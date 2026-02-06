@@ -70,7 +70,7 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 
 	// Determine if package or source
 	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
-	const fromPath = fromMatch ? fromMatch[1]! : '';
+	const fromPath = fromMatch ? fromMatch[2]! : '';
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
 	// Calculate length before "from" followed by whitespace and a quote
@@ -86,7 +86,10 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 
 	if (!isSideEffect) {
 		const afterImport = importLine.replace(/^import\s+type\s+/, '').replace(/^import\s+/, '');
-		const beforeFrom = afterImport.split(' from ')[0]?.trim() || '';
+		const beforeFromMatch = /\sfrom\s+['"]/.exec(afterImport);
+		const beforeFrom = beforeFromMatch
+			? afterImport.substring(0, beforeFromMatch.index).trim()
+			: afterImport.trim();
 
 		const hasCurly = beforeFrom.includes('{');
 		const hasComma = beforeFrom.includes(',');
