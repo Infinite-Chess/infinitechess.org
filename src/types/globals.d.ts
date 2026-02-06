@@ -1,7 +1,7 @@
-// src/globals.d.ts
+// src/types/globals.d.ts
 
-import type { MemberInfo } from './server/types';
-import type { TranslationsObject } from './types/translations';
+import type { MemberInfo } from '../server/types';
+import type { TranslationsObject } from './translations';
 
 /**
  * Client-side translations subset.
