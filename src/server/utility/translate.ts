@@ -5,6 +5,7 @@
  */
 
 import type { Request } from 'express';
+import type { TranslationKeys } from '../../types/translations.js';
 
 import i18next from 'i18next';
 
@@ -48,9 +49,10 @@ function getLanguageToServe(req: Request): string {
  * Retrieves the translation for a given key and language.
  * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
  * @param language - The language code for the translation. Default: `"en-US"`
- * @returns The translated string.
+ * @param options - Additional i18next options (e.g., returnObjects for array translations)
+ * @returns The translated string or object.
  */
-function getTranslation(key: string, language: string = DEFAULT_LANGUAGE): string {
+function getTranslation(key: TranslationKeys, language: string = DEFAULT_LANGUAGE): string {
 	const options = { lng: language };
 	return i18next.t(key, options);
 }
@@ -61,7 +63,7 @@ function getTranslation(key: string, language: string = DEFAULT_LANGUAGE): strin
  * @param req - The request object
  * @returns The translated string.
  */
-function getTranslationForReq(key: string, req: Request): string {
+function getTranslationForReq(key: TranslationKeys, req: Request): string {
 	const language = getLanguageToServe(req);
 	return getTranslation(key, language);
 }
