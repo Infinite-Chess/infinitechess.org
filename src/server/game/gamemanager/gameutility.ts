@@ -28,6 +28,7 @@ import { players } from '../../../shared/chess/util/typeutil.js';
 import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
+import i18next from 'i18next';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
@@ -393,8 +394,10 @@ function constructMetadataOfGame(
 	const white = playerdata[players.WHITE]!.identifier;
 	const black = playerdata[players.BLACK]!.identifier;
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
+	// Get variant translation directly from i18next using dynamic key
+	const variantTranslation = i18next.t(`play.play-menu.${variant}`, { lng: 'en-US' });
 	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${variant}`)} infinite chess game`,
+		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		Variant: variant,
@@ -821,11 +824,17 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - moverule is an array in TOML
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
+		// i18next returns arrays as arrays, so we can access them directly
+		const moveruleArray = i18next.t('play.javascript.termination.moverule', {
+			lng: 'en-US',
+			returnObjects: true,
+		}) as string[];
+		return `${moveruleArray[0]}${numbWholeMovesUntilAutoDraw}${moveruleArray[1]}`;
 	}
-	return getTranslation(`play.javascript.termination.${condition}`);
+	// Use i18next directly for dynamic condition
+	return i18next.t(`play.javascript.termination.${condition}`, { lng: 'en-US' });
 }
 
 function setConclusion(basegame: Game, conclusion: string | undefined): void {

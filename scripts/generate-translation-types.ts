@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+// scripts/generate-translation-types.ts
 
 /**
  * Generates TypeScript types from the English translation TOML file.
@@ -76,16 +76,9 @@ function generateNestedType(obj: TomlTable | any, indentLevel = 1): string {
  * Main function to generate translation types.
  */
 function generateTypes(): void {
-	console.log('Reading translation file...');
 	const tomlContent = fs.readFileSync(translationFile, 'utf-8');
-
-	console.log('Parsing TOML...');
 	const parsed = parse(tomlContent);
-
-	console.log('Generating dot-notation paths...');
 	const dotPaths = generateDotPaths(parsed);
-
-	console.log('Generating nested type structure...');
 	const nestedType = generateNestedType(parsed);
 
 	// Create the output TypeScript file
@@ -109,11 +102,11 @@ ${nestedType}
 }
 `;
 
-	console.log('Writing output file...');
 	fs.writeFileSync(outputFile, output, 'utf-8');
 
-	console.log(`✓ Generated translation types at: ${outputFile}`);
-	console.log(`  - ${dotPaths.length} translation keys`);
+	console.log(
+		`[generate-translation-types] Generated translation types (${dotPaths.length} keys)`,
+	);
 }
 
 // Run the generator

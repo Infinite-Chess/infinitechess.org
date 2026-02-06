@@ -17,10 +17,7 @@ type ClientTranslations = TranslationsObject['index']['javascript'] &
 	TranslationsObject['leaderboard']['javascript'] &
 	TranslationsObject['create-account']['javascript'] &
 	TranslationsObject['reset-password']['javascript'] &
-	TranslationsObject['password-validation'] & {
-		// Allow dynamic access to nested objects (e.g., translations['copypaste'], translations['piecenames'])
-		[key: string]: any;
-	};
+	TranslationsObject['password-validation'];
 
 declare global {
 	/**

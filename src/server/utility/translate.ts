@@ -47,25 +47,22 @@ function getLanguageToServe(req: Request): string {
 
 /**
  * Retrieves the translation for a given key and language.
- * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`. Can be a dynamic string for runtime-constructed keys.
+ * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
  * @param language - The language code for the translation. Default: `"en-US"`
  * @returns The translated string.
  */
-function getTranslation(
-	key: TranslationKeys | string,
-	language: string = DEFAULT_LANGUAGE,
-): string {
+function getTranslation(key: TranslationKeys, language: string = DEFAULT_LANGUAGE): string {
 	const options = { lng: language };
 	return i18next.t(key, options);
 }
 
 /**
  * Retrieves the translation for a given key and req. It reads the req's cookies for its preferred language.
- * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`. Can be a dynamic string for runtime-constructed keys.
+ * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
  * @param req - The request object
  * @returns The translated string.
  */
-function getTranslationForReq(key: TranslationKeys | string, req: Request): string {
+function getTranslationForReq(key: TranslationKeys, req: Request): string {
 	const language = getLanguageToServe(req);
 	return getTranslation(key, language);
 }

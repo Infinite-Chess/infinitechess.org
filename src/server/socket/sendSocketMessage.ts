@@ -5,6 +5,8 @@
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
+import type { TranslationKeys } from '../../types/translations.js';
+
 import { WebSocket } from 'ws';
 
 import uuid from '../../shared/util/uuid.js';
@@ -132,7 +134,7 @@ function sendSocketMessage(
  */
 function sendNotify(
 	ws: CustomWebSocket,
-	translationCode: string,
+	translationCode: TranslationKeys,
 	{ replyto, customNumber }: { replyto?: number; customNumber?: number } = {},
 ): void {
 	const i18next = ws.metadata.cookies.i18next;
@@ -157,7 +159,7 @@ function sendNotify(
  * @param ws - The socket
  * @param translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
-function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
+function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys): void {
 	sendSocketMessage(
 		ws,
 		'general',
