@@ -21,8 +21,8 @@ function extractPathFromComment(line: string): string | null {
 	if (!match || !match[1]) return null;
 
 	const content = match[1].trim();
-	// Check if it looks like a file path (contains / or \ and ends with .ts or .js)
-	if (content.match(/[/\\].*\.(ts|js)$/)) {
+	// Check if it looks like a file path (ends with .ts or .js)
+	if (content.match(/\.(ts|js)$/)) {
 		return content;
 	}
 	return null;
