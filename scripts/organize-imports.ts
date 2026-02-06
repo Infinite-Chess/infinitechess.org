@@ -65,7 +65,7 @@ interface Import {
 	isSideEffect: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
-	/** Which source directory this import belongs to, or null if not a source import or not in shared/client/server directories */
+	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/server directories */
 	sourceDir: 'shared' | 'client' | 'server' | null;
 }
 
@@ -81,8 +81,8 @@ function resolveImportSourceDir(
 	currentFilePath: string,
 	importPath: string,
 ): 'shared' | 'client' | 'server' | null {
-	// Don't process package imports or absolute paths
-	if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
+	// Don't process package imports
+	if (!importPath.startsWith('.') && !path.isAbsolute(importPath)) {
 		return null;
 	}
 
@@ -311,7 +311,7 @@ function organizeImports(imports: Import[]): string {
 	const sharedImports: Import[] = [];
 	const clientImports: Import[] = [];
 	const serverImports: Import[] = [];
-	const otherSourceImports: Import[] = [];
+	const otherSourceImports: Import[] = []; // For relative imports outside shared/client/server (e.g., from src/types, src/tests)
 	const sideEffectImports: Import[] = [];
 
 	for (const imp of imports) {
