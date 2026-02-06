@@ -59,7 +59,6 @@ function generateNestedType(obj: TomlTable | any, indentLevel = 1): string {
 			// Nested object - add index signature for dynamic access
 			lines.push(`${indent}${safeKey}: {`);
 			lines.push(generateNestedType(value, indentLevel + 1));
-			lines.push(`${indent}\t[key: string]: any;`);
 			lines.push(`${indent}};`);
 		} else if (Array.isArray(value)) {
 			// Array type

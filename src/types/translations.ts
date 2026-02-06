@@ -556,22 +556,18 @@ export interface TranslationsObject {
 			'sound-ambience': string;
 			ping: string[];
 			'reset-to-default': string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	footer: {
 		contact: string;
 		terms_of_service: string;
 		source_code: string;
 		language: string;
-		[key: string]: any;
 	};
 	member: {
 		javascript: {
 			'js-confirm_delete': string;
 			'js-enter_password': string;
-			[key: string]: any;
 		};
 		title: string;
 		verify_message: string;
@@ -591,9 +587,7 @@ export interface TranslationsObject {
 			checkmate_bronze: string;
 			checkmate_silver: string;
 			checkmate_gold: string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	leaderboard: {
 		javascript: {
@@ -601,13 +595,11 @@ export interface TranslationsObject {
 			rank: string;
 			player: string;
 			rating: string;
-			[key: string]: any;
 		};
 		title: string;
 		inactive_players: string[];
 		your_global_ranking: string;
 		show_more: string;
-		[key: string]: any;
 	};
 	index: {
 		title: string;
@@ -623,9 +615,7 @@ export interface TranslationsObject {
 		javascript: {
 			contribution_count_singular: string[];
 			contribution_count_plural: string[];
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	credits: {
 		title: string;
@@ -640,7 +630,6 @@ export interface TranslationsObject {
 		code_credits: string[];
 		language_heading: string;
 		language_credits: string[];
-		[key: string]: any;
 	};
 	'create-account': {
 		title: string;
@@ -655,9 +644,7 @@ export interface TranslationsObject {
 			'js-email_invalid': string;
 			'js-email_too_long': string;
 			'js-email_inuse': string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	'reset-password': {
 		javascript: {
@@ -665,15 +652,12 @@ export interface TranslationsObject {
 			'reset-password': string;
 			processing: string;
 			'network-error': string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	'password-validation': {
 		'js-pwd_too_short': string;
 		'js-pwd_too_long': string;
 		'js-pwd_not_pwd': string;
-		[key: string]: any;
 	};
 	play: {
 		title: string;
@@ -685,7 +669,6 @@ export interface TranslationsObject {
 			practice: string;
 			guide: string;
 			editor: string;
-			[key: string]: any;
 		};
 		guide: {
 			title: string;
@@ -707,68 +690,54 @@ export interface TranslationsObject {
 				chancellor: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				archbishop: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				amazon: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				guard: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				hawk: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				centaur: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				knightrider: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				huygen: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				rose: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				obstacle: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
 				void: {
 					name: string;
 					description: string;
-					[key: string]: any;
 				};
-				[key: string]: any;
 			};
-			[key: string]: any;
 		};
 		'practice-menu': {
 			title: string;
 			play: string;
 			back: string;
 			difficulty: string;
-			[key: string]: any;
 		};
 		'play-menu': {
 			title: string;
@@ -831,7 +800,6 @@ export interface TranslationsObject {
 			copy: string;
 			back: string;
 			code: string;
-			[key: string]: any;
 		};
 		gamebuttontooltips: {
 			undo_transition: string;
@@ -847,7 +815,6 @@ export interface TranslationsObject {
 			pause: string;
 			undo: string;
 			restart: string;
-			[key: string]: any;
 		};
 		pause: {
 			title: string;
@@ -859,11 +826,9 @@ export interface TranslationsObject {
 			offer_draw: string;
 			practice_menu: string;
 			main_menu: string;
-			[key: string]: any;
 		};
 		drawoffer: {
 			question: string;
-			[key: string]: any;
 		};
 		javascript: {
 			guest_indicator: string;
@@ -937,7 +902,6 @@ export interface TranslationsObject {
 				rook: string;
 				bishop: string;
 				pawn: string;
-				[key: string]: any;
 			};
 			copypaste: {
 				copied_game: string;
@@ -959,7 +923,6 @@ export interface TranslationsObject {
 				loaded_position_from_clipboard: string;
 				reset_position: string;
 				clear_position: string;
-				[key: string]: any;
 			};
 			rendering: {
 				on: string;
@@ -970,7 +933,6 @@ export interface TranslationsObject {
 				perspective_mode_on_desktop: string;
 				movement_tutorial: string;
 				regenerated_pieces: string;
-				[key: string]: any;
 			};
 			invites: {
 				move_mouse: string;
@@ -984,7 +946,6 @@ export interface TranslationsObject {
 				cancel_invite: string;
 				start_game: string;
 				join_existing_active_games: string;
-				[key: string]: any;
 			};
 			onlinegame: {
 				afk_warning: string;
@@ -1000,7 +961,6 @@ export interface TranslationsObject {
 				server_restarting_in: string;
 				minute: string;
 				minutes: string;
-				[key: string]: any;
 			};
 			websocket: {
 				no_connection: string;
@@ -1013,7 +973,6 @@ export interface TranslationsObject {
 				origin_error: string;
 				connection_closed: string;
 				please_report_bug: string;
-				[key: string]: any;
 			};
 			termination: {
 				checkmate: string;
@@ -1030,7 +989,6 @@ export interface TranslationsObject {
 				time: string;
 				aborted: string;
 				disconnect: string;
-				[key: string]: any;
 			};
 			results: {
 				you_checkmate: string;
@@ -1075,11 +1033,8 @@ export interface TranslationsObject {
 				white_koth: string;
 				black_koth: string;
 				bug_generic: string;
-				[key: string]: any;
 			};
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	terms: {
 		title: string;
@@ -1101,7 +1056,6 @@ export interface TranslationsObject {
 		conclusion_header: string;
 		conclusion_paragraphs: string[];
 		thanks: string;
-		[key: string]: any;
 	};
 	login: {
 		title: string;
@@ -1114,9 +1068,7 @@ export interface TranslationsObject {
 		forgot_instruction: string;
 		javascript: {
 			'network-error': string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	reset_password: {
 		title: string;
@@ -1124,18 +1076,15 @@ export interface TranslationsObject {
 		new_password: string;
 		confirm_password: string;
 		submit_button: string;
-		[key: string]: any;
 	};
 	'error-pages': {
 		'400_message': string;
 		'409_message': string[];
 		'500_message': string;
-		[key: string]: any;
 	};
 	news: {
 		title: string;
 		more_dev_logs: string[];
-		[key: string]: any;
 	};
 	server: {
 		javascript: {
@@ -1176,12 +1125,9 @@ export interface TranslationsObject {
 			'ws-invalid_code': string;
 			'ws-game_aborted': string;
 			'ws-rated_invite_verification_needed': string;
-			[key: string]: any;
 		};
-		[key: string]: any;
 	};
 	'rate-limiting': {
 		generic: string;
-		[key: string]: any;
 	};
 }
