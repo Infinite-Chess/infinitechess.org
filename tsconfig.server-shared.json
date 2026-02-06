@@ -1,0 +1,13 @@
+// tsconfig.server-shared.json
+// TypeScript configuration for type-checking server and shared code only
+// This excludes client-specific global declarations
+
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dev-utils",
+    "src/client" // Exclude client directory and its type declarations
+  ]
+}
