@@ -1,13 +1,16 @@
 // src/client/scripts/esm/game/chess/enginecards/hydrochess_card.ts
 
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces';
 
 import bimath from '../../../../../../shared/util/math/bimath';
+import boardutil from '../../../../../../shared/chess/util/boardutil';
 import typeutil, {
 	Player,
 	rawTypes,
 	RawType,
 	PlayerGroup,
+	players,
 } from '../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
@@ -37,8 +40,13 @@ const SUPPORTED_VARIANTS = new Set([
 /**
  * Determines whether the given position is supported by the engine.
  * If it's not, and we play a game with it anyway, the engine may crash.
+ * @param variantOptions - The variant options including position and game rules
+ * @param organizedPieces - Optional organized pieces for O(1) piece counting. If not provided, falls back to O(n) counting from position Map.
  */
-function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
+function isPositionSupported(
+	variantOptions: VariantOptions,
+	organizedPieces?: OrganizedPieces,
+): SupportedResult {
 	// 1. Any win condition that is not checkmate, royalcapture, allroyalscaptured, or allpiecescaptured is unsupported.
 	const supportedWinConditions = [
 		'checkmate',
@@ -80,12 +88,28 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 4. Not too many pieces in total.
+	// 4. Not too many pieces in total, excluding neutral pieces (voids/obstacles).
 	const maxPieces = 200;
-	if (variantOptions.position.size > maxPieces) {
+	let nonNeutralCount: number;
+
+	if (organizedPieces) {
+		// O(1) when using organized pieces - iterates only through type ranges, not individual pieces
+		nonNeutralCount = boardutil.getPieceCountOfGame(organizedPieces, {
+			ignoreColors: new Set([players.NEUTRAL]),
+		});
+	} else {
+		// O(n) fallback when organized pieces not available
+		nonNeutralCount = 0;
+		for (const type of variantOptions.position.values()) {
+			const color = typeutil.getColorFromType(type);
+			if (color !== players.NEUTRAL) nonNeutralCount++;
+		}
+	}
+
+	if (nonNeutralCount > maxPieces) {
 		return {
 			supported: false,
-			reason: `Too many pieces: ${variantOptions.position.size} (max ${maxPieces}).`,
+			reason: `Too many pieces: ${nonNeutralCount} (max ${maxPieces}).`,
 		};
 	}
 
