@@ -41,6 +41,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Constants ---------------------------------------------------------------
+
+/** Regex pattern to match " from " followed by a quote in import statements */
+const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
+
 // Type Definitions --------------------------------------------------------
 
 interface Import {
@@ -74,7 +79,7 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
 	// Calculate length before "from" followed by whitespace and a quote
-	const match = /\sfrom\s+['"]/.exec(importText);
+	const match = FROM_WITH_QUOTE_PATTERN.exec(importText);
 	const lengthBeforeFrom = match ? match.index : importText.length;
 
 	// Check if multi-line
@@ -86,7 +91,7 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 
 	if (!isSideEffect) {
 		const afterImport = importLine.replace(/^import\s+type\s+/, '').replace(/^import\s+/, '');
-		const beforeFromMatch = /\sfrom\s+['"]/.exec(afterImport);
+		const beforeFromMatch = FROM_WITH_QUOTE_PATTERN.exec(afterImport);
 		const beforeFrom = beforeFromMatch
 			? afterImport.substring(0, beforeFromMatch.index).trim()
 			: afterImport.trim();
