@@ -20,6 +20,7 @@ import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
+import i18next from 'i18next';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
@@ -28,7 +29,6 @@ import { players } from '../../../shared/chess/util/typeutil.js';
 import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
-import i18next from 'i18next';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
