@@ -826,14 +826,11 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 		// One exception - moverule is an array in TOML
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		// @ts-ignore - moverule is an array type, using returnObjects to access it
-		const moveruleArray = getTranslation('play.javascript.termination.moverule', 'en-US', {
-			returnObjects: true,
-		}) as string[];
+		const moveruleArray = getTranslation('play.javascript.termination.moverule') as string[];
 		return `${moveruleArray[0]}${numbWholeMovesUntilAutoDraw}${moveruleArray[1]}`;
 	}
 	// @ts-ignore - condition is dynamic but always maps to a valid translation key
-	const terminationText = getTranslation(`play.javascript.termination.${condition}`);
-	return terminationText;
+	return getTranslation(`play.javascript.termination.${condition}`);
 }
 
 function setConclusion(basegame: Game, conclusion: string | undefined): void {

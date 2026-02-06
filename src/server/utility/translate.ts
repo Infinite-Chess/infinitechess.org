@@ -52,13 +52,9 @@ function getLanguageToServe(req: Request): string {
  * @param options - Additional i18next options (e.g., returnObjects for array translations)
  * @returns The translated string or object.
  */
-function getTranslation(
-	key: TranslationKeys,
-	language: string = DEFAULT_LANGUAGE,
-	options?: { returnObjects?: boolean },
-): string | any {
-	const i18nextOptions = { lng: language, ...options };
-	return i18next.t(key, i18nextOptions);
+function getTranslation(key: TranslationKeys, language: string = DEFAULT_LANGUAGE): string {
+	const options = { lng: language };
+	return i18next.t(key, options);
 }
 
 /**
