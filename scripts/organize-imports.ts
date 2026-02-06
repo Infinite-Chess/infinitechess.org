@@ -65,7 +65,7 @@ interface Import {
 	isSideEffect: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
-	/** Which source directory this import belongs to: 'shared', 'client', 'server', or null for other source imports */
+	/** Which source directory this import belongs to, or null if not a source import or not in shared/client/server directories */
 	sourceDir: 'shared' | 'client' | 'server' | null;
 }
 
@@ -91,11 +91,22 @@ function resolveImportSourceDir(
 	const resolvedImportPath = path.resolve(currentFileDir, importPath);
 
 	// Check if the resolved path is within one of our source directories
-	if (resolvedImportPath.startsWith(SHARED_DIR)) {
+	// We need to ensure proper directory boundaries (not just string prefix matching)
+	const sharedDirWithSep = SHARED_DIR + path.sep;
+	const clientDirWithSep = CLIENT_DIR + path.sep;
+	const serverDirWithSep = SERVER_DIR + path.sep;
+
+	if (resolvedImportPath === SHARED_DIR || resolvedImportPath.startsWith(sharedDirWithSep)) {
 		return 'shared';
-	} else if (resolvedImportPath.startsWith(CLIENT_DIR)) {
+	} else if (
+		resolvedImportPath === CLIENT_DIR ||
+		resolvedImportPath.startsWith(clientDirWithSep)
+	) {
 		return 'client';
-	} else if (resolvedImportPath.startsWith(SERVER_DIR)) {
+	} else if (
+		resolvedImportPath === SERVER_DIR ||
+		resolvedImportPath.startsWith(serverDirWithSep)
+	) {
 		return 'server';
 	}
 
