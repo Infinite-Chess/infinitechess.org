@@ -20,7 +20,6 @@ import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
-import i18next from 'i18next';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
@@ -394,8 +393,8 @@ function constructMetadataOfGame(
 	const white = playerdata[players.WHITE]!.identifier;
 	const black = playerdata[players.BLACK]!.identifier;
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
-	// Get variant translation directly from i18next using dynamic key
-	const variantTranslation = i18next.t(`play.play-menu.${variant}`, { lng: 'en-US' });
+	// @ts-ignore - variant is dynamic but always maps to a valid translation key
+	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
 	const gameMetadata: MetaData = {
 		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
@@ -826,15 +825,15 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 	if (condition === 'moverule') {
 		// One exception - moverule is an array in TOML
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		// i18next returns arrays as arrays, so we can access them directly
-		const moveruleArray = i18next.t('play.javascript.termination.moverule', {
-			lng: 'en-US',
+		// @ts-ignore - moverule is an array type, using returnObjects to access it
+		const moveruleArray = getTranslation('play.javascript.termination.moverule', 'en-US', {
 			returnObjects: true,
 		}) as string[];
 		return `${moveruleArray[0]}${numbWholeMovesUntilAutoDraw}${moveruleArray[1]}`;
 	}
-	// Use i18next directly for dynamic condition
-	return i18next.t(`play.javascript.termination.${condition}`, { lng: 'en-US' });
+	// @ts-ignore - condition is dynamic but always maps to a valid translation key
+	const terminationText = getTranslation(`play.javascript.termination.${condition}`);
+	return terminationText;
 }
 
 function setConclusion(basegame: Game, conclusion: string | undefined): void {
