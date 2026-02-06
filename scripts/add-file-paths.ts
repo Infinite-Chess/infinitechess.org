@@ -1,4 +1,4 @@
-// /home/runner/work/infinitechess.org/infinitechess.org/scripts/add-file-paths.ts
+// scripts/add-file-paths.ts
 
 /**
  * This script ensures all .js and .ts files have their relative file path
@@ -10,6 +10,7 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
 
 /**
  * Checks if a line looks like a file path comment.
@@ -35,7 +36,10 @@ function processFile(filePath: string): void {
 	const lines = content.split('\n');
 
 	// Calculate the correct relative path from repo root
-	const correctPath = filePath.replace(/\\/g, '/');
+	const repoRoot = process.cwd();
+	const absolutePath = resolve(filePath);
+	const relativePath = relative(repoRoot, absolutePath);
+	const correctPath = relativePath.replace(/\\/g, '/');
 	const correctComment = `// ${correctPath}`;
 
 	// Check the first line
