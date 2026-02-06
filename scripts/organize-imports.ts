@@ -9,7 +9,7 @@
  * Usage: tsx scripts/organize-imports.ts <file1> <file2> ...
  *
  * Run on all files:
- * npx tsx scripts/organize-imports.ts $(find src -name "*.ts") *.ts
+ * npx tsx scripts/organize-imports.ts $(find build src scripts -name "*.ts") *.ts
  *
  * ========================================
  * IMPORT ORGANIZATION RULES
