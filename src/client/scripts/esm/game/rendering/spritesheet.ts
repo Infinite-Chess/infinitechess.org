@@ -12,8 +12,8 @@ import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import TextureLoader from '../../webgl/TextureLoader.js';
 import { GameBus } from '../GameBus.js';
+import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 
 // Type Definitions ---------------------------------------------------------------------

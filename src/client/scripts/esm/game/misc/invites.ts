@@ -15,11 +15,11 @@ import docutil from '../../util/docutil.js';
 import websocket from '../websocket.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gamesound from './gamesound.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import loadbalancer from './loadbalancer.js';
 import validatorama from '../../util/validatorama.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 // Types -------------------------------------------------------------------------
 

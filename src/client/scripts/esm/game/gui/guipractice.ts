@@ -9,11 +9,11 @@ import style from './style.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import guititle from './guititle.js';
 import svgcache from '../../chess/rendering/svgcache.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import validatorama from '../../util/validatorama.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 // Variables ----------------------------------------------------------------------------
 

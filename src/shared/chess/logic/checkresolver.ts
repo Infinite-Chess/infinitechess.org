@@ -25,13 +25,13 @@ import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
+import { players } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import vectors, { Vec2Key } from '../../util/math/vectors.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
-import { players } from '../util/typeutil.js';
 
 // Functions ------------------------------------------------------------------------------
 

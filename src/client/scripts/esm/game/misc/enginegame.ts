@@ -13,16 +13,16 @@ import snapping from '../rendering/highlights/snapping.js';
 import selection from '../chess/selection.js';
 import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import { GameBus } from '../GameBus.js';
 import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
+import { animateMove } from '../chess/graphicalchanges.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import { GameBus } from '../GameBus.js';
-import { animateMove } from '../chess/graphicalchanges.js';
 
 // Type Definitions -------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 // src/server/server.ts
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
-
 import { initDatabase } from './database/databaseTables.js';
 import { initDevEnvironment } from './config/setupDev.js';
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 initDatabase();
 // Ensure our workspace is ready for the dev environment

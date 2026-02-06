@@ -1,13 +1,14 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/OceanZone.ts
 
+import type { Zone } from '../EffectZoneManager';
+
 import camera from '../../camera';
 import loadbalancer from '../../../misc/loadbalancer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import { Zone } from '../EffectZoneManager';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { RippleSource, WaterPass } from '../../../../webgl/post_processing/passes/WaterPass';
 
 export class OceanZone implements Zone {

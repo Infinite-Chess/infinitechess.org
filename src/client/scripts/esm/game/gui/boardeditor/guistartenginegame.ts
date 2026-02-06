@@ -9,9 +9,9 @@ import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
 
 import eactions from '../../boardeditor/actions/eactions';
 import gameslot from '../../chess/gameslot';
+import { players } from '../../../../../../shared/chess/util/typeutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 import guifloatingwindow from './guifloatingwindow';
-import { players } from '../../../../../../shared/chess/util/typeutil';
 
 // Types -------------------------------------------------------------
 

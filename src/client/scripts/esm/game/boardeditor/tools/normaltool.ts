@@ -16,8 +16,8 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
 import boardeditor from '../boardeditor';
-import movesequence from '../../chess/movesequence';
 import { GameBus } from '../../GameBus';
+import movesequence from '../../chess/movesequence';
 
 // Making Move Edits in the Game ---------------------------------------------
 

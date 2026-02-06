@@ -10,8 +10,8 @@ import fs from 'fs';
 import path from 'path';
 import * as z from 'zod';
 import process from 'node:process';
-import AbortController from 'abort-controller';
 import { writeFile } from 'node:fs/promises';
+import AbortController from 'abort-controller';
 import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 

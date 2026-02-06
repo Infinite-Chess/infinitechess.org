@@ -10,12 +10,12 @@ import camera from './camera.js';
 import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
 	UnboundedRectangle,
 } from '../../../../../shared/util/math/bounds.js';
-import { createRenderable } from '../../webgl/Renderable.js';
 
 /**
  * Draws a square on screen containing the entire

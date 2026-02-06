@@ -32,8 +32,8 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
-import websocket, { WebsocketMessage } from '../../websocket.js';
 import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import websocket, { WebsocketMessage } from '../../websocket.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 
