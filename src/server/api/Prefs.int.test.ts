@@ -2,11 +2,11 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
-
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
+
+import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 /** An example of valid preferences. */
 const VALID_PREFS_1 = {

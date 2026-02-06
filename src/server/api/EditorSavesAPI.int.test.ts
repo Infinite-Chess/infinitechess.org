@@ -11,12 +11,12 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import editorutil from '../../shared/editor/editorutil.js';
 
+import { testRequest } from '../../tests/testRequest.js';
+import integrationUtils from '../../tests/integrationUtils.js';
+
 import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
-
-import { testRequest } from '../../tests/testRequest.js';
-import integrationUtils from '../../tests/integrationUtils.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
