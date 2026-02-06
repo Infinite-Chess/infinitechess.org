@@ -9,8 +9,8 @@
  * and updates them as needed to avoid duplicates.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 /**
  * Checks if a line looks like a file path comment.
@@ -28,9 +28,7 @@ function extractPathFromComment(line: string): string | null {
 	return null;
 }
 
-/**
- * Processes a single file to ensure it has the correct path comment.
- */
+/** Processes a single file to ensure it has the correct path comment. */
 function processFile(filePath: string): void {
 	const content = readFileSync(filePath, 'utf-8');
 	const lines = content.split('\n');
@@ -100,42 +98,31 @@ function processFile(filePath: string): void {
 	if (needsUpdate) {
 		const newContent = newLines.join('\n');
 		writeFileSync(filePath, newContent, 'utf-8');
-		console.log(`Updated: ${filePath}`);
+		console.log(filePath);
 	}
 }
 
-/**
- * Main entry point for the script.
- */
+/** Main entry point for the script. */
 function main(): void {
 	const args = process.argv.slice(2);
 
 	if (args.length === 0) {
-		console.error('Error: No files specified');
-		console.error('Usage: tsx scripts/add-file-paths.ts <file1> <file2> ...');
+		console.error('No files provided. Usage: tsx add-file-paths.ts <file1> <file2> ...');
 		process.exit(1);
 	}
 
 	// Filter for only .js and .ts files
 	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts)$/));
 
-	if (jsAndTsFiles.length === 0) {
-		console.log('No .js or .ts files to process');
-		return;
-	}
-
-	console.log(`Processing ${jsAndTsFiles.length} file(s)...`);
-
 	for (const file of jsAndTsFiles) {
 		try {
 			processFile(file);
 		} catch (error) {
 			console.error(`Error processing ${file}:`, error);
-			process.exit(1);
 		}
 	}
 
-	console.log('Done!');
+	console.log(`Updated path in ${jsAndTsFiles.length} files.`);
 }
 
 main();

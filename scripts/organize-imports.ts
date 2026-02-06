@@ -341,23 +341,23 @@ function processFile(filePath: string): boolean {
 // Main Execution ----------------------------------------------------------
 
 function main(): void {
-	const files = process.argv.slice(2).filter((f) => f.endsWith('.ts'));
+	const args = process.argv.slice(2);
 
-	if (files.length === 0) {
-		console.log(
-			'[organize-imports] No files provided. Usage: tsx organize-imports.ts <file1> <file2> ...',
-		);
-		return;
+	if (args.length === 0) {
+		console.error('No files provided. Usage: tsx organize-imports.ts <file1> <file2> ...');
+		process.exit(1);
 	}
 
-	let changed = 0;
-	const cwd = process.cwd();
+	// Filter for only .ts files
+	const tsFiles = args.filter((f) => f.endsWith('.ts'));
 
-	for (const file of files) {
+	let changed = 0;
+
+	for (const file of tsFiles) {
 		if (!fs.existsSync(file)) continue;
 		if (!processFile(file)) continue;
 
-		const relative = path.isAbsolute(file) ? path.relative(cwd, file) : file;
+		const relative = path.isAbsolute(file) ? path.relative(process.cwd(), file) : file;
 		console.log(relative);
 		changed++;
 	}
