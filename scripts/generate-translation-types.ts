@@ -73,9 +73,7 @@ function generateNestedType(obj: TomlTable | any, indentLevel = 1): string {
 	return lines.join('\n');
 }
 
-/**
- * Main function to generate translation types.
- */
+/** Main function to generate translation types. */
 function generateTypes(): void {
 	const tomlContent = fs.readFileSync(translationFile, 'utf-8');
 	const parsed = parse(tomlContent);
