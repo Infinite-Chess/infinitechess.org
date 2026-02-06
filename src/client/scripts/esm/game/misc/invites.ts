@@ -36,8 +36,8 @@ export interface Invite {
 	variant: string;
 	/** The clock value */
 	clock: TimeControl;
-	/** The player color (Neutral = Random) */
-	color: Player;
+	/** The player color (null = Random) */
+	color: Player | null;
 	publicity: 'public' | 'private';
 	rated: 'casual' | 'rated';
 }
@@ -46,7 +46,7 @@ export interface Invite {
 export interface InviteOptions {
 	variant: string;
 	clock: TimeControl;
-	color: Player;
+	color: Player | null;
 	private: 'public' | 'private';
 	rated: 'casual' | 'rated';
 }
@@ -164,7 +164,7 @@ function cancel(inviteID = ourInviteID): void {
 function generateTagForInvite(inviteOptions: {
 	variant: string;
 	clock: TimeControl;
-	color: Player;
+	color: Player | null;
 	publicity: 'public' | 'private';
 	rated: 'casual' | 'rated';
 	tag?: string;

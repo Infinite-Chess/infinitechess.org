@@ -239,7 +239,7 @@ function initMatch(
  * - `playerColors`: the colors of each player, in order of ascending player number.
  */
 function assignWhiteBlackPlayersFromInvite(
-	inviteColor: Player,
+	inviteColor: Player | null,
 	player1: AuthMemberInfo,
 	player2: AuthMemberInfo,
 ): PlayerGroup<AuthMemberInfo> {
@@ -251,7 +251,7 @@ function assignWhiteBlackPlayersFromInvite(
 	} else if (inviteColor === players.BLACK) {
 		colorData[players.WHITE] = player2;
 		colorData[players.BLACK] = player1;
-	} else if (inviteColor === players.NEUTRAL) {
+	} else if (inviteColor === null) {
 		// Random
 		if (Math.random() > 0.5) {
 			colorData[players.WHITE] = player1;
