@@ -16,12 +16,13 @@ import WebSocket from 'ws';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import socketUtility from '../../socket/socketUtility.js';
-import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';

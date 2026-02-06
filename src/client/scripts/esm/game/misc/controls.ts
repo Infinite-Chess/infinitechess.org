@@ -9,13 +9,14 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import docutil from '../../util/docutil.js';
-import vectors from '../../../../../shared/util/math/vectors.js';
 import guipause from '../gui/guipause.js';
 import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';

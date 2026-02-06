@@ -7,8 +7,9 @@
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Player } from '../../shared/chess/util/typeutil.js';
 
-import db from './database.js';
 import jsutil from '../../shared/util/jsutil.js';
+
+import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allPlayerGamesColumns } from './databaseTables.js';
 

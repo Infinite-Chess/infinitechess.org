@@ -7,8 +7,9 @@
 import type { Rating } from '../../../../server/database/leaderboardsManager.js';
 import type { ServerUsernameContainer } from '../../../../shared/types.js';
 
-import docutil from './docutil.js';
 import metadata from '../../../../shared/chess/util/metadata.js';
+
+import docutil from './docutil.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // Types ----------------------------------------------------------------------------------------

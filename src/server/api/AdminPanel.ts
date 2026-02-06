@@ -8,6 +8,7 @@
 import type { Request, Response } from 'express';
 
 import validators from '../../shared/util/validators.js';
+
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { manuallyVerifyUser } from '../controllers/verifyAccountController.js';

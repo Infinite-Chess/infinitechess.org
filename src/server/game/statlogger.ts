@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 
 import timeutil from '../../shared/util/timeutil.js';
+
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { readFile, writeFile } from '../utility/lockFile.js';
 

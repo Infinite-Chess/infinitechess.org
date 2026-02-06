@@ -12,13 +12,16 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+
 import toast from '../gui/toast.js';
 import arrows from './arrows/arrows.js';
 import meshes from './meshes.js';
 import splines from '../../util/splines.js';
 import boardpos from './boardpos.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import gamesound from '../misc/gamesound.js';
 import piecemodels from './piecemodels.js';
 import perspective from './perspective.js';
@@ -27,8 +30,6 @@ import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import WaterRipples from './WaterRipples.js';
 import instancedshapes from './instancedshapes.js';
-import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions -----------------------------------------------------------------------

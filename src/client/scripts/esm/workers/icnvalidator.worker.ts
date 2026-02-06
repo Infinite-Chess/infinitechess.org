@@ -6,8 +6,9 @@
 
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import gameformulator from '../game/chess/gameformulator.js';
 import { players as p } from '../../../../shared/chess/util/typeutil.js';
+
+import gameformulator from '../game/chess/gameformulator.js';
 
 // Define types
 export interface WorkerMessage {

@@ -15,6 +15,7 @@ import state from '../../../../../../shared/chess/logic/state';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
+
 import boardeditor from '../boardeditor';
 import { GameBus } from '../../GameBus';
 import movesequence from '../../chess/movesequence';

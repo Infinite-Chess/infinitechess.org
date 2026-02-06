@@ -17,6 +17,7 @@ import { Request, Response } from 'express';
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
 
 import validators from '../../shared/util/validators.js';
+
 import { handleLogin } from './loginController.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';

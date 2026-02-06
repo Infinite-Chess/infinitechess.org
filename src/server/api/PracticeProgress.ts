@@ -9,6 +9,7 @@ import type { ParsedCookies } from '../types.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 

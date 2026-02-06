@@ -9,27 +9,28 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/initvaria
 import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
-import toast from '../gui/toast.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
-import guipause from '../gui/guipause.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import websocket from '../websocket.js';
-import IndexedDB from '../../util/IndexedDB.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import enginegame from '../misc/enginegame.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import gameloader from './gameloader.js';
-import boardeditor from '../boardeditor/boardeditor.js';
-import gameformulator from './gameformulator.js';
 import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import gameslot, { PresetAnnotes } from './gameslot.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import toast from '../gui/toast.js';
+import guipause from '../gui/guipause.js';
+import websocket from '../websocket.js';
+import IndexedDB from '../../util/IndexedDB.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import enginegame from '../misc/enginegame.js';
+import gameloader from './gameloader.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import gameformulator from './gameformulator.js';
+import gameslot, { PresetAnnotes } from './gameslot.js';
 
 /**
  * A list of metadata properties that are retained from the current game when pasting an external game.

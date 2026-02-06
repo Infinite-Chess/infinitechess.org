@@ -4,8 +4,9 @@
  * This script keeps track of our deltaTime, FPS, AFK status, and hibernation status.
  */
 
-import stats from '../gui/stats.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+
+import stats from '../gui/stats.js';
 import config from '../config.js';
 import invites from './invites.js';
 import tabnameflash from './onlinegame/tabnameflash.js';

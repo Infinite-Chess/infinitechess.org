@@ -8,10 +8,11 @@ import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http';
 import type { CustomWebSocket } from './socketUtility.js';
 
+import { GAME_VERSION } from '../../shared/game_version.js';
+
 import { onclose } from './closeSocket.js';
 import socketUtility from './socketUtility.js';
 import { onmessage } from './receiveSocketMessage.js';
-import { GAME_VERSION } from '../../shared/game_version.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';

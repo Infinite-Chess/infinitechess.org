@@ -11,25 +11,30 @@ import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js
 import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsSpecial, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 
+import bounds from '../../../../../shared/util/math/bounds.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
+import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
+
 import mouse from '../../util/mouse.js';
 import toast from '../gui/toast.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
-import bounds from '../../../../../shared/util/math/bounds.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import guipause from '../gui/guipause.js';
 import gameslot from './gameslot.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import boardpos from '../rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
 import keybinds from '../misc/keybinds.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { Mouse } from '../input.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gameloader from './gameloader.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
-import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import enginegame from '../misc/enginegame.js';
 import Transition from '../rendering/transitions/Transition.js';
 import normaltool from '../boardeditor/tools/normaltool.js';
@@ -41,11 +46,7 @@ import movesequence from './movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { animateMove } from './graphicalchanges.js';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
 import { listener_document, listener_overlay } from './game.js';
 
 // Variables -----------------------------------------------------------------------------

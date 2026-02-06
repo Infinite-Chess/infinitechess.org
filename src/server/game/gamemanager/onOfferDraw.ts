@@ -9,8 +9,9 @@ import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import gameutility from './gameutility.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
+
+import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
 import {
 	isDrawOfferOpen,

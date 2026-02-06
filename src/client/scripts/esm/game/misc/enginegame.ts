@@ -4,8 +4,12 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from '../gui/toast.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
+import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+
+import toast from '../gui/toast.js';
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import boardpos from '../rendering/boardpos.js';
@@ -17,12 +21,9 @@ import { GameBus } from '../GameBus.js';
 import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
-import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
-import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 // Type Definitions -------------------------------------------------------------
 

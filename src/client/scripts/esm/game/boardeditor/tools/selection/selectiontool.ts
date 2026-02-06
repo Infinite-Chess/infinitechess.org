@@ -13,14 +13,15 @@ import type {
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds';
 
+import bimath from '../../../../../../../shared/util/math/bimath';
+import boardutil from '../../../../../../../shared/chess/util/boardutil';
+
 import mouse from '../../../../util/mouse';
 import sfill from './sfill';
 import sdrag from './sdrag';
 import arrows from '../../../rendering/arrows/arrows';
 import meshes from '../../../rendering/meshes';
-import bimath from '../../../../../../../shared/util/math/bimath';
 import gameslot from '../../../chess/gameslot';
-import boardutil from '../../../../../../../shared/chess/util/boardutil';
 import { Mouse } from '../../../input';
 import boardeditor from '../../boardeditor';
 import stoolgraphics from './stoolgraphics';

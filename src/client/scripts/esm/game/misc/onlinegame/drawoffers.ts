@@ -10,10 +10,11 @@
 
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+
 import toast from '../../gui/toast.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import websocket from '../../websocket.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';

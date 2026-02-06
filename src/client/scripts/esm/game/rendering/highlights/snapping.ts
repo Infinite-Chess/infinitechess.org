@@ -16,18 +16,20 @@ import type {
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
+import jsutil from '../../../../../../shared/util/jsutil.js';
+import geometry from '../../../../../../shared/util/math/geometry.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
+
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
-import jsutil from '../../../../../../shared/util/jsutil.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
-import geometry from '../../../../../../shared/util/math/geometry.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import miniimage from '../miniimage.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import { Mouse } from '../../input.js';
 import Transition from '../transitions/Transition.js';
 import primitives from '../primitives.js';
@@ -36,7 +38,6 @@ import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
-import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 

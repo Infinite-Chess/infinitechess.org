@@ -4,14 +4,15 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import themes from '../../../../../shared/components/header/themes.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import docutil from '../../util/docutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import LocalStorage from '../../util/LocalStorage.js';
-import validatorama from '../../util/validatorama.js';
 import pieceThemes, {
 	PieceColorGroup,
 } from '../../../../../shared/components/header/pieceThemes.js';
+
+import docutil from '../../util/docutil.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import validatorama from '../../util/validatorama.js';
 
 /** Prefs that do NOT get saved on the server side */
 const clientSidePrefs: string[] = [

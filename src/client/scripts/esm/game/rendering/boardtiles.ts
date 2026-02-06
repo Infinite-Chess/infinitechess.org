@@ -13,9 +13,11 @@ import type { AttributeInfo, Renderable, TextureInfo } from '../../webgl/Rendera
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+
 import style from '../gui/style.js';
 import camera from './camera.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
 import imagecache from '../../chess/rendering/imagecache.js';
@@ -30,7 +32,6 @@ import guipromotion from '../gui/guipromotion.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import webgl, { gl } from './webgl.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 

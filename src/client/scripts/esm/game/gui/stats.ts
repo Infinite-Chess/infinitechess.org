@@ -7,8 +7,9 @@
  * FPS
  */
 
-import config from '../config.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
+
+import config from '../config.js';
 import gameslot from '../chess/gameslot.js';
 import guinavigation from './guinavigation.js';
 

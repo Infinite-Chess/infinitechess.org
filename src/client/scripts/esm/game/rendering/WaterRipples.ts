@@ -7,17 +7,18 @@
 import type { ProgramManager } from '../../webgl/ProgramManager';
 import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
 
+import bounds from '../../../../../shared/util/math/bounds';
+import bdcoords from '../../../../../shared/chess/util/bdcoords';
+import { players as p } from '../../../../../shared/chess/util/typeutil';
+import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
+
 import space from '../misc/space';
 import camera from './camera';
-import bounds from '../../../../../shared/util/math/bounds';
 import boardpos from './boardpos';
 import drawrays from './highlights/annotations/drawrays';
-import bdcoords from '../../../../../shared/chess/util/bdcoords';
 import gameloader from '../chess/gameloader';
 import perspective from './perspective';
 import frametracker from './frametracker';
-import { players as p } from '../../../../../shared/chess/util/typeutil';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
 
 // Constants --------------------------------------------------------------------------------

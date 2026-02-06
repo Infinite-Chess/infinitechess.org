@@ -6,9 +6,10 @@
  * GRAPHICAL (spritesheet) aspects.
  */
 
+import themes from '../../../../../shared/components/header/themes.js';
+
 import style from './style.js';
 import thread from '../../util/thread.js';
-import themes from '../../../../../shared/components/header/themes.js';
 import preferences from '../../components/header/preferences.js';
 
 const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;

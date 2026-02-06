@@ -17,12 +17,13 @@ import bounds from '../../../../../../../shared/util/math/bounds';
 import bimath from '../../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../../shared/chess/util/typeutil';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords';
-import selectiontool from './selectiontool';
 import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
 import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
 import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
-import boardeditor, { Edit } from '../../boardeditor';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
+
+import selectiontool from './selectiontool';
+import boardeditor, { Edit } from '../../boardeditor';
 
 // Type Definitions ----------------------------------------------------------
 

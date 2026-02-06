@@ -12,15 +12,16 @@ import type { BDCoords, Coords } from '../../../../../shared/chess/util/coorduti
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
+
 import space from '../misc/space.js';
 import camera from './camera.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import meshes from './meshes.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import guinavigation from '../gui/guinavigation.js';
-import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 import Transition, { ZoomTransition } from './transitions/Transition.js';
 
 /**

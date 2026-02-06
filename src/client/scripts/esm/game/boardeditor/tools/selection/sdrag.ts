@@ -7,9 +7,15 @@
  * and handles moving the selection.
  */
 
+import bimath from '../../../../../../../shared/util/math/bimath';
+import coordutil, { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import bounds, {
+	BoundingBox,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
+
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
-import bimath from '../../../../../../../shared/util/math/bimath';
 import arrows from '../../../rendering/arrows/arrows';
 import scursor from './scursor';
 import gameslot from '../../../chess/gameslot';
@@ -17,11 +23,6 @@ import { Mouse } from '../../../input';
 import selectiontool from './selectiontool';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
-import coordutil, { Coords } from '../../../../../../../shared/chess/util/coordutil';
-import bounds, {
-	BoundingBox,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
 
 // Constants -----------------------------------------
 

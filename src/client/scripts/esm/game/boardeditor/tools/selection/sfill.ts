@@ -9,22 +9,23 @@
 
 import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
 
+import bimath from '../../../../../../../shared/util/math/bimath';
+import vectors from '../../../../../../../shared/util/math/vectors';
+import bounds, {
+	BoundingBox,
+	DoubleBoundingBox,
+} from '../../../../../../../shared/util/math/bounds';
+
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
 import sdrag from './sdrag';
-import bimath from '../../../../../../../shared/util/math/bimath';
 import arrows from '../../../rendering/arrows/arrows';
-import vectors from '../../../../../../../shared/util/math/vectors';
 import scursor from './scursor';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
 import selectiontool from './selectiontool';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
-import bounds, {
-	BoundingBox,
-	DoubleBoundingBox,
-} from '../../../../../../../shared/util/math/bounds';
 
 // State ---------------------------------------------
 
