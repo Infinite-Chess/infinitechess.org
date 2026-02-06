@@ -26,8 +26,9 @@
  * 2. Regular package imports
  * 3. Regular source imports from shared (src/shared/)
  * 4. Regular source imports from client (src/client/)
- * 5. Regular source imports from server (src/server/)
- * 6. Side-effect imports
+ * 5. Regular source imports from tests (src/tests/)
+ * 6. Regular source imports from server (src/server/)
+ * 7. Side-effect imports
  *
  * SORTING WITHIN GROUPS:
  * - Multi-line imports last
@@ -51,6 +52,8 @@ const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
 const SHARED_DIR = path.resolve(process.cwd(), 'src/shared');
 /** Path to the client directory */
 const CLIENT_DIR = path.resolve(process.cwd(), 'src/client');
+/** Path to the tests directory */
+const TESTS_DIR = path.resolve(process.cwd(), 'src/tests');
 /** Path to the server directory */
 const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
 
@@ -63,8 +66,8 @@ interface Import {
 	isSideEffect: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
-	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/server directories */
-	sourceDir: 'shared' | 'client' | 'server' | null;
+	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/tests/server directories */
+	sourceDir: 'shared' | 'client' | 'tests' | 'server' | null;
 }
 
 // Helper Functions --------------------------------------------------------
@@ -73,12 +76,12 @@ interface Import {
  * Resolves an import path from the current file and determines which source directory it belongs to.
  * @param currentFilePath - Absolute path to the file being processed
  * @param importPath - The path from the import statement (e.g., '../../../shared/util/timeutil.js')
- * @returns 'shared', 'client', 'server', or null if not in any of these directories
+ * @returns 'shared', 'client', 'tests', 'server', or null if not in any of these directories
  */
 function resolveImportSourceDir(
 	currentFilePath: string,
 	importPath: string,
-): 'shared' | 'client' | 'server' | null {
+): 'shared' | 'client' | 'tests' | 'server' | null {
 	// Don't process package imports
 	if (!importPath.startsWith('.') && !path.isAbsolute(importPath)) {
 		return null;
@@ -92,6 +95,7 @@ function resolveImportSourceDir(
 	// We need to ensure proper directory boundaries (not just string prefix matching)
 	const sharedDirWithSep = SHARED_DIR + path.sep;
 	const clientDirWithSep = CLIENT_DIR + path.sep;
+	const testsDirWithSep = TESTS_DIR + path.sep;
 	const serverDirWithSep = SERVER_DIR + path.sep;
 
 	if (resolvedImportPath === SHARED_DIR || resolvedImportPath.startsWith(sharedDirWithSep)) {
@@ -101,6 +105,8 @@ function resolveImportSourceDir(
 		resolvedImportPath.startsWith(clientDirWithSep)
 	) {
 		return 'client';
+	} else if (resolvedImportPath === TESTS_DIR || resolvedImportPath.startsWith(testsDirWithSep)) {
+		return 'tests';
 	} else if (
 		resolvedImportPath === SERVER_DIR ||
 		resolvedImportPath.startsWith(serverDirWithSep)
@@ -308,8 +314,9 @@ function organizeImports(imports: Import[]): string {
 	const packageImports: Import[] = [];
 	const sharedImports: Import[] = [];
 	const clientImports: Import[] = [];
+	const testsImports: Import[] = [];
 	const serverImports: Import[] = [];
-	const otherSourceImports: Import[] = []; // For relative imports outside shared/client/server (e.g., from src/types, src/tests)
+	const otherSourceImports: Import[] = []; // For relative imports outside shared/client/tests/server (e.g., from src/types)
 	const sideEffectImports: Import[] = [];
 
 	for (const imp of imports) {
@@ -325,6 +332,8 @@ function organizeImports(imports: Import[]): string {
 				sharedImports.push(imp);
 			} else if (imp.sourceDir === 'client') {
 				clientImports.push(imp);
+			} else if (imp.sourceDir === 'tests') {
+				testsImports.push(imp);
 			} else if (imp.sourceDir === 'server') {
 				serverImports.push(imp);
 			} else {
@@ -345,6 +354,7 @@ function organizeImports(imports: Import[]): string {
 	packageImports.sort(compareImports);
 	sharedImports.sort(compareImports);
 	clientImports.sort(compareImports);
+	testsImports.sort(compareImports);
 	serverImports.sort(compareImports);
 	otherSourceImports.sort(compareImports);
 	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
@@ -360,13 +370,17 @@ function organizeImports(imports: Import[]): string {
 		groups.push(packageImports.map((i) => i.raw).join('\n'));
 	}
 
-	// Add source imports in order: shared, client, server
+	// Add source imports in order: shared, client, tests, server
 	if (sharedImports.length > 0) {
 		groups.push(sharedImports.map((i) => i.raw).join('\n'));
 	}
 
 	if (clientImports.length > 0) {
 		groups.push(clientImports.map((i) => i.raw).join('\n'));
+	}
+
+	if (testsImports.length > 0) {
+		groups.push(testsImports.map((i) => i.raw).join('\n'));
 	}
 
 	if (serverImports.length > 0) {
