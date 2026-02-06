@@ -10,7 +10,7 @@ import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../gui/toast.js';
 import guiplay from '../gui/guiplay.js';
@@ -245,8 +245,8 @@ function updateInviteList(list: Invite[]): void {
 		newInvite.appendChild(cloc);
 
 		// prettier-ignore
-		const uColor: string = ours ? invite.color === players.WHITE ? translations['invites']['you_are_white'] : invite.color === players.BLACK ? translations['invites']['you_are_black'] : translations['invites']['random']
-                            : invite.color === players.WHITE ? translations['invites']['you_are_black'] : invite.color === players.BLACK ? translations['invites']['you_are_white'] : translations['invites']['random'];
+		const uColor: string = ours ? invite.color === p.WHITE ? translations['invites']['you_are_white'] : invite.color === p.BLACK ? translations['invites']['you_are_black'] : translations['invites']['random']
+                            : invite.color === p.WHITE ? translations['invites']['you_are_black'] : invite.color === p.BLACK ? translations['invites']['you_are_white'] : translations['invites']['random'];
 		const color = createDiv(['invite-child'], uColor);
 		newInvite.appendChild(color);
 
