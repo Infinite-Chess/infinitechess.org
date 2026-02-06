@@ -49,6 +49,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant)
+		// @ts-ignore
 		longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 
 	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);

@@ -109,10 +109,7 @@ function onmessage(data: { action: string; value: any }): void {
 			updateActiveGameCount(data.value);
 			break;
 		default:
-			toast.show(
-				`${translations['invites']['unknown_action_received_1']} ${data.action} ${translations['invites']['unknown_action_received_2']}`,
-				{ error: true },
-			);
+			console.error(`Received message for invites with unknown action ${data.action}!`);
 			break;
 	}
 }
@@ -238,7 +235,7 @@ function updateInviteList(list: Invite[]): void {
 		).element;
 		displayelement_usernamecontainer.classList.add('invite-child');
 		newInvite.appendChild(displayelement_usernamecontainer);
-
+		// @ts-ignore
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
 		newInvite.appendChild(variant);
 

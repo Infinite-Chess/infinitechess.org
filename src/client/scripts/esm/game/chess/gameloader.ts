@@ -132,6 +132,7 @@ async function startLocalGame(options: {
 
 	const metadata = {
 		...options,
+		// @ts-ignore
 		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
 		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
 		Round: '-' as '-',

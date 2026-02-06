@@ -39,7 +39,7 @@ type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid
 type UsernameValidationResultTranslations =
 	| 'js-username_reserved'
 	| 'js-username_tooshort'
-	| 'ws-username_length'
+	| 'js-username_length'
 	| 'js-username_wrongenc';
 
 const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
@@ -54,7 +54,7 @@ emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invali
 const usernameErrorTranslations = new Map<number, UsernameValidationResultTranslations>();
 usernameErrorTranslations.set(UsernameValidationResult.UsernameIsReserved, 'js-username_reserved');
 usernameErrorTranslations.set(UsernameValidationResult.UsernameTooShort, 'js-username_tooshort');
-usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'ws-username_length'); // there is no translation for js-username_toolong
+usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'js-username_length'); // there is no translation for js-username_toolong
 usernameErrorTranslations.set(
 	UsernameValidationResult.OnlyLettersAndNumbers,
 	'js-username_wrongenc',

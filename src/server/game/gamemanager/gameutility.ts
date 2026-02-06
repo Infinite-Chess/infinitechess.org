@@ -393,8 +393,10 @@ function constructMetadataOfGame(
 	const white = playerdata[players.WHITE]!.identifier;
 	const black = playerdata[players.BLACK]!.identifier;
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
+	// @ts-ignore - variant is dynamic but always maps to a valid translation key
+	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
 	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${variant}`)} infinite chess game`,
+		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		Variant: variant,
@@ -821,10 +823,12 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - moverule is an array in TOML
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
+		// @ts-ignore - moverule is an array type, so we know these exist!
 		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
 	}
+	// @ts-ignore - condition is dynamic but always maps to a valid translation key
 	return getTranslation(`play.javascript.termination.${condition}`);
 }
 

@@ -1,4 +1,7 @@
 {
+  "86": {
+    "note": "Added js-username_reserved & js-username_length lines 156-157. Deleted ws-username_length line 635. Deleted ws-username_reserved line 639."
+  },
   "85": {
     "note": "Changed seen on line 132 from an array to a single string, deleting the 'ago' part.",
     "changes": ["member.seen"]

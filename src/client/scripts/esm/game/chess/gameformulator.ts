@@ -108,10 +108,8 @@ function ICNToGamefile(ICN: string): FullGame {
 
 function convertVariantFromSpokenLanguageToCode(Variant?: string): string | undefined {
 	// Iterate through all translations until we find one that matches this name
-	for (const translationCode in translations) {
-		if (translations[translationCode] === Variant) {
-			return translationCode;
-		}
+	for (const [code, value] of Object.entries(translations)) {
+		if (value === Variant) return code;
 	}
 	// Else the variant is probably already the code!
 	return Variant;
