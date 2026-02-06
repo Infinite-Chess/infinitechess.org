@@ -4,7 +4,6 @@
 
 import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
-
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 

@@ -6,13 +6,13 @@
 import validatorama from '../../util/validatorama.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
 
-// Only imported so their code will run! ------------------------------------------------
 import './spacing.js';
 import './settings.js';
 import './faviconselector.js';
 import './currpage-greyer.js';
 import './news-notification.js'; // Handles unread news badge
 import '../../util/tooltips.js'; // This should be imported on EVERY page!
+
 // --------------------------------------------------------------------------------------
 
 const loginLink = document.getElementById('login-link') as HTMLAnchorElement;

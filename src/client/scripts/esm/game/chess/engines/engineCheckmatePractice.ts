@@ -8,9 +8,19 @@
  * @author Andreas Tsevas
  */
 
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type {
+	Coords,
+	CoordsKey,
+	DoubleCoords,
+} from '../../../../../../shared/chess/util/coordutil.js';
+
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import icnconverter, {
+	_Move_Compact,
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
 import {
 	rawTypes as r,
@@ -19,19 +29,6 @@ import {
 	numTypes,
 } from '../../../../../../shared/chess/util/typeutil.js';
 
-/**
- * Typescript types are erased during compilation, so adding these
- * here doesn't actually mean adding dependancies.
- */
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type {
-	Coords,
-	CoordsKey,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
-import icnconverter, {
-	_Move_Compact,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
 // type gamefile = import("../../chess/logic/gamefile").default;
 // type Coords = import("../../chess/util/coordutil").Coords;

@@ -5,7 +5,6 @@
  */
 
 import type { Request, Response } from 'express';
-
 import type { ParsedCookies } from '../types.js';
 
 import jsutil from '../../shared/util/jsutil.js';

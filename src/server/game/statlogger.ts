@@ -2,12 +2,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
 import { fileURLToPath } from 'node:url';
 
 import timeutil from '../../shared/util/timeutil.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { readFile, writeFile } from '../utility/lockFile.js';
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

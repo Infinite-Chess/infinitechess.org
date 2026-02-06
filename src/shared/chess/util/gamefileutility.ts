@@ -13,9 +13,7 @@ import moveutil from './moveutil.js';
 import metadata from './metadata.js';
 import gamerules from '../variants/gamerules.js';
 import winconutil from './winconutil.js';
-
-// THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
-import wincondition from '../logic/wincondition.js';
+import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 
 // Methods -------------------------------------------------------------
 

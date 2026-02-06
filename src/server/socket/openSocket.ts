@@ -6,7 +6,6 @@
 
 import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http';
-
 import type { CustomWebSocket } from './socketUtility.js';
 
 import socketUtility from './socketUtility.js';

@@ -1,39 +1,34 @@
 // src/client/scripts/esm/webgl/ProgramManager.ts
 
-import { ShaderProgram } from './ShaderProgram';
-
-// Generic Shaders
 import vsSource_color from '../../../shaders/color/vertex.glsl';
 import fsSource_color from '../../../shaders/color/fragment.glsl';
-import vsSource_colorInstanced from '../../../shaders/color/instanced/vertex.glsl';
+import fsSource_water from '../../../shaders/water/fragment.glsl';
+import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
+import fsSource_glitch from '../../../shaders/glitch/fragment.glsl'; // Import the new glitch fragment shader
 import vsSource_texture from '../../../shaders/texture/vertex.glsl';
 import fsSource_texture from '../../../shaders/texture/fragment.glsl';
-import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
-import vsSource_colorTexture from '../../../shaders/color_texture/vertex.glsl';
-import fsSource_colorTexture from '../../../shaders/color_texture/fragment.glsl';
-// Specialized Shaders
+import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
+import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
+import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
+import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
+import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
+import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
+import fsSource_posterize from '../../../shaders/posterize/fragment.glsl';
 import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
 import fsSource_miniImages from '../../../shaders/mini_images/fragment.glsl';
 import vsSource_highlights from '../../../shaders/highlights/vertex.glsl';
-import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
+import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
 import vsSource_arrowImages from '../../../shaders/arrow_images/vertex.glsl';
 import fsSource_arrowImages from '../../../shaders/arrow_images/fragment.glsl';
-import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
-// Surface Level Effects
+import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
+import vsSource_colorTexture from '../../../shaders/color_texture/vertex.glsl';
+import fsSource_colorTexture from '../../../shaders/color_texture/fragment.glsl';
+import vsSource_colorInstanced from '../../../shaders/color/instanced/vertex.glsl';
 import vsSource_boardUberShader from '../../../shaders/board_uber_shader/vertex.glsl';
 import fsSource_boardUberShader from '../../../shaders/board_uber_shader/fragment.glsl';
-// Post Processing Shaders
-import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
-import fsSource_postPass from '../../../shaders/post_pass/fragment.glsl';
-import fsSource_colorGrade from '../../../shaders/color_grade/fragment.glsl';
-import fsSource_posterize from '../../../shaders/posterize/fragment.glsl';
-import fsSource_vignette from '../../../shaders/vignette/fragment.glsl';
-import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
-import fsSource_water from '../../../shaders/water/fragment.glsl';
-import fsSource_waterRipple from '../../../shaders/water_ripple/fragment.glsl';
-import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
+import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
 import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/fragment.glsl';
-import fsSource_glitch from '../../../shaders/glitch/fragment.glsl'; // Import the new glitch fragment shader
+import { ShaderProgram } from './ShaderProgram';
 
 // =============================== Type Definitions ===============================
 

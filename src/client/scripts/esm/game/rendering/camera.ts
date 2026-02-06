@@ -11,23 +11,23 @@
  * modelMatrix  is custom for each rendered object, translating it how desired.
  */
 
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
-import perspective from './perspective.js';
-import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import frametracker from './frametracker.js';
+import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import screenshake from './screenshake.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
+import frametracker from './frametracker.js';
 import { gl } from './webgl.js';
-
-import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
-import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;

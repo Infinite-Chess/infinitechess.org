@@ -6,7 +6,6 @@
  */
 
 import type { Request, Response } from 'express';
-
 import type { Role } from '../roles.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
