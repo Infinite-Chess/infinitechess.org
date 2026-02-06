@@ -49,10 +49,8 @@ const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
 
 /** Path to the shared directory */
 const SHARED_DIR = path.resolve(process.cwd(), 'src/shared');
-
 /** Path to the client directory */
 const CLIENT_DIR = path.resolve(process.cwd(), 'src/client');
-
 /** Path to the server directory */
 const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
 
