@@ -1,4 +1,4 @@
-// src/server/game/clockweb.ts
+// src/server/game/timecontrol.ts
 
 /**
  * Stores valid time controls for lobby invites.
