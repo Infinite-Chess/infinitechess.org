@@ -106,6 +106,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*": "prettier --write --ignore-unknown",
+    "**/*.{js,ts}": "tsx scripts/add-file-paths.ts"
   }
 }
