@@ -19,14 +19,14 @@ import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
+import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { animateMove } from '../../chess/graphicalchanges.js';
 import icnconverter, {
 	_Move_Compact,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { GameBus } from '../../GameBus.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Events ---------------------------------------------------------------------
 

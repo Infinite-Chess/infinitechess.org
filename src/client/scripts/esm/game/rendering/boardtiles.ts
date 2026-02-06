@@ -24,14 +24,14 @@ import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 import spritesheet from './spritesheet.js';
 import perspective from './perspective.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
+import webgl, { gl } from './webgl.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
-import webgl, { gl } from './webgl.js';
-import { GameBus } from '../GameBus.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 
 // Type Definitions ----------------------------------------------------------------

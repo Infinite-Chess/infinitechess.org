@@ -16,12 +16,12 @@ import type { ServerGame } from './gameutility.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 import gameutility from './gameutility.js';
-import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 import { getGameByID } from './gamemanager.js';
 import { getGameData } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { cancelDisconnectTimer } from './afkdisconnect.js';
+import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already

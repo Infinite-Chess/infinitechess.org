@@ -43,18 +43,18 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import guinavigation from '../gui/guinavigation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
-import promotionlines from '../rendering/promotionlines.js';
-import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
-import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
 import webgl, { gl } from '../rendering/webgl.js';
-import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
-import { GameBus } from '../GameBus.js';
+import promotionlines from '../rendering/promotionlines.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
+import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
+import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
+import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,

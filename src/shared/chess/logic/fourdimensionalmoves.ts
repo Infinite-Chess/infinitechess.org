@@ -22,10 +22,10 @@ import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
+import { players } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
-import { players } from '../util/typeutil.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 

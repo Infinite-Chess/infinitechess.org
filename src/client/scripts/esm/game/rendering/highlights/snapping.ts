@@ -28,6 +28,7 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import miniimage from '../miniimage.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import { Mouse } from '../../input.js';
 import Transition from '../transitions/Transition.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
@@ -35,9 +36,8 @@ import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
-import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.js';
-import { Mouse } from '../../input.js';
+import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------

@@ -11,8 +11,8 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/ut
 import space from '../game/misc/space.js';
 import camera from '../game/rendering/camera.js';
 import perspective from '../game/rendering/perspective.js';
-import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
 import { listener_document, listener_overlay } from '../game/chess/game.js';
+import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
 
 /**
  * This is capable of getting the mouse position, EVEN IF

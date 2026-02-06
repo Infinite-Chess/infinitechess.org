@@ -7,8 +7,8 @@ import { v4 as uuid } from 'uuid';
 import { fileURLToPath } from 'node:url';
 import { promises as fsPromises } from 'fs';
 
-import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
 import { getClientIP } from '../utility/IP.js';
+import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

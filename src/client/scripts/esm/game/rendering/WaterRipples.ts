@@ -16,8 +16,8 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords';
 import gameloader from '../chess/gameloader';
 import perspective from './perspective';
 import frametracker from './frametracker';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
 import { players as p } from '../../../../../shared/chess/util/typeutil';
+import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
 
 // Constants --------------------------------------------------------------------------------

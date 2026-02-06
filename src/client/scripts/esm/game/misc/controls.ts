@@ -33,8 +33,8 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadbalancer from './loadbalancer.js';
 import guipromotion from '../gui/guipromotion.js';
 import guinavigation from '../gui/guinavigation.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_document } from '../chess/game.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 // Constants -------------------------------------------------------------------
 

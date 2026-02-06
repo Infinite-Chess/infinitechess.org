@@ -1,8 +1,8 @@
 // src/server/routes/root.ts
 
 import path from 'path';
-import express, { Request, Response } from 'express';
 import { fileURLToPath } from 'node:url';
+import express, { Request, Response } from 'express';
 
 import { getLanguageToServe } from '../utility/translate.js';
 

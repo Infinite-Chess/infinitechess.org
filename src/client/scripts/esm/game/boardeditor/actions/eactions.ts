@@ -39,10 +39,10 @@ import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil'
 import boardeditor, { Edit } from '../boardeditor';
 import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
+import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces';
-import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 import gamefile, {
 	Additional,
 	Board,

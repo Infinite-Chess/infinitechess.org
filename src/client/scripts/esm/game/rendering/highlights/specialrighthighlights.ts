@@ -16,11 +16,11 @@ import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import piecemodels from '../piecemodels.js';
+import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../instancedshapes.js';
 import squarerendering from './squarerendering.js';
-import { GameBus } from '../../GameBus.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables -------------------------------------------------------------------------------------

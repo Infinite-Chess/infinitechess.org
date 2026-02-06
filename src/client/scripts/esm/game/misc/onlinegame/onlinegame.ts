@@ -2,7 +2,7 @@
 
 /**
  * This module keeps trap of the data of the onlinegame we are currently in.
- * */
+ */
 
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
@@ -18,10 +18,10 @@ import IndexedDB from '../../../util/IndexedDB.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
+import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
 import serverrestart from './serverrestart.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import { GameBus } from '../../GameBus.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
