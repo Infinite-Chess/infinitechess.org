@@ -8,6 +8,7 @@ import typeutil, {
 	rawTypes,
 	RawType,
 	PlayerGroup,
+	players as p,
 } from '../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
@@ -80,12 +81,17 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 4. Not too many pieces in total.
+	// 4. Not too many pieces in total, excluding neutral pieces (voids/obstacles).
 	const maxPieces = 200;
-	if (variantOptions.position.size > maxPieces) {
+	let nonNeutralCount = 0;
+	for (const type of variantOptions.position.values()) {
+		const color = typeutil.getColorFromType(type);
+		if (color !== p.NEUTRAL) nonNeutralCount++;
+	}
+	if (nonNeutralCount > maxPieces) {
 		return {
 			supported: false,
-			reason: `Too many pieces: ${variantOptions.position.size} (max ${maxPieces}).`,
+			reason: `Too many pieces: ${nonNeutralCount} (max ${maxPieces}).`,
 		};
 	}
 
