@@ -275,10 +275,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	}
 
 	// Does the engine support the position and settings?
-	const supported_result = hydrochess_card.isPositionSupported(
-		variantOptions,
-		gameslot.getGamefile()!.boardsim.pieces,
-	);
+	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
 		toast.show(`Position is not supported for reason: ${supported_result.reason}`, {
 			error: true,
