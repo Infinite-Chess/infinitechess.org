@@ -5,7 +5,7 @@
  * message, and if so, sends them the game info
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import gameutility from './gameutility.js';
 import { getGameBySocket } from './gamemanager.js';

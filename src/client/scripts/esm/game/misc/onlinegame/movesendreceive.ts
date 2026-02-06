@@ -25,7 +25,7 @@ import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../gamebus.js';
 import movesequence from '../../chess/movesequence.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
 

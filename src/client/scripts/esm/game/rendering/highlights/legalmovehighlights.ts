@@ -22,7 +22,7 @@ import boardpos from '../boardpos.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../gamebus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../instancedshapes.js';

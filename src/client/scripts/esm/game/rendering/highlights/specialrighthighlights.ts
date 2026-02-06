@@ -17,7 +17,7 @@ import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
 import piecemodels from '../piecemodels.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../gamebus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../instancedshapes.js';

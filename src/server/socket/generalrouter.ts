@@ -4,7 +4,7 @@
  * This script handles the incoming general websocket message route.
  */
 
-import type { CustomWebSocket } from './socketUtility.js';
+import type { CustomWebSocket } from './socketutility.js';
 
 import * as z from 'zod';
 

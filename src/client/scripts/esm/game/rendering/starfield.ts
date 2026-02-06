@@ -19,7 +19,7 @@ import boardtiles from './boardtiles.js';
 import gameloader from '../chess/gameloader.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import loadbalancer from '../misc/loadbalancer.js';
 import frametracker from './frametracker.js';
 import {

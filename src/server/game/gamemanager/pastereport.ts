@@ -5,10 +5,10 @@
  */
 
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import gameutility from './gameutility.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logevents.js';
 
 /**
  * Called when a player submits a websocket message informing us they

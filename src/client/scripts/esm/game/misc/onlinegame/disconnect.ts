@@ -13,7 +13,7 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
-import pingManager from '../../../util/pingManager.js';
+import pingManager from '../../../util/pingmanager.js';
 
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
 let timeOpponentLoseFromDisconnect: number | undefined;

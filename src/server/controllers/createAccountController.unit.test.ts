@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from 'vitest';
 
-import { profanityMatcher } from './createAccountController'; // Import the identical one used in the controller
+import { profanityMatcher } from './createaccountcontroller'; // Import the identical one used in the controller
 
 /**
  * Helper function to check profanity (same logic as in createAccountController)

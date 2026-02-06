@@ -5,7 +5,7 @@
  */
 
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 

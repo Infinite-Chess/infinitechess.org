@@ -16,42 +16,42 @@ import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
-import errorHandler from './errorHandler.js';
-import { reqLogger } from './logEvents.js';
-import { verifyJWT } from './verifyJWT.js';
-import { rateLimit } from './rateLimit.js';
-import EditorSavesAPI from '../api/EditorSavesAPI.js';
-import secureRedirect from './secureRedirect.js';
+import errorHandler from './errorhandler.js';
+import { reqLogger } from './logevents.js';
+import { verifyJWT } from './verifyjwt.js';
+import { rateLimit } from './ratelimit.js';
+import EditorSavesAPI from '../api/editorsavesapi.js';
+import secureRedirect from './secureredirect.js';
 import { rootRouter } from '../routes/root.js';
-import { handleLogin } from '../controllers/loginController.js';
-import { handleLogout } from '../controllers/logoutController.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
-import { getMemberData } from '../api/MemberAPI.js';
-import { removeAccount } from '../controllers/deleteAccountController.js';
-import { processCommand } from '../api/AdminPanel.js';
-import { getContributors } from '../api/GitHub.js';
-import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
-import { getLeaderboardData } from '../api/LeaderboardAPI.js';
-import { requestConfirmEmail } from '../controllers/sendMail.js';
-import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
-import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
-import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
-import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+import { handleLogin } from '../controllers/logincontroller.js';
+import { handleLogout } from '../controllers/logoutcontroller.js';
+import { verifyAccount } from '../controllers/verifyaccountcontroller.js';
+import { getMemberData } from '../api/memberapi.js';
+import { removeAccount } from '../controllers/deleteaccountcontroller.js';
+import { processCommand } from '../api/adminpanel.js';
+import { getContributors } from '../api/github.js';
+import { handleSesWebhook } from '../controllers/awswebhook.js';
+import { accessTokenIssuer } from '../controllers/authenticationTokens/accesstokenissuer.js';
+import { getLeaderboardData } from '../api/leaderboardapi.js';
+import { requestConfirmEmail } from '../controllers/sendmail.js';
+import { assignOrRenewBrowserID } from '../controllers/browseridmanager.js';
+import { postPrefs, setPrefsCookie } from '../api/prefs.js';
+import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/practiceprogress.js';
+import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/newsapi.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
-} from '../controllers/passwordResetController.js';
+} from '../controllers/passwordresetcontroller.js';
 import {
 	checkEmailValidity,
 	checkUsernameAvailable,
 	createNewMember,
-} from '../controllers/createAccountController.js';
+} from '../controllers/createaccountcontroller.js';
 import {
 	createAccountLimiter,
 	resendAccountVerificationLimiter,
 	forgotPasswordLimiter,
-} from './rateLimiters.js';
+} from './ratelimiters.js';
 
 // Constants -------------------------------------------------------------------------
 

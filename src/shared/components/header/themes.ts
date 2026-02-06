@@ -3,7 +3,7 @@
 // This module stores our themes. Straight forward :P
 
 import type { Color } from '../../util/math/math.js';
-import type { PieceColorGroup } from './pieceThemes.js';
+import type { PieceColorGroup } from './piecethemes.js';
 
 import jsutil from '../../util/jsutil.js';
 

@@ -21,7 +21,7 @@ import drawoffers from '../misc/onlinegame/drawoffers.js';
 import gameloader from '../chess/gameloader.js';
 import perspective from '../rendering/perspective.js';
 import guipractice from './guipractice.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from '../rendering/frametracker.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import checkmatepractice from '../chess/checkmatepractice.js';

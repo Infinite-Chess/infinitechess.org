@@ -5,18 +5,18 @@
  * with the "game" route to where they need to go.
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import * as z from 'zod';
 
 import { onPaste } from './pastereport.js';
 import { onJoinGame } from './joingame.js';
 import { resyncToGame } from './resync.js';
-import { onAFK, onAFK_Return } from './onAFK.js';
+import { onAFK, onAFK_Return } from './onafk.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
-import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
+import { offerDraw, acceptDraw, declineDraw } from './onofferdraw.js';
 import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 
 const GameSchema = z.discriminatedUnion('action', [

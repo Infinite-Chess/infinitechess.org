@@ -8,11 +8,11 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
-import socketUtility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketutility.js';
 import { memberInfoEq } from './inviteutility.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendSocketMessage } from '../../socket/sendsocketmessage.js';
 
 /**
  * List of clients currently subscribed to invites list events, with their

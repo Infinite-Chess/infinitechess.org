@@ -17,7 +17,7 @@ import math from '../../../../../shared/util/math/math.js';
 
 import screenshake from '../rendering/screenshake.js';
 import WaterRipples from '../rendering/WaterRipples.js';
-import AudioManager, { SoundObject } from '../../audio/AudioManager.js';
+import AudioManager, { SoundObject } from '../../audio/audiomanager.js';
 
 // Constants --------------------------------------------------------------------------
 

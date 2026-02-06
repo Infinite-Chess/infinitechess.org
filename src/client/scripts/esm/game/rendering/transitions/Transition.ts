@@ -30,7 +30,7 @@ import boardpos from '../boardpos.js';
 import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../gamebus.js';
 import area, { Area } from '../area.js';
 
 // Type Definitions ----------------------------------------------------------------------

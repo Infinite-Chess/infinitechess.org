@@ -12,7 +12,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logevents.js';
 
 //--------------------------------------------------------------------------------------------------------
 

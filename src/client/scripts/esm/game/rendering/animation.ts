@@ -25,7 +25,7 @@ import boardpos from './boardpos.js';
 import gamesound from '../misc/gamesound.js';
 import piecemodels from './piecemodels.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import WaterRipples from './WaterRipples.js';

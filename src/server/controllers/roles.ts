@@ -5,8 +5,8 @@
  * and removal of roles from members.
  */
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
+import { logEventsAndPrint } from '../middleware/logevents.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/membermanager.js';
 
 /**
  * All possible roles, IN ORDER FROM LEAST TO MOST IMPORTANCE!

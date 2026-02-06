@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 import timeutil from '../../shared/util/timeutil.js';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { readFile, writeFile } from '../utility/lockFile.js';
+import { logEventsAndPrint } from '../middleware/logevents.js';
+import { readFile, writeFile } from '../utility/lockfile.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 

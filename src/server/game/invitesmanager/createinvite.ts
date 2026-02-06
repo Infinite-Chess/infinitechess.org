@@ -6,9 +6,9 @@
  * Here we also read allowinvites.js to see if we are currently allowing new invites or not.
  */
 
-import type { Rating } from '../../database/leaderboardsManager.js';
+import type { Rating } from '../../database/leaderboardsmanager.js';
 import type { Invite } from './inviteutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
@@ -23,12 +23,12 @@ import {
 
 import timecontrol from '../timecontrol.js';
 import { getTranslation } from '../../utility/translate.js';
-import { isServerRestarting } from '../updateServerRestart.js';
+import { isServerRestarting } from '../updateserverrestart.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsmanager.js';
+import { getMinutesUntilServerRestart } from '../timeserverrestarts.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendsocketmessage.js';
 import {
 	existingInviteHasID,
 	userHasInvite,

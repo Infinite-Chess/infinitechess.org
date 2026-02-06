@@ -41,7 +41,7 @@ import normaltool from '../boardeditor/tools/normaltool.js';
 import preferences from '../../components/header/preferences.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import movesequence from './movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';

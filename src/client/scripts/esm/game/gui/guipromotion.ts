@@ -13,7 +13,7 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import { Mouse } from '../input.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import { listener_overlay } from '../chess/game.js';
 
 // Variables --------------------------------------------------------------------

@@ -11,28 +11,28 @@
  */
 
 import type { ServerGame } from './gameutility.js';
-import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
+import type { RefreshTokenRecord } from '../../database/refreshtokenmanager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 
 import gameutility from './gameutility.js';
-import { getMultipleGameData } from '../../database/gamesManager.js';
-import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
-import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
+import { getMultipleGameData } from '../../database/gamesmanager.js';
+import { sendRatingAbuseEmail } from '../../controllers/sendmail.js';
+import { findRefreshTokensForUsers } from '../../database/refreshtokenmanager.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logevents.js';
+import { getMultipleMemberDataByCriteria } from '../../database/membermanager.js';
 import {
 	getRecentNRatedGamesForUser,
 	getOpponentsOfUserFromGames,
-} from '../../database/playerGamesManager.js';
+} from '../../database/playergamesmanager.js';
 import {
 	addEntryToRatingAbuseTable,
 	isEntryInRatingAbuseTable,
 	getRatingAbuseData,
 	updateRatingAbuseColumns,
-} from '../../database/ratingAbuseManager.js';
+} from '../../database/ratingabusemanager.js';
 
 /**
  * Potential red flags (already implemented checks are marked with an X at the start of the line):

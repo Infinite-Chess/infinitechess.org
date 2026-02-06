@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { readFile } from '../utility/lockFile.js';
+import { readFile } from '../utility/lockfile.js';
 
 const bannedPath = path.resolve('database/banned.json');
 

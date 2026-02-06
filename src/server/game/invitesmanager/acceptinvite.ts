@@ -6,19 +6,19 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import * as z from 'zod';
 
 import gameutility from '../gamemanager/gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketutility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendsocketmessage.js';
 import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import {
 	getInviteAndIndexByID,

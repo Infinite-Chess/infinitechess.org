@@ -4,11 +4,11 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
-import { testRequest } from '../../tests/testRequest.js';
-import integrationUtils from '../../tests/integrationUtils.js';
+import { testRequest } from '../../tests/testrequest.js';
+import integrationUtils from '../../tests/integrationutils.js';
 
-import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import { getMemberDataByCriteria } from '../database/membermanager.js';
+import { generateTables, clearAllTables } from '../database/databasetables.js';
 
 // We'll use the first easy checkmate as our valid test case
 const VALID_CHECKMATE_ID = validcheckmates.validCheckmates.easy[0];

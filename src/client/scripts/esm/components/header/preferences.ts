@@ -8,7 +8,7 @@ import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import pieceThemes, {
 	PieceColorGroup,
-} from '../../../../../shared/components/header/pieceThemes.js';
+} from '../../../../../shared/components/header/piecethemes.js';
 
 import docutil from '../../util/docutil.js';
 import LocalStorage from '../../util/LocalStorage.js';

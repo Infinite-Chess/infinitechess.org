@@ -24,7 +24,7 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from '../rendering/frametracker.js';
 import guinavigation from '../gui/guinavigation.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';

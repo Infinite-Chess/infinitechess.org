@@ -20,7 +20,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
-import pingManager from '../../../util/pingManager.js';
+import pingManager from '../../../util/pingmanager.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */

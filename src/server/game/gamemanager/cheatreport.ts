@@ -6,7 +6,7 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import * as z from 'zod';
 
@@ -14,7 +14,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logevents.js';
 
 /** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({

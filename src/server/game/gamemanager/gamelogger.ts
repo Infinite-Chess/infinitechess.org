@@ -19,7 +19,7 @@ import { PlayerGroup, players, type Player } from '../../../shared/chess/util/ty
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logevents.js';
 import {
 	computeRatingDataChanges,
 	DEFAULT_LEADERBOARD_ELO,
@@ -30,7 +30,7 @@ import {
 	getPlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	updatePlayerLeaderboardRating_core,
-} from '../../database/leaderboardsManager.js';
+} from '../../database/leaderboardsmanager.js';
 
 // Functions -------------------------------------------------------------------------------
 

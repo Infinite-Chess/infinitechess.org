@@ -44,7 +44,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import guinavigation from '../gui/guinavigation.js';

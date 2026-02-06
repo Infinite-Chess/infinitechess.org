@@ -2,7 +2,7 @@
 
 import type { Game } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
-import type { SoundObject } from '../../audio/AudioManager.js';
+import type { SoundObject } from '../../audio/audiomanager.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -12,7 +12,7 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import gamesound from '../misc/gamesound.js';
 import gameloader from '../chess/gameloader.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
 	[players.WHITE]: {

@@ -8,7 +8,7 @@
  */
 
 import AudioUtils from './AudioUtils';
-import AudioManager from './AudioManager';
+import AudioManager from './audiomanager';
 import { LayerConfig, SoundLayer } from './SoundLayer';
 
 // Type Definitions ------------------------------------------------------------------

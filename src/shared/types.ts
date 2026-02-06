@@ -4,7 +4,7 @@
  * Miscellaneous shared type definitions between server and client.
  */
 
-import type { Rating } from '../server/database/leaderboardsManager';
+import type { Rating } from '../server/database/leaderboardsmanager';
 
 /** The username container of an invite sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 interface ServerUsernameContainer {

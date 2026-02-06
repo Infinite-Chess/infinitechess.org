@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import AudioManager from '../../../../audio/AudioManager';
+import AudioManager from '../../../../audio/audiomanager';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';

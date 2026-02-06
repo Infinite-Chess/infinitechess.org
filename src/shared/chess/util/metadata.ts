@@ -7,7 +7,7 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Rating } from '../../../server/database/leaderboardsManager.js';
+import type { Rating } from '../../../server/database/leaderboardsmanager.js';
 import type { Player } from './typeutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
 

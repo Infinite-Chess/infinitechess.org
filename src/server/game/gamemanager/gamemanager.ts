@@ -5,10 +5,10 @@
  */
 
 import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
+import type { Rating } from '../../database/leaderboardsmanager.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
 import WebSocket from 'ws';
@@ -22,13 +22,13 @@ import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
-import socketUtility from '../../socket/socketUtility.js';
+import socketUtility from '../../socket/socketutility.js';
 import { closeDrawOffer } from './drawoffers.js';
-import { genUniqueGameID } from '../../database/gamesManager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { executeSafely_async } from '../../utility/errorGuard.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { genUniqueGameID } from '../../database/gamesmanager.js';
+import { sendSocketMessage } from '../../socket/sendsocketmessage.js';
+import { executeSafely_async } from '../../utility/errorguard.js';
+import { getTimeServerRestarting } from '../timeserverrestarts.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsmanager.js';
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,

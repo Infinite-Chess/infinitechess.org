@@ -1,7 +1,7 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
+import type { Rating } from '../../../../../../server/database/leaderboardsmanager.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';

@@ -1,7 +1,7 @@
 // src/server/server.ts
 
-import { initDatabase } from './database/databaseTables.js';
-import { initDevEnvironment } from './config/setupDev.js';
+import { initDatabase } from './database/databasetables.js';
+import { initDevEnvironment } from './config/setupdev.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -14,9 +14,9 @@ import https from 'https';
 // Other imports
 import app from './app.js';
 import db from './database/database.js';
-import socketServer from './socket/socketServer.js';
+import socketServer from './socket/socketserver.js';
 import { logAllGames } from './game/gamemanager/gamemanager.js';
-import { getCertOptions } from './config/certOptions.js';
+import { getCertOptions } from './config/certoptions.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 

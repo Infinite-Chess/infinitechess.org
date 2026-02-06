@@ -32,7 +32,7 @@ import primitives from '../primitives.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
-import { GameBus } from '../../GameBus.js';
+import { GameBus } from '../../gamebus.js';
 import frametracker from '../frametracker.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 import { listener_overlay } from '../../chess/game.js';

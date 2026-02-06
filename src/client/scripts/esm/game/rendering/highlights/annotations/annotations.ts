@@ -22,7 +22,7 @@ import drawarrows from './drawarrows.js';
 import gameloader from '../../../chess/gameloader.js';
 import drawsquares from './drawsquares.js';
 import preferences from '../../../../components/header/preferences.js';
-import { GameBus } from '../../../GameBus.js';
+import { GameBus } from '../../../gamebus.js';
 
 // Type Definitions ------------------------------------------------------------
 

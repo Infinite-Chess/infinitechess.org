@@ -34,7 +34,7 @@ import animation from './animation.js';
 import selection from '../chess/selection.js';
 import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';

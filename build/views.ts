@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import editorutil from '../src/shared/editor/editorutil.js';
 
-import translationLoader from '../src/server/config/translationLoader.js';
+import translationLoader from '../src/server/config/translationloader.js';
 import { DEFAULT_LANGUAGE } from '../src/server/utility/translate.js';
 import { UNCERTAIN_LEADERBOARD_RD } from '../src/server/game/gamemanager/ratingcalculation.js';
 

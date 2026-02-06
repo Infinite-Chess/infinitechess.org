@@ -45,7 +45,7 @@ import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';

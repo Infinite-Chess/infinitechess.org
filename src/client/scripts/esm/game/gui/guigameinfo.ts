@@ -5,7 +5,7 @@
  * displaying the clocks, and whos turn it currently is.
  */
 
-import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
+import type { Rating } from '../../../../../server/database/leaderboardsmanager.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';

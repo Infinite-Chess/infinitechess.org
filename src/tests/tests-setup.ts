@@ -21,7 +21,7 @@ console.warn = vi.fn();
 
 // Mock Logger to prevent file writes
 // This tells Vitest whenever any file imports logEvents.js, give them these empty functions instead.
-vi.mock('../server/middleware/logEvents.js', () => ({
+vi.mock('../server/middleware/logevents.js', () => ({
 	logEvents: vi.fn(), // Do nothing
 	logEventsAndPrint: vi.fn(), // Do nothing
 	reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware

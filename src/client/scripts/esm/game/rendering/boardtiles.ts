@@ -26,7 +26,7 @@ import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
 import spritesheet from './spritesheet.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from './frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import texturecache from '../../chess/rendering/texturecache.js';

@@ -18,11 +18,11 @@ import jsutil from '../../../shared/util/jsutil.js';
 
 import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
-import { getGameData } from '../../database/gamesManager.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getGameData } from '../../database/gamesmanager.js';
+import { logEventsAndPrint } from '../../middleware/logevents.js';
+import { sendSocketMessage } from '../../socket/sendsocketmessage.js';
 import { cancelDisconnectTimer } from './afkdisconnect.js';
-import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
+import socketUtility, { CustomWebSocket } from '../../socket/socketutility.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already

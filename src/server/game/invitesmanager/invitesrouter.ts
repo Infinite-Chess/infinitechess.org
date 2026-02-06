@@ -5,7 +5,7 @@
  * with the "invites" route to where they need to go.
  */
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 
 import * as z from 'zod';
 

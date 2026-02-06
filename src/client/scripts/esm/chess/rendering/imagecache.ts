@@ -16,7 +16,7 @@ import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
 import svgcache from '../../chess/rendering/svgcache.js';
-import { GameBus } from '../../game/GameBus.js';
+import { GameBus } from '../../game/gamebus.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
 // Variables ---------------------------------------------------------------------------

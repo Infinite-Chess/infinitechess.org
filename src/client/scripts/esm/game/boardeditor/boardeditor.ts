@@ -33,7 +33,7 @@ import egamerules from './egamerules.js';
 import gameloader from '../chess/gameloader.js';
 import drawingtool from './tools/drawingtool.js';
 import perspective from '../rendering/perspective.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import movesequence from '../chess/movesequence.js';
 import guinavigation from '../gui/guinavigation.js';
 import selectiontool from './tools/selection/selectiontool.js';

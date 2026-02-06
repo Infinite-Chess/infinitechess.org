@@ -24,7 +24,7 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import Transition from '../rendering/transitions/Transition.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';

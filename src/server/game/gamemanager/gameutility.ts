@@ -8,13 +8,13 @@
  */
 
 import type { Game } from '../../../shared/chess/logic/gamefile.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
+import type { Rating } from '../../database/leaderboardsmanager.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { CustomWebSocket } from '../../socket/socketutility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 
@@ -31,12 +31,12 @@ import {
 } from '../../../shared/chess/variants/validleaderboard.js';
 
 import { getTranslation } from '../../utility/translate.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { logEventsAndPrint } from '../../middleware/logevents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { getTimeServerRestarting } from '../timeserverrestarts.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsmanager.js';
+import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendsocketmessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 
 // Type Definitions -----------------------------------------------------------------------------

@@ -17,7 +17,7 @@ import snapping from '../rendering/highlights/snapping.js';
 import selection from '../chess/selection.js';
 import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import { GameBus } from '../GameBus.js';
+import { GameBus } from '../gamebus.js';
 import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
