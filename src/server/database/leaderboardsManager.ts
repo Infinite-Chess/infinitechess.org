@@ -5,7 +5,6 @@
  */
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import db from './database.js';

@@ -37,12 +37,12 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import perspective from '../rendering/perspective.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 // Variables --------------------------------------------------------------------
 

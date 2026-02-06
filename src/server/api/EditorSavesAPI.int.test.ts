@@ -11,9 +11,9 @@ import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import editorutil from '../../shared/editor/editorutil.js';
 import EditorSavesAPI from './EditorSavesAPI.js';
+import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 import editorSavesManager from '../database/editorSavesManager.js';
-import { testRequest } from '../../tests/testRequest.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 describe('EditorSavesAPI Integration', () => {

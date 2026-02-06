@@ -22,10 +22,10 @@ import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gameloader from '../../chess/gameloader.js';
 import preferences from '../../../components/header/preferences.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
+import { GameBus } from '../../GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import arrows, { ArrowPiece } from './arrows.js';
-import { GameBus } from '../../GameBus.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------
 

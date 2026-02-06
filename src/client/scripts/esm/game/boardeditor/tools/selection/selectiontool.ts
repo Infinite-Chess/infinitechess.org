@@ -21,11 +21,11 @@ import meshes from '../../../rendering/meshes';
 import bimath from '../../../../../../../shared/util/math/bimath';
 import gameslot from '../../../chess/gameslot';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import { Mouse } from '../../../input';
 import boardeditor from '../../boardeditor';
 import stoolgraphics from './stoolgraphics';
 import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';
-import { Mouse } from '../../../input';
 import { listener_document, listener_overlay } from '../../../chess/game';
 
 // State ----------------------------------------------

@@ -16,19 +16,19 @@ import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';
 import boardpos from '../../boardpos.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import annotations from './annotations.js';
 import legalmovemodel from '../legalmovemodel.js';
-import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
 import highlightline, { Line } from '../highlightline.js';
+import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
-import { Mouse } from '../../../input.js';
 
 // Variables -----------------------------------------------------------------
 

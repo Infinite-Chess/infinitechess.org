@@ -14,16 +14,16 @@ import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import pastegame from '../chess/pastegame.js';
 import boarddrag from '../rendering/boarddrag.js';
+import { Mouse } from '../input.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import gameloader from '../chess/gameloader.js';
 import perspective from '../rendering/perspective.js';
 import guipractice from './guipractice.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
-import { Mouse } from '../input.js';
-import { GameBus } from '../GameBus.js';
 import { listener_document } from '../chess/game.js';
 
 // Elements ------------------------------------------------------------------------------

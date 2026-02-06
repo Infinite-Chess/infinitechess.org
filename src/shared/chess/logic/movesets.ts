@@ -14,8 +14,8 @@ import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
-import specialdetect from './specialdetect.js';
 import { rawTypes } from '../util/typeutil.js';
+import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/isprime.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */

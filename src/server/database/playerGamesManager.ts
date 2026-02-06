@@ -5,7 +5,6 @@
  */
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-
 import type { Player } from '../../shared/chess/util/typeutil.js';
 
 import db from './database.js';

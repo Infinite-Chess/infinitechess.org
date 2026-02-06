@@ -23,13 +23,13 @@ import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import gameformulator from './gameformulator.js';
+import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
+import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 
 /**
  * A list of metadata properties that are retained from the current game when pasting an external game.

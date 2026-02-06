@@ -24,13 +24,13 @@ import boardpos from '../boardpos.js';
 import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
+import { GameBus } from '../../GameBus.js';
 import area, { Area } from '../area.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import { GameBus } from '../../GameBus.js';
 
 // Type Definitions ----------------------------------------------------------------------
 

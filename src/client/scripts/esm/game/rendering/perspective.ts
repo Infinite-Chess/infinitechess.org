@@ -16,10 +16,10 @@ import docutil from '../../util/docutil.js';
 import guipause from '../gui/guipause.js';
 import gameslot from '../chess/gameslot.js';
 import selection from '../chess/selection.js';
+import { Mouse } from '../input.js';
 import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
 import camera, { Mat4 } from './camera.js';
-import { Mouse } from '../input.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 

@@ -16,11 +16,11 @@ import drawrays from './drawrays.js';
 import keybinds from '../../../misc/keybinds.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import { Mouse } from '../../../input.js';
 import drawarrows from './drawarrows.js';
 import gameloader from '../../../chess/gameloader.js';
 import drawsquares from './drawsquares.js';
 import preferences from '../../../../components/header/preferences.js';
-import { Mouse } from '../../../input.js';
 import { GameBus } from '../../../GameBus.js';
 
 // Type Definitions ------------------------------------------------------------

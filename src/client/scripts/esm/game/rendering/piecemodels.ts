@@ -11,6 +11,7 @@ import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
+import { gl } from './webgl.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import boardpos from './boardpos.js';
@@ -22,9 +23,8 @@ import miniimage from './miniimage.js';
 import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import instancedshapes from './instancedshapes.js';
-import { gl } from './webgl.js';
 import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
+import instancedshapes from './instancedshapes.js';
 import {
 	AttributeInfoInstanced,
 	RenderableInstanced,

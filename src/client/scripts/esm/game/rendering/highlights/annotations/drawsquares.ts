@@ -20,9 +20,9 @@ import gameslot from '../../../chess/gameslot.js';
 import guipause from '../../../gui/guipause.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import squarerendering from '../squarerendering.js';
-import { Mouse } from '../../../input.js';
 
 // Variables -----------------------------------------------------------------
 
