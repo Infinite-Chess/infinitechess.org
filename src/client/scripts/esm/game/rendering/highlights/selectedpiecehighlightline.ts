@@ -10,18 +10,19 @@ import type { Line } from './highlightline.js';
 
 import bd from '@naviary/bigdecimal';
 
-import boardpos from '../boardpos.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import selection from '../../chess/selection.js';
-import preferences from '../../../components/header/preferences.js';
-import highlightline from './highlightline.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	CoordsKey,
 } from '../../../../../../shared/chess/util/coordutil.js';
+
+import boardpos from '../boardpos.js';
+import selection from '../../chess/selection.js';
+import preferences from '../../../components/header/preferences.js';
+import highlightline from './highlightline.js';
 
 /**
  * Calculates all the lines formed from the highlight

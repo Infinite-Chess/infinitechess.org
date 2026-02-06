@@ -15,26 +15,29 @@ import type { Additional, FullGame } from '../../../../../shared/chess/logic/gam
 
 import bd from '@naviary/bigdecimal';
 
-import area from '../rendering/area.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+
+import area from '../rendering/area.js';
 import board from '../rendering/boardtiles.js';
 import arrows from '../rendering/arrows/arrows.js';
 import meshes from '../rendering/meshes.js';
 import { gl } from '../rendering/webgl.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import copygame from './copygame.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import miniimage from '../rendering/miniimage.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import pastegame from './pastegame.js';
 import gamesound from '../misc/gamesound.js';
 import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gameloader from './gameloader.js';
 import spritesheet from '../rendering/spritesheet.js';
@@ -42,13 +45,11 @@ import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import perspective from '../rendering/perspective.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { GameBus } from '../GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import guinavigation from '../gui/guinavigation.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { animateMove } from './graphicalchanges.js';
 
 // Type Definitions ----------------------------------------------------------

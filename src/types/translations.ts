@@ -107,10 +107,10 @@ export type TranslationKeys =
 	| 'create-account.password'
 	| 'create-account.create_button'
 	| 'create-account.agreement'
+	| 'create-account.javascript.js-username_reserved'
 	| 'create-account.javascript.js-username_length'
 	| 'create-account.javascript.js-username_tooshort'
 	| 'create-account.javascript.js-username_wrongenc'
-	| 'create-account.javascript.js-username_reserved'
 	| 'create-account.javascript.js-email_invalid'
 	| 'create-account.javascript.js-email_too_long'
 	| 'create-account.javascript.js-email_inuse'
@@ -639,10 +639,10 @@ export interface TranslationsObject {
 		create_button: string;
 		agreement: string[];
 		javascript: {
+			'js-username_reserved': string;
 			'js-username_length': string;
 			'js-username_tooshort': string;
 			'js-username_wrongenc': string;
-			'js-username_reserved': string;
 			'js-email_invalid': string;
 			'js-email_too_long': string;
 			'js-email_inuse': string;

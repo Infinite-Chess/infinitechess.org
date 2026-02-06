@@ -25,10 +25,13 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../server/game/gamemanager/gameutility.js';
 
-import gui from '../gui/gui.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import gameslot from './gameslot.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+
+import gui from '../gui/gui.js';
+import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import IndexedDB from '../../util/IndexedDB.js';
@@ -37,11 +40,9 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import perspective from '../rendering/perspective.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
 
 // Variables --------------------------------------------------------------------

@@ -9,13 +9,14 @@ import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+
 import toast from '../gui/toast.js';
 import guiplay from '../gui/guiplay.js';
 import docutil from '../../util/docutil.js';
 import websocket from '../websocket.js';
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import gamesound from './gamesound.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import loadbalancer from './loadbalancer.js';
 import validatorama from '../../util/validatorama.js';

@@ -11,20 +11,21 @@ import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
-import meshes from '../meshes.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import boardpos from '../boardpos.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
-import selection from '../../chess/selection.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+
+import meshes from '../meshes.js';
+import gameslot from '../../chess/gameslot.js';
+import boardpos from '../boardpos.js';
+import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
 import preferences from '../../../components/header/preferences.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
 import { GameBus } from '../../GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
-import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import arrows, { ArrowPiece } from './arrows.js';
 
 // Type Definitions -------------------------------------------------------------------------------------------

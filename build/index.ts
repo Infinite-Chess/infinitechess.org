@@ -8,13 +8,13 @@
  * 					Further, all css files are minified by lightningcss.
  */
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
-
 import { setupEnv } from './env';
+import { buildViews } from './views';
 import { buildClient } from './client';
 import { buildServer } from './server';
 import { setupEngineWasm } from './engine-wasm';
-import { buildViews } from './views';
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 // Ensure .env file exists and has valid contents
 setupEnv();

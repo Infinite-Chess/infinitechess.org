@@ -13,11 +13,12 @@ import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import boardpos from '../boardpos.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';

@@ -6,8 +6,9 @@ import { format, formatDistance } from 'date-fns';
 
 import timeutil from '../../shared/util/timeutil.js';
 import metadata from '../../shared/chess/util/metadata.js';
-import { localeMap } from '../config/dateLocales.js';
 import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
+
+import { localeMap } from '../config/dateLocales.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';

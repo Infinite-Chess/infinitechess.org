@@ -15,8 +15,13 @@ import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import variant from '../../../shared/chess/variants/variant.js';
-import timecontrol from '../timecontrol.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
+import {
+	Leaderboards,
+	VariantLeaderboards,
+} from '../../../shared/chess/variants/validleaderboard.js';
+
+import timecontrol from '../timecontrol.js';
 import { getTranslation } from '../../utility/translate.js';
 import { isServerRestarting } from '../updateServerRestart.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
@@ -24,10 +29,6 @@ import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import {
-	Leaderboards,
-	VariantLeaderboards,
-} from '../../../shared/chess/variants/validleaderboard.js';
 import {
 	existingInviteHasID,
 	userHasInvite,

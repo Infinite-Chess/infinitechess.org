@@ -9,13 +9,14 @@ import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/co
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import mouse from '../../util/mouse.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+
+import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
 import drawrays from './highlights/annotations/drawrays.js';
 import keybinds from '../misc/keybinds.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import selection from '../chess/selection.js';
 import Transition from './transitions/Transition.js';
 import drawarrows from './highlights/annotations/drawarrows.js';

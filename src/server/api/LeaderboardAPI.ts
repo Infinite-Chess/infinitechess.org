@@ -9,6 +9,7 @@
 import type { Request, Response } from 'express';
 
 import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
+
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import {

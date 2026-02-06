@@ -3,6 +3,7 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import uuid from '../../shared/util/uuid.js';
+
 import { isBrowserIDBanned } from '../middleware/banned.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 

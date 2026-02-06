@@ -15,8 +15,9 @@ import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
-import gameutility from './gameutility.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+
+import gameutility from './gameutility.js';
 import { getMultipleGameData } from '../../database/gamesManager.js';
 import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
 import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';

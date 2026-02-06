@@ -15,22 +15,23 @@ import type {
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../../../misc/space.js';
-import mouse from '../../../../util/mouse.js';
-import camera from '../../camera.js';
 import vectors from '../../../../../../../shared/util/math/vectors.js';
-import snapping from '../snapping.js';
 import geometry from '../../../../../../../shared/util/math/geometry.js';
-import boardpos from '../../boardpos.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
-import { Mouse } from '../../../input.js';
-import preferences from '../../../../components/header/preferences.js';
-import { createRenderable } from '../../../../webgl/Renderable.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
+
+import space from '../../../misc/space.js';
+import mouse from '../../../../util/mouse.js';
+import camera from '../../camera.js';
+import snapping from '../snapping.js';
+import boardpos from '../../boardpos.js';
+import { Mouse } from '../../../input.js';
+import preferences from '../../../../components/header/preferences.js';
+import { createRenderable } from '../../../../webgl/Renderable.js';
 
 // Constants -----------------------------------------------------------------
 

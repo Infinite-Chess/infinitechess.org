@@ -1,15 +1,15 @@
 // build/client.ts
 
-import { readFile } from 'node:fs/promises';
-import { glob } from 'glob';
-import path from 'node:path';
 import fs from 'fs';
-import esbuild, { BuildOptions, Plugin, PluginBuild } from 'esbuild';
 import swc from '@swc/core';
+import path from 'node:path';
+import { glob } from 'glob';
+import { readFile } from 'node:fs/promises';
 import browserslist from 'browserslist';
-import { transform, browserslistToTargets } from 'lightningcss';
 // @ts-ignore this package doesn't have a declaration file
 import stripComments from 'glsl-strip-comments';
+import { transform, browserslistToTargets } from 'lightningcss';
+import esbuild, { BuildOptions, Plugin, PluginBuild } from 'esbuild';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
 

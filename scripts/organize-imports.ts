@@ -9,7 +9,7 @@
  * Usage: tsx scripts/organize-imports.ts <file1> <file2> ...
  *
  * Run on all files:
- * npx tsx scripts/organize-imports.ts $(find src -name "*.ts") *.ts
+ * npx tsx scripts/organize-imports.ts $(find build src scripts -name "*.ts") *.ts
  *
  * ========================================
  * IMPORT ORGANIZATION RULES
@@ -24,8 +24,11 @@
  * GROUPING (groups separated by blank line):
  * 1. Type imports (package and source together, no separation)
  * 2. Regular package imports
- * 3. Regular source imports
- * 4. Side-effect imports
+ * 3. Regular source imports from shared (src/shared/)
+ * 4. Regular source imports from client (src/client/)
+ * 5. Regular source imports from tests (src/tests/)
+ * 6. Regular source imports from server (src/server/)
+ * 7. Side-effect imports
  *
  * SORTING WITHIN GROUPS:
  * - Multi-line imports last
@@ -45,6 +48,15 @@ import * as path from 'path';
 /** Regex pattern to match " from " followed by a quote in import statements */
 const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
 
+/** Path to the shared directory */
+const SHARED_DIR = path.resolve(process.cwd(), 'src/shared');
+/** Path to the client directory */
+const CLIENT_DIR = path.resolve(process.cwd(), 'src/client');
+/** Path to the tests directory */
+const TESTS_DIR = path.resolve(process.cwd(), 'src/tests');
+/** Path to the server directory */
+const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
+
 // Type Definitions --------------------------------------------------------
 
 interface Import {
@@ -54,11 +66,58 @@ interface Import {
 	isSideEffect: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
+	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/tests/server directories */
+	sourceDir: 'shared' | 'client' | 'tests' | 'server' | null;
 }
 
 // Helper Functions --------------------------------------------------------
 
-function parseImport(importText: string, hasTsIgnore: boolean): Import {
+/**
+ * Resolves an import path from the current file and determines which source directory it belongs to.
+ * @param currentFilePath - Absolute path to the file being processed
+ * @param importPath - The path from the import statement (e.g., '../../../shared/util/timeutil.js')
+ * @returns 'shared', 'client', 'tests', 'server', or null if not in any of these directories
+ */
+function resolveImportSourceDir(
+	currentFilePath: string,
+	importPath: string,
+): 'shared' | 'client' | 'tests' | 'server' | null {
+	// Don't process package imports
+	if (!importPath.startsWith('.') && !path.isAbsolute(importPath)) {
+		return null;
+	}
+
+	// Resolve the import path relative to the current file's directory
+	const currentFileDir = path.dirname(currentFilePath);
+	const resolvedImportPath = path.resolve(currentFileDir, importPath);
+
+	// Check if the resolved path is within one of our source directories
+	// We need to ensure proper directory boundaries (not just string prefix matching)
+	const sharedDirWithSep = SHARED_DIR + path.sep;
+	const clientDirWithSep = CLIENT_DIR + path.sep;
+	const testsDirWithSep = TESTS_DIR + path.sep;
+	const serverDirWithSep = SERVER_DIR + path.sep;
+
+	if (resolvedImportPath === SHARED_DIR || resolvedImportPath.startsWith(sharedDirWithSep)) {
+		return 'shared';
+	} else if (
+		resolvedImportPath === CLIENT_DIR ||
+		resolvedImportPath.startsWith(clientDirWithSep)
+	) {
+		return 'client';
+	} else if (resolvedImportPath === TESTS_DIR || resolvedImportPath.startsWith(testsDirWithSep)) {
+		return 'tests';
+	} else if (
+		resolvedImportPath === SERVER_DIR ||
+		resolvedImportPath.startsWith(serverDirWithSep)
+	) {
+		return 'server';
+	}
+
+	return null;
+}
+
+function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: string): Import {
 	const lines = importText.split('\n');
 	const importLine = hasTsIgnore ? lines[lines.length - 1]! : lines[0]!;
 	const trimmed = importLine.trim();
@@ -73,6 +132,9 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
 	const fromPath = fromMatch ? fromMatch[2]! : '';
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
+
+	// Determine which source directory the import belongs to
+	const sourceDir = isPackage ? null : resolveImportSourceDir(currentFilePath, fromPath);
 
 	// Calculate length before "from" followed by whitespace and a quote
 	// For ts-ignore imports, calculate from the import line only, not including the comment
@@ -90,6 +152,7 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 		isSideEffect,
 		isMultiLine,
 		lengthBeforeFrom,
+		sourceDir,
 	};
 }
 
@@ -139,7 +202,10 @@ function findImportBoundaries(lines: string[]): { start: number; end: number } |
 	return start !== -1 ? { start, end } : null;
 }
 
-function extractImports(content: string): {
+function extractImports(
+	content: string,
+	filePath: string,
+): {
 	imports: Import[];
 	beforeImports: string;
 	afterImports: string;
@@ -223,7 +289,7 @@ function extractImports(content: string): {
 			// console.log(importText);
 			// console.log('\n');
 
-			const parsedImport = parseImport(importText, hasTsIgnore);
+			const parsedImport = parseImport(importText, hasTsIgnore, filePath);
 
 			// console.log('Parsed import:', parsedImport, '\n');
 
@@ -246,7 +312,11 @@ function organizeImports(imports: Import[]): string {
 	// Group imports
 	const typeImports: Import[] = [];
 	const packageImports: Import[] = [];
-	const sourceImports: Import[] = [];
+	const sharedImports: Import[] = [];
+	const clientImports: Import[] = [];
+	const testsImports: Import[] = [];
+	const serverImports: Import[] = [];
+	const otherSourceImports: Import[] = []; // For relative imports outside shared/client/tests/server (e.g., from src/types)
 	const sideEffectImports: Import[] = [];
 
 	for (const imp of imports) {
@@ -257,7 +327,18 @@ function organizeImports(imports: Import[]): string {
 		} else if (imp.isPackage) {
 			packageImports.push(imp);
 		} else {
-			sourceImports.push(imp);
+			// Source imports - categorize by directory
+			if (imp.sourceDir === 'shared') {
+				sharedImports.push(imp);
+			} else if (imp.sourceDir === 'client') {
+				clientImports.push(imp);
+			} else if (imp.sourceDir === 'tests') {
+				testsImports.push(imp);
+			} else if (imp.sourceDir === 'server') {
+				serverImports.push(imp);
+			} else {
+				otherSourceImports.push(imp);
+			}
 		}
 	}
 
@@ -271,7 +352,11 @@ function organizeImports(imports: Import[]): string {
 	});
 
 	packageImports.sort(compareImports);
-	sourceImports.sort(compareImports);
+	sharedImports.sort(compareImports);
+	clientImports.sort(compareImports);
+	testsImports.sort(compareImports);
+	serverImports.sort(compareImports);
+	otherSourceImports.sort(compareImports);
 	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
 
 	// Build groups array
@@ -285,8 +370,26 @@ function organizeImports(imports: Import[]): string {
 		groups.push(packageImports.map((i) => i.raw).join('\n'));
 	}
 
-	if (sourceImports.length > 0) {
-		groups.push(sourceImports.map((i) => i.raw).join('\n'));
+	// Add source imports in order: shared, client, tests, server
+	if (sharedImports.length > 0) {
+		groups.push(sharedImports.map((i) => i.raw).join('\n'));
+	}
+
+	if (clientImports.length > 0) {
+		groups.push(clientImports.map((i) => i.raw).join('\n'));
+	}
+
+	if (testsImports.length > 0) {
+		groups.push(testsImports.map((i) => i.raw).join('\n'));
+	}
+
+	if (serverImports.length > 0) {
+		groups.push(serverImports.map((i) => i.raw).join('\n'));
+	}
+
+	// Other source imports that don't belong to shared/client/server
+	if (otherSourceImports.length > 0) {
+		groups.push(otherSourceImports.map((i) => i.raw).join('\n'));
 	}
 
 	if (sideEffectImports.length > 0) {
@@ -302,7 +405,8 @@ function organizeImports(imports: Import[]): string {
 function processFile(filePath: string): boolean {
 	try {
 		const content = fs.readFileSync(filePath, 'utf-8');
-		const { imports, beforeImports, afterImports } = extractImports(content);
+		const absoluteFilePath = path.resolve(filePath);
+		const { imports, beforeImports, afterImports } = extractImports(content, absoluteFilePath);
 
 		if (imports.length === 0) {
 			return false;

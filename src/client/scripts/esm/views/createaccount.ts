@@ -3,6 +3,7 @@
 // The script on the createaccount page
 
 import validators from '../../../../shared/util/validators.js';
+
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 const element_usernameInput = document.getElementById('username') as HTMLInputElement;

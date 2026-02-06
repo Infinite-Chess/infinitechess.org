@@ -16,11 +16,12 @@ import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.j
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+
 // @ts-ignore
 import mat4 from './gl-matrix.js';
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
 import { gl } from './webgl.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';

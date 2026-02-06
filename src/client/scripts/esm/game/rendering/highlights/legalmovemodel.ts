@@ -22,25 +22,26 @@ import type {
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../../misc/space.js';
-import meshes from '../meshes.js';
 import bimath from '../../../../../../shared/util/math/bimath.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
-import gameslot from '../../chess/gameslot.js';
-import boardpos from '../boardpos.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
+import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+
+import space from '../../misc/space.js';
+import meshes from '../meshes.js';
+import gameslot from '../../chess/gameslot.js';
+import boardpos from '../boardpos.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';
 import perspective from '../perspective.js';
-import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
 import legalmoveshapes from '../instancedshapes.js';
 import instancedshapes from '../instancedshapes.js';
-import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import {
 	AttributeInfoInstanced,
 	RenderableInstanced,

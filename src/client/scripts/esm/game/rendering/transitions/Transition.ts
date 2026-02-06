@@ -18,6 +18,12 @@ import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/m
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../../shared/util/math/math.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../shared/chess/util/coordutil.js';
+
 import space from '../../misc/space.js';
 import meshes from '../meshes.js';
 import boardpos from '../boardpos.js';
@@ -26,11 +32,6 @@ import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
 import area, { Area } from '../area.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
 
 // Type Definitions ----------------------------------------------------------------------
 

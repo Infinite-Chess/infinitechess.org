@@ -7,10 +7,11 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil';
 import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
 
-import eactions from '../../boardeditor/actions/eactions';
-import gameslot from '../../chess/gameslot';
 import { players } from '../../../../../../shared/chess/util/typeutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+
+import eactions from '../../boardeditor/actions/eactions';
+import gameslot from '../../chess/gameslot';
 import guifloatingwindow from './guifloatingwindow';
 
 // Types -------------------------------------------------------------

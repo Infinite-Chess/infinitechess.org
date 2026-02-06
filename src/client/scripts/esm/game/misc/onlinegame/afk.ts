@@ -12,14 +12,15 @@
  * if they are the one that is afk.
  */
 
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+
 import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamesound from '../gamesound.js';
 import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
 import pingManager from '../../../util/pingManager.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */

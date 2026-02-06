@@ -11,28 +11,29 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import afk from './afk.js';
 import uuid from '../../../../../../shared/util/uuid.js';
+import clock from '../../../../../../shared/chess/logic/clock.js';
+import metadata from '../../../../../../shared/chess/util/metadata.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
+
+import afk from './afk.js';
 import toast from '../../gui/toast.js';
 import board from '../../rendering/boardtiles.js';
-import clock from '../../../../../../shared/chess/logic/clock.js';
 import guiplay from '../../gui/guiplay.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
 import guititle from '../../gui/guititle.js';
 import guiclock from '../../gui/guiclock.js';
-import metadata from '../../../../../../shared/chess/util/metadata.js';
 import selection from '../../chess/selection.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
-import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
 import websocket, { WebsocketMessage } from '../../websocket.js';
 
 // Type Definitions --------------------------------------------------------------------------------------

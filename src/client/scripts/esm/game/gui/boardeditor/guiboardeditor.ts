@@ -9,18 +9,20 @@ import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
+import timeutil from '../../../../../../shared/util/timeutil.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
+
 import esave from '../../boardeditor/actions/esave.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import tooltips from '../../../util/tooltips.js';
 import eactions from '../../boardeditor/actions/eactions.js';
-import timeutil from '../../../../../../shared/util/timeutil.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import guiloadposition from './guiloadposition.js';
@@ -29,7 +31,6 @@ import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
-import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
 
 // Elements ---------------------------------------------------------------
 

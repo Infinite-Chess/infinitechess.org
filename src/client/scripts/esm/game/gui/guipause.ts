@@ -4,12 +4,13 @@
  * This script handles our Pause menu.
  */
 
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+
 import toast from './toast.js';
 import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
 import copygame from '../chess/copygame.js';
 import guititle from './guititle.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import pastegame from '../chess/pastegame.js';

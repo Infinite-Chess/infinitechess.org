@@ -10,11 +10,12 @@ import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+
 import toast from '../../gui/toast.js';
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import piecemodels from '../piecemodels.js';
 import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';

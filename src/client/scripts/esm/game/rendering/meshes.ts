@@ -18,18 +18,19 @@ import type {
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import boardpos from './boardpos.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import boardtiles from './boardtiles.js';
-import primitives from './primitives.js';
-import spritesheet from './spritesheet.js';
-import perspective from './perspective.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../shared/chess/util/coordutil.js';
+
+import boardpos from './boardpos.js';
+import boardtiles from './boardtiles.js';
+import primitives from './primitives.js';
+import spritesheet from './spritesheet.js';
+import perspective from './perspective.js';
 
 // Constants -------------------------------------------------------------------------
 

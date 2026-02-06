@@ -20,18 +20,19 @@ import type {
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+
+import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import animation from '../../rendering/animation.js';
 import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import movesendreceive from './movesendreceive.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Functions -----------------------------------------------------------------------------

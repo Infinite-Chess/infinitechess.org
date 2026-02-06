@@ -4,12 +4,13 @@
  * This script handles copying games
  */
 
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
 import toast from '../gui/toast.js';
 import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 

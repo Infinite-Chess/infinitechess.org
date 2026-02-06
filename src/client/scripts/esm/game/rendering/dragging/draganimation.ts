@@ -13,15 +13,16 @@ import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/c
 
 import bd from '@naviary/bigdecimal';
 
-import space from '../../misc/space.js';
-import mouse from '../../../util/mouse.js';
 import themes from '../../../../../../shared/components/header/themes.js';
-import meshes from '../meshes.js';
-import camera from '../camera.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import boardpos from '../boardpos.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+
+import space from '../../misc/space.js';
+import mouse from '../../../util/mouse.js';
+import meshes from '../meshes.js';
+import camera from '../camera.js';
+import boardpos from '../boardpos.js';
 import selection from '../../chess/selection.js';
 import animation from '../animation.js';
 import { Mouse } from '../../input.js';

@@ -1,7 +1,8 @@
 // src/server/config/setupDev.ts
 
-import { giveRole } from '../controllers/roles.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+
+import { giveRole } from '../controllers/roles.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
 import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';

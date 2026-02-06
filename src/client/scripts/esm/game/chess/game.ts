@@ -10,14 +10,15 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-import gui from '../gui/gui.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
+import bimath from '../../../../../shared/util/math/bimath.js';
+
+import gui from '../gui/gui.js';
 import mouse from '../../util/mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import border from '../rendering/border.js';
 import camera from '../rendering/camera.js';
-import bimath from '../../../../../shared/util/math/bimath.js';
 import invites from '../misc/invites.js';
 import gameslot from './gameslot.js';
 import guititle from '../gui/guititle.js';

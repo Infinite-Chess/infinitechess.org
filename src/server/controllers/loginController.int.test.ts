@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
 import { testRequest } from '../../tests/testRequest.js';
+
 import { generateAccount } from './createAccountController.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
 

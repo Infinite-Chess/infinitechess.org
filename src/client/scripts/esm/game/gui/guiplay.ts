@@ -7,17 +7,18 @@
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { InviteOptions } from '../misc/invites.js';
 
+import timeutil from '../../../../../shared/util/timeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
+
 import toast from './toast.js';
 import invites from '../misc/invites.js';
 import docutil from '../../util/docutil.js';
 import guititle from './guititle.js';
-import timeutil from '../../../../../shared/util/timeutil.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 
 // Elements --------------------------------------------------------------------

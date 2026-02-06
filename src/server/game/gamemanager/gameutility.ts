@@ -25,6 +25,11 @@ import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
+import {
+	Leaderboards,
+	VariantLeaderboards,
+} from '../../../shared/chess/variants/validleaderboard.js';
+
 import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
@@ -33,10 +38,6 @@ import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import {
-	Leaderboards,
-	VariantLeaderboards,
-} from '../../../shared/chess/variants/validleaderboard.js';
 
 // Type Definitions -----------------------------------------------------------------------------
 

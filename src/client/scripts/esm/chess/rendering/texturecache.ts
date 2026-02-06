@@ -10,6 +10,7 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+
 import imagecache from './imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 

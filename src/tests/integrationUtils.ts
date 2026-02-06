@@ -1,6 +1,7 @@
 // src/tests/integrationUtils.ts
 
 import { testRequest } from './testRequest';
+
 import { generateAccount } from '../server/controllers/createAccountController';
 
 // Variables -------------------------------------------------------------------

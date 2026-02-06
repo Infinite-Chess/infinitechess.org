@@ -3,8 +3,9 @@
 // This script opens and closes our settings drop-down menu when it is clicked.
 
 import math from '../../../../../shared/util/math/math.js';
-import style from '../../game/gui/style.js';
 import themes from '../../../../../shared/components/header/themes.js';
+
+import style from '../../game/gui/style.js';
 import preferences from './preferences.js';
 import boarddropdown from './dropdowns/boarddropdown.js';
 import sounddropdown from './dropdowns/sounddropdown.js';

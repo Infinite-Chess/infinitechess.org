@@ -13,14 +13,15 @@ import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 
-import gameslot from '../chess/gameslot';
 import boardutil from '../../../../../shared/chess/util/boardutil';
 import winconutil from '../../../../../shared/chess/util/winconutil';
-import boardeditor from './boardeditor';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
-import guigamerules from '../gui/boardeditor/guigamerules';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
+
+import gameslot from '../chess/gameslot';
+import boardeditor from './boardeditor';
+import guigamerules from '../gui/boardeditor/guigamerules';
 
 // Type Definitions --------------------------------------------------------------
 

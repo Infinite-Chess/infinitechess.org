@@ -13,30 +13,31 @@ import type {
 
 import bd from '@naviary/bigdecimal';
 
+import jsutil from '../../../../../shared/util/jsutil.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import { Color } from '../../../../../shared/util/math/math.js';
+import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+
 import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import space from '../misc/space.js';
 import mouse from '../../util/mouse.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
-import vectors from '../../../../../shared/util/math/vectors.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
 import premoves from '../chess/premoves.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import animation from './animation.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import selection from '../chess/selection.js';
-import { Color } from '../../../../../shared/util/math/math.js';
 import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
-import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import {
 	RenderableInstanced,
 	AttributeInfoInstanced,

@@ -6,6 +6,7 @@ import type { SimplifiedGameState } from './gamecompressor.js';
 import { describe, it, expect } from 'vitest';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+
 import gamecompressor from './gamecompressor.js';
 
 describe('gamecompressor', () => {

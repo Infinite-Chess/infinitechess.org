@@ -8,10 +8,11 @@
 import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import { Mouse } from '../input.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { GameBus } from '../GameBus.js';
 import { listener_overlay } from '../chess/game.js';
 

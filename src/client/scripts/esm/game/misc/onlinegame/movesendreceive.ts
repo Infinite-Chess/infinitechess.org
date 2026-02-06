@@ -11,8 +11,14 @@ import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.j
 import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import icnconverter, {
+	_Move_Compact,
+} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import guipause from '../../gui/guipause.js';
@@ -21,12 +27,7 @@ import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
-import icnconverter, {
-	_Move_Compact,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 // Events ---------------------------------------------------------------------
 
