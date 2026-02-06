@@ -25,11 +25,7 @@
  * 4. Side-effect imports
  *
  * SORTING WITHIN GROUPS:
- * - @ts-ignore imports first
- * - Default-only imports
- * - Hybrid imports (default + named/namespace)
- * - Regular imports
- * - Multi-line imports
+ * - Multi-line imports last
  * - Then by length before "from"
  *
  * SPACING:
@@ -53,9 +49,6 @@ interface Import {
 	isType: boolean;
 	isPackage: boolean;
 	isSideEffect: boolean;
-	hasTsIgnore: boolean;
-	isDefaultOnly: boolean;
-	isHybrid: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
 }
@@ -85,65 +78,23 @@ function parseImport(importText: string, hasTsIgnore: boolean): Import {
 	// Check if multi-line
 	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
 
-	// Determine import style
-	let isDefaultOnly = false;
-	let isHybrid = false;
-
-	if (!isSideEffect) {
-		const afterImport = importLine.replace(/^import\s+type\s+/, '').replace(/^import\s+/, '');
-		const beforeFromMatch = FROM_WITH_QUOTE_PATTERN.exec(afterImport);
-		const beforeFrom = beforeFromMatch
-			? afterImport.substring(0, beforeFromMatch.index).trim()
-			: afterImport.trim();
-
-		const hasCurly = beforeFrom.includes('{');
-		const hasComma = beforeFrom.includes(',');
-		const curlyIndex = beforeFrom.indexOf('{');
-		const commaBeforeCurly =
-			curlyIndex > 0 && beforeFrom.substring(0, curlyIndex).includes(',');
-
-		if (!hasCurly && !hasComma) {
-			isDefaultOnly = true;
-		} else if (commaBeforeCurly || (hasComma && !hasCurly)) {
-			isHybrid = true;
-		}
-	}
-
 	return {
 		raw: importText,
 		isType,
 		isPackage,
 		isSideEffect,
-		hasTsIgnore,
-		isDefaultOnly,
-		isHybrid,
 		isMultiLine,
 		lengthBeforeFrom,
 	};
 }
 
 function compareImports(a: Import, b: Import): number {
-	// First: ts-ignore imports come first
-	if (a.hasTsIgnore !== b.hasTsIgnore) {
-		return a.hasTsIgnore ? -1 : 1;
+	// First: multi-line imports come last
+	if (a.isMultiLine !== b.isMultiLine) {
+		return a.isMultiLine ? 1 : -1;
 	}
 
-	// Second: by import style
-	const getStyleOrder = (imp: Import): number => {
-		if (imp.isDefaultOnly) return 0;
-		if (imp.isHybrid) return 1;
-		if (imp.isMultiLine) return 3;
-		return 2; // regular
-	};
-
-	const styleA = getStyleOrder(a);
-	const styleB = getStyleOrder(b);
-
-	if (styleA !== styleB) {
-		return styleA - styleB;
-	}
-
-	// Third: by length before "from"
+	// Second: by length before "from"
 	return a.lengthBeforeFrom - b.lengthBeforeFrom;
 }
 
