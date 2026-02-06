@@ -1,3 +1,5 @@
+// scripts/organize-imports.ts
+
 /**
  * TypeScript Import Organizer
  *
