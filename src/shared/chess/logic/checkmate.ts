@@ -59,7 +59,7 @@ function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefi
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'checkmate' };
-	} else return { victor: null, condition: 'stalemate' }; // Victor of null means it was a draw.
+	} else return { victor: null, condition: 'stalemate' };
 }
 
 export { pieceCountToDisableCheckmate, royalCountToDisableCheckmate, detectCheckmateOrStalemate };

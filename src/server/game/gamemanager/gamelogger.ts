@@ -14,7 +14,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { PlayerGroup, type Player } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -102,7 +102,7 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  */
 function updateLeaderboardsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined | null,
+	victor: Player | null | undefined,
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
@@ -175,7 +175,7 @@ function updateLeaderboardsInTransaction(
  */
 function addGameRecordsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined | null,
+	victor: Player | null | undefined,
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
@@ -249,7 +249,7 @@ function addGameRecordsInTransaction(
  */
 function updateAllPlayerStatsInTransaction(
 	{ basegame, match }: ServerGame,
-	victor: Player | undefined | null,
+	victor: Player | null | undefined,
 ): void {
 	const playerMoveCounts = getPlayerMoveCountsInGame({ basegame, match });
 

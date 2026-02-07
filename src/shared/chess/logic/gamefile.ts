@@ -44,7 +44,7 @@ interface Snapshot {
 type GameConclusion = {
 	/** How the game terminated. */
 	condition: string;
-	/** Defined so long as the game wasn't aborted. null = DRAW. */
+	/** Which player was victorious. null = DRAW. undefined = ABORTED */
 	victor?: Player | null;
 };
 

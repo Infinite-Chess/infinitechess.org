@@ -165,7 +165,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 function detectMoveRule({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) {
-		return { victor: null, condition: 'moverule' }; // Victor of null means it was a draw.
+		return { victor: null, condition: 'moverule' };
 	}
 	return undefined;
 }

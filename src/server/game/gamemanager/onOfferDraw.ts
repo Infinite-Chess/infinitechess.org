@@ -71,7 +71,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Accept draw offer!
 
 	closeDrawOffer(servergame.match);
-	setGameConclusion(servergame, { victor: null, condition: 'agreement' }); // Victor of null means it was a draw
+	setGameConclusion(servergame, { victor: null, condition: 'agreement' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 
