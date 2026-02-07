@@ -14,7 +14,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -102,7 +102,7 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  */
 function updateLeaderboardsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
@@ -175,7 +175,7 @@ function updateLeaderboardsInTransaction(
  */
 function addGameRecordsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
@@ -235,7 +235,7 @@ function addGameRecordsInTransaction(
 			user_id,
 			game_id,
 			player,
-			victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0,
+			victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
 			!basegame.untimed ? ending_clocks![player]! : null,
 			ratingData?.[player]?.elo_at_game ?? null,
 			ratingData?.[player]?.elo_change_from_game ?? null,
@@ -249,7 +249,7 @@ function addGameRecordsInTransaction(
  */
 function updateAllPlayerStatsInTransaction(
 	{ basegame, match }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 ): void {
 	const playerMoveCounts = getPlayerMoveCountsInGame({ basegame, match });
 
@@ -263,7 +263,7 @@ function updateAllPlayerStatsInTransaction(
 		// prettier-ignore
 		updateSinglePlayerStatsInTransaction(user_id, {
 			moves_played_increment: playerMoveCounts[player]!,
-			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === players.NEUTRAL ? "draws" : "losses",
+			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === null ? "draws" : "losses",
 			is_rated: match.rated,
 			publicity: match.publicity,
 		});

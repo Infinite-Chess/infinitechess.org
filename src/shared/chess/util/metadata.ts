@@ -77,10 +77,10 @@ function copyMetadataField<K extends MetadataKey>(
  * @param victor - The victor of the game, in player number. Or none if undefined.
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '*' (aborted).
  */
-function getResultFromVictor(victor?: Player): string {
+function getResultFromVictor(victor?: Player | null): string {
 	if (victor === players.WHITE) return '1-0';
 	else if (victor === players.BLACK) return '0-1';
-	else if (victor === players.NEUTRAL) return '1/2-1/2';
+	else if (victor === null) return '1/2-1/2';
 	else if (victor === undefined) return '*';
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
@@ -94,10 +94,10 @@ function getGameConclusionFromResultAndTermination(
 
 	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
-	const victor: Player =
+	const victor: Player | null =
 		result === '1-0' ? players.WHITE :
 		result === '0-1' ? players.BLACK :
-		result === '1/2-1/2' ? players.NEUTRAL :
+		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
 	return { victor, condition: termination };
 }

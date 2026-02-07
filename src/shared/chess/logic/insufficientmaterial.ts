@@ -297,9 +297,9 @@ function detectInsufficientMaterial(
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
 	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
-		return { victor: players.NEUTRAL, condition: 'insuffmat' }; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'insuffmat' };
 	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
-		return { victor: players.NEUTRAL, condition: 'insuffmat' }; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'insuffmat' };
 	else return undefined;
 }
 

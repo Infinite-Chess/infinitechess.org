@@ -10,8 +10,8 @@ import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
+import { rawTypes } from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
-import { players, rawTypes } from '../util/typeutil.js';
 
 /** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
 const pieceCountToDisableCheckmate = 50_000;
@@ -59,7 +59,7 @@ function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefi
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'checkmate' };
-	} else return { victor: players.NEUTRAL, condition: 'stalemate' }; // Victor of player NEUTRAL means it was a draw.
+	} else return { victor: null, condition: 'stalemate' };
 }
 
 export { pieceCountToDisableCheckmate, royalCountToDisableCheckmate, detectCheckmateOrStalemate };

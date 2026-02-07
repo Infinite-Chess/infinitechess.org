@@ -132,7 +132,7 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number): number {
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  * MUTATING. Modifies original ratingdata object.
  */
-function computeRatingDataChanges(ratingdata: RatingData, victor: Player): RatingData {
+function computeRatingDataChanges(ratingdata: RatingData, victor: Player | null): RatingData {
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
 	const playerCount = Object.keys(ratingdata).length;
 	if (playerCount !== 2) throw Error('Rating changes are only supported in two player games!');
@@ -233,7 +233,7 @@ function computeRatingDataChanges(ratingdata: RatingData, victor: Player): Ratin
 // 		victorId = players.BLACK;
 // 		outcomeDescription = "Player 2 (Black) wins";
 // 	} else { // Draw
-// 		victorId = players.NEUTRAL; // `computeRatingDataChanges` handles this as a draw
+// 		victorId = null; // `computeRatingDataChanges` handles this as a draw
 // 		outcomeDescription = "Draw";
 // 	}
 // 	console.log(`Game Outcome: ${outcomeDescription}`);
