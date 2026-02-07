@@ -285,7 +285,8 @@ function concludeGame(): void {
 	const victor: Player | undefined | null = basegame.gameConclusion.victor; // undefined if aborted, null if draw
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
-		if (victor !== null) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		if (victor !== null && victor !== undefined)
+			gamesound.playWin(delayToPlayConcludeSoundSecs);
 		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
 	} else {
 		// In online game or engine game
