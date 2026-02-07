@@ -9,11 +9,12 @@
 
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
+import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
-import type { GameConclusion, GameConclusionCondition } from '../logic/gamefile.js';
+import type { GameConclusion } from '../logic/gamefile.js';
 
 import { players } from './typeutil.js';
-import { GAME_CONCLUSION_CONDITIONS } from '../logic/gamefile.js';
+import { GAME_CONCLUSION_CONDITIONS } from './winconutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -86,9 +87,9 @@ function getResultFromVictor(victor?: Player | null): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
-/** Helper to validate if a string is a valid GameConclusionCondition */
-function isValidGameConclusionCondition(condition: string): condition is GameConclusionCondition {
-	return GAME_CONCLUSION_CONDITIONS.includes(condition as GameConclusionCondition);
+/** Helper to validate if a string is a valid Condition */
+function isValidCondition(condition: string): condition is Condition {
+	return GAME_CONCLUSION_CONDITIONS.includes(condition as Condition);
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
@@ -99,7 +100,7 @@ function getGameConclusionFromResultAndTermination(
 	if (!result || !termination) throw Error('Must provide both result and termination.');
 
 	// Validate that termination is a valid condition
-	if (!isValidGameConclusionCondition(termination)) {
+	if (!isValidCondition(termination)) {
 		throw Error(`Invalid game conclusion condition: ${termination}`);
 	}
 

@@ -9,6 +9,36 @@
 import type { GameRules } from '../variants/gamerules.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
+/**
+ * All possible game conclusion conditions.
+ * Single source of truth for valid condition strings.
+ */
+const GAME_CONCLUSION_CONDITIONS = [
+	// Win/loss conditions (determined during gameplay)
+	'checkmate',
+	'royalcapture',
+	'allroyalscaptured',
+	'allpiecescaptured',
+	'koth', // King of the Hill
+	'time',
+	// Draw conditions
+	'stalemate',
+	'moverule',
+	'repetition',
+	'insuffmat', // insufficient material
+	'agreement',
+	// Game termination without completion
+	'resignation',
+	'disconnect',
+	'aborted',
+] as const;
+
+/**
+ * Union type of all possible game conclusion conditions.
+ * Represents how a game can be terminated.
+ */
+type Condition = (typeof GAME_CONCLUSION_CONDITIONS)[number];
+
 /** Valid win conditions that either color can have. */
 const validWinConditions = [
 	'checkmate',
@@ -86,6 +116,10 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 	// @ts-ignore
 	return translations['termination'][condition];
 }
+
+export type { Condition };
+
+export { GAME_CONCLUSION_CONDITIONS };
 
 export default {
 	isWinConditionValid,

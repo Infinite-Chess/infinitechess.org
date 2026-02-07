@@ -3,6 +3,7 @@
 import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { Condition } from '../util/winconutil.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Move, BaseMove } from './movepiece.js';
@@ -40,40 +41,10 @@ interface Snapshot {
 	box: BoundingBox;
 }
 
-/**
- * All possible game conclusion conditions.
- * Single source of truth for valid condition strings.
- */
-const GAME_CONCLUSION_CONDITIONS = [
-	// Win/loss conditions (determined during gameplay)
-	'checkmate',
-	'royalcapture',
-	'allroyalscaptured',
-	'allpiecescaptured',
-	'koth', // King of the Hill
-	'time',
-	// Draw conditions
-	'stalemate',
-	'moverule',
-	'repetition',
-	'insuffmat', // insufficient material
-	'agreement',
-	// Game termination without completion
-	'resignation',
-	'disconnect',
-	'aborted',
-] as const;
-
-/**
- * Union type of all possible game conclusion conditions.
- * Represents how a game can be terminated.
- */
-type GameConclusionCondition = (typeof GAME_CONCLUSION_CONDITIONS)[number];
-
 /** Stores the results of a game, including how it was terminated, and who won. */
 type GameConclusion = {
 	/** How the game terminated. */
-	condition: GameConclusionCondition;
+	condition: Condition;
 	/** Which player was victorious. null = DRAW. undefined = ABORTED */
 	victor?: Player | null;
 };
@@ -360,18 +331,7 @@ function initFullGame(
 	);
 }
 
-export type {
-	Game,
-	Board,
-	FullGame,
-	Snapshot,
-	ClockDependant,
-	Additional,
-	GameConclusion,
-	GameConclusionCondition,
-};
-
-export { GAME_CONCLUSION_CONDITIONS };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
 
 export default {
 	initGame,
