@@ -1,0 +1,134 @@
+// src/client/scripts/esm/game/websocket/socketrouter.ts
+
+/**
+ * Routes incoming websocket messages to the appropriate handler
+ * based on the subscription type.
+ */
+
+import type { WebsocketMessage, WebsocketMessageValue, HardRefreshInfo } from './socketutil.js';
+
+import timeutil from '../../../../../shared/util/timeutil.js';
+import { GAME_VERSION } from '../../../../../shared/game_version.js';
+
+import toast from '../gui/toast.js';
+import invites from '../misc/invites.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import socketmessages from './socketmessages.js';
+import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
+import { isDebugEnabled, ALSO_PRINT_INCOMING_ECHOS } from './socketutil.js';
+
+/**
+ * Called when we receive an incoming server websocket message.
+ * Sends an echo to the server, then routes the message.
+ * @param serverMessage - The incoming server message event.
+ */
+function onmessage(serverMessage: MessageEvent): void {
+	let message: WebsocketMessage;
+	try {
+		message = JSON.parse(serverMessage.data);
+	} catch (error) {
+		return console.error('Error parsing incoming message as JSON:', error);
+	}
+
+	const isEcho = message.action === 'echo';
+
+	if (isDebugEnabled()) {
+		if (isEcho) {
+			if (ALSO_PRINT_INCOMING_ECHOS)
+				console.log(`Incoming message: ${JSON.stringify(message)}`);
+		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
+	}
+
+	if (isEcho) return socketmessages.cancelTimerOfMessageID(message);
+
+	// Not an echo...
+	const sub = message.sub;
+
+	// Send our echo — we always echo every message EXCEPT echos themselves
+	socketmessages.sendmessage('general', 'echo', message.id);
+
+	// Execute any on-reply function
+	socketmessages.executeOnreplyFunc(message.replyto);
+
+	switch (sub) {
+		case undefined: // Null message (e.g. { id, replyto }). Allows executing on-reply funcs.
+			break;
+		case 'general':
+			ongeneralmessage(message.action, message.value);
+			break;
+		case 'invites':
+			invites.onmessage(message);
+			break;
+		case 'game':
+			onlinegamerouter.routeMessage(message);
+			break;
+		default:
+			console.error('Unknown socket subscription received from the server! Message:');
+			return console.log(message);
+	}
+}
+
+/**
+ * Handles incoming messages with route "general".
+ * @param action - The action the incoming server message specified
+ * @param value - The value of the incoming server message
+ */
+function ongeneralmessage(action: string, value: WebsocketMessageValue): void {
+	switch (action) {
+		case 'notify':
+			toast.show(value);
+			break;
+		case 'notifyerror':
+			toast.show(value, { error: true, durationMultiplier: 2 });
+			break;
+		case 'print':
+			console.log(value);
+			break;
+		case 'printerror':
+			console.error(value);
+			break;
+		case 'renewconnection':
+			// Server sends this expecting an echo, to verify we're still connected.
+			break;
+		case 'gameversion':
+			if (value !== GAME_VERSION) handleHardRefresh(value);
+			break;
+		default:
+			console.log(
+				`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`,
+			);
+	}
+}
+
+/**
+ * Attempts a hard refresh if the server reports a newer game version.
+ * Prevents endless refreshing cycles for browsers that don't support hard refresh.
+ * @param LATEST_GAME_VERSION - The game version the server is currently running.
+ */
+function handleHardRefresh(LATEST_GAME_VERSION: string): void {
+	const reloadInfo = {
+		timeLastHardRefreshed: Date.now(),
+		expectedVersion: LATEST_GAME_VERSION,
+	};
+	const preexistingHardRefreshInfo: HardRefreshInfo = LocalStorage.loadItem('hardrefreshinfo');
+	if (preexistingHardRefreshInfo?.expectedVersion === LATEST_GAME_VERSION) {
+		if (!preexistingHardRefreshInfo.refreshFailed)
+			console.warn(
+				`location.reload(true) failed to hard refresh. Server version: ${LATEST_GAME_VERSION}. Still running: ${GAME_VERSION}`,
+			);
+		preexistingHardRefreshInfo.refreshFailed = true;
+		saveInfo(preexistingHardRefreshInfo);
+		return;
+	}
+	saveInfo(reloadInfo);
+	// @ts-expect-error This parameter does indeed exist -> https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
+	location.reload(true);
+
+	function saveInfo(info: HardRefreshInfo): void {
+		LocalStorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 }));
+	}
+}
+
+export default {
+	onmessage,
+};

@@ -1,0 +1,65 @@
+// src/client/scripts/esm/game/websocket/socketsubs.ts
+
+/**
+ * Manages subscription state for the client websocket system.
+ *
+ * Tracks which subscriptions (e.g. 'invites', 'game') are currently active,
+ * and provides methods to add, remove, and query subscriptions.
+ */
+
+const validSubs = ['invites', 'game'] as const;
+
+type Sub = (typeof validSubs)[number];
+
+const subs: Record<Sub, boolean> = {
+	invites: false,
+	game: false,
+};
+
+/** Returns true if we're currently not subscribed to anything. */
+function zeroSubs(): boolean {
+	for (const sub of validSubs) if (subs[sub] === true) return false;
+	return true;
+}
+
+/**
+ * Whether we are subbed to the given subscription list.
+ * @param sub - The name of the sub
+ */
+function areSubbedToSub(sub: Sub): boolean {
+	if (!validSubs.includes(sub)) throw Error(`Can't ask if we're subbed to invalid sub "${sub}".`);
+	return subs[sub] !== false;
+}
+
+/**
+ * Marks ourself as subscribed to a subscription list.
+ * @param sub - The name of the sub to add
+ */
+function addSub(sub: Sub): void {
+	if (!validSubs.includes(sub)) throw Error(`Can't sub to invalid sub "${sub}".`);
+	subs[sub] = true;
+}
+
+/**
+ * Marks ourself as no longer subscribed to a subscription list.
+ *
+ * If our websocket happens to close unexpectedly, we won't re-subscribe to it.
+ * @param sub - The name of the sub to delete
+ */
+function deleteSub(sub: Sub): void {
+	if (!validSubs.includes(sub)) throw Error(`Can't delete invalid sub "${sub}".`);
+	subs[sub] = false;
+}
+
+/** Returns the list of valid subscription names. */
+function getValidSubs(): readonly string[] {
+	return validSubs;
+}
+
+export default {
+	zeroSubs,
+	areSubbedToSub,
+	addSub,
+	deleteSub,
+	getValidSubs,
+};
