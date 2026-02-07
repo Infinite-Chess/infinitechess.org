@@ -282,17 +282,16 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	const victor: Player | undefined = basegame.gameConclusion.victor; // undefined if aborted
+	const victor: Player | undefined | null = basegame.gameConclusion.victor; // undefined if aborted, null if draw
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
-		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);
+		if (victor !== null) gamesound.playWin(delayToPlayConcludeSoundSecs);
 		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
 	} else {
 		// In online game or engine game
 		const ourRole = gameloader.getOurColor()!;
 		if (victor === ourRole) gamesound.playWin(delayToPlayConcludeSoundSecs);
-		else if (victor === players.NEUTRAL || !victor)
-			gamesound.playDraw(delayToPlayConcludeSoundSecs);
+		else if (victor === null || !victor) gamesound.playDraw(delayToPlayConcludeSoundSecs);
 		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
 

@@ -9,7 +9,6 @@ import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
@@ -72,7 +71,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Accept draw offer!
 
 	closeDrawOffer(servergame.match);
-	setGameConclusion(servergame, { victor: players.NEUTRAL, condition: 'agreement' }); // Player NEUTRAL winning means it was a draw
+	setGameConclusion(servergame, { victor: null, condition: 'agreement' }); // Victor of null means it was a draw
 	gameutility.broadcastGameUpdate(servergame);
 }
 

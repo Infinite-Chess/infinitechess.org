@@ -339,7 +339,7 @@ function gameEnd(conclusion?: GameConclusion): void {
                                                                             : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
                                                                             : condition === 'koth' ? resultTranslations.you_koth
 												: resultTranslations.you_generic;
-		else if (victor === players.NEUTRAL) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
+		else if (victor === null) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
                                                                     : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat

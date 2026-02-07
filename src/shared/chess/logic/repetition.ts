@@ -15,7 +15,7 @@ import type { FullGame, GameConclusion } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
-import { players, rawTypes } from '../util/typeutil.js';
+import { rawTypes } from '../util/typeutil.js';
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`
@@ -139,7 +139,7 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): GameConclusion 
 
 	// Loop is finished. How many equal positions did we find?
 	if (equalPositionsFound === 2)
-		return { victor: players.NEUTRAL, condition: 'repetition' }; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'repetition' }; // Victor of null means it was a draw.
 	else return undefined;
 }
 

@@ -14,9 +14,9 @@ import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import insufficientmaterial from './insufficientmaterial.js';
+import { rawTypes, Player } from '../util/typeutil.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
-import { players, rawTypes, Player } from '../util/typeutil.js';
 import {
 	detectCheckmateOrStalemate,
 	pieceCountToDisableCheckmate,
@@ -165,7 +165,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 function detectMoveRule({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) {
-		return { victor: players.NEUTRAL, condition: 'moverule' }; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'moverule' }; // Victor of null means it was a draw.
 	}
 	return undefined;
 }
