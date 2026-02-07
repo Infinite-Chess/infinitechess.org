@@ -9,6 +9,33 @@
 import type { GameRules } from '../variants/gamerules.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
+/** All possible game conclusion terminations. */
+const ALL_CONDITIONS = [
+	// Win/loss conditions (determined during gameplay)
+	'checkmate',
+	'royalcapture',
+	'allroyalscaptured',
+	'allpiecescaptured',
+	'koth', // King of the Hill
+	'time',
+	// Draw conditions
+	'stalemate',
+	'moverule',
+	'repetition',
+	'insuffmat', // insufficient material
+	'agreement',
+	// Game termination without completion
+	'resignation',
+	'disconnect',
+	'aborted',
+] as const;
+
+/**
+ * Union type of all possible game conclusion conditions.
+ * Represents how a game can be terminated.
+ */
+export type Condition = (typeof ALL_CONDITIONS)[number];
+
 /** Valid win conditions that either color can have. */
 const validWinConditions = [
 	'checkmate',
@@ -77,17 +104,18 @@ function isConclusionDecisive(condition: string): boolean {
  * @param gameRules
  * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
-function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
+function getTerminationInEnglish(gameRules: GameRules, condition: Condition): string {
 	if (condition === 'moverule') {
 		// One exception
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
 	}
-	// @ts-ignore
 	return translations['termination'][condition];
 }
 
 export default {
+	ALL_CONDITIONS,
+
 	isWinConditionValid,
 	isGameConclusionDecisive,
 	isConclusionDecisive,

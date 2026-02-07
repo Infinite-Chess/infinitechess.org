@@ -32,7 +32,7 @@ const submitmoveschem = z.strictObject({
 	moveNumber: z.int(),
 	gameConclusion: z
 		.strictObject({
-			condition: z.string(),
+			condition: z.enum(winconutil.ALL_CONDITIONS),
 			victor: z.number().int().nonnegative().optional() as z.ZodType<Player | undefined>,
 		})
 		.optional(),

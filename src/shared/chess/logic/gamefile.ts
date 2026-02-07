@@ -3,6 +3,7 @@
 import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { Condition } from '../util/winconutil.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Move, BaseMove } from './movepiece.js';
@@ -43,7 +44,7 @@ interface Snapshot {
 /** Stores the results of a game, including how it was terminated, and who won. */
 type GameConclusion = {
 	/** How the game terminated. */
-	condition: string;
+	condition: Condition;
 	/** Which player was victorious. null = DRAW. undefined = ABORTED */
 	victor?: Player | null;
 };

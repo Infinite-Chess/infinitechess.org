@@ -9,6 +9,7 @@
 
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
+import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
@@ -88,10 +89,8 @@ function getResultFromVictor(victor?: Player | null): string {
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
 function getGameConclusionFromResultAndTermination(
 	result: string,
-	termination: string,
+	termination: Condition,
 ): GameConclusion {
-	if (!result || !termination) throw Error('Must provide both result and termination.');
-
 	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
 	const victor: Player | null =
