@@ -85,12 +85,37 @@ function getResultFromVictor(victor?: Player | null): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
+/** Helper to validate if a string is a valid GameConclusionCondition */
+function isValidGameConclusionCondition(condition: string): condition is GameConclusionCondition {
+	return (
+		condition === 'checkmate' ||
+		condition === 'royalcapture' ||
+		condition === 'allroyalscaptured' ||
+		condition === 'allpiecescaptured' ||
+		condition === 'koth' ||
+		condition === 'time' ||
+		condition === 'stalemate' ||
+		condition === 'moverule' ||
+		condition === 'repetition' ||
+		condition === 'insuffmat' ||
+		condition === 'agreement' ||
+		condition === 'resignation' ||
+		condition === 'disconnect' ||
+		condition === 'aborted'
+	);
+}
+
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
 function getGameConclusionFromResultAndTermination(
 	result: string,
 	termination: string,
 ): GameConclusion {
 	if (!result || !termination) throw Error('Must provide both result and termination.');
+
+	// Validate that termination is a valid condition
+	if (!isValidGameConclusionCondition(termination)) {
+		throw Error(`Invalid game conclusion condition: ${termination}`);
+	}
 
 	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
@@ -99,8 +124,8 @@ function getGameConclusionFromResultAndTermination(
 		result === '0-1' ? players.BLACK :
 		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
-	// Cast termination to GameConclusionCondition after validation
-	return { victor, condition: termination as GameConclusionCondition };
+	// termination is now validated to be a GameConclusionCondition
+	return { victor, condition: termination };
 }
 
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
