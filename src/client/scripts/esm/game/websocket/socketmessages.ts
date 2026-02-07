@@ -8,6 +8,7 @@ import type { WebsocketMessage, WebsocketMessageValue } from './socketutil.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 
+import toast from '../gui/toast.js';
 import socketsubs from './socketsubs.js';
 import {
 	isDebugEnabled,
@@ -20,6 +21,18 @@ import {
 // Variables -------------------------------------------------------------------
 
 type MessageID = number;
+
+/** The shape of an outgoing websocket payload sent to the server. */
+type OutgoingPayload = {
+	route: string;
+	contents:
+		| {
+				action: string;
+				value: WebsocketMessageValue;
+		  }
+		| WebsocketMessageValue;
+	id?: number;
+};
 
 /** Echo timers for sent messages awaiting acknowledgement. */
 let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
@@ -186,16 +199,7 @@ async function sendmessage(
 
 	resetTimerToCloseSocket();
 
-	let payload: {
-		route: string;
-		contents:
-			| {
-					action: string;
-					value: WebsocketMessageValue;
-			  }
-			| WebsocketMessageValue;
-		id?: number;
-	};
+	let payload: OutgoingPayload;
 	if (action === 'echo') {
 		payload = {
 			route: 'echo',
@@ -239,9 +243,6 @@ async function sendmessage(
 
 	return true;
 }
-
-// We need toast for the "too many requests" message in sendmessage
-import toast from '../gui/toast.js';
 
 export default {
 	sendmessage,
