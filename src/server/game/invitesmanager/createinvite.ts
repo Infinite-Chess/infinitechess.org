@@ -44,7 +44,7 @@ const createinviteschem = z
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
 			.refine((c) => timecontrol.isValid(c), { error: 'Invalid clock value.' }),
-		color: z.literal([players.WHITE, players.BLACK, players.NEUTRAL]),
+		color: z.literal([players.WHITE, players.BLACK, null]),
 		publicity: z.enum(['public', 'private']),
 		rated: z.enum(['casual', 'rated']),
 		tag: z.string().length(8),
@@ -56,7 +56,7 @@ const createinviteschem = z
 				// Rated game validation...
 				if (!(val.variant in VariantLeaderboards)) return false; // Invalid variant for a rated game.
 				if (val.clock === '-') return false; // Invalid clock for a rated game.
-				if (val.color !== players.NEUTRAL && val.publicity !== 'private') return false; // Specific colors are only allowed if the rated game is also private.
+				if (val.color !== null && val.publicity !== 'private') return false; // Specific colors are only allowed if the rated game is also private.
 			}
 			return true; // Casual games can have any properties.
 		},

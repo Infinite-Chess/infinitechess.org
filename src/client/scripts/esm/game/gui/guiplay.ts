@@ -305,7 +305,7 @@ function callback_createInvite(): void {
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
 		// prettier-ignore
-		const ourColor = inviteOptions.color !== p.NEUTRAL ? inviteOptions.color : Math.random() > 0.5 ? p.WHITE : p.BLACK;
+		const ourColor = inviteOptions.color ?? Math.random() > 0.5 ? p.WHITE : p.BLACK;
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
@@ -330,7 +330,7 @@ function callback_createInvite(): void {
  */
 function getInviteOptions(): InviteOptions {
 	const strcolor = element_optionColor.value;
-	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : p.NEUTRAL;
+	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : null;
 	return {
 		variant: element_optionVariant.value,
 		clock: element_optionClock.value as TimeControl,

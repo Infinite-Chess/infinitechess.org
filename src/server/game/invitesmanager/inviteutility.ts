@@ -30,7 +30,7 @@ interface SafeInvite {
 	tag: string; // Used to verify if an invite is your own.
 	variant: string;
 	clock: TimeControl;
-	color: Player;
+	color: Player | null;
 	rated: 'casual' | 'rated';
 	publicity: 'public' | 'private';
 }
