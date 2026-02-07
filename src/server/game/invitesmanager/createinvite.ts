@@ -44,7 +44,7 @@ const createinviteschem = z
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
 			.refine((c) => timecontrol.isValid(c), { error: 'Invalid clock value.' }),
-		color: z.union([z.literal(players.WHITE), z.literal(players.BLACK), z.null()]),
+		color: z.literal([players.WHITE, players.BLACK, null]),
 		publicity: z.enum(['public', 'private']),
 		rated: z.enum(['casual', 'rated']),
 		tag: z.string().length(8),
