@@ -17,6 +17,7 @@ import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import { GAME_CONCLUSION_CONDITIONS } from '../../../shared/chess/logic/gamefile.js';
 
 import socketUtility from '../../socket/socketUtility.js';
 import { declineDraw } from './onOfferDraw.js';
@@ -32,22 +33,7 @@ const submitmoveschem = z.strictObject({
 	moveNumber: z.int(),
 	gameConclusion: z
 		.strictObject({
-			condition: z.enum([
-				'checkmate',
-				'royalcapture',
-				'allroyalscaptured',
-				'allpiecescaptured',
-				'koth',
-				'time',
-				'stalemate',
-				'moverule',
-				'repetition',
-				'insuffmat',
-				'agreement',
-				'resignation',
-				'disconnect',
-				'aborted',
-			]),
+			condition: z.enum(GAME_CONCLUSION_CONDITIONS),
 			victor: z.number().int().nonnegative().optional() as z.ZodType<Player | undefined>,
 		})
 		.optional(),

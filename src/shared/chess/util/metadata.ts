@@ -13,6 +13,7 @@ import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion, GameConclusionCondition } from '../logic/gamefile.js';
 
 import { players } from './typeutil.js';
+import { GAME_CONCLUSION_CONDITIONS } from '../logic/gamefile.js';
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -87,22 +88,7 @@ function getResultFromVictor(victor?: Player | null): string {
 
 /** Helper to validate if a string is a valid GameConclusionCondition */
 function isValidGameConclusionCondition(condition: string): condition is GameConclusionCondition {
-	return (
-		condition === 'checkmate' ||
-		condition === 'royalcapture' ||
-		condition === 'allroyalscaptured' ||
-		condition === 'allpiecescaptured' ||
-		condition === 'koth' ||
-		condition === 'time' ||
-		condition === 'stalemate' ||
-		condition === 'moverule' ||
-		condition === 'repetition' ||
-		condition === 'insuffmat' ||
-		condition === 'agreement' ||
-		condition === 'resignation' ||
-		condition === 'disconnect' ||
-		condition === 'aborted'
-	);
+	return (GAME_CONCLUSION_CONDITIONS as readonly string[]).includes(condition);
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */

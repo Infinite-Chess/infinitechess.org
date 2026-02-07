@@ -42,26 +42,33 @@ interface Snapshot {
 
 /**
  * All possible game conclusion conditions.
+ * Single source of truth for valid condition strings.
+ */
+const GAME_CONCLUSION_CONDITIONS = [
+	// Win/loss conditions (determined during gameplay)
+	'checkmate',
+	'royalcapture',
+	'allroyalscaptured',
+	'allpiecescaptured',
+	'koth', // King of the Hill
+	'time',
+	// Draw conditions
+	'stalemate',
+	'moverule',
+	'repetition',
+	'insuffmat', // insufficient material
+	'agreement',
+	// Game termination without completion
+	'resignation',
+	'disconnect',
+	'aborted',
+] as const;
+
+/**
+ * Union type of all possible game conclusion conditions.
  * Represents how a game can be terminated.
  */
-type GameConclusionCondition =
-	// Win/loss conditions (determined during gameplay)
-	| 'checkmate'
-	| 'royalcapture'
-	| 'allroyalscaptured'
-	| 'allpiecescaptured'
-	| 'koth' // King of the Hill
-	| 'time'
-	// Draw conditions
-	| 'stalemate'
-	| 'moverule'
-	| 'repetition'
-	| 'insuffmat' // insufficient material
-	| 'agreement'
-	// Game termination without completion
-	| 'resignation'
-	| 'disconnect'
-	| 'aborted';
+type GameConclusionCondition = (typeof GAME_CONCLUSION_CONDITIONS)[number];
 
 /** Stores the results of a game, including how it was terminated, and who won. */
 type GameConclusion = {
@@ -363,6 +370,8 @@ export type {
 	GameConclusion,
 	GameConclusionCondition,
 };
+
+export { GAME_CONCLUSION_CONDITIONS };
 
 export default {
 	initGame,
