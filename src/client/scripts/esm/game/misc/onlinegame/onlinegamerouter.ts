@@ -3,6 +3,7 @@
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -177,7 +178,7 @@ function handleLoggedGameInfo(message: {
 	game_id: number;
 	rated: 0 | 1;
 	private: 0 | 1;
-	termination: string;
+	termination: Condition;
 	icn: string;
 }): void {
 	let parsedGame: LongFormatOut;

@@ -14,7 +14,6 @@ import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
 import { players } from './typeutil.js';
-import { GAME_CONCLUSION_CONDITIONS } from './winconutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -87,23 +86,11 @@ function getResultFromVictor(victor?: Player | null): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
-/** Helper to validate if a string is a valid Condition */
-function isValidCondition(condition: string): condition is Condition {
-	return GAME_CONCLUSION_CONDITIONS.includes(condition as Condition);
-}
-
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
 function getGameConclusionFromResultAndTermination(
 	result: string,
-	termination: string,
+	termination: Condition,
 ): GameConclusion {
-	if (!result || !termination) throw Error('Must provide both result and termination.');
-
-	// Validate that termination is a valid condition
-	if (!isValidCondition(termination)) {
-		throw Error(`Invalid game conclusion condition: ${termination}`);
-	}
-
 	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
 	const victor: Player | null =
