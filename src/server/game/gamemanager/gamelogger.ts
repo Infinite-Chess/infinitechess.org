@@ -80,9 +80,7 @@ async function logGame(servergame: ServerGame): Promise<RatingData | undefined> 
  * Either ALL operations succeed, or NONE do.
  */
 function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
-	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(
-		servergame.basegame.gameConclusion!,
-	);
+	const { victor, condition: termination } = servergame.basegame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame, victor);

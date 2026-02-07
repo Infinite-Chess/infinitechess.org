@@ -283,9 +283,7 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(
-		basegame.gameConclusion,
-	).victor; // undefined if aborted
+	const victor: Player | undefined = basegame.gameConclusion?.victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
 		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);

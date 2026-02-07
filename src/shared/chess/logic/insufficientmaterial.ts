@@ -6,8 +6,8 @@
  * @maintainer tsevasa
  */
 
-import type { Board } from './gamefile.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { Board, GameConclusion } from './gamefile.js';
 
 import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
@@ -203,9 +203,12 @@ function ordered_tuple_descending(tuple: [number, number]): [number, number] {
  * Detects if the game is drawn for insufficient material
  * @param gameRules
  * @param boardsim
- * @returns '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
+ * @returns `{ victor: 0, condition: 'insuffmat' }`, if the game is over by the insufficient material, otherwise *undefined*.
  */
-function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): string | undefined {
+function detectInsufficientMaterial(
+	gameRules: GameRules,
+	boardsim: Board,
+): GameConclusion | undefined {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (
 		!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') ||
@@ -294,9 +297,9 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
 	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
-		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: players.NEUTRAL, condition: 'insuffmat' }; // Victor of player NEUTRAL means it was a draw.
 	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
-		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: players.NEUTRAL, condition: 'insuffmat' }; // Victor of player NEUTRAL means it was a draw.
 	else return undefined;
 }
 

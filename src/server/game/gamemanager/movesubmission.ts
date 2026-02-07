@@ -8,6 +8,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
@@ -29,7 +30,12 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 const submitmoveschem = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
-	gameConclusion: z.string().optional(),
+	gameConclusion: z
+		.strictObject({
+			condition: z.string(),
+			victor: z.number().optional(),
+		})
+		.optional(),
 });
 
 type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
@@ -210,13 +216,14 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
  * @param color - The color they are in the game.
  * @returns *true* if their claimed conclusion seems reasonable.
  */
-function doesGameConclusionCheckOut(gameConclusion: string | undefined, color: Player): boolean {
+function doesGameConclusionCheckOut(
+	gameConclusion: GameConclusion | undefined,
+	color: Player,
+): boolean {
 	if (gameConclusion === undefined) return true;
-	// It is a string...
+	// It is an object...
 
-	// If conclusion is "aborted", victor will not be specified.
-	const { victor, condition } =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { victor, condition } = gameConclusion;
 	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
 	// Game conclusion is decisive...
 	// We can't submit a move where our opponent wins

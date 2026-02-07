@@ -200,8 +200,7 @@ function validateTermination(
 		return;
 	}
 
-	const { victor, condition } =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { victor, condition } = gameConclusion;
 
 	const conditionMappings: Record<string, string> = {
 		Checkmate: 'checkmate',

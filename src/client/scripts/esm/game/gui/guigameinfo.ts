@@ -7,6 +7,7 @@
 
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
@@ -318,11 +319,11 @@ function updateWhosTurn(): void {
 }
 
 /** Updates the whosTurn text to say who won! */
-function gameEnd(conclusion?: string): void {
-	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
+function gameEnd(conclusion?: GameConclusion): void {
+	// { victor: 1, condition: 'checkmate' } / { victor: 2, condition: 'resignation' } / { victor: 0, condition: 'stalemate' }  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
+	const { victor, condition } = conclusion;
 	const resultTranslations = translations['results'];
 
 	const { basegame } = gameslot.getGamefile()!;

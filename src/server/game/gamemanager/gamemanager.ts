@@ -8,6 +8,7 @@ import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 
@@ -317,7 +318,7 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
  * @param servergame - The game
  * @param conclusion - The new game conclusion
  */
-function setGameConclusion(servergame: ServerGame, conclusion: string | undefined): void {
+function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
 	const dontDecrementActiveGames = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	gameutility.setConclusion(servergame.basegame, conclusion);
 	if (conclusion !== undefined) onGameConclusion(servergame, { dontDecrementActiveGames });
@@ -381,7 +382,7 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
 	const loser = servergame.basegame.whosTurn!;
 	const winner = typeutil.invertPlayer(loser);
 
-	setGameConclusion(servergame, `${winner} time`);
+	setGameConclusion(servergame, { victor: winner, condition: 'time' });
 
 	// Sometimes they're clock can have 1ms left. Just make that zero.
 	// This needs to be done AFTER setting game conclusion, because that
@@ -405,10 +406,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 
 	if (gameutility.isGameResignable(servergame.basegame)) {
 		console.log('Someone has lost by disconnection!');
-		setGameConclusion(servergame, `${colorWon} disconnect`);
+		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
 		console.log('Game aborted from disconnection.');
-		setGameConclusion(servergame, 'aborted');
+		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 
 	gameutility.broadcastGameUpdate(servergame);
@@ -425,10 +426,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): void {
 	if (gameutility.isGameResignable(servergame.basegame)) {
 		console.log('Someone has lost by abandonment!');
-		setGameConclusion(servergame, `${colorWon} disconnect`);
+		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
 		console.log('Game aborted from abandonment.');
-		setGameConclusion(servergame, 'aborted');
+		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 
 	gameutility.broadcastGameUpdate(servergame);
@@ -497,7 +498,7 @@ async function logAllGames(): Promise<void> {
 		const servergame = activeGames[gameID]!;
 		if (!gameutility.isGameOver(servergame.basegame)) {
 			// Abort the game
-			setGameConclusion(servergame, 'aborted');
+			setGameConclusion(servergame, { condition: 'aborted' });
 			// Report conclusion to players
 			gameutility.broadcastGameUpdate(servergame);
 		}

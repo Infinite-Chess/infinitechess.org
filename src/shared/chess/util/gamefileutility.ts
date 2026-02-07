@@ -48,15 +48,13 @@ function setTerminationMetadata(basegame: Game): void {
 	if (!basegame.gameConclusion)
 		return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: Player; condition: string } =
-		winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
 	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(
 		basegame.gameRules,
-		victorAndCondition.condition,
+		basegame.gameConclusion.condition,
 	);
 	basegame.metadata.Termination = conditionInPlainEnglish;
 
-	basegame.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
+	basegame.metadata.Result = metadata.getResultFromVictor(basegame.gameConclusion.victor); // white/black/draw/undefined
 }
 
 /**

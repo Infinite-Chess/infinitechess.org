@@ -4,7 +4,7 @@
  * This script contains our checkmate algorithm.
  */
 
-import type { FullGame } from './gamefile.js';
+import type { FullGame, GameConclusion } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
@@ -22,9 +22,9 @@ const royalCountToDisableCheckmate = 6;
 /**
  * Calculates if the provided gamefile is over by checkmate or stalemate
  * @param gamefile - The gamefile to detect if it's in checkmate
- * @returns The color of the player who won by checkmate. '1 checkmate', '2 checkmate', or '0 stalemate'. Or *false* if the game isn't over.
+ * @returns The color of the player who won by checkmate. `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.
  */
-function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
+function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefined {
 	const { basegame, boardsim } = gamefile;
 
 	// The game will be over when the player has zero legal moves remaining, lose or draw.
@@ -56,8 +56,8 @@ function detectCheckmateOrStalemate(gamefile: FullGame): string | undefined {
 			basegame,
 			boardsim.moves.length - 1,
 		);
-		return `${colorThatWon} checkmate`;
-	} else return `${players.NEUTRAL} stalemate`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: colorThatWon, condition: 'checkmate' };
+	} else return { victor: players.NEUTRAL, condition: 'stalemate' }; // Victor of player NEUTRAL means it was a draw.
 }
 
 export { pieceCountToDisableCheckmate, royalCountToDisableCheckmate, detectCheckmateOrStalemate };

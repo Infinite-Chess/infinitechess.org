@@ -72,7 +72,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Accept draw offer!
 
 	closeDrawOffer(servergame.match);
-	setGameConclusion(servergame, `${players.NEUTRAL} agreement`); // Player NEUTRAL winning means it was a draw
+	setGameConclusion(servergame, { victor: players.NEUTRAL, condition: 'agreement' }); // Player NEUTRAL winning means it was a draw
 	gameutility.broadcastGameUpdate(servergame);
 }
 

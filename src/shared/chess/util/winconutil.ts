@@ -8,6 +8,7 @@
 
 import type { Player } from './typeutil.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { GameConclusion } from '../logic/gamefile.js';
 
 /** Valid win conditions that either color can have. */
 const validWinConditions = [
@@ -49,13 +50,13 @@ function isWinConditionValid(winCondition: string): boolean {
  * @param gameConclusion - The gameConclusion
  * @returns *true* if the gameConclusion is decisive.
  */
-function isGameConclusionDecisive(gameConclusion: string | undefined): boolean {
+function isGameConclusionDecisive(gameConclusion: GameConclusion | undefined): boolean {
 	if (gameConclusion === undefined) {
 		throw new Error(
 			'Should not be be testing if game conclusion is decisive when game is not over!',
 		);
 	}
-	const { condition } = getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { condition } = gameConclusion;
 	return isConclusionDecisive(condition);
 }
 
@@ -114,6 +115,5 @@ export default {
 	isWinConditionValid,
 	isGameConclusionDecisive,
 	isConclusionDecisive,
-	getVictorAndConditionFromGameConclusion,
 	getTerminationInEnglish,
 };

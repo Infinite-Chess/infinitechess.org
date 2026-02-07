@@ -345,13 +345,13 @@ function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
 	if (!inCheckmatePractice) return; // Not in checkmate practice
 
-	const gameConclusion: string | undefined = gameslot.getGamefile()!.basegame.gameConclusion;
+	const gameConclusion: GameConclusion | undefined =
+		gameslot.getGamefile()!.basegame.gameConclusion;
 	if (gameConclusion === undefined)
 		throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: Player | undefined =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
+	const victor: Player | undefined = gameConclusion.victor;
 	if (victor === undefined)
 		throw Error('Victor should never be undefined when concluding an engine game.');
 	if (!(enginegame.getOurColor() === victor)) return; // Lost

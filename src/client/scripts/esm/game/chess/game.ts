@@ -141,7 +141,7 @@ function update(): void {
 	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) {
 		// undefined if no clock has ran out
-		gamefile.basegame.gameConclusion = `${timeWinner} time`;
+		gamefile.basegame.gameConclusion = { victor: timeWinner, condition: 'time' };
 		gameslot.concludeGame();
 	}
 	guiclock.update(gamefile.basegame);

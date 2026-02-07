@@ -7,7 +7,6 @@
  * At most this ever handles a single game, not multiple.
  */
 
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
@@ -16,6 +15,7 @@ import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 
 import uuid from '../../../shared/util/uuid.js';
@@ -47,7 +47,7 @@ type ServerGameMoveMessage = { compact: string; clockStamp?: number };
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
 	move: ServerGameMoveMessage;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number;
 	/** If the game is timed, this will be the current clock values. */
@@ -56,7 +56,7 @@ interface OpponentsMoveMessage {
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMoveMessage[];
 	participantState: ParticipantState;
@@ -833,15 +833,16 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 	return getTranslation(`play.javascript.termination.${condition}`);
 }
 
-function setConclusion(basegame: Game, conclusion: string | undefined): void {
+function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;
 
 	// Add on the Result and Termination metadata
 	if (conclusion) {
-		const { victor, condition } =
-			winconutil.getVictorAndConditionFromGameConclusion(conclusion);
-		basegame.metadata.Result = metadata.getResultFromVictor(victor);
-		basegame.metadata.Termination = getTerminationInEnglish(basegame.gameRules, condition);
+		basegame.metadata.Result = metadata.getResultFromVictor(conclusion.victor);
+		basegame.metadata.Termination = getTerminationInEnglish(
+			basegame.gameRules,
+			conclusion.condition,
+		);
 	} else {
 		delete basegame.metadata.Result;
 		delete basegame.metadata.Termination;

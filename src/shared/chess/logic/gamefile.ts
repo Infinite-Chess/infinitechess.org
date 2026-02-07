@@ -41,6 +41,16 @@ interface Snapshot {
 }
 
 /**
+ * The game conclusion object containing the condition and optional victor.
+ * If the game is aborted, victor will be undefined.
+ * If the game is a draw, victor will be Player 0 (neutral).
+ */
+type GameConclusion = {
+	condition: string;
+	victor?: Player;
+};
+
+/**
  * Purely game data
  * Used on both sides
  */
@@ -50,7 +60,7 @@ type Game = {
 	moves: BaseMove[];
 	gameRules: GameRules;
 	whosTurn: Player;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 } & ClockDependant;
 
 /**
@@ -114,7 +124,7 @@ interface Additional {
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
 	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues;
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
@@ -129,7 +139,7 @@ interface Additional {
 function initGame(
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
-	gameConclusion?: string,
+	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 ): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
@@ -257,7 +267,7 @@ function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
 	moves: ServerGameMoveMessage[] = [],
-	gameConclusion?: string,
+	gameConclusion?: GameConclusion,
 	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
@@ -322,7 +332,7 @@ function initFullGame(
 	);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
 
 export default {
 	initGame,
