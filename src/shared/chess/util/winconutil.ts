@@ -104,13 +104,12 @@ function isConclusionDecisive(condition: string): boolean {
  * @param gameRules
  * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
  */
-function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
+function getTerminationInEnglish(gameRules: GameRules, condition: Condition): string {
 	if (condition === 'moverule') {
 		// One exception
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
 		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
 	}
-	// @ts-ignore
 	return translations['termination'][condition];
 }
 
