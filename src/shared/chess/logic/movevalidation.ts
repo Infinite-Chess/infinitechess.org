@@ -260,7 +260,10 @@ function validateConclusion(
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
 
-	if (simulatedConclusion !== claimedGameConclusion) {
+	if (
+		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||
+		simulatedConclusion?.victor !== claimedGameConclusion?.victor
+	) {
 		console.error(
 			`Conclusion mismatch! Simulated: ${simulatedConclusion}, Claimed: ${claimedGameConclusion}`,
 		);
