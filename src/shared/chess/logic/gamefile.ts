@@ -40,13 +40,11 @@ interface Snapshot {
 	box: BoundingBox;
 }
 
-/**
- * The game conclusion object containing the condition and optional victor.
- * If the game is aborted, victor will be undefined.
- * If the game is a draw, victor will be Player 0 (neutral).
- */
+/** Stores the results of a game, including how it was terminated, and who won. */
 type GameConclusion = {
+	/** How the game terminated. */
 	condition: string;
+	/** Defined so long as the game wasn't aborted. Player NEUTRAL = DRAW. */
 	victor?: Player;
 };
 

@@ -351,10 +351,9 @@ function onEngineGameConclude(): void {
 		throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: Player | undefined = gameConclusion.victor;
-	if (victor === undefined)
+	if (gameConclusion.victor === undefined)
 		throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!(enginegame.getOurColor() === victor)) return; // Lost
+	if (!(enginegame.getOurColor() === gameConclusion.victor)) return; // Lost
 
 	// WON!!! 🎉
 

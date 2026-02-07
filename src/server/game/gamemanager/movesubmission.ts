@@ -33,7 +33,7 @@ const submitmoveschem = z.strictObject({
 	gameConclusion: z
 		.strictObject({
 			condition: z.string(),
-			victor: z.number().int().optional() as z.ZodType<Player | undefined>,
+			victor: z.number().int().nonnegative().optional() as z.ZodType<Player | undefined>,
 		})
 		.optional(),
 });
@@ -221,7 +221,6 @@ function doesGameConclusionCheckOut(
 	color: Player,
 ): boolean {
 	if (gameConclusion === undefined) return true;
-	// It is an object...
 
 	const { victor, condition } = gameConclusion;
 	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)

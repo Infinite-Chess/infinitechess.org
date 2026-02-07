@@ -54,7 +54,7 @@ function setTerminationMetadata(basegame: Game): void {
 	);
 	basegame.metadata.Termination = conditionInPlainEnglish;
 
-	basegame.metadata.Result = metadata.getResultFromVictor(basegame.gameConclusion.victor); // white/black/draw/undefined
+	basegame.metadata.Result = metadata.getResultFromVictor(basegame.gameConclusion.victor);
 }
 
 /**

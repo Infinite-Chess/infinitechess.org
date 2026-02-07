@@ -22,7 +22,9 @@ const royalCountToDisableCheckmate = 6;
 /**
  * Calculates if the provided gamefile is over by checkmate or stalemate
  * @param gamefile - The gamefile to detect if it's in checkmate
- * @returns The color of the player who won by checkmate. `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.
+ * @returns The color of the player who won by checkmate.
+ * `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`,
+ * or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.
  */
 function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefined {
 	const { basegame, boardsim } = gamefile;

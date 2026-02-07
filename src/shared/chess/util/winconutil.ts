@@ -55,8 +55,7 @@ function isGameConclusionDecisive(gameConclusion: GameConclusion | undefined): b
 			'Should not be be testing if game conclusion is decisive when game is not over!',
 		);
 	}
-	const { condition } = gameConclusion;
-	return isConclusionDecisive(condition);
+	return isConclusionDecisive(gameConclusion.condition);
 }
 
 /**

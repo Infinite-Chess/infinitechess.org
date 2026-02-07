@@ -319,7 +319,6 @@ function updateWhosTurn(): void {
 
 /** Updates the whosTurn text to say who won! */
 function gameEnd(conclusion?: GameConclusion): void {
-	// { victor: 1, condition: 'checkmate' } / { victor: 2, condition: 'resignation' } / { victor: 0, condition: 'stalemate' }  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = conclusion;
