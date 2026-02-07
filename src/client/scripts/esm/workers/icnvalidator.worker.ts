@@ -4,7 +4,8 @@
  * The web worker script for the ICN Validator Tool.
  */
 
-import winconutil from '../../../../shared/chess/util/winconutil.js';
+import type { GameConclusion } from '../../../../shared/chess/logic/gamefile.js';
+
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../../shared/chess/util/typeutil.js';
 
@@ -169,7 +170,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 function validateTermination(
 	termination: string | undefined,
 	result: string | undefined,
-	gameConclusion: string | undefined,
+	gameConclusion: GameConclusion | undefined,
 ): void {
 	if (termination === 'Draw by maximum moves reached') {
 		if (gameConclusion !== undefined)

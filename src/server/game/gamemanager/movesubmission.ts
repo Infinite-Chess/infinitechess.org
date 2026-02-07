@@ -33,7 +33,7 @@ const submitmoveschem = z.strictObject({
 	gameConclusion: z
 		.strictObject({
 			condition: z.string(),
-			victor: z.number().optional(),
+			victor: z.number().int().optional() as z.ZodType<Player | undefined>,
 		})
 		.optional(),
 });

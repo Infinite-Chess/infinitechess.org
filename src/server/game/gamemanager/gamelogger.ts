@@ -12,7 +12,6 @@ import type { RatingData } from './ratingcalculation.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';

@@ -23,7 +23,6 @@ import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,

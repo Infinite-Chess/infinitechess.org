@@ -12,7 +12,6 @@ import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemana
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
 import metadata from '../../../../../shared/chess/util/metadata.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { PlayerGroup, players } from '../../../../../shared/chess/util/typeutil.js';
 

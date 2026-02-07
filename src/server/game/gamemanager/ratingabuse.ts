@@ -14,7 +14,6 @@ import type { ServerGame } from './gameutility.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 
 import gameutility from './gameutility.js';

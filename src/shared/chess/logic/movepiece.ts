@@ -10,9 +10,9 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
-import type { Board, FullGame } from './gamefile.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
+import type { Board, FullGame, GameConclusion } from './gamefile.js';
 
 import state from './state.js';
 import bimath from '../../util/math/bimath.js';
@@ -640,7 +640,10 @@ function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callba
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): string | undefined {
+function getSimulatedConclusion(
+	gamefile: FullGame,
+	moveDraft: MoveDraft,
+): GameConclusion | undefined {
 	return simulateMoveWrapper(gamefile, moveDraft, () => wincondition.getGameConclusion(gamefile));
 }
 

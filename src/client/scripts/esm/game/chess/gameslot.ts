@@ -20,7 +20,6 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 

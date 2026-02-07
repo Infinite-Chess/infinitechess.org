@@ -6,13 +6,13 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';

@@ -13,7 +13,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
@@ -94,7 +94,7 @@ function synchronizeMovesList(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
 	moves: ServerGameMoveMessage[],
-	claimedGameConclusion: string | undefined,
+	claimedGameConclusion: GameConclusion | undefined,
 ): { opponentPlayedIllegalMove: boolean } {
 	const { boardsim } = gamefile;
 	// console.log("Resyncing...");

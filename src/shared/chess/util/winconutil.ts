@@ -6,7 +6,6 @@
  *
  */
 
-import type { Player } from './typeutil.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
@@ -72,28 +71,6 @@ function isGameConclusionDecisive(gameConclusion: GameConclusion | undefined): b
  */
 function isConclusionDecisive(condition: string): boolean {
 	return decisiveGameConclusions.includes(condition);
-}
-
-/**
- * Calculates the victor and condition properties from the specified game conclusion.
- * For example, "1 checkmate" => `{ victor: 1, condition: 'checkmate' }`.
- * If the game was aborted, victor will be undefined.
- * If the game was a draw, victor will be Player 0 (neutral).
- * @param gameConclusion - The gameConclusion of the gamefile. Examples: '1 checkmate' / '0 stalemate'
- * @returns An object containing 2 properties: `victor` and `condition`
- */
-function getVictorAndConditionFromGameConclusion(gameConclusion: string): {
-	condition: string;
-	victor?: Player;
-} {
-	const [victorStr, condition] = gameConclusion.split(' ');
-	// If the conclusion is "aborted", then the victor isn't specified.
-	if (victorStr === 'aborted') return { condition: victorStr };
-
-	return {
-		victor: Number(victorStr) as Player,
-		condition: condition!,
-	};
 }
 
 /**
