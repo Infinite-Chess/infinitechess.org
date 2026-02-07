@@ -88,7 +88,7 @@ function getResultFromVictor(victor?: Player | null): string {
 
 /** Helper to validate if a string is a valid GameConclusionCondition */
 function isValidGameConclusionCondition(condition: string): condition is GameConclusionCondition {
-	return (GAME_CONCLUSION_CONDITIONS as readonly string[]).includes(condition);
+	return GAME_CONCLUSION_CONDITIONS.includes(condition as GameConclusionCondition);
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
@@ -110,7 +110,6 @@ function getGameConclusionFromResultAndTermination(
 		result === '0-1' ? players.BLACK :
 		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
-	// termination is now validated to be a GameConclusionCondition
 	return { victor, condition: termination };
 }
 
