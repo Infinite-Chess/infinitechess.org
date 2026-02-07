@@ -43,7 +43,7 @@ function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 	}
 
 	// Abort
-	setGameConclusion(servergame, 'aborted');
+	setGameConclusion(servergame, { condition: 'aborted' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 
@@ -74,8 +74,7 @@ function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 		ws.metadata.subscriptions.game?.color ||
 		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
-	const gameConclusion = `${opponentColor} resignation`;
-	setGameConclusion(servergame, gameConclusion);
+	setGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 

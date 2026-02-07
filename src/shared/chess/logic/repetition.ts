@@ -10,8 +10,8 @@
  */
 
 import type { Move } from './movepiece.js';
-import type { FullGame } from './gamefile.js';
 import type { StateChange } from './state.js';
+import type { FullGame, GameConclusion } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
@@ -27,7 +27,7 @@ type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassa
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefined {
+function detectRepetitionDraw({ basegame, boardsim }: FullGame): GameConclusion | undefined {
 	const moveList = boardsim.moves;
 	const turnOrderLength = basegame.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
@@ -139,7 +139,7 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 
 	// Loop is finished. How many equal positions did we find?
 	if (equalPositionsFound === 2)
-		return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: players.NEUTRAL, condition: 'repetition' }; // Victor of player NEUTRAL means it was a draw.
 	else return undefined;
 }
 

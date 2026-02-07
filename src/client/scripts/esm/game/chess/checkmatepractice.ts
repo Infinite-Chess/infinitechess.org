@@ -6,13 +6,13 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
@@ -345,16 +345,15 @@ function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
 	if (!inCheckmatePractice) return; // Not in checkmate practice
 
-	const gameConclusion: string | undefined = gameslot.getGamefile()!.basegame.gameConclusion;
+	const gameConclusion: GameConclusion | undefined =
+		gameslot.getGamefile()!.basegame.gameConclusion;
 	if (gameConclusion === undefined)
 		throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: Player | undefined =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
-	if (victor === undefined)
+	if (gameConclusion.victor === undefined)
 		throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!(enginegame.getOurColor() === victor)) return; // Lost
+	if (!(enginegame.getOurColor() === gameConclusion.victor)) return; // Lost
 
 	// WON!!! 🎉
 

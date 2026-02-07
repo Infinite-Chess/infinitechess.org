@@ -13,12 +13,12 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type {
 	ParticipantState,
@@ -169,7 +169,7 @@ async function startOnlineGame(options: {
 	gameInfo: ServerGameInfo;
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMoveMessage[];
 	clockValues?: ClockValues;

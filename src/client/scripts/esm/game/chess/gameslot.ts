@@ -20,7 +20,6 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
@@ -283,9 +282,7 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(
-		basegame.gameConclusion,
-	).victor; // undefined if aborted
+	const victor: Player | undefined = basegame.gameConclusion.victor; // undefined if aborted
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
 		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);

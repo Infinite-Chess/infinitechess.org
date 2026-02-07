@@ -12,7 +12,6 @@ import type { RatingData } from './ratingcalculation.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';
@@ -80,9 +79,7 @@ async function logGame(servergame: ServerGame): Promise<RatingData | undefined> 
  * Either ALL operations succeed, or NONE do.
  */
 function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
-	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(
-		servergame.basegame.gameConclusion!,
-	);
+	const { victor, condition: termination } = servergame.basegame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame, victor);

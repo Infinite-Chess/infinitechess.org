@@ -298,7 +298,7 @@ function handleLogin(basegame: Game): void {
 function handleNoGame(basegame: Game): void {
 	toast.show(translations['onlinegame'].game_no_longer_exists, { durationMultiplier: 1.5 });
 	websocket.deleteSub('game');
-	basegame.gameConclusion = 'aborted';
+	basegame.gameConclusion = { condition: 'aborted' };
 	gameslot.concludeGame();
 }
 

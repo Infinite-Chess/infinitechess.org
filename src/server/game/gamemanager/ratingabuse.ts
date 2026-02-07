@@ -14,7 +14,6 @@ import type { ServerGame } from './gameutility.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 
 import gameutility from './gameutility.js';
@@ -139,11 +138,7 @@ async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void
 	if (!servergame.match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
 	// the game will NOT have added an entry in the leaderboards table for the players!
-	if (
-		winconutil.getVictorAndConditionFromGameConclusion(servergame.basegame.gameConclusion!)
-			.victor === undefined
-	)
-		return;
+	if (servergame.basegame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
 	const leaderboard_id = VariantLeaderboards[servergame.basegame.metadata.Variant!];
