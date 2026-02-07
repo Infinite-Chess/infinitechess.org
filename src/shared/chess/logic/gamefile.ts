@@ -40,10 +40,33 @@ interface Snapshot {
 	box: BoundingBox;
 }
 
+/**
+ * All possible game conclusion conditions.
+ * Represents how a game can be terminated.
+ */
+type GameConclusionCondition =
+	// Win/loss conditions (determined during gameplay)
+	| 'checkmate'
+	| 'royalcapture'
+	| 'allroyalscaptured'
+	| 'allpiecescaptured'
+	| 'koth' // King of the Hill
+	| 'time'
+	// Draw conditions
+	| 'stalemate'
+	| 'moverule'
+	| 'repetition'
+	| 'insuffmat' // insufficient material
+	| 'agreement'
+	// Game termination without completion
+	| 'resignation'
+	| 'disconnect'
+	| 'aborted';
+
 /** Stores the results of a game, including how it was terminated, and who won. */
 type GameConclusion = {
 	/** How the game terminated. */
-	condition: string;
+	condition: GameConclusionCondition;
 	/** Which player was victorious. null = DRAW. undefined = ABORTED */
 	victor?: Player | null;
 };
@@ -330,7 +353,16 @@ function initFullGame(
 	);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
+export type {
+	Game,
+	Board,
+	FullGame,
+	Snapshot,
+	ClockDependant,
+	Additional,
+	GameConclusion,
+	GameConclusionCondition,
+};
 
 export default {
 	initGame,

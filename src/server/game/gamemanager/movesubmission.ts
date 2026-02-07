@@ -32,7 +32,22 @@ const submitmoveschem = z.strictObject({
 	moveNumber: z.int(),
 	gameConclusion: z
 		.strictObject({
-			condition: z.string(),
+			condition: z.enum([
+				'checkmate',
+				'royalcapture',
+				'allroyalscaptured',
+				'allpiecescaptured',
+				'koth',
+				'time',
+				'stalemate',
+				'moverule',
+				'repetition',
+				'insuffmat',
+				'agreement',
+				'resignation',
+				'disconnect',
+				'aborted',
+			]),
 			victor: z.number().int().nonnegative().optional() as z.ZodType<Player | undefined>,
 		})
 		.optional(),

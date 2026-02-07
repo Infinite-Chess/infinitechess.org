@@ -10,7 +10,7 @@
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
-import type { GameConclusion } from '../logic/gamefile.js';
+import type { GameConclusion, GameConclusionCondition } from '../logic/gamefile.js';
 
 import { players } from './typeutil.js';
 
@@ -99,7 +99,8 @@ function getGameConclusionFromResultAndTermination(
 		result === '0-1' ? players.BLACK :
 		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
-	return { victor, condition: termination };
+	// Cast termination to GameConclusionCondition after validation
+	return { victor, condition: termination as GameConclusionCondition };
 }
 
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
