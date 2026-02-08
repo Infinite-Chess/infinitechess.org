@@ -177,6 +177,7 @@ async function onAuthenticationNeeded(): Promise<void> {
 	const now = Date.now();
 	if (lastTimeWeGotAuthorizationNeededMessage !== undefined) {
 		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
+		// 24 hours
 		if (difference < 1000 * 60 * 60 * 24) {
 			toast.show(translations['websocket'].online_play_disabled);
 			lastTimeWeGotAuthorizationNeededMessage = now;

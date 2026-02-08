@@ -18,7 +18,7 @@ import {
 	CUSHION_BEFORE_AUTO_CLOSE_MILLIS,
 } from './socketutil.js';
 
-// Variables -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type MessageID = number;
 
@@ -33,6 +33,8 @@ type OutgoingPayload = {
 		| WebsocketMessageValue;
 	id?: number;
 };
+
+// Variables -------------------------------------------------------------------
 
 /** Echo timers for sent messages awaiting acknowledgement. */
 let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
