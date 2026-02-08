@@ -12,6 +12,8 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
+import * as z from 'zod';
+
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import metadata from '../../../../../../shared/chess/util/metadata.js';
@@ -36,6 +38,13 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
+import { AFKGameSchema } from './afk.js';
+import { MoveGameSchema } from './movesendreceive.js';
+import { GameUpdateGameSchema } from './resyncer.js';
+import { DisconnectGameSchema } from './disconnect.js';
+import { DrawOffersGameSchema } from './drawoffers.js';
+import { RatingChangeGameSchema } from '../../gui/guigameinfo.js';
+import { ServerRestartGameSchema } from './serverrestart.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 
@@ -66,14 +75,48 @@ interface JoinGameMessage extends GameUpdateMessage {
 	youAreColor: Player;
 }
 
+// Schemas --------------------------------------------------------------------------------------
+
+/** Zod schema for all possible incoming server websocket messages with the 'game' route. */
+const GameSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
+	z.strictObject({
+		action: z.literal('logged-game-info'),
+		value: z.object({
+			game_id: z.number(),
+			rated: z.union([z.literal(0), z.literal(1)]),
+			private: z.union([z.literal(0), z.literal(1)]),
+			termination: z.custom<Condition>(),
+			icn: z.string(),
+		}),
+	}),
+	MoveGameSchema,
+	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
+	GameUpdateGameSchema,
+	RatingChangeGameSchema,
+	z.strictObject({ action: z.literal('unsub') }),
+	z.strictObject({ action: z.literal('login') }),
+	z.strictObject({ action: z.literal('nogame') }),
+	z.strictObject({ action: z.literal('leavegame') }),
+	AFKGameSchema,
+	DisconnectGameSchema,
+	ServerRestartGameSchema,
+	DrawOffersGameSchema,
+]);
+
+/** Represents all possible types an incoming 'game' route websocket message contents could be. */
+type GameMessage = z.infer<typeof GameSchema>;
+
+export { GameSchema };
+
 // Routers --------------------------------------------------------------------------------------
 
 /**
  * Routes a server websocket message with subscription marked `game`.
  * This handles all messages related to the active game we're in.
- * @param data - The incoming server websocket message
+ * @param contents - The contents of the incoming server websocket message
  */
-function routeMessage(contents: { action: string; value: any }): void {
+function routeMessage(contents: GameMessage): void {
 	// console.log(`Received ${contents.action} from server! Message contents:`)
 	// console.log(contents.value)
 
@@ -113,7 +156,7 @@ function routeMessage(contents: { action: string; value: any }): void {
 		case 'login':
 			handleLogin(gamefile.basegame);
 			break;
-		case 'nogame': // Game doesn't exist - SHOULD NEVER HAPPEN
+		case 'nogame':
 			handleNoGame(gamefile.basegame);
 			break;
 		case 'leavegame':
@@ -140,12 +183,14 @@ function routeMessage(contents: { action: string; value: any }): void {
 		case 'declinedraw':
 			drawoffers.onOpponentDeclinedOffer();
 			break;
-		default:
+		default: {
+			const exhaustiveCheck: never = contents;
 			toast.show(
-				`Unknown action "${contents.action}" received from server in 'game' route.`,
+				`Unknown action received from server in 'game' route: ${JSON.stringify(exhaustiveCheck)}`,
 				{ error: true },
 			);
 			break;
+		}
 	}
 }
 

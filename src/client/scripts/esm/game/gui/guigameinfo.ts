@@ -10,10 +10,12 @@ import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
+import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
+import * as z from 'zod';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import { PlayerGroup, players } from '../../../../../shared/chess/util/typeutil.js';
+import { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -22,6 +24,16 @@ import enginegame from '../misc/enginegame.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import frametracker from '../rendering/frametracker.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+
+// Schemas ---------------------------------------------------------------
+
+/** Zod schema for the 'gameratingchange' game route action from the server. */
+const RatingChangeGameSchema = z.strictObject({
+	action: z.literal('gameratingchange'),
+	value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
+});
+
+export { RatingChangeGameSchema };
 
 // Variables
 

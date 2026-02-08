@@ -8,12 +8,32 @@
  * extra time to reconnect.
  */
 
+import * as z from 'zod';
+
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
+
+// Schemas ---------------------------------------------------------------
+
+/** Zod schema for the 'opponentdisconnect' game route action from the server. */
+const opponentDisconnectSchem = z.object({
+	millisUntilAutoDisconnectResign: z.number(),
+	wasByChoice: z.boolean(),
+});
+
+/** Zod schemas for all incoming server messages handled by the disconnect module. */
+const DisconnectGameSchema = z.discriminatedUnion('action', [
+	z.strictObject({ action: z.literal('opponentdisconnect'), value: opponentDisconnectSchem }),
+	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
+]);
+
+export { DisconnectGameSchema };
+
+// Variables -----------------------------------------------------------------------
 
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
 let timeOpponentLoseFromDisconnect: number | undefined;
@@ -31,10 +51,7 @@ let displayOpponentDisconnectTimeoutID: ReturnType<typeof setTimeout> | undefine
 function startOpponentDisconnectCountdown({
 	millisUntilAutoDisconnectResign,
 	wasByChoice,
-}: {
-	millisUntilAutoDisconnectResign: number;
-	wasByChoice: boolean;
-}): void {
+}: z.infer<typeof opponentDisconnectSchem>): void {
 	// This overwrites the "Opponent is AFK" timer
 	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting

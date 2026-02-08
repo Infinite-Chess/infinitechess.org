@@ -5,7 +5,21 @@
  * stating the server will restart in N minutes.
  */
 
+import * as z from 'zod';
+
 import toast from '../../gui/toast.js';
+
+// Schemas ---------------------------------------------------------------
+
+/** Zod schema for the 'serverrestart' game route action from the server. The value is the timestamp when the server will restart. */
+const ServerRestartGameSchema = z.strictObject({
+	action: z.literal('serverrestart'),
+	value: z.number(),
+});
+
+export { ServerRestartGameSchema };
+
+// Constants -----------------------------------------------------------------------
 
 /** The minute intervals at which to display on scree, reminding the user the server is restarting. */
 const keyMinutes: number[] = [30, 20, 15, 10, 5, 2, 1, 0];

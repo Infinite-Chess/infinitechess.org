@@ -10,6 +10,8 @@ import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js'
 import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
+import * as z from 'zod';
+
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
@@ -29,6 +31,16 @@ import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
+
+// Schemas ---------------------------------------------------------------
+
+/** Zod schema for the 'move' game route action from the server. */
+const MoveGameSchema = z.strictObject({
+	action: z.literal('move'),
+	value: z.custom<OpponentsMoveMessage>(),
+});
+
+export { MoveGameSchema };
 
 // Events ---------------------------------------------------------------------
 
