@@ -30,8 +30,6 @@ const DrawOffersGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('declinedraw') }),
 ]);
 
-export { DrawOffersGameSchema };
-
 // Variables ---------------------------------------------------
 
 /**
@@ -185,4 +183,5 @@ export default {
 	set,
 	onMovePlayed,
 	onGameClose,
+	DrawOffersGameSchema,
 };

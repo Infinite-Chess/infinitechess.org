@@ -45,8 +45,6 @@ const GameUpdateGameSchema = z.strictObject({
 	value: z.custom<GameUpdateMessage>(),
 });
 
-export { GameUpdateGameSchema };
-
 // Functions -----------------------------------------------------------------------------
 
 /**
@@ -240,4 +238,5 @@ function synchronizeMovesList(
 export default {
 	handleServerGameUpdate,
 	synchronizeMovesList,
+	GameUpdateGameSchema,
 };

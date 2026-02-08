@@ -204,3 +204,5 @@ export {
 	// updateGameColumns,
 	// deleteGame
 };
+
+export type { GamesRecord };

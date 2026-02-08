@@ -856,7 +856,6 @@ export type {
 	ParticipantState,
 	ServerGameMoveMessage,
 	DrawOfferInfo,
-	DisconnectInfo,
 	GameUpdateMessage,
 };
 

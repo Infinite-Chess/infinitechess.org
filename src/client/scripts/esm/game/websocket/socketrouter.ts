@@ -15,9 +15,7 @@ import invites from '../misc/invites.js';
 import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import socketmessages from './socketmessages.js';
-import { GameSchema } from '../misc/onlinegame/onlinegamerouter.js';
 import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
-import { InvitesSchema } from '../misc/invites.js';
 
 // Schemas ---------------------------------------------------------------------
 
@@ -45,13 +43,13 @@ const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('invites'),
-		contents: InvitesSchema,
+		contents: invites.InvitesSchema,
 		replyto: z.number().optional(),
 	}),
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('game'),
-		contents: GameSchema,
+		contents: onlinegamerouter.GameSchema,
 		replyto: z.number().optional(),
 	}),
 ]);
@@ -60,15 +58,26 @@ const MasterSchema = z.discriminatedUnion('route', [
 export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** The schema for validating incoming echo messages. */
-const EchoSchema = z.object({
+const EchoSchema = z.strictObject({
 	/** The route, which is always 'echo' for echo messages. */
 	route: z.literal('echo'),
 	/** The contents of the echo message: the ID of the message being echoed. */
 	contents: z.number(),
 });
 
-/** The schema for validating all incoming websocket messages, including echos. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
+/** The schema for validating reply-only messages with no route. */
+const ReplyOnlySchema = z.strictObject({
+	route: z.undefined(),
+	id: z.number(),
+	replyto: z.number(),
+});
+
+/** The schema for validating all incoming websocket messages, including echos and reply-only messages. */
+const MasterSchemaWithEchos = z.discriminatedUnion('route', [
+	MasterSchema,
+	EchoSchema,
+	ReplyOnlySchema,
+]);
 
 // Types -----------------------------------------------------------------------
 
@@ -98,18 +107,9 @@ function onmessage(serverMessage: MessageEvent): void {
 	// Reschedule the inactivity timer that detects silent disconnections.
 	socketmessages.rescheduleInactivityTimer();
 
-	// Handle null messages (no route property). These are reply-only messages
-	// (e.g. { id, replyto }) that only exist to execute on-reply functions.
-	if (parsedUnvalidatedMessage.route === undefined) {
-		if (typeof parsedUnvalidatedMessage.id === 'number')
-			socketmessages.send('general', 'echo', parsedUnvalidatedMessage.id);
-		if (typeof parsedUnvalidatedMessage.replyto === 'number')
-			socketmessages.executeOnreplyFunc(parsedUnvalidatedMessage.replyto);
-		return;
-	}
-
 	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
+		toast.show(translations.websocket.please_report_bug, { error: true });
 		console.error('Received malformed websocket message from the server:', zod_result.error);
 		return;
 	}
@@ -127,7 +127,15 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
 
-	// Not an echo...
+	// Handle reply-only messages (no route property).
+	// These exist only to execute on-reply functions.
+	if (message.route === undefined) {
+		socketmessages.send('general', 'echo', message.id);
+		socketmessages.executeOnreplyFunc(message.replyto);
+		return;
+	}
+
+	// Not an echo or reply-only...
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
 	socketmessages.send('general', 'echo', message.id);
@@ -145,11 +153,12 @@ function onmessage(serverMessage: MessageEvent): void {
 		case 'game':
 			onlinegamerouter.routeMessage(message.contents);
 			break;
-		default: {
-			const exhaustiveCheck: never = message;
-			console.error('Unknown socket subscription received from the server! Message:');
-			console.log(exhaustiveCheck);
-		}
+		default:
+			// @ts-ignore
+			console.error(
+				`Unknown socket subscription "${message.route}" received from the server!`,
+			);
+			break;
 	}
 }
 
@@ -177,12 +186,10 @@ function ongeneralmessage(message: GeneralMessage): void {
 		case 'gameversion':
 			if (message.value !== GAME_VERSION) handleHardRefresh(message.value);
 			break;
-		default: {
-			const exhaustiveCheck: never = message;
-			console.log(
-				`We don't know how to treat this server action in general route: ${JSON.stringify(exhaustiveCheck)}`,
-			);
-		}
+		default:
+			// @ts-ignore
+			console.log(`Unknown server action "${message.action}" in general route.`);
+			break;
 	}
 }
 

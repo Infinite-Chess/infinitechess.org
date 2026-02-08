@@ -31,12 +31,10 @@ import { listener_document, listener_overlay } from '../../chess/game.js';
 const AFKGameSchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('opponentafk'),
-		value: z.object({ millisUntilAutoAFKResign: z.number() }),
+		value: z.strictObject({ millisUntilAutoAFKResign: z.number() }),
 	}),
 	z.strictObject({ action: z.literal('opponentafkreturn') }),
 ]);
-
-export { AFKGameSchema };
 
 // Constants -----------------------------------------------------------------------
 
@@ -244,4 +242,5 @@ export default {
 	onGameClose,
 	startOpponentAFKCountdown,
 	stopOpponentAFKCountdown,
+	AFKGameSchema,
 };

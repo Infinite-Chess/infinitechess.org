@@ -40,8 +40,6 @@ const MoveGameSchema = z.strictObject({
 	value: z.custom<OpponentsMoveMessage>(),
 });
 
-export { MoveGameSchema };
-
 // Events ---------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => {
@@ -186,4 +184,5 @@ function handleOpponentsMove(
 export default {
 	sendMove,
 	handleOpponentsMove,
+	MoveGameSchema,
 };

@@ -60,15 +60,13 @@ export interface InviteOptions {
 const InvitesSchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('inviteslist'),
-		value: z.object({ invitesList: z.custom<Invite[]>(), currentGameCount: z.number() }),
+		value: z.strictObject({ invitesList: z.custom<Invite[]>(), currentGameCount: z.number() }),
 	}),
 	z.strictObject({ action: z.literal('gamecount'), value: z.number() }),
 ]);
 
 /** Represents all possible types an incoming 'invites' route websocket message contents could be. */
 type InvitesMessage = z.infer<typeof InvitesSchema>;
-
-export { InvitesSchema };
 
 // Elements ----------------------------------------------------------------------
 
@@ -127,13 +125,10 @@ function onmessage(contents: InvitesMessage): void {
 		case 'gamecount':
 			updateActiveGameCount(contents.value);
 			break;
-		default: {
-			const exhaustiveCheck: never = contents;
-			console.error(
-				`Received message for invites with unknown action: ${JSON.stringify(exhaustiveCheck)}`,
-			);
+		default:
+			// @ts-ignore
+			console.error(`Received message for invites with unknown action: ${contents.action}`);
 			break;
-		}
 	}
 }
 
@@ -508,4 +503,5 @@ export default {
 	unsubIfWeNotHave,
 	subscribeToInvites,
 	unsubFromInvites,
+	InvitesSchema,
 };

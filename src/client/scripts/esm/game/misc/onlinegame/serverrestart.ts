@@ -17,8 +17,6 @@ const ServerRestartGameSchema = z.strictObject({
 	value: z.number(),
 });
 
-export { ServerRestartGameSchema };
-
 // Constants -----------------------------------------------------------------------
 
 /** The minute intervals at which to display on scree, reminding the user the server is restarting. */
@@ -91,4 +89,5 @@ export default {
 	initServerRestart,
 	resetServerRestarting,
 	onGameClose,
+	ServerRestartGameSchema,
 };

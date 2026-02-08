@@ -6,6 +6,7 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
+import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	GameUpdateMessage,
@@ -38,13 +39,6 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
-import { AFKGameSchema } from './afk.js';
-import { MoveGameSchema } from './movesendreceive.js';
-import { GameUpdateGameSchema } from './resyncer.js';
-import { DisconnectGameSchema } from './disconnect.js';
-import { DrawOffersGameSchema } from './drawoffers.js';
-import { RatingChangeGameSchema } from '../../gui/guigameinfo.js';
-import { ServerRestartGameSchema } from './serverrestart.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 
@@ -82,32 +76,26 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
 	z.strictObject({
 		action: z.literal('logged-game-info'),
-		value: z.object({
-			game_id: z.number(),
-			rated: z.union([z.literal(0), z.literal(1)]),
-			private: z.union([z.literal(0), z.literal(1)]),
-			termination: z.custom<Condition>(),
-			icn: z.string(),
-		}),
+		value: z.custom<
+			Required<Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>>
+		>(),
 	}),
-	MoveGameSchema,
+	movesendreceive.MoveGameSchema,
 	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
-	GameUpdateGameSchema,
-	RatingChangeGameSchema,
+	resyncer.GameUpdateGameSchema,
+	guigameinfo.RatingChangeGameSchema,
 	z.strictObject({ action: z.literal('unsub') }),
 	z.strictObject({ action: z.literal('login') }),
 	z.strictObject({ action: z.literal('nogame') }),
 	z.strictObject({ action: z.literal('leavegame') }),
-	AFKGameSchema,
-	DisconnectGameSchema,
-	ServerRestartGameSchema,
-	DrawOffersGameSchema,
+	afk.AFKGameSchema,
+	disconnect.DisconnectGameSchema,
+	serverrestart.ServerRestartGameSchema,
+	drawoffers.DrawOffersGameSchema,
 ]);
 
 /** Represents all possible types an incoming 'game' route websocket message contents could be. */
 type GameMessage = z.infer<typeof GameSchema>;
-
-export { GameSchema };
 
 // Routers --------------------------------------------------------------------------------------
 
@@ -183,14 +171,14 @@ function routeMessage(contents: GameMessage): void {
 		case 'declinedraw':
 			drawoffers.onOpponentDeclinedOffer();
 			break;
-		default: {
-			const exhaustiveCheck: never = contents;
+		default:
+			// @ts-ignore
 			toast.show(
-				`Unknown action received from server in 'game' route: ${JSON.stringify(exhaustiveCheck)}`,
+				// @ts-ignore
+				`Unknown action "${contents.action}" received from server in 'game' route.`,
 				{ error: true },
 			);
 			break;
-		}
 	}
 }
 
@@ -219,13 +207,9 @@ function handleJoinGame(message: JoinGameMessage): void {
  * This loads it, even if we didn't participate in the game, and immediately concludes it.
  * @param message - The message from the server containing the game info.
  */
-function handleLoggedGameInfo(message: {
-	game_id: number;
-	rated: 0 | 1;
-	private: 0 | 1;
-	termination: Condition;
-	icn: string;
-}): void {
+function handleLoggedGameInfo(
+	message: Required<Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>>,
+): void {
 	let parsedGame: LongFormatOut;
 	try {
 		parsedGame = icnconverter.ShortToLong_Format(message.icn);
@@ -286,7 +270,7 @@ function handleLoggedGameInfo(message: {
 		metadata: parsedGame.metadata,
 		gameConclusion: metadata.getGameConclusionFromResultAndTermination(
 			parsedGame.metadata.Result!,
-			message.termination,
+			message.termination as Condition,
 		),
 		moves,
 		youAreColor: ourRole,
@@ -365,6 +349,7 @@ function handleLeaveGame(): void {
 
 export default {
 	routeMessage,
+	GameSchema,
 };
 
 export type { ServerGameInfo };

@@ -34,8 +34,6 @@ const RatingChangeGameSchema = z.strictObject({
 	value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
 });
 
-export { RatingChangeGameSchema };
-
 // Elements ---------------------------------------------------
 
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
@@ -492,4 +490,5 @@ export default {
 	getHeightOfGameInfoBar,
 	updateAlignmentUsernames,
 	addRatingChangeToExistingUsernameContainers,
+	RatingChangeGameSchema,
 };
