@@ -189,7 +189,7 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
 function updateRatingAbuseColumns(
 	user_id: number,
 	leaderboard_id: number,
-	columnsAndValues: RatingAbuseRecord,
+	columnsAndValues: Partial<RatingAbuseRecord>,
 ): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
