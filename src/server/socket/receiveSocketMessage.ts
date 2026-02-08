@@ -30,24 +30,18 @@ const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
 /** Represents all possible types a non-echo incoming websocket message could be! */
-type WebsocketInMessage = z.infer<typeof MasterSchema>;
+export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** This is the id of the message being replied to. */
-const EchoSchema = z.int();
-type EchoMessage = z.infer<typeof EchoSchema>;
+const EchoSchema = z.strictObject({
+	/** The route to forward the message to (e.g., "general", "invites", "game"). */
+	route: z.literal('echo'),
+	/** The contents of the message, for the router to read. */
+	contents: z.int(),
+});
 
 /** The schema for validating all incoming websocket messages, including echos. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [
-	z.strictObject({
-		/** The route to forward the message to (e.g., "general", "invites", "game"). */
-		route: z.literal('echo'),
-		/** The contents of the message, for the router to read. */
-		contents: EchoSchema,
-	}),
-	MasterSchema,
-]);
-/** Represents all possible types an incoming websocket message could be, including echos! */
-type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
+const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
 
 // Constants ---------------------------------------------------------------------------
 
@@ -112,10 +106,10 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// Validation was a success! Message contains valid parameters.
 
-	const message: WebsocketInMessageOrEcho = zod_result.data;
+	const message = zod_result.data;
 
 	if (message.route === 'echo') {
-		const incomingEcho: EchoMessage = message.contents;
+		const incomingEcho: number = message.contents;
 		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
@@ -156,5 +150,3 @@ function rateLimitAndLogMessage(
 }
 
 export { onmessage };
-
-export type { WebsocketInMessage };
