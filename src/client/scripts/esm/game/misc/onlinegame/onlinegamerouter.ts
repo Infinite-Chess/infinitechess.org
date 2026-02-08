@@ -75,14 +75,14 @@ interface JoinGameMessage extends GameUpdateMessage {
  * @param data - The incoming server websocket message
  */
 function routeMessage(data: WebsocketMessage): void {
-	// { sub, action, value, id }
-	// console.log(`Received ${data.action} from server! Message contents:`)
-	// console.log(data.value)
+	// console.log(`Received ${data.contents.action} from server! Message contents:`)
+	// console.log(data.contents.value)
 
 	// These actions are listened to, even when we're not in a game.
 
-	if (data.action === 'joingame') return handleJoinGame(data.value);
-	else if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
+	if (data.contents.action === 'joingame') return handleJoinGame(data.contents.value);
+	else if (data.contents.action === 'logged-game-info')
+		return handleLoggedGameInfo(data.contents.value);
 
 	// All other actions should be ignored if we're not in a game...
 
@@ -96,18 +96,18 @@ function routeMessage(data: WebsocketMessage): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
-	switch (data.action) {
+	switch (data.contents.action) {
 		case 'move':
-			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, data.contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile.basegame, data.value);
+			handleUpdatedClock(gamefile.basegame, data.contents.value);
 			break;
 		case 'gameupdate':
-			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, data.contents.value);
 			break;
 		case 'gameratingchange':
-			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
+			guigameinfo.addRatingChangeToExistingUsernameContainers(data.contents.value);
 			break;
 		case 'unsub':
 			handleUnsubbing();
@@ -122,19 +122,19 @@ function routeMessage(data: WebsocketMessage): void {
 			handleLeaveGame();
 			break;
 		case 'opponentafk':
-			afk.startOpponentAFKCountdown(data.value.millisUntilAutoAFKResign);
+			afk.startOpponentAFKCountdown(data.contents.value.millisUntilAutoAFKResign);
 			break;
 		case 'opponentafkreturn':
 			afk.stopOpponentAFKCountdown();
 			break;
 		case 'opponentdisconnect':
-			disconnect.startOpponentDisconnectCountdown(data.value);
+			disconnect.startOpponentDisconnectCountdown(data.contents.value);
 			break;
 		case 'opponentdisconnectreturn':
 			disconnect.stopOpponentDisconnectCountdown();
 			break;
 		case 'serverrestart':
-			serverrestart.initServerRestart(data.value);
+			serverrestart.initServerRestart(data.contents.value);
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();
@@ -143,9 +143,12 @@ function routeMessage(data: WebsocketMessage): void {
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		default:
-			toast.show(`Unknown action "${data.action}" received from server in 'game' route.`, {
-				error: true,
-			});
+			toast.show(
+				`Unknown action "${data.contents.action}" received from server in 'game' route.`,
+				{
+					error: true,
+				},
+			);
 			break;
 	}
 }

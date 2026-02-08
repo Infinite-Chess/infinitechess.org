@@ -21,16 +21,19 @@ type WebsocketMessageValue = MessageEvent['data'];
 
 /** An incoming websocket server message. */
 export interface WebsocketMessage {
-	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
-	sub: string;
-	/** What action to perform with this message's data. */
-	action: string;
+	/** What route the message should be forwarded to (e.g. "general", "invites", "game"). */
+	route: string;
 	/** The message contents. */
-	value: WebsocketMessageValue;
+	contents: {
+		/** What action to perform with this message's data. */
+		action: string;
+		/** The message value/data. */
+		value: WebsocketMessageValue;
+	};
 	/** The ID of the message to echo, so the server knows we've received it. */
-	id: number;
+	id?: number;
 	/** The ID of the message this message is the reply to, if specified. */
-	replyto: number;
+	replyto?: number;
 }
 
 /** Information about the last hard refresh we attempted. */
@@ -55,7 +58,7 @@ function onmessage(serverMessage: MessageEvent): void {
 		return console.error('Error parsing incoming message as JSON:', error);
 	}
 
-	const isEcho = message.action === 'echo';
+	const isEcho = message.route === 'echo';
 
 	// Any incoming message proves the connection is alive.
 	// Reschedule the inactivity timer that detects silent disconnections.
@@ -71,19 +74,21 @@ function onmessage(serverMessage: MessageEvent): void {
 	if (isEcho) return socketmessages.cancelTimerOfMessageID(message);
 
 	// Not an echo...
-	const sub = message.sub;
+	const route = message.route;
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
-	socketmessages.send('general', 'echo', message.id);
+	if (message.id !== undefined) {
+		socketmessages.send('general', 'echo', message.id);
+	}
 
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
 
-	switch (sub) {
+	switch (route) {
 		case undefined: // Null message (e.g. { id, replyto }). Allows executing on-reply funcs.
 			break;
 		case 'general':
-			ongeneralmessage(message.action, message.value);
+			ongeneralmessage(message.contents.action, message.contents.value);
 			break;
 		case 'invites':
 			invites.onmessage(message);

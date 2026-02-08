@@ -62,8 +62,8 @@ let inactivityTimerID: number | undefined;
  * Called when we hear a server echo. Cancels the timer that assumes
  * disconnection, and updates the ping display.
  */
-function cancelTimerOfMessageID(message: { value: WebsocketMessageValue }): void {
-	const echoMessageID = message.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
+function cancelTimerOfMessageID(message: { contents: WebsocketMessageValue }): void {
+	const echoMessageID = message.contents; // If the route is "echo", the message ID they're echoing is stored in "contents"!
 
 	const echoTimer = echoTimers[echoMessageID];
 	if (!echoTimer) {
@@ -123,7 +123,7 @@ function scheduleOnreplyFunc(messageID: MessageID, onreplyFunc?: () => void): vo
  * When we receive a message with the `replyto` property,
  * executes the on-reply function for that sent message.
  */
-function executeOnreplyFunc(id: number): void {
+function executeOnreplyFunc(id: number | undefined): void {
 	if (id === undefined) return;
 	if (!onreplyFuncs[id]) return;
 	onreplyFuncs[id]();

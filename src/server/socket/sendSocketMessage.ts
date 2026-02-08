@@ -25,15 +25,14 @@ import {
 // Type Definitions ---------------------------------------------------------------------------
 
 /**
- * Represents an incoming WebSocket server message.
+ * Represents an outgoing WebSocket server message.
  */
 interface WebsocketOutMessage {
-	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
-	sub?: string;
-	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
-	action?: string;
-	/** The contents of the message. */
-	value: any;
+	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
+	route?: string;
+	/** The message contents. For echo messages, this is the message ID being echoed.
+	 * For other messages, this is an object with action and value. */
+	contents?: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -92,13 +91,22 @@ function sendSocketMessage(
 	}
 
 	const isEcho = action === 'echo';
-	const payload: WebsocketOutMessage = {
-		sub, // general/error/invites/game
-		action, // sub/unsub/createinvite/cancelinvite/acceptinvite
-		value, // sublist/inviteslist/move
-		id: isEcho ? undefined : uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-		replyto,
-	};
+	const payload: WebsocketOutMessage = isEcho
+		? {
+				route: 'echo',
+				contents: value, // For echo, value contains the message ID
+				id: undefined,
+				replyto,
+			}
+		: {
+				route: sub,
+				contents: {
+					action,
+					value,
+				},
+				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+				replyto,
+			};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);

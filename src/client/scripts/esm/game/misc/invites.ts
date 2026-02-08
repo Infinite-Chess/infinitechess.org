@@ -6,6 +6,7 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { WebsocketMessage } from '../websocket/socketrouter.js';
 import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
@@ -95,23 +96,24 @@ function unsubFromInvites(): void {
  * Should be called by websocket script when it receives a
  * message that the server says is for the "invites" subscription
  */
-function onmessage(data: { action: string; value: any }): void {
-	// { sub, action, value, id }
+function onmessage(data: WebsocketMessage): void {
 	// Any incoming message will have no effect if we're not on the invites page.
 	// This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
 	if (!guiplay.isOpen()) return;
 
-	switch (data.action) {
+	switch (data.contents.action) {
 		case 'inviteslist':
 			// Update the list in the document
-			updateInviteList(data.value.invitesList);
-			updateActiveGameCount(data.value.currentGameCount);
+			updateInviteList(data.contents.value.invitesList);
+			updateActiveGameCount(data.contents.value.currentGameCount);
 			break;
 		case 'gamecount':
-			updateActiveGameCount(data.value);
+			updateActiveGameCount(data.contents.value);
 			break;
 		default:
-			console.error(`Received message for invites with unknown action ${data.action}!`);
+			console.error(
+				`Received message for invites with unknown action ${data.contents.action}!`,
+			);
 			break;
 	}
 }
