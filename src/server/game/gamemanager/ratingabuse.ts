@@ -86,7 +86,8 @@ const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
 // Types Definitions ---------------------------------------------------------------------
 
 /**
- * Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation.
+ * Relevant entries of a PlayerGamesRecord object,
+ * which are used for the rating abuse calculation.
  */
 type RatingAbuseRelevantPlayerGamesRecord = Pick<
 	PlayerGamesRecord,
@@ -94,7 +95,8 @@ type RatingAbuseRelevantPlayerGamesRecord = Pick<
 >;
 
 /**
- * Relevant entries of a GamesRecord object, which are used for the rating abuse calculation.
+ * Relevant entries of a GamesRecord object,
+ * which are used for the rating abuse calculation.
  */
 type RatingAbuseRelevantGamesRecord = Pick<
 	GamesRecord,
@@ -256,14 +258,7 @@ async function measurePlayerRatingAbuse(
 		'termination',
 		'move_count',
 		'time_duration_millis',
-	]);
-	if (!recentGamesEntries) {
-		await logEventsAndPrint(
-			`Failed to retrieve game data for game_ids during rating abuse calculation: ${JSON.stringify(game_id_list)}`,
-			'errLog.txt',
-		);
-		return;
-	}
+	])!;
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// Combine the information about the games into a single gameInfoList object
