@@ -234,6 +234,7 @@ function displayOpponentAFK(secsRemaining: number): void {
 }
 
 export default {
+	AFKGameSchema,
 	onGameStart,
 	isOurAFKAutoResignTimerRunning,
 	onMovePlayed,
@@ -242,5 +243,4 @@ export default {
 	onGameClose,
 	startOpponentAFKCountdown,
 	stopOpponentAFKCountdown,
-	AFKGameSchema,
 };

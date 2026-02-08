@@ -478,6 +478,7 @@ function addRatingChangeToExistingUsernameContainers(
 }
 
 export default {
+	RatingChangeGameSchema,
 	open,
 	close,
 	clearUsernameContainers,
@@ -490,5 +491,4 @@ export default {
 	getHeightOfGameInfoBar,
 	updateAlignmentUsernames,
 	addRatingChangeToExistingUsernameContainers,
-	RatingChangeGameSchema,
 };

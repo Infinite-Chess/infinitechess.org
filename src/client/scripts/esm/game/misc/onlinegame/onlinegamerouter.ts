@@ -71,6 +71,8 @@ interface JoinGameMessage extends GameUpdateMessage {
 
 // Schemas --------------------------------------------------------------------------------------
 
+console.log('All afk properties: ', afk);
+
 /** Zod schema for all possible incoming server websocket messages with the 'game' route. */
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
@@ -347,8 +349,8 @@ function handleLeaveGame(): void {
 }
 
 export default {
-	routeMessage,
 	GameSchema,
+	routeMessage,
 };
 
 export type { ServerGameInfo };

@@ -100,7 +100,7 @@ function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean):
 }
 
 export default {
+	DisconnectGameSchema,
 	startOpponentDisconnectCountdown,
 	stopOpponentDisconnectCountdown,
-	DisconnectGameSchema,
 };

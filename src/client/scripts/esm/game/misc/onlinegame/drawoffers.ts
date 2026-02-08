@@ -173,6 +173,7 @@ function onGameClose(): void {
 }
 
 export default {
+	DrawOffersGameSchema,
 	isOfferingDrawLegal,
 	areWeAcceptingDraw,
 	callback_AcceptDraw,
@@ -183,5 +184,4 @@ export default {
 	set,
 	onMovePlayed,
 	onGameClose,
-	DrawOffersGameSchema,
 };

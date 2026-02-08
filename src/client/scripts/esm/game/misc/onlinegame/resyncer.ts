@@ -236,7 +236,7 @@ function synchronizeMovesList(
 }
 
 export default {
+	GameUpdateGameSchema,
 	handleServerGameUpdate,
 	synchronizeMovesList,
-	GameUpdateGameSchema,
 };

@@ -490,6 +490,7 @@ async function subscribeToInvites(ignoreAlreadySubbed?: boolean): Promise<void> 
 // Exports -----------------------------------------------------------------------
 
 export default {
+	InvitesSchema,
 	gelement_iCodeCode,
 	onmessage,
 	update,
@@ -503,5 +504,4 @@ export default {
 	unsubIfWeNotHave,
 	subscribeToInvites,
 	unsubFromInvites,
-	InvitesSchema,
 };

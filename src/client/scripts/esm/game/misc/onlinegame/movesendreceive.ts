@@ -182,7 +182,7 @@ function handleOpponentsMove(
 }
 
 export default {
+	MoveGameSchema,
 	sendMove,
 	handleOpponentsMove,
-	MoveGameSchema,
 };

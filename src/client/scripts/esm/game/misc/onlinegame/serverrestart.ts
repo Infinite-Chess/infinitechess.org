@@ -86,8 +86,8 @@ function onGameClose(): void {
 }
 
 export default {
+	ServerRestartGameSchema,
 	initServerRestart,
 	resetServerRestarting,
 	onGameClose,
-	ServerRestartGameSchema,
 };
