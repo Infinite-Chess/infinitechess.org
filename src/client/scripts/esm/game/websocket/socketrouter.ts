@@ -21,16 +21,13 @@ type WebsocketMessageValue = MessageEvent['data'];
 
 /** An incoming websocket server message. */
 export interface WebsocketMessage {
-	/** What route the message should be forwarded to (e.g. "general", "invites", "game"). */
+	/** What route the message should be forwarded to (e.g. "general", "invites", "game", "echo"). */
 	route: string;
-	/** The message contents. */
-	contents: {
-		/** What action to perform with this message's data. */
-		action: string;
-		/** The message value/data. */
-		value: WebsocketMessageValue;
-	};
-	/** The ID of the message to echo, so the server knows we've received it. */
+	/** The message contents. For echo messages, this is the message ID being echoed.
+	 * For other messages, this is an object with action and value. */
+	contents: any;
+	/** The ID of the message to echo, so the server knows we've received it.
+	 * Optional: only present for non-echo messages. */
 	id?: number;
 	/** The ID of the message this message is the reply to, if specified. */
 	replyto?: number;

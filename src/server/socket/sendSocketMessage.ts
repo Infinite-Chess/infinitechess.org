@@ -29,10 +29,10 @@ import {
  */
 interface WebsocketOutMessage {
 	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
-	route?: string;
+	route: string;
 	/** The message contents. For echo messages, this is the message ID being echoed.
 	 * For other messages, this is an object with action and value. */
-	contents?: any;
+	contents: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -98,7 +98,7 @@ function sendSocketMessage(
 				...(replyto !== undefined && { replyto }),
 			}
 		: {
-				route: sub,
+				route: sub!,
 				contents: {
 					action,
 					value,
