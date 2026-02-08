@@ -151,7 +151,7 @@ function getMultipleGameData<K extends GamesColumn>(
 	game_id_list: number[],
 	columns: K[],
 ): Pick<GamesRecord, K>[] | undefined {
-	// Guard clauses... Validating the arguments...#
+	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
 		logEventsAndPrint(
