@@ -1,8 +1,8 @@
-// src/server/api/Patreon.ts
+// dev-utils/server/api/Patreon.ts
 
 /*
- * This module, in the future, where be where we connect to Patreon's API
- * to dynamically refresh the list of Patreon-specific patrons on the webiste.
+ * This module, in the future, will be where we connect to Patreon's API
+ * to dynamically refresh the list of Patreon-specific patrons on the website.
  */
 
 /** A list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page.
@@ -29,7 +29,7 @@ const replacementNames: Record<string, string> = {};
  * Returns a list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page,
  * updated every {@link intervalToRefreshPatreonPatronsMillis}.
  */
-function _getPatreonPatrons(): string[] {
+export function getPatreonPatrons(): string[] {
 	// Replace their true usernames with replacements
 	const patronsWithReplacedNames = patrons.map((patron) => {
 		return replacementNames[patron] || patron;

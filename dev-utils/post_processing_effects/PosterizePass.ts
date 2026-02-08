@@ -1,15 +1,14 @@
-// src/client/scripts/esm/webgl/post_processing/passes/PosterizePass.ts
-
-import type { PostProcessPass } from '../PostProcessingPipeline';
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+// dev-utils/post_processing_effects/PosterizePass.ts
 
 /**
  * A post-processing pass that reduces the number of colors in the scene
  * to create a "posterized" effect.
+ * 
+ * This pass is not currently used in the main codebase but is kept here
+ * for potential future use.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class PosterizePass implements PostProcessPass {
-	readonly program: ProgramMap['posterize'];
+export class PosterizePass {
+	readonly program: any; // ProgramMap['posterize'];
 
 	// --- Public Properties for Control ---
 
@@ -23,7 +22,7 @@ class PosterizePass implements PostProcessPass {
 	 */
 	public levels: number = 8;
 
-	constructor(programManager: ProgramManager) {
+	constructor(programManager: any) { // ProgramManager
 		this.program = programManager.get('posterize');
 	}
 

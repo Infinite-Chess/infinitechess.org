@@ -14,7 +14,6 @@ import fsSource_sineWave from '../../../shaders/sine_wave/fragment.glsl';
 import fsSource_heatWave from '../../../shaders/heat_wave/fragment.glsl';
 import { ShaderProgram } from './ShaderProgram';
 import vsSource_starfield from '../../../shaders/starfield/vertex.glsl';
-import fsSource_posterize from '../../../shaders/posterize/fragment.glsl';
 import vsSource_miniImages from '../../../shaders/mini_images/vertex.glsl';
 import fsSource_miniImages from '../../../shaders/mini_images/fragment.glsl';
 import vsSource_highlights from '../../../shaders/highlights/vertex.glsl';
@@ -130,8 +129,8 @@ type Uniforms_ColorGrade =
 	| 'u_saturation'
 	| 'u_tintColor'
 	| 'u_hueOffset';
-type Attributes_Posterize = never;
-type Uniforms_Posterize = 'u_sceneTexture' | 'u_masterStrength' | 'u_levels';
+// type Attributes_Posterize = never; // Moved to dev-utils
+// type Uniforms_Posterize = 'u_sceneTexture' | 'u_masterStrength' | 'u_levels'; // Moved to dev-utils
 type Attributes_Vignette = never;
 type Uniforms_Vignette =
 	| 'u_sceneTexture'
@@ -218,7 +217,7 @@ export type Attributes_All =
 	| Attributes_BoardUberShader
 	| Attributes_PostPass
 	| Attributes_ColorGrade
-	| Attributes_Posterize
+	// | Attributes_Posterize // Moved to dev-utils
 	| Attributes_Vignette
 	| Attributes_SineWave
 	| Attributes_Water
@@ -249,7 +248,7 @@ type Program_BoardUberShader = ShaderProgram<Attributes_BoardUberShader, Uniform
 // Post Processing Shaders
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
-type Program_Posterize = ShaderProgram<Attributes_Posterize, Uniforms_Posterize>;
+// type Program_Posterize = ShaderProgram<Attributes_Posterize, Uniforms_Posterize>; // Moved to dev-utils
 type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
 type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 type Program_Water = ShaderProgram<Attributes_Water, Uniforms_Water>;
@@ -299,8 +298,8 @@ export interface ProgramMap {
 	post_pass: Program_PostPass;
 	/** Post Processing Color Grading Shader. Several color effects. */
 	color_grade: Program_ColorGrade;
-	/** Post Processing Posterize Shader. */
-	posterize: Program_Posterize;
+	// /** Post Processing Posterize Shader. */ // Moved to dev-utils
+	// posterize: Program_Posterize; // Moved to dev-utils
 	/** Post Processing Vignette Effect. */
 	vignette: Program_Vignette;
 	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
@@ -346,7 +345,7 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
 	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
-	posterize: { vertex: vsSource_postPass, fragment: fsSource_posterize },
+	// posterize: { vertex: vsSource_postPass, fragment: fsSource_posterize }, // Moved to dev-utils
 	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 	water: { vertex: vsSource_postPass, fragment: fsSource_water },

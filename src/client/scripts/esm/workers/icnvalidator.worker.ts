@@ -17,20 +17,6 @@ interface WorkerMessage {
 	games: { index: number; icn: string }[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface WorkerResult {
-	chunkId: number;
-	results: {
-		success: boolean;
-		icnconverterErrors: number;
-		formulatorErrors: number;
-		illegalMoveErrors: number;
-		terminationMismatchErrors: number;
-		errors: any[];
-		variantErrors: Record<string, any>;
-	};
-}
-
 // Listen for the main thread to send data
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 	const { chunkId, games } = e.data;

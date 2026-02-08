@@ -1,7 +1,6 @@
-// src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherNode.ts
+// dev-utils/audio/processors/bitcrusher/BitcrusherNode.ts
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class BitcrusherNode extends AudioWorkletNode {
+export class BitcrusherNode extends AudioWorkletNode {
 	constructor(context: AudioContext) {
 		super(context, 'bitcrusher-processor');
 	}
