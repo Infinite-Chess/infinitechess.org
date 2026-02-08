@@ -8,14 +8,20 @@
  * extra time to reconnect.
  */
 
-import type { OpponentDisconnectValue } from '../../websocket/socketschemas.js';
-
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
+
+// Types ---------------------------------------------------------------
+
+/** The parameters for the opponent disconnect countdown. */
+export interface OpponentDisconnectValue {
+	millisUntilAutoDisconnectResign: number;
+	wasByChoice: boolean;
+}
 
 // Variables -----------------------------------------------------------------------
 

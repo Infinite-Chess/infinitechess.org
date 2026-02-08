@@ -11,14 +11,11 @@
  * that combines them all together with echo and reply-only message handling.
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { Invite } from '../misc/invites.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../server/game/timecontrol.js';
-import type { GamesRecord } from '../../../../../server/database/gamesManager.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { ServerUsernameContainer } from '../../../../../shared/types.js';
+import type { OpponentDisconnectValue } from '../misc/onlinegame/disconnect.js';
+import type { JoinGameMessage, LoggedGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type {
 	GameUpdateMessage,
 	OpponentsMoveMessage,
@@ -26,59 +23,6 @@ import type {
 } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import * as z from 'zod';
-
-// Types needed by the schemas -----------------------------------------------
-
-/** The invite object. NOT an HTML object. */
-interface Invite {
-	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
-	usernamecontainer: ServerUsernameContainer;
-	/** A unique identifier */
-	id: string;
-	/** Used to verify if an invite is your own. */
-	tag?: string;
-	/** The name of the variant */
-	variant: string;
-	/** The clock value */
-	clock: TimeControl;
-	/** The player color (null = Random) */
-	color: Player | null;
-	publicity: 'public' | 'private';
-	rated: 'casual' | 'rated';
-}
-
-/**
- * Static information about an online game that is unchanging.
- * Only need this once, when we originally load the game,
- * not on subsequent updates/resyncs.
- */
-interface ServerGameInfo {
-	/** The id of the online game */
-	id: number;
-	rated: boolean;
-	publicity: 'public' | 'private';
-	playerRatings: PlayerGroup<Rating>;
-}
-
-/**
- * The message contents expected when we receive a server websocket 'joingame' message.
- * This contains everything a {@link GameUpdateMessage} message would have, and more!!
- *
- * The stuff included here does not need to be specified when we're resyncing to
- * a game, or receiving a game update, as we already know this stuff.
- */
-interface JoinGameMessage extends GameUpdateMessage {
-	gameInfo: ServerGameInfo;
-	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
-	metadata: MetaData;
-	youAreColor: Player;
-}
-
-/** The parameters for the opponent disconnect countdown. */
-interface OpponentDisconnectValue {
-	millisUntilAutoDisconnectResign: number;
-	wasByChoice: boolean;
-}
 
 // General Schema ---------------------------------------------------------------
 
@@ -116,9 +60,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
 	z.strictObject({
 		action: z.literal('logged-game-info'),
-		value: z.custom<
-			Required<Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>>
-		>(),
+		value: z.custom<LoggedGameInfo>(),
 	}),
 	z.strictObject({ action: z.literal('move'), value: z.custom<OpponentsMoveMessage>() }),
 	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
@@ -187,14 +129,6 @@ const MasterSchema = z.discriminatedUnion('route', [
 
 // Exports ---------------------------------------------------------------
 
-export type {
-	GeneralMessage,
-	InvitesMessage,
-	GameMessage,
-	Invite,
-	JoinGameMessage,
-	ServerGameInfo,
-	OpponentDisconnectValue,
-};
+export type { GeneralMessage, InvitesMessage, GameMessage };
 
 export { MasterSchema };
