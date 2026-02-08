@@ -10,7 +10,7 @@ There are two main coordinate spaces you'll work with:
 
 ### Grid Space (Unit / Tile / Coord Space)
 
-Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates.
+Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss.
 
 ### World Space
 
