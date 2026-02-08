@@ -327,9 +327,7 @@ function startPeriodicLeaderboardRatingDeviationUpdate(): void {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
 
-/**
- * Retrieves all entries of the leaderboards table and updates their RD
- */
+/** Retrieves all entries of the leaderboards table and updates their RD */
 function updateAllRatingDeviationsofLeaderboardTable(): void {
 	const query = `SELECT * FROM leaderboards`;
 

@@ -226,10 +226,10 @@ async function measurePlayerRatingAbuse(
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
 		['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game'],
-	) as RatingAbuseRelevantPlayerGamesRecord[];
+	)!;
 
 	const netRatingChange = recentPlayerGamesEntries.reduce(
-		(acc, g) => acc + g.elo_change_from_game,
+		(acc, g) => acc + g.elo_change_from_game!,
 		0,
 	);
 	const game_id_list = recentPlayerGamesEntries.map((recent_game) => recent_game.game_id);
@@ -259,13 +259,15 @@ async function measurePlayerRatingAbuse(
 	for (let i = 0; i < game_id_list.length; i++) {
 		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
-		if (j > -1)
+		if (j > -1) {
+			// @ts-ignore
 			gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
-		else
+		} else {
 			await logEventsAndPrint(
 				`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`,
 				'errLog.txt',
 			);
+		}
 	}
 	// console.log(gameInfoList);
 
