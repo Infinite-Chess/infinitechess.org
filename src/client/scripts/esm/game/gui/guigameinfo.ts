@@ -7,15 +7,16 @@
 
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
-import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import * as z from 'zod';
+
 import metadata from '../../../../../shared/chess/util/metadata.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import gameslot from '../chess/gameslot.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -35,7 +36,7 @@ const RatingChangeGameSchema = z.strictObject({
 
 export { RatingChangeGameSchema };
 
-// Variables
+// Elements ---------------------------------------------------
 
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
 
@@ -50,7 +51,9 @@ const element_undoButton: HTMLButtonElement = document.getElementById(
 )! as HTMLButtonElement;
 const element_restartButton: HTMLButtonElement = document.getElementById(
 	'restartbutton',
-)! as HTMLButtonElement;
+) as HTMLButtonElement;
+
+// Variables ---------------------------------------------------
 
 let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
