@@ -62,7 +62,6 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
 }
 
 export {
-	accessTokenExpiryMillis,
 	refreshTokenExpiryMillis,
 	refreshTokenGracePeriodMillis,
 	signAccessToken,

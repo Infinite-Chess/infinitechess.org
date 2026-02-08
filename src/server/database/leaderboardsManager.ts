@@ -426,14 +426,11 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 
 // Updated export names to be more descriptive
 export {
-	addUserToLeaderboard,
 	addUserToLeaderboard_core,
-	updatePlayerLeaderboardRating,
 	updatePlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getPlayerLeaderboardRating_core,
-	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,

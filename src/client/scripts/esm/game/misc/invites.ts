@@ -26,7 +26,7 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 // Types -------------------------------------------------------------------------
 
 /** The invite object. NOT an HTML object. */
-export interface Invite {
+interface Invite {
 	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
 	usernamecontainer: ServerUsernameContainer;
 	/** A unique identifier */

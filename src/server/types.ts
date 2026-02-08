@@ -61,4 +61,4 @@ interface ParsedCookies {
 
 export { isRequestIdentified };
 
-export type { IdentifiedRequest, SignedInMemberInfo, MemberInfo, AuthMemberInfo, ParsedCookies };
+export type { IdentifiedRequest, MemberInfo, AuthMemberInfo, ParsedCookies };

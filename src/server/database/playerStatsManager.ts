@@ -93,5 +93,3 @@ function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsReco
 }
 
 // Exports --------------------------------------------------------------------------------------------
-
-export { getPlayerStatsData };

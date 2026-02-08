@@ -22,7 +22,7 @@ import { ContortionFieldZone } from './zones/ContortionFieldZone';
 /**
  * Defines a zone in space that applies a specific visual effect to the board.
  */
-export interface EffectZone {
+interface EffectZone {
 	/** A unique name for the zone, for debugging. */
 	readonly name: string;
 	/** The closest tile that this zone effect starts at. */

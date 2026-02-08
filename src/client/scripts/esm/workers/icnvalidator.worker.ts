@@ -12,12 +12,12 @@ import { players as p } from '../../../../shared/chess/util/typeutil.js';
 import gameformulator from '../game/chess/gameformulator.js';
 
 // Define types
-export interface WorkerMessage {
+interface WorkerMessage {
 	chunkId: number;
 	games: { index: number; icn: string }[];
 }
 
-export interface WorkerResult {
+interface WorkerResult {
 	chunkId: number;
 	results: {
 		success: boolean;

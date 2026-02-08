@@ -7,7 +7,7 @@ import type { ProgramManager, ProgramMap } from '../../ProgramManager';
  * A post-processing pass that reduces the number of colors in the scene
  * to create a "posterized" effect.
  */
-export class PosterizePass implements PostProcessPass {
+class PosterizePass implements PostProcessPass {
 	readonly program: ProgramMap['posterize'];
 
 	// --- Public Properties for Control ---

@@ -210,4 +210,4 @@ export default {
 	getMillisFromClkTimeValue,
 };
 
-export type { Command, CommandObject, ExtractedCommentData };
+export type { CommandObject, ExtractedCommentData };

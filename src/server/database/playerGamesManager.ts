@@ -327,8 +327,6 @@ function getRecentNRatedGamesForUser(
 // Exports --------------------------------------------------------------------------------------------
 
 export {
-	getPlayerGamesData,
-	getPlayersInGame,
 	getOpponentsOfUserFromGames,
 	// Commented out to emphasize this should not ever have to be used:
 	// updatePlayerGamesColumns,

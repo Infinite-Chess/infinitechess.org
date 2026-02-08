@@ -96,7 +96,6 @@ function getLastDrawOfferPlyOfColor(match: MatchInfo, color: Player): number | u
 //--------------------------------------------------------------------------------------------------------
 
 export {
-	movesBetweenDrawOffers,
 	isDrawOfferOpen,
 	doesColorHaveExtendedDrawOffer,
 	hasColorOfferedDrawTooFast,

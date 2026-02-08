@@ -1,6 +1,6 @@
 // src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherNode.ts
 
-export class BitcrusherNode extends AudioWorkletNode {
+class BitcrusherNode extends AudioWorkletNode {
 	constructor(context: AudioContext) {
 		super(context, 'bitcrusher-processor');
 	}

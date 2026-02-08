@@ -243,7 +243,6 @@ export {
 	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
-	handleUnsubbing,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
 	AddVerificationToAllSocketsOfMember,

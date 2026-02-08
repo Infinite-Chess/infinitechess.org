@@ -406,4 +406,4 @@ export default {
 	createEloChangeItem,
 };
 
-export type { UsernameContainer, UsernameContainerProperties, UsernameItem, RatingItem };
+export type { UsernameContainer, UsernameItem, RatingItem };

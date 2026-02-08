@@ -323,4 +323,4 @@ export default {
 	unConcludeGame,
 };
 
-export type { LoadOptions, PresetAnnotes, Additional };
+export type { PresetAnnotes, Additional };

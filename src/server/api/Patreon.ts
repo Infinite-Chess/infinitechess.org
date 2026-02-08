@@ -37,5 +37,3 @@ function getPatreonPatrons(): string[] {
 
 	return patronsWithReplacedNames;
 }
-
-export { getPatreonPatrons };

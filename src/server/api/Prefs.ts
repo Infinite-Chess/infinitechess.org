@@ -18,7 +18,7 @@ import { getMemberDataByCriteria, updateMemberColumns } from '../database/member
 
 // Types -------------------------------------------------------------------------------
 
-export type Preferences = z.infer<typeof prefsSchema>;
+type Preferences = z.infer<typeof prefsSchema>;
 
 // Variables -----------------------------------------------------------------------------
 

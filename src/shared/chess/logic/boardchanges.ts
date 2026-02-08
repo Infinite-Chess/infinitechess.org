@@ -393,7 +393,7 @@ function wasACapture(move: Move): boolean {
 
 // Exports ----------------------------------------------------------------------------------------
 
-export type { genericChangeFunc, ActionList, ChangeApplication, Change };
+export type { genericChangeFunc, ChangeApplication, Change };
 
 export default {
 	changeFuncs,
