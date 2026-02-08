@@ -21,16 +21,16 @@ type WebsocketMessageValue = MessageEvent['data'];
 
 /** An incoming websocket server message. */
 export interface WebsocketMessage {
-	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
-	sub: string;
-	/** What action to perform with this message's data. */
-	action: string;
-	/** The message contents. */
-	value: WebsocketMessageValue;
-	/** The ID of the message to echo, so the server knows we've received it. */
-	id: number;
+	/** What route the message should be forwarded to (e.g. "general", "invites", "game", "echo"). */
+	route: string;
+	/** The message contents. For echo messages, this is the message ID being echoed.
+	 * For other messages, this is an object with action and value. */
+	contents: any;
+	/** The ID of the message to echo, so the server knows we've received it.
+	 * Only present for non-echo messages. */
+	id?: number;
 	/** The ID of the message this message is the reply to, if specified. */
-	replyto: number;
+	replyto?: number;
 }
 
 /** Information about the last hard refresh we attempted. */
@@ -55,7 +55,7 @@ function onmessage(serverMessage: MessageEvent): void {
 		return console.error('Error parsing incoming message as JSON:', error);
 	}
 
-	const isEcho = message.action === 'echo';
+	const isEcho = message.route === 'echo';
 
 	// Any incoming message proves the connection is alive.
 	// Reschedule the inactivity timer that detects silent disconnections.
@@ -68,10 +68,10 @@ function onmessage(serverMessage: MessageEvent): void {
 		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
 
-	if (isEcho) return socketmessages.cancelTimerOfMessageID(message);
+	if (isEcho) return socketmessages.cancelTimerOfMessageID(message.contents);
 
 	// Not an echo...
-	const sub = message.sub;
+	const route = message.route;
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
 	socketmessages.send('general', 'echo', message.id);
@@ -79,17 +79,17 @@ function onmessage(serverMessage: MessageEvent): void {
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
 
-	switch (sub) {
+	switch (route) {
 		case undefined: // Null message (e.g. { id, replyto }). Allows executing on-reply funcs.
 			break;
 		case 'general':
-			ongeneralmessage(message.action, message.value);
+			ongeneralmessage(message.contents.action, message.contents.value);
 			break;
 		case 'invites':
-			invites.onmessage(message);
+			invites.onmessage(message.contents);
 			break;
 		case 'game':
-			onlinegamerouter.routeMessage(message);
+			onlinegamerouter.routeMessage(message.contents);
 			break;
 		default:
 			console.error('Unknown socket subscription received from the server! Message:');

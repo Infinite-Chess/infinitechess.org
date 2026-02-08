@@ -7,7 +7,6 @@ import type { Condition } from '../../../../../../shared/chess/util/winconutil.j
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { WebsocketMessage } from '../../websocket/socketrouter.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
@@ -74,21 +73,20 @@ interface JoinGameMessage extends GameUpdateMessage {
  * This handles all messages related to the active game we're in.
  * @param data - The incoming server websocket message
  */
-function routeMessage(data: WebsocketMessage): void {
-	// { sub, action, value, id }
-	// console.log(`Received ${data.action} from server! Message contents:`)
-	// console.log(data.value)
+function routeMessage(contents: { action: string; value: any }): void {
+	// console.log(`Received ${contents.action} from server! Message contents:`)
+	// console.log(contents.value)
 
 	// These actions are listened to, even when we're not in a game.
 
-	if (data.action === 'joingame') return handleJoinGame(data.value);
-	else if (data.action === 'logged-game-info') return handleLoggedGameInfo(data.value);
+	if (contents.action === 'joingame') return handleJoinGame(contents.value);
+	else if (contents.action === 'logged-game-info') return handleLoggedGameInfo(contents.value);
 
 	// All other actions should be ignored if we're not in a game...
 
 	if (!onlinegame.areInOnlineGame()) {
 		console.log(
-			`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(data)}`,
+			`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(contents)}`,
 		);
 		return;
 	}
@@ -96,18 +94,18 @@ function routeMessage(data: WebsocketMessage): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
-	switch (data.action) {
+	switch (contents.action) {
 		case 'move':
-			movesendreceive.handleOpponentsMove(gamefile, mesh, data.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile.basegame, data.value);
+			handleUpdatedClock(gamefile.basegame, contents.value);
 			break;
 		case 'gameupdate':
-			resyncer.handleServerGameUpdate(gamefile, mesh, data.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
 			break;
 		case 'gameratingchange':
-			guigameinfo.addRatingChangeToExistingUsernameContainers(data.value);
+			guigameinfo.addRatingChangeToExistingUsernameContainers(contents.value);
 			break;
 		case 'unsub':
 			handleUnsubbing();
@@ -122,19 +120,19 @@ function routeMessage(data: WebsocketMessage): void {
 			handleLeaveGame();
 			break;
 		case 'opponentafk':
-			afk.startOpponentAFKCountdown(data.value.millisUntilAutoAFKResign);
+			afk.startOpponentAFKCountdown(contents.value.millisUntilAutoAFKResign);
 			break;
 		case 'opponentafkreturn':
 			afk.stopOpponentAFKCountdown();
 			break;
 		case 'opponentdisconnect':
-			disconnect.startOpponentDisconnectCountdown(data.value);
+			disconnect.startOpponentDisconnectCountdown(contents.value);
 			break;
 		case 'opponentdisconnectreturn':
 			disconnect.stopOpponentDisconnectCountdown();
 			break;
 		case 'serverrestart':
-			serverrestart.initServerRestart(data.value);
+			serverrestart.initServerRestart(contents.value);
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();
@@ -143,9 +141,10 @@ function routeMessage(data: WebsocketMessage): void {
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		default:
-			toast.show(`Unknown action "${data.action}" received from server in 'game' route.`, {
-				error: true,
-			});
+			toast.show(
+				`Unknown action "${contents.action}" received from server in 'game' route.`,
+				{ error: true },
+			);
 			break;
 	}
 }

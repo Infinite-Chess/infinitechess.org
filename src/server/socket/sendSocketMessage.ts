@@ -24,16 +24,13 @@ import {
 
 // Type Definitions ---------------------------------------------------------------------------
 
-/**
- * Represents an incoming WebSocket server message.
- */
+/** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
-	sub?: string;
-	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
-	action?: string;
-	/** The contents of the message. */
-	value: any;
+	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
+	route: string;
+	/** The message contents. For echo messages, this is the message ID being echoed.
+	 * For other messages, this is an object with action and value. */
+	contents: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -61,7 +58,7 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
 /**
  * Sends a message to this websocket's client.
  * @param ws - The websocket
- * @param sub - What subscription/route this message should be forwarded to.
+ * @param route - What subscription/route this message should be forwarded to.
  * @param action - What type of action the client should take within the subscription route.
  * @param value - The contents of the message.
  * @param [replyto] If applicable, the id of the socket message this message is a reply to.
@@ -70,7 +67,7 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
  */
 function sendSocketMessage(
 	ws: CustomWebSocket,
-	sub: string | undefined,
+	route: string | undefined,
 	action: string | undefined,
 	value?: any,
 	replyto?: number,
@@ -80,7 +77,7 @@ function sendSocketMessage(
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(() => {
-			sendSocketMessage(ws, sub, action, value, replyto, { skipLatency: true });
+			sendSocketMessage(ws, route, action, value, replyto, { skipLatency: true });
 		}, simulatedWebsocketLatencyMillis);
 		return;
 	}
@@ -92,13 +89,21 @@ function sendSocketMessage(
 	}
 
 	const isEcho = action === 'echo';
-	const payload: WebsocketOutMessage = {
-		sub, // general/error/invites/game
-		action, // sub/unsub/createinvite/cancelinvite/acceptinvite
-		value, // sublist/inviteslist/move
-		id: isEcho ? undefined : uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-		replyto,
-	};
+	const payload: WebsocketOutMessage = isEcho
+		? {
+				route: 'echo',
+				contents: value, // For echo, value contains the message ID
+				replyto,
+			}
+		: {
+				route: route!,
+				contents: {
+					action,
+					value,
+				},
+				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+				replyto,
+			};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
