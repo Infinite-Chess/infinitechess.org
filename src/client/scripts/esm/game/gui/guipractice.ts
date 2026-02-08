@@ -406,7 +406,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 			? translations[config.earnedKey]
 			: areLoggedIn
 				? translations[config.unearnedKey]
-				: translations['checkmate_logged_out'];
+				: translations.checkmate_logged_out;
 
 		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
 		config.image.classList.toggle('unearned', !isEarned); // Update badge appearance

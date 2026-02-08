@@ -46,8 +46,8 @@ globalThis.htmlscript = (function () {
 
 		element_loadingError.classList.remove('hidden');
 		element_loadingErrorText.textContent = lostNetwork
-			? translations['lost_network']
-			: translations['failed_to_load'];
+			? translations.lost_network
+			: translations.failed_to_load;
 
 		// Remove the glowing in the background animation
 		element_loadingGlow.classList.remove('loadingGlowAnimation');

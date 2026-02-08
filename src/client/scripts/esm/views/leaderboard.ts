@@ -77,7 +77,7 @@ function setSupportedVariantsDisplay(): void {
 		// @ts-ignore
 		variantslist.push(variant in translations ? translations[variant] : variant);
 	});
-	element_supportedVariants.textContent = `${translations['supported_variants']} ${variantslist.join(', ')}.`;
+	element_supportedVariants.textContent = `${translations.supported_variants} ${variantslist.join(', ')}.`;
 }
 
 /**
@@ -90,9 +90,9 @@ function createEmptyLeaderboardTable(): void {
 	const thead = document.createElement('thead');
 	thead.innerHTML = `
 		<tr>
-		<th>${translations['rank']}</th>
-		<th>${translations['player']}</th>
-		<th>${translations['rating']}</th>
+		<th>${translations.rank}</th>
+		<th>${translations.player}</th>
+		<th>${translations.rating}</th>
 		</tr>
 	`;
 	table.appendChild(thead);

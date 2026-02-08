@@ -180,7 +180,7 @@ function copy(): void {
 		move_numbers: false,
 	});
 	docutil.copyToClipboard(shortFormatOut);
-	toast.show(translations['copypaste']['copied_position']);
+	toast.show(translations.copypaste.copied_position);
 }
 
 /** Loads the position from the clipboard. */
@@ -194,7 +194,7 @@ async function paste(): Promise<undefined> {
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
-		const message: string = translations['copypaste'].clipboard_denied;
+		const message: string = translations.copypaste.clipboard_denied;
 		toast.show(message + '\n' + error, { error: true });
 		return;
 	}
@@ -204,13 +204,13 @@ async function paste(): Promise<undefined> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		toast.show(translations['copypaste'].clipboard_invalid, { error: true });
+		toast.show(translations.copypaste.clipboard_invalid, { error: true });
 		return;
 	}
 
 	loadFromLongformat(longformOut);
 	selectiontool.resetState(); // Clear current selection
-	toast.show(translations['copypaste'].loaded_position_from_clipboard);
+	toast.show(translations.copypaste.loaded_position_from_clipboard);
 }
 
 /** Starts a local game from the current board editor position, to test play. */
@@ -291,12 +291,12 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		TimeControl: engineUIConfig.TimeControl,
 		White:
 			engineUIConfig.youAreColor === p.WHITE
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+				? translations.you_indicator
+				: translations.engine_indicator,
 		Black:
 			engineUIConfig.youAreColor === p.BLACK
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+				? translations.you_indicator
+				: translations.engine_indicator,
 		UTCDate,
 		UTCTime,
 	};

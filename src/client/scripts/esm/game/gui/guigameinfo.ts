@@ -242,8 +242,8 @@ function getPlayerNamesForGame(metadata: MetaData): {
 } {
 	if (gameloader.getTypeOfGameWeIn() === 'local' || boardeditor.areInBoardEditor()) {
 		return {
-			white: translations['player_name_white_generic'],
-			black: translations['player_name_black_generic'],
+			white: translations.player_name_white_generic,
+			black: translations.player_name_black_generic,
 			white_type: 'guest',
 			black_type: 'guest',
 		};
@@ -255,23 +255,23 @@ function getPlayerNamesForGame(metadata: MetaData): {
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		const white =
 			onlinegame.areWeColorInOnlineGame(players.WHITE) &&
-			metadata['White'] === translations['guest_indicator']
-				? translations['you_indicator']
+			metadata['White'] === translations.guest_indicator
+				? translations.you_indicator
 				: metadata['White'];
 		const black =
 			onlinegame.areWeColorInOnlineGame(players.BLACK) &&
-			metadata['Black'] === translations['guest_indicator']
-				? translations['you_indicator']
+			metadata['Black'] === translations.guest_indicator
+				? translations.you_indicator
 				: metadata['Black'];
 		return {
 			white: white,
 			black: black,
 			white_type:
-				white === translations['guest_indicator'] || white === translations['you_indicator']
+				white === translations.guest_indicator || white === translations.you_indicator
 					? 'guest'
 					: 'player',
 			black_type:
-				black === translations['guest_indicator'] || black === translations['you_indicator']
+				black === translations.guest_indicator || black === translations.you_indicator
 					? 'guest'
 					: 'player',
 		};
@@ -279,8 +279,8 @@ function getPlayerNamesForGame(metadata: MetaData): {
 		return {
 			white: metadata.White!,
 			black: metadata.Black!,
-			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
-			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
+			white_type: metadata.White === translations.you_indicator ? 'guest' : 'engine',
+			black_type: metadata.Black === translations.you_indicator ? 'guest' : 'engine',
 		};
 	} else
 		throw Error(
@@ -309,10 +309,10 @@ function updateWhosTurn(): void {
 	let textContent = '';
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
-		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
+		textContent = ourTurn ? translations.your_move : translations.their_move;
 	} else
 		textContent =
-			color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
+			color === players.WHITE ? translations.white_to_move : translations.black_to_move;
 
 	element_whosturn.textContent = textContent;
 }
@@ -322,7 +322,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
 	const { victor, condition } = conclusion;
-	const resultTranslations = translations['results'];
+	const resultTranslations = translations.results;
 
 	const { basegame } = gameslot.getGamefile()!;
 

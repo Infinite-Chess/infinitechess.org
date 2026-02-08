@@ -255,7 +255,7 @@ async function initUI(): Promise<void> {
 			else pieceContainer.classList.add('tooltip-d');
 			const localized_piece_name =
 				// @ts-ignore
-				translations['piecenames'][typeutil.getRawTypeStr(coloredTypes[i]!)!];
+				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
 			const modified_piece_abbreviation =
 				player === players.WHITE
@@ -289,7 +289,7 @@ async function initUI(): Promise<void> {
 	// Void tooltip
 	element_void.classList.add('tooltip-dr');
 	// @ts-ignore
-	const localized_void_name = translations['piecenames'][typeutil.getRawTypeStr(rawTypes.VOID)!];
+	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(rawTypes.VOID)!];
 	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
 	element_void.setAttribute('data-tooltip', `${localized_void_name} (${void_abbreviation})`);
 
@@ -307,7 +307,7 @@ async function initUI(): Promise<void> {
 		else pieceContainer.classList.add('tooltip-d');
 		const localized_piece_name =
 			// @ts-ignore
-			translations['piecenames'][typeutil.getRawTypeStr(neutralTypes[i]!)!];
+			translations.piecenames[typeutil.getRawTypeStr(neutralTypes[i]!)!];
 		const piece_abbreviation = icnconverter.piece_codes_raw[neutralTypes[i]!];
 		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
 		pieceContainer.setAttribute(
