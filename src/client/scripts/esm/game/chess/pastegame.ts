@@ -23,12 +23,12 @@ import icnconverter, {
 
 import toast from '../gui/toast.js';
 import guipause from '../gui/guipause.js';
-import websocket from '../websocket.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import socketmessages from '../websocket/socketmessages.js';
 import gameformulator from './gameformulator.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
@@ -113,7 +113,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
-		websocket.sendmessage('game', 'paste');
+		socketmessages.send('game', 'paste');
 }
 
 /** For now doesn't verify if the required royalty is present. */

@@ -10,12 +10,13 @@
 import game from './chess/game.js';
 import webgl from './rendering/webgl.js';
 import camera from './rendering/camera.js';
-import websocket from './websocket.js';
+import socketman from './websocket/socketman.js';
 import IndexedDB from '../util/IndexedDB.js';
 import guiloading from './gui/guiloading.js';
 import LocalStorage from '../util/LocalStorage.js';
 import frametracker from './rendering/frametracker.js';
 import loadbalancer from './misc/loadbalancer.js';
+import socketmessages from './websocket/socketmessages.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
 
 // Starts the game. Runs automatically once the page is loaded.
@@ -30,7 +31,7 @@ function start(): void {
 
 	// Immediately asks the server if we are in a game.
 	// If so, it will send the info to join it.
-	websocket.sendmessage('game', 'joingame', undefined, true);
+	socketmessages.send('game', 'joingame', undefined, true);
 
 	// Update & draw the scene repeatedly
 	frameratelimiter.requestFrame(gameLoop);
@@ -42,7 +43,7 @@ function initListeners(): void {
 
 		// This allows us to control the reason why the socket was closed.
 		// "1000 Closed by client" instead of "1001 Endpoint left"
-		websocket.closeSocket();
+		socketman.closeSocket();
 
 		LocalStorage.eraseExpiredItems();
 		IndexedDB.eraseExpiredItems();

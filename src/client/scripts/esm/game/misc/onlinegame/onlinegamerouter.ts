@@ -7,6 +7,7 @@ import type { Condition } from '../../../../../../shared/chess/util/winconutil.j
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { WebsocketMessage } from '../../websocket/socketrouter.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
@@ -31,11 +32,11 @@ import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
+import socketsubs from '../../websocket/socketsubs.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
-import websocket, { WebsocketMessage } from '../../websocket.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 
@@ -159,8 +160,8 @@ function routeMessage(data: WebsocketMessage): void {
  */
 function handleJoinGame(message: JoinGameMessage): void {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
-	websocket.deleteSub('invites');
-	websocket.addSub('game');
+	socketsubs.deleteSub('invites');
+	socketsubs.addSub('game');
 	guititle.close();
 	guiplay.close();
 	// If the clock values are present, adjust them for ping.
@@ -197,7 +198,7 @@ function handleLoggedGameInfo(message: {
 	// Unload the currently loaded game, if we are in one
 	if (gameloader.areInAGame()) {
 		gameloader.unloadGame();
-		websocket.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
+		socketsubs.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
 	} // Else perhaps we need to close the title screen?? Or the loading screen??
 
 	// Are we one of the players (automatically no, if there's only guests)
@@ -269,7 +270,7 @@ function handleUpdatedClock(basegame: Game, clockValues: ClockValues): void {
  * At this point we should leave the game.
  */
 function handleUnsubbing(): void {
-	websocket.deleteSub('game');
+	socketsubs.deleteSub('game');
 }
 
 /**
@@ -279,7 +280,7 @@ function handleUnsubbing(): void {
  */
 function handleLogin(basegame: Game): void {
 	toast.show(translations['onlinegame'].not_logged_in, { error: true, durationMultiplier: 100 });
-	websocket.deleteSub('game');
+	socketsubs.deleteSub('game');
 	clock.endGame(basegame);
 	guiclock.stopClocks(basegame);
 	selection.unselectPiece();
@@ -298,7 +299,7 @@ function handleLogin(basegame: Game): void {
  */
 function handleNoGame(basegame: Game): void {
 	toast.show(translations['onlinegame'].game_no_longer_exists, { durationMultiplier: 1.5 });
-	websocket.deleteSub('game');
+	socketsubs.deleteSub('game');
 	basegame.gameConclusion = { condition: 'aborted' };
 	gameslot.concludeGame();
 }
@@ -313,7 +314,7 @@ function handleNoGame(basegame: Game): void {
  */
 function handleLeaveGame(): void {
 	toast.show(translations['onlinegame'].another_window_connected);
-	websocket.deleteSub('game');
+	socketsubs.deleteSub('game');
 	gameloader.unloadGame();
 	guititle.open();
 }

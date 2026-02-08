@@ -20,7 +20,7 @@ import docutil from '../../util/docutil.js';
 import guipause from '../gui/guipause.js';
 import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';
-import websocket from '../websocket.js';
+import socketman from '../websocket/socketman.js';
 import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
@@ -213,7 +213,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
-	if (listener_document.isKeyDown('Digit4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener_document.isKeyDown('Digit4')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('Digit7')) enginegame.toggleDebug(); // Render engine generated legal moves
 	if (listener_document.isKeyDown('KeyM')) stats.toggleFPS();
 }

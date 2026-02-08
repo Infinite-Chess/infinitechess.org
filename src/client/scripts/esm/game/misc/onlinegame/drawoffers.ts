@@ -15,10 +15,10 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import toast from '../../gui/toast.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
-import websocket from '../../websocket.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
+import socketmessages from '../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
 
@@ -89,7 +89,7 @@ function onOpponentDeclinedOffer(): void {
  * All legality checks have already passed!
  */
 function extendOffer(): void {
-	websocket.sendmessage('game', 'offerdraw');
+	socketmessages.send('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
 	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
@@ -102,7 +102,7 @@ function extendOffer(): void {
  */
 function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
-	websocket.sendmessage('game', 'acceptdraw');
+	socketmessages.send('game', 'acceptdraw');
 	guidrawoffer.close();
 	guipause.updateDrawOfferButton();
 }
@@ -119,7 +119,7 @@ function callback_declineDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	closeDraw();
 	// Notify the server
-	websocket.sendmessage('game', 'declinedraw');
+	socketmessages.send('game', 'declinedraw');
 	toast.show(`Draw declined`); // TODO: This needs to be localized to the user's language
 }
 

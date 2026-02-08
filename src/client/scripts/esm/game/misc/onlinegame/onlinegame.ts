@@ -15,14 +15,15 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
-import websocket from '../../websocket.js';
 import IndexedDB from '../../../util/IndexedDB.js';
+import socketsubs from '../../websocket/socketsubs.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
 import serverrestart from './serverrestart.js';
+import socketmessages from '../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -321,7 +322,7 @@ function update(): void {
 function resyncToGame(): void {
 	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
-	websocket.sendmessage('game', 'resync', id!);
+	socketmessages.send('game', 'resync', id!);
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
@@ -341,7 +342,7 @@ function reportOpponentsMove(reason: string): void {
 		opponentsMoveNumber,
 	};
 
-	websocket.sendmessage('game', 'report', message);
+	socketmessages.send('game', 'report', message);
 }
 
 /**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
@@ -353,8 +354,8 @@ function onAbortOrResignButtonPress(): void {
 	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile.basegame)) websocket.sendmessage('game', 'resign');
-	else websocket.sendmessage('game', 'abort');
+	if (moveutil.isGameResignable(gamefile.basegame)) socketmessages.send('game', 'resign');
+	else socketmessages.send('game', 'abort');
 }
 
 /**
@@ -370,7 +371,7 @@ function onMainMenuButtonPress(): void {
 	requestRemovalFromPlayersInActiveGames();
 
 	// Tell the server we no longer want game updates.
-	websocket.unsubFromSub('game');
+	socketsubs.unsubFromSub('game');
 }
 
 function deleteCustomVariantOptions(): void {
@@ -391,12 +392,12 @@ function deleteCustomVariantOptions(): void {
  */
 function requestRemovalFromPlayersInActiveGames(): void {
 	if (!areInOnlineGame()) return;
-	if (!websocket.areSubbedToSub('game')) {
+	if (!socketsubs.areSubbedToSub('game')) {
 		// THE SERVER has deleted the game. Already removed from players in active games list!
 		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
 		return;
 	}
-	websocket.sendmessage('game', 'removefromplayersinactivegames');
+	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
 /**
