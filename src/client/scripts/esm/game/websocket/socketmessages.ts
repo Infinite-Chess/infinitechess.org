@@ -5,6 +5,7 @@
  */
 
 import uuid from '../../../../../shared/util/uuid.js';
+import wsutil from '../../../../../shared/util/wsutil.js';
 
 import toast from '../gui/toast.js';
 import socketman from './socketman.js';
@@ -30,11 +31,6 @@ type OutgoingPayload = {
 
 /** Time to wait for echo before assuming disconnection. */
 const timeToWaitForEchoMillis = 5000;
-/**
- * Time after the server's last sent message before the server sends a
- * 'renewconnection' keepalive. Mirrors the server-side constant.
- */
-const timeOfInactivityToRenewConnection = 10000;
 /** Time the websocket remains open without subscriptions. */
 const cushionBeforeAutoCloseMillis = 10000;
 /** Simulated websocket latency in debug mode. */
@@ -181,7 +177,7 @@ function rescheduleInactivityTimer(): void {
 	if (socketsubs.zeroSubs()) return;
 	inactivityTimerID = window.setTimeout(
 		onInactivityTimeout,
-		timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
+		wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
 	);
 }
 
@@ -202,7 +198,7 @@ function onInactivityTimeout(): void {
 	const socket = socketman.getSocket();
 	if (!socket) return;
 	console.log(
-		`No message received for ${timeOfInactivityToRenewConnection + timeToWaitForEchoMillis}ms. Assuming connection lost.`,
+		`No message received for ${wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis}ms. Assuming connection lost.`,
 	);
 	socketman.dispatchLostConnectionCustomEvent();
 	socket.close(1000, 'Connection closed by client. Renew.');
