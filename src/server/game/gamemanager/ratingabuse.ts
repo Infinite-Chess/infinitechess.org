@@ -251,7 +251,7 @@ async function measurePlayerRatingAbuse(
 		'termination',
 		'move_count',
 		'time_duration_millis',
-	]) as RatingAbuseRelevantGamesRecord[];
+	])!;
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// Combine the information about the games into a single gameInfoList object
