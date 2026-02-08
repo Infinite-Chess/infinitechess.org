@@ -12,7 +12,6 @@ import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import {
 	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
 } from '../game/gamemanager/ratingcalculation.js';
