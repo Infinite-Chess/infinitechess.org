@@ -6,9 +6,9 @@
  */
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import style from './style.js';
 import guititle from './guititle.js';
@@ -161,7 +161,7 @@ function createPracticeHTML(): void {
 					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
 					containerDiv.appendChild(pieceDiv);
 
-					if (typeutil.getColorFromType(longPiece) === players.WHITE)
+					if (typeutil.getColorFromType(longPiece) === p.WHITE)
 						piecelistW.appendChild(containerDiv);
 					else piecelistB.appendChild(containerDiv);
 				}

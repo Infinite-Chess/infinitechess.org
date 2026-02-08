@@ -23,7 +23,7 @@ import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -244,20 +244,20 @@ function assignWhiteBlackPlayersFromInvite(
 ): PlayerGroup<AuthMemberInfo> {
 	// { id, owner, variant, clock, color, rated, publicity }
 	const colorData: PlayerGroup<AuthMemberInfo> = {};
-	if (inviteColor === players.WHITE) {
-		colorData[players.WHITE] = player1;
-		colorData[players.BLACK] = player2;
-	} else if (inviteColor === players.BLACK) {
-		colorData[players.WHITE] = player2;
-		colorData[players.BLACK] = player1;
+	if (inviteColor === p.WHITE) {
+		colorData[p.WHITE] = player1;
+		colorData[p.BLACK] = player2;
+	} else if (inviteColor === p.BLACK) {
+		colorData[p.WHITE] = player2;
+		colorData[p.BLACK] = player1;
 	} else if (inviteColor === null) {
 		// Random
 		if (Math.random() > 0.5) {
-			colorData[players.WHITE] = player1;
-			colorData[players.BLACK] = player2;
+			colorData[p.WHITE] = player1;
+			colorData[p.BLACK] = player2;
 		} else {
-			colorData[players.WHITE] = player2;
-			colorData[players.BLACK] = player1;
+			colorData[p.WHITE] = player2;
+			colorData[p.BLACK] = player1;
 		}
 	} else throw Error(`Unsupported color ${inviteColor} when assigning players to game.`);
 
@@ -390,8 +390,8 @@ function constructMetadataOfGame(
 ): MetaData {
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const white = playerdata[players.WHITE]!.identifier;
-	const black = playerdata[players.BLACK]!.identifier;
+	const white = playerdata[p.WHITE]!.identifier;
+	const black = playerdata[p.BLACK]!.identifier;
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
 	// @ts-ignore - variant is dynamic but always maps to a valid translation key
 	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
@@ -410,15 +410,15 @@ function constructMetadataOfGame(
 		// White is a member
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
-		if (playerdata[players.WHITE] !== undefined)
-			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[players.WHITE]!.rating!);
+		if (playerdata[p.WHITE] !== undefined)
+			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!);
 	}
 	if (black.signedIn) {
 		// Black is a member
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
-		if (playerdata[players.BLACK])
-			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[players.BLACK]!.rating!);
+		if (playerdata[p.BLACK])
+			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!);
 	}
 
 	return gameMetadata;
@@ -690,7 +690,7 @@ function isAutoResignDisconnectTimerActiveForColor(match: MatchInfo, color: Play
  * @param servergame - The game
  */
 function sendUpdatedClockToColor(servergame: ServerGame, color: Player): void {
-	if (color !== players.BLACK && color !== players.WHITE) {
+	if (color !== p.BLACK && color !== p.WHITE) {
 		logEventsAndPrint(
 			`Color must be white or black when sending clock to color! Got: ${color}`,
 			'errLog.txt',

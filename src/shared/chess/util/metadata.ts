@@ -13,7 +13,7 @@ import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
-import { players } from './typeutil.js';
+import { players as p } from './typeutil.js';
 
 // Type Definitions ---------------------------------------------------------------
 
@@ -79,8 +79,8 @@ function copyMetadataField<K extends MetadataKey>(
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '*' (aborted).
  */
 function getResultFromVictor(victor?: Player | null): string {
-	if (victor === players.WHITE) return '1-0';
-	else if (victor === players.BLACK) return '0-1';
+	if (victor === p.WHITE) return '1-0';
+	else if (victor === p.BLACK) return '0-1';
 	else if (victor === null) return '1/2-1/2';
 	else if (victor === undefined) return '*';
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
@@ -94,8 +94,8 @@ function getGameConclusionFromResultAndTermination(
 	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
 	const victor: Player | null =
-		result === '1-0' ? players.WHITE :
-		result === '0-1' ? players.BLACK :
+		result === '1-0' ? p.WHITE :
+		result === '0-1' ? p.BLACK :
 		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
 	return { victor, condition: termination };

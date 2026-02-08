@@ -15,7 +15,7 @@ import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import variant from '../../../shared/chess/variants/variant.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -44,7 +44,7 @@ const createinviteschem = z
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
 			.refine((c) => timecontrol.isValid(c), { error: 'Invalid clock value.' }),
-		color: z.literal([players.WHITE, players.BLACK, null]),
+		color: z.literal([p.WHITE, p.BLACK, null]),
 		publicity: z.enum(['public', 'private']),
 		rated: z.enum(['casual', 'rated']),
 		tag: z.string().length(8),

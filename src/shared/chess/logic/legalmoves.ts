@@ -23,7 +23,7 @@ import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';
 import organizedpieces from './organizedpieces.js';
 import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
-import typeutil, { players, rawTypes } from '../util/typeutil.js';
+import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -116,7 +116,7 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
  */
 function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
-	if (player === players.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
+	if (player === p.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
 	const movesetFunc = boardsim.pieceMovesets[rawType];
 	if (!movesetFunc) return { colinear: false }; // Safety net.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
@@ -342,7 +342,7 @@ function testCaptureValidity(
 	premove: boolean,
 ): 0 | 1 | 2 {
 	const rawType = typeutil.getRawType(typeOnSquare);
-	if (rawType === rawTypes.VOID) return 2; // Void, NEVER legal
+	if (rawType === r.VOID) return 2; // Void, NEVER legal
 
 	if (premove) return 0; // There is a non-void piece, but we're premoving => legal move
 

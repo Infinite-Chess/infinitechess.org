@@ -7,7 +7,7 @@
 import type { Color } from '../../util/math/math.js';
 import type { RawType, Player } from '../../chess/util/typeutil.js';
 
-import { rawTypes, players } from '../../chess/util/typeutil.js';
+import { rawTypes as r, players as p } from '../../chess/util/typeutil.js';
 
 type PieceColorGroup = {
 	[_team in Player]: Color;
@@ -15,14 +15,14 @@ type PieceColorGroup = {
 
 /** The default tints for a piece, if not provided. */
 const defaultBaseColors: PieceColorGroup = {
-	[players.NEUTRAL]: [0.5, 0.5, 0.5, 1],
-	[players.WHITE]: [1, 1, 1, 1],
-	[players.BLACK]: [1, 1, 1, 1],
+	[p.NEUTRAL]: [0.5, 0.5, 0.5, 1],
+	[p.WHITE]: [1, 1, 1, 1],
+	[p.BLACK]: [1, 1, 1, 1],
 	// If these are solid color, they're quite saturated
-	[players.RED]: [1, 0.17, 0.17, 1],
-	[players.BLUE]: [0.23, 0.23, 1, 1],
-	[players.YELLOW]: [1, 1, 0.1, 1],
-	[players.GREEN]: [0.1, 1, 0.1, 1],
+	[p.RED]: [1, 0.17, 0.17, 1],
+	[p.BLUE]: [0.23, 0.23, 1, 1],
+	[p.YELLOW]: [1, 1, 0.1, 1],
+	[p.GREEN]: [0.1, 1, 0.1, 1],
 };
 
 /** Config for the SVGs of the pieces */
@@ -33,50 +33,50 @@ const SVGConfig: {
 		colors?: PieceColorGroup;
 	};
 } = {
-	[rawTypes.VOID]: {
+	[r.VOID]: {
 		location: null, // VOID has no svg
 		colors: {
-			[players.NEUTRAL]: [0, 0, 0, 1],
-			[players.WHITE]: [1, 1, 1, 1],
-			[players.BLACK]: [0.3, 0.3, 0.3, 1],
-			[players.RED]: [1, 0, 0, 1],
-			[players.BLUE]: [0, 0, 1, 1],
-			[players.YELLOW]: [1, 1, 0, 1],
-			[players.GREEN]: [0, 1, 0, 1],
+			[p.NEUTRAL]: [0, 0, 0, 1],
+			[p.WHITE]: [1, 1, 1, 1],
+			[p.BLACK]: [0.3, 0.3, 0.3, 1],
+			[p.RED]: [1, 0, 0, 1],
+			[p.BLUE]: [0, 0, 1, 1],
+			[p.YELLOW]: [1, 1, 0, 1],
+			[p.GREEN]: [0, 1, 0, 1],
 		},
 	},
-	[rawTypes.OBSTACLE]: {
+	[r.OBSTACLE]: {
 		location: 'fairy/obstacle',
 		colors: {
-			[players.NEUTRAL]: [0.08, 0.08, 0.08, 1],
-			[players.WHITE]: [1, 1, 1, 1],
-			[players.BLACK]: [0, 0, 0, 1],
-			[players.RED]: [1, 0, 0, 1],
-			[players.BLUE]: [0, 0, 1, 1],
-			[players.YELLOW]: [1, 1, 0, 1],
-			[players.GREEN]: [0, 1, 0, 1],
+			[p.NEUTRAL]: [0.08, 0.08, 0.08, 1],
+			[p.WHITE]: [1, 1, 1, 1],
+			[p.BLACK]: [0, 0, 0, 1],
+			[p.RED]: [1, 0, 0, 1],
+			[p.BLUE]: [0, 0, 1, 1],
+			[p.YELLOW]: [1, 1, 0, 1],
+			[p.GREEN]: [0, 1, 0, 1],
 		},
 	},
-	[rawTypes.KING]: { location: 'classical' },
-	[rawTypes.GIRAFFE]: { location: 'fairy/giraffe' },
-	[rawTypes.CAMEL]: { location: 'fairy/camel' },
-	[rawTypes.ZEBRA]: { location: 'fairy/zebra' },
-	[rawTypes.KNIGHTRIDER]: { location: 'fairy/knightrider' },
-	[rawTypes.AMAZON]: { location: 'fairy/amazon' },
-	[rawTypes.QUEEN]: { location: 'classical' },
-	[rawTypes.ROYALQUEEN]: { location: 'fairy/royalQueen' },
-	[rawTypes.HAWK]: { location: 'fairy/hawk' },
-	[rawTypes.CHANCELLOR]: { location: 'fairy/chancellor' },
-	[rawTypes.ARCHBISHOP]: { location: 'fairy/archbishop' },
-	[rawTypes.CENTAUR]: { location: 'fairy/centaur' },
-	[rawTypes.ROYALCENTAUR]: { location: 'fairy/royalCentaur' },
-	[rawTypes.ROSE]: { location: 'fairy/rose' },
-	[rawTypes.KNIGHT]: { location: 'classical' },
-	[rawTypes.GUARD]: { location: 'fairy/guard' },
-	[rawTypes.HUYGEN]: { location: 'fairy/huygen' },
-	[rawTypes.ROOK]: { location: 'classical' },
-	[rawTypes.BISHOP]: { location: 'classical' },
-	[rawTypes.PAWN]: { location: 'classical' },
+	[r.KING]: { location: 'classical' },
+	[r.GIRAFFE]: { location: 'fairy/giraffe' },
+	[r.CAMEL]: { location: 'fairy/camel' },
+	[r.ZEBRA]: { location: 'fairy/zebra' },
+	[r.KNIGHTRIDER]: { location: 'fairy/knightrider' },
+	[r.AMAZON]: { location: 'fairy/amazon' },
+	[r.QUEEN]: { location: 'classical' },
+	[r.ROYALQUEEN]: { location: 'fairy/royalQueen' },
+	[r.HAWK]: { location: 'fairy/hawk' },
+	[r.CHANCELLOR]: { location: 'fairy/chancellor' },
+	[r.ARCHBISHOP]: { location: 'fairy/archbishop' },
+	[r.CENTAUR]: { location: 'fairy/centaur' },
+	[r.ROYALCENTAUR]: { location: 'fairy/royalCentaur' },
+	[r.ROSE]: { location: 'fairy/rose' },
+	[r.KNIGHT]: { location: 'classical' },
+	[r.GUARD]: { location: 'fairy/guard' },
+	[r.HUYGEN]: { location: 'fairy/huygen' },
+	[r.ROOK]: { location: 'classical' },
+	[r.BISHOP]: { location: 'classical' },
+	[r.PAWN]: { location: 'classical' },
 };
 
 function getLocationsForTypes(types: Iterable<RawType>): Set<string> {

@@ -11,7 +11,10 @@ import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
+import typeutil, {
+	rawTypes as r,
+	players as p,
+} from '../../../../../../shared/chess/util/typeutil.js';
 
 import esave from '../../boardeditor/actions/esave.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
@@ -88,30 +91,30 @@ const element_neutralTypes: Array<Element> = [];
 
 /** Player pieces in the order they will appear */
 const coloredTypes = [
-	rawTypes.KING,
-	rawTypes.QUEEN,
-	rawTypes.ROOK,
-	rawTypes.BISHOP,
-	rawTypes.KNIGHT,
-	rawTypes.PAWN,
-	rawTypes.CHANCELLOR,
-	rawTypes.ARCHBISHOP,
-	rawTypes.AMAZON,
-	rawTypes.GUARD,
-	rawTypes.CENTAUR,
-	rawTypes.HAWK,
-	rawTypes.KNIGHTRIDER,
-	rawTypes.HUYGEN,
-	rawTypes.ROSE,
-	rawTypes.CAMEL,
-	rawTypes.GIRAFFE,
-	rawTypes.ZEBRA,
-	rawTypes.ROYALCENTAUR,
-	rawTypes.ROYALQUEEN,
+	r.KING,
+	r.QUEEN,
+	r.ROOK,
+	r.BISHOP,
+	r.KNIGHT,
+	r.PAWN,
+	r.CHANCELLOR,
+	r.ARCHBISHOP,
+	r.AMAZON,
+	r.GUARD,
+	r.CENTAUR,
+	r.HAWK,
+	r.KNIGHTRIDER,
+	r.HUYGEN,
+	r.ROSE,
+	r.CAMEL,
+	r.GIRAFFE,
+	r.ZEBRA,
+	r.ROYALCENTAUR,
+	r.ROYALQUEEN,
 ];
 
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
-const neutralTypes = [rawTypes.OBSTACLE];
+const neutralTypes = [r.OBSTACLE];
 
 // State -------------------------------------------------------------------
 
@@ -258,7 +261,7 @@ async function initUI(): Promise<void> {
 				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
 			const modified_piece_abbreviation =
-				player === players.WHITE
+				player === p.WHITE
 					? piece_abbreviation.toUpperCase()
 					: piece_abbreviation.toLowerCase();
 			pieceContainer.setAttribute(
@@ -275,7 +278,7 @@ async function initUI(): Promise<void> {
 	// Neutral pieces
 	const neutral_svgs = await svgcache.getSVGElements(
 		neutralTypes.map((rawType) => {
-			return typeutil.buildType(rawType, players.NEUTRAL);
+			return typeutil.buildType(rawType, p.NEUTRAL);
 		}),
 	);
 	const neutralPieces = document.createElement('div');
@@ -289,8 +292,8 @@ async function initUI(): Promise<void> {
 	// Void tooltip
 	element_void.classList.add('tooltip-dr');
 	// @ts-ignore
-	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(rawTypes.VOID)!];
-	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
+	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(r.VOID)!];
+	const void_abbreviation = icnconverter.piece_codes_raw[r.VOID];
 	element_void.setAttribute('data-tooltip', `${localized_void_name} (${void_abbreviation})`);
 
 	element_neutralTypes.push(element_void);
@@ -570,7 +573,7 @@ function updatePieceColors(newColor: Player): void {
 	drawingtool.setColor(newColor);
 
 	// Update currentPieceType, if necessary
-	if (typeutil.getColorFromType(drawingtool.getPiece()) !== players.NEUTRAL) {
+	if (typeutil.getColorFromType(drawingtool.getPiece()) !== p.NEUTRAL) {
 		const currentPieceType = typeutil.buildType(
 			typeutil.getRawType(drawingtool.getPiece()),
 			newColor,

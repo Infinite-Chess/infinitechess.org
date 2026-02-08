@@ -12,7 +12,11 @@ import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil';
-import typeutil, { Player, players, rawTypes } from '../../../../../../shared/chess/util/typeutil';
+import typeutil, {
+	Player,
+	players as p,
+	rawTypes as r,
+} from '../../../../../../shared/chess/util/typeutil';
 
 import mouse from '../../../util/mouse';
 import arrows from '../../rendering/arrows/arrows';
@@ -31,8 +35,8 @@ const drawingTools: Tool[] = ['placer', 'eraser', 'specialrights'];
 
 // State -----------------------------------------------------------
 
-let currentColor: Player = players.WHITE;
-let currentPieceType: number = typeutil.buildType(rawTypes.PAWN, currentColor);
+let currentColor: Player = p.WHITE;
+let currentPieceType: number = typeutil.buildType(r.PAWN, currentColor);
 
 /**
  * Changes are stored in `thisEdit` until the user releases the button.

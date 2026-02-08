@@ -25,7 +25,7 @@ import icnconverter, {
 import {
 	rawTypes as r,
 	ext as e,
-	players,
+	players as p,
 	numTypes,
 } from '../../../../../../shared/chess/util/typeutil.js';
 
@@ -1844,7 +1844,7 @@ async function runEngine(): Promise<void> {
 					undefinedidx++;
 					continue;
 				}
-				if (Math.floor(type / numTypes) !== players.WHITE) continue;
+				if (Math.floor(type / numTypes) !== p.WHITE) continue;
 				const bigintCoords: Coords = [
 					board.pieces.XPositions[idx]!,
 					board.pieces.YPositions[idx]!,

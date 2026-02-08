@@ -5,9 +5,9 @@ import type { VariantOptions } from '../../../../../../shared/chess/logic/initva
 import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil, {
 	Player,
-	rawTypes,
 	RawType,
 	PlayerGroup,
+	rawTypes as r,
 	players as p,
 } from '../../../../../../shared/chess/util/typeutil';
 
@@ -97,28 +97,28 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 
 	// 5. Only suppported pieces may be present.
 	const supportedPieces: RawType[] = [
-		rawTypes.VOID,
-		rawTypes.OBSTACLE,
-		rawTypes.KING,
-		rawTypes.GIRAFFE,
-		rawTypes.CAMEL,
-		rawTypes.ZEBRA,
-		rawTypes.KNIGHTRIDER,
-		rawTypes.AMAZON,
-		rawTypes.QUEEN,
+		r.VOID,
+		r.OBSTACLE,
+		r.KING,
+		r.GIRAFFE,
+		r.CAMEL,
+		r.ZEBRA,
+		r.KNIGHTRIDER,
+		r.AMAZON,
+		r.QUEEN,
 		// rawTypes.ROYALQUEEN, // Not extensively tested
-		rawTypes.HAWK,
-		rawTypes.CHANCELLOR,
-		rawTypes.ARCHBISHOP,
-		rawTypes.CENTAUR,
-		rawTypes.ROYALCENTAUR,
-		rawTypes.ROSE,
-		rawTypes.KNIGHT,
-		rawTypes.GUARD,
-		rawTypes.HUYGEN,
-		rawTypes.ROOK,
-		rawTypes.BISHOP,
-		rawTypes.PAWN,
+		r.HAWK,
+		r.CHANCELLOR,
+		r.ARCHBISHOP,
+		r.CENTAUR,
+		r.ROYALCENTAUR,
+		r.ROSE,
+		r.KNIGHT,
+		r.GUARD,
+		r.HUYGEN,
+		r.ROOK,
+		r.BISHOP,
+		r.PAWN,
 	];
 	for (const type of variantOptions.position.values()) {
 		const rawType = typeutil.getRawType(type);

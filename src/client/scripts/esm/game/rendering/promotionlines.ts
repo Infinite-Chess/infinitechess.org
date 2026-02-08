@@ -8,7 +8,7 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd from '@naviary/bigdecimal';
 
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import camera from './camera.js';
 import meshes from './meshes.js';
@@ -55,8 +55,8 @@ function render(): void {
 	const color: Color = [0, 0, 0, 1];
 	const vertexData: number[] = [];
 
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.WHITE]!, 1);
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.BLACK]!, 0);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.WHITE]!, 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.BLACK]!, 0);
 
 	function addDataForSide(ranks: bigint[], yShift: 1 | 0): void {
 		ranks.forEach((rank) => {

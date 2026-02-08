@@ -5,7 +5,7 @@ import type { SimplifiedGameState } from './gamecompressor.js';
 
 import { describe, it, expect } from 'vitest';
 
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gamecompressor from './gamecompressor.js';
 
@@ -29,10 +29,10 @@ describe('gamecompressor', () => {
 					metadata: mockMetaData,
 					// The game rules are essential for the compressor to know the turn order
 					gameRules: {
-						turnOrder: [players.WHITE, players.BLACK],
+						turnOrder: [p.WHITE, p.BLACK],
 					} as any,
 					moves: [],
-					whosTurn: players.WHITE,
+					whosTurn: p.WHITE,
 					untimed: true,
 					clocks: undefined,
 				},
@@ -65,7 +65,7 @@ describe('gamecompressor', () => {
 		it('should return the same state if halfmoves is 0', () => {
 			const initialState: SimplifiedGameState = {
 				position: new Map(),
-				turnOrder: [players.WHITE, players.BLACK],
+				turnOrder: [p.WHITE, p.BLACK],
 				fullMove: 1,
 				state_global: {
 					specialRights: new Set(),

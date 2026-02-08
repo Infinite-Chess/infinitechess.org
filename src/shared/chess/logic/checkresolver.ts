@@ -25,11 +25,11 @@ import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
-import { players } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
+import { players as p } from '../util/typeutil.js';
 import vectors, { Vec2Key } from '../../util/math/vectors.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
@@ -56,7 +56,7 @@ function removeCheckInvalidMoves(
 	moves: LegalMoves,
 ): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
-	if (color === players.NEUTRAL) return; // Neutral pieces can't be in check
+	if (color === p.NEUTRAL) return; // Neutral pieces can't be in check
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile.basegame, color, 'checkmate')) return;
 
 	// There's a couple type of moves that put you in check:

@@ -19,7 +19,7 @@ import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import { rawTypes, players } from '../../../../../shared/chess/util/typeutil.js';
+import { rawTypes as r, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import mouse from '../../util/mouse.js';
 import toast from '../gui/toast.js';
@@ -368,9 +368,9 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (type === undefined) return 0; // Can't select nothing
 	if (boardeditor.areInBoardEditor()) return preferences.getDragEnabled() ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
 	const [raw, player] = typeutil.splitType(type);
-	if (raw === rawTypes.VOID) return 0; // Can't select voids
+	if (raw === r.VOID) return 0; // Can't select voids
 	if (editMode && gameloader.areInLocalGame()) return preferences.getDragEnabled() ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged in local games.
-	if (player === players.NEUTRAL) return 0; // Can't select neutrals, period.
+	if (player === p.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	// It is our piece type...
 	const isOurTurn = gameloader.isItOurTurn(player);

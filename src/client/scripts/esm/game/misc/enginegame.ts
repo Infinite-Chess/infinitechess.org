@@ -6,7 +6,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import toast from '../gui/toast.js';
@@ -217,8 +217,8 @@ function onMovePlayed(): void {
 	const basegame = gamefile.basegame;
 	const clocks = basegame.clocks;
 	if (!basegame.untimed && clocks) {
-		wtime = clocks.currentTime[players.WHITE];
-		btime = clocks.currentTime[players.BLACK];
+		wtime = clocks.currentTime[p.WHITE];
+		btime = clocks.currentTime[p.BLACK];
 		const incSeconds = clocks.startTime.increment;
 		winc = incSeconds * 1000;
 		binc = incSeconds * 1000;
