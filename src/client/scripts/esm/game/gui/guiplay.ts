@@ -289,7 +289,6 @@ function callback_computer(): void {
 // Also starts local games
 function callback_createInvite(): void {
 	const inviteOptions = getInviteOptions();
-	console.log('Creating invite with options:', inviteOptions);
 
 	if (modeSelected === 'local') {
 		// Load options the game loader needs to load a local loaded game
