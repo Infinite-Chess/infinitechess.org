@@ -6,7 +6,6 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
-import type { WebsocketMessage } from '../websocket/socketrouter.js';
 import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';

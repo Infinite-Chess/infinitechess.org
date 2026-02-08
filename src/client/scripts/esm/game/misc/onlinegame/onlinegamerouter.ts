@@ -7,7 +7,6 @@ import type { Condition } from '../../../../../../shared/chess/util/winconutil.j
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { WebsocketMessage } from '../../websocket/socketrouter.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
