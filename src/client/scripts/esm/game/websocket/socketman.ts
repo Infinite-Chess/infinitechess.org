@@ -10,13 +10,19 @@ import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
 import invites from '../misc/invites.js';
-import docutil from '../../util/docutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../../util/validatorama.js';
 import socketrouter from './socketrouter.js';
 import socketmessages from './socketmessages.js';
+
+// Constants -------------------------------------------------------------------
+
+/** Time to wait for HTTP connection before assuming lost connection. */
+const timeToWaitForHTTPMillis = 5000;
+/** Time before attempting resub after network loss. */
+const timeToResubAfterNetworkLossMillis = 5000;
 
 // Variables -------------------------------------------------------------------
 
@@ -38,18 +44,23 @@ let noConnection = false;
 /** Enables simulated websocket latency and prints all sent and received messages. */
 let DEBUG = false;
 
-// Constants -------------------------------------------------------------------
-
-/** Time to wait for HTTP connection before assuming lost connection. */
-const timeToWaitForHTTPMillis = 5000;
-/** Time before attempting resub after network loss. */
-const timeToResubAfterNetworkLossMillis = 5000;
-
 // Initialization --------------------------------------------------------------
 
-(function init() {
-	document.addEventListener('connection-lost', () => alertUserLostConnection());
-})();
+document.addEventListener('connection-lost', () => {
+	// Displays a toast, notifying the user they lost connection.
+	noConnection = true;
+	toast.show(translations['websocket'].no_connection, {
+		durationMillis: timeToWaitForHTTPMillis,
+	});
+});
+
+// Page navigation handling
+window.addEventListener('pageshow', function (event) {
+	if (event.persisted) {
+		console.log('Page was returned to using the back or forward button.');
+		resubAll();
+	}
+});
 
 // Debug -----------------------------------------------------------------------
 
@@ -60,7 +71,6 @@ function isDebugEnabled(): boolean {
 
 /** Toggles debug mode on or off, showing a toast notification. */
 function toggleDebug(): void {
-	if (!docutil.isLocalEnvironment()) toast.show("Can't enable websocket latency in production.");
 	DEBUG = !DEBUG;
 	toast.show(`Toggled websocket latency: ${DEBUG}`);
 }
@@ -79,27 +89,12 @@ function dispatchLostConnectionCustomEvent(): void {
 	document.dispatchEvent(new CustomEvent('connection-lost'));
 }
 
-/** Dispatches a custom event indicating that a socket connection is being opened. */
-function dispatchOpeningSocketCustomEvent(): void {
-	document.dispatchEvent(new CustomEvent('socket-opening'));
-}
-
-/** Displays a toast notifying the user of lost connection. */
-function alertUserLostConnection(): void {
-	noConnection = true;
-	toast.show(translations['websocket'].no_connection, {
-		durationMillis: timeToWaitForHTTPMillis,
-	});
-}
-
 // Socket Lifecycle ------------------------------------------------------------
 
 /**
  * Repeatedly tries to open a websocket to the server until successful,
  * unless we are in timeout. Never opens more than one socket at a time.
- *
- * This NEVER needs to be called manually; {@link sendmessage} calls it automatically.
- * @returns *true* if a socket was successfully opened.
+ * @returns Whether a socket was successfully opened.
  */
 async function establishSocket(): Promise<boolean> {
 	if (socketclose.isInTimeout()) return false;
@@ -138,7 +133,7 @@ async function establishSocket(): Promise<boolean> {
 
 /**
  * Attempts to open our websocket to the server.
- * @returns *true* if the socket was opened successfully.
+ * @returns Whether the socket was opened successfully.
  */
 async function openSocket(): Promise<boolean> {
 	onSocketUpgradeReqLeave();
@@ -169,7 +164,8 @@ async function openSocket(): Promise<boolean> {
  * that assumes lost connection if no response arrives.
  */
 function onSocketUpgradeReqLeave(): void {
-	dispatchOpeningSocketCustomEvent();
+	// Dispatches a custom event indicating that a socket connection is being opened.
+	document.dispatchEvent(new CustomEvent('socket-opening'));
 	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
 }
 
@@ -213,8 +209,8 @@ async function resubAll(): Promise<void> {
 		if (!(await establishSocket())) return;
 	}
 
-	for (const sub of socketsubs.getValidSubs()) {
-		if (!socketsubs.areSubbedToSub(sub as 'invites' | 'game')) continue;
+	for (const sub of socketsubs.validSubs) {
+		if (!socketsubs.areSubbedToSub(sub)) continue;
 		switch (sub) {
 			case 'invites':
 				await invites.subscribeToInvites(true);
@@ -230,14 +226,7 @@ async function resubAll(): Promise<void> {
 	}
 }
 
-// Page Navigation Handling ----------------------------------------------------
-
-window.addEventListener('pageshow', function (event) {
-	if (event.persisted) {
-		console.log('Page was returned to using the back or forward button.');
-		resubAll();
-	}
-});
+// Exports --------------------------------------------------------------------
 
 export default {
 	getSocket,
@@ -247,5 +236,4 @@ export default {
 	toggleDebug,
 	isDebugEnabled,
 	dispatchLostConnectionCustomEvent,
-	dispatchOpeningSocketCustomEvent,
 };

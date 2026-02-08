@@ -322,7 +322,7 @@ function update(): void {
 function resyncToGame(): void {
 	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
-	socketmessages.sendmessage('game', 'resync', id!);
+	socketmessages.send('game', 'resync', id!);
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
@@ -342,7 +342,7 @@ function reportOpponentsMove(reason: string): void {
 		opponentsMoveNumber,
 	};
 
-	socketmessages.sendmessage('game', 'report', message);
+	socketmessages.send('game', 'report', message);
 }
 
 /**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
@@ -354,8 +354,8 @@ function onAbortOrResignButtonPress(): void {
 	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile.basegame)) socketmessages.sendmessage('game', 'resign');
-	else socketmessages.sendmessage('game', 'abort');
+	if (moveutil.isGameResignable(gamefile.basegame)) socketmessages.send('game', 'resign');
+	else socketmessages.send('game', 'abort');
 }
 
 /**
@@ -397,7 +397,7 @@ function requestRemovalFromPlayersInActiveGames(): void {
 		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
 		return;
 	}
-	socketmessages.sendmessage('game', 'removefromplayersinactivegames');
+	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
 /**

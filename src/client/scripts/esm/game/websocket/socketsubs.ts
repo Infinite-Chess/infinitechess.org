@@ -29,7 +29,6 @@ function zeroSubs(): boolean {
  * @param sub - The name of the sub
  */
 function areSubbedToSub(sub: Sub): boolean {
-	if (!validSubs.includes(sub)) throw Error(`Can't ask if we're subbed to invalid sub "${sub}".`);
 	return subs[sub] !== false;
 }
 
@@ -38,7 +37,6 @@ function areSubbedToSub(sub: Sub): boolean {
  * @param sub - The name of the sub to add
  */
 function addSub(sub: Sub): void {
-	if (!validSubs.includes(sub)) throw Error(`Can't sub to invalid sub "${sub}".`);
 	subs[sub] = true;
 }
 
@@ -49,7 +47,6 @@ function addSub(sub: Sub): void {
  * @param sub - The name of the sub to delete
  */
 function deleteSub(sub: Sub): void {
-	if (!validSubs.includes(sub)) throw Error(`Can't delete invalid sub "${sub}".`);
 	subs[sub] = false;
 }
 
@@ -62,19 +59,16 @@ function unsubFromSub(sub: Sub): void {
 	if (!areSubbedToSub(sub)) return; // Already unsubbed.
 	deleteSub(sub);
 	// Tell the server we no longer want updates.
-	socketmessages.sendmessage('general', 'unsub', sub);
+	socketmessages.send('general', 'unsub', sub);
 }
 
-/** Returns the list of valid subscription names. */
-function getValidSubs(): readonly string[] {
-	return validSubs;
-}
+// Exports --------------------------------------------------------------------
 
 export default {
+	validSubs,
 	zeroSubs,
 	areSubbedToSub,
 	addSub,
 	deleteSub,
 	unsubFromSub,
-	getValidSubs,
 };

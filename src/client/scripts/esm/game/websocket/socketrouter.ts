@@ -19,9 +19,7 @@ import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
 
 type WebsocketMessageValue = MessageEvent['data'];
 
-/**
- * An incoming websocket server message.
- */
+/** An incoming websocket server message. */
 export interface WebsocketMessage {
 	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
 	sub: string;
@@ -72,7 +70,7 @@ function onmessage(serverMessage: MessageEvent): void {
 	const sub = message.sub;
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
-	socketmessages.sendmessage('general', 'echo', message.id);
+	socketmessages.send('general', 'echo', message.id);
 
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
@@ -152,9 +150,11 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 	location.reload(true);
 
 	function saveInfo(info: HardRefreshInfo): void {
-		LocalStorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 }));
+		LocalStorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ hours: 4 })); // I think cloudflare caches scripts for 4 hours
 	}
 }
+
+// Exports --------------------------------------------------------------------
 
 export default {
 	onmessage,

@@ -19,12 +19,10 @@ type WebsocketMessageValue = MessageEvent['data'];
 /** The shape of an outgoing websocket payload sent to the server. */
 type OutgoingPayload = {
 	route: string;
-	contents:
-		| {
-				action: string;
-				value: WebsocketMessageValue;
-		  }
-		| WebsocketMessageValue;
+	contents: {
+		action: string;
+		value: WebsocketMessageValue;
+	};
 	id?: number;
 };
 
@@ -60,7 +58,7 @@ let timeoutIDToAutoClose: number;
  * disconnection, and updates the ping display.
  */
 function cancelTimerOfMessageID(message: { value: WebsocketMessageValue }): void {
-	const echoMessageID = message.value;
+	const echoMessageID = message.value; // If the action is an "echo", the message ID their echo'ing is stored in "value"!
 
 	const echoTimer = echoTimers[echoMessageID];
 	if (!echoTimer) {
@@ -166,7 +164,7 @@ function resetTimerToCloseSocket(): void {
  * @param onreplyFunc - Optional function to execute when we receive the server's response.
  * @returns *true* if the message was able to send.
  */
-async function sendmessage(
+async function send(
 	route: string,
 	action: string,
 	value?: WebsocketMessageValue,
@@ -213,7 +211,7 @@ async function sendmessage(
 	}
 
 	const socket = socketman.getSocket();
-	if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
 
 	const stringifiedMessage = JSON.stringify(payload);
 
@@ -222,13 +220,15 @@ async function sendmessage(
 			() => socket.send(stringifiedMessage),
 			simulatedWebsocketLatencyMillis_Debug,
 		);
-	} else socket.send(stringifiedMessage);
+	} else socket.send(stringifiedMessage); // Send immediately
 
 	return true;
 }
 
+// Exports --------------------------------------------------------------------
+
 export default {
-	sendmessage,
+	send,
 	cancelTimerOfMessageID,
 	cancelAllEchoTimers,
 	executeOnreplyFunc,

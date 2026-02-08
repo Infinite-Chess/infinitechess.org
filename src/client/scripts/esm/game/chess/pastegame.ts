@@ -113,7 +113,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
-		socketmessages.sendmessage('game', 'paste');
+		socketmessages.send('game', 'paste');
 }
 
 /** For now doesn't verify if the required royalty is present. */

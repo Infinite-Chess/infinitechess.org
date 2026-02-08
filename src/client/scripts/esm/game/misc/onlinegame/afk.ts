@@ -127,7 +127,7 @@ function cancelAFKTimer(): void {
 }
 
 function tellServerWeAFK(): void {
-	socketmessages.sendmessage('game', 'AFK');
+	socketmessages.send('game', 'AFK');
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
 	// Play lowtime alert sound
@@ -140,7 +140,7 @@ function tellServerWeAFK(): void {
 }
 
 function tellServerWeBackFromAFK(): void {
-	socketmessages.sendmessage('game', 'AFK-Return');
+	socketmessages.send('game', 'AFK-Return');
 	timeWeLoseFromAFK = undefined;
 	clearTimeout(displayAFKTimeoutID);
 	clearTimeout(playStaccatoTimeoutID);

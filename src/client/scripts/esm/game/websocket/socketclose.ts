@@ -65,6 +65,8 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	document.dispatchEvent(new CustomEvent('socket-closed', { detail }));
 
 	// Connection closed unexpectedly (network interrupted) or server is down.
+	// We did nothing wrong on our part, it's okay to instantly try to reconnect!
+	// But don't if the connection wasn't fully open or this creates spamming!
 	if (event.code === 1006) {
 		if (socketWasDefined) socketman.resubAll();
 		return;
@@ -167,6 +169,8 @@ function leaveTimeout(): void {
 async function onAuthenticationNeeded(): Promise<void> {
 	invites.clearIfOnPlayPage();
 
+	// If this is the second time we're getting this message,
+	// that means that cookies aren't working on this browser.
 	const now = Date.now();
 	if (lastTimeWeGotAuthorizationNeededMessage !== undefined) {
 		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
@@ -182,6 +186,8 @@ async function onAuthenticationNeeded(): Promise<void> {
 	await validatorama.refreshToken();
 	socketman.resubAll();
 }
+
+// Exports -------------------------------------------------------------------
 
 export default {
 	onclose,

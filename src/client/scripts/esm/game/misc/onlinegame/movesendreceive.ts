@@ -61,7 +61,7 @@ function sendMove(): void {
 		gameConclusion: gamefile.basegame.gameConclusion,
 	};
 
-	socketmessages.sendmessage('game', 'submitmove', data, true);
+	socketmessages.send('game', 'submitmove', data, true);
 
 	onlinegame.onMovePlayed({ isOpponents: false });
 }

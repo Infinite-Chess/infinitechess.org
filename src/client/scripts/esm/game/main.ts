@@ -31,7 +31,7 @@ function start(): void {
 
 	// Immediately asks the server if we are in a game.
 	// If so, it will send the info to join it.
-	socketmessages.sendmessage('game', 'joingame', undefined, true);
+	socketmessages.send('game', 'joingame', undefined, true);
 
 	// Update & draw the scene repeatedly
 	frameratelimiter.requestFrame(gameLoop);

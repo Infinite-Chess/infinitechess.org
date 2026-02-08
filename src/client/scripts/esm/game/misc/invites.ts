@@ -141,7 +141,7 @@ function create(variantOptions: InviteOptions): void {
 	// console.log("Invite options before sending create invite:");
 	// console.log(inviteOptions);
 
-	socketmessages.sendmessage('invites', 'createinvite', inviteOptions, true, onreplyFunc);
+	socketmessages.send('invites', 'createinvite', inviteOptions, true, onreplyFunc);
 }
 
 function cancel(inviteID = ourInviteID): void {
@@ -155,7 +155,7 @@ function cancel(inviteID = ourInviteID): void {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockCreateInviteButton;
 
-	socketmessages.sendmessage('invites', 'cancelinvite', inviteID, true, onreplyFunc);
+	socketmessages.send('invites', 'cancelinvite', inviteID, true, onreplyFunc);
 }
 
 /**
@@ -396,7 +396,7 @@ function accept(inviteID: string, isPrivate: boolean): void {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockAcceptInviteButton;
 
-	socketmessages.sendmessage('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
+	socketmessages.send('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
 }
 
 /** Called when an invite element is clicked. */
@@ -470,7 +470,7 @@ async function subscribeToInvites(ignoreAlreadySubbed?: boolean): Promise<void> 
 	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	// console.log("Subbing to invites!");
 	socketsubs.addSub('invites');
-	socketmessages.sendmessage('general', 'sub', 'invites');
+	socketmessages.send('general', 'sub', 'invites');
 }
 
 // Exports -----------------------------------------------------------------------
