@@ -12,14 +12,17 @@ import wsutil from '../../../../../shared/util/wsutil.js';
 import toast from '../gui/toast.js';
 import config from '../config.js';
 import invites from '../misc/invites.js';
+import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from './socketmessages.js';
-import {
-	dispatchLostConnectionCustomEvent,
-	TIME_TO_RESUB_AFTER_TOO_MANY_REQUESTS_MILLIS,
-	TIME_TO_RESUB_AFTER_MESSAGE_TOO_BIG_MILLIS,
-} from './socketutil.js';
+
+// Constants -------------------------------------------------------------------
+
+/** Time before attempting resub after too many requests. */
+const timeToResubAfterTooManyRequestsMillis = 10000;
+/** Time before attempting resub after message too big. */
+const timeToResubAfterMessageTooBigMillis = 5000;
 
 // Variables -------------------------------------------------------------------
 
@@ -30,14 +33,6 @@ let inTimeout = false;
  * we were missing a browser-id cookie, in millis since the Unix Epoch.
  */
 let lastTimeWeGotAuthorizationNeededMessage: number | undefined;
-
-/** Reference to the resubAll function, set by socketman to avoid circular deps. */
-let resubAllFn: (() => Promise<void>) | undefined;
-
-/** Registers the resubAll function from socketman. */
-function registerResubAllFn(fn: () => Promise<void>): void {
-	resubAllFn = fn;
-}
 
 /** Returns whether we're currently in a rate-limit timeout. */
 function isInTimeout(): boolean {
@@ -52,12 +47,10 @@ function isInTimeout(): boolean {
  * based on the closure reason.
  * @param event - The 'close' event fired.
  * @param socketWasDefined - Whether the socket was fully open before closing.
- * @param clearSocket - Callback to clear the socket reference in socketman.
  */
-function onclose(event: CloseEvent, socketWasDefined: boolean, clearSocket: () => void): void {
+function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 
-	clearSocket();
 	socketmessages.cancelAllEchoTimers();
 	socketmessages.resetOnreplyFuncs();
 
@@ -73,19 +66,19 @@ function onclose(event: CloseEvent, socketWasDefined: boolean, clearSocket: () =
 
 	// Connection closed unexpectedly (network interrupted) or server is down.
 	if (event.code === 1006) {
-		if (socketWasDefined) resubAllFn?.();
+		if (socketWasDefined) socketman.resubAll();
 		return;
 	}
 
 	switch (trimmedReason) {
 		case 'Connection expired':
-			resubAllFn?.();
+			socketman.resubAll();
 			break;
 		case 'Connection closed by client':
 			break;
 		case 'Connection closed by client. Renew.':
 			console.log('Closed web socket successfully. Renewing now..');
-			resubAllFn?.();
+			socketman.resubAll();
 			break;
 		case 'Unable to identify client IP address':
 			toast.show(
@@ -99,27 +92,27 @@ function onclose(event: CloseEvent, socketWasDefined: boolean, clearSocket: () =
 			break;
 		case 'Logged out':
 			document.dispatchEvent(new CustomEvent('logout'));
-			resubAllFn?.();
+			socketman.resubAll();
 			break;
 		case 'Too Many Requests. Try again soon.':
 			toast.show(translations['websocket'].too_many_requests, {
-				durationMillis: TIME_TO_RESUB_AFTER_TOO_MANY_REQUESTS_MILLIS,
+				durationMillis: timeToResubAfterTooManyRequestsMillis,
 			});
-			enterTimeout(TIME_TO_RESUB_AFTER_TOO_MANY_REQUESTS_MILLIS);
+			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Message Too Big':
 			toast.show(
 				`${translations['websocket'].message_too_big} ${translations['websocket'].please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
-			enterTimeout(TIME_TO_RESUB_AFTER_MESSAGE_TOO_BIG_MILLIS);
+			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
 		case 'Too Many Sockets':
 			toast.show(
 				`${translations['websocket'].too_many_sockets} ${translations['websocket'].please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
-			window.setTimeout(() => resubAllFn?.(), TIME_TO_RESUB_AFTER_TOO_MANY_REQUESTS_MILLIS);
+			window.setTimeout(() => socketman.resubAll(), timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
 			toast.show(
@@ -127,11 +120,11 @@ function onclose(event: CloseEvent, socketWasDefined: boolean, clearSocket: () =
 				{ error: true, durationMultiplier: 3 },
 			);
 			invites.clearIfOnPlayPage();
-			enterTimeout(TIME_TO_RESUB_AFTER_TOO_MANY_REQUESTS_MILLIS);
+			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'No echo heard':
-			dispatchLostConnectionCustomEvent();
-			resubAllFn?.();
+			socketman.dispatchLostConnectionCustomEvent();
+			socketman.resubAll();
 			break;
 		default:
 			toast.show(
@@ -162,7 +155,7 @@ function enterTimeout(timeMillis: number): void {
 /** Timeout from sending too many requests is over, try to reconnect. */
 function leaveTimeout(): void {
 	inTimeout = false;
-	resubAllFn?.();
+	socketman.resubAll();
 }
 
 // Authentication Handling -----------------------------------------------------
@@ -187,11 +180,10 @@ async function onAuthenticationNeeded(): Promise<void> {
 	lastTimeWeGotAuthorizationNeededMessage = now;
 
 	await validatorama.refreshToken();
-	resubAllFn?.();
+	socketman.resubAll();
 }
 
 export default {
 	onclose,
 	isInTimeout,
-	registerResubAllFn,
 };

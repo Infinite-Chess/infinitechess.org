@@ -5,17 +5,44 @@
  * based on the subscription type.
  */
 
-import type { WebsocketMessage, WebsocketMessageValue, HardRefreshInfo } from './socketutil.js';
-
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
 
 import toast from '../gui/toast.js';
 import invites from '../misc/invites.js';
+import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import socketmessages from './socketmessages.js';
 import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
-import { isDebugEnabled, ALSO_PRINT_INCOMING_ECHOS } from './socketutil.js';
+
+// Types -----------------------------------------------------------------------
+
+type WebsocketMessageValue = MessageEvent['data'];
+
+/**
+ * An incoming websocket server message.
+ */
+export interface WebsocketMessage {
+	/** What subscription the message should be forwarded to (e.g. "general", "invites", "game"). */
+	sub: string;
+	/** What action to perform with this message's data. */
+	action: string;
+	/** The message contents. */
+	value: WebsocketMessageValue;
+	/** The ID of the message to echo, so the server knows we've received it. */
+	id: number;
+	/** The ID of the message this message is the reply to, if specified. */
+	replyto: number;
+}
+
+/** Information about the last hard refresh we attempted. */
+type HardRefreshInfo = {
+	timeLastHardRefreshed: number;
+	expectedVersion: string;
+	refreshFailed?: boolean;
+};
+
+// Routing ---------------------------------------------------------------------
 
 /**
  * Called when we receive an incoming server websocket message.
@@ -32,9 +59,9 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const isEcho = message.action === 'echo';
 
-	if (isDebugEnabled()) {
+	if (socketman.isDebugEnabled()) {
 		if (isEcho) {
-			if (ALSO_PRINT_INCOMING_ECHOS)
+			if (socketmessages.alsoPrintIncomingEchos)
 				console.log(`Incoming message: ${JSON.stringify(message)}`);
 		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}

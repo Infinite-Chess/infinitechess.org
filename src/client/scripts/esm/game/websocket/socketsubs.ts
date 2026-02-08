@@ -7,6 +7,8 @@
  * and provides methods to add, remove, and query subscriptions.
  */
 
+import socketmessages from './socketmessages.js';
+
 const validSubs = ['invites', 'game'] as const;
 
 type Sub = (typeof validSubs)[number];
@@ -51,6 +53,18 @@ function deleteSub(sub: Sub): void {
 	subs[sub] = false;
 }
 
+/**
+ * Unsubs from the provided subscription list,
+ * informing the server we no longer want updates.
+ * @param sub - The name of the sub to unsubscribe from
+ */
+function unsubFromSub(sub: Sub): void {
+	if (!areSubbedToSub(sub)) return; // Already unsubbed.
+	deleteSub(sub);
+	// Tell the server we no longer want updates.
+	socketmessages.sendmessage('general', 'unsub', sub);
+}
+
 /** Returns the list of valid subscription names. */
 function getValidSubs(): readonly string[] {
 	return validSubs;
@@ -61,5 +75,6 @@ export default {
 	areSubbedToSub,
 	addSub,
 	deleteSub,
+	unsubFromSub,
 	getValidSubs,
 };

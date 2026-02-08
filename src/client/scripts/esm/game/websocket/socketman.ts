@@ -3,23 +3,20 @@
 /**
  * Manages the websocket connection lifecycle: opening, closing,
  * reconnecting, and resubscribing after unexpected disconnections.
+ * Also owns the socket instance and debug toggle.
  */
 
 import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
 import invites from '../misc/invites.js';
+import docutil from '../../util/docutil.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../../util/validatorama.js';
 import socketrouter from './socketrouter.js';
 import socketmessages from './socketmessages.js';
-import {
-	dispatchOpeningSocketCustomEvent,
-	TIME_TO_WAIT_FOR_HTTP_MILLIS,
-	TIME_TO_RESUB_AFTER_NETWORK_LOSS_MILLIS,
-} from './socketutil.js';
 
 // Variables -------------------------------------------------------------------
 
@@ -38,26 +35,60 @@ let reqOut: false | number = false;
  */
 let noConnection = false;
 
+/** Enables simulated websocket latency and prints all sent and received messages. */
+let DEBUG = false;
+
+// Constants -------------------------------------------------------------------
+
+/** Time to wait for HTTP connection before assuming lost connection. */
+const timeToWaitForHTTPMillis = 5000;
+/** Time before attempting resub after network loss. */
+const timeToResubAfterNetworkLossMillis = 5000;
+
 // Initialization --------------------------------------------------------------
 
 (function init() {
-	initListeners();
-	// Register callbacks to break circular deps between socketman <-> socketmessages / socketclose
-	socketmessages.registerCloseSocketFn(closeSocket);
-	socketmessages.registerEstablishSocketFn(establishSocket);
-	socketclose.registerResubAllFn(resubAll);
+	document.addEventListener('connection-lost', () => alertUserLostConnection());
 })();
 
-/** Listens for the connection-lost custom event. */
-function initListeners(): void {
-	document.addEventListener('connection-lost', () => alertUserLostConnection());
+// Debug -----------------------------------------------------------------------
+
+/** Returns whether debug mode is enabled. */
+function isDebugEnabled(): boolean {
+	return DEBUG;
+}
+
+/** Toggles debug mode on or off, showing a toast notification. */
+function toggleDebug(): void {
+	if (!docutil.isLocalEnvironment()) toast.show("Can't enable websocket latency in production.");
+	DEBUG = !DEBUG;
+	toast.show(`Toggled websocket latency: ${DEBUG}`);
+}
+
+// Socket Access ---------------------------------------------------------------
+
+/** Returns the current websocket instance, or undefined if not connected. */
+function getSocket(): WebSocket | undefined {
+	return socket;
+}
+
+// Connection Events -----------------------------------------------------------
+
+/** Dispatches a custom event indicating that websocket connection was lost. */
+function dispatchLostConnectionCustomEvent(): void {
+	document.dispatchEvent(new CustomEvent('connection-lost'));
+}
+
+/** Dispatches a custom event indicating that a socket connection is being opened. */
+function dispatchOpeningSocketCustomEvent(): void {
+	document.dispatchEvent(new CustomEvent('socket-opening'));
 }
 
 /** Displays a toast notifying the user of lost connection. */
 function alertUserLostConnection(): void {
 	noConnection = true;
 	toast.show(translations['websocket'].no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
+		durationMillis: timeToWaitForHTTPMillis,
 	});
 }
 
@@ -89,10 +120,10 @@ async function establishSocket(): Promise<boolean> {
 	while (!success && !socketsubs.zeroSubs()) {
 		noConnection = true;
 		toast.show(translations['websocket'].no_connection, {
-			durationMillis: TIME_TO_RESUB_AFTER_NETWORK_LOSS_MILLIS,
+			durationMillis: timeToResubAfterNetworkLossMillis,
 		});
 		invites.clearIfOnPlayPage();
-		await thread.sleep(TIME_TO_RESUB_AFTER_NETWORK_LOSS_MILLIS);
+		await thread.sleep(timeToResubAfterNetworkLossMillis);
 		success = await openSocket();
 	}
 
@@ -118,7 +149,6 @@ async function openSocket(): Promise<boolean> {
 		ws.onopen = () => {
 			onReqBack();
 			socket = ws;
-			socketmessages.setSocket(ws);
 			resolve(true);
 		};
 		ws.onerror = (_event) => {
@@ -128,7 +158,8 @@ async function openSocket(): Promise<boolean> {
 		ws.onmessage = (event: MessageEvent) => socketrouter.onmessage(event);
 		ws.onclose = (event: CloseEvent) => {
 			const wasFullyOpen = socket !== undefined;
-			socketclose.onclose(event, wasFullyOpen, clearSocket);
+			socket = undefined;
+			socketclose.onclose(event, wasFullyOpen);
 		};
 	});
 }
@@ -139,7 +170,7 @@ async function openSocket(): Promise<boolean> {
  */
 function onSocketUpgradeReqLeave(): void {
 	dispatchOpeningSocketCustomEvent();
-	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
+	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
 }
 
 /** Cancels the timer that assumes lost connection. */
@@ -152,9 +183,9 @@ function onReqBack(): void {
 function httpLostConnection(): void {
 	noConnection = true;
 	toast.show(translations['websocket'].no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
+		durationMillis: timeToWaitForHTTPMillis,
 	});
-	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
+	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
@@ -163,12 +194,6 @@ function closeSocket(): void {
 	if (socket.readyState !== WebSocket.OPEN)
 		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
 	socket.close(1000, 'Connection closed by client');
-}
-
-/** Clears the socket reference when the connection is closed. */
-function clearSocket(): void {
-	socket = undefined;
-	socketmessages.setSocket(undefined);
 }
 
 // Resubscription --------------------------------------------------------------
@@ -215,6 +240,12 @@ window.addEventListener('pageshow', function (event) {
 });
 
 export default {
+	getSocket,
 	establishSocket,
 	closeSocket,
+	resubAll,
+	toggleDebug,
+	isDebugEnabled,
+	dispatchLostConnectionCustomEvent,
+	dispatchOpeningSocketCustomEvent,
 };

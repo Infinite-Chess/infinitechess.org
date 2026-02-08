@@ -15,11 +15,12 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import toast from '../gui/toast.js';
 import guiplay from '../gui/guiplay.js';
 import docutil from '../../util/docutil.js';
-import websocket from '../websocket.js';
 import gamesound from './gamesound.js';
+import socketsubs from '../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import loadbalancer from './loadbalancer.js';
 import validatorama from '../../util/validatorama.js';
+import socketmessages from '../websocket/socketmessages.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 
 // Types -------------------------------------------------------------------------
@@ -86,7 +87,7 @@ function unsubIfWeNotHave(): void {
  */
 function unsubFromInvites(): void {
 	clear(true);
-	websocket.unsubFromSub('invites');
+	socketsubs.unsubFromSub('invites');
 }
 
 /**
@@ -140,7 +141,7 @@ function create(variantOptions: InviteOptions): void {
 	// console.log("Invite options before sending create invite:");
 	// console.log(inviteOptions);
 
-	websocket.sendmessage('invites', 'createinvite', inviteOptions, true, onreplyFunc);
+	socketmessages.sendmessage('invites', 'createinvite', inviteOptions, true, onreplyFunc);
 }
 
 function cancel(inviteID = ourInviteID): void {
@@ -154,7 +155,7 @@ function cancel(inviteID = ourInviteID): void {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockCreateInviteButton;
 
-	websocket.sendmessage('invites', 'cancelinvite', inviteID, true, onreplyFunc);
+	socketmessages.sendmessage('invites', 'cancelinvite', inviteID, true, onreplyFunc);
 }
 
 /**
@@ -395,7 +396,7 @@ function accept(inviteID: string, isPrivate: boolean): void {
 	// The function to execute when we hear back the server's response
 	const onreplyFunc = guiplay.unlockAcceptInviteButton;
 
-	websocket.sendmessage('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
+	socketmessages.sendmessage('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
 }
 
 /** Called when an invite element is clicked. */
@@ -465,11 +466,11 @@ async function subscribeToInvites(ignoreAlreadySubbed?: boolean): Promise<void> 
 	// Set to true when we are restarting the connection and need to resub to everything we were to before.
 	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
 
-	const alreadySubbed = websocket.areSubbedToSub('invites');
+	const alreadySubbed = socketsubs.areSubbedToSub('invites');
 	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	// console.log("Subbing to invites!");
-	websocket.addSub('invites');
-	websocket.sendmessage('general', 'sub', 'invites');
+	socketsubs.addSub('invites');
+	socketmessages.sendmessage('general', 'sub', 'invites');
 }
 
 // Exports -----------------------------------------------------------------------

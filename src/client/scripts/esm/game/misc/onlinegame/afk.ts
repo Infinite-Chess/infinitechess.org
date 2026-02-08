@@ -18,9 +18,9 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
-import websocket from '../../websocket.js';
 import onlinegame from './onlinegame.js';
 import pingManager from '../../../util/pingManager.js';
+import socketmessages from '../../websocket/socketmessages.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */
@@ -127,7 +127,7 @@ function cancelAFKTimer(): void {
 }
 
 function tellServerWeAFK(): void {
-	websocket.sendmessage('game', 'AFK');
+	socketmessages.sendmessage('game', 'AFK');
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
 	// Play lowtime alert sound
@@ -140,7 +140,7 @@ function tellServerWeAFK(): void {
 }
 
 function tellServerWeBackFromAFK(): void {
-	websocket.sendmessage('game', 'AFK-Return');
+	socketmessages.sendmessage('game', 'AFK-Return');
 	timeWeLoseFromAFK = undefined;
 	clearTimeout(displayAFKTimeoutID);
 	clearTimeout(playStaccatoTimeoutID);

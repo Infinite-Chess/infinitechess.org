@@ -23,10 +23,11 @@ import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
-import websocket from '../../websocket.js';
+import socketsubs from '../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
+import socketmessages from '../../websocket/socketmessages.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Events ---------------------------------------------------------------------
@@ -45,7 +46,7 @@ function sendMove(): void {
 	if (
 		!onlinegame.areInOnlineGame() ||
 		!onlinegame.areInSync() ||
-		!websocket.areSubbedToSub('game')
+		!socketsubs.areSubbedToSub('game')
 	)
 		return; // Skip
 	// console.log("Sending our move..");
@@ -60,7 +61,7 @@ function sendMove(): void {
 		gameConclusion: gamefile.basegame.gameConclusion,
 	};
 
-	websocket.sendmessage('game', 'submitmove', data, true);
+	socketmessages.sendmessage('game', 'submitmove', data, true);
 
 	onlinegame.onMovePlayed({ isOpponents: false });
 }

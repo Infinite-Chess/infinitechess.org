@@ -4,23 +4,17 @@
  * Handles outgoing websocket messages, echo tracking, and on-reply functions.
  */
 
-import type { WebsocketMessage, WebsocketMessageValue } from './socketutil.js';
-
 import uuid from '../../../../../shared/util/uuid.js';
 
 import toast from '../gui/toast.js';
+import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
-import {
-	isDebugEnabled,
-	dispatchLostConnectionCustomEvent,
-	TIME_TO_WAIT_FOR_ECHO_MILLIS,
-	SIMULATED_WEBSOCKET_LATENCY_MILLIS_DEBUG,
-	CUSHION_BEFORE_AUTO_CLOSE_MILLIS,
-} from './socketutil.js';
 
 // Types -----------------------------------------------------------------------
 
 type MessageID = number;
+
+type WebsocketMessageValue = MessageEvent['data'];
 
 /** The shape of an outgoing websocket payload sent to the server. */
 type OutgoingPayload = {
@@ -34,6 +28,17 @@ type OutgoingPayload = {
 	id?: number;
 };
 
+// Constants -------------------------------------------------------------------
+
+/** Time to wait for echo before assuming disconnection. */
+const timeToWaitForEchoMillis = 5000;
+/** Time the websocket remains open without subscriptions. */
+const cushionBeforeAutoCloseMillis = 10000;
+/** Simulated websocket latency in debug mode. */
+const simulatedWebsocketLatencyMillis_Debug = 1000;
+/** Whether to also print incoming echos in debug mode. */
+const alsoPrintIncomingEchos = false;
+
 // Variables -------------------------------------------------------------------
 
 /** Echo timers for sent messages awaiting acknowledgement. */
@@ -45,34 +50,8 @@ let onreplyFuncs: { [key: MessageID]: Function } = {};
 /** A list of setTimeout timer IDs to cancel whenever a new socket is established. */
 const timerIDsToCancelOnNewSocket: number[] = [];
 
-/** Reference to the active socket, set by socketman. */
-let socketRef: WebSocket | undefined;
-
-/** Reference to the closeSocket function, set by socketman to avoid circular deps. */
-let closeSocketFn: (() => void) | undefined;
-
-/** Reference to the establishSocket function, set by socketman to avoid circular deps. */
-let establishSocketFn: (() => Promise<boolean>) | undefined;
-
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
-
-// Initialization --------------------------------------------------------------
-
-/** Sets the socket reference. Called by socketman when socket state changes. */
-function setSocket(ws: WebSocket | undefined): void {
-	socketRef = ws;
-}
-
-/** Registers the closeSocket function from socketman to avoid circular dependencies. */
-function registerCloseSocketFn(fn: () => void): void {
-	closeSocketFn = fn;
-}
-
-/** Registers the establishSocket function from socketman to avoid circular dependencies. */
-function registerEstablishSocketFn(fn: () => Promise<boolean>): void {
-	establishSocketFn = fn;
-}
 
 // Echo Tracking ---------------------------------------------------------------
 
@@ -80,7 +59,7 @@ function registerEstablishSocketFn(fn: () => Promise<boolean>): void {
  * Called when we hear a server echo. Cancels the timer that assumes
  * disconnection, and updates the ping display.
  */
-function cancelTimerOfMessageID(message: WebsocketMessage): void {
+function cancelTimerOfMessageID(message: { value: WebsocketMessageValue }): void {
 	const echoMessageID = message.value;
 
 	const echoTimer = echoTimers[echoMessageID];
@@ -105,12 +84,13 @@ function renewConnection(messageID: MessageID): void {
 	if (messageID) {
 		delete echoTimers[messageID];
 	}
-	if (!socketRef) return;
+	const socket = socketman.getSocket();
+	if (!socket) return;
 	console.log(
-		`Renewing connection after we haven't received an echo for ${TIME_TO_WAIT_FOR_ECHO_MILLIS} milliseconds...`,
+		`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`,
 	);
-	dispatchLostConnectionCustomEvent();
-	socketRef.close(1000, 'Connection closed by client. Renew.');
+	socketman.dispatchLostConnectionCustomEvent();
+	socket.close(1000, 'Connection closed by client. Renew.');
 }
 
 /**
@@ -169,8 +149,8 @@ function resetTimerToCloseSocket(): void {
 	clearTimeout(timeoutIDToAutoClose);
 	if (socketsubs.zeroSubs()) {
 		timeoutIDToAutoClose = window.setTimeout(
-			() => closeSocketFn?.(),
-			CUSHION_BEFORE_AUTO_CLOSE_MILLIS,
+			() => socketman.closeSocket(),
+			cushionBeforeAutoCloseMillis,
 		);
 	}
 }
@@ -193,7 +173,7 @@ async function sendmessage(
 	isUserAction?: boolean,
 	onreplyFunc?: () => void,
 ): Promise<boolean> {
-	if (!establishSocketFn || !(await establishSocketFn())) {
+	if (!(await socketman.establishSocket())) {
 		if (isUserAction) toast.show(translations['websocket'].too_many_requests);
 		if (onreplyFunc) onreplyFunc();
 		return false;
@@ -218,30 +198,31 @@ async function sendmessage(
 			id: uuid.generateNumbID(10),
 		};
 
-		if (isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
+		if (socketman.isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
 
 		// Set a timer to assume disconnection if echo not received
 		echoTimers[payload.id!] = {
 			timeSent: Date.now(),
 			timeoutID: window.setTimeout(
 				() => renewConnection(payload.id!),
-				TIME_TO_WAIT_FOR_ECHO_MILLIS,
+				timeToWaitForEchoMillis,
 			),
 		};
 
 		scheduleOnreplyFunc(payload.id!, onreplyFunc);
 	}
 
-	if (!socketRef || socketRef.readyState !== WebSocket.OPEN) return false;
+	const socket = socketman.getSocket();
+	if (!socket || socket.readyState !== WebSocket.OPEN) return false;
 
 	const stringifiedMessage = JSON.stringify(payload);
 
-	if (isDebugEnabled()) {
+	if (socketman.isDebugEnabled()) {
 		window.setTimeout(
-			() => socketRef!.send(stringifiedMessage),
-			SIMULATED_WEBSOCKET_LATENCY_MILLIS_DEBUG,
+			() => socket.send(stringifiedMessage),
+			simulatedWebsocketLatencyMillis_Debug,
 		);
-	} else socketRef.send(stringifiedMessage);
+	} else socket.send(stringifiedMessage);
 
 	return true;
 }
@@ -255,7 +236,5 @@ export default {
 	cancelAllTimerIDsToCancelOnNewSocket,
 	addTimerIDToCancelOnNewSocket,
 	resetTimerToCloseSocket,
-	setSocket,
-	registerCloseSocketFn,
-	registerEstablishSocketFn,
+	alsoPrintIncomingEchos,
 };
