@@ -5,6 +5,8 @@
  * based on the subscription type.
  */
 
+import type { GeneralMessage } from './socketschemas.js';
+
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
 
@@ -14,24 +16,9 @@ import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import socketmessages from './socketmessages.js';
 import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
+import { MasterSchema } from './socketschemas.js';
 
 // Types -----------------------------------------------------------------------
-
-type WebsocketMessageValue = MessageEvent['data'];
-
-/** An incoming websocket server message. */
-export interface WebsocketMessage {
-	/** What route the message should be forwarded to (e.g. "general", "invites", "game", "echo"). */
-	route: string;
-	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value. */
-	contents: any;
-	/** The ID of the message to echo, so the server knows we've received it.
-	 * Only present for non-echo messages. */
-	id?: number;
-	/** The ID of the message this message is the reply to, if specified. */
-	replyto?: number;
-}
 
 /** Information about the last hard refresh we attempted. */
 type HardRefreshInfo = {
@@ -44,34 +31,53 @@ type HardRefreshInfo = {
 
 /**
  * Called when we receive an incoming server websocket message.
- * Sends an echo to the server, then routes the message.
+ * Validates it with Zod, sends an echo to the server, then routes the message.
  * @param serverMessage - The incoming server message event.
  */
 function onmessage(serverMessage: MessageEvent): void {
-	let message: WebsocketMessage;
+	let parsedUnvalidatedMessage: any;
 	try {
-		message = JSON.parse(serverMessage.data);
+		parsedUnvalidatedMessage = JSON.parse(serverMessage.data);
 	} catch (error) {
 		return console.error('Error parsing incoming message as JSON:', error);
 	}
-
-	const isEcho = message.route === 'echo';
 
 	// Any incoming message proves the connection is alive.
 	// Reschedule the inactivity timer that detects silent disconnections.
 	socketmessages.rescheduleInactivityTimer();
 
+	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
+	if (!zod_result.success) {
+		toast.show(translations.websocket.malformed_message, {
+			error: true,
+			durationMillis: 100000,
+		});
+		console.error('Received malformed websocket message from the server:', zod_result.error);
+		return;
+	}
+
+	// Validation was a success! Message contains valid parameters.
+
+	const message = zod_result.data;
+
 	if (socketman.isDebugEnabled()) {
-		if (isEcho) {
+		if (message.route === 'echo') {
 			if (socketmessages.alsoPrintIncomingEchos)
 				console.log(`Incoming message: ${JSON.stringify(message)}`);
 		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
 
-	if (isEcho) return socketmessages.cancelTimerOfMessageID(message.contents);
+	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
 
-	// Not an echo...
-	const route = message.route;
+	// Handle reply-only messages (no route property).
+	// These exist only to execute on-reply functions.
+	if (message.route === undefined) {
+		socketmessages.send('general', 'echo', message.id);
+		socketmessages.executeOnreplyFunc(message.replyto);
+		return;
+	}
+
+	// Not an echo or reply-only...
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
 	socketmessages.send('general', 'echo', message.id);
@@ -79,11 +85,9 @@ function onmessage(serverMessage: MessageEvent): void {
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
 
-	switch (route) {
-		case undefined: // Null message (e.g. { id, replyto }). Allows executing on-reply funcs.
-			break;
+	switch (message.route) {
 		case 'general':
-			ongeneralmessage(message.contents.action, message.contents.value);
+			ongeneralmessage(message.contents);
 			break;
 		case 'invites':
 			invites.onmessage(message.contents);
@@ -92,40 +96,42 @@ function onmessage(serverMessage: MessageEvent): void {
 			onlinegamerouter.routeMessage(message.contents);
 			break;
 		default:
-			console.error('Unknown socket subscription received from the server! Message:');
-			return console.log(message);
+			console.error(
+				// @ts-ignore
+				`Unknown socket subscription "${message.route}" received from the server!`,
+			);
+			break;
 	}
 }
 
 /**
  * Handles incoming messages with route "general".
- * @param action - The action the incoming server message specified
- * @param value - The value of the incoming server message
+ * @param message - The validated general route message contents
  */
-function ongeneralmessage(action: string, value: WebsocketMessageValue): void {
-	switch (action) {
+function ongeneralmessage(message: GeneralMessage): void {
+	switch (message.action) {
 		case 'notify':
-			toast.show(value);
+			toast.show(message.value);
 			break;
 		case 'notifyerror':
-			toast.show(value, { error: true, durationMultiplier: 2 });
+			toast.show(message.value, { error: true, durationMultiplier: 2 });
 			break;
 		case 'print':
-			console.log(value);
+			console.log(message.value);
 			break;
 		case 'printerror':
-			console.error(value);
+			console.error(message.value);
 			break;
 		case 'renewconnection':
 			// Server sends this expecting an echo, to verify we're still connected.
 			break;
 		case 'gameversion':
-			if (value !== GAME_VERSION) handleHardRefresh(value);
+			if (message.value !== GAME_VERSION) handleHardRefresh(message.value);
 			break;
 		default:
-			console.log(
-				`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`,
-			);
+			// @ts-ignore
+			console.log(`Unknown server action "${message.action}" in general route.`);
+			break;
 	}
 }
 

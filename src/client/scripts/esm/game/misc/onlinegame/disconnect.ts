@@ -15,6 +15,16 @@ import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
 
+// Types ---------------------------------------------------------------
+
+/** The parameters for the opponent disconnect countdown. */
+export interface OpponentDisconnectValue {
+	millisUntilAutoDisconnectResign: number;
+	wasByChoice: boolean;
+}
+
+// Variables -----------------------------------------------------------------------
+
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
 let timeOpponentLoseFromDisconnect: number | undefined;
 
@@ -31,10 +41,7 @@ let displayOpponentDisconnectTimeoutID: ReturnType<typeof setTimeout> | undefine
 function startOpponentDisconnectCountdown({
 	millisUntilAutoDisconnectResign,
 	wasByChoice,
-}: {
-	millisUntilAutoDisconnectResign: number;
-	wasByChoice: boolean;
-}): void {
+}: OpponentDisconnectValue): void {
 	// This overwrites the "Opponent is AFK" timer
 	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting

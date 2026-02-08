@@ -23,6 +23,8 @@ import pingManager from '../../../util/pingManager.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
+// Constants -----------------------------------------------------------------------
+
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */
 const timeUntilAFKSecs: number = 40; // 40 + 20 = 1 minute
 

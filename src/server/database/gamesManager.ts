@@ -13,7 +13,7 @@ import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 // Type Definitions -----------------------------------------------------------------------------------
 
 /** Structure of a games record. This is all allowed columns of a game_id. */
-interface GamesRecord {
+export interface GamesRecord {
 	game_id?: number;
 	date?: string;
 	base_time_seconds?: number | null;

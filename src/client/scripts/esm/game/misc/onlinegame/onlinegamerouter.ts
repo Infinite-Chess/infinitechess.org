@@ -6,6 +6,8 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
+import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
+import type { GameMessage } from '../../websocket/socketschemas.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	GameUpdateMessage,
@@ -16,7 +18,7 @@ import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import metadata from '../../../../../../shared/chess/util/metadata.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
@@ -44,13 +46,13 @@ import movesendreceive from './movesendreceive.js';
  * Only need this once, when we originally load the game,
  * not on subsequent updates/resyncs.
  */
-type ServerGameInfo = {
+export interface ServerGameInfo {
 	/** The id of the online game */
 	id: number;
 	rated: boolean;
 	publicity: 'public' | 'private';
 	playerRatings: PlayerGroup<Rating>;
-};
+}
 
 /**
  * The message contents expected when we receive a server websocket 'joingame' message.
@@ -59,21 +61,26 @@ type ServerGameInfo = {
  * The stuff included here does not need to be specified when we're resyncing to
  * a game, or receiving a game update, as we already know this stuff.
  */
-interface JoinGameMessage extends GameUpdateMessage {
+export interface JoinGameMessage extends GameUpdateMessage {
 	gameInfo: ServerGameInfo;
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData;
 	youAreColor: Player;
 }
 
+/** The game info of an ended game from the database, as sent by the server. */
+export type LoggedGameInfo = Required<
+	Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>
+>;
+
 // Routers --------------------------------------------------------------------------------------
 
 /**
  * Routes a server websocket message with subscription marked `game`.
  * This handles all messages related to the active game we're in.
- * @param data - The incoming server websocket message
+ * @param contents - The contents of the incoming server websocket message
  */
-function routeMessage(contents: { action: string; value: any }): void {
+function routeMessage(contents: GameMessage): void {
 	// console.log(`Received ${contents.action} from server! Message contents:`)
 	// console.log(contents.value)
 
@@ -113,7 +120,7 @@ function routeMessage(contents: { action: string; value: any }): void {
 		case 'login':
 			handleLogin(gamefile.basegame);
 			break;
-		case 'nogame': // Game doesn't exist - SHOULD NEVER HAPPEN
+		case 'nogame':
 			handleNoGame(gamefile.basegame);
 			break;
 		case 'leavegame':
@@ -142,6 +149,7 @@ function routeMessage(contents: { action: string; value: any }): void {
 			break;
 		default:
 			toast.show(
+				// @ts-ignore
 				`Unknown action "${contents.action}" received from server in 'game' route.`,
 				{ error: true },
 			);
@@ -174,13 +182,7 @@ function handleJoinGame(message: JoinGameMessage): void {
  * This loads it, even if we didn't participate in the game, and immediately concludes it.
  * @param message - The message from the server containing the game info.
  */
-function handleLoggedGameInfo(message: {
-	game_id: number;
-	rated: 0 | 1;
-	private: 0 | 1;
-	termination: Condition;
-	icn: string;
-}): void {
+function handleLoggedGameInfo(message: LoggedGameInfo): void {
 	let parsedGame: LongFormatOut;
 	try {
 		parsedGame = icnconverter.ShortToLong_Format(message.icn);
@@ -209,7 +211,7 @@ function handleLoggedGameInfo(message: {
 		? uuid.base62ToBase10(parsedGame.metadata.BlackID)
 		: undefined;
 	// prettier-ignore
-	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? players.WHITE : ourUserId === blackId ? players.BLACK : undefined) : undefined;
+	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? p.WHITE : ourUserId === blackId ? p.BLACK : undefined) : undefined;
 
 	// The clock values are already ingrained into the moves!
 	// prettier-ignore
@@ -222,13 +224,9 @@ function handleLoggedGameInfo(message: {
 	// Display elo ratings, if any.
 	const playerRatings: PlayerGroup<Rating> = {};
 	if (parsedGame.metadata.WhiteElo)
-		playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.WhiteElo,
-		);
+		playerRatings[p.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
 	if (parsedGame.metadata.BlackElo)
-		playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.BlackElo,
-		);
+		playerRatings[p.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
 
 	// Load the game.
 	gameloader.startOnlineGame({
@@ -241,7 +239,7 @@ function handleLoggedGameInfo(message: {
 		metadata: parsedGame.metadata,
 		gameConclusion: metadata.getGameConclusionFromResultAndTermination(
 			parsedGame.metadata.Result!,
-			message.termination,
+			message.termination as Condition,
 		),
 		moves,
 		youAreColor: ourRole,
@@ -321,5 +319,3 @@ function handleLeaveGame(): void {
 export default {
 	routeMessage,
 };
-
-export type { ServerGameInfo };

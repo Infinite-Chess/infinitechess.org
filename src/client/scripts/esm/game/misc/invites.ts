@@ -6,6 +6,7 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { InvitesMessage } from '../websocket/socketschemas.js';
 import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
@@ -26,7 +27,7 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 // Types -------------------------------------------------------------------------
 
 /** The invite object. NOT an HTML object. */
-interface Invite {
+export interface Invite {
 	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
 	usernamecontainer: ServerUsernameContainer;
 	/** A unique identifier */
@@ -95,7 +96,7 @@ function unsubFromInvites(): void {
  * Should be called by websocket script when it receives a
  * message that the server says is for the "invites" subscription
  */
-function onmessage(contents: { action: string; value: any }): void {
+function onmessage(contents: InvitesMessage): void {
 	// Any incoming message will have no effect if we're not on the invites page.
 	// This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
 	if (!guiplay.isOpen()) return;
@@ -110,7 +111,8 @@ function onmessage(contents: { action: string; value: any }): void {
 			updateActiveGameCount(contents.value);
 			break;
 		default:
-			console.error(`Received message for invites with unknown action ${contents.action}!`);
+			// @ts-ignore
+			console.error(`Received message for invites with unknown action: ${contents.action}`);
 			break;
 	}
 }

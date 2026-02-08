@@ -7,6 +7,8 @@
 
 import toast from '../../gui/toast.js';
 
+// Constants -----------------------------------------------------------------------
+
 /** The minute intervals at which to display on scree, reminding the user the server is restarting. */
 const keyMinutes: number[] = [30, 20, 15, 10, 5, 2, 1, 0];
 
