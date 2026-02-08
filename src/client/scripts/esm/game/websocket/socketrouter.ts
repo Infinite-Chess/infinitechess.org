@@ -36,19 +36,19 @@ type GeneralMessage = z.infer<typeof GeneralSchema>;
 
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
-	z.object({
+	z.strictObject({
 		id: z.number(),
 		route: z.literal('general'),
 		contents: GeneralSchema,
 		replyto: z.number().optional(),
 	}),
-	z.object({
+	z.strictObject({
 		id: z.number(),
 		route: z.literal('invites'),
 		contents: InvitesSchema,
 		replyto: z.number().optional(),
 	}),
-	z.object({
+	z.strictObject({
 		id: z.number(),
 		route: z.literal('game'),
 		contents: GameSchema,
