@@ -96,24 +96,22 @@ function unsubFromInvites(): void {
  * Should be called by websocket script when it receives a
  * message that the server says is for the "invites" subscription
  */
-function onmessage(data: WebsocketMessage): void {
+function onmessage(contents: { action: string; value: any }): void {
 	// Any incoming message will have no effect if we're not on the invites page.
 	// This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
 	if (!guiplay.isOpen()) return;
 
-	switch (data.contents.action) {
+	switch (contents.action) {
 		case 'inviteslist':
 			// Update the list in the document
-			updateInviteList(data.contents.value.invitesList);
-			updateActiveGameCount(data.contents.value.currentGameCount);
+			updateInviteList(contents.value.invitesList);
+			updateActiveGameCount(contents.value.currentGameCount);
 			break;
 		case 'gamecount':
-			updateActiveGameCount(data.contents.value);
+			updateActiveGameCount(contents.value);
 			break;
 		default:
-			console.error(
-				`Received message for invites with unknown action ${data.contents.action}!`,
-			);
+			console.error(`Received message for invites with unknown action ${contents.action}!`);
 			break;
 	}
 }

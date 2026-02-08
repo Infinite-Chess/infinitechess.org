@@ -27,7 +27,7 @@ export interface WebsocketMessage {
 	 * For other messages, this is an object with action and value. */
 	contents: any;
 	/** The ID of the message to echo, so the server knows we've received it.
-	 * Optional: only present for non-echo messages. */
+	 * Only present for non-echo messages. */
 	id?: number;
 	/** The ID of the message this message is the reply to, if specified. */
 	replyto?: number;
@@ -68,15 +68,13 @@ function onmessage(serverMessage: MessageEvent): void {
 		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
 	}
 
-	if (isEcho) return socketmessages.cancelTimerOfMessageID(message);
+	if (isEcho) return socketmessages.cancelTimerOfMessageID(message.contents);
 
 	// Not an echo...
 	const route = message.route;
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
-	if (message.id !== undefined) {
-		socketmessages.send('general', 'echo', message.id);
-	}
+	socketmessages.send('general', 'echo', message.id);
 
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
@@ -88,10 +86,10 @@ function onmessage(serverMessage: MessageEvent): void {
 			ongeneralmessage(message.contents.action, message.contents.value);
 			break;
 		case 'invites':
-			invites.onmessage(message);
+			invites.onmessage(message.contents);
 			break;
 		case 'game':
-			onlinegamerouter.routeMessage(message);
+			onlinegamerouter.routeMessage(message.contents);
 			break;
 		default:
 			console.error('Unknown socket subscription received from the server! Message:');

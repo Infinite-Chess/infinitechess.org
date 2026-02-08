@@ -62,10 +62,8 @@ let inactivityTimerID: number | undefined;
  * Called when we hear a server echo. Cancels the timer that assumes
  * disconnection, and updates the ping display.
  */
-function cancelTimerOfMessageID(message: { contents: WebsocketMessageValue }): void {
-	const echoMessageID = message.contents; // If the route is "echo", the message ID they're echoing is stored in "contents"!
-
-	const echoTimer = echoTimers[echoMessageID];
+function cancelTimerOfMessageID(ID: number): void {
+	const echoTimer = echoTimers[ID];
 	if (!echoTimer) {
 		console.error('Could not find echo timer for message.');
 		return;
@@ -76,7 +74,7 @@ function cancelTimerOfMessageID(message: { contents: WebsocketMessageValue }): v
 	document.dispatchEvent(new CustomEvent('ping', { detail: timeTaken }));
 
 	clearTimeout(echoTimer.timeoutID);
-	delete echoTimers[echoMessageID];
+	delete echoTimers[ID];
 }
 
 /**

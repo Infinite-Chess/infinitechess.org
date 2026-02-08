@@ -74,21 +74,20 @@ interface JoinGameMessage extends GameUpdateMessage {
  * This handles all messages related to the active game we're in.
  * @param data - The incoming server websocket message
  */
-function routeMessage(data: WebsocketMessage): void {
-	// console.log(`Received ${data.contents.action} from server! Message contents:`)
-	// console.log(data.contents.value)
+function routeMessage(contents: { action: string; value: any }): void {
+	// console.log(`Received ${contents.action} from server! Message contents:`)
+	// console.log(contents.value)
 
 	// These actions are listened to, even when we're not in a game.
 
-	if (data.contents.action === 'joingame') return handleJoinGame(data.contents.value);
-	else if (data.contents.action === 'logged-game-info')
-		return handleLoggedGameInfo(data.contents.value);
+	if (contents.action === 'joingame') return handleJoinGame(contents.value);
+	else if (contents.action === 'logged-game-info') return handleLoggedGameInfo(contents.value);
 
 	// All other actions should be ignored if we're not in a game...
 
 	if (!onlinegame.areInOnlineGame()) {
 		console.log(
-			`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(data)}`,
+			`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(contents)}`,
 		);
 		return;
 	}
@@ -96,18 +95,18 @@ function routeMessage(data: WebsocketMessage): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
-	switch (data.contents.action) {
+	switch (contents.action) {
 		case 'move':
-			movesendreceive.handleOpponentsMove(gamefile, mesh, data.contents.value);
+			movesendreceive.handleOpponentsMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile.basegame, data.contents.value);
+			handleUpdatedClock(gamefile.basegame, contents.value);
 			break;
 		case 'gameupdate':
-			resyncer.handleServerGameUpdate(gamefile, mesh, data.contents.value);
+			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
 			break;
 		case 'gameratingchange':
-			guigameinfo.addRatingChangeToExistingUsernameContainers(data.contents.value);
+			guigameinfo.addRatingChangeToExistingUsernameContainers(contents.value);
 			break;
 		case 'unsub':
 			handleUnsubbing();
@@ -122,19 +121,19 @@ function routeMessage(data: WebsocketMessage): void {
 			handleLeaveGame();
 			break;
 		case 'opponentafk':
-			afk.startOpponentAFKCountdown(data.contents.value.millisUntilAutoAFKResign);
+			afk.startOpponentAFKCountdown(contents.value.millisUntilAutoAFKResign);
 			break;
 		case 'opponentafkreturn':
 			afk.stopOpponentAFKCountdown();
 			break;
 		case 'opponentdisconnect':
-			disconnect.startOpponentDisconnectCountdown(data.contents.value);
+			disconnect.startOpponentDisconnectCountdown(contents.value);
 			break;
 		case 'opponentdisconnectreturn':
 			disconnect.stopOpponentDisconnectCountdown();
 			break;
 		case 'serverrestart':
-			serverrestart.initServerRestart(data.contents.value);
+			serverrestart.initServerRestart(contents.value);
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();
@@ -144,10 +143,8 @@ function routeMessage(data: WebsocketMessage): void {
 			break;
 		default:
 			toast.show(
-				`Unknown action "${data.contents.action}" received from server in 'game' route.`,
-				{
-					error: true,
-				},
+				`Unknown action "${contents.action}" received from server in 'game' route.`,
+				{ error: true },
 			);
 			break;
 	}

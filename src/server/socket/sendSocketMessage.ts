@@ -24,9 +24,7 @@ import {
 
 // Type Definitions ---------------------------------------------------------------------------
 
-/**
- * Represents an outgoing WebSocket server message.
- */
+/** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
 	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
 	route: string;
@@ -60,7 +58,7 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
 /**
  * Sends a message to this websocket's client.
  * @param ws - The websocket
- * @param sub - What subscription/route this message should be forwarded to.
+ * @param route - What subscription/route this message should be forwarded to.
  * @param action - What type of action the client should take within the subscription route.
  * @param value - The contents of the message.
  * @param [replyto] If applicable, the id of the socket message this message is a reply to.
@@ -69,7 +67,7 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
  */
 function sendSocketMessage(
 	ws: CustomWebSocket,
-	sub: string | undefined,
+	route: string | undefined,
 	action: string | undefined,
 	value?: any,
 	replyto?: number,
@@ -79,7 +77,7 @@ function sendSocketMessage(
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(() => {
-			sendSocketMessage(ws, sub, action, value, replyto, { skipLatency: true });
+			sendSocketMessage(ws, route, action, value, replyto, { skipLatency: true });
 		}, simulatedWebsocketLatencyMillis);
 		return;
 	}
@@ -95,16 +93,16 @@ function sendSocketMessage(
 		? {
 				route: 'echo',
 				contents: value, // For echo, value contains the message ID
-				...(replyto !== undefined && { replyto }),
+				replyto,
 			}
 		: {
-				route: sub!,
+				route: route!,
 				contents: {
 					action,
 					value,
 				},
 				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-				...(replyto !== undefined && { replyto }),
+				replyto,
 			};
 	const stringifiedPayload = JSON.stringify(payload);
 
