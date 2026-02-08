@@ -509,7 +509,7 @@ function calcRemainingExistingTypes(
 	if (editor) {
 		// ALL pieces may be added in the board editor, but only of the players mentioned in turnOrder
 		const playersSet: Set<Player> = new Set(turnOrder);
-		if (turnOrder.some((p) => p >= 3)) playersSet.add(p.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
+		if (turnOrder.some((player) => player >= 3)) playersSet.add(p.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
 		const playersArray: Array<Player> = [...playersSet];
 		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
 		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.
