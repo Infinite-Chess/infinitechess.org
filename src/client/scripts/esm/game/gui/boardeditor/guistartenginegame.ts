@@ -7,8 +7,8 @@
 import type { Player } from '../../../../../../shared/chess/util/typeutil';
 import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
 
-import { players } from '../../../../../../shared/chess/util/typeutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import { players as p } from '../../../../../../shared/chess/util/typeutil';
 
 import eactions from '../../boardeditor/actions/eactions';
 import gameslot from '../../chess/gameslot';
@@ -129,7 +129,7 @@ function updateEngineUIcontents(): void {
 /** Constructs the engineconfig by reading the input boxes, and validating them */
 function readEngineUIConfig(): EngineUIConfig {
 	// Player color
-	const youAreColor = element_white.checked ? players.WHITE : players.BLACK;
+	const youAreColor = element_white.checked ? p.WHITE : p.BLACK;
 
 	// Time control
 	let TimeControl: TimeControl = '-';
