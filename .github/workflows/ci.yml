@@ -91,7 +91,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [lint, type-check, test]
 
     steps:
       - name: Checkout repository
