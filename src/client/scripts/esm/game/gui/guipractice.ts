@@ -136,7 +136,7 @@ function createPracticeHTML(): void {
 
 			const versusText = document.createElement('div');
 			versusText.className = 'checkmate-child versus';
-			versusText.textContent = translations['versus'];
+			versusText.textContent = translations.versus;
 
 			const piecelistB = document.createElement('div');
 			piecelistB.className = 'piecelistB';
@@ -406,7 +406,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 			? translations[config.earnedKey]
 			: areLoggedIn
 				? translations[config.unearnedKey]
-				: translations['checkmate_logged_out'];
+				: translations.checkmate_logged_out;
 
 		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
 		config.image.classList.toggle('unearned', !isEarned); // Update badge appearance

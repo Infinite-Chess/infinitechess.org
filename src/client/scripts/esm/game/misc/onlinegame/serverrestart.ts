@@ -35,14 +35,14 @@ function initServerRestart(timeToRestart: number): void {
 /** Displays the next "Server restaring..." message, and schedules the next one. */
 function displayServerRestarting(minutesLeft: number): void {
 	if (minutesLeft === 0) {
-		toast.show(translations['onlinegame'].server_restarting, { durationMultiplier: 2 });
+		toast.show(translations.onlinegame.server_restarting, { durationMultiplier: 2 });
 		time = undefined;
 		return; // Print no more server restarting messages
 	}
 	const minutes_plurality =
-		minutesLeft === 1 ? translations['onlinegame'].minute : translations['onlinegame'].minutes;
+		minutesLeft === 1 ? translations.onlinegame.minute : translations.onlinegame.minutes;
 	toast.show(
-		`${translations['onlinegame'].server_restarting_in} ${minutesLeft} ${minutes_plurality}...`,
+		`${translations.onlinegame.server_restarting_in} ${minutesLeft} ${minutes_plurality}...`,
 		{ durationMultiplier: 2 },
 	);
 	let nextKeyMinute: number;

@@ -75,7 +75,7 @@ function gelement_iCodeCode(): HTMLElement {
 function update(): void {
 	if (!guiplay.isOpen()) return; // Not on the play screen
 	if (loadbalancer.areWeHibernating())
-		toast.show(translations['invites'].move_mouse, { durationMultiplier: 0.1 });
+		toast.show(translations.invites.move_mouse, { durationMultiplier: 0.1 });
 }
 
 function unsubIfWeNotHave(): void {
@@ -146,7 +146,7 @@ function create(variantOptions: InviteOptions): void {
 
 function cancel(inviteID = ourInviteID): void {
 	if (!weHaveInvite) return;
-	if (!inviteID) return toast.show(translations['invites'].cannot_cancel, { error: true });
+	if (!inviteID) return toast.show(translations.invites.cannot_cancel, { error: true });
 
 	LocalStorage.deleteItem('invite-tag');
 
@@ -226,8 +226,8 @@ function updateInviteList(list: Invite[]): void {
 
 		if (invite.usernamecontainer.type === 'guest') {
 			// Standardize the name according to our language.
-			if (ours) invite.usernamecontainer.username = translations['you_indicator'];
-			else invite.usernamecontainer.username = translations['guest_indicator'];
+			if (ours) invite.usernamecontainer.username = translations.you_indicator;
+			else invite.usernamecontainer.username = translations.guest_indicator;
 		}
 		const username_item = { value: invite.usernamecontainer.username, openInNewWindow: false };
 		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(
@@ -246,17 +246,15 @@ function updateInviteList(list: Invite[]): void {
 		newInvite.appendChild(cloc);
 
 		// prettier-ignore
-		const uColor: string = ours ? invite.color === p.WHITE ? translations['invites']['you_are_white'] : invite.color === p.BLACK ? translations['invites']['you_are_black'] : translations['invites']['random']
-                            : invite.color === p.WHITE ? translations['invites']['you_are_black'] : invite.color === p.BLACK ? translations['invites']['you_are_white'] : translations['invites']['random'];
+		const uColor: string = ours ? invite.color === p.WHITE ? translations.invites.you_are_white : invite.color === p.BLACK ? translations.invites.you_are_black : translations.invites.random
+                            : invite.color === p.WHITE ? translations.invites.you_are_black : invite.color === p.BLACK ? translations.invites.you_are_white : translations.invites.random;
 		const color = createDiv(['invite-child'], uColor);
 		newInvite.appendChild(color);
 
 		const rated = createDiv(['invite-child'], translations[invite.rated]);
 		newInvite.appendChild(rated);
 
-		const a: string = ours
-			? translations['invites']['cancel']
-			: translations['invites']['accept'];
+		const a: string = ours ? translations.invites.cancel : translations.invites.accept;
 		const accept = createDiv(['invite-child', 'accept'], a);
 		newInvite.appendChild(accept);
 
@@ -416,8 +414,8 @@ function click(element: HTMLElement): void {
 function updateCreateInviteButton(): void {
 	if (guiplay.getModeSelected() !== 'online') return;
 	if (weHaveInvite)
-		guiplay.setElement_CreateInviteTextContent(translations['invites']['cancel_invite']);
-	else guiplay.setElement_CreateInviteTextContent(translations['invites']['create_invite']);
+		guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
+	else guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
 }
 
 function updatePrivateInviteCode(privateInviteID: string | undefined): void {
@@ -450,7 +448,7 @@ function updatePrivateInviteCode(privateInviteID: string | undefined): void {
 
 function updateActiveGameCount(newCount: number): void {
 	if (newCount === undefined) throw Error('Need to specify active game count');
-	element_joinExisting.textContent = `${translations['invites']['join_existing_active_games']} ${newCount}`;
+	element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
 }
 
 function doWeHave(): boolean {

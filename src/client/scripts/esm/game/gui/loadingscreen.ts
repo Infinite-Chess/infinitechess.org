@@ -79,7 +79,7 @@ async function onError(): Promise<void> {
 	element_loadingError!.classList.remove('hidden');
 	// const lostNetwork = !navigator.onLine;
 	// element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
-	element_loadingErrorText!.textContent = translations['failed_to_load'];
+	element_loadingErrorText!.textContent = translations.failed_to_load;
 
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.

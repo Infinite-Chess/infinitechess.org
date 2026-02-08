@@ -182,14 +182,14 @@ function changePlayMode(mode: typeof modeSelected): void {
 
 	modeSelected = mode;
 	if (mode === 'online') {
-		element_playName.textContent = translations['menu_online'];
+		element_playName.textContent = translations.menu_online;
 		element_online.classList.add('selected');
 		element_local.classList.remove('selected');
 		element_online.classList.remove('not-selected');
 		element_local.classList.add('not-selected');
 		element_computer.classList.remove('selected');
 		element_computer.classList.add('not-selected');
-		element_createInvite.textContent = translations['invites']['create_invite'];
+		element_createInvite.textContent = translations.invites.create_invite;
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.remove('hidden');
 		element_optionCardPrivate.classList.remove('hidden');
@@ -214,14 +214,14 @@ function changePlayMode(mode: typeof modeSelected): void {
 		// because it was still locked from us still waiting for the server's repsponse to our last create/cancel command.
 		// add choose col
 		enableCreateInviteButton();
-		element_playName.textContent = translations['menu_local'];
+		element_playName.textContent = translations.menu_local;
 		element_online.classList.remove('selected');
 		element_local.classList.add('selected');
 		element_online.classList.add('not-selected');
 		element_local.classList.remove('not-selected');
 		element_computer.classList.remove('selected');
 		element_computer.classList.add('not-selected');
-		element_createInvite.textContent = translations['invites']['start_game'];
+		element_createInvite.textContent = translations.invites.start_game;
 		element_optionCardColor.classList.add('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
@@ -239,14 +239,14 @@ function changePlayMode(mode: typeof modeSelected): void {
 	} else if (mode === 'computer') {
 		// For now, until engines become stronger, time is not customizable.
 		enableCreateInviteButton();
-		element_playName.textContent = translations['menu_computer'];
+		element_playName.textContent = translations.menu_computer;
 		element_online.classList.remove('selected');
 		element_local.classList.remove('selected');
 		element_online.classList.add('not-selected');
 		element_local.classList.add('not-selected');
 		element_computer.classList.add('selected');
 		element_computer.classList.remove('not-selected');
-		element_createInvite.textContent = translations['invites']['start_game'];
+		element_createInvite.textContent = translations.invites.start_game;
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.add('hidden');
 		element_optionCardPrivate.classList.add('hidden');
@@ -402,7 +402,7 @@ function savePreferredRatedOption(ratedValue: string): void {
 function callback_joinPrivate(): void {
 	const code = element_textboxPrivate.value.toLowerCase();
 
-	if (code.length !== 5) return toast.show(translations['invite_error_digits']);
+	if (code.length !== 5) return toast.show(translations.invite_error_digits);
 
 	element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
 
@@ -426,7 +426,7 @@ function callback_copyInviteCode(): void {
 	const code = invites.gelement_iCodeCode().textContent;
 
 	docutil.copyToClipboard(code);
-	toast.show(translations['invite_copied']);
+	toast.show(translations.invite_copied);
 }
 
 function initListeners_Invites(): void {

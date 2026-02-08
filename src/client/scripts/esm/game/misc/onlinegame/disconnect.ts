@@ -53,11 +53,11 @@ function stopOpponentDisconnectCountdown(): void {
 
 function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean): void {
 	const opponent_disconnectedOrLostConnection = wasByChoice
-		? translations['onlinegame'].opponent_disconnected
-		: translations['onlinegame'].opponent_lost_connection;
+		? translations.onlinegame.opponent_disconnected
+		: translations.onlinegame.opponent_lost_connection;
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.isOurAFKAutoResignTimerRunning())

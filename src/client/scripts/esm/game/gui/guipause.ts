@@ -130,10 +130,10 @@ function updateDrawOfferButton(): void {
 	if (!isPaused) return; // Not paused, no point in updating button, because it's updated as soon as we pause the game
 	// Should it say "offer draw" or "accept draw"?
 	if (drawoffers.areWeAcceptingDraw()) {
-		element_offerDraw.innerText = translations['accept_draw']; // "Accept Draw"
+		element_offerDraw.innerText = translations.accept_draw; // "Accept Draw"
 		element_offerDraw.classList.remove('opacity-0_5');
 		return;
-	} else element_offerDraw.innerText = translations['offer_draw']; // "Offer Draw"
+	} else element_offerDraw.innerText = translations.offer_draw; // "Offer Draw"
 
 	// Update transparency
 	if (drawoffers.isOfferingDrawLegal()) element_offerDraw.classList.remove('opacity-0_5');
@@ -166,10 +166,10 @@ function updateTextOfMainMenuButton(freezeMainMenuButtonUponChange?: true): void
 		// If the text currently says "Abort Game" or "Resign Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort or resign and actually not want to exit to main menu.
 		if (
 			freezeMainMenuButtonUponChange &&
-			element_mainmenu.textContent !== translations['main_menu']
+			element_mainmenu.textContent !== translations.main_menu
 		)
 			freezeMainMenuButton();
-		element_mainmenu.textContent = translations['main_menu'];
+		element_mainmenu.textContent = translations.main_menu;
 		is_main_menu_button_used_as_resign_or_abort_button = false;
 		return;
 	}
@@ -179,14 +179,14 @@ function updateTextOfMainMenuButton(freezeMainMenuButtonUponChange?: true): void
 		// If the text currently says "Abort Game", freeze the button for 1 second in case the user clicked it RIGHT after it switched text! They may have tried to abort and actually not want to resign.
 		if (
 			freezeMainMenuButtonUponChange &&
-			element_mainmenu.textContent !== translations['resign_game']
+			element_mainmenu.textContent !== translations.resign_game
 		)
 			freezeMainMenuButton();
-		element_mainmenu.textContent = translations['resign_game'];
+		element_mainmenu.textContent = translations.resign_game;
 		return;
 	}
 
-	element_mainmenu.textContent = translations['abort_game'];
+	element_mainmenu.textContent = translations.abort_game;
 }
 
 /** Temporarily disable the main menu button for a certain number of milliseconds */
@@ -285,12 +285,12 @@ function callback_ToggleArrows(): void {
 	arrows.toggleArrows();
 	const mode = arrows.getMode();
 	// prettier-ignore
-	const text = mode === 0 ? translations['arrows_off']
-               : mode === 1 ? translations['arrows_defense']
-			   : mode === 2 ? translations['arrows_all']
-			   : translations['arrows_all_hippogonals'];
+	const text = mode === 0 ? translations.arrows_off
+               : mode === 1 ? translations.arrows_defense
+			   : mode === 2 ? translations.arrows_all
+			   : translations.arrows_all_hippogonals;
 	element_pointers.textContent = text;
-	if (!isPaused) toast.show(translations['toggled'] + ' ' + text);
+	if (!isPaused) toast.show(translations.toggled + ' ' + text);
 }
 
 /** Called when the perspective button is clicked. */

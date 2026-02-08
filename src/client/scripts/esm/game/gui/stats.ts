@@ -60,7 +60,7 @@ function updateTextContentOfMoves(): void {
 	const currentPly = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1;
 	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile()!.boardsim.moves);
 
-	elementStatusMoves.textContent = `${translations['move_counter']} ${currentPly}/${totalPlyCount}`;
+	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }
 
 function updateStatsCSS(): void {

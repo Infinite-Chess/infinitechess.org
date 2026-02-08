@@ -68,7 +68,7 @@ function init(): void {
 	}); // Stencil required for masking world border stuff
 	if (!newContext) {
 		// WebGL2 not supported
-		alert(translations['webgl_unsupported']);
+		alert(translations.webgl_unsupported);
 		throw new Error('WebGL2 not supported by browser.');
 		// gl = camera.canvas.getContext('webgl', { alpha: false });
 	}

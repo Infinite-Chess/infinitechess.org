@@ -262,12 +262,12 @@ async function startEngineGame(options: {
 		TimeControl: options.TimeControl ?? '-',
 		White:
 			options.youAreColor === players.WHITE
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+				? translations.you_indicator
+				: translations.engine_indicator,
 		Black:
 			options.youAreColor === players.BLACK
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+				? translations.you_indicator
+				: translations.engine_indicator,
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};

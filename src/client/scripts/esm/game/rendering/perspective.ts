@@ -59,7 +59,7 @@ function getIsViewingBlackPerspective(): boolean {
 
 function toggle(): void {
 	if (!docutil.isMouseSupported())
-		return toast.show(translations['rendering'].perspective_mode_on_desktop);
+		return toast.show(translations.rendering.perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
@@ -70,7 +70,7 @@ function enable(): void {
 		return console.error('Should not be enabling perspective when it is already enabled.');
 	enabled = true;
 
-	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].on}`;
+	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.on}`;
 
 	guipause.callback_Resume();
 
@@ -78,7 +78,7 @@ function enable(): void {
 
 	initCrosshairModel();
 
-	toast.show(translations['rendering'].movement_tutorial);
+	toast.show(translations.rendering.movement_tutorial);
 }
 
 function disable(): void {
@@ -89,7 +89,7 @@ function disable(): void {
 	// document.exitPointerLock()
 	guipause.callback_Resume();
 
-	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].off}`;
+	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
 
 	const viewWhitePerspective = gameslot.areInGame()
 		? gameslot.isLoadedGameViewingWhitePerspective()
