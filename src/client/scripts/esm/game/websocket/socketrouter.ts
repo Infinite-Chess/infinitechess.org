@@ -32,8 +32,20 @@ const GeneralSchema = z.discriminatedUnion('action', [
 /** Represents all possible types an incoming 'general' route websocket message contents could be. */
 type GeneralMessage = z.infer<typeof GeneralSchema>;
 
-/** The schema for validating all non-echo incoming websocket messages. */
+/** The schema for validating all incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
+	// Echo messages
+	z.strictObject({
+		route: z.literal('echo'),
+		contents: z.number(),
+	}),
+	// Reply-only messages (no route property, only exist to execute on-reply functions)
+	z.strictObject({
+		route: z.undefined(),
+		id: z.number(),
+		replyto: z.number(),
+	}),
+	// Routed messages
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('general'),
@@ -56,22 +68,6 @@ const MasterSchema = z.discriminatedUnion('route', [
 
 /** Represents all possible types a non-echo incoming websocket message could be. */
 export type WebsocketInMessage = z.infer<typeof MasterSchema>;
-
-/** The schema for validating all incoming websocket messages, including echos and reply-only messages. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [
-	MasterSchema,
-	// Echo messages
-	z.strictObject({
-		route: z.literal('echo'),
-		contents: z.number(),
-	}),
-	// Reply-only messages (no route property, only exist to execute on-reply functions)
-	z.strictObject({
-		route: z.undefined(),
-		id: z.number(),
-		replyto: z.number(),
-	}),
-]);
 
 // Types -----------------------------------------------------------------------
 
@@ -101,9 +97,12 @@ function onmessage(serverMessage: MessageEvent): void {
 	// Reschedule the inactivity timer that detects silent disconnections.
 	socketmessages.rescheduleInactivityTimer();
 
-	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
+	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
-		toast.show(translations.websocket.malformed_message, { error: true });
+		toast.show(translations.websocket.malformed_message, {
+			error: true,
+			durationMillis: 100000,
+		});
 		console.error('Received malformed websocket message from the server:', zod_result.error);
 		return;
 	}

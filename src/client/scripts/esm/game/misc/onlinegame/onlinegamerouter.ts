@@ -32,7 +32,6 @@ import gameslot from '../../chess/gameslot.js';
 import guititle from '../../gui/guititle.js';
 import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
-import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
@@ -41,6 +40,7 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
+import disconnect, { OpponentDisconnectValue } from './disconnect.js';
 
 // Type Definitions --------------------------------------------------------------------------------------
 
@@ -100,10 +100,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('opponentafkreturn') }),
 	z.strictObject({
 		action: z.literal('opponentdisconnect'),
-		value: z.strictObject({
-			millisUntilAutoDisconnectResign: z.number(),
-			wasByChoice: z.boolean(),
-		}),
+		value: z.custom<OpponentDisconnectValue>(),
 	}),
 	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
 	z.strictObject({ action: z.literal('serverrestart'), value: z.number() }),

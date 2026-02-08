@@ -18,7 +18,7 @@ import pingManager from '../../../util/pingManager.js';
 // Types ---------------------------------------------------------------
 
 /** The parameters for the opponent disconnect countdown. */
-interface OpponentDisconnectValue {
+export interface OpponentDisconnectValue {
 	millisUntilAutoDisconnectResign: number;
 	wasByChoice: boolean;
 }
