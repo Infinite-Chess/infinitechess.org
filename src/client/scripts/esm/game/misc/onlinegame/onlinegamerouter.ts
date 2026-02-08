@@ -172,9 +172,8 @@ function routeMessage(contents: GameMessage): void {
 			drawoffers.onOpponentDeclinedOffer();
 			break;
 		default:
-			// @ts-ignore
+			// @ts-expect-error All cases covered; contents would be `never` here.
 			toast.show(
-				// @ts-ignore
 				`Unknown action "${contents.action}" received from server in 'game' route.`,
 				{ error: true },
 			);
