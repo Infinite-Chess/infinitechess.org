@@ -85,19 +85,12 @@ const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 // Types Definitions ---------------------------------------------------------------------
 
-/** Utility type to make specific fields of a type non-nullable */
-type WithNonNullableFields<T, K extends keyof T> = T & {
-	[P in K]: NonNullable<T[P]>;
-};
-
 /**
  * Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation.
- * Note: score and elo_change_from_game are guaranteed to be non-null because
- * getRecentNRatedGamesForUser filters out aborted games (WHERE pg.score IS NOT NULL).
  */
-type RatingAbuseRelevantPlayerGamesRecord = WithNonNullableFields<
-	Pick<PlayerGamesRecord, 'game_id' | 'score' | 'clock_at_end_millis' | 'elo_change_from_game'>,
-	'score' | 'elo_change_from_game'
+type RatingAbuseRelevantPlayerGamesRecord = Pick<
+	PlayerGamesRecord,
+	'game_id' | 'score' | 'clock_at_end_millis' | 'elo_change_from_game'
 >;
 
 /**
@@ -233,17 +226,15 @@ async function measurePlayerRatingAbuse(
 	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check });
 
 	// Retrieve the most recent ranked non-aborted games from the player_games table
-	// Note: These entries are guaranteed to have non-null score and elo_change_from_game
-	// because the SQL query filters WHERE pg.score IS NOT NULL
 	const recentPlayerGamesEntries = getRecentNRatedGamesForUser(
 		user_id,
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
 		['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game'],
-	) as RatingAbuseRelevantPlayerGamesRecord[];
+	);
 
 	const netRatingChange = recentPlayerGamesEntries.reduce(
-		(acc, g) => acc + g.elo_change_from_game,
+		(acc, g) => acc + (g.elo_change_from_game ?? 0),
 		0,
 	);
 	const game_id_list = recentPlayerGamesEntries.map((recent_game) => recent_game.game_id);
@@ -265,7 +256,14 @@ async function measurePlayerRatingAbuse(
 		'termination',
 		'move_count',
 		'time_duration_millis',
-	]) as RatingAbuseRelevantGamesRecord[];
+	]);
+	if (!recentGamesEntries) {
+		await logEventsAndPrint(
+			`Failed to retrieve game data for game_ids during rating abuse calculation: ${JSON.stringify(game_id_list)}`,
+			'errLog.txt',
+		);
+		return;
+	}
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// Combine the information about the games into a single gameInfoList object
@@ -451,7 +449,7 @@ function checkMoveCounts(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it contains too few moves
 		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
@@ -479,7 +477,7 @@ function checkDurations(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if it lasted too briefly on the server
 		if (
@@ -510,7 +508,7 @@ function checkClockAtEnd(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
 
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (
