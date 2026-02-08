@@ -2,20 +2,17 @@
 
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 import type {
-	GameUpdateMessage,
-	OpponentsMoveMessage,
-	PlayerRatingChangeInfo,
-	ServerGameMoveMessage,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
-
-import * as z from 'zod';
+	GameMessage,
+	JoinGameMessage,
+	ServerGameInfo,
+} from '../../websocket/socketschemas.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
@@ -32,6 +29,7 @@ import gameslot from '../../chess/gameslot.js';
 import guititle from '../../gui/guititle.js';
 import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
+import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
@@ -40,76 +38,6 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
-import disconnect, { OpponentDisconnectValue } from './disconnect.js';
-
-// Type Definitions --------------------------------------------------------------------------------------
-
-/**
- * Static information about an online game that is unchanging.
- * Only need this once, when we originally load the game,
- * not on subsequent updates/resyncs.
- */
-type ServerGameInfo = {
-	/** The id of the online game */
-	id: number;
-	rated: boolean;
-	publicity: 'public' | 'private';
-	playerRatings: PlayerGroup<Rating>;
-};
-
-/**
- * The message contents expected when we receive a server websocket 'joingame' message.
- * This contains everything a {@link GameUpdateMessage} message would have, and more!!
- *
- * The stuff included here does not need to be specified when we're resyncing to
- * a game, or receiving a game update, as we already know this stuff.
- */
-interface JoinGameMessage extends GameUpdateMessage {
-	gameInfo: ServerGameInfo;
-	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
-	metadata: MetaData;
-	youAreColor: Player;
-}
-
-// Schemas --------------------------------------------------------------------------------------
-
-/** Zod schema for all possible incoming server websocket messages with the 'game' route. */
-const GameSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
-	z.strictObject({
-		action: z.literal('logged-game-info'),
-		value: z.custom<
-			Required<Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>>
-		>(),
-	}),
-	z.strictObject({ action: z.literal('move'), value: z.custom<OpponentsMoveMessage>() }),
-	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
-	z.strictObject({ action: z.literal('gameupdate'), value: z.custom<GameUpdateMessage>() }),
-	z.strictObject({
-		action: z.literal('gameratingchange'),
-		value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
-	}),
-	z.strictObject({ action: z.literal('unsub') }),
-	z.strictObject({ action: z.literal('login') }),
-	z.strictObject({ action: z.literal('nogame') }),
-	z.strictObject({ action: z.literal('leavegame') }),
-	z.strictObject({
-		action: z.literal('opponentafk'),
-		value: z.strictObject({ millisUntilAutoAFKResign: z.number() }),
-	}),
-	z.strictObject({ action: z.literal('opponentafkreturn') }),
-	z.strictObject({
-		action: z.literal('opponentdisconnect'),
-		value: z.custom<OpponentDisconnectValue>(),
-	}),
-	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
-	z.strictObject({ action: z.literal('serverrestart'), value: z.number() }),
-	z.strictObject({ action: z.literal('drawoffer') }),
-	z.strictObject({ action: z.literal('declinedraw') }),
-]);
-
-/** Represents all possible types an incoming 'game' route websocket message contents could be. */
-type GameMessage = z.infer<typeof GameSchema>;
 
 // Routers --------------------------------------------------------------------------------------
 
@@ -357,7 +285,6 @@ function handleLeaveGame(): void {
 }
 
 export default {
-	GameSchema,
 	routeMessage,
 };
 

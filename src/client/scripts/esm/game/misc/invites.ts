@@ -6,9 +6,7 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
-import type { ServerUsernameContainer } from '../../../../../shared/types.js';
-
-import * as z from 'zod';
+import type { Invite, InvitesMessage } from '../websocket/socketschemas.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
@@ -27,24 +25,6 @@ import usernamecontainer from '../../util/usernamecontainer.js';
 
 // Types -------------------------------------------------------------------------
 
-/** The invite object. NOT an HTML object. */
-interface Invite {
-	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
-	usernamecontainer: ServerUsernameContainer;
-	/** A unique identifier */
-	id: string;
-	/** Used to verify if an invite is your own. */
-	tag?: string;
-	/** The name of the variant */
-	variant: string;
-	/** The clock value */
-	clock: TimeControl;
-	/** The player color (null = Random) */
-	color: Player | null;
-	publicity: 'public' | 'private';
-	rated: 'casual' | 'rated';
-}
-
 /** Create lobby invite options. */
 export interface InviteOptions {
 	variant: string;
@@ -53,20 +33,6 @@ export interface InviteOptions {
 	private: 'public' | 'private';
 	rated: 'casual' | 'rated';
 }
-
-// Schemas -----------------------------------------------------------------------
-
-/** Zod schema for all possible incoming server websocket messages with the 'invites' route. */
-const InvitesSchema = z.discriminatedUnion('action', [
-	z.strictObject({
-		action: z.literal('inviteslist'),
-		value: z.strictObject({ invitesList: z.custom<Invite[]>(), currentGameCount: z.number() }),
-	}),
-	z.strictObject({ action: z.literal('gamecount'), value: z.number() }),
-]);
-
-/** Represents all possible types an incoming 'invites' route websocket message contents could be. */
-type InvitesMessage = z.infer<typeof InvitesSchema>;
 
 // Elements ----------------------------------------------------------------------
 
@@ -490,7 +456,6 @@ async function subscribeToInvites(ignoreAlreadySubbed?: boolean): Promise<void> 
 // Exports -----------------------------------------------------------------------
 
 export default {
-	InvitesSchema,
 	gelement_iCodeCode,
 	onmessage,
 	update,

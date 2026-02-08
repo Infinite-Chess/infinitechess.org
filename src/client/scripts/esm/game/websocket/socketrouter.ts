@@ -5,7 +5,7 @@
  * based on the subscription type.
  */
 
-import * as z from 'zod';
+import type { GeneralMessage } from './socketschemas.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
@@ -16,58 +16,7 @@ import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import socketmessages from './socketmessages.js';
 import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
-
-// Schemas ---------------------------------------------------------------------
-
-/** Zod schema for all possible incoming 'general' route messages from the server. */
-const GeneralSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('notify'), value: z.string() }),
-	z.strictObject({ action: z.literal('notifyerror'), value: z.string() }),
-	z.strictObject({ action: z.literal('print'), value: z.string() }),
-	z.strictObject({ action: z.literal('printerror'), value: z.string() }),
-	z.strictObject({ action: z.literal('renewconnection') }),
-	z.strictObject({ action: z.literal('gameversion'), value: z.string() }),
-]);
-
-/** Represents all possible types an incoming 'general' route websocket message contents could be. */
-type GeneralMessage = z.infer<typeof GeneralSchema>;
-
-/** The schema for validating all incoming websocket messages. */
-const MasterSchema = z.discriminatedUnion('route', [
-	// Echo messages
-	z.strictObject({
-		route: z.literal('echo'),
-		contents: z.number(),
-	}),
-	// Reply-only messages (no route property, only exist to execute on-reply functions)
-	z.strictObject({
-		route: z.undefined(),
-		id: z.number(),
-		replyto: z.number(),
-	}),
-	// Routed messages
-	z.strictObject({
-		id: z.number(),
-		route: z.literal('general'),
-		contents: GeneralSchema,
-		replyto: z.number().optional(),
-	}),
-	z.strictObject({
-		id: z.number(),
-		route: z.literal('invites'),
-		contents: invites.InvitesSchema,
-		replyto: z.number().optional(),
-	}),
-	z.strictObject({
-		id: z.number(),
-		route: z.literal('game'),
-		contents: onlinegamerouter.GameSchema,
-		replyto: z.number().optional(),
-	}),
-]);
-
-/** Represents all possible types a non-echo incoming websocket message could be. */
-export type WebsocketInMessage = z.infer<typeof MasterSchema>;
+import { MasterSchema } from './socketschemas.js';
 
 // Types -----------------------------------------------------------------------
 
