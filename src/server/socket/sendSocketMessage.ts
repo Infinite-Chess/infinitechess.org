@@ -176,9 +176,8 @@ function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(
-		renewConnection,
+		() => renewConnection(ws),
 		wsutil.timeOfInactivityToRenewConnection,
-		ws,
 	);
 }
 

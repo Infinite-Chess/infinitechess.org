@@ -165,12 +165,8 @@ function resetTimerToCloseSocket(): void {
 
 /**
  * Reschedules the inactivity timer. Called on every incoming message.
- * If no message is received within timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
- * the client assumes the connection is dead and closes the socket.
- *
- * Rationale: The server sends 'renewconnection' after timeOfInactivityToRenewConnection of
- * no sent messages. If we don't hear ANY message within that window plus the echo timeout,
- * the connection has silently failed.
+ * If no message is received within a certain time frame, the client
+ * assumes the connection is dead and closes the socket.
  */
 function rescheduleInactivityTimer(): void {
 	cancelInactivityTimer();
@@ -190,7 +186,7 @@ function cancelInactivityTimer(): void {
 }
 
 /**
- * Called when no message has been received within the expected window.
+ * Called when no message has been received within the expected time frame.
  * Closes the socket and dispatches a lost connection event.
  */
 function onInactivityTimeout(): void {
