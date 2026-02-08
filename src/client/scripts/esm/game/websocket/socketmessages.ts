@@ -46,9 +46,6 @@ let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
 /** Functions to execute when we get a specific reply back. */
 let onreplyFuncs: { [key: MessageID]: Function } = {};
 
-/** A list of setTimeout timer IDs to cancel whenever a new socket is established. */
-const timerIDsToCancelOnNewSocket: number[] = [];
-
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
 
@@ -139,16 +136,6 @@ function resetOnreplyFuncs(): void {
 }
 
 // Timer Management ------------------------------------------------------------
-
-/** Cancels all timers that should be canceled on new socket establishment. */
-function cancelAllTimerIDsToCancelOnNewSocket(): void {
-	timerIDsToCancelOnNewSocket.forEach((ID) => clearTimeout(ID));
-}
-
-/** Adds a timer ID to cancel upon the next socket establishment. */
-function addTimerIDToCancelOnNewSocket(ID: number): void {
-	timerIDsToCancelOnNewSocket.push(ID);
-}
 
 /** If we have zero subscriptions, resets the timer to auto-close the socket. */
 function resetTimerToCloseSocket(): void {
@@ -280,9 +267,6 @@ export default {
 	cancelAllEchoTimers,
 	executeOnreplyFunc,
 	resetOnreplyFuncs,
-	cancelAllTimerIDsToCancelOnNewSocket,
-	addTimerIDToCancelOnNewSocket,
-	resetTimerToCloseSocket,
 	rescheduleInactivityTimer,
 	cancelInactivityTimer,
 	alsoPrintIncomingEchos,

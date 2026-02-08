@@ -125,7 +125,6 @@ async function establishSocket(): Promise<boolean> {
 	if (success && noConnection)
 		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
 	noConnection = false;
-	socketmessages.cancelAllTimerIDsToCancelOnNewSocket();
 
 	openingSocket = false;
 	return success;
