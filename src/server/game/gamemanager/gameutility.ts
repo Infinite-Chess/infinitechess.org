@@ -851,7 +851,6 @@ function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): 
 export type {
 	ServerGame,
 	MatchInfo,
-	PlayerData,
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,

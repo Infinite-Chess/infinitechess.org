@@ -35,5 +35,3 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 }
 
 export { routeIncomingSocketMessage };
-
-export type { WebsocketInMessage };

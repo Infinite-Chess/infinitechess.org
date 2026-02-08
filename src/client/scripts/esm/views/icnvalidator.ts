@@ -32,6 +32,33 @@ interface ValidationError {
 	gameConclusion?: string;
 }
 
+/** Result message from the ICN validator worker. */
+interface WorkerResult {
+	type: 'done';
+	chunkId: number;
+	results: {
+		success: boolean;
+		successfulCount: number;
+		icnconverterErrors: number;
+		formulatorErrors: number;
+		illegalMoveErrors: number;
+		terminationMismatchErrors: number;
+		errors: any[];
+		variantErrors: Record<string, VariantStats>;
+	};
+}
+
+/**
+ * Progress message from the ICN validator worker.
+ */
+interface WorkerProgressMessage {
+	type: 'progress';
+	chunkId: number;
+	count: number;
+}
+
+type WorkerMessage = WorkerResult | WorkerProgressMessage;
+
 type LogType = 'info' | 'success' | 'warning' | 'error';
 
 const SPRTGamesSchema = z.array(z.string());
@@ -217,7 +244,7 @@ async function validateGames(): Promise<void> {
 		let itemsProcessedInChunk = 0;
 
 		// Handle Messages
-		worker.onmessage = (e) => {
+		worker.onmessage = (e: MessageEvent<WorkerMessage>) => {
 			if (e.data.type === 'progress') {
 				// Update counters
 				const count = e.data.count;

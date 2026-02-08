@@ -271,4 +271,4 @@ export default {
 	printClocks,
 };
 
-export type { ClockValues, ClockData, ClockDependant };
+export type { ClockValues, ClockData };

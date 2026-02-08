@@ -196,9 +196,4 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 	}
 }
 
-export {
-	setPracticeProgressCookie,
-	deletePracticeProgressCookie,
-	getCheckmatesBeaten,
-	postCheckmateBeaten,
-};
+export { setPracticeProgressCookie, deletePracticeProgressCookie, postCheckmateBeaten };

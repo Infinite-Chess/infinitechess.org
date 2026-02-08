@@ -25,7 +25,7 @@ import {
 	DEFAULT_LEADERBOARD_RD,
 } from './ratingcalculation.js';
 import {
-	addUserToLeaderboard_core,
+	addUserToLeaderboard,
 	getPlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	updatePlayerLeaderboardRating_core,
@@ -124,7 +124,7 @@ function updateLeaderboardsInTransaction(
 		// If a player isn't on the leaderboard, add them first.
 		// We use the _core (error-throwing) version because we are inside a transaction.
 		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) {
-			addUserToLeaderboard_core(
+			addUserToLeaderboard(
 				user_id,
 				leaderboard_id,
 				DEFAULT_LEADERBOARD_ELO,

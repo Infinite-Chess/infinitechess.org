@@ -1,4 +1,4 @@
-// src/client/scripts/esm/webgl/post_processing/passes/PosterizePass.ts
+// dev-utils/post_processing_effects/posterize/PosterizePass.ts
 
 import type { PostProcessPass } from '../PostProcessingPipeline';
 import type { ProgramManager, ProgramMap } from '../../ProgramManager';

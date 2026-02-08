@@ -91,4 +91,4 @@ function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 
 export type { Invite, SafeInvite };
 
-export { isInvitePrivate, isInvitePublic, makeInviteSafe, safelyCopyInvite, memberInfoEq };
+export { isInvitePrivate, isInvitePublic, safelyCopyInvite, memberInfoEq };

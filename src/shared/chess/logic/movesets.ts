@@ -379,11 +379,4 @@ export default {
 	areColinearsPresent,
 };
 
-export type {
-	Movesets,
-	RawMovesets,
-	PieceMoveset,
-	BlockingFunction,
-	IgnoreFunction,
-	SpecialFunction,
-};
+export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };

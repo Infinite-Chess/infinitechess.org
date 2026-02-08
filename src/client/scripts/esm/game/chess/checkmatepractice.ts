@@ -4,7 +4,6 @@
  * This script handles checkmate practice logic
  */
 
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';

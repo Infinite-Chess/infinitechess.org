@@ -17,7 +17,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // Constants ---------------------------------------------------------------------------------
 
 /** Maximum length for ICN notation (also determines max size) */
-export const MAX_ICN_LENGTH = 1_000_000;
+const MAX_ICN_LENGTH = 1_000_000;
 
 // Zod Schemas -------------------------------------------------------------------------------
 

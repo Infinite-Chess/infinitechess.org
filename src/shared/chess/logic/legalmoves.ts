@@ -673,7 +673,7 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 
 // Exports ----------------------------------------------------------------
 
-export type { LegalMoves, Vicinity, SlideLimits };
+export type { LegalMoves, SlideLimits };
 
 export default {
 	genVicinity,

@@ -483,4 +483,4 @@ export default {
 	renderVoids,
 };
 
-export type { MeshData, Mesh };
+export type { Mesh };

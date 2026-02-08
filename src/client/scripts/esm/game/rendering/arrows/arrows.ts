@@ -1447,4 +1447,4 @@ export default {
 	render,
 };
 
-export type { ArrowPiece, HoveredArrow };
+export type { ArrowPiece };

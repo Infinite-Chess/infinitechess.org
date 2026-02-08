@@ -12,14 +12,14 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // Type Definitions --------------------------------------------------------------------
 
 /** Represents a saved position list record (name, piece_count, timestamp). */
-export type EditorSavesListRecord = {
+type EditorSavesListRecord = {
 	name: string;
 	piece_count: number;
 	timestamp: number;
 };
 
 /** Represents a saved position ICN record (icn, pawn_double_push, castling). */
-export type EditorSavesIcnRecord = {
+type EditorSavesIcnRecord = {
 	icn: string;
 	pawn_double_push: 0 | 1;
 	castling: 0 | 1;

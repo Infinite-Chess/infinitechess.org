@@ -27,7 +27,6 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  */
 const ESMEntryPoints = [
 	'src/client/scripts/esm/game/main.ts',
-	'src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.ts',
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index.ts',

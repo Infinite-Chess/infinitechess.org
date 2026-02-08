@@ -12,22 +12,9 @@ import { players as p } from '../../../../shared/chess/util/typeutil.js';
 import gameformulator from '../game/chess/gameformulator.js';
 
 // Define types
-export interface WorkerMessage {
+interface WorkerMessage {
 	chunkId: number;
 	games: { index: number; icn: string }[];
-}
-
-export interface WorkerResult {
-	chunkId: number;
-	results: {
-		success: boolean;
-		icnconverterErrors: number;
-		formulatorErrors: number;
-		illegalMoveErrors: number;
-		terminationMismatchErrors: number;
-		errors: any[];
-		variantErrors: Record<string, any>;
-	};
 }
 
 // Listen for the main thread to send data

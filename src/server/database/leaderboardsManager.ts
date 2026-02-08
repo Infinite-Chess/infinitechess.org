@@ -12,7 +12,6 @@ import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import {
 	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
 	UNCERTAIN_LEADERBOARD_RD,
 	RD_UPDATE_FREQUENCY,
 } from '../game/gamemanager/ratingcalculation.js';
@@ -44,7 +43,7 @@ type Rating = { value: number; confident: boolean };
  * @throws {SqliteError} If the database query fails. The error's `code` property
  *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
  */
-function addUserToLeaderboard_core(
+function addUserToLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -61,39 +60,6 @@ function addUserToLeaderboard_core(
 	`;
 	// This will throw on failure, which is what we want for a transaction.
 	return db.run(query, [user_id, leaderboard_id, elo, rd]);
-}
-
-/**
- * Safely adds a user entry to a specific leaderboard.
- * This wraps the core logic in a try/catch block, making it safe for standalone use.
- * @returns A result object indicating success or failure.
- */
-function addUserToLeaderboard(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number = DEFAULT_LEADERBOARD_ELO,
-	rd: number = DEFAULT_LEADERBOARD_RD,
-): ModifyQueryResult {
-	try {
-		const result = addUserToLeaderboard_core(user_id, leaderboard_id, elo, rd);
-		return { success: true, result };
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-
-		let reason = 'Failed to add user to leaderboard.';
-		if (error instanceof Error && 'code' in error) {
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the members table.';
-			} else if (error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				reason = `User ID already exists on this leaderboard.`;
-			}
-		}
-		return { success: false, reason };
-	}
 }
 
 /**
@@ -243,7 +209,7 @@ function getPlayerLeaderboardRating(
  * @param user_id - The id for the user
  * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
  */
-function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
+function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	// New function leveraging the idx_leaderboards_user index
 	const query = `
         SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
@@ -427,13 +393,10 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 // Updated export names to be more descriptive
 export {
 	addUserToLeaderboard,
-	addUserToLeaderboard_core,
-	updatePlayerLeaderboardRating,
 	updatePlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getPlayerLeaderboardRating_core,
-	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,

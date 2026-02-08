@@ -41,7 +41,7 @@ function fade(t: number): number {
  * @param period The interval after which the noise pattern should repeat. Must be an integer.
  * @returns A function that takes a number `t` and returns a noise value between -1 and 1.
  */
-export function create1DNoiseGenerator(period: number): (_t: number) => number {
+function create1DNoiseGenerator(period: number): (_t: number) => number {
 	if (period > 256) throw Error('Period must be 256 or less.');
 
 	// Pre-calculate random gradients for the length of the period.

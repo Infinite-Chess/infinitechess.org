@@ -657,7 +657,6 @@ export type {
 	CoordsSpecial,
 	enpassantCreate,
 	enpassant,
-	promoteTrigger,
 	promotion,
 	castle,
 	path,
