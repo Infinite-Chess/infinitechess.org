@@ -157,7 +157,6 @@ function updateLeaderboardsInTransaction(
 			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		const data = ratingdata[player]!;
-		// We use updatePlayerLeaderboardRating to ensure errors propagate and roll back the transaction.
 		updatePlayerLeaderboardRating(
 			user_id!,
 			leaderboard_id,

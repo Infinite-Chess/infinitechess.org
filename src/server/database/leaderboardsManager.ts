@@ -334,7 +334,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 	const query = `SELECT * FROM leaderboards`;
 
 	try {
-		const entries = db.all(query) as LeaderboardEntry[];
+		const entries = db.all<LeaderboardEntry>(query);
 		for (const entry of entries) {
 			const updatedRD = getTrueRD(
 				entry.rating_deviation!,
@@ -362,7 +362,6 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 
 // Exports --------------------------------------------------------------------------------------------
 
-// Updated export names to be more descriptive
 export {
 	addUserToLeaderboard,
 	updatePlayerLeaderboardRating,
