@@ -18,13 +18,13 @@ import {
 
 // Type Definitions -----------------------------------------------------------------------------------
 
-/** Structure of a leaderboard entry record for a user. */
+/** Structure of a complete leaderboard entry record. */
 interface LeaderboardEntry {
-	user_id?: number;
-	leaderboard_id?: number;
-	elo?: number;
-	rating_deviation?: number;
-	rd_last_update_date?: string | null; // Can be null if no games played yet
+	user_id: number;
+	leaderboard_id: number;
+	elo: number;
+	rating_deviation: number;
+	rd_last_update_date: string | null; // Can be null if no games played yet
 	// Consider adding volatility if you use it in Glicko-2
 }
 
@@ -317,7 +317,7 @@ function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboar
 	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
 	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
-	return { value: rating_values.elo!, confident };
+	return { value: rating_values.elo, confident };
 }
 
 // Regular Table Utility Functions -------------------------------------------------------------------
@@ -336,14 +336,11 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 	try {
 		const entries = db.all<LeaderboardEntry>(query);
 		for (const entry of entries) {
-			const updatedRD = getTrueRD(
-				entry.rating_deviation!,
-				entry?.rd_last_update_date ?? null,
-			);
+			const updatedRD = getTrueRD(entry.rating_deviation, entry.rd_last_update_date);
 			updatePlayerLeaderboardRating(
-				entry.user_id!,
-				entry.leaderboard_id! as Leaderboard,
-				entry.elo!,
+				entry.user_id,
+				entry.leaderboard_id as Leaderboard,
+				entry.elo,
 				updatedRD,
 			);
 		}
