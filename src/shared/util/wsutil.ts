@@ -5,6 +5,14 @@
  * sockets that both the CLIENT and server can use.
  */
 
+// Constants ---------------------------------------------------------------------------------
+
+/**
+ * After this much time of no messages sent, the server sends a
+ * 'renewconnection' keepalive expecting an echo back.
+ */
+const timeOfInactivityToRenewConnection = 10000;
+
 // Variables ---------------------------------------------------------------------------------
 
 // Possible websocket closure reasons:
@@ -91,5 +99,6 @@ function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean
 // -----------------------------------------------------------------------------------------
 
 export default {
+	timeOfInactivityToRenewConnection,
 	wasSocketClosureNotByTheirChoice,
 };

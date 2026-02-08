@@ -52,6 +52,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 
 	socketmessages.cancelAllEchoTimers();
+	socketmessages.cancelInactivityTimer();
 	socketmessages.resetOnreplyFuncs();
 
 	const trimmedReason = event.reason.trim();

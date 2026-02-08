@@ -11,6 +11,7 @@ import { WebSocket } from 'ws';
 
 import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
+import wsutil from '../../shared/util/wsutil.js';
 
 import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
@@ -54,12 +55,6 @@ const simulatedWebsocketLatencyMillis = 0;
 if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis !== 0) {
 	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
 }
-
-/**
- * After this much time of no messages sent we send a message,
- * expecting an echo, just to check if they are still connected.
- */
-const timeOfInactivityToRenewConnection = 10000;
 
 // Sending Messages ---------------------------------------------------------------------------
 
@@ -181,9 +176,8 @@ function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(
-		renewConnection,
-		timeOfInactivityToRenewConnection,
-		ws,
+		() => renewConnection(ws),
+		wsutil.timeOfInactivityToRenewConnection,
 	);
 }
 

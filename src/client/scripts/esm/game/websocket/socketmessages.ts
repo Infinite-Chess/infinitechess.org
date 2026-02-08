@@ -5,6 +5,7 @@
  */
 
 import uuid from '../../../../../shared/util/uuid.js';
+import wsutil from '../../../../../shared/util/wsutil.js';
 
 import toast from '../gui/toast.js';
 import socketman from './socketman.js';
@@ -50,6 +51,13 @@ const timerIDsToCancelOnNewSocket: number[] = [];
 
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
+
+/**
+ * The timeout ID for detecting server inactivity.
+ * If no message is received within the expected window, the client
+ * assumes the connection is dead and closes the socket.
+ */
+let inactivityTimerID: number | undefined;
 
 // Echo Tracking ---------------------------------------------------------------
 
@@ -153,6 +161,45 @@ function resetTimerToCloseSocket(): void {
 	}
 }
 
+// Inactivity Detection --------------------------------------------------------
+
+/**
+ * Reschedules the inactivity timer. Called on every incoming message.
+ * If no message is received within a certain time frame, the client
+ * assumes the connection is dead and closes the socket.
+ */
+function rescheduleInactivityTimer(): void {
+	cancelInactivityTimer();
+	if (socketsubs.zeroSubs()) return;
+	inactivityTimerID = window.setTimeout(
+		onInactivityTimeout,
+		wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
+	);
+}
+
+/** Cancels the inactivity timer. Called when the socket closes. */
+function cancelInactivityTimer(): void {
+	if (inactivityTimerID !== undefined) {
+		clearTimeout(inactivityTimerID);
+		inactivityTimerID = undefined;
+	}
+}
+
+/**
+ * Called when no message has been received within the expected time frame.
+ * Closes the socket and dispatches a lost connection event.
+ */
+function onInactivityTimeout(): void {
+	inactivityTimerID = undefined;
+	const socket = socketman.getSocket();
+	if (!socket) return;
+	console.log(
+		`No message received for ${wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis}ms. Assuming connection lost.`,
+	);
+	socketman.dispatchLostConnectionCustomEvent();
+	socket.close(1000, 'Connection closed by client. Renew.');
+}
+
 // Sending Messages ------------------------------------------------------------
 
 /**
@@ -236,5 +283,7 @@ export default {
 	cancelAllTimerIDsToCancelOnNewSocket,
 	addTimerIDToCancelOnNewSocket,
 	resetTimerToCloseSocket,
+	rescheduleInactivityTimer,
+	cancelInactivityTimer,
 	alsoPrintIncomingEchos,
 };

@@ -57,6 +57,10 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const isEcho = message.action === 'echo';
 
+	// Any incoming message proves the connection is alive.
+	// Reschedule the inactivity timer that detects silent disconnections.
+	socketmessages.rescheduleInactivityTimer();
+
 	if (socketman.isDebugEnabled()) {
 		if (isEcho) {
 			if (socketmessages.alsoPrintIncomingEchos)
