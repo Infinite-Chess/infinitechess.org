@@ -449,7 +449,7 @@ function checkMoveCounts(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if it contains too few moves
 		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
@@ -477,7 +477,7 @@ function checkDurations(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if it lasted too briefly on the server
 		if (
@@ -508,7 +508,7 @@ function checkClockAtEnd(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (
