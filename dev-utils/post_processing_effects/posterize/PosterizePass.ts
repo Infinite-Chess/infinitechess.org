@@ -1,14 +1,14 @@
-// dev-utils/post_processing_effects/PosterizePass.ts
+// dev-utils/post_processing_effects/posterize/PosterizePass.ts
+
+import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A post-processing pass that reduces the number of colors in the scene
  * to create a "posterized" effect.
- * 
- * This pass is not currently used in the main codebase but is kept here
- * for potential future use.
  */
-export class PosterizePass {
-	readonly program: any; // ProgramMap['posterize'];
+export class PosterizePass implements PostProcessPass {
+	readonly program: ProgramMap['posterize'];
 
 	// --- Public Properties for Control ---
 
@@ -22,7 +22,7 @@ export class PosterizePass {
 	 */
 	public levels: number = 8;
 
-	constructor(programManager: any) { // ProgramManager
+	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('posterize');
 	}
 

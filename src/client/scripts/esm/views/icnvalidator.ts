@@ -32,9 +32,7 @@ interface ValidationError {
 	gameConclusion?: string;
 }
 
-/**
- * Result message from the ICN validator worker.
- */
+/** Result message from the ICN validator worker. */
 interface WorkerResult {
 	type: 'done';
 	chunkId: number;

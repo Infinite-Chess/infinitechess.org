@@ -1,4 +1,4 @@
-// dev-utils/audio/processors/bitcrusher/BitcrusherNode.ts
+// dev-utils/scripts/audio/processors/bitcrusher/BitcrusherNode.ts
 
 export class BitcrusherNode extends AudioWorkletNode {
 	constructor(context: AudioContext) {

@@ -1,4 +1,4 @@
-// dev-utils/server/api/Patreon.ts
+// dev-utils/scripts/PatreonAPI.ts
 
 /*
  * This module, in the future, will be where we connect to Patreon's API

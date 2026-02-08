@@ -1,4 +1,4 @@
-// dev-utils/audio/processors/bitcrusher/BitcrusherProcessor.ts
+// dev-utils/scripts/audio/processors/bitcrusher/BitcrusherProcessor.ts
 
 import type { AudioParamDescriptor } from '../worklet-types';
 
