@@ -18,7 +18,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -115,12 +115,8 @@ async function initBoardEditor(
 	if (variantOptions === undefined) {
 		// Set gamerulesGUIinfo object according to loaded Classical variant
 		const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
-		gamefile.basegame.gameRules.winConditions[players.WHITE] = [
-			icnconverter.default_win_condition,
-		];
-		gamefile.basegame.gameRules.winConditions[players.BLACK] = [
-			icnconverter.default_win_condition,
-		];
+		gamefile.basegame.gameRules.winConditions[p.WHITE] = [icnconverter.default_win_condition];
+		gamefile.basegame.gameRules.winConditions[p.BLACK] = [icnconverter.default_win_condition];
 
 		initial_pawnDoublePush = true;
 		initial_castling = true;
