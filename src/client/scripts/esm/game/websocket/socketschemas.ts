@@ -37,7 +37,7 @@ const GeneralSchema = z.discriminatedUnion('action', [
 ]);
 
 /** Represents all possible types an incoming 'general' route websocket message contents could be. */
-type GeneralMessage = z.infer<typeof GeneralSchema>;
+export type GeneralMessage = z.infer<typeof GeneralSchema>;
 
 // Invites Schema ---------------------------------------------------------------
 
@@ -51,7 +51,7 @@ const InvitesSchema = z.discriminatedUnion('action', [
 ]);
 
 /** Represents all possible types an incoming 'invites' route websocket message contents could be. */
-type InvitesMessage = z.infer<typeof InvitesSchema>;
+export type InvitesMessage = z.infer<typeof InvitesSchema>;
 
 // Game Schema ---------------------------------------------------------------
 
@@ -89,7 +89,7 @@ const GameSchema = z.discriminatedUnion('action', [
 ]);
 
 /** Represents all possible types an incoming 'game' route websocket message contents could be. */
-type GameMessage = z.infer<typeof GameSchema>;
+export type GameMessage = z.infer<typeof GameSchema>;
 
 // Master Schema ---------------------------------------------------------------
 
@@ -128,7 +128,5 @@ const MasterSchema = z.discriminatedUnion('route', [
 ]);
 
 // Exports ---------------------------------------------------------------
-
-export type { GeneralMessage, InvitesMessage, GameMessage };
 
 export { MasterSchema };
