@@ -14,13 +14,15 @@ import { allRatingAbuseColumns } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
-/** Structure of a rating_abuse record. This is all allowed columns of a (user_id, leaderboard_id). */
+/** Structure of a complete rating_abuse record. */
 interface RatingAbuseRecord {
-	user_id?: number;
-	leaderboard_id?: number;
-	game_count_since_last_check?: number | null;
-	last_alerted_at?: string | null;
+	user_id: number;
+	leaderboard_id: number;
+	game_count_since_last_check: number | null;
+	last_alerted_at: string | null;
 }
+
+type RatingAbuseColumn = keyof RatingAbuseRecord;
 
 /** The result of add/update operations */
 type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
@@ -117,13 +119,13 @@ function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boo
  * @param user_id - The user_id of the player
  * @param leaderboard_id - The leaderboard_id
  * @param columns - The columns to retrieve (e.g., ['game_count_since_last_check', 'last_alerted_at'])
- * @returns - An object containing the requested columns, or undefined if no match is found.
+ * @returns An object containing the requested columns, or undefined if no match is found.
  */
-function getRatingAbuseData(
+function getRatingAbuseData<K extends RatingAbuseColumn>(
 	user_id: number,
 	leaderboard_id: number,
-	columns: string[],
-): RatingAbuseRecord | undefined {
+	columns: K[],
+): Pick<RatingAbuseRecord, K> | undefined {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
@@ -152,7 +154,7 @@ function getRatingAbuseData(
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get<RatingAbuseRecord>(query, [user_id, leaderboard_id]);
+		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
 
 		// If no row is found, return undefined
 		if (!row) {
@@ -187,7 +189,7 @@ function getRatingAbuseData(
 function updateRatingAbuseColumns(
 	user_id: number,
 	leaderboard_id: number,
-	columnsAndValues: RatingAbuseRecord,
+	columnsAndValues: Partial<RatingAbuseRecord>,
 ): ModifyQueryResult {
 	// Ensure columnsAndValues is an object and not empty
 	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {

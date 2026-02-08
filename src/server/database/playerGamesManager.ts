@@ -14,16 +14,18 @@ import { allPlayerGamesColumns } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
-/** Structure of a player_games record. This is all allowed columns of a (user_id, game_id). */
+/** Structure of a complete player_games record. */
 interface PlayerGamesRecord {
-	user_id?: number;
-	game_id?: number;
-	player_number?: Player;
-	score?: number | null;
-	clock_at_end_millis?: number | null;
-	elo_at_game?: number | null;
-	elo_change_from_game?: number | null;
+	user_id: number;
+	game_id: number;
+	player_number: Player;
+	score: number | null;
+	clock_at_end_millis: number | null;
+	elo_at_game: number | null;
+	elo_change_from_game: number | null;
 }
+
+type PlayerGamesColumn = keyof PlayerGamesRecord;
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -32,13 +34,13 @@ interface PlayerGamesRecord {
  * @param user_id - The user_id of the player
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['user_id', 'player_number'])
- * @returns - an array of PlayerGamesRecord information about the members in a game who are not equal to user_id
+ * @returns An array of objects with the requested columns from player_games.
  */
-function getOpponentsOfUserFromGames(
+function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 	user_id: number,
 	game_id_list: number[],
-	columns: string[],
-): PlayerGamesRecord[] {
+	columns: K[],
+): Pick<PlayerGamesRecord, K>[] {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
@@ -71,7 +73,7 @@ function getOpponentsOfUserFromGames(
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all<PlayerGamesRecord>(query, [user_id, ...game_id_list]);
+		const rows = db.all<Pick<PlayerGamesRecord, K>>(query, [user_id, ...game_id_list]);
 
 		// If no rows found, return undefined
 		if (!rows || rows.length === 0) {
@@ -103,12 +105,12 @@ function getOpponentsOfUserFromGames(
  * @param columns - Array of column names from player_games to return (e.g., ['game_id', 'score']).
  * @returns Array of objects containing only the requested columns.
  */
-function getRecentNRatedGamesForUser(
+function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	limit: number,
-	columns: string[],
-): PlayerGamesRecord[] {
+	columns: K[],
+): Pick<PlayerGamesRecord, K>[] {
 	// Validate columns argument
 	if (!Array.isArray(columns)) {
 		logEventsAndPrint(
@@ -143,7 +145,7 @@ function getRecentNRatedGamesForUser(
 
 	try {
 		// Bind parameters: user, leaderboard, and limit
-		return db.all(query, [user_id, leaderboard_id, limit]) as PlayerGamesRecord[];
+		return db.all<Pick<PlayerGamesRecord, K>>(query, [user_id, leaderboard_id, limit]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(

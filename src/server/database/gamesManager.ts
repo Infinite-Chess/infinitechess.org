@@ -12,24 +12,26 @@ import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
-/** Structure of a games record. This is all allowed columns of a game_id. */
+/** Structure of a complete games record. */
 export interface GamesRecord {
-	game_id?: number;
-	date?: string;
-	base_time_seconds?: number | null;
-	increment_seconds?: number | null;
-	variant?: string;
+	game_id: number;
+	date: string;
+	base_time_seconds: number | null;
+	increment_seconds: number | null;
+	variant: string;
 	/** 0 => false  1 => true */
-	rated?: 0 | 1;
-	leaderboard_id?: number | null;
+	rated: 0 | 1;
+	leaderboard_id: number | null;
 	/** 0 => false  1 => true */
-	private?: 0 | 1;
-	result?: string;
-	termination?: string;
-	move_count?: number;
-	time_duration_millis?: number | null;
-	icn?: string;
+	private: 0 | 1;
+	result: string;
+	termination: string;
+	move_count: number;
+	time_duration_millis: number | null;
+	icn: string;
 }
+
+type GamesColumn = keyof GamesRecord;
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -83,9 +85,12 @@ function isGameIdTaken(game_id: number): boolean {
  * Fetches specified columns of a single game from the games table based on game_id
  * @param game_id - The game_id of the game
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
- * @returns - An object containing the requested columns, or undefined if no match is found.
+ * @returns An object containing the requested columns, or undefined if no match is found.
  */
-function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {
+function getGameData<K extends GamesColumn>(
+	game_id: number,
+	columns: K[],
+): Pick<GamesRecord, K> | undefined {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
@@ -112,7 +117,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get<GamesRecord>(query, [game_id]);
+		const row = db.get<Pick<GamesRecord, K>>(query, [game_id]);
 
 		// If no row is found, return undefined
 		if (!row) {
@@ -140,10 +145,13 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
  * Fetches specified columns of multiple games from the games table based on list of game_ids
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
- * @returns - An array of GamesRecord objects, or undefined if no matches found.
+ * @returns An array of objects with the requested columns, or undefined if no matches found.
  */
-function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRecord[] | undefined {
-	// Guard clauses... Validating the arguments...#
+function getMultipleGameData<K extends GamesColumn>(
+	game_id_list: number[],
+	columns: K[],
+): Pick<GamesRecord, K>[] | undefined {
+	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
 		logEventsAndPrint(
@@ -170,7 +178,7 @@ function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRe
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all<GamesRecord>(query, game_id_list);
+		const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
 
 		// If no rows found, return undefined
 		if (!rows || rows.length === 0) {
