@@ -136,7 +136,7 @@ function createPracticeHTML(): void {
 
 			const versusText = document.createElement('div');
 			versusText.className = 'checkmate-child versus';
-			versusText.textContent = translations['versus'];
+			versusText.textContent = translations.versus;
 
 			const piecelistB = document.createElement('div');
 			piecelistB.className = 'piecelistB';

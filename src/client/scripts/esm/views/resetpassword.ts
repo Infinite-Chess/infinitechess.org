@@ -109,7 +109,7 @@ function initializeForm(elements: FormElements): void {
 		isSubmitting = true;
 		submitButton.disabled = true;
 		submitButton.className = 'unavailable';
-		submitButton.value = translations['processing'];
+		submitButton.value = translations.processing;
 
 		try {
 			const response = await fetch('/reset-password', {
