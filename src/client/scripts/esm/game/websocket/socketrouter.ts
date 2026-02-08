@@ -57,26 +57,20 @@ const MasterSchema = z.discriminatedUnion('route', [
 /** Represents all possible types a non-echo incoming websocket message could be. */
 export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
-/** The schema for validating incoming echo messages. */
-const EchoSchema = z.strictObject({
-	/** The route, which is always 'echo' for echo messages. */
-	route: z.literal('echo'),
-	/** The contents of the echo message: the ID of the message being echoed. */
-	contents: z.number(),
-});
-
-/** The schema for validating reply-only messages with no route. */
-const ReplyOnlySchema = z.strictObject({
-	route: z.undefined(),
-	id: z.number(),
-	replyto: z.number(),
-});
-
 /** The schema for validating all incoming websocket messages, including echos and reply-only messages. */
 const MasterSchemaWithEchos = z.discriminatedUnion('route', [
 	MasterSchema,
-	EchoSchema,
-	ReplyOnlySchema,
+	// Echo messages
+	z.strictObject({
+		route: z.literal('echo'),
+		contents: z.number(),
+	}),
+	// Reply-only messages (no route property, only exist to execute on-reply functions)
+	z.strictObject({
+		route: z.undefined(),
+		id: z.number(),
+		replyto: z.number(),
+	}),
 ]);
 
 // Types -----------------------------------------------------------------------
@@ -109,7 +103,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
-		toast.show(translations.websocket.please_report_bug, { error: true });
+		toast.show(translations.websocket.malformed_message, { error: true });
 		console.error('Received malformed websocket message from the server:', zod_result.error);
 		return;
 	}

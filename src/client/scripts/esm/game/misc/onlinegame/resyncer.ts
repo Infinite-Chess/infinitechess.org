@@ -19,8 +19,6 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import * as z from 'zod';
-
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -36,14 +34,6 @@ import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
-
-// Schemas ---------------------------------------------------------------
-
-/** Zod schema for the 'gameupdate' game route action from the server. */
-const GameUpdateGameSchema = z.strictObject({
-	action: z.literal('gameupdate'),
-	value: z.custom<GameUpdateMessage>(),
-});
 
 // Functions -----------------------------------------------------------------------------
 
@@ -236,7 +226,6 @@ function synchronizeMovesList(
 }
 
 export default {
-	GameUpdateGameSchema,
 	handleServerGameUpdate,
 	synchronizeMovesList,
 };

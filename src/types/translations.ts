@@ -384,6 +384,7 @@ export type TranslationKeys =
 	| 'play.javascript.websocket.origin_error'
 	| 'play.javascript.websocket.connection_closed'
 	| 'play.javascript.websocket.please_report_bug'
+	| 'play.javascript.websocket.malformed_message'
 	| 'play.javascript.termination.checkmate'
 	| 'play.javascript.termination.stalemate'
 	| 'play.javascript.termination.repetition'
@@ -975,6 +976,7 @@ export interface TranslationsObject {
 				origin_error: string;
 				connection_closed: string;
 				please_report_bug: string;
+				malformed_message: string;
 			};
 			termination: {
 				checkmate: string;

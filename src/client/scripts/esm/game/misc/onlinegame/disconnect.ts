@@ -8,8 +8,6 @@
  * extra time to reconnect.
  */
 
-import * as z from 'zod';
-
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
@@ -17,25 +15,13 @@ import toast from '../../gui/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
 
-// Schemas ---------------------------------------------------------------
+// Types ---------------------------------------------------------------
 
-/** Zod schema for the value of the 'opponentdisconnect' game route action from the server. */
-const opponentDisconnectValueSchema = z.strictObject({
-	millisUntilAutoDisconnectResign: z.number(),
-	wasByChoice: z.boolean(),
-});
-
-/** The inferred type for the opponentdisconnect message value. */
-type OpponentDisconnectValue = z.infer<typeof opponentDisconnectValueSchema>;
-
-/** Zod schemas for all incoming server messages handled by the disconnect module. */
-const DisconnectGameSchema = z.discriminatedUnion('action', [
-	z.strictObject({
-		action: z.literal('opponentdisconnect'),
-		value: opponentDisconnectValueSchema,
-	}),
-	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
-]);
+/** The parameters for the opponent disconnect countdown. */
+interface OpponentDisconnectValue {
+	millisUntilAutoDisconnectResign: number;
+	wasByChoice: boolean;
+}
 
 // Variables -----------------------------------------------------------------------
 
@@ -100,7 +86,6 @@ function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean):
 }
 
 export default {
-	DisconnectGameSchema,
 	startOpponentDisconnectCountdown,
 	stopOpponentDisconnectCountdown,
 };

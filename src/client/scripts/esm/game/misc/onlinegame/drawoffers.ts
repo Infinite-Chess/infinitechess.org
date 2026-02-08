@@ -10,8 +10,6 @@
 
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import * as z from 'zod';
-
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import toast from '../../gui/toast.js';
@@ -21,14 +19,6 @@ import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
 import socketmessages from '../../websocket/socketmessages.js';
-
-// Schemas ---------------------------------------------------------------
-
-/** Zod schemas for all incoming server messages handled by the drawoffers module. */
-const DrawOffersGameSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('drawoffer') }),
-	z.strictObject({ action: z.literal('declinedraw') }),
-]);
 
 // Variables ---------------------------------------------------
 
@@ -173,7 +163,6 @@ function onGameClose(): void {
 }
 
 export default {
-	DrawOffersGameSchema,
 	isOfferingDrawLegal,
 	areWeAcceptingDraw,
 	callback_AcceptDraw,

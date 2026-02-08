@@ -5,17 +5,7 @@
  * stating the server will restart in N minutes.
  */
 
-import * as z from 'zod';
-
 import toast from '../../gui/toast.js';
-
-// Schemas ---------------------------------------------------------------
-
-/** Zod schema for the 'serverrestart' game route action from the server. The value is the timestamp when the server will restart. */
-const ServerRestartGameSchema = z.strictObject({
-	action: z.literal('serverrestart'),
-	value: z.number(),
-});
 
 // Constants -----------------------------------------------------------------------
 
@@ -86,7 +76,6 @@ function onGameClose(): void {
 }
 
 export default {
-	ServerRestartGameSchema,
 	initServerRestart,
 	resetServerRestarting,
 	onGameClose,

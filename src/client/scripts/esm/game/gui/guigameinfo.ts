@@ -12,8 +12,6 @@ import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
-import * as z from 'zod';
-
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
@@ -25,14 +23,6 @@ import enginegame from '../misc/enginegame.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import frametracker from '../rendering/frametracker.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-
-// Schemas ---------------------------------------------------------------
-
-/** Zod schema for the 'gameratingchange' game route action from the server. */
-const RatingChangeGameSchema = z.strictObject({
-	action: z.literal('gameratingchange'),
-	value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
-});
 
 // Elements ---------------------------------------------------
 
@@ -478,7 +468,6 @@ function addRatingChangeToExistingUsernameContainers(
 }
 
 export default {
-	RatingChangeGameSchema,
 	open,
 	close,
 	clearUsernameContainers,

@@ -12,8 +12,6 @@
  * if they are the one that is afk.
  */
 
-import * as z from 'zod';
-
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
@@ -24,17 +22,6 @@ import onlinegame from './onlinegame.js';
 import pingManager from '../../../util/pingManager.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
-
-// Schemas ---------------------------------------------------------------
-
-/** Zod schemas for all incoming server messages handled by the afk module. */
-const AFKGameSchema = z.discriminatedUnion('action', [
-	z.strictObject({
-		action: z.literal('opponentafk'),
-		value: z.strictObject({ millisUntilAutoAFKResign: z.number() }),
-	}),
-	z.strictObject({ action: z.literal('opponentafkreturn') }),
-]);
 
 // Constants -----------------------------------------------------------------------
 
@@ -234,7 +221,6 @@ function displayOpponentAFK(secsRemaining: number): void {
 }
 
 export default {
-	AFKGameSchema,
 	onGameStart,
 	isOurAFKAutoResignTimerRunning,
 	onMovePlayed,

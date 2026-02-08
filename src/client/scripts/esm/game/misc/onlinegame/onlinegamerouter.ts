@@ -10,6 +10,8 @@ import type { GamesRecord } from '../../../../../../server/database/gamesManager
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	GameUpdateMessage,
+	OpponentsMoveMessage,
+	PlayerRatingChangeInfo,
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
@@ -80,18 +82,33 @@ const GameSchema = z.discriminatedUnion('action', [
 			Required<Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>>
 		>(),
 	}),
-	movesendreceive.MoveGameSchema,
+	z.strictObject({ action: z.literal('move'), value: z.custom<OpponentsMoveMessage>() }),
 	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
-	resyncer.GameUpdateGameSchema,
-	guigameinfo.RatingChangeGameSchema,
+	z.strictObject({ action: z.literal('gameupdate'), value: z.custom<GameUpdateMessage>() }),
+	z.strictObject({
+		action: z.literal('gameratingchange'),
+		value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
+	}),
 	z.strictObject({ action: z.literal('unsub') }),
 	z.strictObject({ action: z.literal('login') }),
 	z.strictObject({ action: z.literal('nogame') }),
 	z.strictObject({ action: z.literal('leavegame') }),
-	afk.AFKGameSchema,
-	disconnect.DisconnectGameSchema,
-	serverrestart.ServerRestartGameSchema,
-	drawoffers.DrawOffersGameSchema,
+	z.strictObject({
+		action: z.literal('opponentafk'),
+		value: z.strictObject({ millisUntilAutoAFKResign: z.number() }),
+	}),
+	z.strictObject({ action: z.literal('opponentafkreturn') }),
+	z.strictObject({
+		action: z.literal('opponentdisconnect'),
+		value: z.strictObject({
+			millisUntilAutoDisconnectResign: z.number(),
+			wasByChoice: z.boolean(),
+		}),
+	}),
+	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
+	z.strictObject({ action: z.literal('serverrestart'), value: z.number() }),
+	z.strictObject({ action: z.literal('drawoffer') }),
+	z.strictObject({ action: z.literal('declinedraw') }),
 ]);
 
 /** Represents all possible types an incoming 'game' route websocket message contents could be. */
