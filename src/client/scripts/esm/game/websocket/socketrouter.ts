@@ -154,8 +154,8 @@ function onmessage(serverMessage: MessageEvent): void {
 			onlinegamerouter.routeMessage(message.contents);
 			break;
 		default:
-			// @ts-expect-error All cases covered; route would be `never` here.
 			console.error(
+				// @ts-ignore
 				`Unknown socket subscription "${message.route}" received from the server!`,
 			);
 			break;
