@@ -28,9 +28,6 @@ interface LeaderboardEntry {
 	// Consider adding volatility if you use it in Glicko-2
 }
 
-/** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
-
 /** A rating value and whether we are confident about it. */
 type Rating = { value: number; confident: boolean };
 
@@ -63,13 +60,13 @@ function addUserToLeaderboard(
 }
 
 /**
- * The core logic for updating a player's rating.
- * This function is "unsafe" as it throws errors on failure, making it
- * suitable for use inside a database transaction which can catch the
- * error and roll back.
+ * Updates the rating values for a player on a specific leaderboard.
+ * This function throws errors on failure, making it suitable for use
+ * inside a database transaction which can catch the error and roll back.
+ * Callers outside of transactions should implement their own error handling.
  * @throws {Error} If the user is not found or if the database query fails.
  */
-function updatePlayerLeaderboardRating_core(
+function updatePlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -92,31 +89,6 @@ function updatePlayerLeaderboardRating_core(
 		);
 	}
 	return result;
-}
-
-/**
- * Safely updates the rating values for a player on a specific leaderboard.
- * This wraps the core logic in a try/catch block, making it safe for
- * standalone use, such as in background jobs or admin tools.
- * @returns A result object indicating success or failure.
- */
-function updatePlayerLeaderboardRating(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number,
-	rd: number,
-): ModifyQueryResult {
-	try {
-		const result = updatePlayerLeaderboardRating_core(user_id, leaderboard_id, elo, rd);
-		return { success: true, result };
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-		return { success: false, reason: message };
-	}
 }
 
 /**
@@ -362,7 +334,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 	const query = `SELECT * FROM leaderboards`;
 
 	try {
-		const entries = db.all(query) as LeaderboardEntry[];
+		const entries = db.all<LeaderboardEntry>(query);
 		for (const entry of entries) {
 			const updatedRD = getTrueRD(
 				entry.rating_deviation!,
@@ -390,10 +362,9 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 
 // Exports --------------------------------------------------------------------------------------------
 
-// Updated export names to be more descriptive
 export {
 	addUserToLeaderboard,
-	updatePlayerLeaderboardRating_core,
+	updatePlayerLeaderboardRating,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getPlayerLeaderboardRating_core,

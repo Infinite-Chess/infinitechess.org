@@ -28,7 +28,7 @@ import {
 	addUserToLeaderboard,
 	getPlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
-	updatePlayerLeaderboardRating_core,
+	updatePlayerLeaderboardRating,
 } from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------------------
@@ -157,8 +157,7 @@ function updateLeaderboardsInTransaction(
 			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		const data = ratingdata[player]!;
-		// We use the _core version to ensure errors propagate and roll back the transaction.
-		updatePlayerLeaderboardRating_core(
+		updatePlayerLeaderboardRating(
 			user_id!,
 			leaderboard_id,
 			data.elo_after_game!,
