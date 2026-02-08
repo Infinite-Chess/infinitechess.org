@@ -25,7 +25,7 @@ const opponentDisconnectValueSchema = z.strictObject({
 	wasByChoice: z.boolean(),
 });
 
-/** The inferred type for the opponentdisconnect value. */
+/** The inferred type for the opponentdisconnect message value. */
 type OpponentDisconnectValue = z.infer<typeof opponentDisconnectValueSchema>;
 
 /** Zod schemas for all incoming server messages handled by the disconnect module. */
