@@ -38,7 +38,7 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
  * @param columns - The columns to retrieve (e.g., ['user_id', 'player_number'])
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
-function getPlayerGamesData(
+function _getPlayerGamesData(
 	user_id: number,
 	game_id: number,
 	columns: string[],
@@ -100,7 +100,7 @@ function getPlayerGamesData(
  * @param game_id - The game_id of the game
  * @returns - an array of PlayerGamesRecord information about the members in a game
  */
-function getPlayersInGame(game_id: number): PlayerGamesRecord[] {
+function _getPlayersInGame(game_id: number): PlayerGamesRecord[] {
 	// Construct SQL query
 	const query = `
 		SELECT *

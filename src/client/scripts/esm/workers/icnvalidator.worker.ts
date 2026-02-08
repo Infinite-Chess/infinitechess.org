@@ -17,7 +17,7 @@ interface WorkerMessage {
 	games: { index: number; icn: string }[];
 }
 
-interface WorkerResult {
+interface _WorkerResult {
 	chunkId: number;
 	results: {
 		success: boolean;

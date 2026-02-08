@@ -15,7 +15,6 @@ import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../../util/validatorama.js';
 import socketrouter from './socketrouter.js';
-import socketmessages from './socketmessages.js';
 
 // Constants -------------------------------------------------------------------
 

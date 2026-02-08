@@ -29,7 +29,7 @@ const replacementNames: Record<string, string> = {};
  * Returns a list of patrons on Naviary's [patreon](https://www.patreon.com/Naviary) page,
  * updated every {@link intervalToRefreshPatreonPatronsMillis}.
  */
-function getPatreonPatrons(): string[] {
+function _getPatreonPatrons(): string[] {
 	// Replace their true usernames with replacements
 	const patronsWithReplacedNames = patrons.map((patron) => {
 		return replacementNames[patron] || patron;

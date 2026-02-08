@@ -41,7 +41,7 @@ interface PlayerStatsRecord {
  * @param columns - The columns to retrieve (e.g., ['user_id', 'moves_played', 'game_count'])
  * @returns - An object containing the requested columns, or undefined if no match is found.
  */
-function getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsRecord | undefined {
+function _getPlayerStatsData(user_id: number, columns: string[]): PlayerStatsRecord | undefined {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {

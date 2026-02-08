@@ -68,7 +68,7 @@ function addUserToLeaderboard_core(
  * This wraps the core logic in a try/catch block, making it safe for standalone use.
  * @returns A result object indicating success or failure.
  */
-function addUserToLeaderboard(
+function _addUserToLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number = DEFAULT_LEADERBOARD_ELO,
@@ -243,7 +243,7 @@ function getPlayerLeaderboardRating(
  * @param user_id - The id for the user
  * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
  */
-function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
+function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	// New function leveraging the idx_leaderboards_user index
 	const query = `
         SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
