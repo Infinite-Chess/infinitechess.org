@@ -21,7 +21,7 @@ type Command = (typeof validCommands)[number];
  * Represents a generic command ready to be embedded,
  * containing the command name and its formatted value string.
  */
-interface CommandObject {
+export interface CommandObject {
 	/** The name of the command (e.g., 'clk', 'timestamp'). */
 	command: Command; // Use the Command union type
 	/** The string value associated with the command. */
@@ -209,5 +209,3 @@ export default {
 	createClkCommandObject,
 	getMillisFromClkTimeValue,
 };
-
-export type { CommandObject, ExtractedCommentData };

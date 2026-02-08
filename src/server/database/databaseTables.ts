@@ -36,7 +36,7 @@ const allMemberColumns: string[] = [
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const allPlayerStatsColumns: string[] = [
+const _allPlayerStatsColumns: string[] = [
 	'user_id',
 	'moves_played',
 	'game_count',
@@ -357,7 +357,6 @@ export {
 	game_id_upper_cap,
 	uniqueMemberKeys,
 	allMemberColumns,
-	allPlayerStatsColumns,
 	allPlayerGamesColumns,
 	allGamesColumns,
 	allRatingAbuseColumns,
