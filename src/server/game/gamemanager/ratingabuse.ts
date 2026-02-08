@@ -11,6 +11,8 @@
  */
 
 import type { ServerGame } from './gameutility.js';
+import type { GamesRecord } from '../../database/gamesManager.js';
+import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
@@ -83,25 +85,30 @@ const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 // Types Definitions ---------------------------------------------------------------------
 
-/** Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation */
-type RatingAbuseRelevantPlayerGamesRecord = {
-	game_id: number;
-	score: number;
-	clock_at_end_millis: number | null;
-	elo_change_from_game: number;
-};
+/**
+ * Relevant entries of a PlayerGamesRecord object,
+ * which are used for the rating abuse calculation.
+ */
+type RatingAbuseRelevantPlayerGamesRecord = Pick<
+	PlayerGamesRecord,
+	'game_id' | 'score' | 'clock_at_end_millis' | 'elo_change_from_game'
+>;
 
-/** Relevant entries of a GamesRecord object, which are used for the rating abuse calculation */
-type RatingAbuseRelevantGamesRecord = {
-	game_id: number;
-	date: string;
-	base_time_seconds: number | null;
-	increment_seconds: number | null;
-	private: 0 | 1;
-	termination: string;
-	move_count: number;
-	time_duration_millis: number | null;
-};
+/**
+ * Relevant entries of a GamesRecord object,
+ * which are used for the rating abuse calculation.
+ */
+type RatingAbuseRelevantGamesRecord = Pick<
+	GamesRecord,
+	| 'game_id'
+	| 'date'
+	| 'base_time_seconds'
+	| 'increment_seconds'
+	| 'private'
+	| 'termination'
+	| 'move_count'
+	| 'time_duration_millis'
+>;
 
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord &
@@ -226,10 +233,10 @@ async function measurePlayerRatingAbuse(
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
 		['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game'],
-	)!;
+	);
 
 	const netRatingChange = recentPlayerGamesEntries.reduce(
-		(acc, g) => acc + g.elo_change_from_game!,
+		(acc, g) => acc + (g.elo_change_from_game ?? 0),
 		0,
 	);
 	const game_id_list = recentPlayerGamesEntries.map((recent_game) => recent_game.game_id);
@@ -260,7 +267,6 @@ async function measurePlayerRatingAbuse(
 		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
 		if (j > -1) {
-			// @ts-ignore
 			gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
 		} else {
 			await logEventsAndPrint(
@@ -438,7 +444,7 @@ function checkMoveCounts(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if it contains too few moves
 		if (gameInfo.move_count <= SUSPICIOUS_MOVE_COUNT) {
@@ -466,7 +472,7 @@ function checkDurations(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if it lasted too briefly on the server
 		if (
@@ -497,7 +503,7 @@ function checkClockAtEnd(
 	let weight = 0;
 	let comment = '';
 	for (const gameInfo of gameInfoList) {
-		if (gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious is player lost elo from it
+		if (!gameInfo.elo_change_from_game || gameInfo.elo_change_from_game < 0) continue; // Game is not suspicious if player lost elo from it
 
 		// Game is suspicious if the clock at the end is still similar to the start time
 		if (

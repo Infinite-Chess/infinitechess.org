@@ -15,7 +15,7 @@ import { allPlayerGamesColumns } from './databaseTables.js';
 // Types ----------------------------------------------------------------------------------------------
 
 /** Structure of a complete player_games record. */
-interface PlayerGamesRecord {
+export interface PlayerGamesRecord {
 	user_id: number;
 	game_id: number;
 	player_number: Player;
