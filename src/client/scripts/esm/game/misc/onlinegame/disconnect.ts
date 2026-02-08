@@ -19,15 +19,18 @@ import pingManager from '../../../util/pingManager.js';
 
 // Schemas ---------------------------------------------------------------
 
-/** Zod schema for the 'opponentdisconnect' game route action from the server. */
-const opponentDisconnectSchem = z.object({
+/** Zod schema for the value of the 'opponentdisconnect' game route action from the server. */
+const opponentDisconnectValueSchema = z.object({
 	millisUntilAutoDisconnectResign: z.number(),
 	wasByChoice: z.boolean(),
 });
 
 /** Zod schemas for all incoming server messages handled by the disconnect module. */
 const DisconnectGameSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('opponentdisconnect'), value: opponentDisconnectSchem }),
+	z.strictObject({
+		action: z.literal('opponentdisconnect'),
+		value: opponentDisconnectValueSchema,
+	}),
 	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
 ]);
 
@@ -51,7 +54,7 @@ let displayOpponentDisconnectTimeoutID: ReturnType<typeof setTimeout> | undefine
 function startOpponentDisconnectCountdown({
 	millisUntilAutoDisconnectResign,
 	wasByChoice,
-}: z.infer<typeof opponentDisconnectSchem>): void {
+}: z.infer<typeof opponentDisconnectValueSchema>): void {
 	// This overwrites the "Opponent is AFK" timer
 	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
