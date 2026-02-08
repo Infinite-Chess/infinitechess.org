@@ -11,6 +11,8 @@
  */
 
 import type { ServerGame } from './gameutility.js';
+import type { GamesRecord } from '../../database/gamesManager.js';
+import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
@@ -83,25 +85,35 @@ const SUSPICIOUS_ACCOUNT_AGE_MILLIS = 1000 * 60 * 60 * 24 * 5; // 5 days
 
 // Types Definitions ---------------------------------------------------------------------
 
-/** Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation */
-type RatingAbuseRelevantPlayerGamesRecord = {
-	game_id: number;
-	score: number;
-	clock_at_end_millis: number | null;
-	elo_change_from_game: number;
+/** Utility type to make specific fields of a type non-nullable */
+type WithNonNullableFields<T, K extends keyof T> = T & {
+	[P in K]: NonNullable<T[P]>;
 };
 
-/** Relevant entries of a GamesRecord object, which are used for the rating abuse calculation */
-type RatingAbuseRelevantGamesRecord = {
-	game_id: number;
-	date: string;
-	base_time_seconds: number | null;
-	increment_seconds: number | null;
-	private: 0 | 1;
-	termination: string;
-	move_count: number;
-	time_duration_millis: number | null;
-};
+/**
+ * Relevant entries of a PlayerGamesRecord object, which are used for the rating abuse calculation.
+ * Note: score and elo_change_from_game are guaranteed to be non-null because
+ * getRecentNRatedGamesForUser filters out aborted games (WHERE pg.score IS NOT NULL).
+ */
+type RatingAbuseRelevantPlayerGamesRecord = WithNonNullableFields<
+	Pick<PlayerGamesRecord, 'game_id' | 'score' | 'clock_at_end_millis' | 'elo_change_from_game'>,
+	'score' | 'elo_change_from_game'
+>;
+
+/**
+ * Relevant entries of a GamesRecord object, which are used for the rating abuse calculation.
+ */
+type RatingAbuseRelevantGamesRecord = Pick<
+	GamesRecord,
+	| 'game_id'
+	| 'date'
+	| 'base_time_seconds'
+	| 'increment_seconds'
+	| 'private'
+	| 'termination'
+	| 'move_count'
+	| 'time_duration_millis'
+>;
 
 /** Object containing all relevant information about a specific game, which is used for the rating abuse calculation */
 type RatingAbuseRelevantGameInfo = RatingAbuseRelevantPlayerGamesRecord &
@@ -221,15 +233,17 @@ async function measurePlayerRatingAbuse(
 	updateRatingAbuseColumns(user_id, leaderboard_id, { game_count_since_last_check });
 
 	// Retrieve the most recent ranked non-aborted games from the player_games table
+	// Note: These entries are guaranteed to have non-null score and elo_change_from_game
+	// because the SQL query filters WHERE pg.score IS NOT NULL
 	const recentPlayerGamesEntries = getRecentNRatedGamesForUser(
 		user_id,
 		leaderboard_id,
 		GAME_INTERVAL_TO_MEASURE,
 		['game_id', 'score', 'clock_at_end_millis', 'elo_change_from_game'],
-	)!;
+	) as RatingAbuseRelevantPlayerGamesRecord[];
 
 	const netRatingChange = recentPlayerGamesEntries.reduce(
-		(acc, g) => acc + g.elo_change_from_game!,
+		(acc, g) => acc + g.elo_change_from_game,
 		0,
 	);
 	const game_id_list = recentPlayerGamesEntries.map((recent_game) => recent_game.game_id);
@@ -251,7 +265,7 @@ async function measurePlayerRatingAbuse(
 		'termination',
 		'move_count',
 		'time_duration_millis',
-	])!;
+	]) as RatingAbuseRelevantGamesRecord[];
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// Combine the information about the games into a single gameInfoList object
@@ -260,7 +274,6 @@ async function measurePlayerRatingAbuse(
 		const j = games_table_game_id_list.indexOf(game_id_list[i]!);
 		// If the same game_id exists in both lists of retrieved database entries, add this game as a single object to gameInfoList
 		if (j > -1) {
-			// @ts-ignore
 			gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
 		} else {
 			await logEventsAndPrint(

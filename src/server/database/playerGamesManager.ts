@@ -158,6 +158,8 @@ function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 
 // Exports --------------------------------------------------------------------------------------------
 
+export type { PlayerGamesRecord };
+
 export {
 	getOpponentsOfUserFromGames,
 	// Commented out to emphasize this should not ever have to be used:
