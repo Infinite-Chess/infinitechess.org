@@ -27,7 +27,7 @@ import {
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
 	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
-	route: string;
+	route: string | undefined;
 	/** The message contents. For echo messages, this is the message ID being echoed.
 	 * For other messages, this is an object with action and value. */
 	contents: any;
@@ -96,7 +96,7 @@ function sendSocketMessage(
 				replyto,
 			}
 		: {
-				route: route!,
+				route,
 				contents: {
 					action,
 					value,
