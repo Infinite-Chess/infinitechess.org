@@ -8,17 +8,17 @@ import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeu
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gamesound from '../misc/gamesound.js';
 import gameloader from '../chess/gameloader.js';
 import { GameBus } from '../GameBus.js';
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
-	[players.WHITE]: {
+	[p.WHITE]: {
 		timer: document.getElementById('timer-white')!,
 	},
-	[players.BLACK]: {
+	[p.BLACK]: {
 		timer: document.getElementById('timer-black')!,
 	},
 };

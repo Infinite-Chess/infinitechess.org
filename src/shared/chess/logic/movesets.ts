@@ -14,8 +14,8 @@ import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
-import { rawTypes } from '../util/typeutil.js';
 import specialdetect from './specialdetect.js';
+import { rawTypes as r } from '../util/typeutil.js';
 import { primalityTest } from '../../util/isprime.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
@@ -198,66 +198,66 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 
 	const rawMovesets: RawMovesets = {
 		// Finitely moving
-		[rawTypes.PAWN]: {
+		[r.PAWN]: {
 			special: specialdetect.pawns,
 		},
-		[rawTypes.KNIGHT]: {
+		[r.KNIGHT]: {
 			individual: knightMoves,
 		},
-		[rawTypes.HAWK]: {
+		[r.HAWK]: {
 			individual: [...generateCompassMoves(2n), ...generateCompassMoves(3n)],
 		},
-		[rawTypes.KING]: {
+		[r.KING]: {
 			individual: kingMoves,
 			special: specialdetect.kings,
 		},
-		[rawTypes.GUARD]: {
+		[r.GUARD]: {
 			individual: kingMoves,
 		},
 		// Infinitely moving
-		[rawTypes.ROOK]: {
+		[r.ROOK]: {
 			sliding: rookMoves,
 		},
-		[rawTypes.BISHOP]: {
+		[r.BISHOP]: {
 			sliding: bishopMoves,
 		},
-		[rawTypes.QUEEN]: {
+		[r.QUEEN]: {
 			sliding: {
 				...rookMoves,
 				...bishopMoves,
 			},
 		},
-		[rawTypes.ROYALQUEEN]: {
+		[r.ROYALQUEEN]: {
 			sliding: {
 				...rookMoves,
 				...bishopMoves,
 			},
 		},
-		[rawTypes.CHANCELLOR]: {
+		[r.CHANCELLOR]: {
 			individual: knightMoves,
 			sliding: rookMoves,
 		},
-		[rawTypes.ARCHBISHOP]: {
+		[r.ARCHBISHOP]: {
 			individual: knightMoves,
 			sliding: bishopMoves,
 		},
-		[rawTypes.AMAZON]: {
+		[r.AMAZON]: {
 			individual: knightMoves,
 			sliding: {
 				...rookMoves,
 				...bishopMoves,
 			},
 		},
-		[rawTypes.CAMEL]: {
+		[r.CAMEL]: {
 			individual: generateLeaperMoves(1n, 3n),
 		},
-		[rawTypes.GIRAFFE]: {
+		[r.GIRAFFE]: {
 			individual: generateLeaperMoves(1n, 4n),
 		},
-		[rawTypes.ZEBRA]: {
+		[r.ZEBRA]: {
 			individual: generateLeaperMoves(2n, 3n),
 		},
-		[rawTypes.KNIGHTRIDER]: {
+		[r.KNIGHTRIDER]: {
 			sliding: {
 				'1,2': slideLimits,
 				'1,-2': slideLimits,
@@ -265,14 +265,14 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				'2,-1': slideLimits,
 			},
 		},
-		[rawTypes.CENTAUR]: {
+		[r.CENTAUR]: {
 			individual: [...kingMoves, ...knightMoves],
 		},
-		[rawTypes.ROYALCENTAUR]: {
+		[r.ROYALCENTAUR]: {
 			individual: [...kingMoves, ...knightMoves],
 			special: specialdetect.kings,
 		},
-		[rawTypes.HUYGEN]: {
+		[r.HUYGEN]: {
 			sliding: rookMoves,
 			blocking: (
 				friendlyColor: Player,
@@ -291,7 +291,7 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 				return isPrime;
 			},
 		},
-		[rawTypes.ROSE]: {
+		[r.ROSE]: {
 			special: specialdetect.roses,
 		},
 	};

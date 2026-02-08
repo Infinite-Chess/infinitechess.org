@@ -23,7 +23,7 @@ import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
-import { players, rawTypes } from '../util/typeutil.js';
+import { players as p, rawTypes as r } from '../util/typeutil.js';
 
 /**
  * This detects if special moves are legal.
@@ -130,7 +130,7 @@ function kings(
 		if (pieceColor !== color) return false;
 
 		// Piece should not be a pawn or jumping royal
-		if (rawType === rawTypes.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
+		if (rawType === r.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
 
 		return true;
 	}
@@ -191,7 +191,7 @@ function pawns(
 ): CoordsSpecial[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === players.WHITE ? 1n : -1n;
+	const yOneorNegOne = color === p.WHITE ? 1n : -1n;
 	const individualMoves: CoordsSpecial[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -304,7 +304,7 @@ function addPossibleEnPassant(
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
 	// prettier-ignore
-	const yParity = color === players.WHITE ? 1n : color === players.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
+	const yParity = color === p.WHITE ? 1n : color === p.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
 	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
@@ -476,7 +476,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
  * @returns
  */
 function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): boolean {
-	if (typeutil.getRawType(type) !== rawTypes.PAWN) return false;
+	if (typeutil.getRawType(type) !== r.PAWN) return false;
 	if (!basegame.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);

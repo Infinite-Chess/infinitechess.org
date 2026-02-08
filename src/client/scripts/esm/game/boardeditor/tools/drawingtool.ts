@@ -15,7 +15,7 @@ import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil
 import typeutil, {
 	Player,
 	players as p,
-	rawTypes as t,
+	rawTypes as r,
 } from '../../../../../../shared/chess/util/typeutil';
 
 import mouse from '../../../util/mouse';
@@ -36,7 +36,7 @@ const drawingTools: Tool[] = ['placer', 'eraser', 'specialrights'];
 // State -----------------------------------------------------------
 
 let currentColor: Player = p.WHITE;
-let currentPieceType: number = typeutil.buildType(t.PAWN, currentColor);
+let currentPieceType: number = typeutil.buildType(r.PAWN, currentColor);
 
 /**
  * Changes are stored in `thisEdit` until the user releases the button.

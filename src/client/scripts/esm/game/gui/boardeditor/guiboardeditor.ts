@@ -12,7 +12,7 @@ import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import typeutil, {
-	rawTypes as t,
+	rawTypes as r,
 	players as p,
 } from '../../../../../../shared/chess/util/typeutil.js';
 
@@ -91,30 +91,30 @@ const element_neutralTypes: Array<Element> = [];
 
 /** Player pieces in the order they will appear */
 const coloredTypes = [
-	t.KING,
-	t.QUEEN,
-	t.ROOK,
-	t.BISHOP,
-	t.KNIGHT,
-	t.PAWN,
-	t.CHANCELLOR,
-	t.ARCHBISHOP,
-	t.AMAZON,
-	t.GUARD,
-	t.CENTAUR,
-	t.HAWK,
-	t.KNIGHTRIDER,
-	t.HUYGEN,
-	t.ROSE,
-	t.CAMEL,
-	t.GIRAFFE,
-	t.ZEBRA,
-	t.ROYALCENTAUR,
-	t.ROYALQUEEN,
+	r.KING,
+	r.QUEEN,
+	r.ROOK,
+	r.BISHOP,
+	r.KNIGHT,
+	r.PAWN,
+	r.CHANCELLOR,
+	r.ARCHBISHOP,
+	r.AMAZON,
+	r.GUARD,
+	r.CENTAUR,
+	r.HAWK,
+	r.KNIGHTRIDER,
+	r.HUYGEN,
+	r.ROSE,
+	r.CAMEL,
+	r.GIRAFFE,
+	r.ZEBRA,
+	r.ROYALCENTAUR,
+	r.ROYALQUEEN,
 ];
 
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
-const neutralTypes = [t.OBSTACLE];
+const neutralTypes = [r.OBSTACLE];
 
 // State -------------------------------------------------------------------
 
@@ -292,8 +292,8 @@ async function initUI(): Promise<void> {
 	// Void tooltip
 	element_void.classList.add('tooltip-dr');
 	// @ts-ignore
-	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(t.VOID)!];
-	const void_abbreviation = icnconverter.piece_codes_raw[t.VOID];
+	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(r.VOID)!];
+	const void_abbreviation = icnconverter.piece_codes_raw[r.VOID];
 	element_void.setAttribute('data-tooltip', `${localized_void_name} (${void_abbreviation})`);
 
 	element_neutralTypes.push(element_void);

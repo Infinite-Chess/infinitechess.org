@@ -14,9 +14,9 @@ import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import insufficientmaterial from './insufficientmaterial.js';
-import { rawTypes, Player } from '../util/typeutil.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
+import { rawTypes as r, Player } from '../util/typeutil.js';
 import {
 	detectCheckmateOrStalemate,
 	pieceCountToDisableCheckmate,
@@ -131,7 +131,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (!lastMove) return undefined;
-	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
+	if (typeutil.getRawType(lastMove.type) !== r.KING) return undefined;
 
 	let kingInCenter = false;
 	for (const thisCenterSquare of kothCenterSquares) {
@@ -140,7 +140,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 			thisCenterSquare,
 		);
 		if (typeAtSquare === undefined) continue;
-		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
+		if (typeutil.getRawType(typeAtSquare) === r.KING) {
 			kingInCenter = true;
 			break;
 		}

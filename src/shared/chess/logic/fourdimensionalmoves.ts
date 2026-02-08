@@ -22,9 +22,9 @@ import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
-import { players } from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
+import { players as p } from '../util/typeutil.js';
 import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
@@ -62,7 +62,7 @@ function pawnLegalMoves(
 	const distance_complement = movetype === 'spacelike' ? dim.BOARD_SPACING : 1n;
 
 	// White and black pawns move and capture in opposite directions.
-	const yDistanceParity = color === players.WHITE ? distance : -distance;
+	const yDistanceParity = color === p.WHITE ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -191,7 +191,7 @@ function addPossibleEnPassant(
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
 	// prettier-ignore
-	const yDistanceParity = color === players.WHITE ? ydistance : color === players.BLACK ? -ydistance : (() => { throw new Error("Invalid color!"); })();
+	const yDistanceParity = color === p.WHITE ? ydistance : color === p.BLACK ? -ydistance : (() => { throw new Error("Invalid color!"); })();
 
 	if (coords[1] + yDistanceParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 

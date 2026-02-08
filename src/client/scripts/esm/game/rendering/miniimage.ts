@@ -20,7 +20,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../gui/toast.js';
 import webgl from './webgl.js';
@@ -397,10 +397,10 @@ function render(): void {
 
 	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
 	const sortedNeutrals = boardsim.existingTypes
-		.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL)
+		.filter((t: number) => typeutil.getColorFromType(t) === p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 	const sortedColors = boardsim.existingTypes
-		.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL)
+		.filter((t: number) => typeutil.getColorFromType(t) !== p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 
 	const u_size = snapping.getEntityWidthWorld();

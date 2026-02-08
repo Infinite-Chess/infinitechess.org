@@ -17,7 +17,7 @@ import boardutil from '../../../../../shared/chess/util/boardutil';
 import winconutil from '../../../../../shared/chess/util/winconutil';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
-import typeutil, { players as p, rawTypes as t } from '../../../../../shared/chess/util/typeutil';
+import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../chess/gameslot';
 import boardeditor from './boardeditor';
@@ -52,9 +52,9 @@ interface GameRulesGUIinfo {
 // Game rule relevant piece types
 
 /** All piece types affected by the pawnDoublePush rule */
-const pawnDoublePushTypes: RawType[] = [t.PAWN];
+const pawnDoublePushTypes: RawType[] = [r.PAWN];
 /** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
-const castlingTypes: RawType[] = [t.ROOK, t.KING, t.ROYALCENTAUR];
+const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
 
 // State -------------------------------------------------------------
 

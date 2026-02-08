@@ -31,7 +31,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
-import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
+import { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
@@ -647,13 +647,13 @@ function calcArrowsLineDraft(
 	if (
 		closestPosDotProd !== undefined &&
 		!posDotProd.includes(closestPosDotProd) &&
-		typeutil.getRawType(closestPosDotProd.piece.type) !== rawTypes.VOID
+		typeutil.getRawType(closestPosDotProd.piece.type) !== r.VOID
 	)
 		posDotProd.push(closestPosDotProd);
 	if (
 		closestNegDotProd !== undefined &&
 		!negDotProd.includes(closestNegDotProd) &&
-		typeutil.getRawType(closestNegDotProd.piece.type) !== rawTypes.VOID
+		typeutil.getRawType(closestNegDotProd.piece.type) !== r.VOID
 	)
 		negDotProd.push(closestNegDotProd);
 

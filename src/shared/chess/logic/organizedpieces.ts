@@ -19,7 +19,7 @@ import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
 import coordutil from '../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import typeutil, { ext, players, rawTypes, neutralRawTypes } from '../util/typeutil.js';
+import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
 
 // Type Definitions ----------------------------------------------------------------
 
@@ -509,7 +509,7 @@ function calcRemainingExistingTypes(
 	if (editor) {
 		// ALL pieces may be added in the board editor, but only of the players mentioned in turnOrder
 		const playersSet: Set<Player> = new Set(turnOrder);
-		if (turnOrder.some((p) => p >= 3)) playersSet.add(players.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
+		if (turnOrder.some((p) => p >= 3)) playersSet.add(p.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
 		const playersArray: Array<Player> = [...playersSet];
 		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
 		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.

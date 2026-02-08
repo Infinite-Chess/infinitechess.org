@@ -13,8 +13,8 @@ import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemana
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
 import metadata from '../../../../../shared/chess/util/metadata.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -94,10 +94,10 @@ function embedUsernameContainers(gameMetadata: MetaData): void {
 	const change_white = gameMetadata.WhiteRatingDiff
 		? Number(gameMetadata.WhiteRatingDiff)
 		: undefined;
-	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE]
+	const rating_item_white: RatingItem | undefined = playerRatings?.[p.WHITE]
 		? {
-				value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
-				confident: playerRatings[players.WHITE]!.confident,
+				value: playerRatings[p.WHITE]!.value + (change_white ?? 0),
+				confident: playerRatings[p.WHITE]!.confident,
 				change: change_white,
 			}
 		: undefined;
@@ -116,10 +116,10 @@ function embedUsernameContainers(gameMetadata: MetaData): void {
 	const change_black = gameMetadata.BlackRatingDiff
 		? Number(gameMetadata.BlackRatingDiff)
 		: undefined;
-	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK]
+	const rating_item_black: RatingItem | undefined = playerRatings?.[p.BLACK]
 		? {
-				value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
-				confident: playerRatings[players.BLACK]!.confident,
+				value: playerRatings[p.BLACK]!.value + (change_black ?? 0),
+				confident: playerRatings[p.BLACK]!.confident,
 				change: change_black,
 			}
 		: undefined;
@@ -257,12 +257,12 @@ function getPlayerNamesForGame(metadata: MetaData): {
 			);
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		const white =
-			onlinegame.areWeColorInOnlineGame(players.WHITE) &&
+			onlinegame.areWeColorInOnlineGame(p.WHITE) &&
 			metadata['White'] === translations.guest_indicator
 				? translations.you_indicator
 				: metadata['White'];
 		const black =
-			onlinegame.areWeColorInOnlineGame(players.BLACK) &&
+			onlinegame.areWeColorInOnlineGame(p.BLACK) &&
 			metadata['Black'] === translations.guest_indicator
 				? translations.you_indicator
 				: metadata['Black'];
@@ -304,7 +304,7 @@ function updateWhosTurn(): void {
 
 	const color = basegame.whosTurn;
 
-	if (color !== players.WHITE && color !== players.BLACK)
+	if (color !== p.WHITE && color !== p.BLACK)
 		throw Error(
 			`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`,
 		);
@@ -314,8 +314,7 @@ function updateWhosTurn(): void {
 		const ourTurn = gameloader.isItOurTurn();
 		textContent = ourTurn ? translations.your_move : translations.their_move;
 	} else
-		textContent =
-			color === players.WHITE ? translations.white_to_move : translations.black_to_move;
+		textContent = color === p.WHITE ? translations.white_to_move : translations.black_to_move;
 
 	element_whosturn.textContent = textContent;
 }
@@ -359,29 +358,29 @@ function gameEnd(conclusion?: GameConclusion): void {
                                                             : condition === 'koth' ? resultTranslations.opponent_koth
 												: resultTranslations.opponent_generic;
 	} else { // Local game, OR spectating an online game
-		if (condition === 'checkmate') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_checkmate
-                                                                    : victor === players.BLACK ? resultTranslations.black_checkmate
+		if (condition === 'checkmate') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_checkmate
+                                                                    : victor === p.BLACK ? resultTranslations.black_checkmate
 						: `${resultTranslations.bug_generic} Ending: checkmate`;
-		else if (condition === 'time') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_time
-                                                                    : victor === players.BLACK ? resultTranslations.black_time
+		else if (condition === 'time') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_time
+                                                                    : victor === p.BLACK ? resultTranslations.black_time
 						: `${resultTranslations.bug_generic} Ending: time`;
-		else if (condition === 'resignation') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_resignation
-																		   : victor === players.BLACK ? resultTranslations.black_resignation
+		else if (condition === 'resignation') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_resignation
+																		   : victor === p.BLACK ? resultTranslations.black_resignation
 						: `${resultTranslations.bug_generic} Ending: resignation`;
-		else if (condition === 'disconnect') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_disconnect
-																			: victor === players.BLACK ? resultTranslations.black_disconnect
+		else if (condition === 'disconnect') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_disconnect
+																			: victor === p.BLACK ? resultTranslations.black_disconnect
 						: `${resultTranslations.bug_generic} Ending: disconnect`;
-		else if (condition === 'royalcapture') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_royalcapture
-                                                                            : victor === players.BLACK ? resultTranslations.black_royalcapture
+		else if (condition === 'royalcapture') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_royalcapture
+                                                                            : victor === p.BLACK ? resultTranslations.black_royalcapture
 						: `${resultTranslations.bug_generic} Ending: royalcapture`;
-		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allroyalscaptured
-                                                                                : victor === players.BLACK ? resultTranslations.black_allroyalscaptured
+		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allroyalscaptured
+                                                                                : victor === p.BLACK ? resultTranslations.black_allroyalscaptured
 						: `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
-		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allpiecescaptured
-                                                                                : victor === players.BLACK ? resultTranslations.black_allpiecescaptured
+		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allpiecescaptured
+                                                                                : victor === p.BLACK ? resultTranslations.black_allpiecescaptured
 						: `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
-		else if (condition === 'koth') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_koth
-                                                                    : victor === players.BLACK ? resultTranslations.black_koth
+		else if (condition === 'koth') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_koth
+                                                                    : victor === p.BLACK ? resultTranslations.black_koth
 						: `${resultTranslations.bug_generic} Ending: koth`;
 		else if (condition === 'stalemate')
 			element_whosturn.textContent = resultTranslations.draw_stalemate;
@@ -445,22 +444,22 @@ function addRatingChangeToExistingUsernameContainers(
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
 	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
-		ratingChanges[players.WHITE]!.change,
+		ratingChanges[p.WHITE]!.change,
 	);
 	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
-		ratingChanges[players.BLACK]!.change,
+		ratingChanges[p.BLACK]!.change,
 	);
 
 	// Update username containers
 	usernamecontainer.createEloChangeItem(
 		usernamecontainer_white!,
-		ratingChanges[players.WHITE]!.newRating,
-		ratingChanges[players.WHITE]!.change,
+		ratingChanges[p.WHITE]!.newRating,
+		ratingChanges[p.WHITE]!.change,
 	);
 	usernamecontainer.createEloChangeItem(
 		usernamecontainer_black!,
-		ratingChanges[players.BLACK]!.newRating,
-		ratingChanges[players.BLACK]!.change,
+		ratingChanges[p.BLACK]!.newRating,
+		ratingChanges[p.BLACK]!.change,
 	);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.

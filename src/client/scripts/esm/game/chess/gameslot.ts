@@ -20,8 +20,8 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../rendering/area.js';
 import board from '../rendering/boardtiles.js';
@@ -109,7 +109,7 @@ function isLoadedGameViewingWhitePerspective(): boolean {
 		throw Error(
 			"Cannot ask if loaded game is from white's perspective when there isn't a loaded game.",
 		);
-	return youAreColor === players.WHITE;
+	return youAreColor === p.WHITE;
 }
 
 /**
@@ -150,7 +150,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 function loadLogical(loadOptions: LoadOptions): void {
 	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
 
-	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
+	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
 	// Disable miniimages if there's too many pieces

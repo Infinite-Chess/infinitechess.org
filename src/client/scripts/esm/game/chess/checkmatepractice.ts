@@ -15,7 +15,11 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+import {
+	players as p,
+	ext as e,
+	rawTypes as r,
+} from '../../../../../shared/chess/util/typeutil.js';
 
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
@@ -103,7 +107,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
-		youAreColor: players.WHITE,
+		youAreColor: p.WHITE,
 		currentEngine,
 		engineConfig: {
 			checkmateSelectedID: checkmateSelectedID,
@@ -160,7 +164,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
-			if (typeutil.getColorFromType(piece) === players.WHITE) {
+			if (typeutil.getColorFromType(piece) === p.WHITE) {
 				if (blackpieceplaced)
 					throw Error('Must place all white pieces before placing black pieces.');
 

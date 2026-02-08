@@ -14,7 +14,7 @@ import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
-import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
+import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
@@ -211,13 +211,13 @@ function detectInsufficientMaterial(
 ): GameConclusion | undefined {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (
-		!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') ||
-		!gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')
+		!gamerules.doesColorHaveWinCondition(gameRules, p.WHITE, 'checkmate') ||
+		!gamerules.doesColorHaveWinCondition(gameRules, p.BLACK, 'checkmate')
 	)
 		return undefined;
 	if (
-		gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 ||
-		gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1
+		gamerules.getWinConditionCountOfColor(gameRules, p.WHITE) !== 1 ||
+		gamerules.getWinConditionCountOfColor(gameRules, p.BLACK) !== 1
 	)
 		return undefined;
 
@@ -229,7 +229,7 @@ function detectInsufficientMaterial(
 	if (
 		boardutil.getPieceCountOfGame(boardsim.pieces, {
 			ignoreRawTypes: new Set([r.OBSTACLE]),
-			ignoreColors: new Set([players.NEUTRAL]),
+			ignoreColors: new Set([p.NEUTRAL]),
 		}) +
 			boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >=
 		11
@@ -262,8 +262,8 @@ function detectInsufficientMaterial(
 			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as
 				| 0
 				| 1;
-			if (color === players.WHITE) bishopsW_count[parity] += 1;
-			else if (color === players.BLACK) bishopsB_count[parity] += 1;
+			if (color === p.WHITE) bishopsW_count[parity] += 1;
+			else if (color === p.BLACK) bishopsB_count[parity] += 1;
 		} else if (piece.type in scenario) {
 			const currentCount = scenario[piece.type];
 			if (typeof currentCount === 'number') {
@@ -282,8 +282,8 @@ function detectInsufficientMaterial(
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
 	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![players.WHITE]!;
-		const promotionListBlack = gameRules.promotionsAllowed![players.BLACK]!;
+		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE]!;
+		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK]!;
 		if (r.PAWN + e.W in scenario && promotionListWhite.length !== 0) return undefined;
 		if (r.PAWN + e.B in scenario && promotionListBlack.length !== 0) return undefined;
 	}

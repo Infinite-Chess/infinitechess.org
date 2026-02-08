@@ -16,9 +16,9 @@ import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import legalmoves from './legalmoves.js';
-import { players } from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
+import { players as p } from '../util/typeutil.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
 
 // Functions ----------------------------------------------------------------
@@ -119,7 +119,7 @@ function doesVicinityAttackSquare(
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
-		if (typeOnSquareColor === players.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
+		if (typeOnSquareColor === p.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
 
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) {
@@ -159,7 +159,7 @@ function doesSpecialAttackSquare(
 		// Is it the same color?
 		const [trimmedTypeOnSquare, typeOnSquareColor] = typeutil.splitType(typeOnSquare);
 		if (friendlyColor === typeOnSquareColor) continue; // A friendly can't capture us
-		if (typeOnSquareColor === players.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
+		if (typeOnSquareColor === p.NEUTRAL) continue; // Neutrals can't capture us either (GARGOYLE ALERT)
 
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) {
@@ -277,7 +277,7 @@ function doesLineAttackSquare(
 		const thisPiece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, thisPieceIdx)!;
 		const thisPieceColor = typeutil.getColorFromType(thisPiece.type);
 		if (color === thisPieceColor) continue; // Same team, can't capture us, CONTINUE to next piece!
-		if (thisPieceColor === players.NEUTRAL) continue; // Neutrals can't move, that means they can't make captures, right?
+		if (thisPieceColor === p.NEUTRAL) continue; // Neutrals can't move, that means they can't make captures, right?
 
 		const thisPieceMoveset = legalmoves.getPieceMoveset(gamefile.boardsim, thisPiece.type);
 

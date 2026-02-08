@@ -27,8 +27,8 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
@@ -199,7 +199,7 @@ async function startOnlineGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
-			viewWhitePerspective: options.youAreColor === players.WHITE,
+			viewWhitePerspective: options.youAreColor === p.WHITE,
 			allowEditCoords: false,
 			additional,
 		})
@@ -261,11 +261,11 @@ async function startEngineGame(options: {
 		Round: '-',
 		TimeControl: options.TimeControl ?? '-',
 		White:
-			options.youAreColor === players.WHITE
+			options.youAreColor === p.WHITE
 				? translations.you_indicator
 				: translations.engine_indicator,
 		Black:
-			options.youAreColor === players.BLACK
+			options.youAreColor === p.BLACK
 				? translations.you_indicator
 				: translations.engine_indicator,
 		UTCDate: timeutil.getCurrentUTCDate(),
@@ -276,7 +276,7 @@ async function startEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
-		viewWhitePerspective: options.youAreColor === players.WHITE,
+		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
@@ -392,7 +392,7 @@ async function startCustomEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata: options.metadata,
-		viewWhitePerspective: options.youAreColor === players.WHITE,
+		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
