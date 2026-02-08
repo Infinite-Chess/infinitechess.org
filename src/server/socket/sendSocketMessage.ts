@@ -95,8 +95,7 @@ function sendSocketMessage(
 		? {
 				route: 'echo',
 				contents: value, // For echo, value contains the message ID
-				id: undefined,
-				replyto,
+				...(replyto !== undefined && { replyto }),
 			}
 		: {
 				route: sub,
@@ -105,7 +104,7 @@ function sendSocketMessage(
 					value,
 				},
 				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-				replyto,
+				...(replyto !== undefined && { replyto }),
 			};
 	const stringifiedPayload = JSON.stringify(payload);
 
