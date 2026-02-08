@@ -21,7 +21,7 @@ import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import metadata from '../../../../../../shared/chess/util/metadata.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
@@ -251,7 +251,7 @@ function handleLoggedGameInfo(
 		? uuid.base62ToBase10(parsedGame.metadata.BlackID)
 		: undefined;
 	// prettier-ignore
-	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? players.WHITE : ourUserId === blackId ? players.BLACK : undefined) : undefined;
+	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? p.WHITE : ourUserId === blackId ? p.BLACK : undefined) : undefined;
 
 	// The clock values are already ingrained into the moves!
 	// prettier-ignore
@@ -264,13 +264,9 @@ function handleLoggedGameInfo(
 	// Display elo ratings, if any.
 	const playerRatings: PlayerGroup<Rating> = {};
 	if (parsedGame.metadata.WhiteElo)
-		playerRatings[players.WHITE] = metadata.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.WhiteElo,
-		);
+		playerRatings[p.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
 	if (parsedGame.metadata.BlackElo)
-		playerRatings[players.BLACK] = metadata.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.BlackElo,
-		);
+		playerRatings[p.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
 
 	// Load the game.
 	gameloader.startOnlineGame({
