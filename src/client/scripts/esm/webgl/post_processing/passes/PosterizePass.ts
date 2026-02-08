@@ -7,7 +7,8 @@ import type { ProgramManager, ProgramMap } from '../../ProgramManager';
  * A post-processing pass that reduces the number of colors in the scene
  * to create a "posterized" effect.
  */
-class _PosterizePass implements PostProcessPass {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class PosterizePass implements PostProcessPass {
 	readonly program: ProgramMap['posterize'];
 
 	// --- Public Properties for Control ---

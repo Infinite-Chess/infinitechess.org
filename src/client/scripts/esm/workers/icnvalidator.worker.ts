@@ -17,7 +17,8 @@ interface WorkerMessage {
 	games: { index: number; icn: string }[];
 }
 
-interface _WorkerResult {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface WorkerResult {
 	chunkId: number;
 	results: {
 		success: boolean;

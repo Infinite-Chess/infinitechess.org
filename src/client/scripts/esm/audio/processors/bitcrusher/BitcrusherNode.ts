@@ -1,6 +1,7 @@
 // src/client/scripts/esm/audio/processors/bitcrusher/BitcrusherNode.ts
 
-class _BitcrusherNode extends AudioWorkletNode {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class BitcrusherNode extends AudioWorkletNode {
 	constructor(context: AudioContext) {
 		super(context, 'bitcrusher-processor');
 	}
@@ -11,14 +12,14 @@ class _BitcrusherNode extends AudioWorkletNode {
 	 * @param workletUrl The URL to the compiled bitcrusher-processor.js file.
 	 * @returns A promise that resolves with a fully initialized BitcrusherNode instance.
 	 */
-	public static async create(context: AudioContext): Promise<_BitcrusherNode> {
+	public static async create(context: AudioContext): Promise<BitcrusherNode> {
 		try {
 			// Load the worklet processor from the specified URL
 			await context.audioWorklet.addModule(
 				'scripts/esm/audio/processors/bitcrusher/BitcrusherProcessor.js',
 			);
 			// Once loaded, create an instance of the node
-			return new _BitcrusherNode(context);
+			return new BitcrusherNode(context);
 		} catch (e) {
 			console.error('Failed to load bitcrusher audio worklet', e);
 			throw e;
