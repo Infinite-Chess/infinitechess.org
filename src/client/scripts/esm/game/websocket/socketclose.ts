@@ -84,7 +84,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			break;
 		case 'Unable to identify client IP address':
 			toast.show(
-				`${translations['websocket'].unable_to_identify_ip} ${translations['websocket'].please_report_bug}`,
+				`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 100 },
 			);
 			invites.clearIfOnPlayPage();
@@ -97,28 +97,28 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			socketman.resubAll();
 			break;
 		case 'Too Many Requests. Try again soon.':
-			toast.show(translations['websocket'].too_many_requests, {
+			toast.show(translations.websocket.too_many_requests, {
 				durationMillis: timeToResubAfterTooManyRequestsMillis,
 			});
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Message Too Big':
 			toast.show(
-				`${translations['websocket'].message_too_big} ${translations['websocket'].please_report_bug}`,
+				`${translations.websocket.message_too_big} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
 			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
 		case 'Too Many Sockets':
 			toast.show(
-				`${translations['websocket'].too_many_sockets} ${translations['websocket'].please_report_bug}`,
+				`${translations.websocket.too_many_sockets} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
 			window.setTimeout(() => socketman.resubAll(), timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
 			toast.show(
-				`${translations['websocket'].origin_error} ${translations['websocket'].please_report_bug}`,
+				`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
 			invites.clearIfOnPlayPage();
@@ -130,7 +130,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			break;
 		default:
 			toast.show(
-				`${translations['websocket'].connection_closed} "${trimmedReason}". Code: ${event.code}. ${translations['websocket'].please_report_bug}`,
+				`${translations.websocket.connection_closed} "${trimmedReason}". Code: ${event.code}. ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 100 },
 			);
 			console.error(
@@ -176,7 +176,7 @@ async function onAuthenticationNeeded(): Promise<void> {
 		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
 		// 24 hours
 		if (difference < 1000 * 60 * 60 * 24) {
-			toast.show(translations['websocket'].online_play_disabled);
+			toast.show(translations.websocket.online_play_disabled);
 			lastTimeWeGotAuthorizationNeededMessage = now;
 			return;
 		}

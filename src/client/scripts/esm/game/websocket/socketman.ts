@@ -49,7 +49,7 @@ let DEBUG = false;
 document.addEventListener('connection-lost', () => {
 	// Displays a toast, notifying the user they lost connection.
 	noConnection = true;
-	toast.show(translations['websocket'].no_connection, {
+	toast.show(translations.websocket.no_connection, {
 		durationMillis: timeToWaitForHTTPMillis,
 	});
 });
@@ -114,7 +114,7 @@ async function establishSocket(): Promise<boolean> {
 
 	while (!success && !socketsubs.zeroSubs()) {
 		noConnection = true;
-		toast.show(translations['websocket'].no_connection, {
+		toast.show(translations.websocket.no_connection, {
 			durationMillis: timeToResubAfterNetworkLossMillis,
 		});
 		invites.clearIfOnPlayPage();
@@ -123,7 +123,7 @@ async function establishSocket(): Promise<boolean> {
 	}
 
 	if (success && noConnection)
-		toast.show(translations['websocket'].reconnected, { durationMillis: 1000 });
+		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
 	noConnection = false;
 	socketmessages.cancelAllTimerIDsToCancelOnNewSocket();
 
@@ -178,7 +178,7 @@ function onReqBack(): void {
 /** Displays "Lost connection" and keeps repeating until we successfully connect. */
 function httpLostConnection(): void {
 	noConnection = true;
-	toast.show(translations['websocket'].no_connection, {
+	toast.show(translations.websocket.no_connection, {
 		durationMillis: timeToWaitForHTTPMillis,
 	});
 	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);

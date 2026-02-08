@@ -172,7 +172,7 @@ async function send(
 	onreplyFunc?: () => void,
 ): Promise<boolean> {
 	if (!(await socketman.establishSocket())) {
-		if (isUserAction) toast.show(translations['websocket'].too_many_requests);
+		if (isUserAction) toast.show(translations.websocket.too_many_requests);
 		if (onreplyFunc) onreplyFunc();
 		return false;
 	}

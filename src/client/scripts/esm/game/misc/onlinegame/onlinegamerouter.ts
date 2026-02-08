@@ -279,7 +279,7 @@ function handleUnsubbing(): void {
  * due to the reason we are no longer logged in.
  */
 function handleLogin(basegame: Game): void {
-	toast.show(translations['onlinegame'].not_logged_in, { error: true, durationMultiplier: 100 });
+	toast.show(translations.onlinegame.not_logged_in, { error: true, durationMultiplier: 100 });
 	socketsubs.deleteSub('game');
 	clock.endGame(basegame);
 	guiclock.stopClocks(basegame);
@@ -298,7 +298,7 @@ function handleLogin(basegame: Game): void {
  * * The server restarts mid-game.
  */
 function handleNoGame(basegame: Game): void {
-	toast.show(translations['onlinegame'].game_no_longer_exists, { durationMultiplier: 1.5 });
+	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
 	basegame.gameConclusion = { condition: 'aborted' };
 	gameslot.concludeGame();
@@ -313,7 +313,7 @@ function handleNoGame(basegame: Game): void {
  * However you can start a local game.
  */
 function handleLeaveGame(): void {
-	toast.show(translations['onlinegame'].another_window_connected);
+	toast.show(translations.onlinegame.another_window_connected);
 	socketsubs.deleteSub('game');
 	gameloader.unloadGame();
 	guititle.open();

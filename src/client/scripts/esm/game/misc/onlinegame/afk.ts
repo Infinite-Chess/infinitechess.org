@@ -150,10 +150,10 @@ function tellServerWeBackFromAFK(): void {
 
 function displayWeAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
 	toast.show(
-		`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
+		`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
 		{ durationMillis: 1000 },
 	);
 	const nextSecsRemaining = secsRemaining - 1;
@@ -201,10 +201,10 @@ function stopOpponentAFKCountdown(): void {
 
 function displayOpponentAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
 	toast.show(
-		`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
+		`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
 		{ durationMillis: 1000 },
 	);
 	const nextSecsRemaining = secsRemaining - 1;
