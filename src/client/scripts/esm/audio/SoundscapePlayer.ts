@@ -11,7 +11,7 @@ import AudioUtils from './AudioUtils';
 import AudioManager from './AudioManager';
 import { LayerConfig, SoundLayer } from './SoundLayer';
 
-// Type Definitions ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------
 
 /** The complete configuration for a soundscape. */
 export interface SoundscapeConfig {

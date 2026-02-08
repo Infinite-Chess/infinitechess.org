@@ -57,7 +57,7 @@ const TESTS_DIR = path.resolve(process.cwd(), 'src/tests');
 /** Path to the server directory */
 const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
 
-// Type Definitions --------------------------------------------------------
+// Types -------------------------------------------------------------------
 
 interface Import {
 	raw: string;

@@ -15,7 +15,7 @@ import type { GameConclusion } from '../logic/gamefile.js';
 
 import { players as p } from './typeutil.js';
 
-// Type Definitions ---------------------------------------------------------------
+// Types --------------------------------------------------------------------------
 
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */

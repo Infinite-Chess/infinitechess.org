@@ -34,7 +34,7 @@ import movesequence from './movesequence.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from './graphicalchanges.js';
 
-// Type Definitions ---------------------------------------------
+// Types --------------------------------------------------------
 
 interface Premove extends Edit, MoveDraft {
 	/** The type of piece moved */

@@ -15,7 +15,7 @@ import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/mov
 import coordutil from './coordutil.js';
 import { players as p } from './typeutil.js';
 
-// Type Definitions ------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------
 
 /**
  * The format of outdated 2D moves list in game ICN notation.

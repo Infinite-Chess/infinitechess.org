@@ -9,7 +9,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { Edit, path } from './movepiece.js';
 
-// Type Definitions ------------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------------
 
 /** The state of a game holds variables that change over the duration of it. */
 interface GameState {

@@ -33,7 +33,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
 
-// Type Definitions ---------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------------
 
 /**
  * Piece Mesh Instance Data.

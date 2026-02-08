@@ -50,7 +50,7 @@ import {
 	createRenderable_Instanced_GivenInfo,
 } from '../../../webgl/Renderable.js';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** Information for iterating the instance data of a legal move line as far as it needs to be rendered. */
 type RayIterationInfo = {

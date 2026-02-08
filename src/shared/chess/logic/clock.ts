@@ -18,7 +18,7 @@ import timeutil from '../../util/timeutil.js';
 import clockutil from '../util/clockutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 
-// Type Definitions ---------------------------------------------------------------
+// Types --------------------------------------------------------------------------
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {

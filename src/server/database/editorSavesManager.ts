@@ -9,7 +9,7 @@ import type { RunResult } from 'better-sqlite3';
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-// Type Definitions --------------------------------------------------------------------
+// Types -------------------------------------------------------------------------------
 
 /** Represents a saved position list record (name, piece_count, timestamp). */
 type EditorSavesListRecord = {

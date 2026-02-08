@@ -53,7 +53,7 @@ import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
 
-// Type Definitions --------------------------------------------------------------------
+// Types -------------------------------------------------------------------------------
 
 /**
  * An object containing all the arrow lines of a single frame,

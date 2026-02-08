@@ -8,7 +8,7 @@
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * A length-2 array of coordinates: `[x,y]`

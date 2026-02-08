@@ -18,7 +18,7 @@ import docutil from '../util/docutil.js';
 import validatorama from '../util/validatorama.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
-// Type Definitions ----------------------------------------------------------------------
+// Types ---------------------------------------------------------------------------------
 
 interface MemberData {
 	joined: string;

@@ -10,7 +10,7 @@ import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
-// Type Definitions -----------------------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------------------
 
 /** Structure of a games record. This is all allowed columns of a game_id. */
 export interface GamesRecord {

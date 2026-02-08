@@ -12,7 +12,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import bimath from './bimath.js';
 import bdcoords from '../../chess/util/bdcoords.js';
 
-// Type Definitions -----------------------------------------------------------
+// Types ----------------------------------------------------------------------
 
 /** A length-2 number array. Commonly used for storing directions. */
 type Vec2 = [bigint, bigint];

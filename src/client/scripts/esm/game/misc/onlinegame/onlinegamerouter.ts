@@ -39,7 +39,7 @@ import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
 
-// Type Definitions --------------------------------------------------------------------------------------
+// Types -------------------------------------------------------------------------------------------------
 
 /**
  * Static information about an online game that is unchanging.

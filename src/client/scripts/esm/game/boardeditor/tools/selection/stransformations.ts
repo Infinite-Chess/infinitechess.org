@@ -25,7 +25,7 @@ import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/u
 import selectiontool from './selectiontool';
 import boardeditor, { Edit } from '../../boardeditor';
 
-// Type Definitions ----------------------------------------------------------
+// Types ---------------------------------------------------------------------
 
 /** A Piece object that also remembers its specialrights state. */
 interface StatePiece extends Piece {

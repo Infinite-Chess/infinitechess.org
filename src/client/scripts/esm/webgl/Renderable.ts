@@ -19,7 +19,7 @@ import { ShaderProgram } from './ShaderProgram.js';
 import { createBufferFromData, updateBufferIndices } from './BufferUtil.js';
 import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
-// Type Definitions -----------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------
 
 /**
  * Any kind of array that may be passed to the constructors

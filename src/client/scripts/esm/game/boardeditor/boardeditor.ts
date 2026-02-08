@@ -18,9 +18,9 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../gui/toast.js';
 import arrows from '../rendering/arrows/arrows.js';
@@ -41,7 +41,7 @@ import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import stransformations from './tools/selection/stransformations.js';
 import { listener_document } from '../chess/game.js';
 
-// Type Definitions -------------------------------------------------------------
+// Types ------------------------------------------------------------------------
 
 type Tool = (typeof validTools)[number];
 

@@ -30,7 +30,7 @@ import {
 	PlayerGroup,
 } from '../../util/typeutil.js';
 
-// Type Definitions -------------------------------------------------------------------
+// Types ------------------------------------------------------------------------------
 
 /** Represents the game format coming IN to the converter. */
 interface LongFormatIn extends LongFormatBase {

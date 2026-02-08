@@ -17,7 +17,7 @@ import { GameBus } from '../GameBus.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
 
-// Type Definitions ---------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------
 
 /** A bounding box storing texture coords info. */
 interface TextureData {

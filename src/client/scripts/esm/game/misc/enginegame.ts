@@ -25,7 +25,7 @@ import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from '../chess/graphicalchanges.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 
-// Type Definitions -------------------------------------------------------------
+// Types ------------------------------------------------------------------------
 
 /** List of valid engines */
 type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added

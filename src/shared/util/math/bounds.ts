@@ -10,7 +10,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from './bimath.js';
 
-// Type Definitions --------------------------------------------------------------
+// Types -------------------------------------------------------------------------
 
 /** A arbitrarily large rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {

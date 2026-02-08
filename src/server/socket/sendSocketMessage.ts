@@ -22,7 +22,7 @@ import {
 	timeToWaitForEchoMillis,
 } from './echoTracker.js';
 
-// Type Definitions ---------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {

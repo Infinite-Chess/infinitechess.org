@@ -32,7 +32,7 @@ import WaterRipples from './WaterRipples.js';
 import instancedshapes from './instancedshapes.js';
 import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
-// Type Definitions -----------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------
 
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {

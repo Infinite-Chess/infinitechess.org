@@ -38,7 +38,7 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 
-// Type Definitions -----------------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------------
 
 type ServerGameMoveMessage = { compact: string; clockStamp?: number };
 

@@ -11,7 +11,7 @@ import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
 import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
 type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };

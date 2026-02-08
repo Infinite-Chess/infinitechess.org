@@ -9,7 +9,7 @@ import preferences from '../components/header/preferences';
 import { DownsamplerNode } from './processors/downsampler/DownsamplerNode';
 import { createEffectNode, EffectConfig, NodeChain } from './AudioEffects';
 
-// Type Definitions ----------------------------------------------------------------------------------
+// Types ---------------------------------------------------------------------------------------------
 
 type AudioBufferWithGainNode = AudioBufferSourceNode & { gainNode: GainNode };
 

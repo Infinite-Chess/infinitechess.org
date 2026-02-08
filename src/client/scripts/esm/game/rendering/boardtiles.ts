@@ -35,7 +35,7 @@ import webgl, { gl } from './webgl.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
 import { createRenderable, createRenderable_GivenInfo } from '../../webgl/Renderable.js';
 
-// Type Definitions ----------------------------------------------------------------
+// Types ---------------------------------------------------------------------------
 
 /**
  * Optional noise textures to bind during rendering,

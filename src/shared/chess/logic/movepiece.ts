@@ -30,7 +30,7 @@ import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
 import { rawTypes as r } from '../util/typeutil.js';
 
-// Type Definitions ---------------------------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------------------------------------------
 
 /**
  * A pair of coordinates, WITH attached special move information.

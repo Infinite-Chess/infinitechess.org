@@ -21,7 +21,7 @@ import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 
-// Type Definitions ---------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [

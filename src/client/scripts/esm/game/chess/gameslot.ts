@@ -51,7 +51,7 @@ import texturecache from '../../chess/rendering/texturecache.js';
 import guinavigation from '../gui/guinavigation.js';
 import { animateMove } from './graphicalchanges.js';
 
-// Type Definitions ----------------------------------------------------------
+// Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
 interface LoadOptions {

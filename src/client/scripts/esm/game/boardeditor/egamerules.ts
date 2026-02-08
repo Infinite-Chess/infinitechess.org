@@ -23,7 +23,7 @@ import gameslot from '../chess/gameslot';
 import boardeditor from './boardeditor';
 import guigamerules from '../gui/boardeditor/guigamerules';
 
-// Type Definitions --------------------------------------------------------------
+// Types -------------------------------------------------------------------------
 
 /** Type encoding information for the game rules object of the editor position */
 interface GameRulesGUIinfo {

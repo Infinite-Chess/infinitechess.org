@@ -28,7 +28,7 @@ import { GameBus } from '../../GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
 
-// Type Definitions -------------------------------------------------------------------------------------------
+// Types ------------------------------------------------------------------------------------------------------
 
 /** Contains the legal moves, and other info, about the piece an arrow indicator is pointing to. */
 interface ArrowLegalMoves {

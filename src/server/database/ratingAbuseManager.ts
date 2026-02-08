@@ -12,7 +12,7 @@ import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allRatingAbuseColumns } from './databaseTables.js';
 
-// Type Definitions -----------------------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------------------
 
 /** Structure of a rating_abuse record. This is all allowed columns of a (user_id, leaderboard_id). */
 interface RatingAbuseRecord {

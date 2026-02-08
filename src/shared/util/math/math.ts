@@ -6,7 +6,7 @@
  * Most of the stuff in here were moved to either bounds.ts, vectors.ts, or geometry.ts.
  */
 
-// Type Definitions -------------------------------------------
+// Types ------------------------------------------------------
 
 /** A color in a length-4 array: `[r,g,b,a]` */
 type Color = [number, number, number, number];

@@ -24,7 +24,7 @@ import drawsquares from './drawsquares.js';
 import preferences from '../../../../components/header/preferences.js';
 import { GameBus } from '../../../GameBus.js';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /** An object storing all visible annotations for a specific ply. */
 interface Annotes {

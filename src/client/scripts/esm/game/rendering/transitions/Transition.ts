@@ -33,7 +33,7 @@ import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
 import area, { Area } from '../area.js';
 
-// Type Definitions ----------------------------------------------------------------------
+// Types ---------------------------------------------------------------------------------
 
 /** Main Transition type. Either Zooming OR Panning. */
 type Transition =

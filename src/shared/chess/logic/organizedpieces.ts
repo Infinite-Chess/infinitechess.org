@@ -21,7 +21,7 @@ import coordutil from '../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
 
-// Type Definitions ----------------------------------------------------------------
+// Types ---------------------------------------------------------------------------
 
 /**
  * An object that stores the pieces on the board in several different organized ways.
