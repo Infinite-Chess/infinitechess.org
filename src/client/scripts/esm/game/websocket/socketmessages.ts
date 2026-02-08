@@ -145,11 +145,6 @@ function cancelAllTimerIDsToCancelOnNewSocket(): void {
 	timerIDsToCancelOnNewSocket.forEach((ID) => clearTimeout(ID));
 }
 
-/** Adds a timer ID to cancel upon the next socket establishment. */
-function addTimerIDToCancelOnNewSocket(ID: number): void {
-	timerIDsToCancelOnNewSocket.push(ID);
-}
-
 /** If we have zero subscriptions, resets the timer to auto-close the socket. */
 function resetTimerToCloseSocket(): void {
 	clearTimeout(timeoutIDToAutoClose);
@@ -281,8 +276,6 @@ export default {
 	executeOnreplyFunc,
 	resetOnreplyFuncs,
 	cancelAllTimerIDsToCancelOnNewSocket,
-	addTimerIDToCancelOnNewSocket,
-	resetTimerToCloseSocket,
 	rescheduleInactivityTimer,
 	cancelInactivityTimer,
 	alsoPrintIncomingEchos,
