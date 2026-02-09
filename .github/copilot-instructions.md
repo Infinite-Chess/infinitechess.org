@@ -31,6 +31,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 
 - **API Design:** REST endpoints and socket handlers are in `src/server/api/` and `src/server/socket/`.
 - **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`.
+- **Rendering:** When asked to add new graphics and visuals, refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
 
 ## Integration Points
 
