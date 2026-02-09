@@ -8,7 +8,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 
 ## Key Guidelines
 
-1. Follow code standards and best practices of today.
+1. Follow industry standards and best code practices of today.
 2. Maintain existing code structure, organization, and consistency.
 3. Perform testing for new complex functions to ensure their output is as expected.
 4. Actual unit/integration tests are not required, unless explicitly asked for.
