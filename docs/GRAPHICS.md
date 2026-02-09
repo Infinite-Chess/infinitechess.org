@@ -10,11 +10,15 @@ There are two main coordinate spaces you'll work with:
 
 ### Grid Space (Unit / Tile / Coord Space)
 
-Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss. When decimal precision is needed on top of BigInts—such as for sub-tile positioning during board transformations—the codebase uses **BigDecimals**, a custom number type from the `@naviary/bigdecimal` package that adds floating-point values to BigInts. BigDecimals are efficient, fully type-safe, and the package provides all the arithmetic methods you need (`add`, `subtract`, `multiply`, `divideFloating`, etc.).
+Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss.
+
+When decimal precision is needed on top of BigInts—such as for sub-tile positioning during board transformations—the codebase uses **BigDecimals**, a custom number type from the `@naviary/bigdecimal` package that adds floating-point values to BigInts. BigDecimals are efficient, fully type-safe, and the package provides all the arithmetic methods you need (`add`, `subtract`, `multiply`, `divideFloating`, etc.).
 
 ### World Space
 
-World space is the coordinate system the GPU and camera see. The camera is fixed at `[0, 0, 12]` in 3D space, looking down; it is the **board** that moves and scales beneath it. The center of the screen is always `[0, 0]` in world space, and importantly, **the world-space screen bounding box does not change with zoom level or board position**—only resizing the browser window changes it. Zooming and panning affect the board's scale and position, not the camera's view. This means world-space vertex data close to the origin is always safe; it is the grid-to-world conversion (which depends on scale and position) that can produce extreme values.
+World space is the coordinate system the GPU and camera see. The camera is fixed at `[0, 0, 12]` in 3D space, looking down; it is the **board** that moves and scales beneath it.
+
+The center of the screen is always `[0, 0]` in world space, and importantly, **the world-space screen bounding box does not change with zoom level or board position**—only resizing the browser window changes it. Zooming and panning affect the board's scale and position, not the camera's view. This means world-space vertex data close to the origin is always safe; it is the grid-to-world conversion (which depends on scale and position) that can produce extreme values.
 
 ### Converting Between Spaces
 
