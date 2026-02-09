@@ -215,6 +215,7 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
+		// FROM is guaranteed to be defined if transporter is defined (see module setup)
 		await sendMail({
 			to: FROM!,
 			subject: messageSubject,
