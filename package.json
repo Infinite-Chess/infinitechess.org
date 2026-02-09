@@ -12,7 +12,7 @@
     "@naviary/bigdecimal": "^1.0.1",
     "@swc/core": "^1.7.0",
     "abort-controller": "^3.0.0",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^11.5.0",
     "browserslist": "^4.23.2",
     "cookie-parser": "^1.4.6",
