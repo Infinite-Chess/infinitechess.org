@@ -16,8 +16,8 @@
     "noUncheckedIndexedAccess": true,
     "strict": true,
     "noEmitOnError": true,
-    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
-    // "allowJs": true, // Allows TypeScript to import JavaScript modules.
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "allowJs": true // Allows TypeScript to import JavaScript modules.
     // "checkJs": true  // Reports errors in .js files based on JSDoc and inference.
   },
   // Tells TypeScript and every tool that uses this file (IntelliSense, ESLint): "My source code is in the src folder."

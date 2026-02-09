@@ -7,7 +7,6 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-// @ts-ignore
 import mat4 from './gl-matrix.js';
 import toast from '../gui/toast.js';
 import webgl from './webgl.js';

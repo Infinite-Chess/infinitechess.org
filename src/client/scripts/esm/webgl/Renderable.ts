@@ -12,7 +12,6 @@
 
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 
-// @ts-ignore
 import mat4 from '../game/rendering/gl-matrix.js';
 import camera, { Mat4 } from '../game/rendering/camera.js';
 import { ShaderProgram } from './ShaderProgram.js';

@@ -18,7 +18,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-// @ts-ignore
 import mat4 from './gl-matrix.js';
 import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
