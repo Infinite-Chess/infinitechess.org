@@ -57,9 +57,9 @@ All new scripts are required to be written in TypeScript, vs JavaScript.
 
 To retain maximum type safety, no casting via `as` is permitted, only in rare circumstances when it is not simple to get typescript to infer the type, and we are 100% confident of the type. Try to use generics where you can.
 
-For arguments defined by user input, or needing to be sanitized from the client, use the `zod` package to achieve full type safety.
+No `// ts-ignore`s are permitted, either.
 
-No `// ts-ignore`s are permitted, except for imports of existing `.js` files into `.ts` files.
+For arguments defined by user input, or needing to be sanitized from the client, use the `zod` package to achieve full type safety.
 
 For all methods that accept a function callback for an argument, like `map()`, `filter()`, `forEach()`, `setTimeout()`, etc., to obtain type safety, don't pass in the function directly, but use a wrapper. For example, don't do `array.map(functionCallback)`, but do do `array.map((item) => functionCallback(item))`. The exception is when adding callbacks for event listeners, as we have to retain the reference to the original function in order to remove the listener later.
 
