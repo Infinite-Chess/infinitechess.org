@@ -20,7 +20,7 @@ The bounding box of the screen over the grid space can be retrieved with `boardt
 
 World space is the coordinate system the GPU and camera use. The camera is fixed at `[0, 0, 12]` at all times, looking straight down at the board, while the board moves and scales underneath it. The board spans the entire X/Y plane, and the Z axis is away from the board (or up when in perspective mode). This is the final coordinate space all vertex data is converted to before rendering.
 
-The center of the screen is always `[0, 0]` in world space. The bounding box of the screen can be retrieved with `camera.getRespectiveScreenBox()`, which automatically expands the box to the horizon when in perspective mode. Panning/zooming the board has no effect on this boxes coordinates, only resizing the window does. The horizon is `1500` (chebyshev) world space units away from the center of the screen, anything beyond that gets clipped. For this reason, arbitrarily large grid-space coordinates _always_ have to be converted to world space before rendering, and clamped to that range, to prevent visual artifacts.
+The center of the screen is always `[0, 0]` in world space. The bounding box of the screen can be retrieved with `camera.getRespectiveScreenBox()`, which automatically expands the box to the horizon when in perspective mode. Panning/zooming the board has no effect on this box's coordinates, only resizing the window does. The horizon is `1500` (chebyshev) world space units away from the center of the screen, anything beyond that gets clipped. For this reason, arbitrarily large grid-space coordinates _always_ have to be converted to world space before rendering, and clamped to that range, to prevent visual artifacts.
 
 ### Converting Between Spaces
 
