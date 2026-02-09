@@ -2,11 +2,10 @@
 
 import type { Request } from 'express';
 
-import * as aws from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { Response } from 'express';
-import { SESClient } from '@aws-sdk/client-ses';
+import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
@@ -36,7 +35,7 @@ const sesClient =
 // Create nodemailer transporter using SES
 const transporter = sesClient
 	? nodemailer.createTransport({
-			SES: { ses: sesClient, aws },
+			SES: { sesClient, SendRawEmailCommand },
 		} as nodemailer.TransportOptions)
 	: null;
 
