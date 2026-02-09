@@ -86,7 +86,6 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "prod": "npm start",
     "build": "npm run generate:types && npm run clean && npm run copy:views && npm run prod:assets && tsx build/index.ts",
     "start": "node dist/server/server.js",
     "prod:assets": "cpx \"src/**/*.{css,png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,toml,md}\" dist",
