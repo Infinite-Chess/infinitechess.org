@@ -10,11 +10,11 @@ There are two main coordinate spaces you'll work with:
 
 ### Grid Space (Unit / Tile / Coord Space)
 
-Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss.
+Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss. When decimal precision is needed on top of BigInts—such as for sub-tile positioning during board transformations—the codebase uses **BigDecimals**, a custom number type from the `@naviary/bigdecimal` package that adds floating-point values to BigInts. BigDecimals are efficient, fully type-safe, and the package provides all the arithmetic methods you need (`add`, `subtract`, `multiply`, `divideFloating`, etc.).
 
 ### World Space
 
-World space is the coordinate system the GPU and camera see. It depends on the board's current position and zoom level (scale). As the player pans and zooms, the same grid square maps to different world-space coordinates. The camera itself is fixed at `[0, 0, 12]` in 3D space, looking down; it is the **board** that moves and scales beneath it.
+World space is the coordinate system the GPU and camera see. The camera is fixed at `[0, 0, 12]` in 3D space, looking down; it is the **board** that moves and scales beneath it. The center of the screen is always `[0, 0]` in world space, and importantly, **the world-space screen bounding box does not change with zoom level or board position**—only resizing the browser window changes it. Zooming and panning affect the board's scale and position, not the camera's view. This means world-space vertex data close to the origin is always safe; it is the grid-to-world conversion (which depends on scale and position) that can produce extreme values.
 
 ### Converting Between Spaces
 
@@ -37,7 +37,7 @@ Since the board is infinite, you often need to know what region of it is current
 
 **In world space**, [`camera.ts`](../src/client/scripts/esm/game/rendering/camera.ts) provides:
 
-- `getScreenBoundingBox()` — Returns `{ left, right, bottom, top }` in world-space units, representing the visible screen edges. Accepts an optional debug-mode flag and padding.
+- `getScreenBoundingBox()` — Returns `{ left, right, bottom, top }` in world-space units, representing the visible screen edges. Accepts an optional debug-mode flag and padding. This box is independent of zoom and board position—it only changes when the window is resized.
 - `getRespectiveScreenBox()` — Same idea, but adapts for perspective mode.
 
 **In grid space**, [`boardtiles.ts`](../src/client/scripts/esm/game/rendering/boardtiles.ts) provides:
@@ -47,22 +47,15 @@ Since the board is infinite, you often need to know what region of it is current
 
 ## Creating Vertex Data
 
-All geometry rendered to the screen starts as an array of vertex data. Each vertex contains its attributes packed sequentially—position components first, then optionally color and/or texture coordinates.
+All geometry rendered to the screen starts as an array of vertex data. Each vertex contains its attributes packed sequentially—position components first, then optionally color and/or texture coordinates. **Stride** is the total number of components per vertex. For example, a 2D position `(x, y)` plus an RGBA color `(r, g, b, a)` yields a stride of 6.
 
 ### Primitives
 
-[`primitives.ts`](../src/client/scripts/esm/game/rendering/primitives.ts) has ready-made helpers for common shapes:
+[`primitives.ts`](../src/client/scripts/esm/game/rendering/primitives.ts) provides helpers for calculating the vertex data of various shapes—squares, rectangles, circles, and more—from coordinates and colors. For example, `Quad_Color()` produces a colored 2D quad with stride 6, `Circle()` produces a filled circle, and `Rect()` produces a line-loop rectangle outline. See the file for the full list of available shape helpers and their parameters.
 
-| Function                                                        | Produces                | Stride | Use Case                  |
-| --------------------------------------------------------------- | ----------------------- | ------ | ------------------------- |
-| `Quad_Color(left, bottom, right, top, color)`                   | 2D quad, solid color    | 6      | Colored rectangles, masks |
-| `Quad_Color3D(left, bottom, right, top, z, color)`              | 3D quad, solid color    | 7      | Depth-layered rectangles  |
-| `Quad_Texture(left, bottom, right, top, texCoords)`             | 2D quad, textured       | 4      | Sprite/image rendering    |
-| `Quad_ColorTexture(left, bottom, right, top, texCoords, color)` | 2D quad, tinted texture | 8      | Tinted sprites            |
-| `Circle(centerX, centerY, radius, resolution, color)`           | 2D circle               | 6      | Circular indicators       |
-| `Rect(left, bottom, right, top, color)`                         | Line-loop rectangle     | 6      | Outlines, debug boxes     |
+### Instanced Shape Data
 
-**Stride** is the total number of components per vertex. For example, a 2D position `(x, y)` plus an RGBA color `(r, g, b, a)` yields a stride of 6.
+[`instancedshapes.ts`](../src/client/scripts/esm/game/rendering/instancedshapes.ts) provides concrete vertex data for common game shapes used with instanced rendering: squares, dots (circles), corner triangles (for capture indicators), and plus signs. These are useful both as ready-made shape data for instanced rendering and as reference examples for how to calculate custom vertex data by hand.
 
 ### Mesh Helpers
 
@@ -73,6 +66,10 @@ All geometry rendered to the screen starts as an array of vertex data. Each vert
 - `getCoordBoxWorld(coords)` — Returns the world-space bounding box `{ left, right, bottom, top }` for a given grid square.
 - `applyWorldTransformationsToBoundingBox(box)` — Applies the current board position and scale to a bounding box.
 - `expandTileBoundingBoxToEncompassWholeSquare(box)` — Expands an integer bounding box by 0.5 in each direction so it covers the full visual area of the edge tiles.
+
+### Square Highlights
+
+For the common task of highlighting squares on the board, [`squarerendering.ts`](../src/client/scripts/esm/game/rendering/highlights/squarerendering.ts) provides a high-level helper that handles vertex data creation and renderable construction for you. Its `genModel(highlights, color)` function takes an array of grid coordinates and a color, and returns a ready-to-render instanced model. Many rendering scripts use this to easily render square highlights without manually constructing vertex or instance data.
 
 ## Rendering with `createRenderable()`
 
@@ -99,16 +96,38 @@ renderable.render();
 
 The returned `Renderable` object has:
 
-- `.render(position?, scale?, uniforms?)` — Draws the geometry. Optional position/scale override the board transforms. Custom uniforms can be passed as an object.
+- `.render(position?, scale?, uniforms?)` — Draws the geometry. Whether you need to pass `position` and `scale` depends on your vertex data's coordinate space. If your vertex data is already in **world space** (the typical case for non-instanced rendering), no transformations are necessary—just call `.render()` with no arguments. However, if your vertex data is specified in **grid/coord space**, you need to pass the board's position and scale so the GPU can transform it correctly. See `legalmovehighlights.renderSelectedPieceLegalMoves()` for an example of this pattern. Custom uniforms can also be passed as an object.
 - `.data` — Direct reference to the vertex buffer data. You can modify this and call `.updateBufferIndices(start, count)` to efficiently push changes to the GPU without recreating the buffer.
+
+### Instanced Rendering with `createRenderable_Instanced()`
+
+For rendering many copies of the same shape efficiently (e.g., legal move dots, square highlights), use [`createRenderable_Instanced()`](../src/client/scripts/esm/webgl/Renderable.ts). Instead of duplicating vertex data for each instance, you provide the shape's vertex data once and a separate array of per-instance data (typically positions):
+
+```ts
+import { createRenderable_Instanced } from '../../webgl/Renderable.js';
+
+const vertexData = instancedshapes.getDataLegalMoveSquare(color);
+const instanceData = buildInstancePositions(coordinates);
+const model = createRenderable_Instanced(
+	vertexData,
+	instanceData,
+	'TRIANGLES',
+	'colorInstanced',
+	true,
+);
+model.render(position, scale);
+```
+
+**Parameters** are similar to `createRenderable()`, but with `vertexData` (the shape geometry, specified once) and `instanceData` (per-instance attributes like positions) as separate arrays. The returned `RenderableInstanced` object exposes both `.vertexData` and `.instanceData` for efficient partial updates via `updateBufferIndices_VertexBuffer()` and `updateBufferIndices_InstanceBuffer()`.
 
 ## Commonly Used Shaders
 
-| Shader Name      | Vertex Format        | Stride (2D) | When to Use                                                              |
-| ---------------- | -------------------- | ----------- | ------------------------------------------------------------------------ |
-| `'color'`        | position + RGBA      | 6           | Solid colored shapes: highlights, masks, outlines, debug visuals         |
-| `'texture'`      | position + UV        | 4           | Textured quads without tinting                                           |
-| `'colorTexture'` | position + UV + RGBA | 8           | Textured quads with per-vertex color tinting (e.g., pieces on the board) |
+| Shader Name        | Vertex Format        | Stride (2D) | When to Use                                                              |
+| ------------------ | -------------------- | ----------- | ------------------------------------------------------------------------ |
+| `'color'`          | position + RGBA      | 6           | Solid colored shapes: highlights, masks, outlines, debug visuals         |
+| `'colorInstanced'` | position + RGBA      | 6           | Same as `'color'`, but for instanced rendering                           |
+| `'texture'`        | position + UV        | 4           | Textured quads without tinting                                           |
+| `'colorTexture'`   | position + UV + RGBA | 8           | Textured quads with per-vertex color tinting (e.g., pieces on the board) |
 
 For 3D positions, add 1 to each stride (e.g., `'color'` with 3D = stride 7). The position components always come first, followed by texture coordinates (if used), then color (if used).
 
