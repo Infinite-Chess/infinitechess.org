@@ -7,7 +7,7 @@
   "main": "dist/server/server.js",
   "type": "module",
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.985.0",
+    "@aws-sdk/client-sesv2": "^3.985.0",
     "@aws-sdk/credential-providers": "^3.985.0",
     "@naviary/bigdecimal": "^1.0.1",
     "@swc/core": "^1.7.0",

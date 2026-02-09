@@ -2,11 +2,10 @@
 
 import type { Request } from 'express';
 
-import * as aws from '@aws-sdk/client-ses';
 import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { Response } from 'express';
-import { SESClient } from '@aws-sdk/client-ses';
+import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
@@ -27,7 +26,7 @@ const FROM = EMAIL_FROM_ADDRESS;
 // Create SES client
 const sesClient =
 	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
-		? new SESClient({
+		? new SESv2Client({
 				region: AWS_REGION,
 				credentials: fromEnv(),
 			})
@@ -36,7 +35,7 @@ const sesClient =
 // Create nodemailer transporter using SES
 const transporter = sesClient
 	? nodemailer.createTransport({
-			SES: { ses: sesClient, aws },
+			SES: { sesClient, SendEmailCommand },
 		} as nodemailer.TransportOptions)
 	: null;
 
