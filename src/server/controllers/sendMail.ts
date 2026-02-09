@@ -74,9 +74,7 @@ async function sendMail(options: SendMailOptions, devLogMessage?: string): Promi
 
 	const mailOptions = {
 		from: `"Infinite Chess" <${FROM}>`,
-		to: options.to,
-		subject: options.subject,
-		...(options.html ? { html: options.html } : { text: options.text }),
+		...options,
 	};
 
 	await transporter.sendMail(mailOptions);
@@ -217,13 +215,8 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		if (!FROM) {
-			console.log('FROM email address not configured. Not sending rating abuse email.');
-			return;
-		}
-
 		await sendMail({
-			to: FROM,
+			to: FROM!,
 			subject: messageSubject,
 			text: messageText,
 		});
