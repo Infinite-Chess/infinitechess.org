@@ -349,7 +349,6 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	const pdx = -ndy; // Perpendicular vector x
 	const pdy = ndx; // Perpendicular vector y
 
-	let actualBodyLength: number;
 	let actualBodyWidth: number;
 	let actualTipLength: number;
 	let actualTipWidth: number;
@@ -367,14 +366,13 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 		// the remaining body (length - desiredTipLength) meets or exceeds the proportionallyMinBodyLength.
 		// This is the "ideal" scenario where the tip gets its desired length.
 		actualTipLength = desiredTipLength;
-		actualBodyLength = length - actualTipLength;
 		actualTipWidth = tipWidthArg; // Tip length is as desired, so tip width is as desired.
 		actualBodyWidth = bodyWidthArg;
 	} else {
 		// Case 2: Not enough space for both full desiredTipLength AND proportionallyMinBodyLength.
 		// This is the "constrained" scenario.
 		// Body gets its proportionallyMinBodyLength.
-		actualBodyLength = proportionallyMinBodyLength;
+		const actualBodyLength = proportionallyMinBodyLength;
 		// Tip gets the rest of the total length.
 		actualTipLength = length - actualBodyLength;
 		// Scale body width and tip width based on how their actual length compares to their desired length.

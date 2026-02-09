@@ -120,7 +120,6 @@ function calculateFromBox(box: BoundingBoxBD): Area {
 	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
 	const maximizedBox = boardtiles.getBoundingBoxOfBoard(newBoardPos, newScale, false);
-	math;
 	// PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
 	return {
