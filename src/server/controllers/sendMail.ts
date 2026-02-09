@@ -50,11 +50,40 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 	`;
 }
 
+/**
+ * Options for sending an email. Must include either `html` or `text`, but not both.
+ */
+type SendMailOptions = {
+	to: string;
+	subject: string;
+} & ({ html: string; text?: never } | { text: string; html?: never });
+
+/**
+ * Helper function to send an email via the transporter.
+ * Checks if transporter is defined and logs a generic message if not.
+ * Does NOT include error handling - any errors will naturally throw.
+ * @param options - Email options including recipient, subject, and content (html or text)
+ */
+async function sendMail(options: SendMailOptions): Promise<void> {
+	if (!transporter) {
+		console.log('Email environment variables not specified. Not sending email.');
+		return;
+	}
+
+	const mailOptions = {
+		from: `"Infinite Chess" <${FROM}>`,
+		to: options.to,
+		subject: options.subject,
+		...(options.html ? { html: options.html } : { text: options.text }),
+	};
+
+	await transporter.sendMail(mailOptions);
+}
+
 // --- Email Sending Functions ---
 
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
 	if (!transporter) {
-		console.log('Email environment variables not specified. Not sending password reset email.');
 		console.log('Password Reset Link (for dev):', resetUrl);
 		return;
 	}
@@ -66,15 +95,12 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
 	`;
 
-	const mailOptions = {
-		from: `"Infinite Chess" <${FROM}>`,
-		to: recipientEmail,
-		subject: 'Your Password Reset Request',
-		html: createEmailHtmlWrapper('Password Reset Request', content),
-	};
-
 	try {
-		await transporter.sendMail(mailOptions);
+		await sendMail({
+			to: recipientEmail,
+			subject: 'Your Password Reset Request',
+			html: createEmailHtmlWrapper('Password Reset Request', content),
+		});
 		console.log(`Password reset email sent to ${recipientEmail}`);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
@@ -136,9 +162,6 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 		).toString();
 
 		if (!transporter) {
-			console.log(
-				'Email environment variables not specified. Not sending email confirmation.',
-			);
 			console.log('Verification Link (for dev):', verificationUrl);
 			return;
 		}
@@ -150,14 +173,11 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		const mailOptions = {
-			from: `"Infinite Chess" <${FROM}>`,
+		await sendMail({
 			to: record.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
-		};
-
-		await transporter.sendMail(mailOptions);
+		});
 		console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
@@ -199,21 +219,11 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		if (!transporter) {
-			console.log(
-				'Email environment variables not specified. Not sending rating abuse email.',
-			);
-			return;
-		}
-
-		const mailOptions = {
-			from: `Infinite Chess <${FROM}>`,
-			to: FROM, // Send to same address as sender for internal notifications
+		await sendMail({
+			to: FROM!,
 			subject: messageSubject,
 			text: messageText,
-		};
-
-		await transporter.sendMail(mailOptions);
+		});
 		console.log(
 			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
 		);
