@@ -499,7 +499,7 @@ function makeAllMovesInGame(
 			const conclusion = wincondition.getGameConclusion(gamefile);
 			if (conclusion)
 				throw new Error(
-					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by (${conclusion}).`,
+					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by (${JSON.stringify(conclusion)}).`,
 				);
 		}
 	}
