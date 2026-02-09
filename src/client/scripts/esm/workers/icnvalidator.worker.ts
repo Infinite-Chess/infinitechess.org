@@ -7,7 +7,7 @@
 import type { GameConclusion } from '../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import { players as p, Player } from '../../../../shared/chess/util/typeutil.js';
 
 import gameformulator from '../game/chess/gameformulator.js';
 
@@ -209,10 +209,10 @@ function validateTermination(
 	}
 
 	if (victor !== undefined && result) {
-		const resultMappings: Record<string, number> = {
+		const resultMappings: Record<string, Player | null> = {
 			'1-0': p.WHITE,
 			'0-1': p.BLACK,
-			'1/2-1/2': p.NEUTRAL,
+			'1/2-1/2': null,
 		};
 		if (result in resultMappings) {
 			if (victor !== resultMappings[result])
