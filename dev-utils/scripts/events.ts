@@ -48,7 +48,7 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 	if (listeners === undefined) {
 		return false;
 	}
-	for (let i = 0; i <= listeners.length; i++ ) {
+	for (let i = 0; i < listeners.length; i++ ) {
 		if (listeners[i] !== listener) continue;
 		listeners.splice(i, 1);
 		return true;
