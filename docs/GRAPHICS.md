@@ -91,7 +91,7 @@ Different shaders are compatible with different ways of packing vertex data. Som
 | `'texture'`          | position + texture coords | -                     | Textured shapes                              |
 | `'textureInstanced'` | position + texture coords | position              | Textured shapes with via instanced rendering |
 
-Other shaders can allow for more unique properties for each instance, such as `'arrows'` for the indicator arrows rendering, which allows a unique position, color (for opacity), and rotation per arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated star. For a full list of available shaders and their compatible vertex data packing, see [`ProgramManager.ts`](../src/client/scripts/esm/webgl/ProgramManager.ts).
+Other shaders can allow for more unique properties for each instance, such as `'arrows'` for the indicator arrows rendering, which allows a unique position, color (for opacity), and rotation, per arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated star. For a full list of available shaders and their compatible vertex data packing, see [`ProgramManager.ts`](../src/client/scripts/esm/webgl/ProgramManager.ts).
 
 ## Integrating Into the Render Loop
 
