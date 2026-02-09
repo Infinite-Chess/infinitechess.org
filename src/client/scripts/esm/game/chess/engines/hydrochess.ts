@@ -123,7 +123,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		}
 
 		const timeLimit = data.engineConfig?.engineTimeLimitPerMoveMillis ?? 0;
-		let bestMoveResult = engine.get_best_move_with_time(timeLimit, true);
+		const bestMoveResult = engine.get_best_move_with_time(timeLimit, true);
 		engine.free();
 
 		if (!bestMoveResult) {
