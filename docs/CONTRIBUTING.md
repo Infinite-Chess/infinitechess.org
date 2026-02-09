@@ -59,7 +59,7 @@ To retain maximum type safety, no casting via `as` is permitted, only in rare ci
 
 For arguments defined by user input, or needing to be sanitized from the client, use the `zod` package to achieve full type safety.
 
-No `// ts-ignore`s are permitted, except for imports of existing `.js` files into `.ts` files.
+No `// ts-ignore`s are permitted, except in rare cases where TypeScript cannot infer the correct type and we are confident in the type (e.g., importing packages without type declarations, importing WASM modules).
 
 For all methods that accept a function callback for an argument, like `map()`, `filter()`, `forEach()`, `setTimeout()`, etc., to obtain type safety, don't pass in the function directly, but use a wrapper. For example, don't do `array.map(functionCallback)`, but do do `array.map((item) => functionCallback(item))`. The exception is when adding callbacks for event listeners, as we have to retain the reference to the original function in order to remove the listener later.
 
