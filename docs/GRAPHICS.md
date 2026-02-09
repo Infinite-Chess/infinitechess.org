@@ -2,211 +2,109 @@
 
 [← Back to Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./CONTRIBUTING.md)
 
-This guide explains how graphics rendering works in Infinite Chess and how to add new visuals to the board. Since the board is infinite, the rendering system has a few unique considerations compared to typical 2D games.
+This guide explains how graphics rendering works on the board, and how to add new visuals. An infinite board provides a few unique considerations to the rendering system than typical 2D games.
 
 ## Coordinate Spaces
 
-There are two main coordinate spaces you'll work with:
+There are two coordinate spaces to know of:
 
-### Grid Space (Unit / Tile / Coord Space)
+### Grid Space (Coord/Model Space)
 
-Grid space uses integer coordinates where each unit is one chess square. The coordinate `[3, 5]` refers to the square at column 3, row 5 on the chessboard. This is the space most game logic operates in—piece positions, legal moves, and board boundaries are all expressed in grid coordinates. Because the board is infinite, grid coordinates are represented as **BigInts** (e.g., `10n`) to support arbitrarily large values without floating-point precision loss.
+Grid space uses integer coordinates where each unit is one chess square. The origin of a square is its center, so the coordinate `[3n, 5n]` refers to the middle of the square at (3,5). Piece rendering uses this coordinate space, including square highlights.
 
-When decimal precision is needed on top of BigInts—such as for sub-tile positioning during board transformations—the codebase uses **BigDecimals**, a custom number type from the `@naviary/bigdecimal` package that adds floating-point values to BigInts. BigDecimals are efficient, fully type-safe, and the package provides all the arithmetic methods you need (`add`, `subtract`, `multiply`, `divideFloating`, etc.).
+When decimal precision is needed on top of BigInts (like knowing, for example, the exact coordinate the edges of the screen are at) we use **BigDecimals** from `@naviary/bigdecimal`, a custom designed number package that adds decimal precision to arbitrarily large coordinates. The package provides fully type safe arithmetic methods for working with them when needed.
+
+The bounding box of the screen over the grid space can be retrieved with `boardtiles.gboundingBoxFloat()` (decimal precision) or `boardtiles.gboundingBox()` (rounded away from screen center to next integer coordinates).
 
 ### World Space
 
-World space is the coordinate system the GPU and camera see. The camera is fixed at `[0, 0, 12]` in 3D space, looking down; it is the **board** that moves and scales beneath it.
+World space is the coordinate system the GPU and camera use. The camera is fixed at `[0, 0, 12]` at all times, looking straight down at the board, while the board moves and scales underneath it. The board spans the entire X/Y plane, and the Z axis is away from the board (or up when in perspective mode). This is the final coordinate space all vertex data is converted to before rendering.
 
-The center of the screen is always `[0, 0]` in world space, and importantly, **the world-space screen bounding box does not change with zoom level or board position**—only resizing the browser window changes it. Zooming and panning affect the board's scale and position, not the camera's view. This means world-space vertex data close to the origin is always safe; it is the grid-to-world conversion (which depends on scale and position) that can produce extreme values.
+The center of the screen is always `[0, 0]` in world space. The bounding box of the screen can be retrieved with `camera.getRespectiveScreenBox()`, which automatically expands the box to the horizon when in perspective mode. Panning/zooming the board has no effect on this boxes coordinates, only resizing the window does. The horizon is `1500` (chebyshev) world space units away from the center of the screen, anything beyond that gets clipped. For this reason, arbitrarily large grid-space coordinates _always_ have to be converted to world space before rendering, and clamped to that range, to prevent visual artifacts.
 
 ### Converting Between Spaces
 
-[`space.ts`](../src/client/scripts/esm/game/misc/space.ts) provides the key conversion functions:
+[`space.ts`](../src/client/scripts/esm/game/misc/space.ts) provides key conversion functions for converting from one coordinate space to the other.
 
-- `convertCoordToWorldSpace(coords)` — Grid → World. Accounts for the square's center offset, board position, and scale.
-- `convertWorldSpaceToCoords(worldCoords)` — World → Grid (floating-point result).
-- `convertWorldSpaceToCoords_Rounded(worldCoords)` — World → Grid, rounded to the nearest integer tile.
-- `convertWorldSpaceToGrid(value)` — Divides a single world-space value by the current board scale.
+- `convertCoordToWorldSpace(coords)` — Grid → World. You may first have to cast BigInt coords to BigDecimal coords via `bdcoords.FromCoords(coords)`.
+- `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
+- `convertWorldSpaceToCoords_Rounded(worldCoords)` — World → Grid, returning the integer tile coordinates the world space position is over.
 
-[`mouse.ts`](../src/client/scripts/esm/game/misc/mouse.ts) builds on these to give you the pointer position in either space:
+[`mouse.ts`](../src/client/scripts/esm/game/misc/mouse.ts) can be used to locate the mouse position in either coordinate space.
 
 - `getMouseWorld()` — Mouse position in world space.
-- `getTileMouseOver_Float()` — Mouse position as a floating-point grid coordinate.
-- `getTileMouseOver_Integer()` — Mouse position snapped to the integer tile it hovers over.
-
-## Screen Bounding Boxes
-
-Since the board is infinite, you often need to know what region of it is currently visible.
-
-**In world space**, [`camera.ts`](../src/client/scripts/esm/game/rendering/camera.ts) provides:
-
-- `getScreenBoundingBox()` — Returns `{ left, right, bottom, top }` in world-space units, representing the visible screen edges. Accepts an optional debug-mode flag and padding. This box is independent of zoom and board position—it only changes when the window is resized.
-- `getRespectiveScreenBox()` — Same idea, but adapts for perspective mode.
-
-**In grid space**, [`boardtiles.ts`](../src/client/scripts/esm/game/rendering/boardtiles.ts) provides:
-
-- `getBoundingBoxOfBoard()` — Visible region as a floating-point bounding box in grid coordinates.
-- `gboundingBox()` — Visible region as an integer bounding box, rounded outward so every partially-visible tile is included.
+- `getTileMouseOver_Float()` — Mouse position in grid space (with decimal precision).
+- `getTileMouseOver_Integer()` — Mouse position in grid space, returning the integer tile coordinates the mouse is over.
 
 ## Creating Vertex Data
 
-All geometry rendered to the screen starts as an array of vertex data. Each vertex contains its attributes packed sequentially—position components first, then optionally color and/or texture coordinates. **Stride** is the total number of components per vertex. For example, a 2D position `(x, y)` plus an RGBA color `(r, g, b, a)` yields a stride of 6.
+All geometry rendered to the screen starts as an array of vertex data. Each vertex contains its attributes packed sequentially—position components first, then optionally color and/or texture coordinates. So for example, the vertex data of a red line from (-1,0) to (1,0) would be:
+
+```ts
+// prettier-ignore
+const vertexData = [
+	// x, y,   r, g, b, a
+	  -1, 0,   1, 0, 0, 1, // Vertex 1
+	   1, 0,   1, 0, 0, 1, // Vertex 2
+];
+```
+
+The exact attributes you include in the vertex data depends on the shader you plan on rendering your object with, and whether you're using instanced rendering. More info below.
 
 ### Primitives
 
-[`primitives.ts`](../src/client/scripts/esm/game/rendering/primitives.ts) provides helpers for calculating the vertex data of various shapes—squares, rectangles, circles, and more—from coordinates and colors. For example, `Quad_Color()` produces a colored 2D quad with stride 6, `Circle()` produces a filled circle, and `Rect()` produces a line-loop rectangle outline. See the file for the full list of available shape helpers and their parameters.
+[`primitives.ts`](../src/client/scripts/esm/game/rendering/primitives.ts) provides many helpers for calculating the vertex data of various shapes: squares, rectangles, circles, etc. from just their dimensions and color.
 
 ### Instanced Shape Data
 
-[`instancedshapes.ts`](../src/client/scripts/esm/game/rendering/instancedshapes.ts) provides concrete vertex data for common game shapes used with instanced rendering: squares, dots (circles), corner triangles (for capture indicators), and plus signs. These are useful both as ready-made shape data for instanced rendering and as reference examples for how to calculate custom vertex data by hand.
+[`instancedshapes.ts`](../src/client/scripts/esm/game/rendering/instancedshapes.ts), if you're using instanced rendering (which is a lot simpler to create vertex & instance data for, if you're rendering many copies of the same shape), provides helpers for obtaining the vertex data of the shape you want to render: legal move square, dot, special rights plus sign, etc.
+
+If you use instanced rendering, you bypass the need to calculate instance-specific vertex data, often only needing to specify the position offset of each of your objects in the instance data. This is used by piece rendering inside [`piecemodels.ts`](../src/client/scripts/esm/game/rendering/piecemodels.ts) (that example renders textures), and by legal move model generation inside [`legalmovemodel.ts`](../src/client/scripts/esm/game/rendering/highlights/legalmovemodel.ts).
 
 ### Mesh Helpers
 
-[`meshes.ts`](../src/client/scripts/esm/game/rendering/meshes.ts) provides higher-level helpers that automatically apply board transformations:
-
-- `QuadWorld_Color(coords, color)` — Takes a grid coordinate and returns world-space vertex data for a colored tile highlight.
-- `QuadWorld_ColorTexture(coords, type, color)` — Same, but with texture coordinates for a piece sprite.
-- `getCoordBoxWorld(coords)` — Returns the world-space bounding box `{ left, right, bottom, top }` for a given grid square.
-- `applyWorldTransformationsToBoundingBox(box)` — Applies the current board position and scale to a bounding box.
-- `expandTileBoundingBoxToEncompassWholeSquare(box)` — Expands an integer bounding box by 0.5 in each direction so it covers the full visual area of the edge tiles.
+[`meshes.ts`](../src/client/scripts/esm/game/rendering/meshes.ts) provides higher-level helpers for automatically generating the vertex data for you if all you have is the integer coordinate and color of the square you want vertex data for. It can also convert a grid space bounding box into world space for you.
 
 ### Square Highlights
 
-For the common task of highlighting squares on the board, [`squarerendering.ts`](../src/client/scripts/esm/game/rendering/highlights/squarerendering.ts) provides a high-level helper that handles vertex data creation and renderable construction for you. Its `genModel(highlights, color)` function takes an array of grid coordinates and a color, and returns a ready-to-render instanced model. Many rendering scripts use this to easily render square highlights without manually constructing vertex or instance data.
+For the common task of highlighting squares on the board, [`squarerendering.genModel()`](../src/client/scripts/esm/game/rendering/highlights/squarerendering.ts) is high-level helper that internally handles the vertex data and instance data creation for you from just a list of integer coordinates and a color, returning a ready-to-render object.
 
-## Rendering with `createRenderable()`
+## Rendering Vertex Data
 
-Once you have vertex data, pass it to [`createRenderable()`](../src/client/scripts/esm/webgl/Renderable.ts) to create a GPU-ready object:
+Once you have vertex data, pass it to [`createRenderable()`](../src/client/scripts/esm/webgl/Renderable.ts) or [`createRenderable_Instanced()`](../src/client/scripts/esm/webgl/Renderable.ts)
+to create a GPU-ready object that can instantly be rendered.
 
-```ts
-import { createRenderable } from '../../webgl/Renderable.js';
+They accept arguments for vertex data, instance data (if using instanced rendering), information on how you packed your vertex data with the position & color attributes, the drawing mode to use ('TRIANGLES', 'LINES', etc.), and the name of the shader you want to use (see options below).
 
-const vertexData = primitives.Quad_Color(left, bottom, right, top, [1, 0, 0, 1]);
-const renderable = createRenderable(vertexData, 2, 'TRIANGLES', 'color', true);
-renderable.render();
-```
+The returned `Renderable` object has a `render()` property for instantly rendering it. If you generated your vertex data in world space, you don't have to specify transformation arguments when rendering for the item to appear in the correct place. If however your vertex data is in grid space (which is common for instance rendering), you should provide the `position` and `scale` arguments when rendering. Position is dependent on the board position (`meshes.getModelPosition()`), and scale is dependant on the board scale (`boardpos.getBoardScaleAsNumber()`). The render method uses these to automatically transform the points to world space when rendering.
 
-**Parameters:**
+The `Renderable` object also has properties for updating its vertex/instance data internally, allowing you the option to skip generating a whole new Renderable every single frame. This is optimal when you have arbitrarily many objects to render, and their positions change infrequently. [`piecemodels.ts`](../src/client/scripts/esm/game/rendering/piecemodels.ts) for example does this when updating the model of the piece sprites.
 
-| Parameter               | Description                                                                        |
-| ----------------------- | ---------------------------------------------------------------------------------- |
-| `data`                  | Vertex data array (number[] or TypedArray)                                         |
-| `numPositionComponents` | `2` for 2D (x, y) or `3` for 3D (x, y, z)                                          |
-| `mode`                  | Drawing primitive: `'TRIANGLES'`, `'LINES'`, `'LINE_LOOP'`, `'TRIANGLE_FAN'`, etc. |
-| `shader`                | Name of the shader program to use (see below)                                      |
-| `usingColor`            | `true` if vertex data includes RGBA color components                               |
-| `texture`               | Optional WebGLTexture for textured shaders                                         |
+## Shader Picking
 
-The returned `Renderable` object has:
+Different shaders are compatible with different ways of packing vertex data. Some are compatible with rendering colored vertices, some with textured vertices, and another with both. There are many shaders the game uses, many custom made for specific object rendering, but here are the most common we use:
 
-- `.render(position?, scale?, uniforms?)` — Draws the geometry. Whether you need to pass `position` and `scale` depends on your vertex data's coordinate space. If your vertex data is already in **world space** (the typical case for non-instanced rendering), no transformations are necessary—just call `.render()` with no arguments. However, if your vertex data is specified in **grid/coord space**, you need to pass the board's position and scale so the GPU can transform it correctly. See `legalmovehighlights.renderSelectedPieceLegalMoves()` for an example of this pattern. Custom uniforms can also be passed as an object.
-- `.data` — Direct reference to the vertex buffer data. You can modify this and call `.updateBufferIndices(start, count)` to efficiently push changes to the GPU without recreating the buffer.
+| Shader Name          | Vertex Data Packing       | Instance Data Packing | When to Use                                  |
+| -------------------- | ------------------------- | --------------------- | -------------------------------------------- |
+| `'color'`            | position + color          | -                     | Solid colored shapes                         |
+| `'colorInstanced'`   | position + color          | position              | Solid colored shapes via instanced rendering |
+| `'texture'`          | position + texture coords | -                     | Textured shapes                              |
+| `'textureInstanced'` | position + texture coords | position              | Textured shapes with via instanced rendering |
 
-### Instanced Rendering with `createRenderable_Instanced()`
-
-For rendering many copies of the same shape efficiently (e.g., legal move dots, square highlights), use [`createRenderable_Instanced()`](../src/client/scripts/esm/webgl/Renderable.ts). Instead of duplicating vertex data for each instance, you provide the shape's vertex data once and a separate array of per-instance data (typically positions):
-
-```ts
-import { createRenderable_Instanced } from '../../webgl/Renderable.js';
-
-const vertexData = instancedshapes.getDataLegalMoveSquare(color);
-const instanceData = buildInstancePositions(coordinates);
-const model = createRenderable_Instanced(
-	vertexData,
-	instanceData,
-	'TRIANGLES',
-	'colorInstanced',
-	true,
-);
-model.render(position, scale);
-```
-
-**Parameters** are similar to `createRenderable()`, but with `vertexData` (the shape geometry, specified once) and `instanceData` (per-instance attributes like positions) as separate arrays. The returned `RenderableInstanced` object exposes both `.vertexData` and `.instanceData` for efficient partial updates via `updateBufferIndices_VertexBuffer()` and `updateBufferIndices_InstanceBuffer()`.
-
-## Commonly Used Shaders
-
-| Shader Name        | Vertex Format        | Stride (2D) | When to Use                                                              |
-| ------------------ | -------------------- | ----------- | ------------------------------------------------------------------------ |
-| `'color'`          | position + RGBA      | 6           | Solid colored shapes: highlights, masks, outlines, debug visuals         |
-| `'colorInstanced'` | position + RGBA      | 6           | Same as `'color'`, but for instanced rendering                           |
-| `'texture'`        | position + UV        | 4           | Textured quads without tinting                                           |
-| `'colorTexture'`   | position + UV + RGBA | 8           | Textured quads with per-vertex color tinting (e.g., pieces on the board) |
-
-For 3D positions, add 1 to each stride (e.g., `'color'` with 3D = stride 7). The position components always come first, followed by texture coordinates (if used), then color (if used).
-
-## Clamping to Screen Edges
-
-Because the board is infinite, world-space coordinates can grow arbitrarily large. Passing extreme floating-point values as vertex data to the GPU causes visual glitches. **You must clamp your vertex coordinates to the visible screen area.**
-
-[`border.ts`](../src/client/scripts/esm/game/rendering/border.ts) demonstrates this pattern:
-
-```ts
-const screenBox = camera.getRespectiveScreenBox();
-
-// Cap world-space coordinates to the screen edges
-if (worldBox.left < screenBox.left) worldBox.left = screenBox.left;
-if (worldBox.right > screenBox.right) worldBox.right = screenBox.right;
-if (worldBox.bottom < screenBox.bottom) worldBox.bottom = screenBox.bottom;
-if (worldBox.top > screenBox.top) worldBox.top = screenBox.top;
-```
-
-**When do you need to clamp?** Any time your geometry could extend far beyond the screen—for instance, a line stretching to the edge of the playable region, or a filled rectangle covering a large board area. Geometry that only covers a single tile or a small cluster of tiles near the camera typically does not need clamping.
+Other shaders can allow for more unique properties for each instance, such as `'arrows'` for the indicator arrows rendering, which allows a unique position, color (for opacity), and rotation per arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated star. For a full list of available shaders and their compatible vertex data packing, see [`ProgramManager.ts`](../src/client/scripts/esm/webgl/ProgramManager.ts).
 
 ## Integrating Into the Render Loop
 
-The render loop lives in `game.ts`. The `renderScene()` function calls each renderer in a specific order:
+The render loop lives in `game.ts`. The `renderScene()` function renders all items in the order:
 
-1. **Background** — Starfield / void rendering (via stencil masking)
-2. **Board** — Tile grid, promotion lines, masked to the playable region
-3. **Below-piece overlays** — Highlights, check indicators, legal move dots
+1. **Background** — Starfield / void rendering (uses masking)
+2. **Board** — Infinite tile grid, promotion lines
+3. **Below-piece overlays** — Square highlights, rays, check indicators, legal move highlights
 4. **Pieces** — All piece sprites
-5. **Above-piece overlays** — Arrows, animations, annotations, crosshair
+5. **Above-piece overlays** — Arrows, animations, crosshair
 
-To add a new renderer:
+Call your script's render method in the appropriate section.
 
-1. **Create a module** in `src/client/scripts/esm/game/rendering/` with a `render()` function.
-2. **Import it** in `game.ts`.
-3. **Call your `render()` function** at the appropriate point in `renderScene()`, depending on whether your visual should appear below or above pieces.
+## Conclusion
 
-If your graphic needs to update every frame (e.g., it depends on camera position), regenerate or update vertex data inside your `render()` function. For static geometry, create the `Renderable` once and simply call `.render()` each frame.
-
-## Putting It All Together: Example Workflow
-
-Here is a condensed example of how you might render a colored rectangle on the board at grid coordinates `[10, 20]` to `[15, 25]`:
-
-```ts
-import camera from './camera.js';
-import meshes from './meshes.js';
-import primitives from './primitives.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-
-function render() {
-	// 1. Define bounds in grid space
-	const gridBox = { left: 10n, right: 15n, bottom: 20n, top: 25n };
-
-	// 2. Expand to cover full tiles and convert to world space
-	const expanded = meshes.expandTileBoundingBoxToEncompassWholeSquare(gridBox);
-	const worldBox = meshes.applyWorldTransformationsToBoundingBox(expanded);
-
-	// 3. Clamp to screen edges to prevent float overflow
-	const screenBox = camera.getRespectiveScreenBox();
-	if (worldBox.left < screenBox.left) worldBox.left = screenBox.left;
-	if (worldBox.right > screenBox.right) worldBox.right = screenBox.right;
-	if (worldBox.bottom < screenBox.bottom) worldBox.bottom = screenBox.bottom;
-	if (worldBox.top > screenBox.top) worldBox.top = screenBox.top;
-
-	// 4. Build vertex data and render
-	const color = [0.2, 0.6, 1.0, 0.5]; // Semi-transparent blue
-	const vertexData = primitives.Quad_Color(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
-		color,
-	);
-	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
-}
-```
-
-This covers the core workflow: define geometry in grid space, transform to world space, clamp to the screen, generate vertex data, and render. For more advanced needs—custom shaders, instanced rendering, or post-processing effects—study the existing renderers in the `rendering/` directory as reference implementations.
+Ultimately, always refer to how the existing code renders objects for inspiration for rendering your own!
