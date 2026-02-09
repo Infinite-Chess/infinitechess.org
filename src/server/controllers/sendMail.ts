@@ -33,7 +33,6 @@ const sesClient =
 		: null;
 
 // Create nodemailer transporter using SES
-// Nodemailer v7 requires the sesClient property (not 'ses') and SendRawEmailCommand
 const transporter = sesClient
 	? nodemailer.createTransport({
 			SES: { sesClient, SendRawEmailCommand },
