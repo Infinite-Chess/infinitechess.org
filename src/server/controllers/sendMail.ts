@@ -63,10 +63,12 @@ type SendMailOptions = {
  * Checks if transporter is defined and logs a generic message if not.
  * Does NOT include error handling - any errors will naturally throw.
  * @param options - Email options including recipient, subject, and content (html or text)
+ * @param devLogMessage - Optional message to log in development when transporter is not available
  */
-async function sendMail(options: SendMailOptions): Promise<void> {
+async function sendMail(options: SendMailOptions, devLogMessage?: string): Promise<void> {
 	if (!transporter) {
 		console.log('Email environment variables not specified. Not sending email.');
+		if (devLogMessage) console.log(devLogMessage);
 		return;
 	}
 
@@ -83,11 +85,6 @@ async function sendMail(options: SendMailOptions): Promise<void> {
 // --- Email Sending Functions ---
 
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
-	if (!transporter) {
-		console.log('Password Reset Link (for dev):', resetUrl);
-		return;
-	}
-
 	const content = `
 		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
 		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
@@ -96,11 +93,14 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	try {
-		await sendMail({
-			to: recipientEmail,
-			subject: 'Your Password Reset Request',
-			html: createEmailHtmlWrapper('Password Reset Request', content),
-		});
+		await sendMail(
+			{
+				to: recipientEmail,
+				subject: 'Your Password Reset Request',
+				html: createEmailHtmlWrapper('Password Reset Request', content),
+			},
+			`Password Reset Link (for dev): ${resetUrl}`,
+		);
 		console.log(`Password reset email sent to ${recipientEmail}`);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
@@ -161,11 +161,6 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			`${baseUrl}/verify/${record.username.toLowerCase()}/${record.verification_code}`,
 		).toString();
 
-		if (!transporter) {
-			console.log('Verification Link (for dev):', verificationUrl);
-			return;
-		}
-
 		const content = `
 			<p style="font-size: 16px; color: #555;">Thank you, <strong>${record.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
 			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
@@ -173,11 +168,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		await sendMail({
-			to: record.email,
-			subject: 'Verify Your Account',
-			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
-		});
+		await sendMail(
+			{
+				to: record.email,
+				subject: 'Verify Your Account',
+				html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
+			},
+			`Verification Link (for dev): ${verificationUrl}`,
+		);
 		console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
@@ -219,8 +217,13 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
+		if (!FROM) {
+			console.log('FROM email address not configured. Not sending rating abuse email.');
+			return;
+		}
+
 		await sendMail({
-			to: FROM!,
+			to: FROM,
 			subject: messageSubject,
 			text: messageText,
 		});
