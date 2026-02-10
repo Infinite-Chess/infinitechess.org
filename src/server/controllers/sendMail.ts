@@ -12,6 +12,12 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
+/** Options for sending an email. */
+type SendMailOptions = {
+	to: string;
+	subject: string;
+} & ({ html: string } | { text: string });
+
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];
 const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
@@ -51,33 +57,23 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 }
 
 /**
- * Options for sending an email. Must include either `html` or `text`, but not both.
- */
-type SendMailOptions = {
-	to: string;
-	subject: string;
-} & ({ html: string; text?: never } | { text: string; html?: never });
-
-/**
  * Helper function to send an email via the transporter.
  * Checks if transporter is defined and logs a generic message if not.
- * Does NOT include error handling - any errors will naturally throw.
  * @param options - Email options including recipient, subject, and content (html or text)
- * @param devLogMessage - Optional message to log in development when transporter is not available
+ * @returns Whether the email was sent, which won't be the case if env variables aren't present.
  */
-async function sendMail(options: SendMailOptions, devLogMessage?: string): Promise<void> {
+async function sendMail(options: SendMailOptions): Promise<boolean> {
 	if (!transporter) {
 		console.log('Email environment variables not specified. Not sending email.');
-		if (devLogMessage) console.log(devLogMessage);
-		return;
+		return false;
 	}
 
-	const mailOptions = {
+	await transporter.sendMail({
 		from: `"Infinite Chess" <${FROM}>`,
 		...options,
-	};
+	});
 
-	await transporter.sendMail(mailOptions);
+	return true;
 }
 
 // --- Email Sending Functions ---
@@ -91,15 +87,13 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	try {
-		await sendMail(
-			{
-				to: recipientEmail,
-				subject: 'Your Password Reset Request',
-				html: createEmailHtmlWrapper('Password Reset Request', content),
-			},
-			`Password Reset Link (for dev): ${resetUrl}`,
-		);
-		console.log(`Password reset email sent to ${recipientEmail}`);
+		const sent = await sendMail({
+			to: recipientEmail,
+			subject: 'Your Password Reset Request',
+			html: createEmailHtmlWrapper('Password Reset Request', content),
+		});
+		if (sent) console.log(`Password reset email sent to ${recipientEmail}`);
+		else console.log(`Password Reset Link: ${resetUrl}`);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
@@ -166,15 +160,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		await sendMail(
-			{
-				to: record.email,
-				subject: 'Verify Your Account',
-				html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
-			},
-			`Verification Link (for dev): ${verificationUrl}`,
-		);
-		console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
+		const sent = await sendMail({
+			to: record.email,
+			subject: 'Verify Your Account',
+			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
+		});
+		if (sent)
+			console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
+		else console.log(`Verification Link: ${verificationUrl}`);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
@@ -215,15 +208,13 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		// FROM is guaranteed to be defined if transporter is defined (see module setup)
-		await sendMail({
-			to: FROM!,
+		const sent = await sendMail({
+			to: FROM ?? '',
 			subject: messageSubject,
 			text: messageText,
 		});
-		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
-		);
+		if (sent) console.log(`Rating abuse warning email sent successfully to ${FROM}.`);
+		else console.log("Didn't send rating abuse email.");
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		await logEventsAndPrint(
