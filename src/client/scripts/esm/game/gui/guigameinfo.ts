@@ -396,7 +396,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 		else {
 			element_whosturn.textContent = resultTranslations.bug_generic;
 			console.error(
-				`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`,
+				`Victor: ${victor}\nCondition: ${condition}`,
 			);
 		}
 	}

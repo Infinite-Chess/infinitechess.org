@@ -11,7 +11,6 @@ import type { BDCoords, Coords } from '../../../../../shared/chess/util/coorduti
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 

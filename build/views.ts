@@ -46,9 +46,7 @@ const staticTranslatedTemplates = [
 
 // Functions -----------------------------------------------------------------
 
-/**
- * Generates translated versions of templates in staticTranslatedTemplates
- */
+/** Generates translated versions of templates in {@link staticTranslatedTemplates}. */
 export async function buildViews(): Promise<void> {
 	// Load data
 	const translations = translationLoader.loadTranslations();

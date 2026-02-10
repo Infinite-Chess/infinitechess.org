@@ -7,7 +7,7 @@
 import type { GameConclusion } from '../../../../shared/chess/logic/gamefile.js';
 
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import { players as p, Player } from '../../../../shared/chess/util/typeutil.js';
 
 import gameformulator from '../game/chess/gameformulator.js';
 
@@ -162,21 +162,21 @@ function validateTermination(
 	if (termination === 'Draw by maximum moves reached') {
 		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is "Draw by maximum moves reached" but gameConclusion is defined: ${gameConclusion}`,
+				`Termination is "Draw by maximum moves reached" but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
 			);
 		return;
 	}
 	if (termination && termination.startsWith('Material adjudication')) {
 		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is Material Adjudication but gameConclusion is defined: ${gameConclusion}`,
+				`Termination is Material Adjudication but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
 			);
 		return;
 	}
 	if (termination === 'Loss on time') {
 		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is Loss on time but gameConclusion is defined: ${gameConclusion}`,
+				`Termination is Loss on time but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
 			);
 		return;
 	}
@@ -209,10 +209,10 @@ function validateTermination(
 	}
 
 	if (victor !== undefined && result) {
-		const resultMappings: Record<string, number> = {
+		const resultMappings: Record<string, Player | null> = {
 			'1-0': p.WHITE,
 			'0-1': p.BLACK,
-			'1/2-1/2': p.NEUTRAL,
+			'1/2-1/2': null,
 		};
 		if (result in resultMappings) {
 			if (victor !== resultMappings[result])
