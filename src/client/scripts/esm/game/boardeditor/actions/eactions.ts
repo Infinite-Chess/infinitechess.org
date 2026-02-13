@@ -288,10 +288,10 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 			};
 		} else {
 			// Clamp existing world border to ±limit
-			if (wb.left != null && wb.left < -limit) wb.left = -limit;
-			if (wb.right != null && wb.right > limit) wb.right = limit;
-			if (wb.bottom != null && wb.bottom < -limit) wb.bottom = -limit;
-			if (wb.top != null && wb.top > limit) wb.top = limit;
+			if (wb.left !== null && wb.left < -limit) wb.left = -limit;
+			if (wb.right !== null && wb.right > limit) wb.right = limit;
+			if (wb.bottom !== null && wb.bottom < -limit) wb.bottom = -limit;
+			if (wb.top !== null && wb.top > limit) wb.top = limit;
 		}
 	}
 
