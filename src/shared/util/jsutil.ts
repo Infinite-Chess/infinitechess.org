@@ -6,6 +6,9 @@
 
 import bimath from './math/bimath.js';
 
+/** Maximum signed 64-bit integer value (2^63 - 1). */
+const I64_MAX = 2n ** 63n - 1n;
+
 /**
  * Deep copies an entire object, no matter how deep its nested.
  * No properties will contain references to the source object.
@@ -473,4 +476,5 @@ export default {
 	ensureJSONString,
 	areSetsEqual,
 	typedKeys,
+	I64_MAX,
 };

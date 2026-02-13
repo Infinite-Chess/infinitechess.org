@@ -46,11 +46,10 @@ interface EngineConfig {
  * Engine games have a world border enabled so as to keep the position within safe floating point range.
  * If the variant's world border is smaller, that will be used instead.
  */
-const I64_MAX = 2n ** 63n - 1n;
 const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
 	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
 	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-	hydrochess: I64_MAX - 1000n,
+	hydrochess: jsutil.I64_MAX - 1000n,
 };
 
 /**

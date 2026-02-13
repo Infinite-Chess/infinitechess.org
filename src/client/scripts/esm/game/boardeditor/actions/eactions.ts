@@ -260,39 +260,30 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
-		const startingPositionBox = boardutil.getBoundingBoxOfAllPieces(
-			gameslot.getGamefile()!.boardsim.pieces,
-		)!; // Guaranteed defined since above we check if there's > 0 pieces
+		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
 
-		// Calculate it using the default distance
-		const worldBorderProperty = engineWorldBorderDict[currentEngine];
-		variantOptions.gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
-	}
-
-	// Ensure world border exists and respects engine coordinate limits
-	{
 		const limit = engineWorldBorderDict[currentEngine];
-		const wb = variantOptions.gameRules.worldBorder;
-		if (!wb) {
-			// No world border set at all, use ±limit
-			variantOptions.gameRules.worldBorder = {
-				left: -limit,
-				right: limit,
-				bottom: -limit,
-				top: limit,
-			};
-		} else {
-			// Clamp existing world border to ±limit
-			if (wb.left !== null && wb.left < -limit) wb.left = -limit;
-			if (wb.right !== null && wb.right > limit) wb.right = limit;
-			if (wb.bottom !== null && wb.bottom < -limit) wb.bottom = -limit;
-			if (wb.top !== null && wb.top > limit) wb.top = limit;
-		}
+
+		// How far can we extend in each direction before hitting ±limit?
+		const availableLeft = bb.left + limit;
+		const availableRight = limit - bb.right;
+		const availableBottom = bb.bottom + limit;
+		const availableTop = limit - bb.top;
+
+		// Use the smallest available distance so no side exceeds ±limit,
+		// and opposite sides remain equidistant from the position.
+		let dist = limit;
+		if (availableLeft < dist) dist = availableLeft;
+		if (availableRight < dist) dist = availableRight;
+		if (availableBottom < dist) dist = availableBottom;
+		if (availableTop < dist) dist = availableTop;
+
+		variantOptions.gameRules.worldBorder = {
+			left: bb.left - dist,
+			right: bb.right + dist,
+			bottom: bb.bottom - dist,
+			top: bb.top + dist,
+		};
 	}
 
 	// Does the engine support the position and settings?
