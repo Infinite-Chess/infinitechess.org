@@ -57,7 +57,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 
 	// 2. World border larger than i64 is unsupported.
 	const I64_MAX = 2n ** 63n - 1n;
-	const cap = I64_MAX - 500n; // Small cushion
+	const cap = I64_MAX - 1000n; // Small cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
 		Object.values(variantOptions.gameRules.worldBorder).some(

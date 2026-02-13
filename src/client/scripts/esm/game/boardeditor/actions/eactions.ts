@@ -274,6 +274,27 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		};
 	}
 
+	// Ensure world border exists and respects engine coordinate limits
+	{
+		const limit = engineWorldBorderDict[currentEngine];
+		const wb = variantOptions.gameRules.worldBorder;
+		if (!wb) {
+			// No world border set at all, use ±limit
+			variantOptions.gameRules.worldBorder = {
+				left: -limit,
+				right: limit,
+				bottom: -limit,
+				top: limit,
+			};
+		} else {
+			// Clamp existing world border to ±limit
+			if (wb.left != null && wb.left < -limit) wb.left = -limit;
+			if (wb.right != null && wb.right > limit) wb.right = limit;
+			if (wb.bottom != null && wb.bottom < -limit) wb.bottom = -limit;
+			if (wb.top != null && wb.top > limit) wb.top = limit;
+		}
+	}
+
 	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
