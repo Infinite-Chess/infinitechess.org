@@ -212,20 +212,55 @@ function initBoard(
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
 	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	let worldBorderFromDist = false;
 	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
+		if (worldBorderProperty === undefined) {
 			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
+			worldBorderFromDist = true;
+		} else if (worldBorderDist < worldBorderProperty) {
+			worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
+			worldBorderFromDist = true;
+		}
 	}
 
 	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
 		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
+		let left = startingPositionBox.left - worldBorderProperty;
+		let right = startingPositionBox.right + worldBorderProperty;
+		let bottom = startingPositionBox.bottom - worldBorderProperty;
+		let top = startingPositionBox.top + worldBorderProperty;
+
+		// Only apply balancing logic when worldBorderProperty came from worldBorderDist
+		if (worldBorderFromDist) {
+			// Check if any side was clamped
+			const anyClamped =
+				left < -worldBorderProperty ||
+				right > worldBorderProperty ||
+				bottom < -worldBorderProperty ||
+				top > worldBorderProperty;
+
+			if (anyClamped) {
+				// Calculate the available border distance in each direction
+				const availableLeft = startingPositionBox.left + worldBorderProperty;
+				const availableRight = worldBorderProperty - startingPositionBox.right;
+				const availableBottom = startingPositionBox.bottom + worldBorderProperty;
+				const availableTop = worldBorderProperty - startingPositionBox.top;
+
+				// Use the smallest available border for all sides to maintain balance
+				let limitingBorder = availableLeft;
+				if (availableRight < limitingBorder) limitingBorder = availableRight;
+				if (availableBottom < limitingBorder) limitingBorder = availableBottom;
+				if (availableTop < limitingBorder) limitingBorder = availableTop;
+
+				// Apply the limiting border to all sides
+				left = startingPositionBox.left - limitingBorder;
+				right = startingPositionBox.right + limitingBorder;
+				bottom = startingPositionBox.bottom - limitingBorder;
+				top = startingPositionBox.top + limitingBorder;
+			}
+		}
+
+		gameRules.worldBorder = { left, right, bottom, top };
 	}
 
 	const startSnapshot: Snapshot = {
