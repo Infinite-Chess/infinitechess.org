@@ -51,6 +51,7 @@ import guinavigation from '../gui/guinavigation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import promotionlines from '../rendering/promotionlines.js';
+import borderanimation from '../rendering/borderanimation.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
@@ -133,6 +134,7 @@ function update(): void {
 	// There is a gamefile, update everything board-related...
 
 	starfield.update(); // Update the star field animation, if needed.
+	borderanimation.update(listener_document, gamefile); // Update the border expansion animation, if active.
 
 	controls.testInGameToggles(gamefile, mesh);
 
