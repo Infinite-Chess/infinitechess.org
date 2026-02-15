@@ -21,6 +21,7 @@ import type { EditorSaveState } from './esave';
 import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 
+import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
 import timeutil from '../../../../../../shared/util/timeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
@@ -270,19 +271,15 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		const availableBottom = bb.bottom + limit;
 		const availableTop = limit - bb.top;
 
-		// Use the smallest available distance so no side exceeds ±limit,
-		// and opposite sides remain equidistant from the position.
-		let dist = limit;
-		if (availableLeft < dist) dist = availableLeft;
-		if (availableRight < dist) dist = availableRight;
-		if (availableBottom < dist) dist = availableBottom;
-		if (availableTop < dist) dist = availableTop;
+		// Calculate separate limiting distances for horizontal and vertical axes
+		const horizontalDist = bimath.min(availableLeft, availableRight);
+		const verticalDist = bimath.min(availableBottom, availableTop);
 
 		variantOptions.gameRules.worldBorder = {
-			left: bb.left - dist,
-			right: bb.right + dist,
-			bottom: bb.bottom - dist,
-			top: bb.top + dist,
+			left: bb.left - horizontalDist,
+			right: bb.right + horizontalDist,
+			bottom: bb.bottom - verticalDist,
+			top: bb.top + verticalDist,
 		};
 	}
 
