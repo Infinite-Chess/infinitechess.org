@@ -3,6 +3,8 @@
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
 import bimath from '../../../../../../shared/util/math/bimath';
+import bounds from '../../../../../../shared/util/math/bounds';
+import coordutil from '../../../../../../shared/chess/util/coordutil';
 import typeutil, {
 	Player,
 	RawType,
@@ -78,7 +80,21 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		};
 	}
 
-	// 3. Maximum of one promotion line per player.
+	// 3. Boundary of all pieces is entirely contained within world border (no piece out of bounds)
+	if (variantOptions.gameRules.worldBorder) {
+		const allCoords = [...variantOptions.position.keys()].map((coordsKey) =>
+			coordutil.getCoordsFromKey(coordsKey),
+		);
+		const piecesBox = bounds.getBoxFromCoordsList(allCoords);
+
+		if (!bounds.boxContainsBox(variantOptions.gameRules.worldBorder, piecesBox))
+			return {
+				supported: false,
+				reason: `Pieces are out of bounds.`,
+			};
+	}
+
+	// 4. Maximum of one promotion line per player.
 	if (variantOptions.gameRules.promotionRanks) {
 		for (const playerRanks of Object.values(variantOptions.gameRules.promotionRanks)) {
 			if (playerRanks.length > 1) {
@@ -90,7 +106,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 4. Not too many pieces in total, excluding neutral pieces (voids/obstacles).
+	// 5. Not too many pieces in total, excluding neutral pieces (voids/obstacles).
 	const maxPieces = 200;
 	let nonNeutralCount = 0;
 	for (const type of variantOptions.position.values()) {
@@ -104,7 +120,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		};
 	}
 
-	// 5. Only suppported pieces may be present.
+	// 6. Only suppported pieces may be present.
 	const supportedPieces: RawType[] = [
 		r.VOID,
 		r.OBSTACLE,
@@ -139,7 +155,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 6. Maximum of 1 royal per side.
+	// 7. Maximum of 1 royal per side.
 	const royalsCountByPlayer: PlayerGroup<number> = {};
 	for (const type of variantOptions.position.values()) {
 		const rawType = typeutil.getRawType(type);
