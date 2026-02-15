@@ -18,6 +18,9 @@ type SupportedResult = { supported: true } | { supported: false; reason: string 
 /** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
 const I64_MAX = 2n ** 63n - 1n;
 
+/** The maximum world border distance the engine can handle. */
+const BORDER_CAP = I64_MAX - 1000n; // Small cushion
+
 const SUPPORTED_VARIANTS = new Set([
 	'Classical',
 	'Confined_Classical',
@@ -63,11 +66,10 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	}
 
 	// 2. World border larger than i64 is unsupported.
-	const cap = I64_MAX - 1000n; // Small cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
 		Object.values(variantOptions.gameRules.worldBorder).some(
-			(dist) => dist === null || bimath.abs(dist) > cap,
+			(dist) => dist === null || bimath.abs(dist) > BORDER_CAP,
 		)
 	) {
 		return {
@@ -159,6 +161,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 export default {
 	// Constants
 	I64_MAX,
+	BORDER_CAP,
 	SUPPORTED_VARIANTS,
 	// Functions
 	isPositionSupported,

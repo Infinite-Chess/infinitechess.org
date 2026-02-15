@@ -263,23 +263,34 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		// Calculate minimum bounding box of all pieces
 		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
 
-		const limit = engineWorldBorderDict[currentEngine];
+		/*
+		 * Priority:
+		 * 1. Default distance
+		 * 2. Capped at engine's cap
+		 */
+
+		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		const cap = hydrochess_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
-		const availableLeft = bb.left + limit;
-		const availableRight = limit - bb.right;
-		const availableBottom = bb.bottom + limit;
-		const availableTop = limit - bb.top;
+		const availableLeft = bb.left + cap;
+		const availableRight = cap - bb.right;
+		const availableBottom = bb.bottom + cap;
+		const availableTop = cap - bb.top;
 
 		// Calculate separate limiting distances for horizontal and vertical axes
-		const horizontalDist = bimath.min(availableLeft, availableRight);
-		const verticalDist = bimath.min(availableBottom, availableTop);
+		const availableHorz = bimath.min(availableLeft, availableRight);
+		const availableVert = bimath.min(availableBottom, availableTop);
+
+		// Use the minimum between the default and the capped
+		const distHorz = bimath.min(worldBorderProperty, availableHorz);
+		const distVert = bimath.min(worldBorderProperty, availableVert);
 
 		variantOptions.gameRules.worldBorder = {
-			left: bb.left - horizontalDist,
-			right: bb.right + horizontalDist,
-			bottom: bb.bottom - verticalDist,
-			top: bb.top + verticalDist,
+			left: bb.left - distHorz,
+			right: bb.right + distHorz,
+			bottom: bb.bottom - distVert,
+			top: bb.top + distVert,
 		};
 	}
 

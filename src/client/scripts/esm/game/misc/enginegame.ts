@@ -50,7 +50,7 @@ interface EngineConfig {
 const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
 	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
 	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-	hydrochess: hydrochess_card.I64_MAX - 1000n,
+	hydrochess: hydrochess_card.I64_MAX - 2000n,
 };
 
 /**
