@@ -55,10 +55,11 @@ function render(): void {
 	const color: Color = [0, 0, 0, 1];
 	const vertexData: number[] = [];
 
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.WHITE]!, 1);
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.BLACK]!, 0);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.WHITE], 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.BLACK], 0);
 
-	function addDataForSide(ranks: bigint[], yShift: 1 | 0): void {
+	function addDataForSide(ranks: bigint[] | undefined, yShift: 1 | 0): void {
+		if (!ranks) return;
 		ranks.forEach((rank) => {
 			const rankBD = bd.fromBigInt(rank);
 			const relativeRank: number = bd.toNumber(bd.subtract(rankBD, position[1])); // Subtract our board position

@@ -583,7 +583,7 @@ function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModi
 
 /**
  * Returns default gamerules with provided modifications
- * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
+ * @param modifications - The modifications to the default gamerules.
  * @returns The gamerules
  */
 function getGameRules(modifications: GameRuleModifications = {}): GameRules {
