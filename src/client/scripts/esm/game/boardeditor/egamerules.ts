@@ -329,8 +329,8 @@ function updateGamefileProperties(
 		gamefile.basegame.gameRules.promotionRanks = undefined;
 	} else {
 		gamefile.basegame.gameRules.promotionRanks = {};
-		gamefile.basegame.gameRules.promotionRanks[p.WHITE] = promotionRanks.white || [];
-		gamefile.basegame.gameRules.promotionRanks[p.BLACK] = promotionRanks.black || [];
+		gamefile.basegame.gameRules.promotionRanks[p.WHITE] = promotionRanks.white;
+		gamefile.basegame.gameRules.promotionRanks[p.BLACK] = promotionRanks.black;
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
