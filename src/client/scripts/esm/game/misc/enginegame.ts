@@ -23,6 +23,7 @@ import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from '../chess/graphicalchanges.js';
+import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 
 // Types ------------------------------------------------------------------------
@@ -49,7 +50,7 @@ interface EngineConfig {
 const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
 	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
 	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-	hydrochess: jsutil.I64_MAX - 1000n,
+	hydrochess: hydrochess_card.I64_MAX - 1000n,
 };
 
 /**

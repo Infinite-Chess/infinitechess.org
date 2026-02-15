@@ -3,7 +3,6 @@
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
 import bimath from '../../../../../../shared/util/math/bimath';
-import jsutil from '../../../../../../shared/util/jsutil';
 import typeutil, {
 	Player,
 	RawType,
@@ -13,6 +12,11 @@ import typeutil, {
 } from '../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
+
+// Constants -------------------------------------------------------------
+
+/** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
+const I64_MAX = 2n ** 63n - 1n;
 
 const SUPPORTED_VARIANTS = new Set([
 	'Classical',
@@ -36,6 +40,8 @@ const SUPPORTED_VARIANTS = new Set([
 	'Omega',
 ]);
 
+// Functions -------------------------------------------------------------
+
 /**
  * Determines whether the given position is supported by the engine.
  * If it's not, and we play a game with it anyway, the engine may crash.
@@ -57,7 +63,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	}
 
 	// 2. World border larger than i64 is unsupported.
-	const cap = jsutil.I64_MAX - 1000n; // Small cushion
+	const cap = I64_MAX - 1000n; // Small cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
 		Object.values(variantOptions.gameRules.worldBorder).some(
@@ -150,4 +156,10 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	return { supported: true };
 }
 
-export default { SUPPORTED_VARIANTS, isPositionSupported };
+export default {
+	// Constants
+	I64_MAX,
+	SUPPORTED_VARIANTS,
+	// Functions
+	isPositionSupported,
+};
