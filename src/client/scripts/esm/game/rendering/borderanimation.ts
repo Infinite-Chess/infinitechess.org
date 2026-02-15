@@ -11,7 +11,7 @@ import type { InputListener } from '../input.js';
 // Constants ---------------------------------------------------------------
 
 /** Beats per minute for the animation. */
-const BPM = 127;
+const BPM = 128;
 
 /** Duration of one beat in milliseconds. */
 const BEAT_DURATION_MS = (60 / BPM) * 1000;
