@@ -315,7 +315,7 @@ function renderScene(): void {
 		boardeditor.render();
 		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');
-		perspective.renderCrosshair();
+		// perspective.renderCrosshair();
 	});
 }
 
