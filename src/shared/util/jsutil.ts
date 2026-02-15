@@ -155,11 +155,6 @@ function removeObjectFromArray(array: any[], object: any): void {
 		);
 }
 
-// // Returns true if provided object is a float32array
-// function isFloat32Array(param: any): boolean {
-// 	return param instanceof Float32Array;
-// }
-
 /**
  * Copies the properties from one object to another,
  * without overwriting the existing properties on the destination object,
@@ -460,7 +455,6 @@ export default {
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
 	deleteElementFromOrganizedArray,
-	// isFloat32Array,
 	copyPropertiesToObject,
 	isEmpty,
 	isJson,

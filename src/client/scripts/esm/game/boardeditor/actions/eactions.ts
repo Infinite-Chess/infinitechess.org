@@ -21,6 +21,7 @@ import type { EditorSaveState } from './esave';
 import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 
+import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
 import timeutil from '../../../../../../shared/util/timeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
@@ -260,17 +261,36 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
-		const startingPositionBox = boardutil.getBoundingBoxOfAllPieces(
-			gameslot.getGamefile()!.boardsim.pieces,
-		)!; // Guaranteed defined since above we check if there's > 0 pieces
+		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
 
-		// Calculate it using the default distance
+		/*
+		 * Priority:
+		 * 1. Default distance
+		 * 2. Capped at engine's cap
+		 */
+
 		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		const cap = hydrochess_card.BORDER_CAP;
+
+		// How far can we extend in each direction before hitting ±limit?
+		const availableLeft = bb.left + cap;
+		const availableRight = cap - bb.right;
+		const availableBottom = bb.bottom + cap;
+		const availableTop = cap - bb.top;
+
+		// Calculate separate limiting distances for horizontal and vertical axes
+		const availableHorz = bimath.min(availableLeft, availableRight);
+		const availableVert = bimath.min(availableBottom, availableTop);
+
+		// Use the minimum between the default and the capped
+		const distHorz = bimath.min(worldBorderProperty, availableHorz);
+		const distVert = bimath.min(worldBorderProperty, availableVert);
+
 		variantOptions.gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
+			left: bb.left - distHorz,
+			right: bb.right + distHorz,
+			bottom: bb.bottom - distVert,
+			top: bb.top + distVert,
 		};
 	}
 
