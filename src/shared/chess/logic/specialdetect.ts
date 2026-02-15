@@ -331,8 +331,8 @@ function appendPawnMoveAndAttachPromoteFlag(
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
-		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
 	individualMoves.push(landCoords);
@@ -480,9 +480,9 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 	if (!basegame.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);
-	const promotionRanks = basegame.gameRules.promotionRanks[color]!;
+	const promotionRanks = basegame.gameRules.promotionRanks[color];
 
-	return promotionRanks.includes(coordsClicked[1]);
+	return promotionRanks?.includes(coordsClicked[1]) || false;
 }
 
 /**

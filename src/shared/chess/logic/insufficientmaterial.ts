@@ -282,10 +282,10 @@ function detectInsufficientMaterial(
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
 	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE]!;
-		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK]!;
-		if (r.PAWN + e.W in scenario && promotionListWhite.length !== 0) return undefined;
-		if (r.PAWN + e.B in scenario && promotionListBlack.length !== 0) return undefined;
+		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
+		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
+		if (r.PAWN + e.W in scenario && promotionListWhite?.length !== 0) return undefined;
+		if (r.PAWN + e.B in scenario && promotionListBlack?.length !== 0) return undefined;
 	}
 
 	// Create scenario object with inverted players

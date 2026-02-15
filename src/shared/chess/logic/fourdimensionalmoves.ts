@@ -219,8 +219,8 @@ function appendPawnMoveAndAttachPromoteFlag(
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
-		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
 	individualMoves.push(landCoords);
