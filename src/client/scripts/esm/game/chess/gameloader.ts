@@ -534,7 +534,7 @@ function openGameinfoBarAndConcludeGameIfOver(
 	metadata: MetaData,
 	showGameControlButtons: boolean = false,
 ): void {
-	guigameinfo.open(metadata, showGameControlButtons);
+	// guigameinfo.open(metadata, showGameControlButtons);
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 

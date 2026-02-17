@@ -334,8 +334,8 @@ function updateSkyColor(): void {
 	const skyG = (avgG - baseDim) * multiplierDim;
 	const skyB = (avgB - baseDim) * multiplierDim;
 
-	webgl.setClearColor([skyR, skyG, skyB]);
-	// webgl.setClearColor([0,0,0]); // Solid Black
+	// webgl.setClearColor([skyR, skyG, skyB]);
+	webgl.setClearColor([0, 0, 0]); // Solid Black
 }
 
 function updateNavColor(): void {

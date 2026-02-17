@@ -176,7 +176,7 @@ function loadLogical(loadOptions: LoadOptions): void {
 /** Loads all of the graphical components of a game */
 async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
-	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
+	// guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
 	guiclock.set(loadedGamefile!.basegame);
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
