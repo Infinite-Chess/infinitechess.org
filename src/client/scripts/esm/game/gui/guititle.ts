@@ -7,6 +7,7 @@
 import guiplay from './guiplay.js';
 import guipractice from './guipractice.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
+import gui from './gui.js';
 import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------
@@ -40,18 +41,18 @@ function initListeners(): void {
 	element_play.addEventListener('click', callback_Play);
 	element_practice.addEventListener('click', callback_Practice);
 	element_guide.addEventListener('click', callback_Guide);
-	// element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_boardEditor.addEventListener('click', gui.displayStatus_FeaturePlanned);
 	// ENABLE WHEN board editor is ready
-	element_boardEditor.addEventListener('click', callback_BoardEditor);
+	// element_boardEditor.addEventListener('click', callback_BoardEditor);
 }
 
 function closeListeners(): void {
 	element_play.removeEventListener('click', callback_Play);
 	element_practice.removeEventListener('click', callback_Practice);
 	element_guide.removeEventListener('click', callback_Guide);
-	// element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
+	element_boardEditor.removeEventListener('click', gui.displayStatus_FeaturePlanned);
 	// ENABLE WHEN board editor is ready
-	element_boardEditor.removeEventListener('click', callback_BoardEditor);
+	// element_boardEditor.removeEventListener('click', callback_BoardEditor);
 }
 
 function callback_Play(_event: Event): void {
@@ -69,10 +70,10 @@ function callback_Guide(_event: Event): void {
 	window.location.href = languagedropdown.addLngQueryParamToLink(`/guide`);
 }
 
-function callback_BoardEditor(_event: Event): void {
-	close();
-	guiboardeditor.open();
-}
+// function callback_BoardEditor(_event: Event): void {
+// 	close();
+// 	guiboardeditor.open();
+// }
 
 export default {
 	boardVel,
