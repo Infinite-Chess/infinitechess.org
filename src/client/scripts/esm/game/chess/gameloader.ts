@@ -255,19 +255,18 @@ async function startEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const formattedEngineName = enginegame.getFormattedEngineName(
+		options.currentEngine,
+		options.engineConfig.strengthLevel,
+	);
+
 	const metadata: MetaData = {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: options.TimeControl ?? '-',
-		White:
-			options.youAreColor === p.WHITE
-				? translations.you_indicator
-				: translations.engine_indicator,
-		Black:
-			options.youAreColor === p.BLACK
-				? translations.you_indicator
-				: translations.engine_indicator,
+		White: options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName,
+		Black: options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName,
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
@@ -388,6 +387,16 @@ async function startCustomEngineGame(options: {
 
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
+
+	const formattedEngineName = enginegame.getFormattedEngineName(
+		options.currentEngine,
+		options.engineConfig.strengthLevel,
+	);
+
+	options.metadata.White =
+		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
+	options.metadata.Black =
+		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({

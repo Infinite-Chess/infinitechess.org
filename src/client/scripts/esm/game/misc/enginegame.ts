@@ -63,6 +63,22 @@ const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: numbe
 	hydrochess: 4000,
 };
 
+/**
+ * Display names for each engine.
+ */
+const engineDisplayNamesDict: { [key in validEngineName]: string } = {
+	engineCheckmatePractice: 'Checkmate Practice',
+	hydrochess: 'HydroChess',
+};
+
+/**
+ * Returns a formatted engine name string, optionally including its strength level.
+ */
+function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
+	const name = engineDisplayNamesDict[engineName];
+	return strengthLevel !== undefined ? `${name} (Level ${strengthLevel})` : name;
+}
+
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -420,7 +436,12 @@ function render(): void {
 
 // Export ---------------------------------------------------------------------------------
 
-export { engineWorldBorderDict, engineDefaultTimeLimitPerMoveMillisDict };
+export {
+	engineWorldBorderDict,
+	engineDefaultTimeLimitPerMoveMillisDict,
+	engineDisplayNamesDict,
+	getFormattedEngineName,
+};
 
 export default {
 	areInEngineGame,
@@ -434,6 +455,8 @@ export default {
 	toggleDebug,
 	render,
 	onViewMove,
+	engineDisplayNamesDict,
+	getFormattedEngineName,
 };
 
 export type { EngineConfig, validEngineName };
