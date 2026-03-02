@@ -4,7 +4,7 @@
  * This module is responsible for creating and managing audio effects using the Web Audio API.
  */
 
-// Type Definitions ----------------------------------------------------------------------------------
+// Types ---------------------------------------------------------------------------------------------
 
 /** A wrapper containing the input and output nodes of an effect graph. */
 export interface NodeChain {

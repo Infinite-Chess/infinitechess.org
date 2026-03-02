@@ -1,0 +1,491 @@
+// src/client/scripts/esm/game/misc/invites.ts
+
+/**
+ * This script manages the invites on the Play page.
+ */
+
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { InvitesMessage } from '../websocket/socketschemas.js';
+import type { ServerUsernameContainer } from '../../../../../shared/types.js';
+
+import uuid from '../../../../../shared/util/uuid.js';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
+import toast from '../gui/toast.js';
+import guiplay from '../gui/guiplay.js';
+import docutil from '../../util/docutil.js';
+import gamesound from './gamesound.js';
+import socketsubs from '../websocket/socketsubs.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import loadbalancer from './loadbalancer.js';
+import validatorama from '../../util/validatorama.js';
+import socketmessages from '../websocket/socketmessages.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
+
+// Types -------------------------------------------------------------------------
+
+/** The invite object. NOT an HTML object. */
+export interface Invite {
+	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
+	usernamecontainer: ServerUsernameContainer;
+	/** A unique identifier */
+	id: string;
+	/** Used to verify if an invite is your own. */
+	tag?: string;
+	/** The name of the variant */
+	variant: string;
+	/** The clock value */
+	clock: TimeControl;
+	/** The player color (null = Random) */
+	color: Player | null;
+	publicity: 'public' | 'private';
+	rated: 'casual' | 'rated';
+}
+
+/** Create lobby invite options. */
+export interface InviteOptions {
+	variant: string;
+	clock: TimeControl;
+	color: Player | null;
+	private: 'public' | 'private';
+	rated: 'casual' | 'rated';
+}
+
+// Elements ----------------------------------------------------------------------
+
+const invitesContainer = document.getElementById('invites')!;
+const ourInviteContainer = document.getElementById('our-invite')!;
+const element_joinExisting = document.getElementById('join-existing')!;
+const element_inviteCodeCode = document.getElementById('invite-code-code')!;
+
+// Variables ---------------------------------------------------------------------
+
+/** Whether we have an existing invite created by us. */
+let weHaveInvite = false;
+/** The ID of our existing invite, if any. */
+let ourInviteID: string | undefined;
+
+// Functions ---------------------------------------------------------------------
+
+function gelement_iCodeCode(): HTMLElement {
+	return element_inviteCodeCode;
+}
+
+function update(): void {
+	if (!guiplay.isOpen()) return; // Not on the play screen
+	if (loadbalancer.areWeHibernating())
+		toast.show(translations.invites.move_mouse, { durationMultiplier: 0.1 });
+}
+
+function unsubIfWeNotHave(): void {
+	if (!weHaveInvite) unsubFromInvites();
+}
+
+/**
+ * Unsubscribes from the invites subscriptions list.
+ */
+function unsubFromInvites(): void {
+	clear(true);
+	socketsubs.unsubFromSub('invites');
+}
+
+/**
+ * Update invites list according to new data!
+ * Should be called by websocket script when it receives a
+ * message that the server says is for the "invites" subscription
+ */
+function onmessage(contents: InvitesMessage): void {
+	// Any incoming message will have no effect if we're not on the invites page.
+	// This can happen if we have slow network and leave the invites screen before the server sends us an invites-related message.
+	if (!guiplay.isOpen()) return;
+
+	switch (contents.action) {
+		case 'inviteslist':
+			// Update the list in the document
+			updateInviteList(contents.value.invitesList);
+			updateActiveGameCount(contents.value.currentGameCount);
+			break;
+		case 'gamecount':
+			updateActiveGameCount(contents.value);
+			break;
+		default:
+			// @ts-ignore
+			console.error(`Received message for invites with unknown action: ${contents.action}`);
+			break;
+	}
+}
+
+/**
+ * Sends the create invite request message from the given InviteOptions specified on the invite creation screen.
+ */
+function create(variantOptions: InviteOptions): void {
+	if (weHaveInvite)
+		return console.error("We already have an existing invite, can't create more.");
+
+	const inviteOptions = {
+		variant: variantOptions.variant,
+		clock: variantOptions.clock,
+		color: variantOptions.color,
+		publicity: variantOptions.private, // Only the `private` property is changed to `publicity`
+		rated: variantOptions.rated,
+	};
+
+	generateTagForInvite(inviteOptions);
+
+	guiplay.lockCreateInviteButton();
+
+	// The function to execute when we hear back the server's response
+	const onreplyFunc = guiplay.unlockCreateInviteButton;
+
+	// console.log("Invite options before sending create invite:");
+	// console.log(inviteOptions);
+
+	socketmessages.send('invites', 'createinvite', inviteOptions, true, onreplyFunc);
+}
+
+function cancel(inviteID = ourInviteID): void {
+	if (!weHaveInvite) return;
+	if (!inviteID) return toast.show(translations.invites.cannot_cancel, { error: true });
+
+	LocalStorage.deleteItem('invite-tag');
+
+	guiplay.lockCreateInviteButton();
+
+	// The function to execute when we hear back the server's response
+	const onreplyFunc = guiplay.unlockCreateInviteButton;
+
+	socketmessages.send('invites', 'cancelinvite', inviteID, true, onreplyFunc);
+}
+
+/**
+ * Generates a tag id for the invite parameters before
+ * we send off action "createinvite" to the server.
+ */
+function generateTagForInvite(inviteOptions: {
+	variant: string;
+	clock: TimeControl;
+	color: Player | null;
+	publicity: 'public' | 'private';
+	rated: 'casual' | 'rated';
+	tag?: string;
+}): void {
+	// Create and send invite with a tag so we know which ones ours
+	const tag = uuid.generateID_Base62(8);
+
+	// NEW browser storage method!
+	LocalStorage.saveItem('invite-tag', tag);
+
+	inviteOptions.tag = tag;
+}
+
+/** Updates the invite elements on the invite creation screen according to the new list provided. */
+function updateInviteList(list: Invite[]): void {
+	// { invitesList, currentGameCount }
+	if (!list) return;
+
+	const alreadySeenOurInvite = weHaveInvite;
+	let alreadyPlayedSound = false;
+
+	// Close all previous event listeners and delete invites from the document
+	clear();
+
+	// Append latest invites to the document and re-init event listeners.
+	let foundOurs = false;
+	let privateInviteID: string | undefined = undefined;
+	ourInviteID = undefined;
+	for (let i = 0; i < list.length; i++) {
+		// { usernamecontainer, variant, clock, color, publicity }
+		const invite = list[i]!;
+
+		// Is this our own invite?
+		const ours = foundOurs ? false : isInviteOurs(invite);
+		if (ours) {
+			foundOurs = true;
+			ourInviteID = invite.id;
+			if (!alreadySeenOurInvite) {
+				gamesound.playMarimba();
+				alreadyPlayedSound = true;
+			}
+		}
+
+		const classes = ['invite', 'button', 'unselectable'];
+		const isPrivate = invite.publicity === 'private';
+		if (isPrivate) privateInviteID = invite.id;
+		if (ours && !isPrivate) classes.push('ours');
+		else if (ours && isPrivate) classes.push('private');
+
+		const newInvite = createDiv(classes, undefined, invite.id);
+
+		// <div class="invite-child">Playername (elo)</div>
+		// <div class="invite-child">Standard</div>
+		// <div class="invite-child">15m+15s</div>
+		// <div class="invite-child">Random</div>
+		// <div class="invite-child">Casual</div>
+		// <div class="invite-child accept">Accept</div>
+
+		if (invite.usernamecontainer.type === 'guest') {
+			// Standardize the name according to our language.
+			if (ours) invite.usernamecontainer.username = translations.you_indicator;
+			else invite.usernamecontainer.username = translations.guest_indicator;
+		}
+		const username_item = { value: invite.usernamecontainer.username, openInNewWindow: false };
+		const displayelement_usernamecontainer = usernamecontainer.createUsernameContainer(
+			invite.usernamecontainer.type,
+			username_item,
+			invite.usernamecontainer.rating,
+		).element;
+		displayelement_usernamecontainer.classList.add('invite-child');
+		newInvite.appendChild(displayelement_usernamecontainer);
+		// @ts-ignore
+		const variant = createDiv(['invite-child'], translations[invite.variant]);
+		newInvite.appendChild(variant);
+
+		const time = clockutil.getClockFromKey(invite.clock);
+		const cloc = createDiv(['invite-child'], time);
+		newInvite.appendChild(cloc);
+
+		// prettier-ignore
+		const uColor: string = ours ? invite.color === p.WHITE ? translations.invites.you_are_white : invite.color === p.BLACK ? translations.invites.you_are_black : translations.invites.random
+                            : invite.color === p.WHITE ? translations.invites.you_are_black : invite.color === p.BLACK ? translations.invites.you_are_white : translations.invites.random;
+		const color = createDiv(['invite-child'], uColor);
+		newInvite.appendChild(color);
+
+		const rated = createDiv(['invite-child'], translations[invite.rated]);
+		newInvite.appendChild(rated);
+
+		const a: string = ours ? translations.invites.cancel : translations.invites.accept;
+		const accept = createDiv(['invite-child', 'accept'], a);
+		newInvite.appendChild(accept);
+
+		const targetCont = ours ? ourInviteContainer : invitesContainer;
+		targetCont.appendChild(newInvite);
+	}
+
+	if (!alreadyPlayedSound) playBaseIfNewInvite(list);
+
+	weHaveInvite = foundOurs;
+	updateCreateInviteButton();
+	updatePrivateInviteCode(privateInviteID);
+
+	guiplay.initListeners_Invites();
+
+	// If we are on "Local" and have an existing invite, IMMEDIATELY cancel it! This can happen with slow network.
+	if (weHaveInvite && guiplay.getModeSelected() !== 'online') cancel();
+}
+
+/**
+ * Plucks base C2 (audio cue) if the new invites list contains an invite from a new person!
+ *
+ * Uses a closure to maintain state of recent users and IDs from the last list.
+ */
+const playBaseIfNewInvite = (() => {
+	const COOLDOWN_SECS = 10;
+
+	const recentUsers: Record<string, boolean> = {};
+	let IDsInLastList: Record<string, boolean> = {};
+
+	return function (inviteList: Invite[]): void {
+		let playedSound = false;
+		const newIDsInList: Record<string, boolean> = {};
+		inviteList.forEach((invite) => {
+			const name = invite.usernamecontainer.username;
+			const id = invite.id;
+			newIDsInList[id] = true;
+			if (IDsInLastList[id]) return; // Not a new invite, was there last update.
+			if (recentUsers[name]) return; // We recently played a sound for this user
+			if (isInviteOurs(invite)) return;
+			recentUsers[name] = true;
+			setTimeout(() => delete recentUsers[name], COOLDOWN_SECS * 1000);
+			if (playedSound) return;
+			playSoundNewOpponentInvite();
+			playedSound = true;
+		});
+		IDsInLastList = newIDsInList;
+	};
+})();
+
+function playSoundNewOpponentInvite(): void {
+	if (docutil.isMouseSupported()) gamesound.playBase();
+	else gamesound.playViola_c3();
+}
+
+/**
+ * Close all previous event listeners and delete invites from the document
+ * @param resetRecentUsersCache - If true, resets the playBaseIfNewInvite closure's internal state for tracking recent users
+ */
+function clear(resetRecentUsersCache?: true): void {
+	guiplay.closeListeners_Invites();
+	ourInviteContainer.innerHTML = ''; // Deletes all contained invite elements
+	invitesContainer.innerHTML = ''; // Deletes all contained invite elements
+	weHaveInvite = false;
+	ourInviteID = undefined;
+	element_inviteCodeCode.textContent = '';
+	// Passing in an empty list resets the local scope variables for next time.
+	if (resetRecentUsersCache) playBaseIfNewInvite([]);
+}
+
+/** Deletes all invites and resets create invite button if on play page. */
+function clearIfOnPlayPage(): void {
+	if (!guiplay.isOpen()) return; // Not on the play screen
+	clear();
+	updateCreateInviteButton();
+}
+
+/** Tests if a virtual invite belongs to us. */
+function isInviteOurs(invite: Invite): boolean {
+	if (validatorama.areWeLoggedIn()) {
+		return (
+			invite.usernamecontainer.type === 'player' &&
+			validatorama.getOurUsername() === invite.usernamecontainer.username
+		);
+	}
+
+	if (!invite.tag) return invite.id === ourInviteID; // Tag not present (invite converted from an HTML element), compare ID instead.
+
+	// Compare the tag..
+
+	const localStorageTag = LocalStorage.loadItem('invite-tag');
+	if (!localStorageTag) return false;
+	if (invite.tag === localStorageTag) return true;
+	return false;
+}
+
+/** Creates a virtual invite from the given invite HTML element. */
+function getInviteFromElement(inviteElement: HTMLElement): Invite {
+	const id = inviteElement.getAttribute('id')!;
+
+	/**
+	 * Starting from the first child, the order goes:
+	 * Usernamecontainer, Variant, TimeControl, Color, Publicity, Rated
+	 * (see the {@link Invite} object)
+	 */
+
+	return {
+		usernamecontainer: usernamecontainer.extractPropertiesFromUsernameContainerElement(
+			inviteElement.children[0] as HTMLDivElement,
+		),
+		variant: inviteElement.children[1]!.textContent,
+		clock: inviteElement.children[2]!.textContent as TimeControl,
+		color: Number(inviteElement.children[3]!.textContent) as Player,
+		publicity: inviteElement.children[4]!.textContent as 'public' | 'private',
+		rated: inviteElement.children[5]!.textContent as 'casual' | 'rated',
+		id,
+	};
+}
+
+function createDiv(
+	classes: string[],
+	textContent: string | undefined,
+	id?: string,
+): HTMLDivElement {
+	const element = document.createElement('div');
+	classes.forEach((c) => element.classList.add(c));
+	if (textContent !== undefined) element.textContent = textContent;
+	if (id !== undefined) element.id = id;
+	return element;
+}
+
+function accept(inviteID: string, isPrivate: boolean): void {
+	const inviteinfo = { id: inviteID, isPrivate };
+
+	guiplay.lockAcceptInviteButton();
+
+	// The function to execute when we hear back the server's response
+	const onreplyFunc = guiplay.unlockAcceptInviteButton;
+
+	socketmessages.send('invites', 'acceptinvite', inviteinfo, true, onreplyFunc);
+}
+
+/** Called when an invite element is clicked. */
+function click(element: HTMLElement): void {
+	const invite = getInviteFromElement(element);
+	const isOurs = isInviteOurs(invite);
+
+	if (isOurs) {
+		// Only cancel if the Create Invite button isn't disabled
+		if (!guiplay.isCreateInviteButtonLocked()) cancel(invite.id);
+	} else {
+		// Not our invite, accept the one we clicked
+		if (!guiplay.isAcceptInviteButtonLocked()) accept(invite.id, false);
+	}
+}
+
+function updateCreateInviteButton(): void {
+	if (guiplay.getModeSelected() !== 'online') return;
+	if (weHaveInvite)
+		guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
+	else guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
+}
+
+function updatePrivateInviteCode(privateInviteID: string | undefined): void {
+	// If undefined, we know we don't have a "private" invite
+	if (guiplay.getModeSelected() === 'local') return;
+
+	if (!weHaveInvite) {
+		guiplay.showElement_joinPrivate();
+		guiplay.hideElement_inviteCode();
+		return;
+	}
+
+	// We have an invite...
+
+	// If the classlist of our private invite contains a "private" property of "private",
+	// then display our invite code text!
+
+	if (privateInviteID) {
+		guiplay.hideElement_joinPrivate();
+		guiplay.showElement_inviteCode();
+		element_inviteCodeCode.textContent = privateInviteID.toUpperCase();
+		return;
+	}
+
+	// Else our invite is NOT private, only show the "Private Invite:" display.
+
+	guiplay.showElement_joinPrivate();
+	guiplay.hideElement_inviteCode();
+}
+
+function updateActiveGameCount(newCount: number): void {
+	if (newCount === undefined) throw Error('Need to specify active game count');
+	element_joinExisting.textContent = `${translations.invites.join_existing_active_games} ${newCount}`;
+}
+
+function doWeHave(): boolean {
+	return weHaveInvite;
+}
+
+/**
+ * Subscribes to the invites list. We will receive updates
+ * for incoming and deleted invites from other players.
+ * @param ignoreAlreadySubbed - *true* If the socket closed unexpectedly and we need to resub. subs.invites will already be true so we ignore that.
+ */
+async function subscribeToInvites(ignoreAlreadySubbed?: boolean): Promise<void> {
+	// Set to true when we are restarting the connection and need to resub to everything we were to before.
+	if (!guiplay.isOpen()) return; // Don't subscribe to invites if we're not on the play page!
+
+	const alreadySubbed = socketsubs.areSubbedToSub('invites');
+	if (!ignoreAlreadySubbed && alreadySubbed) return;
+	// console.log("Subbing to invites!");
+	socketsubs.addSub('invites');
+	socketmessages.send('general', 'sub', 'invites');
+}
+
+// Exports -----------------------------------------------------------------------
+
+export default {
+	gelement_iCodeCode,
+	onmessage,
+	update,
+	create,
+	cancel,
+	clear,
+	accept,
+	click,
+	doWeHave,
+	clearIfOnPlayPage,
+	unsubIfWeNotHave,
+	subscribeToInvites,
+	unsubFromInvites,
+};

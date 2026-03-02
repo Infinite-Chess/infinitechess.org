@@ -1,21 +1,24 @@
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import gamesound from '../misc/gamesound.js';
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import clock from '../../../../../shared/chess/logic/clock.js';
-import { GameBus } from '../GameBus.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
+// src/client/scripts/esm/game/gui/guiclock.ts
 
-import type { SoundObject } from '../../audio/AudioManager.js';
-import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Game } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
+import type { SoundObject } from '../../audio/AudioManager.js';
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+
+import clock from '../../../../../shared/chess/logic/clock.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
+import gamesound from '../misc/gamesound.js';
+import gameloader from '../chess/gameloader.js';
+import { GameBus } from '../GameBus.js';
 
 const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
-	[players.WHITE]: {
+	[p.WHITE]: {
 		timer: document.getElementById('timer-white')!,
 	},
-	[players.BLACK]: {
+	[p.BLACK]: {
 		timer: document.getElementById('timer-black')!,
 	},
 };
@@ -176,7 +179,7 @@ function rescheduleSoundEffects(clocks: ClockData): void {
 	cancelSoundEffectTimers(); // Clear the previous timeouts
 
 	if (clocks.colorTicking === undefined) return; // Don't reschedule sound effects if no clocks are ticking
-	if (onlinegame.areInOnlineGame() && clocks.colorTicking! !== onlinegame.getOurColor()) return; // Don't play the sound effect for our opponent.
+	if (!gameloader.areInLocalGame() && clocks.colorTicking !== gameloader.getOurColor()) return; // Don't play the sound effect for our opponent.
 
 	scheduleMinuteTick(clocks); // Lowtime notif at 1 minute left
 	scheduleCountdown(clocks); // Schedule 10s drum countdown

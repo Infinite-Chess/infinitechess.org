@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/miniimage.ts
+
 /**
  * This script handles the rendering of the mini images of our pieces when we're zoomed out
  */
@@ -11,36 +13,36 @@ import type {
 
 import bd from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-import webgl from './webgl.js';
-import space from '../misc/space.js';
-import frametracker from './frametracker.js';
-import gameslot from '../chess/gameslot.js';
-import animation from './animation.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import mouse from '../../util/mouse.js';
-import boardpos from './boardpos.js';
-import snapping from './highlights/snapping.js';
-import instancedshapes from './instancedshapes.js';
-import texturecache from '../../chess/rendering/texturecache.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import selection from '../chess/selection.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
-import boardtiles from './boardtiles.js';
-import perspective from './perspective.js';
-import premoves from '../chess/premoves.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import { Color } from '../../../../../shared/util/math/math.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import { players, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+
+import toast from '../gui/toast.js';
+import webgl from './webgl.js';
+import space from '../misc/space.js';
+import mouse from '../../util/mouse.js';
+import gameslot from '../chess/gameslot.js';
+import boardpos from './boardpos.js';
+import snapping from './highlights/snapping.js';
+import premoves from '../chess/premoves.js';
+import animation from './animation.js';
+import selection from '../chess/selection.js';
+import boardtiles from './boardtiles.js';
+import perspective from './perspective.js';
+import { GameBus } from '../GameBus.js';
+import frametracker from './frametracker.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import instancedshapes from './instancedshapes.js';
 import {
 	RenderableInstanced,
 	AttributeInfoInstanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import { GameBus } from '../GameBus.js';
 
 // Variables --------------------------------------------------------------
 
@@ -92,8 +94,8 @@ function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) statustext.showStatus(translations['rendering'].icon_rendering_off);
-	else statustext.showStatus(translations['rendering'].icon_rendering_on);
+	if (disabled) toast.show(translations.rendering.icon_rendering_off);
+	else toast.show(translations.rendering.icon_rendering_on);
 }
 
 // Updating --------------------------------------------------------------------------
@@ -395,10 +397,10 @@ function render(): void {
 
 	// Sort the types in descending order, so that lower player number pieces are rendered on top, and kings are rendered on top.
 	const sortedNeutrals = boardsim.existingTypes
-		.filter((t: number) => typeutil.getColorFromType(t) === players.NEUTRAL)
+		.filter((t: number) => typeutil.getColorFromType(t) === p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 	const sortedColors = boardsim.existingTypes
-		.filter((t: number) => typeutil.getColorFromType(t) !== players.NEUTRAL)
+		.filter((t: number) => typeutil.getColorFromType(t) !== p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 
 	const u_size = snapping.getEntityWidthWorld();

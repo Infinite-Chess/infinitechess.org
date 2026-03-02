@@ -1,3 +1,5 @@
+// src/shared/chess/util/gamefileutility.ts
+
 /**
  * This script contains many utility methods for working with gamefiles.
  */
@@ -9,10 +11,9 @@ import type { Game, Board, FullGame } from '../logic/gamefile.js';
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
 import metadata from './metadata.js';
-import winconutil from './winconutil.js';
 import gamerules from '../variants/gamerules.js';
-// THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
-import wincondition from '../logic/wincondition.js';
+import winconutil from './winconutil.js';
+import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 
 // Methods -------------------------------------------------------------
 
@@ -47,15 +48,13 @@ function setTerminationMetadata(basegame: Game): void {
 	if (!basegame.gameConclusion)
 		return console.error("Cannot set conclusion metadata when game isn't over yet.");
 
-	const victorAndCondition: { victor?: Player; condition: string } =
-		winconutil.getVictorAndConditionFromGameConclusion(basegame.gameConclusion);
 	const conditionInPlainEnglish: string = winconutil.getTerminationInEnglish(
 		basegame.gameRules,
-		victorAndCondition.condition,
+		basegame.gameConclusion.condition,
 	);
 	basegame.metadata.Termination = conditionInPlainEnglish;
 
-	basegame.metadata.Result = metadata.getResultFromVictor(victorAndCondition.victor); // white/black/draw/undefined
+	basegame.metadata.Result = metadata.getResultFromVictor(basegame.gameConclusion.victor);
 }
 
 /**

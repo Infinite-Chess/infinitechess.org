@@ -8,14 +8,15 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd from '@naviary/bigdecimal';
 
-import boardtiles from './boardtiles.js';
-import gameslot from '../chess/gameslot.js';
-import boardpos from './boardpos.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { createRenderable } from '../../webgl/Renderable.js';
-import primitives from './primitives.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
 import camera from './camera.js';
 import meshes from './meshes.js';
+import gameslot from '../chess/gameslot.js';
+import boardpos from './boardpos.js';
+import boardtiles from './boardtiles.js';
+import primitives from './primitives.js';
+import { createRenderable } from '../../webgl/Renderable.js';
 
 // ===================================== Constants =====================================
 
@@ -54,10 +55,11 @@ function render(): void {
 	const color: Color = [0, 0, 0, 1];
 	const vertexData: number[] = [];
 
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.WHITE]!, 1);
-	addDataForSide(gamefile.basegame.gameRules.promotionRanks[players.BLACK]!, 0);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.WHITE], 1);
+	addDataForSide(gamefile.basegame.gameRules.promotionRanks[p.BLACK], 0);
 
-	function addDataForSide(ranks: bigint[], yShift: 1 | 0): void {
+	function addDataForSide(ranks: bigint[] | undefined, yShift: 1 | 0): void {
+		if (!ranks) return;
 		ranks.forEach((rank) => {
 			const rankBD = bd.fromBigInt(rank);
 			const relativeRank: number = bd.toNumber(bd.subtract(rankBD, position[1])); // Subtract our board position

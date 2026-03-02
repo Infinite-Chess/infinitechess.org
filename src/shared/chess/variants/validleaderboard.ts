@@ -1,3 +1,5 @@
+// src/shared/chess/variants/validleaderboard.ts
+
 /**
  * This script stores all global variables related to our leaderboards.
  */

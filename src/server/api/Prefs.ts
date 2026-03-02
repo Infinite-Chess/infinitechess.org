@@ -1,22 +1,24 @@
+// src/server/api/Prefs.ts
+
 /**
  * This script sets the preferences cookie on any request to an HTML file.
  * And it has an API for setting your preferences in the database.
  */
 
 import type { NextFunction, Request, Response } from 'express';
-import type { IdentifiedRequest } from '../types.js';
 
 import z from 'zod';
 
 import themes from '../../shared/components/header/themes.js';
 import jsutil from '../../shared/util/jsutil.js';
-import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+
 import { logZodError } from '../utility/zodlogger.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 // Types -------------------------------------------------------------------------------
 
-export type Preferences = z.infer<typeof prefsSchema>;
+type Preferences = z.infer<typeof prefsSchema>;
 
 // Variables -----------------------------------------------------------------------------
 
@@ -53,7 +55,7 @@ function setPrefsCookie(req: Request, res: Response, next: NextFunction): void {
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab preferences of other users this way, but there's no harm in that.
 	const cookies = req.cookies;
-	const memberInfoCookieStringified = cookies.memberInfo;
+	const memberInfoCookieStringified = cookies['memberInfo'];
 	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
 
 	let memberInfoCookie; // { user_id, username }
@@ -130,8 +132,8 @@ function getPrefs(userId: number): Preferences | undefined {
 }
 
 /** Route that Handles a POST request to update user preferences in the database. */
-function postPrefs(req: IdentifiedRequest, res: Response): void {
-	if (!req.memberInfo.signedIn) {
+function postPrefs(req: Request, res: Response): void {
+	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(
 			"User tried to save preferences when they weren't signed in!",
 			'errLog.txt',

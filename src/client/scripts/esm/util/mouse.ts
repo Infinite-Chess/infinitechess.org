@@ -1,16 +1,18 @@
+// src/client/scripts/esm/util/mouse.ts
+
 /**
  * This script contains several wrappers for getting the
  * mouse position, world space, or coordinates,
  * reading the correct listener depending on whether we're in perspective mode or not.
  */
 
-import { listener_document, listener_overlay } from '../game/chess/game.js';
-import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+
 import space from '../game/misc/space.js';
 import camera from '../game/rendering/camera.js';
 import perspective from '../game/rendering/perspective.js';
-
-import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/util/coordutil.js';
+import { listener_document, listener_overlay } from '../game/chess/game.js';
+import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
 
 /**
  * This is capable of getting the mouse position, EVEN IF

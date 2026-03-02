@@ -1,17 +1,18 @@
-import themes from '../../../../../shared/components/header/themes.js';
-import pieceThemes, {
-	PieceColorGroup,
-} from '../../../../../shared/components/header/pieceThemes.js';
-import localstorage from '../../util/localstorage.js';
-import timeutil from '../../../../../shared/util/timeutil.js';
-import validatorama from '../../util/validatorama.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
-import docutil from '../../util/docutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+// src/client/scripts/esm/components/header/preferences.ts
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
-// Type Definitions ------------------------------------------------------------
+import themes from '../../../../../shared/components/header/themes.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
+import pieceThemes, {
+	PieceColorGroup,
+} from '../../../../../shared/components/header/pieceThemes.js';
+
+import docutil from '../../util/docutil.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import validatorama from '../../util/validatorama.js';
 
 /** Prefs that do NOT get saved on the server side */
 const clientSidePrefs: string[] = [
@@ -79,7 +80,7 @@ let changeWasMade: boolean = false;
 })();
 
 function loadPreferences(): void {
-	const browserStoragePrefs: Preferences = localstorage.loadItem('preferences') || {
+	const browserStoragePrefs: Preferences = LocalStorage.loadItem('preferences') || {
 		theme: themes.defaultTheme,
 		legal_moves: default_legal_moves,
 		perspective_sensitivity: default_perspective_sensitivity,
@@ -107,7 +108,7 @@ function loadPreferences(): void {
 
 function savePreferences(): void {
 	const oneYearInMillis: number = timeutil.getTotalMilliseconds({ years: 1 });
-	localstorage.saveItem('preferences', preferences, oneYearInMillis);
+	LocalStorage.saveItem('preferences', preferences, oneYearInMillis);
 
 	// After a delay, also send a post request to the server to update our preferences.
 	// Auto send it if the window is closing

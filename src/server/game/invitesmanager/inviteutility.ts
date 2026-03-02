@@ -1,16 +1,18 @@
+// src/server/game/invitesmanager/inviteutility.ts
+
 /*
  * This script stores utility methods for working
  * with single invites, not multiple
  */
 
-import jsutil from '../../../shared/util/jsutil.js';
-
-import type { AuthMemberInfo } from '../../types.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { AuthMemberInfo } from '../../types.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
-// Type Definitions -------------------------------------------------------------------------------------------
+import jsutil from '../../../shared/util/jsutil.js';
+
+// Type Definitions
 
 /** A lobby game invite. */
 interface Invite extends SafeInvite {
@@ -27,8 +29,8 @@ interface SafeInvite {
 	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
 	tag: string; // Used to verify if an invite is your own.
 	variant: string;
-	clock: MetaData['TimeControl'];
-	color: Player;
+	clock: TimeControl;
+	color: Player | null;
 	rated: 'casual' | 'rated';
 	publicity: 'public' | 'private';
 }
@@ -89,4 +91,4 @@ function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 
 export type { Invite, SafeInvite };
 
-export { isInvitePrivate, isInvitePublic, makeInviteSafe, safelyCopyInvite, memberInfoEq };
+export { isInvitePrivate, isInvitePublic, safelyCopyInvite, memberInfoEq };

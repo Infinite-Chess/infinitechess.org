@@ -1,3 +1,0 @@
-[submodule "src/client/scripts/esm/game/chess/engines/hydrochess-wasm"]
-	path = src/client/scripts/esm/game/chess/engines/hydrochess-wasm
-	url = https://github.com/Infinite-Chess/hydrochess

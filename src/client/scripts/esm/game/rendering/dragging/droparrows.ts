@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/dragging/droparrows.ts
+
 /**
  * This script handles dropping the dragged piece onto
  * arrow indicators to capture the piece the arrow
@@ -7,15 +9,16 @@
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
+import typeutil from '../../../../../../shared/chess/util/typeutil.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+
+import space from '../../misc/space.js';
 import arrows from '../arrows/arrows.js';
+import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import draganimation from './draganimation.js';
-import space from '../../misc/space.js';
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import gameslot from '../../chess/gameslot.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
 let capturedPieceThisFrame: Piece | undefined;
 

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/renderers/ColorFlowRenderer.ts
+// src/client/scripts/esm/game/rendering/ColorFlowRenderer.ts
 
 /**
  * A modular renderer that paints a color flow effect across the

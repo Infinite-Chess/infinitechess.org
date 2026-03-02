@@ -1,3 +1,5 @@
+// src/shared/chess/logic/repetition.ts
+
 /**
  * This script contains our algorithm for detecting draw by repetition.
  *
@@ -7,13 +9,13 @@
  * It also takes into account special rights.
  */
 
-import type { FullGame } from './gamefile.js';
 import type { Move } from './movepiece.js';
 import type { StateChange } from './state.js';
+import type { FullGame, GameConclusion } from './gamefile.js';
 
-import boardchanges from './boardchanges.js';
 import typeutil from '../util/typeutil.js';
-import { players, rawTypes } from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 /** Either a surplus/deficit, on an exact coordinate. This may include a piece type, or an enpassant state. */
 type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`
@@ -25,7 +27,7 @@ type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassa
  * @param gamefile - The gamefile
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefined {
+function detectRepetitionDraw({ basegame, boardsim }: FullGame): GameConclusion | undefined {
 	const moveList = boardsim.moves;
 	const turnOrderLength = basegame.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.
@@ -48,7 +50,7 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.
 		// 'capture' move changes are handled lower down, they are one-way too.
-		if (typeutil.getRawType(move.type) === rawTypes.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
+		if (typeutil.getRawType(move.type) === r.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
 		if (
 			move.state.global.some(
 				(stateChange: StateChange) =>
@@ -136,8 +138,7 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): string | undefi
 	}
 
 	// Loop is finished. How many equal positions did we find?
-	if (equalPositionsFound === 2)
-		return `${players.NEUTRAL} repetition`; // Victor of player NEUTRAL means it was a draw.
+	if (equalPositionsFound === 2) return { victor: null, condition: 'repetition' };
 	else return undefined;
 }
 

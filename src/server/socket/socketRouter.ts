@@ -7,12 +7,12 @@
  * It also handles subbing to subscription lists.
  */
 
-import { routeGeneralMessage } from './generalrouter.js';
-import { routeInvitesMessage } from '../game/invitesmanager/invitesrouter.js';
-import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
-
 import type { CustomWebSocket } from './socketUtility.js';
 import type { WebsocketInMessage } from './receiveSocketMessage.js';
+
+import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
+import { routeGeneralMessage } from './generalrouter.js';
+import { routeInvitesMessage } from '../game/invitesmanager/invitesrouter.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -35,5 +35,3 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 }
 
 export { routeIncomingSocketMessage };
-
-export type { WebsocketInMessage };

@@ -1,14 +1,16 @@
+// src/client/scripts/esm/util/usernamecontainer.ts
+
 /**
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
-// @ts-ignore
-import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
-import metadata from '../../../../shared/chess/util/metadata.js';
-import docutil from './docutil.js';
-
 import type { Rating } from '../../../../server/database/leaderboardsManager.js';
 import type { ServerUsernameContainer } from '../../../../shared/types.js';
+
+import metadata from '../../../../shared/chess/util/metadata.js';
+
+import docutil from './docutil.js';
+import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // Types ----------------------------------------------------------------------------------------
 
@@ -404,4 +406,4 @@ export default {
 	createEloChangeItem,
 };
 
-export type { UsernameContainer, UsernameContainerProperties, UsernameItem, RatingItem };
+export type { UsernameContainer, UsernameItem, RatingItem };

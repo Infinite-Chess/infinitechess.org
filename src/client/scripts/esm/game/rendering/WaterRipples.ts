@@ -4,21 +4,22 @@
  * This scripts managers the animated water ripple effect for extremely large moves.
  */
 
-import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
 import type { ProgramManager } from '../../webgl/ProgramManager';
+import type { PostProcessPass } from '../../webgl/post_processing/PostProcessingPipeline';
 
-import frametracker from './frametracker';
-import camera from './camera';
+import bounds from '../../../../../shared/util/math/bounds';
+import bdcoords from '../../../../../shared/chess/util/bdcoords';
+import { players as p } from '../../../../../shared/chess/util/typeutil';
+import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
+
 import space from '../misc/space';
+import camera from './camera';
 import boardpos from './boardpos';
 import drawrays from './highlights/annotations/drawrays';
-import bounds from '../../../../../shared/util/math/bounds';
-import perspective from './perspective';
 import gameloader from '../chess/gameloader';
-import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
-import { players as p } from '../../../../../shared/chess/util/typeutil';
+import perspective from './perspective';
+import frametracker from './frametracker';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
-import bdcoords from '../../../../../shared/chess/util/bdcoords';
 
 // Constants --------------------------------------------------------------------------------
 

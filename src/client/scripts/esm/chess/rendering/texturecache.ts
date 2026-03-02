@@ -1,14 +1,17 @@
+// src/client/scripts/esm/chess/rendering/texturecache.ts
+
 /**
  * This module handles the caching of WebGL textures of the pieces in our game.
  * It prevents redundant texture creation and data uploads to the GPU by caching
  * textures based on their source type. All textures are created with mipmaps enabled.
  */
 
-import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
 import imagecache from './imagecache.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 
 // Texture Cache Implementation ----------------------------------------------------------

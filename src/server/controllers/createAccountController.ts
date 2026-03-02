@@ -10,25 +10,25 @@
  */
 
 import crypto from 'crypto';
-import { Request, Response } from 'express';
-
 import bcrypt from 'bcrypt';
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
-import { handleLogin } from './loginController.js';
-// @ts-ignore
-import { getTranslationForReq } from '../utility/translate.js';
-// @ts-ignore
+// @ts-ignore this package has no types
 import emailValidator from 'node-email-verifier';
+import { Request, Response } from 'express';
+import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity';
+
+import validators from '../../shared/util/validators.js';
+
+import { handleLogin } from './loginController.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getTranslationForReq } from '../utility/translate.js';
+import { sendEmailConfirmation } from './sendMail.js';
 import {
 	addUser,
 	isEmailTaken,
 	isUsernameTaken,
 	SQLITE_CONSTRAINT_ERROR,
 } from '../database/memberManager.js';
-import { sendEmailConfirmation } from './sendMail.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import validators from '../../shared/util/validators.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
 
 // Variables -------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 /**
  * Generate an account only from the provided username, email, and password.
  * Regex tests are skipped.
- * @returns If it was a success, the row ID of where the member was inserted. Parent is also the same as their user ID)
+ * @returns If it was a success, the row ID of where the member was inserted (same as their user_id).
  *
  * @throws If account creation fails for any reason.
  */
@@ -222,7 +222,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		validators.UsernameValidationResult.UsernameIsReserved
 	) {
 		allowed = false;
-		reason = getTranslationForReq('server.javascript.ws-username_reserved', req);
+		reason = getTranslationForReq('create-account.javascript.js-username_reserved', req);
 	}
 
 	res.json({
@@ -240,7 +240,10 @@ function doUsernameValidation(username: string, req: Request, res: Response): bo
 			case validators.UsernameValidationResult.UsernameTooShort:
 			case validators.UsernameValidationResult.UsernameTooLong:
 				res.status(400).json({
-					message: getTranslationForReq('server.javascript.ws-username_length', req),
+					message: getTranslationForReq(
+						'create-account.javascript.js-username_length',
+						req,
+					),
 				});
 				return false;
 			case validators.UsernameValidationResult.OnlyLettersAndNumbers:

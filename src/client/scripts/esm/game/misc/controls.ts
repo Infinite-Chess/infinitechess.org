@@ -1,41 +1,41 @@
+// src/client/scripts/esm/game/misc/controls.ts
+
 /**
  * This script controls the board navigation
  * via the WASD keys, space/shift, and mouse wheel.
  */
 
-// @ts-ignore
-import guipause from '../gui/guipause.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-import websocket from '../websocket.js';
-import loadbalancer from './loadbalancer.js';
-import camera from '../rendering/camera.js';
-import perspective from '../rendering/perspective.js';
-import copygame from '../chess/copygame.js';
-import docutil from '../../util/docutil.js';
-import mouse from '../../util/mouse.js';
-import guipromotion from '../gui/guipromotion.js';
-import boarddrag from '../rendering/boarddrag.js';
-import boardpos from '../rendering/boardpos.js';
-import selection from '../chess/selection.js';
+import type { Mesh } from '../rendering/piecemodels.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+
 import jsutil from '../../../../../shared/util/jsutil.js';
-import animation from '../rendering/animation.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import piecemodels from '../rendering/piecemodels.js';
-import guinavigation from '../gui/guinavigation.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import miniimage from '../rendering/miniimage.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
+
+import toast from '../gui/toast.js';
+import stats from '../gui/stats.js';
+import mouse from '../../util/mouse.js';
+import camera from '../rendering/camera.js';
+import docutil from '../../util/docutil.js';
+import guipause from '../gui/guipause.js';
+import copygame from '../chess/copygame.js';
+import boardpos from '../rendering/boardpos.js';
+import socketman from '../websocket/socketman.js';
+import boarddrag from '../rendering/boarddrag.js';
+import selection from '../chess/selection.js';
+import animation from '../rendering/animation.js';
+import miniimage from '../rendering/miniimage.js';
 import Transition from '../rendering/transitions/Transition.js';
 import enginegame from './enginegame.js';
+import perspective from '../rendering/perspective.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import loadbalancer from './loadbalancer.js';
+import guipromotion from '../gui/guipromotion.js';
+import guinavigation from '../gui/guinavigation.js';
 import { listener_document } from '../chess/game.js';
-
-import type { Mesh } from '../rendering/piecemodels.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -213,7 +213,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
-	if (listener_document.isKeyDown('Digit4')) websocket.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener_document.isKeyDown('Digit4')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('Digit7')) enginegame.toggleDebug(); // Render engine generated legal moves
 	if (listener_document.isKeyDown('KeyM')) stats.toggleFPS();
 }
@@ -234,7 +234,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
-		statustext.showStatus('Regenerated piece models.', false, 0.5);
+		toast.show('Regenerated piece models.', { durationMultiplier: 0.5 });
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();

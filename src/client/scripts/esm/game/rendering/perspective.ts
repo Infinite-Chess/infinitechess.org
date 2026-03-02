@@ -5,25 +5,22 @@
  * Also rendering our crosshair
  */
 
-// @ts-ignore
+import type { Color } from '../../../../../shared/util/math/math.js';
+
 import mat4 from './gl-matrix.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-// @ts-ignore
-import guipause from '../gui/guipause.js';
+import toast from '../gui/toast.js';
 import webgl from './webgl.js';
+import config from '../config.js';
+import docutil from '../../util/docutil.js';
+import guipause from '../gui/guipause.js';
+import gameslot from '../chess/gameslot.js';
+import selection from '../chess/selection.js';
+import { Mouse } from '../input.js';
+import preferences from '../../components/header/preferences.js';
+import frametracker from './frametracker.js';
 import camera, { Mat4 } from './camera.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
-import selection from '../chess/selection.js';
-import frametracker from './frametracker.js';
-import config from '../config.js';
-import preferences from '../../components/header/preferences.js';
-import gameslot from '../chess/gameslot.js';
-import docutil from '../../util/docutil.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-import { Mouse } from '../input.js';
-
-import type { Color } from '../../../../../shared/util/math/math.js';
 
 /** Whether perspective mode is enabled. */
 let enabled = false;
@@ -61,7 +58,7 @@ function getIsViewingBlackPerspective(): boolean {
 
 function toggle(): void {
 	if (!docutil.isMouseSupported())
-		return statustext.showStatus(translations['rendering'].perspective_mode_on_desktop);
+		return toast.show(translations.rendering.perspective_mode_on_desktop);
 
 	if (!enabled) enable();
 	else disable();
@@ -72,7 +69,7 @@ function enable(): void {
 		return console.error('Should not be enabling perspective when it is already enabled.');
 	enabled = true;
 
-	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].on}`;
+	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.on}`;
 
 	guipause.callback_Resume();
 
@@ -80,7 +77,7 @@ function enable(): void {
 
 	initCrosshairModel();
 
-	statustext.showStatus(translations['rendering'].movement_tutorial);
+	toast.show(translations.rendering.movement_tutorial);
 }
 
 function disable(): void {
@@ -91,7 +88,7 @@ function disable(): void {
 	// document.exitPointerLock()
 	guipause.callback_Resume();
 
-	guipause.getelement_perspective().textContent = `${translations['rendering'].perspective}: ${translations['rendering'].off}`;
+	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
 
 	const viewWhitePerspective = gameslot.areInGame()
 		? gameslot.isLoadedGameViewingWhitePerspective()

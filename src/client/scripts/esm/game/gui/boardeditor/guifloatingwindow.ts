@@ -19,18 +19,10 @@ const element_boardUI = document.getElementById('boardUI')!;
 /** Functions that handle all floating window behavior */
 interface FloatingWindowHandle {
 	open: () => void;
-	close: () => void;
-	toggle: () => void;
+	close: (resetPositioning: boolean) => void;
 	resetPositioning: () => void;
 	clampToParentBounds: () => void;
 	isOpen: () => boolean;
-}
-
-/** Functions that handle floating window closing */
-interface FloatingWindowClosingHandle {
-	close: () => void;
-	isOpen: () => boolean;
-	resetPositioning: () => void;
 }
 
 /** Options for initializing a floating window in the board editor */
@@ -41,56 +33,24 @@ interface FloatingWindowOptions {
 	/** Header element of floating window */
 	headerEl: HTMLElement;
 
-	/** Button in editor bar that toggles visibility of floating window (gets 'active' class while open) */
-	toggleButtonEl?: HTMLElement;
-
-	/** Optional close button inside the floating window */
-	closeButtonEl?: HTMLElement;
+	/** Close button inside the floating window */
+	closeButtonEl: HTMLElement;
 
 	/** Optional list of input elements in floating window. They will get deselected on any click outside the floating window */
 	inputElList?: HTMLInputElement[];
 
 	/** Called after the floating window opens (use for window-specific listeners) */
-	onOpen?: () => void;
+	onOpen: () => void;
 
 	/** Called after the floating window closes (use for window-specific listener cleanup) */
-	onClose?: () => void;
+	onClose: (resetPositioning: boolean) => void;
 }
 
 // Utilities -------------------------------------------------------------
 
-/** Manager function that handles the closing and resetting of floating windows */
-const windowClosingManager = (() => {
-	const managedWindows = new Set<FloatingWindowClosingHandle>();
-
-	function register(w: FloatingWindowClosingHandle): void {
-		managedWindows.add(w);
-	}
-
-	function unregister(w: FloatingWindowClosingHandle): void {
-		managedWindows.delete(w);
-	}
-
-	function closeOthers(except: FloatingWindowClosingHandle): void {
-		for (const w of managedWindows) {
-			if (w !== except && w.isOpen()) w.close();
-		}
-	}
-
-	function closeAndResetAll(): void {
-		for (const w of managedWindows) {
-			if (w.isOpen()) w.close();
-			w.resetPositioning();
-		}
-	}
-
-	return { register, unregister, closeOthers, closeAndResetAll };
-})();
-
 /** Create the functions needed for the handling of a floating window in the board editor */
-function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle {
-	const { windowEl, headerEl, toggleButtonEl, closeButtonEl, inputElList, onOpen, onClose } =
-		opts;
+function create(opts: FloatingWindowOptions): FloatingWindowHandle {
+	const { windowEl, headerEl, closeButtonEl, inputElList, onOpen, onClose } = opts;
 
 	// Window Position & Dragging State
 	let offsetX = 0;
@@ -196,7 +156,7 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 
 		window.addEventListener('resize', clampToParentBounds);
 
-		if (closeButtonEl) closeButtonEl.addEventListener('click', close);
+		if (closeButtonEl) closeButtonEl.addEventListener('click', callbackClose);
 
 		if (inputElList) {
 			inputElList.forEach((el) => {
@@ -219,7 +179,7 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 
 		window.removeEventListener('resize', clampToParentBounds);
 
-		if (closeButtonEl) closeButtonEl.removeEventListener('click', close);
+		if (closeButtonEl) closeButtonEl.removeEventListener('click', callbackClose);
 
 		if (inputElList) {
 			inputElList.forEach((el) => {
@@ -234,11 +194,14 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		return !windowEl.classList.contains('hidden');
 	}
 
-	function close(): void {
-		windowEl.classList.add('hidden');
-		if (toggleButtonEl) toggleButtonEl.classList.remove('active');
+	function callbackClose(): void {
+		close(false);
+	}
 
-		onClose?.();
+	function close(resetPositioning: boolean): void {
+		windowEl.classList.add('hidden');
+
+		onClose(resetPositioning);
 		removeBaseListeners();
 	}
 
@@ -248,26 +211,14 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		savedPos = undefined;
 	}
 
-	// Register floating window closing functions in the windowClosingManager
-	const FloatingWindowClosingHandle: FloatingWindowClosingHandle = {
-		close,
-		isOpen,
-		resetPositioning,
-	};
-	windowClosingManager.register({ close, isOpen, resetPositioning });
-
 	/** Open floating window */
 	function open(): void {
-		// Close all other floating windows in the board editor
-		windowClosingManager.closeOthers(FloatingWindowClosingHandle);
-
 		if (savedPos !== undefined) {
 			windowEl.style.left = `${savedPos.left}px`;
 			windowEl.style.top = `${savedPos.top}px`;
 		}
 
 		windowEl.classList.remove('hidden');
-		if (toggleButtonEl) toggleButtonEl.classList.add('active');
 
 		// Ensure it’s inside bounds on open (and after becoming visible)
 		clampToParentBounds();
@@ -276,16 +227,9 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 		onOpen?.();
 	}
 
-	/** Toggle floating window */
-	function toggle(): void {
-		if (isOpen()) close();
-		else open();
-	}
-
 	return {
 		open,
 		close,
-		toggle,
 		resetPositioning,
 		clampToParentBounds,
 		isOpen,
@@ -293,8 +237,5 @@ function createFloatingWindow(opts: FloatingWindowOptions): FloatingWindowHandle
 }
 
 export default {
-	windowClosingManager,
-	createFloatingWindow,
+	create,
 };
-
-export type { FloatingWindowHandle, FloatingWindowOptions };

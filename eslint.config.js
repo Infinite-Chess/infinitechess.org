@@ -1,3 +1,5 @@
+// eslint.config.js
+
 import globals from 'globals';
 import pluginJs from '@eslint/js';
 import pluginTypescript from '@typescript-eslint/eslint-plugin';
@@ -6,6 +8,9 @@ import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 export default [
 	pluginJs.configs.recommended,
+	{
+		ignores: ['dev-utils/**', 'dist/**', 'src/client/pkg/**'],
+	},
 	{
 		files: ['**/*.js', '**/*.ts'], // Apply the following rule overrides to both js and ts files...
 		// plugins: { "@typescript-eslint": pluginTypescript }, // Define plugins as an object.  SUPPOSEDLY THIS IS NOT NEEDED??

@@ -1,3 +1,5 @@
+// src/server/game/updateServerRestart.ts
+
 /**
  * This script keeps track of the time the server will be restarting, if it is going to be.
  * This is determined by database/allowinvites.json. Whenever an invite is attempted to be
@@ -5,17 +7,12 @@
  * The actual reading is done in src/server/game/invitesmanager
  */
 
-// System imports
 import fs from 'fs';
 import path from 'path';
 
-// Middleware imports
-import { readFile, writeFile } from '../utility/lockFile.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-
-// Custom imports
+import { readFile, writeFile } from '../utility/lockFile.js';
 import { broadCastGameRestarting } from './gamemanager/gamemanager.js';
-// @ts-ignore
 import { cancelServerRestart, setTimeServerRestarting } from './timeServerRestarts.js';
 
 //--------------------------------------------------------------------------------------------------------

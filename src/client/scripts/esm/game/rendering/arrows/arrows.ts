@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/arrows/arrows.ts
+
 /**
  * This script calculates and renders the arrow indicators
  * on the sides of the screen, pointing to pieces off-screen
@@ -8,50 +10,50 @@
  * Other scripts may add/remove arrows in between update() and render() calls.
  */
 
+import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import type {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import type { LineKey } from '../../../../../../shared/chess/util/boardutil.js';
-import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
-import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import spritesheet from '../spritesheet.js';
-import gameslot from '../../chess/gameslot.js';
-import guinavigation from '../../gui/guinavigation.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 import jsutil from '../../../../../../shared/util/jsutil.js';
-import coordutil from '../../../../../../shared/chess/util/coordutil.js';
-import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import frametracker from '../frametracker.js';
-import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
-import space from '../../misc/space.js';
-import boardutil from '../../../../../../shared/chess/util/boardutil.js';
-import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
-import mouse from '../../../util/mouse.js';
-import boardpos from '../boardpos.js';
-import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import boardutil from '../../../../../../shared/chess/util/boardutil.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
+import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
+import { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
+import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
+import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
+import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+
+import space from '../../misc/space.js';
+import mouse from '../../../util/mouse.js';
+import gameslot from '../../chess/gameslot.js';
+import boardpos from '../boardpos.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
-import perspective from '../perspective.js';
 import Transition from '../transitions/Transition.js';
-import bimath from '../../../../../../shared/util/math/bimath.js';
-import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+import spritesheet from '../spritesheet.js';
+import guigameinfo from '../../gui/guigameinfo.js';
+import perspective from '../perspective.js';
+import frametracker from '../frametracker.js';
+import guinavigation from '../../gui/guinavigation.js';
 import { listener_overlay } from '../../chess/game.js';
+import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
-import { rawTypes } from '../../../../../../shared/chess/util/typeutil.js';
 import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 
-// Type Definitions --------------------------------------------------------------------
+// Types -------------------------------------------------------------------------------
 
 /**
  * An object containing all the arrow lines of a single frame,
@@ -645,13 +647,13 @@ function calcArrowsLineDraft(
 	if (
 		closestPosDotProd !== undefined &&
 		!posDotProd.includes(closestPosDotProd) &&
-		typeutil.getRawType(closestPosDotProd.piece.type) !== rawTypes.VOID
+		typeutil.getRawType(closestPosDotProd.piece.type) !== r.VOID
 	)
 		posDotProd.push(closestPosDotProd);
 	if (
 		closestNegDotProd !== undefined &&
 		!negDotProd.includes(closestNegDotProd) &&
-		typeutil.getRawType(closestNegDotProd.piece.type) !== rawTypes.VOID
+		typeutil.getRawType(closestNegDotProd.piece.type) !== r.VOID
 	)
 		negDotProd.push(closestNegDotProd);
 
@@ -1445,4 +1447,4 @@ export default {
 	render,
 };
 
-export type { ArrowPiece, HoveredArrow };
+export type { ArrowPiece };

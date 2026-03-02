@@ -2,10 +2,9 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
-import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class IridescenceZone implements Zone {

@@ -5,13 +5,13 @@
  * with the "invites" route to where they need to go.
  */
 
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
 import * as z from 'zod';
 
 import { createInvite, createinviteschem } from './createinvite.js';
 import { cancelInvite, cancelinviteschem } from './cancelinvite.js';
 import { acceptInvite, acceptinviteschem } from './acceptinvite.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 const InvitesSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createinvite'), value: createinviteschem }),

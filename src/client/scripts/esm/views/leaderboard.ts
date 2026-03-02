@@ -1,3 +1,5 @@
+// src/client/scripts/esm/views/leaderboard.ts
+
 /*
  * This script:
  *
@@ -5,14 +7,15 @@
  * so we can display that info.
  */
 
+import type { UsernameItem } from '../util/usernamecontainer.js';
+
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../../shared/chess/variants/validleaderboard.js';
-import usernamecontainer from '../util/usernamecontainer.js';
-import validatorama from '../util/validatorama.js';
 
-import type { UsernameItem } from '../util/usernamecontainer.js';
+import validatorama from '../util/validatorama.js';
+import usernamecontainer from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
 const element_LeaderboardContainer = document.getElementById('leaderboard-table')!;
@@ -71,9 +74,10 @@ function setSupportedVariantsDisplay(): void {
 	const variantslist: string[] = [];
 	valid_variants.forEach((variant: string | null) => {
 		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
+		// @ts-ignore
 		variantslist.push(variant in translations ? translations[variant] : variant);
 	});
-	element_supportedVariants.textContent = `${translations['supported_variants']} ${variantslist.join(', ')}.`;
+	element_supportedVariants.textContent = `${translations.supported_variants} ${variantslist.join(', ')}.`;
 }
 
 /**
@@ -86,9 +90,9 @@ function createEmptyLeaderboardTable(): void {
 	const thead = document.createElement('thead');
 	thead.innerHTML = `
 		<tr>
-		<th>${translations['rank']}</th>
-		<th>${translations['player']}</th>
-		<th>${translations['rating']}</th>
+		<th>${translations.rank}</th>
+		<th>${translations.player}</th>
+		<th>${translations.rating}</th>
 		</tr>
 	`;
 	table.appendChild(thead);

@@ -1,12 +1,13 @@
+// src/client/scripts/esm/game/gui/guititle.ts
+
 /**
  * This script handles our Title Screen
  */
 
-import guipractice from './guipractice.js';
-import gui from './gui.js';
-// @ts-ignore
 import guiplay from './guiplay.js';
-// @ts-ignore
+import guipractice from './guipractice.js';
+import guiboardeditor from './boardeditor/guiboardeditor.js';
+import gui from './gui.js';
 import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------

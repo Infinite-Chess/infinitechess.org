@@ -1,29 +1,31 @@
+// src/shared/chess/logic/legalmoves.ts
+
 /**
  * This script calculates legal moves
  */
 
-import specialdetect from './specialdetect.js';
-import boardutil from '../util/boardutil.js';
-import organizedpieces from './organizedpieces.js';
-import coordutil from '../util/coordutil.js';
-import movesets from './movesets.js';
-import variant from '../variants/variant.js';
-import checkresolver from './checkresolver.js';
-import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
-import typeutil, { players, rawTypes } from '../util/typeutil.js';
-
-import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
-import type { PieceMoveset } from './movesets.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
-import type { IgnoreFunction, BlockingFunction } from './movesets.js';
-import type { MetaData } from '../util/metadata.js';
 import type { Piece } from '../util/boardutil.js';
+import type { MetaData } from '../util/metadata.js';
+import type { PieceMoveset } from './movesets.js';
 import type { CoordsSpecial } from './movepiece.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
-import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
+import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
-// Type Definitions ----------------------------------------------------------------
+import variant from '../variants/variant.js';
+import movesets from './movesets.js';
+import boardutil from '../util/boardutil.js';
+import coordutil from '../util/coordutil.js';
+import specialdetect from './specialdetect.js';
+import checkresolver from './checkresolver.js';
+import organizedpieces from './organizedpieces.js';
+import bounds, { UnboundedRectangle } from '../../util/math/bounds.js';
+import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
+
+// Types ---------------------------------------------------------------------------
 
 /**
  * The negative/positive vector step-limit of a sliding direction.
@@ -92,7 +94,6 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vicinity {
-	// @ts-ignore
 	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(metadata);
 	const vicinity = {} as Vicinity;
 	// Object keys are strings, so we need to cast the type to a number
@@ -115,7 +116,7 @@ function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vi
  */
 function getPieceMoveset(boardsim: Board, pieceType: number): PieceMoveset {
 	const [rawType, player] = typeutil.splitType(pieceType); // Split the type into raw and color
-	if (player === players.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
+	if (player === p.NEUTRAL) return { colinear: false }; // Neutral pieces CANNOT MOVE!
 	const movesetFunc = boardsim.pieceMovesets[rawType];
 	if (!movesetFunc) return { colinear: false }; // Safety net.
 	return movesetFunc(); // Calling these parameters as a function returns their moveset.
@@ -341,7 +342,7 @@ function testCaptureValidity(
 	premove: boolean,
 ): 0 | 1 | 2 {
 	const rawType = typeutil.getRawType(typeOnSquare);
-	if (rawType === rawTypes.VOID) return 2; // Void, NEVER legal
+	if (rawType === r.VOID) return 2; // Void, NEVER legal
 
 	if (premove) return 0; // There is a non-void piece, but we're premoving => legal move
 
@@ -672,7 +673,7 @@ function hasAtleast1Move(moves: LegalMoves): boolean {
 
 // Exports ----------------------------------------------------------------
 
-export type { LegalMoves, Vicinity, SlideLimits };
+export type { LegalMoves, SlideLimits };
 
 export default {
 	genVicinity,

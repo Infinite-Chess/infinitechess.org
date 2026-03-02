@@ -1,3 +1,5 @@
+// src/shared/util/EventBus.ts
+
 /**
  * Typed Event Bus
  * T is the mapping of event names to detail types.

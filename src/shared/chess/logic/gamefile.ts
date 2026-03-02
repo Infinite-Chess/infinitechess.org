@@ -1,32 +1,34 @@
-import type { ClockData, ClockValues } from './clock.js';
-import type { CoordsKey } from '../util/coordutil.js';
-import type { MetaData } from '../util/metadata.js';
-import type { GameRules } from '../variants/gamerules.js';
-import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { Move, BaseMove } from './movepiece.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { PieceMoveset } from './movesets.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { VariantOptions } from './initvariant.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
-import type { SpecialMoveFunction } from './specialmove.js';
-import type { BoundingBox } from '../../util/math/bounds.js';
+// src/shared/chess/logic/gamefile.ts
 
-import organizedpieces from './organizedpieces.js';
-import initvariant from './initvariant.js';
-import jsutil from '../../util/jsutil.js';
-import typeutil from '../util/typeutil.js';
-import legalmoves from './legalmoves.js';
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
+import type { MetaData } from '../util/metadata.js';
+import type { CoordsKey } from '../util/coordutil.js';
+import type { GameRules } from '../variants/gamerules.js';
+import type { Condition } from '../util/winconutil.js';
+import type { BoundingBox } from '../../util/math/bounds.js';
+import type { PieceMoveset } from './movesets.js';
+import type { Move, BaseMove } from './movepiece.js';
+import type { VariantOptions } from './initvariant.js';
+import type { OrganizedPieces } from './organizedpieces.js';
+import type { SpecialMoveFunction } from './specialmove.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
+import type { ClockData, ClockValues } from './clock.js';
+import type { GameState, GlobalGameState } from './state.js';
+import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
+
 import clock from './clock.js';
-import movepiece from './movepiece.js';
-import checkdetection from './checkdetection.js';
-import gamerules from '../variants/gamerules.js';
-import wincondition from './wincondition.js';
-import bounds from '../../util/math/bounds.js';
+import jsutil from '../../util/jsutil.js';
 import variant from '../variants/variant.js';
+import typeutil from '../util/typeutil.js';
 import movesets from './movesets.js';
+import boardutil from '../util/boardutil.js';
+import movepiece from './movepiece.js';
+import gamerules from '../variants/gamerules.js';
+import legalmoves from './legalmoves.js';
+import initvariant from './initvariant.js';
+import wincondition from './wincondition.js';
+import checkdetection from './checkdetection.js';
+import organizedpieces from './organizedpieces.js';
+import gamefileutility from '../util/gamefileutility.js';
 
 interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -39,6 +41,14 @@ interface Snapshot {
 	box: BoundingBox;
 }
 
+/** Stores the results of a game, including how it was terminated, and who won. */
+type GameConclusion = {
+	/** How the game terminated. */
+	condition: Condition;
+	/** Which player was victorious. null = DRAW. undefined = ABORTED */
+	victor?: Player | null;
+};
+
 /**
  * Purely game data
  * Used on both sides
@@ -49,7 +59,7 @@ type Game = {
 	moves: BaseMove[];
 	gameRules: GameRules;
 	whosTurn: Player;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 } & ClockDependant;
 
 /**
@@ -113,7 +123,7 @@ interface Additional {
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
 	/** The conclusion of the game, if loading an online game that has already ended. */
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Any already existing clock values for the gamefile. */
 	clockValues?: ClockValues;
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
@@ -128,7 +138,7 @@ interface Additional {
 function initGame(
 	metadata: MetaData,
 	variantOptions?: VariantOptions,
-	gameConclusion?: string,
+	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 ): Game {
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
@@ -195,8 +205,10 @@ function initBoard(
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
-	const coordsOfAllPieces = boardutil.getCoordsOfAllPieces(pieces);
-	const startingPositionBox = bounds.getBoxFromCoordsList(coordsOfAllPieces);
+	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
+	// Fallback if no pieces present
+	if (startingPositionBox === undefined)
+		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
 	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
@@ -254,7 +266,7 @@ function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
 	moves: ServerGameMoveMessage[] = [],
-	gameConclusion?: string,
+	gameConclusion?: GameConclusion,
 	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
@@ -319,7 +331,7 @@ function initFullGame(
 	);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
 
 export default {
 	initGame,

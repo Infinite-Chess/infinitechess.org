@@ -1,17 +1,17 @@
 // src/shared/chess/logic/movevalidation.ts
 
 import jsutil from '../../util/jsutil.js';
-import boardutil, { Piece } from '../util/boardutil.js';
-import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 import winconutil from '../util/winconutil.js';
-import checkresolver from './checkresolver.js';
-import { FullGame } from './gamefile.js';
-import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
 import legalmoves from './legalmoves.js';
-import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
+import boardutil, { Piece } from '../util/boardutil.js';
+import { FullGame, GameConclusion } from './gamefile.js';
+import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
+import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
 type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };
@@ -58,7 +58,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 function isOpponentsMoveLegal(
 	gamefile: FullGame,
 	move_compact: _Move_Compact,
-	claimedGameConclusion: string | undefined,
+	claimedGameConclusion: GameConclusion | undefined,
 ): MoveValidationResult {
 	// We run both move and conclusion checks when at the front of the game
 	return runActionAtGameFront(gamefile, () => {
@@ -236,7 +236,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 }
 
 /**
- * Checks if the claimed game conclusion is the expected one after simulating the move.
+ * Determines whether the opponent's claimed conclusion matches what we calculate from the position.
  * @param gamefile - The gamefile
  * @param moveDraft - The move draft, WITH special flags attached!
  * @param claimedGameConclusion - The opponent's claimed game conclusion
@@ -247,7 +247,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 function validateConclusion(
 	gamefile: FullGame,
 	moveDraft: MoveDraft,
-	claimedGameConclusion: string | undefined,
+	claimedGameConclusion: GameConclusion | undefined,
 ): ConclusionValidityResult {
 	if (
 		claimedGameConclusion !== undefined &&
@@ -260,7 +260,10 @@ function validateConclusion(
 	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
 	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
 
-	if (simulatedConclusion !== claimedGameConclusion) {
+	if (
+		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||
+		simulatedConclusion?.victor !== claimedGameConclusion?.victor
+	) {
 		console.error(
 			`Conclusion mismatch! Simulated: ${simulatedConclusion}, Claimed: ${claimedGameConclusion}`,
 		);

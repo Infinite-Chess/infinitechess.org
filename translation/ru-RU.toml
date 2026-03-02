@@ -1,4 +1,5 @@
 name = "Русский" # Name of language
+english_name = "Russian"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "76"
 maintainer = "Function f(x)"

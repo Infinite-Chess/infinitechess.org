@@ -1,21 +1,22 @@
+// src/client/scripts/esm/game/rendering/highlights/checkhighlight.ts
+
 /**
  * This script renders the red glow surrounding
  * royal pieces currently in check.
  */
 
-import space from '../../misc/space.js';
+import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
+
+import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import preferences from '../../../components/header/preferences.js';
+
+import space from '../../misc/space.js';
 import boardpos from '../boardpos.js';
 import primitives from '../primitives.js';
-import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
+import preferences from '../../../components/header/preferences.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
-
-// Type Definitions ----------------------------------------------------------------
-
-import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
 
 // Functions -----------------------------------------------------------------------
 

@@ -1,26 +1,28 @@
+// src/client/scripts/esm/game/rendering/highlights/specialrighthighlights.ts
+
 /**
  * This is a DEBUGGING script for rendering special right and enpassant highlights.
  *
  * Enable by pressing `7`.
  */
 
-import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
-import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
-import gameslot from '../../chess/gameslot.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+
+import toast from '../../gui/toast.js';
+import meshes from '../meshes.js';
+import gameslot from '../../chess/gameslot.js';
+import boardpos from '../boardpos.js';
+import piecemodels from '../piecemodels.js';
+import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import boardpos from '../boardpos.js';
 import legalmoveshapes from '../instancedshapes.js';
-import piecemodels from '../piecemodels.js';
 import squarerendering from './squarerendering.js';
-import meshes from '../meshes.js';
 import { RenderableInstanced, createRenderable_Instanced } from '../../../webgl/Renderable.js';
-import { GameBus } from '../../GameBus.js';
 
 // Variables -------------------------------------------------------------------------------------
 
@@ -61,7 +63,7 @@ function disable(): void {
 
 function toggle(): void {
 	enabled = !enabled;
-	statustext.showStatus(`Toggled special rights highlights: ${enabled}`, false, 0.5);
+	toast.show(`Toggled special rights highlights: ${enabled}`, { durationMultiplier: 0.5 });
 	regenModel();
 	frametracker.onVisualChange();
 }
@@ -76,7 +78,7 @@ function render(): void {
 function regenModel(): void {
 	if (!enabled) return; // Not enabled
 
-	// console.log("Regenerating specialrights model");
+	// console.log('Regenerating specialrights model');
 	const gamefile = gameslot.getGamefile()!;
 	const model_Offset: Coords = legalmovemodel.getOffset();
 	// Instance data
@@ -120,23 +122,12 @@ function renderEnPassant(): void {
 		.render(undefined, undefined, { u_size });
 }
 
-/**
- * Called when any forward-global-move is made in the game, us or our opponent.
- *
- * This does not count rewinding/forwarding (which are local changes),
- * nor does it count simulated moves, or moves only made using movepiece.makeMove() and then reverted.
- */
-function onMove(): void {
-	// console.log("On move");
-	regenModel();
-}
-
 // Exports -----------------------------------------------------------------------
 
 export default {
 	enable,
 	disable,
 	toggle,
+	regenModel,
 	render,
-	onMove,
 };

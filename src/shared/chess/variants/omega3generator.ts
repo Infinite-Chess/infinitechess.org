@@ -1,14 +1,14 @@
-// src/client/scripts/esm/chess/variants/omega3generator.ts
+// src/shared/chess/variants/omega3generator.ts
 
 /**
  * Here lies the position generator for the Omega^3 Showcase variant.
  */
 
+import type { BoundingBox } from '../../util/math/bounds.js';
+import type { Coords, CoordsKey } from '../util/coordutil.js';
+
 import coordutil from '../util/coordutil.js';
 import { ext as e, rawTypes as r } from '../util/typeutil.js';
-
-import type { Coords, CoordsKey } from '../util/coordutil.js';
-import type { BoundingBox } from '../../util/math/bounds.js';
 
 /**
  * Generates the Omega^3 position example

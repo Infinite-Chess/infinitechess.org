@@ -1,7 +1,7 @@
 // src/server/database/blacklistManager.ts
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import db from './database.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /** Adds an email to the blacklist, if it isn't already. */
 export function addToBlacklist(email: string, reason: string): void {

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/config.ts
+
 /** This script contains our game configurations. */
 
 import docutil from '../util/docutil.js';

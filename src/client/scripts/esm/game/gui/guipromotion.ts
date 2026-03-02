@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guipromotion.ts
+
 /**
  * This script handles our promotion menu, when
  * pawns reach the promotion line.
@@ -6,12 +8,13 @@
 import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import selection from '../chess/selection.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
 import svgcache from '../../chess/rendering/svgcache.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { listener_overlay } from '../chess/game.js';
+import selection from '../chess/selection.js';
 import { Mouse } from '../input.js';
 import { GameBus } from '../GameBus.js';
+import { listener_overlay } from '../chess/game.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -21,8 +24,8 @@ const PromotionGUI: {
 } = {
 	base: document.getElementById('promote')!,
 	players: {
-		[players.WHITE]: document.getElementById('promotewhite')!,
-		[players.BLACK]: document.getElementById('promoteblack')!,
+		[p.WHITE]: document.getElementById('promotewhite')!,
+		[p.BLACK]: document.getElementById('promoteblack')!,
 	},
 };
 

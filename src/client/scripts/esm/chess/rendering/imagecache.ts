@@ -1,3 +1,5 @@
+// src/client/scripts/esm/chess/rendering/imagecache.ts
+
 /**
  * This script caches the HTMLImageElement objects for the pieces
  * required by the currently loaded game.
@@ -8,13 +10,14 @@
  * If no game is loaded, the cache should be empty.
  */
 
-import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+
 import svgcache from '../../chess/rendering/svgcache.js';
-import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 import { GameBus } from '../../game/GameBus.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
 // Variables ---------------------------------------------------------------------------
 

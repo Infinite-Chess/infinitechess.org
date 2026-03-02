@@ -12,7 +12,7 @@
 
 import { createLFO, LFOConfig } from './LFOFactory';
 
-// Type Definitions ------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------
 
 /** A single sound layer within a soundscape. */
 export interface LayerConfig {
@@ -22,10 +22,10 @@ export interface LayerConfig {
 }
 
 /** The configuration for the audio source of a layer. */
-export type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
+type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
 
 /** Configuration for a noise source. */
-export interface NoiseSourceConfig {
+interface NoiseSourceConfig {
 	type: 'noise';
 }
 

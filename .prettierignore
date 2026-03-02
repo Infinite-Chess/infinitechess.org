@@ -1,0 +1,6 @@
+# .prettierignore
+
+dist/
+dev-utils/
+src/client/pkg/
+*.ejs

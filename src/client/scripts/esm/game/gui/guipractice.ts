@@ -1,17 +1,20 @@
+// src/client/scripts/esm/game/gui/guipractice.ts
+
 /*
  * This script handles our Practice page, containing
  * our practice selection menu.
  */
 
-import checkmatepractice from '../chess/checkmatepractice.js';
-import guititle from './guititle.js';
-import validatorama from '../../util/validatorama.js';
-import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import svgcache from '../../chess/rendering/svgcache.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
 import style from './style.js';
+import guititle from './guititle.js';
+import svgcache from '../../chess/rendering/svgcache.js';
+import validatorama from '../../util/validatorama.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -133,13 +136,14 @@ function createPracticeHTML(): void {
 
 			const versusText = document.createElement('div');
 			versusText.className = 'checkmate-child versus';
-			versusText.textContent = translations['versus'];
+			versusText.textContent = translations.versus;
 
 			const piecelistB = document.createElement('div');
 			piecelistB.className = 'piecelistB';
 
 			const checkmateDifficulty = document.createElement('div');
 			checkmateDifficulty.className = 'checkmate-difficulty';
+			// @ts-ignore
 			checkmateDifficulty.textContent = translations[difficulty];
 
 			for (const entry of piecelist) {
@@ -157,7 +161,7 @@ function createPracticeHTML(): void {
 					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
 					containerDiv.appendChild(pieceDiv);
 
-					if (typeutil.getColorFromType(longPiece) === players.WHITE)
+					if (typeutil.getColorFromType(longPiece) === p.WHITE)
 						piecelistW.appendChild(containerDiv);
 					else piecelistB.appendChild(containerDiv);
 				}
@@ -392,7 +396,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 			earnedKey: 'checkmate_gold',
 			unearnedKey: 'checkmate_gold_unearned',
 		},
-	];
+	] as const;
 
 	badgeConfigs.forEach((config) => {
 		if (!config.element || !config.image) return;
@@ -402,7 +406,7 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 			? translations[config.earnedKey]
 			: areLoggedIn
 				? translations[config.unearnedKey]
-				: translations['checkmate_logged_out'];
+				: translations.checkmate_logged_out;
 
 		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
 		config.image.classList.toggle('unearned', !isEarned); // Update badge appearance

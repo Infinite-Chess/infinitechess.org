@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gameslot.ts
+
 /**
  * Whether we're in a local game, online game, analysis board, or board editor,
  * what they ALL have in common is a gamefile! This script stores THAT gamefile!
@@ -5,50 +7,51 @@
  * It also has the loader and unloader methods for the gamefile.
  */
 
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bd from '@naviary/bigdecimal';
-import guinavigation from '../gui/guinavigation.js';
-import guipromotion from '../gui/guipromotion.js';
-import spritesheet from '../rendering/spritesheet.js';
-import movesequence from './movesequence.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import piecemodels from '../rendering/piecemodels.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import miniimage from '../rendering/miniimage.js';
-import arrows from '../rendering/arrows/arrows.js';
-import clock from '../../../../../shared/chess/logic/clock.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import imagecache from '../../chess/rendering/imagecache.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import boardpos from '../rendering/boardpos.js';
-import texturecache from '../../chess/rendering/texturecache.js';
-import guiclock from '../gui/guiclock.js';
-import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import drawrays from '../rendering/highlights/annotations/drawrays.js';
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import copygame from './copygame.js';
-import pastegame from './pastegame.js';
-import board from '../rendering/boardtiles.js';
-import Transition from '../rendering/transitions/Transition.js';
-import perspective from '../rendering/perspective.js';
-import area from '../rendering/area.js';
-import gamesound from '../misc/gamesound.js';
-import meshes from '../rendering/meshes.js';
-import starfield from '../rendering/starfield.js';
-import gameloader from './gameloader.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { animateMove } from './graphicalchanges.js';
-import { gl } from '../rendering/webgl.js';
-import { GameBus } from '../GameBus.js';
 
-// Type Definitions ----------------------------------------------------------
+import clock from '../../../../../shared/chess/logic/clock.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
+import area from '../rendering/area.js';
+import board from '../rendering/boardtiles.js';
+import arrows from '../rendering/arrows/arrows.js';
+import meshes from '../rendering/meshes.js';
+import { gl } from '../rendering/webgl.js';
+import boardpos from '../rendering/boardpos.js';
+import guiclock from '../gui/guiclock.js';
+import drawrays from '../rendering/highlights/annotations/drawrays.js';
+import copygame from './copygame.js';
+import miniimage from '../rendering/miniimage.js';
+import pastegame from './pastegame.js';
+import gamesound from '../misc/gamesound.js';
+import starfield from '../rendering/starfield.js';
+import imagecache from '../../chess/rendering/imagecache.js';
+import Transition from '../rendering/transitions/Transition.js';
+import gameloader from './gameloader.js';
+import spritesheet from '../rendering/spritesheet.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
+import perspective from '../rendering/perspective.js';
+import { GameBus } from '../GameBus.js';
+import guipromotion from '../gui/guipromotion.js';
+import movesequence from './movesequence.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import guinavigation from '../gui/guinavigation.js';
+import { animateMove } from './graphicalchanges.js';
+
+// Types ---------------------------------------------------------------------
 
 /** Options for loading a game. */
 interface LoadOptions {
@@ -106,7 +109,7 @@ function isLoadedGameViewingWhitePerspective(): boolean {
 		throw Error(
 			"Cannot ask if loaded game is from white's perspective when there isn't a loaded game.",
 		);
-	return youAreColor === players.WHITE;
+	return youAreColor === p.WHITE;
 }
 
 /**
@@ -147,7 +150,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 function loadLogical(loadOptions: LoadOptions): void {
 	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
 
-	youAreColor = loadOptions.viewWhitePerspective ? players.WHITE : players.BLACK;
+	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
 	// Disable miniimages if there's too many pieces
@@ -279,18 +282,19 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	const victor: Player | undefined = winconutil.getVictorAndConditionFromGameConclusion(
-		basegame.gameConclusion,
-	).victor; // undefined if aborted
+	const victor = basegame.gameConclusion.victor; // undefined if aborted, null if draw
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
-		if (victor !== players.NEUTRAL) gamesound.playWin(delayToPlayConcludeSoundSecs);
-		else gamesound.playDraw(delayToPlayConcludeSoundSecs);
+		if (victor !== null && victor !== undefined) {
+			gamesound.playWin(delayToPlayConcludeSoundSecs);
+		} else {
+			gamesound.playDraw(delayToPlayConcludeSoundSecs);
+		}
 	} else {
 		// In online game or engine game
 		const ourRole = gameloader.getOurColor()!;
 		if (victor === ourRole) gamesound.playWin(delayToPlayConcludeSoundSecs);
-		else if (victor === players.NEUTRAL || !victor)
+		else if (victor === null || victor === undefined)
 			gamesound.playDraw(delayToPlayConcludeSoundSecs);
 		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
@@ -319,4 +323,4 @@ export default {
 	unConcludeGame,
 };
 
-export type { LoadOptions, PresetAnnotes, Additional };
+export type { PresetAnnotes, Additional };

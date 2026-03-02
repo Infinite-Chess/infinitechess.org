@@ -1,26 +1,30 @@
+// src/client/scripts/esm/game/gui/guigameinfo.ts
+
 /**
  * This script handles the game info bar, during a game,
  * displaying the clocks, and whos turn it currently is.
  */
 
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
-import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
-import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import frametracker from '../rendering/frametracker.js';
+import metadata from '../../../../../shared/chess/util/metadata.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
 import gameslot from '../chess/gameslot.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
 import gameloader from '../chess/gameloader.js';
 import enginegame from '../misc/enginegame.js';
-import { PlayerGroup, players } from '../../../../../shared/chess/util/typeutil.js';
-import usernamecontainer from '../../util/usernamecontainer.js';
-import metadata from '../../../../../shared/chess/util/metadata.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import frametracker from '../rendering/frametracker.js';
+import usernamecontainer from '../../util/usernamecontainer.js';
 
-// Variables
+// Elements ---------------------------------------------------
 
 const element_gameInfoBar = document.getElementById('game-info-bar')!;
 
@@ -35,7 +39,9 @@ const element_undoButton: HTMLButtonElement = document.getElementById(
 )! as HTMLButtonElement;
 const element_restartButton: HTMLButtonElement = document.getElementById(
 	'restartbutton',
-)! as HTMLButtonElement;
+) as HTMLButtonElement;
+
+// Variables ---------------------------------------------------
 
 let isOpen = false;
 /** Whether to show the practice mode game control buttons - undo move and restart. */
@@ -88,10 +94,10 @@ function embedUsernameContainers(gameMetadata: MetaData): void {
 	const change_white = gameMetadata.WhiteRatingDiff
 		? Number(gameMetadata.WhiteRatingDiff)
 		: undefined;
-	const rating_item_white: RatingItem | undefined = playerRatings?.[players.WHITE]
+	const rating_item_white: RatingItem | undefined = playerRatings?.[p.WHITE]
 		? {
-				value: playerRatings[players.WHITE]!.value + (change_white ?? 0),
-				confident: playerRatings[players.WHITE]!.confident,
+				value: playerRatings[p.WHITE]!.value + (change_white ?? 0),
+				confident: playerRatings[p.WHITE]!.confident,
 				change: change_white,
 			}
 		: undefined;
@@ -110,10 +116,10 @@ function embedUsernameContainers(gameMetadata: MetaData): void {
 	const change_black = gameMetadata.BlackRatingDiff
 		? Number(gameMetadata.BlackRatingDiff)
 		: undefined;
-	const rating_item_black: RatingItem | undefined = playerRatings?.[players.BLACK]
+	const rating_item_black: RatingItem | undefined = playerRatings?.[p.BLACK]
 		? {
-				value: playerRatings[players.BLACK]!.value + (change_black ?? 0),
-				confident: playerRatings[players.BLACK]!.confident,
+				value: playerRatings[p.BLACK]!.value + (change_black ?? 0),
+				confident: playerRatings[p.BLACK]!.confident,
 				change: change_black,
 			}
 		: undefined;
@@ -239,8 +245,8 @@ function getPlayerNamesForGame(metadata: MetaData): {
 } {
 	if (gameloader.getTypeOfGameWeIn() === 'local' || boardeditor.areInBoardEditor()) {
 		return {
-			white: translations['player_name_white_generic'],
-			black: translations['player_name_black_generic'],
+			white: translations.player_name_white_generic,
+			black: translations.player_name_black_generic,
 			white_type: 'guest',
 			black_type: 'guest',
 		};
@@ -251,24 +257,24 @@ function getPlayerNamesForGame(metadata: MetaData): {
 			);
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
 		const white =
-			onlinegame.areWeColorInOnlineGame(players.WHITE) &&
-			metadata['White'] === translations['guest_indicator']
-				? translations['you_indicator']
+			onlinegame.areWeColorInOnlineGame(p.WHITE) &&
+			metadata['White'] === translations.guest_indicator
+				? translations.you_indicator
 				: metadata['White'];
 		const black =
-			onlinegame.areWeColorInOnlineGame(players.BLACK) &&
-			metadata['Black'] === translations['guest_indicator']
-				? translations['you_indicator']
+			onlinegame.areWeColorInOnlineGame(p.BLACK) &&
+			metadata['Black'] === translations.guest_indicator
+				? translations.you_indicator
 				: metadata['Black'];
 		return {
 			white: white,
 			black: black,
 			white_type:
-				white === translations['guest_indicator'] || white === translations['you_indicator']
+				white === translations.guest_indicator || white === translations.you_indicator
 					? 'guest'
 					: 'player',
 			black_type:
-				black === translations['guest_indicator'] || black === translations['you_indicator']
+				black === translations.guest_indicator || black === translations.you_indicator
 					? 'guest'
 					: 'player',
 		};
@@ -276,8 +282,8 @@ function getPlayerNamesForGame(metadata: MetaData): {
 		return {
 			white: metadata.White!,
 			black: metadata.Black!,
-			white_type: metadata.White === translations['you_indicator'] ? 'guest' : 'engine',
-			black_type: metadata.Black === translations['you_indicator'] ? 'guest' : 'engine',
+			white_type: metadata.White === translations.you_indicator ? 'guest' : 'engine',
+			black_type: metadata.Black === translations.you_indicator ? 'guest' : 'engine',
 		};
 	} else
 		throw Error(
@@ -298,7 +304,7 @@ function updateWhosTurn(): void {
 
 	const color = basegame.whosTurn;
 
-	if (color !== players.WHITE && color !== players.BLACK)
+	if (color !== p.WHITE && color !== p.BLACK)
 		throw Error(
 			`Cannot set the document element text showing whos turn it is when color is neither white nor black! ${color}`,
 		);
@@ -306,21 +312,19 @@ function updateWhosTurn(): void {
 	let textContent = '';
 	if (!gameloader.areInLocalGame()) {
 		const ourTurn = gameloader.isItOurTurn();
-		textContent = ourTurn ? translations['your_move'] : translations['their_move'];
+		textContent = ourTurn ? translations.your_move : translations.their_move;
 	} else
-		textContent =
-			color === players.WHITE ? translations['white_to_move'] : translations['black_to_move'];
+		textContent = color === p.WHITE ? translations.white_to_move : translations.black_to_move;
 
 	element_whosturn.textContent = textContent;
 }
 
 /** Updates the whosTurn text to say who won! */
-function gameEnd(conclusion?: string): void {
-	// '1 checkmate' / '2 resignation' / '0 stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
+function gameEnd(conclusion?: GameConclusion): void {
 	if (conclusion === undefined) throw Error("Should not call gameEnd when game isn't over.");
 
-	const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
-	const resultTranslations = translations['results'];
+	const { victor, condition } = conclusion;
+	const resultTranslations = translations.results;
 
 	const { basegame } = gameslot.getGamefile()!;
 
@@ -337,7 +341,7 @@ function gameEnd(conclusion?: string): void {
                                                                             : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
                                                                             : condition === 'koth' ? resultTranslations.you_koth
 												: resultTranslations.you_generic;
-		else if (victor === players.NEUTRAL) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
+		else if (victor === null) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                     : condition === 'repetition' ? resultTranslations.draw_repetition
                                                                     : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                     : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
@@ -354,29 +358,29 @@ function gameEnd(conclusion?: string): void {
                                                             : condition === 'koth' ? resultTranslations.opponent_koth
 												: resultTranslations.opponent_generic;
 	} else { // Local game, OR spectating an online game
-		if (condition === 'checkmate') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_checkmate
-                                                                    : victor === players.BLACK ? resultTranslations.black_checkmate
+		if (condition === 'checkmate') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_checkmate
+                                                                    : victor === p.BLACK ? resultTranslations.black_checkmate
 						: `${resultTranslations.bug_generic} Ending: checkmate`;
-		else if (condition === 'time') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_time
-                                                                    : victor === players.BLACK ? resultTranslations.black_time
+		else if (condition === 'time') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_time
+                                                                    : victor === p.BLACK ? resultTranslations.black_time
 						: `${resultTranslations.bug_generic} Ending: time`;
-		else if (condition === 'resignation') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_resignation
-																		   : victor === players.BLACK ? resultTranslations.black_resignation
+		else if (condition === 'resignation') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_resignation
+																		   : victor === p.BLACK ? resultTranslations.black_resignation
 						: `${resultTranslations.bug_generic} Ending: resignation`;
-		else if (condition === 'disconnect') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_disconnect
-																			: victor === players.BLACK ? resultTranslations.black_disconnect
+		else if (condition === 'disconnect') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_disconnect
+																			: victor === p.BLACK ? resultTranslations.black_disconnect
 						: `${resultTranslations.bug_generic} Ending: disconnect`;
-		else if (condition === 'royalcapture') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_royalcapture
-                                                                            : victor === players.BLACK ? resultTranslations.black_royalcapture
+		else if (condition === 'royalcapture') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_royalcapture
+                                                                            : victor === p.BLACK ? resultTranslations.black_royalcapture
 						: `${resultTranslations.bug_generic} Ending: royalcapture`;
-		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allroyalscaptured
-                                                                                : victor === players.BLACK ? resultTranslations.black_allroyalscaptured
+		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allroyalscaptured
+                                                                                : victor === p.BLACK ? resultTranslations.black_allroyalscaptured
 						: `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
-		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_allpiecescaptured
-                                                                                : victor === players.BLACK ? resultTranslations.black_allpiecescaptured
+		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allpiecescaptured
+                                                                                : victor === p.BLACK ? resultTranslations.black_allpiecescaptured
 						: `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
-		else if (condition === 'koth') element_whosturn.textContent = victor === players.WHITE ? resultTranslations.white_koth
-                                                                    : victor === players.BLACK ? resultTranslations.black_koth
+		else if (condition === 'koth') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_koth
+                                                                    : victor === p.BLACK ? resultTranslations.black_koth
 						: `${resultTranslations.bug_generic} Ending: koth`;
 		else if (condition === 'stalemate')
 			element_whosturn.textContent = resultTranslations.draw_stalemate;
@@ -392,7 +396,7 @@ function gameEnd(conclusion?: string): void {
 		else {
 			element_whosturn.textContent = resultTranslations.bug_generic;
 			console.error(
-				`Game conclusion: "${conclusion}"\nVictor: ${victor}\nCondition: ${condition}`,
+				`Victor: ${victor}\nCondition: ${condition}`,
 			);
 		}
 	}
@@ -440,22 +444,22 @@ function addRatingChangeToExistingUsernameContainers(
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
 	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
-		ratingChanges[players.WHITE]!.change,
+		ratingChanges[p.WHITE]!.change,
 	);
 	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
-		ratingChanges[players.BLACK]!.change,
+		ratingChanges[p.BLACK]!.change,
 	);
 
 	// Update username containers
 	usernamecontainer.createEloChangeItem(
 		usernamecontainer_white!,
-		ratingChanges[players.WHITE]!.newRating,
-		ratingChanges[players.WHITE]!.change,
+		ratingChanges[p.WHITE]!.newRating,
+		ratingChanges[p.WHITE]!.change,
 	);
 	usernamecontainer.createEloChangeItem(
 		usernamecontainer_black!,
-		ratingChanges[players.BLACK]!.newRating,
-		ratingChanges[players.BLACK]!.change,
+		ratingChanges[p.BLACK]!.newRating,
+		ratingChanges[p.BLACK]!.change,
 	);
 
 	// Need to set a timer to allow the document to repaint, because we need to read the updated element widths.

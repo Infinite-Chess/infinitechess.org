@@ -1,26 +1,10 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/drawarrows.ts
+
 /**
  * This script allows the user to draw arrows on the board.
  *
  * Helpful for analysis, and requested by many.
  */
-
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
-import space from '../../../misc/space.js';
-import preferences from '../../../../components/header/preferences.js';
-import snapping from '../snapping.js';
-import mouse from '../../../../util/mouse.js';
-import vectors from '../../../../../../../shared/util/math/vectors.js';
-import geometry from '../../../../../../../shared/util/math/geometry.js';
-import boardpos from '../../boardpos.js';
-import camera from '../../camera.js';
-import { createRenderable } from '../../../../webgl/Renderable.js';
-import { Mouse } from '../../../input.js';
-import coordutil, {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../../shared/chess/util/coordutil.js';
 
 import type { Arrow } from './annotations.js';
 import type { Color } from '../../../../../../../shared/util/math/math.js';
@@ -28,7 +12,26 @@ import type {
 	BoundingBoxBD,
 	DoubleBoundingBox,
 } from '../../../../../../../shared/util/math/bounds.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import vectors from '../../../../../../../shared/util/math/vectors.js';
+import geometry from '../../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import coordutil, {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../../shared/chess/util/coordutil.js';
+
+import space from '../../../misc/space.js';
+import mouse from '../../../../util/mouse.js';
+import camera from '../../camera.js';
+import snapping from '../snapping.js';
+import boardpos from '../../boardpos.js';
+import { Mouse } from '../../../input.js';
+import preferences from '../../../../components/header/preferences.js';
+import { createRenderable } from '../../../../webgl/Renderable.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -346,7 +349,6 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	const pdx = -ndy; // Perpendicular vector x
 	const pdy = ndx; // Perpendicular vector y
 
-	let actualBodyLength: number;
 	let actualBodyWidth: number;
 	let actualTipLength: number;
 	let actualTipWidth: number;
@@ -364,14 +366,13 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 		// the remaining body (length - desiredTipLength) meets or exceeds the proportionallyMinBodyLength.
 		// This is the "ideal" scenario where the tip gets its desired length.
 		actualTipLength = desiredTipLength;
-		actualBodyLength = length - actualTipLength;
 		actualTipWidth = tipWidthArg; // Tip length is as desired, so tip width is as desired.
 		actualBodyWidth = bodyWidthArg;
 	} else {
 		// Case 2: Not enough space for both full desiredTipLength AND proportionallyMinBodyLength.
 		// This is the "constrained" scenario.
 		// Body gets its proportionallyMinBodyLength.
-		actualBodyLength = proportionallyMinBodyLength;
+		const actualBodyLength = proportionallyMinBodyLength;
 		// Tip gets the rest of the total length.
 		actualTipLength = length - actualBodyLength;
 		// Scale body width and tip width based on how their actual length compares to their desired length.

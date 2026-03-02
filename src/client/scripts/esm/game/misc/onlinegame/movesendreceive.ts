@@ -1,31 +1,34 @@
+// src/client/scripts/esm/game/misc/onlinegame/movesendreceive.ts
+
 /**
  * This script handles sending our move in online games to the server,
  * and receiving moves from our opponent.
  */
 
-import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../../rendering/piecemodels.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import onlinegame from './onlinegame.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import selection from '../../chess/selection.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import movesequence from '../../chess/movesequence.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import icnconverter, {
 	_Move_Compact,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
-import websocket from '../../websocket.js';
-import { GameBus } from '../../GameBus.js';
-// @ts-ignore
 import guipause from '../../gui/guipause.js';
+import selection from '../../chess/selection.js';
+import socketsubs from '../../websocket/socketsubs.js';
+import onlinegame from './onlinegame.js';
+import { GameBus } from '../../GameBus.js';
+import movesequence from '../../chess/movesequence.js';
+import socketmessages from '../../websocket/socketmessages.js';
+import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Events ---------------------------------------------------------------------
 
@@ -43,7 +46,7 @@ function sendMove(): void {
 	if (
 		!onlinegame.areInOnlineGame() ||
 		!onlinegame.areInSync() ||
-		!websocket.areSubbedToSub('game')
+		!socketsubs.areSubbedToSub('game')
 	)
 		return; // Skip
 	// console.log("Sending our move..");
@@ -58,7 +61,7 @@ function sendMove(): void {
 		gameConclusion: gamefile.basegame.gameConclusion,
 	};
 
-	websocket.sendmessage('game', 'submitmove', data, true);
+	socketmessages.send('game', 'submitmove', data, true);
 
 	onlinegame.onMovePlayed({ isOpponents: false });
 }

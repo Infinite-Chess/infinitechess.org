@@ -1,13 +1,14 @@
 // src/server/api/PracticeProgress.int.test.ts
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
-import request from 'supertest';
 
-import app from '../app.js';
-import integrationUtils from '../../tests/integrationUtils.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
-import { generateTables, clearAllTables } from '../database/databaseTables.js';
+
+import { testRequest } from '../../tests/testRequest.js';
+import integrationUtils from '../../tests/integrationUtils.js';
+
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
 // We'll use the first easy checkmate as our valid test case
 const VALID_CHECKMATE_ID = validcheckmates.validCheckmates.easy[0];
@@ -28,10 +29,9 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https'); // Fakes HTTPS to bypass middleware redirect
+			.set('Cookie', cookie);
 
 		expect(response.status).toBe(400);
 	});
@@ -39,10 +39,9 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with missing new_checkmate_beaten', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({}); // No new_checkmate_beaten
 
 		expect(response.status).toBe(400);
@@ -51,19 +50,17 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with non-string new_checkmate_beaten', async () => {
 		const cookie = await integrationUtils.createAndLoginUser();
 
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: 12345 }); // Non-string
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject requests from unauthenticated users', async () => {
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		expect(response.status).toBe(401);
@@ -72,10 +69,9 @@ describe('Practice Progress Integration', () => {
 	it('should reject invalid checkmate IDs', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
 
 		expect(response.status).toBe(400);
@@ -85,12 +81,10 @@ describe('Practice Progress Integration', () => {
 	it('should allow a logged-in user to save a new checkmate', async () => {
 		const user = await integrationUtils.createAndLoginUser();
 
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
-
 		expect(response.status).toBe(200);
 
 		// Check DB Side Effect
@@ -113,17 +107,15 @@ describe('Practice Progress Integration', () => {
 		if (!secondCheckmateId) throw new Error('Not enough valid checkmate IDs for this test!');
 
 		// 1. Submit First Checkmate
-		await request(app)
+		await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Second Checkmate
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: secondCheckmateId });
 
 		expect(response.status).toBe(200);
@@ -137,17 +129,15 @@ describe('Practice Progress Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		// 1. Submit First Time
-		await request(app)
+		await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Same ID Again
-		const response = await request(app)
+		const response = await testRequest()
 			.post('/api/update-checkmatelist')
 			.set('Cookie', user.cookie)
-			.set('X-Forwarded-Proto', 'https') // Fakes HTTPS to bypass middleware redirect
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// Should now be 204 No Content, indicating no change in state

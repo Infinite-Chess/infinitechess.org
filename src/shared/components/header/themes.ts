@@ -1,9 +1,11 @@
-// This module stores our themes. Straight forward :P
+// src/shared/components/header/themes.ts
 
-import jsutil from '../../util/jsutil.js';
+// This module stores our themes. Straight forward :P
 
 import type { Color } from '../../util/math/math.js';
 import type { PieceColorGroup } from './pieceThemes.js';
+
+import jsutil from '../../util/jsutil.js';
 
 /*
  * Strings for computed property names.

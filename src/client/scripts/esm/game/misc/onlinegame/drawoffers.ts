@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/drawoffers.ts
+
 /**
  * This script stores the logic surrounding draw extending and acceptance
  * in online games, client-side.
@@ -8,16 +10,15 @@
 
 import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
-// @ts-ignore
-import guipause from '../../gui/guipause.js';
-import websocket from '../../websocket.js';
-import gameslot from '../../chess/gameslot.js';
-import onlinegame from './onlinegame.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import guidrawoffer from '../../gui/guidrawoffer.js';
+
+import toast from '../../gui/toast.js';
+import guipause from '../../gui/guipause.js';
+import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
+import onlinegame from './onlinegame.js';
+import guidrawoffer from '../../gui/guidrawoffer.js';
+import socketmessages from '../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
 
@@ -80,7 +81,7 @@ function onOpponentExtendedOffer(): void {
 
 /** Is called when our opponent declines our draw offer */
 function onOpponentDeclinedOffer(): void {
-	statustext.showStatus(`Opponent declined draw offer.`);
+	toast.show(`Opponent declined draw offer.`);
 }
 
 /**
@@ -88,10 +89,10 @@ function onOpponentDeclinedOffer(): void {
  * All legality checks have already passed!
  */
 function extendOffer(): void {
-	websocket.sendmessage('game', 'offerdraw');
+	socketmessages.send('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
-	statustext.showStatus(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
+	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 	guipause.updateDrawOfferButton();
 }
 
@@ -101,7 +102,7 @@ function extendOffer(): void {
  */
 function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
-	websocket.sendmessage('game', 'acceptdraw');
+	socketmessages.send('game', 'acceptdraw');
 	guidrawoffer.close();
 	guipause.updateDrawOfferButton();
 }
@@ -118,8 +119,8 @@ function callback_declineDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
 	closeDraw();
 	// Notify the server
-	websocket.sendmessage('game', 'declinedraw');
-	statustext.showStatus(`Draw declined`); // TODO: This needs to be localized to the user's language
+	socketmessages.send('game', 'declinedraw');
+	toast.show(`Draw declined`); // TODO: This needs to be localized to the user's language
 }
 
 /**

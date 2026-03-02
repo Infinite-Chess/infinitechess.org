@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/style.ts
+
 /**
  * Utility function for html elements and styles.
  *
@@ -7,13 +9,34 @@
 
 import type { Color } from '../../../../../shared/util/math/math';
 
+// Types -------------------------------------------------------------
+
+/** HSL Color representation */
+interface HSLColor {
+	/** Hue (0 - 360) */
+	h: number;
+	/** Saturation (0.0 - 1.0) */
+	s: number;
+	/** Lightness (0.0 - 1.0) */
+	l: number;
+}
+
+// Constants -------------------------------------------------------------
+
+/** SVG default namespace */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Elements  -------------------------------------------------------------
+
 const element_style = document.getElementById('style')!; // The in-html-doc style element containing css stylings
+
+// Variables  -------------------------------------------------------------
 
 // What things require styling that our javascript changes?
 // * The navigation bar, when the theme changes.
 let navigationStyle: string;
 
-// Other operations
+// Functions -------------------------------------------------------------
 
 function setNavStyle(cssStyle: string): void {
 	navigationStyle = cssStyle;
@@ -72,9 +95,77 @@ function arrayToCssColor(colorArray: Color): string {
 	return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+/**
+ * Converts RGB components to an HSL Color.
+ * @param r - Red (0-255)
+ * @param g - Green (0-255)
+ * @param b - Blue (0-255)
+ * @returns HSLColor object
+ */
+function rgbToHsl(r: number, g: number, b: number): HSLColor {
+	const rN = r / 255;
+	const gN = g / 255;
+	const bN = b / 255;
+
+	const max = Math.max(rN, gN, bN);
+	const min = Math.min(rN, gN, bN);
+
+	let h = 0;
+	let s = 0;
+	const l = (max + min) / 2;
+
+	if (max !== min) {
+		const d = max - min;
+		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+		switch (max) {
+			case rN:
+				h = (gN - bN) / d + (gN < bN ? 6 : 0);
+				break;
+			case gN:
+				h = (bN - rN) / d + 2;
+				break;
+			case bN:
+				h = (rN - gN) / d + 4;
+				break;
+		}
+		h /= 6;
+	}
+
+	return { h: h * 360, s, l };
+}
+
+/**
+ * Converts numeric RGB components into a CSS rgb() color string.
+ * @param r - Red channel (0-255)
+ * @param g - Green channel (0-255)
+ * @param b - Blue channel (0-255)
+ * @returns A CSS color string, e.g., "rgb(255, 100, 50)"
+ */
+function rgbToCssString(r: number, g: number, b: number): string {
+	return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+}
+
+/**
+ * Converts an HSLColor object into a CSS hsl() color string.
+ * @param hsl The HSLColor object to convert.
+ * @returns A CSS color string, e.g., "hsl(360, 100%, 50%)"
+ */
+function hslToCssString(hsl: HSLColor): string {
+	const h = Math.round(hsl.h);
+	const s = Math.round(hsl.s * 100);
+	const l = Math.round(hsl.l * 100);
+	return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
 export default {
+	SVG_NS,
+
 	setNavStyle,
 	arrayToCssColor,
 	getElementIndexWithinItsParent,
 	getChildByIndexInParent,
+	rgbToHsl,
+	rgbToCssString,
+	hslToCssString,
 };

@@ -6,42 +6,42 @@
  * It handles initialization, edit history, executing edits, current tool, etc.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Mesh } from '../rendering/piecemodels.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import { listener_document } from '../chess/game.js';
-import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import gameslot from '../chess/gameslot.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import selection from '../chess/selection.js';
 import state from '../../../../../shared/chess/logic/state.js';
-import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import movesequence from '../chess/movesequence.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import guinavigation from '../gui/guinavigation.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import selectiontool from './tools/selection/selectiontool.js';
-import egamerules from './egamerules.js';
-import drawingtool from './tools/drawingtool.js';
-import stransformations from './tools/selection/stransformations.js';
-import eactions from './eactions.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import miniimage from '../rendering/miniimage.js';
-import arrows from '../rendering/arrows/arrows.js';
-import perspective from '../rendering/perspective.js';
-import gameloader from '../chess/gameloader.js';
-import eautosave from './eautosave.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-// Type Definitions -------------------------------------------------------------
+import toast from '../gui/toast.js';
+import arrows from '../rendering/arrows/arrows.js';
+import gameslot from '../chess/gameslot.js';
+import eactions from './actions/eactions.js';
+import selection from '../chess/selection.js';
+import miniimage from '../rendering/miniimage.js';
+import eautosave from './actions/eautosave.js';
+import egamerules from './egamerules.js';
+import gameloader from '../chess/gameloader.js';
+import drawingtool from './tools/drawingtool.js';
+import perspective from '../rendering/perspective.js';
+import { GameBus } from '../GameBus.js';
+import movesequence from '../chess/movesequence.js';
+import guinavigation from '../gui/guinavigation.js';
+import selectiontool from './tools/selection/selectiontool.js';
+import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import stransformations from './tools/selection/stransformations.js';
+import { listener_document } from '../chess/game.js';
+
+// Types ------------------------------------------------------------------------
 
 type Tool = (typeof validTools)[number];
 
@@ -88,6 +88,9 @@ let initial_pawnDoublePush: boolean | undefined = true;
 /** The value of the castling game rule in the initial zeroth edit */
 let initial_castling: boolean | undefined = true;
 
+/** Name of active position, as displayed on editor bar and used for "Save" button by default */
+let active_positionname: string | undefined = undefined;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
@@ -112,12 +115,8 @@ async function initBoardEditor(
 	if (variantOptions === undefined) {
 		// Set gamerulesGUIinfo object according to loaded Classical variant
 		const gamefile = jsutil.deepCopyObject(gameslot.getGamefile()!);
-		gamefile.basegame.gameRules.winConditions[players.WHITE] = [
-			icnconverter.default_win_condition,
-		];
-		gamefile.basegame.gameRules.winConditions[players.BLACK] = [
-			icnconverter.default_win_condition,
-		];
+		gamefile.basegame.gameRules.winConditions[p.WHITE] = [icnconverter.default_win_condition];
+		gamefile.basegame.gameRules.winConditions[p.BLACK] = [icnconverter.default_win_condition];
 
 		initial_pawnDoublePush = true;
 		initial_castling = true;
@@ -139,6 +138,12 @@ async function initBoardEditor(
 		);
 	}
 
+	// Erase the `inCheck` and `attackers` state of the gamefile, which were auto-calculated in the constructor.
+	// Prevents check highlights from rendering when opening the board editor.
+	const gamefile = gameslot.getGamefile()!;
+	gamefile.boardsim.state.local.inCheck = false;
+	gamefile.boardsim.state.local.attackers = [];
+
 	addEventListeners();
 
 	eautosave.startPositionAutosave();
@@ -146,7 +151,7 @@ async function initBoardEditor(
 
 function closeBoardEditor(): void {
 	eautosave.markPositionDirty();
-	void eautosave.saveCurrentPositionOnce();
+	void eautosave.autosaveCurrentPositionOnce();
 	eautosave.stopPositionAutosave();
 
 	// Reset state
@@ -239,11 +244,10 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 
 	// Run logical changes
 	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
+	GameBus.dispatch('physical-move');
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
-
-	specialrighthighlights.onMove();
 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
@@ -380,7 +384,7 @@ function Copy(): void {
 
 	if (currentTool !== 'selection-tool') {
 		// Copy game notation
-		eactions.save();
+		eactions.copy();
 	} else if (selectiontool.isExistingSelection()) {
 		// Copy current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -406,11 +410,11 @@ function Cut(): void {
 /** Custom Board Editor handler for Paste event. */
 function Paste(): void {
 	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
-	if (gameloader.areWeLoadingGame()) return statustext.pleaseWaitForTask();
+	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
 
 	if (currentTool !== 'selection-tool') {
 		// Paste game notation
-		eactions.load();
+		eactions.paste();
 	} else if (selectiontool.isExistingSelection()) {
 		// Paste clipboard at current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -451,6 +455,15 @@ function stealPointer(pointerIdToSteal: string): void {
 		drawingtool.stealPointer(pointerIdToSteal);
 }
 
+function getActivePositionName(): string | undefined {
+	return active_positionname;
+}
+
+function setActivePositionName(positionname: string | undefined): void {
+	active_positionname = positionname;
+	guiboardeditor.updateActivePositionElement(positionname);
+}
+
 // Rendering ------------------------------------------------------------------
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
@@ -489,6 +502,8 @@ export default {
 	canRedo,
 	isLeftMouseReserved,
 	stealPointer,
+	getActivePositionName,
+	setActivePositionName,
 	// Rendering
 	render,
 };

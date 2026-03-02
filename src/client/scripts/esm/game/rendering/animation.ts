@@ -1,36 +1,38 @@
+// src/client/scripts/esm/game/rendering/animation.ts
+
 /**
  * This script handles the animation of pieces.
  * It also plays the sounds.
  */
 
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-import arrows from './arrows/arrows.js';
-import frametracker from './frametracker.js';
 import math from '../../../../../shared/util/math/math.js';
-import splines from '../../util/splines.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+
+import toast from '../gui/toast.js';
+import arrows from './arrows/arrows.js';
+import meshes from './meshes.js';
+import splines from '../../util/splines.js';
 import boardpos from './boardpos.js';
 import gamesound from '../misc/gamesound.js';
-import instancedshapes from './instancedshapes.js';
 import piecemodels from './piecemodels.js';
-import texturecache from '../../chess/rendering/texturecache.js';
-import meshes from './meshes.js';
 import perspective from './perspective.js';
-import WaterRipples from './WaterRipples.js';
-import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import { GameBus } from '../GameBus.js';
+import frametracker from './frametracker.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import WaterRipples from './WaterRipples.js';
+import instancedshapes from './instancedshapes.js';
+import { createRenderable, createRenderable_Instanced_GivenInfo } from '../../webgl/Renderable.js';
 
-// Type Definitions -----------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------
 
 /** Represents an animation segment between two waypoints. */
 interface AnimationSegment {
@@ -247,7 +249,7 @@ function clearAnimations(playSounds = false): void {
 
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	statustext.showStatus(`Toggled animation splines: ${DEBUG}`, false, 0.5);
+	toast.show(`Toggled animation splines: ${DEBUG}`, { durationMultiplier: 0.5 });
 }
 
 // Helper Functions -----------------------------------------------------------

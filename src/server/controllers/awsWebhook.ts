@@ -1,11 +1,13 @@
-// src/controllers/awsWebhook.ts
+// src/server/controllers/awsWebhook.ts
 
 /**
  * Controller to handle AWS SNS webhooks for SES bounce and complaint notifications.
  */
 
 import type { Request, Response } from 'express';
+
 import MessageValidator from 'sns-validator';
+
 import { addToBlacklist } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 

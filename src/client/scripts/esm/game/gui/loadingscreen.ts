@@ -1,13 +1,16 @@
+// src/client/scripts/esm/game/gui/loadingscreen.ts
+
 /**
  * This script manages the spinny pawn loading animation
  * while a game is loading both the LOGICAL and
  * GRAPHICAL (spritesheet) aspects.
  */
 
-import preferences from '../../components/header/preferences.js';
-import thread from '../../util/thread.js';
 import themes from '../../../../../shared/components/header/themes.js';
+
 import style from './style.js';
+import thread from '../../util/thread.js';
+import preferences from '../../components/header/preferences.js';
 
 const loadingScreen: HTMLElement = document.querySelector('.game-loading-screen') as HTMLElement;
 
@@ -76,7 +79,7 @@ async function onError(): Promise<void> {
 	element_loadingError!.classList.remove('hidden');
 	// const lostNetwork = !navigator.onLine;
 	// element_loadingErrorText!.textContent = lostNetwork ? translations['lost_network'] : translations['failed_to_load'];
-	element_loadingErrorText!.textContent = translations['failed_to_load'];
+	element_loadingErrorText!.textContent = translations.failed_to_load;
 
 	// This gives the document a chance to repaint, as otherwise our javascript
 	// will continue to run until the next animation frame, which could be a long time.

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/input.ts
+
 /**
  * This script can attach input listeners to individual elements.
  *

@@ -4,17 +4,23 @@
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { Edit } from '../../boardeditor/boardeditor';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 
+import bounds from '../../../../../../shared/util/math/bounds';
+import boardutil from '../../../../../../shared/chess/util/boardutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import { RawType } from '../../../../../../shared/chess/util/typeutil';
-import jsutil from '../../../../../../shared/util/jsutil';
-import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
-import boardeditor from '../../boardeditor/boardeditor';
+import typeutil, {
+	players as p,
+	rawTypes as r,
+	RawType,
+} from '../../../../../../shared/chess/util/typeutil';
+
 import gameslot from '../../chess/gameslot';
+import boardeditor from '../../boardeditor/boardeditor';
 import guifloatingwindow from './guifloatingwindow';
+import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 
 // Elements ----------------------------------------------------------
 
@@ -90,15 +96,27 @@ const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsA
 
 // Create floating window -------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_gamerules,
 	closeButtonEl: element_closeButton,
 	inputElList: elements_selectionList,
-	onOpen: initGameRulesListeners,
-	onClose: closeGameRulesListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ---------------------------------------------
+
+function onOpen(): void {
+	element_gamerules.classList.add('active');
+	initGameRulesListeners();
+}
+
+function onClose(resetPositioning: boolean): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_gamerules.classList.remove('active');
+	closeGameRulesListeners();
+}
 
 // Gamerules-specific listeners -------------------------------------------
 
@@ -204,20 +222,37 @@ function readGameRules(): void {
 		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
 	};
 
-	// promotionsAllowed
-	let promotionsAllowed: Number[] | undefined = undefined;
+	// promotions allowed
+	let promotionsAllowed: RawType[] | undefined = undefined;
 	const promotionsAllowedRaw = element_promotionpieces.value;
-	if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		// prettier-ignore
-		promotionsAllowed = promotionsAllowedRaw ? [...new Set(promotionsAllowedRaw.split(',').map(raw => Number(icnconverter.piece_codes_raw_inverted[raw.toLowerCase()]) as Number))] : jsutil.deepCopyObject(icnconverter.default_promotions);
-		if (promotionsAllowed.includes(NaN)) {
-			// One or more piece abbreviations were invalid
-			element_promotionpieces.classList.add('invalid-input');
-			promotionsAllowed = undefined;
-		} else {
-			element_promotionpieces.classList.remove('invalid-input');
-			if (promotionsAllowed.length === 0) promotionsAllowed = undefined;
+	pa: if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
+		const runningPromotionsAllowed: RawType[] = [];
+
+		for (const code of promotionsAllowedRaw.split(',')) {
+			const typeStr: string | undefined = icnconverter.piece_codes_inverted[code];
+			if (typeStr === undefined) {
+				element_promotionpieces.classList.add('invalid-input');
+				break pa;
+			}
+			const type = Number(typeStr);
+			const [rawType, color] = typeutil.splitType(type);
+
+			if (
+				typeutil.royals.includes(rawType) || // Can't promote to royals
+				rawType === r.PAWN || // Can't promote to pawns
+				color === p.NEUTRAL || // Can't promote to neutrals
+				runningPromotionsAllowed.includes(rawType) // No duplicates
+			) {
+				element_promotionpieces.classList.add('invalid-input');
+				break pa;
+			}
+
+			runningPromotionsAllowed.push(rawType);
 		}
+
+		// All promotion pieces are valid
+		element_promotionpieces.classList.remove('invalid-input');
+		promotionsAllowed = runningPromotionsAllowed;
 	} else if (promotionsAllowedRaw === '') {
 		element_promotionpieces.classList.remove('invalid-input');
 	} else {
@@ -249,6 +284,8 @@ function readGameRules(): void {
 		{ el: element_borderTop, val: element_borderTop.value },
 	];
 
+	const gamefile = gameslot.getGamefile()!;
+
 	const anyBorderSet = borderInputs.some((input) => input.val !== '');
 	if (!anyBorderSet) {
 		// All empty -> Valid (Undefined)
@@ -257,16 +294,16 @@ function readGameRules(): void {
 	} else {
 		// Must be valid integers or empty, and must be ascending
 		// Empty represents Infinity or -Infinity
-		const leftValid = !element_borderLeft.value || integerRegex.test(element_borderLeft.value);
-		const rightValid =
+		let leftValid = !element_borderLeft.value || integerRegex.test(element_borderLeft.value);
+		let rightValid =
 			!element_borderRight.value ||
 			(integerRegex.test(element_borderRight.value) &&
 				(!leftValid ||
 					!element_borderLeft.value ||
 					BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value)));
-		const bottomValid =
+		let bottomValid =
 			!element_borderBottom.value || integerRegex.test(element_borderBottom.value);
-		const topValid =
+		let topValid =
 			!element_borderTop.value ||
 			(integerRegex.test(element_borderTop.value) &&
 				(!bottomValid ||
@@ -274,27 +311,45 @@ function readGameRules(): void {
 					BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value)));
 
 		if (leftValid && rightValid && bottomValid && topValid) {
-			borderInputs.forEach((input) => input.el.classList.remove('invalid-input'));
+			// Initial values look valid
 			worldBorder = {
 				left: element_borderLeft.value ? BigInt(element_borderLeft.value) : null,
 				right: element_borderRight.value ? BigInt(element_borderRight.value) : null,
 				bottom: element_borderBottom.value ? BigInt(element_borderBottom.value) : null,
 				top: element_borderTop.value ? BigInt(element_borderTop.value) : null,
 			};
-		} else {
-			// Invalid: Either partial data or non-integer data or invalid ranges
-			// Mark invalid fields as invalid.
-			if (!leftValid) element_borderLeft.classList.add('invalid-input');
-			else element_borderLeft.classList.remove('invalid-input');
-			if (!rightValid) element_borderRight.classList.add('invalid-input');
-			else element_borderRight.classList.remove('invalid-input');
-			if (!bottomValid) element_borderBottom.classList.add('invalid-input');
-			else element_borderBottom.classList.remove('invalid-input');
-			if (!topValid) element_borderTop.classList.add('invalid-input');
-			else element_borderTop.classList.remove('invalid-input');
+			if (
+				worldBorder.left === null &&
+				worldBorder.right === null &&
+				worldBorder.bottom === null &&
+				worldBorder.top === null
+			)
+				worldBorder = undefined;
 
-			worldBorder = undefined;
+			// Further check if all pieces are within the border
+			if (worldBorder) {
+				const allCoords = boardutil.getCoordsOfAllPieces(gamefile.boardsim.pieces);
+				if (allCoords.some((coords) => !bounds.boxContainsSquare(worldBorder!, coords))) {
+					// One or more pieces are outside the border -> All invalid
+					leftValid = false;
+					rightValid = false;
+					bottomValid = false;
+					topValid = false;
+				}
+			}
 		}
+
+		// Mark invalid fields as invalid.
+		if (!leftValid) element_borderLeft.classList.add('invalid-input');
+		else element_borderLeft.classList.remove('invalid-input');
+		if (!rightValid) element_borderRight.classList.add('invalid-input');
+		else element_borderRight.classList.remove('invalid-input');
+		if (!bottomValid) element_borderBottom.classList.add('invalid-input');
+		else element_borderBottom.classList.remove('invalid-input');
+		if (!topValid) element_borderTop.classList.add('invalid-input');
+		else element_borderTop.classList.remove('invalid-input');
+
+		if (!leftValid || !rightValid || !bottomValid || !topValid) worldBorder = undefined;
 	}
 
 	const gameRules: GameRulesGUIinfo = {
@@ -302,7 +357,7 @@ function readGameRules(): void {
 		enPassant,
 		moveRule,
 		promotionRanks,
-		promotionsAllowed: promotionsAllowed as RawType[],
+		promotionsAllowed,
 		winConditions,
 		pawnDoublePush,
 		castling,
@@ -319,7 +374,6 @@ function readGameRules(): void {
 		gameRules.worldBorder,
 	);
 
-	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
@@ -441,7 +495,8 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 // Exports -----------------------------------------------------------------
 
 export default {
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	toggle: floatingWindow.toggle,
+	isOpen: floatingWindow.isOpen,
 	setGameRules,
 };

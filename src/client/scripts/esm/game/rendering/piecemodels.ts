@@ -1,36 +1,39 @@
+// src/client/scripts/esm/game/rendering/piecemodels.ts
+
 /**
  * This generates and renders the meshes of each individual piece type in the game.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
+import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import { gl } from './webgl.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import instancedshapes from './instancedshapes.js';
-import miniimage from './miniimage.js';
-import frametracker from './frametracker.js';
-import boardpos from './boardpos.js';
-import texturecache from '../../chess/rendering/texturecache.js';
-import geometry from '../../../../../shared/util/math/geometry.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
-import perspective from './perspective.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import geometry from '../../../../../shared/util/math/geometry.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
+
 import meshes from './meshes.js';
-import { rawTypes } from '../../../../../shared/chess/util/typeutil.js';
+import { gl } from './webgl.js';
+import boardpos from './boardpos.js';
+import miniimage from './miniimage.js';
+import perspective from './perspective.js';
+import frametracker from './frametracker.js';
+import texturecache from '../../chess/rendering/texturecache.js';
+import instancedshapes from './instancedshapes.js';
 import {
 	AttributeInfoInstanced,
 	RenderableInstanced,
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
 } from '../../webgl/Renderable.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
-// Type Definitions ---------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------------
 
 /**
  * Piece Mesh Instance Data.
@@ -115,7 +118,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
 		// [43] pawn(white)
-		if (typeutil.getRawType(type) === rawTypes.VOID)
+		if (typeutil.getRawType(type) === r.VOID)
 			mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
 		else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 	}
@@ -137,7 +140,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 function regenType(boardsim: Board, mesh: Mesh, type: number): void {
 	console.log(`Regenerating mesh of type ${type}.`);
 
-	if (typeutil.getRawType(type) === rawTypes.VOID)
+	if (typeutil.getRawType(type) === r.VOID)
 		mesh.types[type] = genVoidModel(boardsim, mesh, type); // Custom mesh generation logic for voids
 	else mesh.types[type] = genTypeModel(boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 
@@ -422,7 +425,7 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids
 		// NOT ANYMORE SINCE ADDING STAR FIELD ANIMATION (voids are rendered separately)
-		// mesh.types[rawTypes.VOID]?.model.render(position, scale);
+		// mesh.types[r.VOID]?.model.render(position, scale);
 		return;
 	}
 
@@ -438,7 +441,7 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 
 	for (const [typeStr, meshData] of Object.entries(mesh.types)) {
 		const type = Number(typeStr);
-		if (type === rawTypes.VOID) continue; // Skip voids, they should be rendered separately
+		if (type === r.VOID) continue; // Skip voids, they should be rendered separately
 		meshData.model.render(position, scale);
 	}
 }
@@ -452,7 +455,7 @@ function renderVoids(mesh: Mesh | undefined): void {
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
-	mesh.types[rawTypes.VOID]?.model.render(position, scale);
+	mesh.types[r.VOID]?.model.render(position, scale);
 }
 
 /**
@@ -480,4 +483,4 @@ export default {
 	renderVoids,
 };
 
-export type { MeshData, Mesh };
+export type { Mesh };

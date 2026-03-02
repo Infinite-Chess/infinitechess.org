@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/afk.ts
+
 /**
  * This script keeps track of how long we have been afk in the current online game,
  * and if it's for too long, it informs the server that fact,
@@ -10,16 +12,18 @@
  * if they are the one that is afk.
  */
 
-import onlinegame from './onlinegame.js';
-import gameslot from '../../chess/gameslot.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import pingManager from '../../../util/pingManager.js';
-import { listener_document, listener_overlay } from '../../chess/game.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+
+import toast from '../../gui/toast.js';
+import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
-import websocket from '../../websocket.js';
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import onlinegame from './onlinegame.js';
+import pingManager from '../../../util/pingManager.js';
+import socketmessages from '../../websocket/socketmessages.js';
+import { listener_document, listener_overlay } from '../../chess/game.js';
+
+// Constants -----------------------------------------------------------------------
 
 /** The time, in seconds, we must be AFK for us to alert the server that fact. Afterward the server will start an auto-resign timer. */
 const timeUntilAFKSecs: number = 40; // 40 + 20 = 1 minute
@@ -52,8 +56,7 @@ let timeOpponentLoseFromAFK: number | undefined;
 /** The timeout ID of the timer to display the next "Opponent is AFK..." message. */
 let displayOpponentAFKTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
-// If we lost connection while displaying status messages of when our opponent
-// will disconnect, stop doing that.
+// If we lost connection while displaying toast status messages of when our opponent will disconnect, stop doing that.
 document.addEventListener('connection-lost', () => {
 	// Stop saying when the opponent will lose from being afk
 	clearTimeout(displayOpponentAFKTimeoutID);
@@ -126,7 +129,7 @@ function cancelAFKTimer(): void {
 }
 
 function tellServerWeAFK(): void {
-	websocket.sendmessage('game', 'AFK');
+	socketmessages.send('game', 'AFK');
 	timeWeLoseFromAFK = Date.now() + timerToLossFromAFK;
 
 	// Play lowtime alert sound
@@ -139,7 +142,7 @@ function tellServerWeAFK(): void {
 }
 
 function tellServerWeBackFromAFK(): void {
-	websocket.sendmessage('game', 'AFK-Return');
+	socketmessages.send('game', 'AFK-Return');
 	timeWeLoseFromAFK = undefined;
 	clearTimeout(displayAFKTimeoutID);
 	clearTimeout(playStaccatoTimeoutID);
@@ -149,11 +152,11 @@ function tellServerWeBackFromAFK(): void {
 
 function displayWeAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(
-		`${translations['onlinegame'].afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
-		1000,
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
+	toast.show(
+		`${translations.onlinegame.afk_warning} ${resigningOrAborting} ${secsRemaining}...`,
+		{ durationMillis: 1000 },
 	);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
@@ -200,11 +203,11 @@ function stopOpponentAFKCountdown(): void {
 
 function displayOpponentAFK(secsRemaining: number): void {
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
-	statustext.showStatusForDuration(
-		`${translations['onlinegame'].opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
-		1000,
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
+	toast.show(
+		`${translations.onlinegame.opponent_afk} ${resigningOrAborting} ${secsRemaining}...`,
+		{ durationMillis: 1000 },
 	);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop

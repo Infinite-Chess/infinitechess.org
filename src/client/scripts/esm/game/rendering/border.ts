@@ -5,16 +5,17 @@
  * animation of games with a world border.
  */
 
-import meshes from './meshes.js';
-import camera from './camera.js';
-import primitives from './primitives.js';
-import perspective from './perspective.js';
-import boardtiles from './boardtiles.js';
 import bounds, {
 	BoundingBox,
 	DoubleBoundingBox,
 	UnboundedRectangle,
 } from '../../../../../shared/util/math/bounds.js';
+
+import meshes from './meshes.js';
+import camera from './camera.js';
+import primitives from './primitives.js';
+import boardtiles from './boardtiles.js';
+import perspective from './perspective.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 
 /**

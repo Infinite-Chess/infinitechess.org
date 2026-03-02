@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/annotations/drawrays.ts
+
 /**
  * This script allows the user to draw rays on the board.
  *
@@ -6,27 +8,28 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import preferences from '../../../../components/header/preferences.js';
-import snapping from '../snapping.js';
-import space from '../../../misc/space.js';
-import gameslot from '../../../chess/gameslot.js';
-import boardpos from '../../boardpos.js';
-import mouse from '../../../../util/mouse.js';
-import annotations from './annotations.js';
-import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 import variant from '../../../../../../../shared/chess/variants/variant.js';
+import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
-import legalmovemodel from '../legalmovemodel.js';
-import meshes from '../../meshes.js';
-import highlightline, { Line } from '../highlightline.js';
-import { Mouse } from '../../../input.js';
+import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../../shared/chess/util/coordutil.js';
-import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
-import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+
+import space from '../../../misc/space.js';
+import mouse from '../../../../util/mouse.js';
+import meshes from '../../meshes.js';
+import snapping from '../snapping.js';
+import gameslot from '../../../chess/gameslot.js';
+import boardpos from '../../boardpos.js';
+import { Mouse } from '../../../input.js';
+import preferences from '../../../../components/header/preferences.js';
+import annotations from './annotations.js';
+import legalmovemodel from '../legalmovemodel.js';
+import highlightline, { Line } from '../highlightline.js';
+import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 
 // Variables -----------------------------------------------------------------
 

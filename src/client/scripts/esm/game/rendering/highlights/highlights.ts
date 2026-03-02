@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/highlights/highlights.ts
+
 /**
  * This script renders all highlights:
  *
@@ -6,19 +8,20 @@
  * Legal moves (of selected piece and hovered arrows)
  */
 
-import checkhighlight from './checkhighlight.js';
-import legalmovehighlights from './legalmovehighlights.js';
-import specialrighthighlights from './specialrighthighlights.js';
-import boardpos from '../boardpos.js';
-import annotations from './annotations/annotations.js';
-import premoves from '../../chess/premoves.js';
-import preferences from '../../../components/header/preferences.js';
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import squarerendering from './squarerendering.js';
-import enginegame from '../../misc/enginegame.js';
-
 import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
+
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+
+import boardpos from '../boardpos.js';
+import premoves from '../../chess/premoves.js';
+import enginegame from '../../misc/enginegame.js';
+import annotations from './annotations/annotations.js';
+import preferences from '../../../components/header/preferences.js';
+import checkhighlight from './checkhighlight.js';
+import squarerendering from './squarerendering.js';
+import legalmovehighlights from './legalmovehighlights.js';
+import specialrighthighlights from './specialrighthighlights.js';
 
 /**
  * Renders all highlights, including:

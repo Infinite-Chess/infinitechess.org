@@ -1,20 +1,22 @@
+// src/client/scripts/esm/game/rendering/highlights/highlightline.ts
+
 /**
  * This script renders our single-line legal sliding moves
  * when we are zoomed out far.
  */
 
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
-import perspective from '../perspective.js';
-import boardtiles from '../boardtiles.js';
-import space from '../../misc/space.js';
-import boardpos from '../boardpos.js';
-import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
-
-import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { LineCoefficients } from '../../../../../../shared/util/math/vectors.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
+import space from '../../misc/space.js';
+import boardpos from '../boardpos.js';
+import boardtiles from '../boardtiles.js';
+import perspective from '../perspective.js';
+import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 /**
  * A single highlight line.

@@ -1,3 +1,5 @@
+// src/server/socket/socketManager.ts
+
 /**
  * This script stores all open websockets organized by ID, IP, and session.
  *
@@ -6,12 +8,11 @@
  * And unsubbing a socket from subscriptions.
  */
 
-import { handleUnsubbing } from './generalrouter.js';
+import type { CustomWebSocket } from './socketUtility.js';
+
 import uuid from '../../shared/util/uuid.js';
 
-// Type Definitions ---------------------------------------------------------------------------
-
-import type { CustomWebSocket } from './socketUtility.js';
+import { handleUnsubbing } from './generalrouter.js';
 
 // Variables ---------------------------------------------------------------------------
 
@@ -164,7 +165,7 @@ function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReaso
  * @param closureReason - The reason for closure, sent to the client.
  */
 function closeAllSocketsOfMember(
-	user_id: string,
+	user_id: number,
 	closureCode: number,
 	closureReason: string,
 ): void {
@@ -242,7 +243,6 @@ export {
 	doesSessionHaveMaxSocketCount,
 	generateUniqueIDForSocket,
 	unsubSocketFromAllSubs,
-	handleUnsubbing,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
 	AddVerificationToAllSocketsOfMember,

@@ -1,20 +1,20 @@
+// src/server/game/gamemanager/cheatreport.ts
+
 /**
  * This script handles cheat reports, aborting games when they come in.
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
 import * as z from 'zod';
 
-// Middleware imports
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-
-// Custom imports
-import gameutility from './gameutility.js';
-import { setGameConclusion } from './gamemanager.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
-import type { ServerGame } from './gameutility.js';
-import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import gameutility from './gameutility.js';
+import { setGameConclusion } from './gamemanager.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({
@@ -107,7 +107,7 @@ function onReport(
 	}
 	// Cheating report was valid, terminate the game..
 
-	setGameConclusion(servergame, 'aborted');
+	setGameConclusion(servergame, { condition: 'aborted' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 

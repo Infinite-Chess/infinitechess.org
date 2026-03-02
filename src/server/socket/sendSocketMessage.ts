@@ -1,35 +1,36 @@
+// src/server/socket/sendSocketMessage.ts
+
 /**
  * This script sends socket messages,
  * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
  */
 
+import type { TranslationKeys } from '../../types/translations.js';
+
 import { WebSocket } from 'ws';
 
+import uuid from '../../shared/util/uuid.js';
+import jsutil from '../../shared/util/jsutil.js';
+import wsutil from '../../shared/util/wsutil.js';
+
+import socketUtility from './socketUtility.js';
+import { getTranslation } from '../utility/translate.js';
+import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
 import {
 	addTimeoutToEchoTimers,
 	deleteEchoTimerForMessageID,
 	timeToWaitForEchoMillis,
 } from './echoTracker.js';
-import socketUtility from './socketUtility.js';
-import uuid from '../../shared/util/uuid.js';
-import jsutil from '../../shared/util/jsutil.js';
-// @ts-ignore
-import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
-// @ts-ignore
-import { getTranslation } from '../utility/translate.js';
 
-// Type Definitions ---------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------
 
-/**
- * Represents an incoming WebSocket server message.
- */
+/** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The subscription to forward the message to (e.g., "general", "invites", "game"). */
-	sub?: string;
-	/** The action to perform with the message's data (e.g., "sub", "unsub", "joingame", "opponentmove"). */
-	action?: string;
-	/** The contents of the message. */
-	value: any;
+	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
+	route: string | undefined;
+	/** The message contents. For echo messages, this is the message ID being echoed.
+	 * For other messages, this is an object with action and value. */
+	contents: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -52,18 +53,12 @@ if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis
 	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
 }
 
-/**
- * After this much time of no messages sent we send a message,
- * expecting an echo, just to check if they are still connected.
- */
-const timeOfInactivityToRenewConnection = 10000;
-
 // Sending Messages ---------------------------------------------------------------------------
 
 /**
  * Sends a message to this websocket's client.
  * @param ws - The websocket
- * @param sub - What subscription/route this message should be forwarded to.
+ * @param route - What subscription/route this message should be forwarded to.
  * @param action - What type of action the client should take within the subscription route.
  * @param value - The contents of the message.
  * @param [replyto] If applicable, the id of the socket message this message is a reply to.
@@ -72,7 +67,7 @@ const timeOfInactivityToRenewConnection = 10000;
  */
 function sendSocketMessage(
 	ws: CustomWebSocket,
-	sub: string | undefined,
+	route: string | undefined,
 	action: string | undefined,
 	value?: any,
 	replyto?: number,
@@ -82,7 +77,7 @@ function sendSocketMessage(
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(() => {
-			sendSocketMessage(ws, sub, action, value, replyto, { skipLatency: true });
+			sendSocketMessage(ws, route, action, value, replyto, { skipLatency: true });
 		}, simulatedWebsocketLatencyMillis);
 		return;
 	}
@@ -94,13 +89,21 @@ function sendSocketMessage(
 	}
 
 	const isEcho = action === 'echo';
-	const payload: WebsocketOutMessage = {
-		sub, // general/error/invites/game
-		action, // sub/unsub/createinvite/cancelinvite/acceptinvite
-		value, // sublist/inviteslist/move
-		id: isEcho ? undefined : uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-		replyto,
-	};
+	const payload: WebsocketOutMessage = isEcho
+		? {
+				route: 'echo',
+				contents: value, // For echo, value contains the message ID
+				replyto,
+			}
+		: {
+				route,
+				contents: {
+					action,
+					value,
+				},
+				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+				replyto,
+			};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
@@ -132,7 +135,7 @@ function sendSocketMessage(
  */
 function sendNotify(
 	ws: CustomWebSocket,
-	translationCode: string,
+	translationCode: TranslationKeys,
 	{ replyto, customNumber }: { replyto?: number; customNumber?: number } = {},
 ): void {
 	const i18next = ws.metadata.cookies.i18next;
@@ -157,7 +160,7 @@ function sendNotify(
  * @param ws - The socket
  * @param translationCode - The code of the message to retrieve the language-specific translation for. For example, `"server.javascript.ws-already_in_game"`
  */
-function sendNotifyError(ws: CustomWebSocket, translationCode: string): void {
+function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys): void {
 	sendSocketMessage(
 		ws,
 		'general',
@@ -178,9 +181,8 @@ function rescheduleRenewConnection(ws: CustomWebSocket): void {
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
 	ws.metadata.renewConnectionTimeoutID = setTimeout(
-		renewConnection,
-		timeOfInactivityToRenewConnection,
-		ws,
+		() => renewConnection(ws),
+		wsutil.timeOfInactivityToRenewConnection,
 	);
 }
 

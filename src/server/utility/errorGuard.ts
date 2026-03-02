@@ -1,3 +1,5 @@
+// src/server/utility/errorGuard.ts
+
 /**
  * This module contains methods for safely executing functions,
  * catching any errors that may occur, logging them to the error log.

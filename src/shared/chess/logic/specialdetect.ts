@@ -1,29 +1,29 @@
-// Import Start
+// src/shared/chess/logic/specialdetect.ts
+
+import type { Coords } from '../util/coordutil.js';
+import type { Player } from '../util/typeutil.js';
+import type { MoveDraft } from './movepiece.js';
+import type { CoordsSpecial } from './movepiece.js';
+import type { enpassantCreate } from './movepiece.js';
+import type { FullGame, Game, Board } from './gamefile.js';
+
 import bd from '@naviary/bigdecimal';
 
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
-import organizedpieces from './organizedpieces.js';
-import typeutil from '../util/typeutil.js';
-import jsutil from '../../util/jsutil.js';
-import coordutil from '../util/coordutil.js';
-import gamerules from '../variants/gamerules.js';
 import math from '../../util/math/math.js';
-import checkresolver from './checkresolver.js';
+import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
-import legalmoves from './legalmoves.js';
-import { players, rawTypes } from '../util/typeutil.js';
-// Import End
-
-import type { FullGame, Game, Board } from './gamefile.js';
-import type { MoveDraft } from './movepiece.js';
-import type { Coords } from '../util/coordutil.js';
-import type { CoordsSpecial } from './movepiece.js';
-import type { enpassantCreate } from './movepiece.js';
-import type { Player } from '../util/typeutil.js';
+import typeutil from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
+import boardutil from '../util/boardutil.js';
+import coordutil from '../util/coordutil.js';
+import gamerules from '../variants/gamerules.js';
+import legalmoves from './legalmoves.js';
+import checkresolver from './checkresolver.js';
+import gamefileutility from '../util/gamefileutility.js';
+import organizedpieces from './organizedpieces.js';
+import { players as p, rawTypes as r } from '../util/typeutil.js';
 
 /**
  * This detects if special moves are legal.
@@ -130,7 +130,7 @@ function kings(
 		if (pieceColor !== color) return false;
 
 		// Piece should not be a pawn or jumping royal
-		if (rawType === rawTypes.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
+		if (rawType === r.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
 
 		return true;
 	}
@@ -191,7 +191,7 @@ function pawns(
 ): CoordsSpecial[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
-	const yOneorNegOne = color === players.WHITE ? 1n : -1n;
+	const yOneorNegOne = color === p.WHITE ? 1n : -1n;
 	const individualMoves: CoordsSpecial[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -304,7 +304,7 @@ function addPossibleEnPassant(
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== 1n) return; // Not immediately left or right of us
 	// prettier-ignore
-	const yParity = color === players.WHITE ? 1n : color === players.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
+	const yParity = color === p.WHITE ? 1n : color === p.BLACK ? -1n : (() => { throw new Error("Invalid color!"); })();
 	if (coords[1] + yParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
 	// It is capturable en passant!
@@ -331,8 +331,8 @@ function appendPawnMoveAndAttachPromoteFlag(
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
-		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
 	individualMoves.push(landCoords);
@@ -476,13 +476,13 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
  * @returns
  */
 function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): boolean {
-	if (typeutil.getRawType(type) !== rawTypes.PAWN) return false;
+	if (typeutil.getRawType(type) !== r.PAWN) return false;
 	if (!basegame.gameRules.promotionRanks) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);
-	const promotionRanks = basegame.gameRules.promotionRanks[color]!;
+	const promotionRanks = basegame.gameRules.promotionRanks[color];
 
-	return promotionRanks.includes(coordsClicked[1]);
+	return promotionRanks?.includes(coordsClicked[1]) || false;
 }
 
 /**

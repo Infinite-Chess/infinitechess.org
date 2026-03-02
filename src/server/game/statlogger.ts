@@ -1,12 +1,16 @@
-import path from 'path';
-import fs from 'fs';
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
+// src/server/game/statlogger.ts
 
-import { readFile, writeFile } from '../utility/lockFile.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'node:url';
+
 import timeutil from '../../shared/util/timeutil.js';
 
-import { fileURLToPath } from 'node:url';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { readFile, writeFile } from '../utility/lockFile.js';
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import type { Game } from '../../shared/chess/logic/gamefile.js';

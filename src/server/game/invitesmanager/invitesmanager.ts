@@ -1,3 +1,5 @@
+// src/server/game/invitesmanager/invitesmanager.ts
+
 /**
  * This script manages our list of all active invites,
  * subscribes and unsubs sockets to and from the invites
@@ -5,28 +7,27 @@
  * and broadcasts changes out to the clients.
  */
 
-// @ts-ignore
-import {
-	getInviteSubscribers,
-	addSocketToInvitesSubs,
-	removeSocketFromInvitesSubs,
-	doesUserHaveActiveConnection,
-} from './invitessubscribers.js';
-// @ts-ignore
-import { getActiveGameCount } from '../gamemanager/gamecount.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { SafeInvite, Invite } from './inviteutility.js';
+
+import jsutil from '../../../shared/util/jsutil.js';
+
 import socketUtility from '../../socket/socketUtility.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getActiveGameCount } from '../gamemanager/gamecount.js';
 import {
 	isInvitePrivate,
 	safelyCopyInvite,
 	isInvitePublic,
 	memberInfoEq,
 } from './inviteutility.js';
-import jsutil from '../../../shared/util/jsutil.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-
-import type { SafeInvite, Invite } from './inviteutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { AuthMemberInfo } from '../../types.js';
+import {
+	getInviteSubscribers,
+	addSocketToInvitesSubs,
+	removeSocketFromInvitesSubs,
+	doesUserHaveActiveConnection,
+} from './invitessubscribers.js';
 
 //-------------------------------------------------------------------------------------------
 

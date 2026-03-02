@@ -1,4 +1,6 @@
-// src/types.ts
+// src/server/types.ts
+
+import type { Role } from './controllers/roles';
 
 import { Request } from 'express';
 
@@ -26,7 +28,7 @@ type SignedInMemberInfo = {
 	signedIn: true;
 	user_id: number;
 	username: string;
-	roles: string[] | null;
+	roles: Role[] | null;
 	browser_id?: string;
 };
 
@@ -59,4 +61,4 @@ interface ParsedCookies {
 
 export { isRequestIdentified };
 
-export type { IdentifiedRequest, SignedInMemberInfo, MemberInfo, AuthMemberInfo, ParsedCookies };
+export type { IdentifiedRequest, MemberInfo, AuthMemberInfo, ParsedCookies };

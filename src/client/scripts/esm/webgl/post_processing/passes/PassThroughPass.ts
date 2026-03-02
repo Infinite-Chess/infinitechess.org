@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/post_processing/passes/PassThroughPass.ts
 
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A Post Processing Pass Through Effect, with zero effects.

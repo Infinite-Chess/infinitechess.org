@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/premoves.ts
+
 /**
  * This script handles the processing and execution of premoves
  * after the opponent's move.
@@ -5,33 +7,34 @@
  * Premoves are handled client-side, not server side.
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
-import movesequence from './movesequence.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import boardpos from '../rendering/boardpos.js';
-import preferences from '../../components/header/preferences.js';
-import selection from './selection.js';
-import squarerendering from '../rendering/highlights/squarerendering.js';
-import gameslot from './gameslot.js';
+import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
-import animation from '../rendering/animation.js';
-import mouse from '../../util/mouse.js';
 import movepiece, {
 	CoordsSpecial,
 	Edit,
 	MoveDraft,
 } from '../../../../../shared/chess/logic/movepiece.js';
-import { animateMove } from './graphicalchanges.js';
-import { Mouse } from '../input.js';
-import { GameBus } from '../GameBus.js';
 
-// Type Definitions ---------------------------------------------
+import mouse from '../../util/mouse.js';
+import boardpos from '../rendering/boardpos.js';
+import gameslot from './gameslot.js';
+import selection from './selection.js';
+import animation from '../rendering/animation.js';
+import { Mouse } from '../input.js';
+import preferences from '../../components/header/preferences.js';
+import { GameBus } from '../GameBus.js';
+import movesequence from './movesequence.js';
+import squarerendering from '../rendering/highlights/squarerendering.js';
+import { animateMove } from './graphicalchanges.js';
+
+// Types --------------------------------------------------------
 
 interface Premove extends Edit, MoveDraft {
 	/** The type of piece moved */

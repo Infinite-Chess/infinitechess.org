@@ -1,17 +1,22 @@
-// src/controllers/sendMail.ts
+// src/server/controllers/sendMail.ts
+
+import type { Request } from 'express';
 
 import nodemailer from 'nodemailer';
-import { Response } from 'express';
-import { SESClient } from '@aws-sdk/client-ses';
 import { fromEnv } from '@aws-sdk/credential-providers';
-// Import entire module for nodemailer SES transport (needs access to SendRawEmailCommand)
-import * as aws from '@aws-sdk/client-ses';
+import { Response } from 'express';
+import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
+
+import { getAppBaseUrl } from '../utility/urlUtils.js';
+import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 
-import { IdentifiedRequest } from '../types.js';
-import { getAppBaseUrl } from '../utility/urlUtils.js';
-import { isBlacklisted } from '../database/blacklistManager.js';
+/** Options for sending an email. */
+type SendMailOptions = {
+	to: string;
+	subject: string;
+} & ({ html: string } | { text: string });
 
 // --- Module Setup ---
 const AWS_REGION = process.env['AWS_REGION'];
@@ -27,7 +32,7 @@ const FROM = EMAIL_FROM_ADDRESS;
 // Create SES client
 const sesClient =
 	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
-		? new SESClient({
+		? new SESv2Client({
 				region: AWS_REGION,
 				credentials: fromEnv(),
 			})
@@ -36,7 +41,7 @@ const sesClient =
 // Create nodemailer transporter using SES
 const transporter = sesClient
 	? nodemailer.createTransport({
-			SES: { ses: sesClient, aws },
+			SES: { sesClient, SendEmailCommand },
 		} as nodemailer.TransportOptions)
 	: null;
 
@@ -51,15 +56,29 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 	`;
 }
 
+/**
+ * Helper function to send an email via the transporter.
+ * Checks if transporter is defined and logs a generic message if not.
+ * @param options - Email options including recipient, subject, and content (html or text)
+ * @returns Whether the email was sent, which won't be the case if env variables aren't present.
+ */
+async function sendMail(options: SendMailOptions): Promise<boolean> {
+	if (!transporter) {
+		console.log('Email environment variables not specified. Not sending email.');
+		return false;
+	}
+
+	await transporter.sendMail({
+		from: `"Infinite Chess" <${FROM}>`,
+		...options,
+	});
+
+	return true;
+}
+
 // --- Email Sending Functions ---
 
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
-	if (!transporter) {
-		console.log('Email environment variables not specified. Not sending password reset email.');
-		console.log('Password Reset Link (for dev):', resetUrl);
-		return;
-	}
-
 	const content = `
 		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
 		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
@@ -67,16 +86,14 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
 	`;
 
-	const mailOptions = {
-		from: `"Infinite Chess" <${FROM}>`,
-		to: recipientEmail,
-		subject: 'Your Password Reset Request',
-		html: createEmailHtmlWrapper('Password Reset Request', content),
-	};
-
 	try {
-		await transporter.sendMail(mailOptions);
-		console.log(`Password reset email sent to ${recipientEmail}`);
+		const sent = await sendMail({
+			to: recipientEmail,
+			subject: 'Your Password Reset Request',
+			html: createEmailHtmlWrapper('Password Reset Request', content),
+		});
+		if (sent) console.log(`Password reset email sent to ${recipientEmail}`);
+		else console.log(`Password Reset Link: ${resetUrl}`);
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
@@ -136,14 +153,6 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			`${baseUrl}/verify/${record.username.toLowerCase()}/${record.verification_code}`,
 		).toString();
 
-		if (!transporter) {
-			console.log(
-				'Email environment variables not specified. Not sending email confirmation.',
-			);
-			console.log('Verification Link (for dev):', verificationUrl);
-			return;
-		}
-
 		const content = `
 			<p style="font-size: 16px; color: #555;">Thank you, <strong>${record.username}</strong>, for creating an account. Please click the button below to verify your account.</p>
 			<p style="font-size: 16px; color: #555;">If this takes you to the login page, then as soon as you log in, your account will be verified.</p>
@@ -151,15 +160,14 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		const mailOptions = {
-			from: `"Infinite Chess" <${FROM}>`,
+		const sent = await sendMail({
 			to: record.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
-		};
-
-		await transporter.sendMail(mailOptions);
-		console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
+		});
+		if (sent)
+			console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
+		else console.log(`Verification Link: ${verificationUrl}`);
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
@@ -170,7 +178,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 }
 
 /** API to resend the verification email. */
-function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
+function requestConfirmEmail(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		res.status(401).json({ message: 'You must be signed in to perform this action.' });
 		return;
@@ -200,24 +208,13 @@ function requestConfirmEmail(req: IdentifiedRequest, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		if (!transporter) {
-			console.log(
-				'Email environment variables not specified. Not sending rating abuse email.',
-			);
-			return;
-		}
-
-		const mailOptions = {
-			from: `Infinite Chess <${FROM}>`,
-			to: FROM, // Send to same address as sender for internal notifications
+		const sent = await sendMail({
+			to: FROM ?? '',
 			subject: messageSubject,
 			text: messageText,
-		};
-
-		await transporter.sendMail(mailOptions);
-		console.log(
-			`Rating abuse warning email with subject "${messageSubject}" sent successfully to ${FROM}.`,
-		);
+		});
+		if (sent) console.log(`Rating abuse warning email sent successfully to ${FROM}.`);
+		else console.log("Didn't send rating abuse email.");
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		await logEventsAndPrint(

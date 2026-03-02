@@ -3,6 +3,7 @@
 // The script on the createaccount page
 
 import validators from '../../../../shared/util/validators.js';
+
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 const element_usernameInput = document.getElementById('username') as HTMLInputElement;
@@ -43,7 +44,9 @@ element_usernameInput.addEventListener('input', () => {
 			// Reset variable because it now exists.
 			usernameError = document.getElementById('usernameerror')!;
 		}
-		usernameError.textContent = translations[validators.getUsernameErrorTranslation(result)!];
+		const errorTranslation = validators.getUsernameErrorTranslation(result);
+		if (errorTranslation) usernameError.textContent = translations[errorTranslation];
+		else usernameError.textContent = 'Invalid username (BUG, please report!)'; // Fallback message if no translation is available for this error
 	} else if (usernameError) {
 		// No errors, delete that error element if it exists
 		usernameHasError = false;
@@ -75,6 +78,7 @@ element_usernameInput.addEventListener('focusout', () => {
 
 			// translate the message from the server if a translation is available
 			let result_message = result.reason;
+			// @ts-ignore
 			if (translations[result_message]) result_message = translations[result_message];
 			usernameError.textContent = result_message;
 			updateSubmitButton();

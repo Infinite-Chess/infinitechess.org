@@ -1,15 +1,20 @@
+// src/client/scripts/esm/components/header/settings.ts
+
 // This script opens and closes our settings drop-down menu when it is clicked.
 
-import languagedropdown from './dropdowns/languagedropdown.js';
-import boarddropdown from './dropdowns/boarddropdown.js';
-import legalmovedropdown from './dropdowns/legalmovedropdown.js';
-import perspectivedropdown from './dropdowns/perspectivedropdown.js';
-import selectiondropdown from './dropdowns/selectiondropdown.js';
-import sounddropdown from './dropdowns/sounddropdown.js';
-import preferences from './preferences.js';
+import math from '../../../../../shared/util/math/math.js';
 import themes from '../../../../../shared/components/header/themes.js';
-// Only imported so its code runs
-import './pingmeter.js';
+
+import style from '../../game/gui/style.js';
+import preferences from './preferences.js';
+import boarddropdown from './dropdowns/boarddropdown.js';
+import sounddropdown from './dropdowns/sounddropdown.js';
+import languagedropdown from './dropdowns/languagedropdown.js';
+import legalmovedropdown from './dropdowns/legalmovedropdown.js';
+import selectiondropdown from './dropdowns/selectiondropdown.js';
+import perspectivedropdown from './dropdowns/perspectivedropdown.js';
+
+import './pingmeter.js'; // Only imported so its code runs
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -58,8 +63,8 @@ let settingsIsOpen = settings.classList.contains('open');
 	document.addEventListener('click', closeSettingsDropdownIfClickedAway);
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
-	updateSwitchColor();
-	document.addEventListener('theme-change', updateSwitchColor);
+	updateBackgroundColor();
+	document.addEventListener('theme-change', updateBackgroundColor);
 
 	// [DEBUGGING] Instantly open the settings dropdown on page refresh
 	// openSettingsDropdown();
@@ -145,8 +150,8 @@ function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 	return clickedDropdown;
 }
 
-/** Updates the color of all boolean switches on the settings menu, depending on the current theme. */
-function updateSwitchColor(): void {
+/** Updates the stylesheet colors --background-theme-color and --switch-on-color based on the current theme. */
+function updateBackgroundColor(): void {
 	const theme = preferences.getTheme();
 	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
 	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
@@ -159,19 +164,23 @@ function updateSwitchColor(): void {
 	const switchG = AvgG * 255;
 	const switchB = AvgB * 255;
 
-	const cssSwitch = `rgb(${switchR}, ${switchG}, ${switchB})`;
+	const cssSwitch = style.rgbToCssString(switchR, switchG, switchB);
 
 	// Also set the --background-theme-color property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
 
-	// Brighten factor (e.g., 15% brighter)
-	const factor = 1.14;
-	const brighten = (v: number): number => Math.min(255, v * factor);
-	const backgroundR = brighten(switchR);
-	const backgroundG = brighten(switchG);
-	const backgroundB = brighten(switchB);
+	// Convert to HSL Color
+	const backgroundHSL = style.rgbToHsl(switchR, switchG, switchB);
 
-	const cssBackground = `rgb(${backgroundR}, ${backgroundG}, ${backgroundB})`;
+	// Brighten by 5%
+	backgroundHSL.l += 0.05;
+	// Min lightness of 0.6 (Prevent dark themes from making accent colors too dark)
+	backgroundHSL.l = math.clamp(backgroundHSL.l, 0.6, 1);
+
+	// Create CSS string
+	const cssBackground = style.hslToCssString(backgroundHSL);
+
+	// Set CSS properties
 
 	const root = document.documentElement;
 	root.style.setProperty('--switch-on-color', cssSwitch);

@@ -1,5 +1,7 @@
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
+// src/client/scripts/esm/webgl/post_processing/passes/ColorGradePass.ts
+
 import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A post-processing pass for applying a full suite of color grading effects.

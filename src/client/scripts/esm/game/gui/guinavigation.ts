@@ -1,33 +1,34 @@
+// src/client/scripts/esm/game/gui/guinavigation.ts
+
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
-import guipause from './guipause.js';
-// @ts-ignore
+import bimath from '../../../../../shared/util/math/bimath.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
+
+import toast from './toast.js';
 import stats from './stats.js';
-// @ts-ignore
-import statustext from './statustext.js';
+import mouse from '../../util/mouse.js';
+import space from '../misc/space.js';
+import guipause from './guipause.js';
+import gameslot from '../chess/gameslot.js';
+import boardpos from '../rendering/boardpos.js';
+import snapping from '../rendering/highlights/snapping.js';
+import premoves from '../chess/premoves.js';
+import selection from '../chess/selection.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import Transition from '../rendering/transitions/Transition.js';
+import annotations from '../rendering/highlights/annotations/annotations.js';
+import boardeditor from '../boardeditor/boardeditor.js';
+import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import gameslot from '../chess/gameslot.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import selection from '../chess/selection.js';
-import mouse from '../../util/mouse.js';
-import boardpos from '../rendering/boardpos.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
-import snapping from '../rendering/highlights/snapping.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
-import premoves from '../chess/premoves.js';
-import Transition from '../rendering/transitions/Transition.js';
-import space from '../misc/space.js';
-import bimath from '../../../../../shared/util/math/bimath.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-import { GameBus } from '../GameBus.js';
 
 /**
  * This script handles the navigation bar, in a game,
@@ -427,12 +428,12 @@ function callback_CoordsChange(index: 0 | 1): void {
 		proposed = parseStringToBigInt(target.value);
 	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
-		statustext.showStatus(translations['coords-invalid'], true);
+		toast.show(translations['coords-invalid'], { error: true });
 		return;
 	}
 
 	if (bimath.abs(proposed) > TELEPORT_LIMIT) {
-		statustext.showStatus(translations['coords-exceeded'], true);
+		toast.show(translations['coords-exceeded'], { error: true });
 		return;
 	}
 
@@ -448,7 +449,8 @@ function callback_Back(): void {
 }
 
 function callback_Expand(): void {
-	const allCoords = boardutil.getCoordsOfAllPieces(gameslot.getGamefile()!.boardsim.pieces!);
+	const box: Partial<BoundingBox> =
+		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces) ?? {};
 
 	// Add the square annotation highlights, too.
 
@@ -458,9 +460,24 @@ function callback_Expand(): void {
 		.getAnnoteSnapPoints(false)
 		.map((point) => bdcoords.coordsToBigInt(point));
 
-	allCoords.push(...annoteSnapPoints);
-	if (allCoords.length === 0) allCoords.push([1n, 1n], [8n, 8n]); // use the [1,1]-[8,8] area as a fallback
-	Transition.zoomToCoordsList(allCoords);
+	// Expand the box to include all annote snap points
+	for (const snapPoint of annoteSnapPoints) {
+		if (box.left === undefined || snapPoint[0] < box.left) box.left = snapPoint[0];
+		if (box.right === undefined || snapPoint[0] > box.right) box.right = snapPoint[0];
+		if (box.bottom === undefined || snapPoint[1] < box.bottom) box.bottom = snapPoint[1];
+		if (box.top === undefined || snapPoint[1] > box.top) box.top = snapPoint[1];
+	}
+
+	// If any sides are still undefined, set them to default values
+	const definedBox: BoundingBox =
+		box.left === undefined ||
+		box.right === undefined ||
+		box.bottom === undefined ||
+		box.top === undefined
+			? { left: 1n, right: 8n, bottom: 1n, top: 8n }
+			: (box as BoundingBox);
+
+	Transition.zoomToCoordsBox(definedBox);
 }
 
 function recenter(): void {

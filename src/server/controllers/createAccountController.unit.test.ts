@@ -1,4 +1,4 @@
-// src/server/controllers/createAccountController.test.ts
+// src/server/controllers/createAccountController.unit.test.ts
 
 /**
  * Tests for the profanity filter used in account creation.
@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+
 import { profanityMatcher } from './createAccountController'; // Import the identical one used in the controller
 
 /**

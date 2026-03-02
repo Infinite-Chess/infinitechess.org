@@ -1,14 +1,15 @@
 // src/client/scripts/esm/game/rendering/effect_zone/zones/EchoRiftZone.ts
 
-import PerlinNoise from '../../../../util/PerlinNoise';
-import AudioManager from '../../../../audio/AudioManager';
+import type { Zone } from '../EffectZoneManager';
+
 import gamesound from '../../../misc/gamesound';
+import PerlinNoise from '../../../../util/PerlinNoise';
 import preferences from '../../../../components/header/preferences';
-import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import AudioManager from '../../../../audio/AudioManager';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
-import { Zone } from '../EffectZoneManager';
-import { VoronoiDistortionPass } from '../../../../webgl/post_processing/passes/VoronoiDistortionPass';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
+import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import { VoronoiDistortionPass } from '../../../../webgl/post_processing/passes/VoronoiDistortionPass';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class EchoRiftZone implements Zone {

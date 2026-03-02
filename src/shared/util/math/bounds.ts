@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/math/bounds.ts
+// src/shared/util/math/bounds.ts
 
 /**
  * This script contains methods for constructing and operating on bounding boxes.
@@ -10,7 +10,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from './bimath.js';
 
-// Type Definitions --------------------------------------------------------------
+// Types -------------------------------------------------------------------------
 
 /** A arbitrarily large rectangle object with properties for the coordinates of its sides. */
 interface BoundingBox {
@@ -207,11 +207,11 @@ function boxContainsBoxBD(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boo
 /**
  * Determines if two bounding boxes have zero overlap.
  */
-function areBoxesDisjoint(box1: DoubleBoundingBox, box3: DoubleBoundingBox): boolean {
-	if (box1.right <= box3.left) return true;
-	if (box1.left >= box3.right) return true;
-	if (box1.top <= box3.bottom) return true;
-	if (box1.bottom >= box3.top) return true;
+function areBoxesDisjoint(box1: DoubleBoundingBox, box2: DoubleBoundingBox): boolean {
+	if (box1.right <= box2.left) return true;
+	if (box1.left >= box2.right) return true;
+	if (box1.top <= box2.bottom) return true;
+	if (box1.bottom >= box2.top) return true;
 
 	return false;
 }

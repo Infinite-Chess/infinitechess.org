@@ -1,12 +1,11 @@
-// src/client/scripts/esm/game/rendering/effect_zone/zones/IridescenceZone.ts
+// src/client/scripts/esm/game/rendering/effect_zone/zones/SpectralEdgeZone.ts
 
 import type { Zone } from '../EffectZoneManager';
 
-// @ts-ignore
 import loadbalancer from '../../../misc/loadbalancer';
-import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
-import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
+import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
+import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 
 export class SpectralEdgeZone implements Zone {

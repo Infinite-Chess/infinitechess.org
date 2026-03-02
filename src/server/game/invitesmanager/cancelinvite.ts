@@ -4,14 +4,14 @@
  * This script handles invite cancelation.
  */
 
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
 import * as z from 'zod';
 
-import { memberInfoEq } from './inviteutility.js';
 import socketUtility from '../../socket/socketUtility.js';
-import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
+import { memberInfoEq } from './inviteutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
 
 /** The zod schema for validating the contents of the cancelinvite message. */
 const cancelinviteschem = z.string().length(IDLengthOfInvites);

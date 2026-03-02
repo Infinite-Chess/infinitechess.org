@@ -4,13 +4,17 @@
  * This script handles almost all of the queries we use to interact with the members table!
  */
 
-import jsutil from '../../shared/util/jsutil.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
-import db from './database.js';
-import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
+import type { DeleteReason } from '../controllers/deleteAccountController.js';
+
 import { SqliteError } from 'better-sqlite3';
 
-// Type Definitions ----------------------------------------------------------
+import jsutil from '../../shared/util/jsutil.js';
+
+import db from './database.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
+
+// Types ---------------------------------------------------------------------
 
 /** Structure of a complete member record. */
 export interface MemberRecord {
@@ -133,7 +137,7 @@ function addUser(
  *
  * @throws If a database error occurs during the deletion process.
  */
-function deleteUser(user_id: number, reason_deleted: string): void {
+function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
 	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {

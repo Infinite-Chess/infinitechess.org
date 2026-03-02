@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/disconnect.ts
+
 /**
  * This script displays a countdown on screen, when our opponent disconnects,
  * how much longer they have remaining until they are auto-resigned.
@@ -6,12 +8,22 @@
  * extra time to reconnect.
  */
 
-import afk from './afk.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+
+import afk from './afk.js';
+import toast from '../../gui/toast.js';
+import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+
+// Types ---------------------------------------------------------------
+
+/** The parameters for the opponent disconnect countdown. */
+export interface OpponentDisconnectValue {
+	millisUntilAutoDisconnectResign: number;
+	wasByChoice: boolean;
+}
+
+// Variables -----------------------------------------------------------------------
 
 /** The timestamp our opponent will lose from disconnection, if they don't reconnect before then. */
 let timeOpponentLoseFromDisconnect: number | undefined;
@@ -29,10 +41,7 @@ let displayOpponentDisconnectTimeoutID: ReturnType<typeof setTimeout> | undefine
 function startOpponentDisconnectCountdown({
 	millisUntilAutoDisconnectResign,
 	wasByChoice,
-}: {
-	millisUntilAutoDisconnectResign: number;
-	wasByChoice: boolean;
-}): void {
+}: OpponentDisconnectValue): void {
 	// This overwrites the "Opponent is AFK" timer
 	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
@@ -51,17 +60,17 @@ function stopOpponentDisconnectCountdown(): void {
 
 function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean): void {
 	const opponent_disconnectedOrLostConnection = wasByChoice
-		? translations['onlinegame'].opponent_disconnected
-		: translations['onlinegame'].opponent_lost_connection;
+		? translations.onlinegame.opponent_disconnected
+		: translations.onlinegame.opponent_lost_connection;
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
-		? translations['onlinegame'].auto_resigning_in
-		: translations['onlinegame'].auto_aborting_in;
+		? translations.onlinegame.auto_resigning_in
+		: translations.onlinegame.auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,
 	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
 	if (!afk.isOurAFKAutoResignTimerRunning())
-		statustext.showStatusForDuration(
+		toast.show(
 			`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`,
-			1000,
+			{ durationMillis: 1000 },
 		);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop

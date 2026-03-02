@@ -79,18 +79,35 @@ button {
 	margin: 0.2em 0.2em;
 }
 
+.editor-positionname {
+	text-align: center;
+	margin: 0.3em 1em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 /* SVG resizings */
 
 .svg-reset {
 	transform: scale(0.85) translate(2%, 0%);
 }
 
-.svg-clearall {
+.svg-delete {
+	aspect-ratio: 1;
 	transform: scale(0.8);
 }
 
-.svg-saved-positions {
+.svg-load-position {
 	transform: scale(0.75);
+}
+
+.svg-save-position-as {
+	transform: scale(0.82);
+}
+
+.svg-save-position {
+	transform: scale(0.82);
 }
 
 .svg-copy-notation {
@@ -1422,10 +1439,10 @@ svg.collapse {
 
 /* Shared floating Window UI */
 .floating-window {
-	max-width: min(220px, 60vw);
+	display: flex;
+	flex-direction: column;
 	max-height: min(80vh, var(--dvh-sub-nav));
 	box-sizing: border-box;
-	overflow: auto; /* enable vertical scrolling */
 	padding: 0 18px 16px 18px;
 	border-radius: 12px;
 	position: absolute;
@@ -1436,10 +1453,33 @@ svg.collapse {
 	font-family: 'Segoe UI', Roboto, sans-serif;
 	font-size: 14px;
 	color: #222;
+	--editor-floating-window-btn-primary: #1d8ee4;
+	--editor-floating-window-btn-primary-hover: #0d7ed4;
+	--editor-floating-window-btn-secondary: #e0e0e0;
+	--editor-floating-window-btn-secondary-hover: #d5d5d5;
+}
+
+.floating-window.scrolling {
+	overflow: auto;
+}
+
+.floating-window.nonscrolling {
+	overflow: hidden;
+}
+
+.floating-window.narrow {
+	width: 100%;
+	box-sizing: border-box;
+	max-width: min(220px, 60vw);
+}
+
+.floating-window.wide {
+	width: 100%;
+	max-width: calc(2 * min(230px, 60vw));
 }
 
 /* Header (draggable area + close button) */
-.floating-window-header {
+.window-header {
 	cursor: move;
 	user-select: none;
 	display: flex;
@@ -1467,7 +1507,7 @@ svg.collapse {
 .divider {
 	border: none;
 	border-bottom: 1px solid #ccc;
-	margin: 0 0 12px 0;
+	margin-bottom: 12px;
 }
 
 /* Floating window UI confirmation button styling */
@@ -1478,7 +1518,7 @@ svg.collapse {
 	margin-top: 18px;
 }
 
-.btn {
+.confirmation-buttons .btn {
 	min-width: 80px;
 	padding: 10px 18px;
 	border-radius: 8px;
@@ -1489,21 +1529,21 @@ svg.collapse {
 }
 
 .btn-primary {
-	background-color: #1d8ee4;
+	background-color: var(--editor-floating-window-btn-primary);
 	color: #ffffff;
 }
 
 .btn-primary:hover {
-	background-color: #0d7ed4;
+	background-color: var(--editor-floating-window-btn-primary-hover);
 }
 
 .btn-secondary {
-	background-color: #e0e0e0;
+	background-color: var(--editor-floating-window-btn-secondary);
 	color: #222;
 }
 
 .btn-secondary:hover {
-	background-color: #d5d5d5;
+	background-color: var(--editor-floating-window-btn-secondary-hover);
 }
 
 /* Floating window UI input styling */
@@ -1516,6 +1556,7 @@ svg.collapse {
 .flwindow-section label {
 	font-weight: 500;
 	margin-bottom: 4px;
+	word-wrap: break-word;
 }
 
 .floating-window .invalid-input {
@@ -1612,6 +1653,157 @@ svg.collapse {
 	color: #999;
 }
 
+/* Board editor load & save positions UI */
+
+.saved-positions {
+	/* Fixed column widths */
+	--w-count: 70px;
+	--w-date: 95px;
+	--w-header-actions: 52px;
+	/* Shared column structure (everything left of the action buttons) */
+	--grid-layout: auto var(--w-count) var(--w-date);
+
+	/* Allows flex items to shrink below their content size,
+	allowing the positions list to be scrollable instead of clipping */
+	min-height: 0;
+}
+
+.saved-position-header {
+	display: grid;
+	grid-template-columns: var(--grid-layout) var(--w-header-actions);
+	align-items: center;
+	padding: 0 0.5em;
+	margin-bottom: 0.4em;
+}
+
+.saved-position-header > div {
+	padding-right: 0.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.saved-position-list {
+	min-height: 80px;
+	overflow-y: auto;
+}
+
+.saved-position {
+	height: 2.5em;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	display: grid;
+	align-items: center;
+	grid-template-columns: var(--grid-layout) max-content max-content;
+	padding: 0 0.5em;
+}
+
+.saved-position:nth-child(even) {
+	background-color: #f7f7f7;
+}
+
+.saved-position.active-position {
+	--mid: var(--background-theme-color);
+	--end: color-mix(in srgb, var(--mid), white 50%);
+	background: linear-gradient(var(--end), var(--mid), var(--end));
+}
+
+.saved-position > div {
+	padding-right: 0.5em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Hide piece count column on semi-small screens */
+@container (max-width: 390px) {
+	.saved-positions .piece-count {
+		display: none;
+	}
+	.saved-positions {
+		--grid-layout: auto var(--w-date);
+	}
+}
+/* Also hide date column on very small screens */
+@container (max-width: 320px) {
+	.saved-positions .date {
+		display: none;
+	}
+	.saved-positions {
+		--grid-layout: auto;
+	}
+}
+
+.position-name {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 12px;
+}
+
+.position-name-row {
+	display: flex;
+	gap: 8px;
+}
+
+.position-name-row input {
+	flex-grow: 1;
+	min-width: 0;
+}
+
+.position-name-btnsave {
+	flex-shrink: 0;
+	width: 75px;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: 600;
+	background-color: var(--editor-floating-window-btn-primary);
+	color: #ffffff;
+}
+
+.position-name-btnsave:hover {
+	background-color: var(--editor-floating-window-btn-primary-hover);
+}
+
+.saved-position-btn {
+	background-color: transparent;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+}
+
+.saved-position-btn:hover svg {
+	transform: scale(1.1);
+}
+
+.saved-position-btn svg {
+	width: 22px;
+	aspect-ratio: 1;
+}
+
+/* The overlay covers ONLY the load-position-UI */
+.load-position-modal-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.25);
+	pointer-events: auto;
+}
+
+.load-position-modal {
+	width: 90%;
+	border-radius: 0.75em;
+	background-color: rgba(255, 255, 255, 0.96);
+	box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+	padding: 0em 1em 0.5em 1em;
+}
+
+.load-position-modal-header {
+	cursor: unset;
+}
+
 /* Pause UI */
 
 .pauseUI {
@@ -1669,7 +1861,7 @@ button.practicemenu {
 
 /* Status text showing alerts and errors */
 
-.statusmessage {
+.toastmessage {
 	position: absolute;
 	bottom: 84px;
 	left: 0;
@@ -1679,7 +1871,7 @@ button.practicemenu {
 	pointer-events: none;
 }
 
-.statusmessage .statustext {
+.toastmessage .toast {
 	margin: 0 auto;
 	padding: 0.4em 3em;
 	width: fit-content;
@@ -1690,7 +1882,7 @@ button.practicemenu {
 	line-height: 1.5;
 }
 
-.statustext.ok {
+.toast.ok {
 	opacity: 1;
 	color: black;
 	--color: white;
@@ -1705,7 +1897,7 @@ button.practicemenu {
 	);
 }
 
-.statustext.error {
+.toast.error {
 	opacity: 1;
 	color: white;
 	--color: rgb(255, 0, 0);
@@ -1789,13 +1981,5 @@ a {
 }
 
 .fade-out-1s {
-	animation: fade-out 1s; /* UPDATE 1s within the document in the statustext module! */
-}
-
-.fade-in-2_3s {
-	animation: fade-in 0.67s;
-}
-
-.fade-out-2_3s {
-	animation: fade-out 0.67s; /* UPDATE 1s within the document in the statustext module! */
+	animation: fade-out 1s; /* UPDATE 1s within the document in the toast module! */
 }

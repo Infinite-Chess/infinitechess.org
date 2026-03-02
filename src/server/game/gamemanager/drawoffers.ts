@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/drawoffers.ts
+
 /**
  * This script contains utility methods for draw offers,
  * and has almost zero dependancies.
@@ -7,10 +9,10 @@
  * NOR does it send any websocket messages.
  */
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
-import type { MatchInfo, ServerGame } from './gameutility.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
+
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -94,7 +96,6 @@ function getLastDrawOfferPlyOfColor(match: MatchInfo, color: Player): number | u
 //--------------------------------------------------------------------------------------------------------
 
 export {
-	movesBetweenDrawOffers,
 	isDrawOfferOpen,
 	doesColorHaveExtendedDrawOffer,
 	hasColorOfferedDrawTooFast,

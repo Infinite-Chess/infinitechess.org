@@ -4,13 +4,11 @@
  * Defines and configures the Express application instance.
  */
 
-import express from 'express';
 import ejs from 'ejs';
+import express from 'express';
 
-// @ts-ignore
-import configureMiddleware from './middleware/middleware.js';
-// @ts-ignore
-import { initTranslations } from './config/setupTranslations.js';
+import { initTranslations } from './config/i18n.js';
+import { configureMiddleware } from './middleware/middleware.js';
 
 const app = express();
 
@@ -22,7 +20,8 @@ app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all 
 app.engine('html', ejs.renderFile);
 app.set('view engine', 'html');
 
-// This is in here so integration tests work
+// This is in here so integration tests work, as otherwise if
+// this is in server.js, i18next is never initialized for tests.
 initTranslations();
 
 configureMiddleware(app); // Setup the middleware waterfall

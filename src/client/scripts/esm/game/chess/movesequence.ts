@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/movesequence.ts
+
 /**
  * This is a client-side script that executes global and local moves,
  * making both the logical, and graphical changes.
@@ -8,24 +10,24 @@
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Edit, Move, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
 
-import gameslot from './gameslot.js';
-import guinavigation from '../gui/guinavigation.js';
-import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
-import { animateMove, meshChanges } from './graphicalchanges.js';
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import piecemodels from '../rendering/piecemodels.js';
-import { Mesh } from '../rendering/piecemodels.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import guiclock from '../gui/guiclock.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
-import frametracker from '../rendering/frametracker.js';
-import enginegame from '../misc/enginegame.js';
-import { GameBus } from '../GameBus.js';
-// @ts-ignore
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+
 import stats from '../gui/stats.js';
+import gameslot from './gameslot.js';
+import guiclock from '../gui/guiclock.js';
+import { Mesh } from '../rendering/piecemodels.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import enginegame from '../misc/enginegame.js';
+import piecemodels from '../rendering/piecemodels.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import { GameBus } from '../GameBus.js';
+import frametracker from '../rendering/frametracker.js';
+import guinavigation from '../gui/guinavigation.js';
+import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
 

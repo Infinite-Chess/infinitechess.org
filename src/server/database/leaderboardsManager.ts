@@ -4,33 +4,29 @@
  * This script handles queries to the leaderboards table.
  */
 
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
-import db from './database.js';
-import {
-	DEFAULT_LEADERBOARD_ELO,
-	DEFAULT_LEADERBOARD_RD,
-	UNCERTAIN_LEADERBOARD_RD,
-	RD_UPDATE_FREQUENCY,
-} from '../game/gamemanager/ratingcalculation.js';
-import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
-
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
-// Type Definitions -----------------------------------------------------------------------------------
+import db from './database.js';
+import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import {
+	DEFAULT_LEADERBOARD_ELO,
+	UNCERTAIN_LEADERBOARD_RD,
+	RD_UPDATE_FREQUENCY,
+} from '../game/gamemanager/ratingcalculation.js';
 
-/** Structure of a leaderboard entry record for a user. */
+// Types ----------------------------------------------------------------------------------------------
+
+/** Structure of a complete leaderboard entry record. */
 interface LeaderboardEntry {
-	user_id?: number;
-	leaderboard_id?: number;
-	elo?: number;
-	rating_deviation?: number;
-	rd_last_update_date?: string | null; // Can be null if no games played yet
+	user_id: number;
+	leaderboard_id: number;
+	elo: number;
+	rating_deviation: number;
+	rd_last_update_date: string | null; // Can be null if no games played yet
 	// Consider adding volatility if you use it in Glicko-2
 }
-
-/** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason?: string };
 
 /** A rating value and whether we are confident about it. */
 type Rating = { value: number; confident: boolean };
@@ -44,7 +40,7 @@ type Rating = { value: number; confident: boolean };
  * @throws {SqliteError} If the database query fails. The error's `code` property
  *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
  */
-function addUserToLeaderboard_core(
+function addUserToLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -64,46 +60,13 @@ function addUserToLeaderboard_core(
 }
 
 /**
- * Safely adds a user entry to a specific leaderboard.
- * This wraps the core logic in a try/catch block, making it safe for standalone use.
- * @returns A result object indicating success or failure.
- */
-function addUserToLeaderboard(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number = DEFAULT_LEADERBOARD_ELO,
-	rd: number = DEFAULT_LEADERBOARD_RD,
-): ModifyQueryResult {
-	try {
-		const result = addUserToLeaderboard_core(user_id, leaderboard_id, elo, rd);
-		return { success: true, result };
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error adding user "${user_id}" to leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-
-		let reason = 'Failed to add user to leaderboard.';
-		if (error instanceof Error && 'code' in error) {
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = 'User ID does not exist in the members table.';
-			} else if (error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
-				reason = `User ID already exists on this leaderboard.`;
-			}
-		}
-		return { success: false, reason };
-	}
-}
-
-/**
- * The core logic for updating a player's rating.
- * This function is "unsafe" as it throws errors on failure, making it
- * suitable for use inside a database transaction which can catch the
- * error and roll back.
+ * Updates the rating values for a player on a specific leaderboard.
+ * This function throws errors on failure, making it suitable for use
+ * inside a database transaction which can catch the error and roll back.
+ * Callers outside of transactions should implement their own error handling.
  * @throws {Error} If the user is not found or if the database query fails.
  */
-function updatePlayerLeaderboardRating_core(
+function updatePlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -126,31 +89,6 @@ function updatePlayerLeaderboardRating_core(
 		);
 	}
 	return result;
-}
-
-/**
- * Safely updates the rating values for a player on a specific leaderboard.
- * This wraps the core logic in a try/catch block, making it safe for
- * standalone use, such as in background jobs or admin tools.
- * @returns A result object indicating success or failure.
- */
-function updatePlayerLeaderboardRating(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number,
-	rd: number,
-): ModifyQueryResult {
-	try {
-		const result = updatePlayerLeaderboardRating_core(user_id, leaderboard_id, elo, rd);
-		return { success: true, result };
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error modifying leaderboard ratings data for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-		return { success: false, reason: message };
-	}
 }
 
 /**
@@ -243,7 +181,7 @@ function getPlayerLeaderboardRating(
  * @param user_id - The id for the user
  * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
  */
-function getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
+function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	// New function leveraging the idx_leaderboards_user index
 	const query = `
         SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
@@ -379,7 +317,7 @@ function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboar
 	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
 	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
-	return { value: rating_values.elo!, confident };
+	return { value: rating_values.elo, confident };
 }
 
 // Regular Table Utility Functions -------------------------------------------------------------------
@@ -389,23 +327,18 @@ function startPeriodicLeaderboardRatingDeviationUpdate(): void {
 	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
 }
 
-/**
- * Retrieves all entries of the leaderboards table and updates their RD
- */
+/** Retrieves all entries of the leaderboards table and updates their RD */
 function updateAllRatingDeviationsofLeaderboardTable(): void {
 	const query = `SELECT * FROM leaderboards`;
 
 	try {
-		const entries = db.all(query) as LeaderboardEntry[];
+		const entries = db.all<LeaderboardEntry>(query);
 		for (const entry of entries) {
-			const updatedRD = getTrueRD(
-				entry.rating_deviation!,
-				entry?.rd_last_update_date ?? null,
-			);
+			const updatedRD = getTrueRD(entry.rating_deviation, entry.rd_last_update_date);
 			updatePlayerLeaderboardRating(
-				entry.user_id!,
-				entry.leaderboard_id! as Leaderboard,
-				entry.elo!,
+				entry.user_id,
+				entry.leaderboard_id as Leaderboard,
+				entry.elo,
 				updatedRD,
 			);
 		}
@@ -424,16 +357,12 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 
 // Exports --------------------------------------------------------------------------------------------
 
-// Updated export names to be more descriptive
 export {
 	addUserToLeaderboard,
-	addUserToLeaderboard_core,
 	updatePlayerLeaderboardRating,
-	updatePlayerLeaderboardRating_core,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
 	getPlayerLeaderboardRating_core,
-	getAllUserLeaderboardEntries, // Added export for the new function
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/faviconselector.ts
+
 // This script auto detects device theme and adjusts the browser icon accordingly
 
 const element_favicon = document.getElementById('favicon') as HTMLLinkElement;

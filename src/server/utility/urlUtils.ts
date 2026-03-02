@@ -1,4 +1,4 @@
-// src/utility/urlUtils.ts
+// src/server/utility/urlUtils.ts
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 

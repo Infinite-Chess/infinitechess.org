@@ -1,13 +1,16 @@
+// src/server/game/gamemanager/abortresigngame.ts
+
 /**
  * This script handles the abortings and resignations of online games
  */
 
-import gameutility from './gameutility.js';
-import { setGameConclusion } from './gamemanager.js';
+import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerGame } from './gameutility.js';
+import gameutility from './gameutility.js';
+import { setGameConclusion } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -40,7 +43,7 @@ function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 	}
 
 	// Abort
-	setGameConclusion(servergame, 'aborted');
+	setGameConclusion(servergame, { condition: 'aborted' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 
@@ -71,8 +74,7 @@ function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 		ws.metadata.subscriptions.game?.color ||
 		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
-	const gameConclusion = `${opponentColor} resignation`;
-	setGameConclusion(servergame, gameConclusion);
+	setGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 

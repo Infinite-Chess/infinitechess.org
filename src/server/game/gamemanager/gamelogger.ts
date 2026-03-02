@@ -6,30 +6,30 @@
  * It also updates the players' stats in the "players_stats" table
  */
 
-import { PlayerGroup, players, type Player } from '../../../shared/chess/util/typeutil.js';
-import {
-	addUserToLeaderboard_core,
-	getPlayerLeaderboardRating_core,
-	isPlayerInLeaderboard,
-	updatePlayerLeaderboardRating_core,
-} from '../../database/leaderboardsManager.js';
+import type { Game } from '../../../shared/chess/logic/gamefile.js';
+import type { ServerGame } from './gameutility.js';
+import type { RatingData } from './ratingcalculation.js';
+
+import timeutil from '../../../shared/util/timeutil.js';
+import clockutil from '../../../shared/chess/util/clockutil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
+
+import db from '../../database/database.js';
+import gameutility from './gameutility.js';
+import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import {
 	computeRatingDataChanges,
 	DEFAULT_LEADERBOARD_ELO,
 	DEFAULT_LEADERBOARD_RD,
 } from './ratingcalculation.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
-import gameutility from './gameutility.js';
-import db from '../../database/database.js';
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import clockutil from '../../../shared/chess/util/clockutil.js';
-import timeutil from '../../../shared/util/timeutil.js';
-
-import type { ServerGame } from './gameutility.js';
-import type { RatingData } from './ratingcalculation.js';
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
+import {
+	addUserToLeaderboard,
+	getPlayerLeaderboardRating_core,
+	isPlayerInLeaderboard,
+	updatePlayerLeaderboardRating,
+} from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------------------
 
@@ -79,9 +79,7 @@ async function logGame(servergame: ServerGame): Promise<RatingData | undefined> 
  * Either ALL operations succeed, or NONE do.
  */
 function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
-	const { victor, condition: termination } = winconutil.getVictorAndConditionFromGameConclusion(
-		servergame.basegame.gameConclusion!,
-	);
+	const { victor, condition: termination } = servergame.basegame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame, victor);
@@ -104,7 +102,7 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  */
 function updateLeaderboardsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
@@ -126,7 +124,7 @@ function updateLeaderboardsInTransaction(
 		// If a player isn't on the leaderboard, add them first.
 		// We use the _core (error-throwing) version because we are inside a transaction.
 		if (!isPlayerInLeaderboard(user_id, leaderboard_id)) {
-			addUserToLeaderboard_core(
+			addUserToLeaderboard(
 				user_id,
 				leaderboard_id,
 				DEFAULT_LEADERBOARD_ELO,
@@ -159,8 +157,7 @@ function updateLeaderboardsInTransaction(
 			? match.playerData[player]!.identifier.user_id
 			: undefined;
 		const data = ratingdata[player]!;
-		// We use the _core version to ensure errors propagate and roll back the transaction.
-		updatePlayerLeaderboardRating_core(
+		updatePlayerLeaderboardRating(
 			user_id!,
 			leaderboard_id,
 			data.elo_after_game!,
@@ -177,7 +174,7 @@ function updateLeaderboardsInTransaction(
  */
 function addGameRecordsInTransaction(
 	{ match, basegame }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
@@ -237,7 +234,7 @@ function addGameRecordsInTransaction(
 			user_id,
 			game_id,
 			player,
-			victor === undefined ? null : victor === player ? 1 : victor === players.NEUTRAL ? 0.5 : 0,
+			victor === undefined ? null : victor === player ? 1 : victor === null ? 0.5 : 0,
 			!basegame.untimed ? ending_clocks![player]! : null,
 			ratingData?.[player]?.elo_at_game ?? null,
 			ratingData?.[player]?.elo_change_from_game ?? null,
@@ -251,7 +248,7 @@ function addGameRecordsInTransaction(
  */
 function updateAllPlayerStatsInTransaction(
 	{ basegame, match }: ServerGame,
-	victor: Player | undefined,
+	victor: Player | null | undefined,
 ): void {
 	const playerMoveCounts = getPlayerMoveCountsInGame({ basegame, match });
 
@@ -265,7 +262,7 @@ function updateAllPlayerStatsInTransaction(
 		// prettier-ignore
 		updateSinglePlayerStatsInTransaction(user_id, {
 			moves_played_increment: playerMoveCounts[player]!,
-			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === players.NEUTRAL ? "draws" : "losses",
+			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === null ? "draws" : "losses",
 			is_rated: match.rated,
 			publicity: match.publicity,
 		});

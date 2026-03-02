@@ -7,15 +7,15 @@
  * of the Selection Tool in the Board Editor
  */
 
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
-import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
 import type { Color } from '../../../../../../../shared/util/math/math';
+import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
 
 import mouse from '../../../../util/mouse';
+import space from '../../../misc/space';
 import camera from '../../../rendering/camera';
 import meshes from '../../../rendering/meshes';
 import primitives from '../../../rendering/primitives';
-import space from '../../../misc/space';
 import { createRenderable } from '../../../../webgl/Renderable';
 
 // Constants ---------------------------------------------------

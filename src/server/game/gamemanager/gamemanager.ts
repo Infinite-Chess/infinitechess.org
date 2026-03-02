@@ -1,53 +1,52 @@
+// src/server/game/gamemanager/gamemanager.ts
+
 /**
  * The script keeps track of all our active online games.
  */
 
-// System imports
+import type { Invite } from '../invitesmanager/inviteutility.js';
+import type { Rating } from '../../database/leaderboardsManager.js';
+import type { ServerGame } from './gameutility.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+
 import WebSocket from 'ws';
 
-// @ts-ignore
+import clock from '../../../shared/chess/logic/clock.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
+import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+
+import statlogger from '../statlogger.js';
+import gamelogger from './gamelogger.js';
+import gameutility from './gameutility.js';
+import ratingabuse from './ratingabuse.js';
+import socketUtility from '../../socket/socketUtility.js';
+import { closeDrawOffer } from './drawoffers.js';
+import { genUniqueGameID } from '../../database/gamesManager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
-// @ts-ignore
+import { getTimeServerRestarting } from '../timeServerRestarts.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,
 	printActiveGameCount,
 } from './gamecount.js';
-// @ts-ignore
-import { closeDrawOffer } from './drawoffers.js';
-// @ts-ignore
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
-import gameutility from './gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
-import statlogger from '../statlogger.js';
-import gamelogger from './gamelogger.js';
-import {
-	cancelAutoAFKResignTimer,
-	startDisconnectTimer,
-	cancelDisconnectTimers,
-	getDisconnectionForgivenessDuration,
-} from './afkdisconnect.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
 	getIDOfGamePlayerIsIn,
 	hasColorInGameSeenConclusion,
 } from './activeplayers.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import { genUniqueGameID } from '../../database/gamesManager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import ratingabuse from './ratingabuse.js';
-import clock from '../../../shared/chess/logic/clock.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-
-import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
+import {
+	cancelAutoAFKResignTimer,
+	startDisconnectTimer,
+	cancelDisconnectTimers,
+	getDisconnectionForgivenessDuration,
+} from './afkdisconnect.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -319,7 +318,7 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
  * @param servergame - The game
  * @param conclusion - The new game conclusion
  */
-function setGameConclusion(servergame: ServerGame, conclusion: string | undefined): void {
+function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
 	const dontDecrementActiveGames = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	gameutility.setConclusion(servergame.basegame, conclusion);
 	if (conclusion !== undefined) onGameConclusion(servergame, { dontDecrementActiveGames });
@@ -383,7 +382,7 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
 	const loser = servergame.basegame.whosTurn!;
 	const winner = typeutil.invertPlayer(loser);
 
-	setGameConclusion(servergame, `${winner} time`);
+	setGameConclusion(servergame, { victor: winner, condition: 'time' });
 
 	// Sometimes they're clock can have 1ms left. Just make that zero.
 	// This needs to be done AFTER setting game conclusion, because that
@@ -407,10 +406,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 
 	if (gameutility.isGameResignable(servergame.basegame)) {
 		console.log('Someone has lost by disconnection!');
-		setGameConclusion(servergame, `${colorWon} disconnect`);
+		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
 		console.log('Game aborted from disconnection.');
-		setGameConclusion(servergame, 'aborted');
+		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 
 	gameutility.broadcastGameUpdate(servergame);
@@ -427,10 +426,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): void {
 	if (gameutility.isGameResignable(servergame.basegame)) {
 		console.log('Someone has lost by abandonment!');
-		setGameConclusion(servergame, `${colorWon} disconnect`);
+		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
 		console.log('Game aborted from abandonment.');
-		setGameConclusion(servergame, 'aborted');
+		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 
 	gameutility.broadcastGameUpdate(servergame);
@@ -499,7 +498,7 @@ async function logAllGames(): Promise<void> {
 		const servergame = activeGames[gameID]!;
 		if (!gameutility.isGameOver(servergame.basegame)) {
 			// Abort the game
-			setGameConclusion(servergame, 'aborted');
+			setGameConclusion(servergame, { condition: 'aborted' });
 			// Report conclusion to players
 			gameutility.broadcastGameUpdate(servergame);
 		}

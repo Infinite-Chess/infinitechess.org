@@ -7,24 +7,25 @@
  * selection from the Selection Tool in the Board Editor
  */
 
-import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
-import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
 import type { Mesh } from '../../../rendering/piecemodels';
+import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
+import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import boardutil, { LineKey, Piece } from '../../../../../../../shared/chess/util/boardutil';
-import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
-import boardeditor, { Edit } from '../../boardeditor';
-import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
-import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
 import bounds from '../../../../../../../shared/util/math/bounds';
-import selectiontool from './selectiontool';
 import bimath from '../../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../../shared/chess/util/typeutil';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords';
+import organizedpieces from '../../../../../../../shared/chess/logic/organizedpieces';
+import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
+import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
+import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
 
-// Type Definitions ----------------------------------------------------------
+import selectiontool from './selectiontool';
+import boardeditor, { Edit } from '../../boardeditor';
+
+// Types ---------------------------------------------------------------------
 
 /** A Piece object that also remembers its specialrights state. */
 interface StatePiece extends Piece {
@@ -458,6 +459,11 @@ function Transform(
 	const piecesInSource = getPiecesInBox(gamefile, sourceBox);
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
 
+	// Determine whether the destination box is entirely contained within the border
+	const withinBorder = gamefile.basegame.gameRules.worldBorder
+		? bounds.boxContainsBox(gamefile.basegame.gameRules.worldBorder, destinationBox)
+		: true;
+
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// Clear the destination area of any pieces not part of the original selection
@@ -477,6 +483,12 @@ function Transform(
 	for (const piece of piecesInSource) {
 		// Determine the new state for this piece
 		const transformed = transformer(piece);
+		// Skip if the destination is out of bounds
+		if (
+			!withinBorder &&
+			!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder!, transformed.coords)
+		)
+			continue;
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
 		boardeditor.queueAddPiece(
@@ -528,7 +540,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 	const step: Vec2 = axis === 0 ? [1n, 0n] : [0n, 1n];
 
 	const slideKey = vectors.getKeyFromVec2(step);
-	const lines: Map<LineKey, number[]> = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
+	const lines = o.lines.get(slideKey)!; // All lines of pieces going in one vector direction
 
 	/** Running list of all pieces within the box. */
 	const piecesInSelection: Piece[] = [];
@@ -559,7 +571,7 @@ function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
 		// Iterate through each line to find all pieces within the selection box
 		for (let i = linesStart; i <= linesEnd; i++) {
 			const coordsForKey: Coords = axis === 0 ? [0n, i] : [i, 0n]; // 0n makes no difference for the final key of the line, it can be anything.
-			const lineKey: LineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
+			const lineKey = organizedpieces.getKeyFromLine(step, coordsForKey);
 
 			const thisLine: number[] | undefined = lines.get(lineKey);
 			if (!thisLine) continue; // Empty line

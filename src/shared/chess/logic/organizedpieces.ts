@@ -1,3 +1,5 @@
+// src/shared/chess/logic/organizedpieces.ts
+
 /**
  * This script generates and manages the organized pieces of a game.
  *
@@ -9,18 +11,17 @@
  * - By line
  */
 
-import typeutil, { ext, players, rawTypes, neutralRawTypes } from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
-import movesets from './movesets.js';
-import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import bimath from '../../util/math/bimath.js';
-
-import type { LineKey } from '../util/boardutil.js';
-import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
+import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
-// Type Definitions ----------------------------------------------------------------
+import bimath from '../../util/math/bimath.js';
+import movesets from './movesets.js';
+import coordutil from '../util/coordutil.js';
+import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
+import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
+
+// Types ---------------------------------------------------------------------------
 
 /**
  * An object that stores the pieces on the board in several different organized ways.
@@ -81,6 +82,9 @@ interface TypeRange {
 	/** Each number in this array is the index of the undefined in the large XYPositions arrays. This array is also sorted. */
 	undefineds: Array<number>;
 }
+
+/** A unique identifier for a single line of pieces. `C|X` */
+type LineKey = `${bigint}|${bigint}`;
 
 // Constants ---------------------------------------------------------------------------
 
@@ -505,7 +509,7 @@ function calcRemainingExistingTypes(
 	if (editor) {
 		// ALL pieces may be added in the board editor, but only of the players mentioned in turnOrder
 		const playersSet: Set<Player> = new Set(turnOrder);
-		if (turnOrder.some((p) => p >= 3)) playersSet.add(players.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
+		if (turnOrder.some((player) => player >= 3)) playersSet.add(p.NEUTRAL); // also add gargoyles for neutral player, if more than 2 players are in game
 		const playersArray: Array<Player> = [...playersSet];
 		existingTypes = typeutil.buildAllTypesForPlayers(playersArray, Object.values(rawTypes));
 		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.
@@ -658,4 +662,4 @@ export default {
 	getXFromLine,
 };
 
-export type { OrganizedPieces, TypeRange };
+export type { OrganizedPieces, TypeRange, LineKey };

@@ -11,25 +11,23 @@
  * modelMatrix  is custom for each rendered object, translating it how desired.
  */
 
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-// @ts-ignore
-import stats from '../gui/stats.js';
-// @ts-ignore
-import mat4 from './gl-matrix.js';
-import perspective from './perspective.js';
-import guidrawoffer from '../gui/guidrawoffer.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import frametracker from './frametracker.js';
+
+import mat4 from './gl-matrix.js';
+import toast from '../gui/toast.js';
+import stats from '../gui/stats.js';
+import { gl } from './webgl.js';
+import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import screenshake from './screenshake.js';
-import { gl } from './webgl.js';
-
-import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
-import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
+import frametracker from './frametracker.js';
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;
@@ -100,7 +98,7 @@ function toggleDebug(): void {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	onPositionChange();
 	perspective.initCrosshairModel();
-	statustext.showStatus(`Toggled camera debug: ${DEBUG}`);
+	toast.show(`Toggled camera debug: ${DEBUG}`);
 }
 
 function getDebug(): boolean {

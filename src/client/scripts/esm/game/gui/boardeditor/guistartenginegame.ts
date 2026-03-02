@@ -4,14 +4,15 @@
  * Manages the GUI popup window for the Start engine game button of the Board Editor
  */
 
-import { players } from '../../../../../../shared/chess/util/typeutil';
-import guifloatingwindow from './guifloatingwindow';
-import eactions from '../../boardeditor/eactions';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import gameslot from '../../chess/gameslot';
-
 import type { Player } from '../../../../../../shared/chess/util/typeutil';
 import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
+
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import { players as p } from '../../../../../../shared/chess/util/typeutil';
+
+import eactions from '../../boardeditor/actions/eactions';
+import gameslot from '../../chess/gameslot';
+import guifloatingwindow from './guifloatingwindow';
 
 // Types -------------------------------------------------------------
 
@@ -66,15 +67,28 @@ const elements_selectionList: HTMLInputElement[] = [
 
 // Create floating window ----------------------------------------------------
 
-const floatingWindow = guifloatingwindow.createFloatingWindow({
+const floatingWindow = guifloatingwindow.create({
 	windowEl: element_window,
 	headerEl: element_header,
-	toggleButtonEl: element_enginegamebutton,
 	closeButtonEl: element_closeButton,
 	inputElList: elements_selectionList,
-	onOpen: initEngineGameUIListeners,
-	onClose: closeEngineGameUIListeners,
+	onOpen,
+	onClose,
 });
+
+// Toggling ------------------------------------------------------------
+
+function onOpen(): void {
+	updateEngineUIcontents();
+	element_enginegamebutton.classList.add('active');
+	initEngineGameUIListeners();
+}
+
+function onClose(resetPositioning = false): void {
+	if (resetPositioning) floatingWindow.resetPositioning();
+	element_enginegamebutton.classList.remove('active');
+	closeEngineGameUIListeners();
+}
 
 // Enginegame-UI-specific listeners -------------------------------------------
 
@@ -96,18 +110,13 @@ function closeEngineGameUIListeners(): void {
 
 // Utilities ----------------------------------------------------------------------
 
-function toggle(): void {
-	if (!floatingWindow.isOpen()) updateEngineUIcontents();
-	floatingWindow.toggle();
-}
-
 function onYesButtonPress(): void {
 	const engineUIConfig = readEngineUIConfig();
 	eactions.startEngineGame(engineUIConfig);
 }
 
 function onNoButtonPress(): void {
-	floatingWindow.close();
+	floatingWindow.close(false);
 }
 
 /** Updates the engineconfig UI values when opened */
@@ -120,7 +129,7 @@ function updateEngineUIcontents(): void {
 /** Constructs the engineconfig by reading the input boxes, and validating them */
 function readEngineUIConfig(): EngineUIConfig {
 	// Player color
-	const youAreColor = element_white.checked ? players.WHITE : players.BLACK;
+	const youAreColor = element_white.checked ? p.WHITE : p.BLACK;
 
 	// Time control
 	let TimeControl: TimeControl = '-';
@@ -151,9 +160,9 @@ function readEngineUIConfig(): EngineUIConfig {
 // Exports -----------------------------------------------------------------
 
 export default {
-	toggle,
+	open: floatingWindow.open,
 	close: floatingWindow.close,
-	resetPositioning: floatingWindow.resetPositioning,
+	isOpen: floatingWindow.isOpen,
 };
 
 export type { EngineUIConfig };

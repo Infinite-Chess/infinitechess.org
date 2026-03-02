@@ -1,34 +1,36 @@
+// src/shared/chess/logic/movepiece.ts
+
 /**
  * This script handles the logical side of moving pieces, nothing graphical.
  *
  * Both ends, client & server, should be able to use this script.
  */
 
-import type { Board, FullGame } from './gamefile.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { EnPassant, MoveState } from './state.js';
 import type { Change } from './boardchanges.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
 import type { _Move_Compact } from './icn/icnconverter.js';
+import type { EnPassant, MoveState } from './state.js';
+import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
+import type { Board, FullGame, GameConclusion } from './gamefile.js';
 
-import typeutil from '../util/typeutil.js';
-import coordutil from '../util/coordutil.js';
 import state from './state.js';
-import boardchanges from './boardchanges.js';
-import boardutil from '../util/boardutil.js';
+import bimath from '../../util/math/bimath.js';
+import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
-import { rawTypes } from '../util/typeutil.js';
-import icnconverter from './icn/icnconverter.js';
+import coordutil from '../util/coordutil.js';
+import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
-import checkdetection from './checkdetection.js';
-import specialdetect from './specialdetect.js';
+import boardchanges from './boardchanges.js';
+import icnconverter from './icn/icnconverter.js';
 import wincondition from './wincondition.js';
+import specialdetect from './specialdetect.js';
+import checkdetection from './checkdetection.js';
 import movevalidation from './movevalidation.js';
 import organizedpieces from './organizedpieces.js';
-import bimath from '../../util/math/bimath.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
-// Type Definitions ---------------------------------------------------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------------------------------------------------
 
 /**
  * A pair of coordinates, WITH attached special move information.
@@ -253,7 +255,7 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, coords)!;
 	const [rawType, player] = typeutil.splitType(piece.type);
 
-	if (rawType === rawTypes.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
+	if (rawType === r.PAWN) return; // Pawns cannot castle, them losing their special right doesn't affect others.
 
 	const isTrigger: boolean = typeutil.jumpingRoyals.includes(rawType); // Royals are the castling triggers
 
@@ -268,47 +270,77 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 
 		// Basic Validity Checks
 		if (candPlayer !== player) continue; // Affects friends only
-		if (candRawType === rawTypes.PAWN) continue; // Pawns don't have castling rights
+		if (candRawType === r.PAWN) continue; // Pawns don't have castling rights
 
 		const candCoordsKey = coordutil.getKeyFromCoords(candidate.coords);
 		if (!boardsim.state.global.specialRights.has(candCoordsKey)) continue; // Already has no rights
 
-		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
-
 		// Optimization: If the piece being checked is the same "Role" as the piece that triggered this event,
 		// it is unaffected. (e.g. Left Rook moving doesn't stop Right Rook from *potential* castling).
+		const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
 		if (candidateIsTrigger === isTrigger) continue;
 
 		// 3. Search: Does this candidate have ANY valid partner remaining?
-		const hasValidPartner = row.some((partnerIdx) => {
-			const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
-			const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
-
-			// Partner Validation
-			if (partnerPlayer !== player) return false; // Affects friends only
-			if (partnerRawType === rawTypes.PAWN) return false; // Pawns don't have castling rights
-
-			const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
-			if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
-
-			const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
-
-			// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
-			if (partnerIsTrigger === candidateIsTrigger) return false;
-
-			// The partner cannot be the piece that just moved/died
-			if (coordutil.areCoordsEqual(partner.coords, coords)) return false;
-
-			// Distance Check: Must be at least 3 spaces away
-			const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
-			if (dist < 3n) return false;
-
-			return true; // Found a valid partner!
-		});
+		const hasValidPartner = hasCastlingPartner(
+			boardsim,
+			candidate,
+			// Additional constraint: The partner cannot be the piece that just moved/died
+			(partner: Piece) => !coordutil.areCoordsEqual(partner.coords, coords),
+		);
 
 		// If no partners were found, this piece is now impotent. Revoke its rights.
 		if (!hasValidPartner) state.createSpecialRightsState(edit, candCoordsKey, true, false);
 	}
+}
+
+/**
+ * Determines whether a piece has any valid castling partner on the board.
+ * @param boardsim
+ * @param candidate - A candidate piece for castling. MUST NOT be a pawn.
+ * @param partnerConstraint - An optional function, run for each partner, that must return true for them to be considered valid.
+ */
+function hasCastlingPartner(
+	boardsim: Board,
+	candidate: Piece,
+	partnerConstraint?: (partner: Piece) => boolean,
+): boolean {
+	const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
+
+	// Basic Validity Checks
+	if (candRawType === r.PAWN) throw new Error('Cannot test if pawn has valid castling partner.'); // Safety, this could be easy to accidentally pass in.
+
+	const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
+
+	const key = organizedpieces.getKeyFromLine([1n, 0n], candidate.coords);
+	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
+
+	// Search: Does this candidate have ANY valid castling partner?
+	const hasValidPartner = row.some((partnerIdx) => {
+		const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
+		const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
+
+		// Partner Validation
+		if (partnerPlayer !== candPlayer) return false; // Affects friends only
+		if (partnerRawType === r.PAWN) return false; // Pawns don't have castling rights
+
+		const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
+		if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
+
+		// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
+		const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
+		if (partnerIsTrigger === candidateIsTrigger) return false;
+
+		// Distance Check: Must be at least 3 spaces away
+		const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
+		if (dist < 3n) return false;
+
+		// Additional optional constraint checks
+		if (partnerConstraint && !partnerConstraint(partner)) return false;
+
+		return true; // Found a valid partner!
+	});
+
+	return hasValidPartner;
 }
 
 /**
@@ -319,7 +351,7 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 
 	// Reset if it was a capture or pawn movement
 	const newMoveRule =
-		!move.flags.capture && typeutil.getRawType(move.type) !== rawTypes.PAWN
+		!move.flags.capture && typeutil.getRawType(move.type) !== r.PAWN
 			? boardsim.state.global.moveRuleState! + 1
 			: 0;
 	state.createMoveRuleState(move, boardsim.state.global.moveRuleState!, newMoveRule);
@@ -467,7 +499,7 @@ function makeAllMovesInGame(
 			const conclusion = wincondition.getGameConclusion(gamefile);
 			if (conclusion)
 				throw new Error(
-					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by (${conclusion}).`,
+					`Moves cannot come after game ends. Move ${i + 1} should have concluded game by ${JSON.stringify(conclusion)}.`,
 				);
 		}
 	}
@@ -608,7 +640,10 @@ function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callba
  * Simulates a move to get the gameConclusion
  * @returns the gameConclusion
  */
-function getSimulatedConclusion(gamefile: FullGame, moveDraft: MoveDraft): string | undefined {
+function getSimulatedConclusion(
+	gamefile: FullGame,
+	moveDraft: MoveDraft,
+): GameConclusion | undefined {
 	return simulateMoveWrapper(gamefile, moveDraft, () => wincondition.getGameConclusion(gamefile));
 }
 
@@ -622,7 +657,6 @@ export type {
 	CoordsSpecial,
 	enpassantCreate,
 	enpassant,
-	promoteTrigger,
 	promotion,
 	castle,
 	path,
@@ -632,6 +666,7 @@ export default {
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,
+	hasCastlingPartner,
 	makeMove,
 	updateTurn,
 	goToMove,

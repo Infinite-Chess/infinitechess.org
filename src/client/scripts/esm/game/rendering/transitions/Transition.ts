@@ -13,25 +13,27 @@
  * within a constant duration, while still feeling smooth and natural.
  */
 
+import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import perspective from '../perspective.js';
-import space from '../../misc/space.js';
-import boardtiles from '../boardtiles.js';
-import boarddrag from '../boarddrag.js';
-import boardpos from '../boardpos.js';
 import math from '../../../../../../shared/util/math/math.js';
-import area, { Area } from '../area.js';
 import coordutil, {
 	BDCoords,
 	Coords,
 	DoubleCoords,
 } from '../../../../../../shared/chess/util/coordutil.js';
-import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
-import meshes from '../meshes.js';
-import { GameBus } from '../../GameBus.js';
 
-// Type Definitions ----------------------------------------------------------------------
+import space from '../../misc/space.js';
+import meshes from '../meshes.js';
+import boardpos from '../boardpos.js';
+import boarddrag from '../boarddrag.js';
+import boardtiles from '../boardtiles.js';
+import perspective from '../perspective.js';
+import { GameBus } from '../../GameBus.js';
+import area, { Area } from '../area.js';
+
+// Types ---------------------------------------------------------------------------------
 
 /** Main Transition type. Either Zooming OR Panning. */
 type Transition =
@@ -388,15 +390,6 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 }
 
 /**
- * Starts a Zooming Transition to a list of coordinates.
- * If an intermediate zoom-out is needed first, it will be done.
- */
-function zoomToCoordsList(coordsList: Coords[]): void {
-	const box = bounds.getBoxFromCoordsList(coordsList);
-	zoomToCoordsBox(box);
-}
-
-/**
  * Starts a Zooming Transition to an integer bounding box.
  * If an intermediate zoom-out is needed first, it will be done.
  */
@@ -705,7 +698,6 @@ export default {
 	areTransitioning,
 	startZoomTransition,
 	startPanTransition,
-	zoomToCoordsList,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
 	singleZoomToBDCoords,

@@ -1,14 +1,15 @@
+// src/server/socket/closeSocket.ts
+
 /**
  * This script terminates websockets.
  */
 
-import socketUtility from './socketUtility.js';
-import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
+import type { CustomWebSocket } from './socketUtility.js';
+
 import wsutil from '../../shared/util/wsutil.js';
 
-// Type Definitions ---------------------------------------------------------------------------
-
-import type { CustomWebSocket } from './socketUtility.js';
+import socketUtility from './socketUtility.js';
+import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
 
 // Functions ---------------------------------------------------------------------------
 

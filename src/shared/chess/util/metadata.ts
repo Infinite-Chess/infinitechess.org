@@ -1,3 +1,5 @@
+// src/shared/chess/util/metadata.ts
+
 /**
  * This script stores the type definition for a game's metadata.
  *
@@ -5,20 +7,15 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import { Rating } from '../../../server/database/leaderboardsManager.js';
-import { players } from './typeutil.js';
-
+import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
+import type { Condition } from './winconutil.js';
+import type { TimeControl } from '../../../server/game/timecontrol.js';
+import type { GameConclusion } from '../logic/gamefile.js';
 
-// Type Definitions ---------------------------------------------------------------
+import { players as p } from './typeutil.js';
 
-/**
- * The clock value for the game, in the form `"s+s"`, where the left
- * is start time in seconds, and the right is increment in seconds.
- *
- * If the game is untimed, this should be `"-"`
- */
-type TimeControl = `${number}+${number}` | '-';
+// Types --------------------------------------------------------------------------
 
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
@@ -81,26 +78,27 @@ function copyMetadataField<K extends MetadataKey>(
  * @param victor - The victor of the game, in player number. Or none if undefined.
  * @returns The result of the game in the format '1-0', '0-1', '0.5-0.5', or '*' (aborted).
  */
-function getResultFromVictor(victor?: Player): string {
-	if (victor === players.WHITE) return '1-0';
-	else if (victor === players.BLACK) return '0-1';
-	else if (victor === players.NEUTRAL) return '1/2-1/2';
+function getResultFromVictor(victor?: Player | null): string {
+	if (victor === p.WHITE) return '1-0';
+	else if (victor === p.BLACK) return '0-1';
+	else if (victor === null) return '1/2-1/2';
 	else if (victor === undefined) return '*';
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
-function getGameConclusionFromResultAndTermination(result: string, termination: string): string {
-	if (!result || !termination) throw Error('Must provide both result and termination.');
-
-	if (termination === 'aborted') return 'aborted';
+function getGameConclusionFromResultAndTermination(
+	result: string,
+	termination: Condition,
+): GameConclusion {
+	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
-	const victor: Player =
-		result === '1-0' ? players.WHITE :
-		result === '0-1' ? players.BLACK :
-		result === '1/2-1/2' ? players.NEUTRAL :
+	const victor: Player | null =
+		result === '1-0' ? p.WHITE :
+		result === '0-1' ? p.BLACK :
+		result === '1/2-1/2' ? null :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
-	return `${victor} ${termination}`;
+	return { victor, condition: termination };
 }
 
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */

@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/dropdowns/sounddropdown.ts
+
 // This script manages the sound settings dropdown
 
 import preferences from '../preferences.js';

@@ -1,29 +1,32 @@
+// src/client/scripts/esm/game/misc/enginegame.ts
+
 // This module keeps track of the data of the engine game we are currently in.
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import selection from '../chess/selection.js';
-import checkmatepractice from '../chess/checkmatepractice.js';
-import gameslot from '../chess/gameslot.js';
-import movesequence from '../chess/movesequence.js';
-import gamecompressor from '../chess/gamecompressor.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
-import { animateMove } from '../chess/graphicalchanges.js';
-import premoves from '../chess/premoves.js';
-import perspective from '../rendering/perspective.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+
+import toast from '../gui/toast.js';
+import gameslot from '../chess/gameslot.js';
+import premoves from '../chess/premoves.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import squarerendering from '../rendering/highlights/squarerendering.js';
+import selection from '../chess/selection.js';
+import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import frametracker from '../rendering/frametracker.js';
 import { GameBus } from '../GameBus.js';
-// @ts-ignore
-import statustext from '../gui/statustext.js';
+import movesequence from '../chess/movesequence.js';
+import frametracker from '../rendering/frametracker.js';
+import gamecompressor from '../chess/gamecompressor.js';
+import squarerendering from '../rendering/highlights/squarerendering.js';
+import { animateMove } from '../chess/graphicalchanges.js';
+import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
+import checkmatepractice from '../chess/checkmatepractice.js';
 
-// Type Definitions -------------------------------------------------------------
+// Types ------------------------------------------------------------------------
 
 /** List of valid engines */
 type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
@@ -47,7 +50,7 @@ interface EngineConfig {
 const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
 	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
 	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-	hydrochess: BigInt(1e15),
+	hydrochess: hydrochess_card.I64_MAX - 2000n,
 };
 
 /**
@@ -215,8 +218,8 @@ function onMovePlayed(): void {
 	const basegame = gamefile.basegame;
 	const clocks = basegame.clocks;
 	if (!basegame.untimed && clocks) {
-		wtime = clocks.currentTime[players.WHITE];
-		btime = clocks.currentTime[players.BLACK];
+		wtime = clocks.currentTime[p.WHITE];
+		btime = clocks.currentTime[p.BLACK];
 		const incSeconds = clocks.startTime.increment;
 		winc = incSeconds * 1000;
 		binc = incSeconds * 1000;
@@ -287,7 +290,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefile.basegame.gameConclusion = `${ourColor} resignation`;
+		gamefile.basegame.gameConclusion = { victor: ourColor, condition: 'resignation' };
 		gameslot.concludeGame();
 		return;
 	}
@@ -298,10 +301,9 @@ function makeEngineMove(compactMove: unknown): void {
 	const moveValidationResults = movevalidation.isEnginesMoveLegal(gamefile, compactMove);
 
 	if (!moveValidationResults.valid) {
-		statustext.showStatus(
+		toast.show(
 			`Engine submitted an illegal move. Please report this bug! Move ${compactMove} is illegal for reason: ${moveValidationResults.reason}`,
-			true,
-			100,
+			{ error: true, durationMultiplier: 100 },
 		);
 		console.error(
 			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
@@ -343,7 +345,7 @@ function makeEngineMove(compactMove: unknown): void {
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */
 function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
-	statustext.showStatus(`Toggled engine move gen highlights: ${move_gen_debug}`);
+	toast.show(`Toggled engine move gen highlights: ${move_gen_debug}`);
 
 	if (!move_gen_debug)
 		pendingDebugRequests.length = 0; // Turning off: Clear pending requests.

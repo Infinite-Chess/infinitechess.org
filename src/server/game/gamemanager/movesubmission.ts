@@ -1,35 +1,43 @@
+// src/server/game/gamemanager/movesubmission.ts
+
 /**
  * The script handles when a user submits a move in
  * the game they are in, and does basic checks to make sure it's valid.
  */
 
-import * as z from 'zod';
-
-// Middleware imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
-// @ts-ignore
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import { declineDraw } from './onOfferDraw.js';
-import { resyncToGame } from './resync.js';
-import { pushGameClock, setGameConclusion } from './gamemanager.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import gameutility, { ServerGame } from './gameutility.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import socketUtility from '../../socket/socketUtility.js';
-import bimath from '../../../shared/util/math/bimath.js';
-
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import * as z from 'zod';
+
+import bimath from '../../../shared/util/math/bimath.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+
+import socketUtility from '../../socket/socketUtility.js';
+import { declineDraw } from './onOfferDraw.js';
+import { resyncToGame } from './resync.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import gameutility, { ServerGame } from './gameutility.js';
+import { pushGameClock, setGameConclusion } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the submitmove message. */
 const submitmoveschem = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
-	gameConclusion: z.string().optional(),
+	gameConclusion: z
+		.strictObject({
+			condition: z.enum(winconutil.ALL_CONDITIONS),
+			victor: z.union([z.number().int().nonnegative(), z.null()]).optional() as z.ZodType<
+				Player | null | undefined
+			>,
+		})
+		.optional(),
 });
 
 type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
@@ -210,13 +218,13 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
  * @param color - The color they are in the game.
  * @returns *true* if their claimed conclusion seems reasonable.
  */
-function doesGameConclusionCheckOut(gameConclusion: string | undefined, color: Player): boolean {
+function doesGameConclusionCheckOut(
+	gameConclusion: GameConclusion | undefined,
+	color: Player,
+): boolean {
 	if (gameConclusion === undefined) return true;
-	// It is a string...
 
-	// If conclusion is "aborted", victor will not be specified.
-	const { victor, condition } =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion);
+	const { victor, condition } = gameConclusion;
 	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
 	// Game conclusion is decisive...
 	// We can't submit a move where our opponent wins

@@ -1,7 +1,14 @@
+// src/server/game/gamemanager/onOfferDraw.ts
+
 /**
  * This script contains the routes for extending, accepting, and rejecting
  * draw offers in online games.
  */
+
+import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
@@ -12,11 +19,6 @@ import {
 	doesColorHaveExtendedDrawOffer,
 	closeDrawOffer,
 } from './drawoffers.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerGame } from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -69,7 +71,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Accept draw offer!
 
 	closeDrawOffer(servergame.match);
-	setGameConclusion(servergame, `${players.NEUTRAL} agreement`); // Player NEUTRAL winning means it was a draw
+	setGameConclusion(servergame, { victor: null, condition: 'agreement' });
 	gameutility.broadcastGameUpdate(servergame);
 }
 

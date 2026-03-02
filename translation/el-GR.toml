@@ -1,4 +1,5 @@
 name = "Ελληνικά" # Name of language
+english_name = "Greek"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "84"
 maintainer = "tsevasa"

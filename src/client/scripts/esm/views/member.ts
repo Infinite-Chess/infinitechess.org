@@ -12,13 +12,13 @@
  * * Deletes account when button clicked and password entered.
  */
 
+import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
+
 import docutil from '../util/docutil.js';
 import validatorama from '../util/validatorama.js';
-import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
-// @ts-ignore
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
-// --- Type Definitions ---
+// Types ---------------------------------------------------------------------------------
 
 interface MemberData {
 	joined: string;
@@ -34,7 +34,7 @@ interface MemberData {
 	verified_notified?: boolean; // True if they've seen the "thank you" message.
 }
 
-// --- DOM Element Selection ---
+// Elements -----------------------------------------------------------------------
 
 const element_verifyErrorElement = document.getElementById('verifyerror')!;
 const element_verifyConfirmElement = document.getElementById('verifyconfirm')!;

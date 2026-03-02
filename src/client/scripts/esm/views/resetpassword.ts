@@ -5,10 +5,10 @@
  * It validates user input for a new password and sends it to the server.
  */
 
-// Import the shared password validation utility.
 import validators from '../../../../shared/util/validators.js';
 
-// --- Type Definitions for Clarity ---
+// Types ----------------------------------------------------------------
+
 type FormElements = {
 	form: HTMLFormElement;
 	newPasswordInput: HTMLInputElement;
@@ -109,7 +109,7 @@ function initializeForm(elements: FormElements): void {
 		isSubmitting = true;
 		submitButton.disabled = true;
 		submitButton.className = 'unavailable';
-		submitButton.value = translations['processing'];
+		submitButton.value = translations.processing;
 
 		try {
 			const response = await fetch('/reset-password', {

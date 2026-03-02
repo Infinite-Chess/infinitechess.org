@@ -1,17 +1,17 @@
+// src/server/game/gamemanager/afkdisconnect.ts
+
 /**
  * The script handles the setting, resetting, and cancellation
  * of both the auto resign timer when players go AFK in online games,
  * and the disconnection timer when they leave the page / lose internet.
  */
 
-// Custom imports
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
 
-import gameutility from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
-// Type imports
-import type { MatchInfo, ServerGame } from './gameutility.js';
-import type { Player } from '../../../shared/chess/util/typeutil.js';
+import gameutility from './gameutility.js';
 
 //--------------------------------------------------------------------------------------------------------
 

@@ -5,8 +5,8 @@
  */
 
 import db from './database.js';
-import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
+import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
 // Variables -----------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ const allMemberColumns: string[] = [
 ];
 
 /** All columns of the player_stats table. Each of these would be valid to retrieve from any member. */
-const allPlayerStatsColumns: string[] = [
+const _allPlayerStatsColumns: string[] = [
 	'user_id',
 	'moves_played',
 	'game_count',
@@ -277,19 +277,20 @@ function generateTables(): void {
 	}
 
 	// Editor Saves table
-	// db.run(`
-	// 	CREATE TABLE IF NOT EXISTS editor_saves (
-	// 		position_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	// 		user_id INTEGER NOT NULL,
-	// 		name TEXT NOT NULL,
-	// 		size INTEGER NOT NULL,
-	// 		icn TEXT NOT NULL,
+	db.run(`
+		CREATE TABLE IF NOT EXISTS editor_saves (
+			user_id INTEGER NOT NULL,
+			name TEXT NOT NULL,
+			piece_count INTEGER NOT NULL,
+			timestamp INTEGER NOT NULL,
+			icn TEXT NOT NULL,
+			pawn_double_push BOOLEAN NOT NULL CHECK (pawn_double_push IN (0, 1)),
+			castling BOOLEAN NOT NULL CHECK (castling IN (0, 1)),
 
-	// 		FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
-	// 	);
-	// `);
-	// Indexes for editor_saves table
-	// db.run(`CREATE INDEX IF NOT EXISTS idx_editor_saves_user_id ON editor_saves (user_id);`);
+			PRIMARY KEY (user_id, name),
+			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+		);
+	`);
 
 	// Blacklisted Emails table
 	db.run(`
@@ -356,7 +357,6 @@ export {
 	game_id_upper_cap,
 	uniqueMemberKeys,
 	allMemberColumns,
-	allPlayerStatsColumns,
 	allPlayerGamesColumns,
 	allGamesColumns,
 	allRatingAbuseColumns,

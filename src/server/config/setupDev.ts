@@ -1,13 +1,13 @@
 // src/server/config/setupDev.ts
 
-import 'dotenv/config'; // Imports all properties of process.env, if it exists
-
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
-import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
+
+import { giveRole } from '../controllers/roles.js';
 import { generateAccount } from '../controllers/createAccountController.js';
 import { ensureSelfSignedCertificate } from './generateCert.js';
-// @ts-ignore
-import { giveRole } from '../controllers/roles.js';
+import { isUsernameTaken, updateMemberColumns } from '../database/memberManager.js';
+
+import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 export function initDevEnvironment(): void {
 	if (process.env['NODE_ENV'] === 'production') return;

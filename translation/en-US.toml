@@ -1,6 +1,7 @@
 name = "English" # Name of language
+english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "84"
+version = "87"
 maintainer = "Naviary"
 
 [header]
@@ -128,7 +129,7 @@ verify_message = "Please check your email to verify your account. Unverified acc
 resend_message = ["Didn't get one? Check your spam folder. Also, ", "send it again.", " If you still can't find it, ", "message us."]
 verify_confirm = "Thank you! Your account has been verified."
 joined = "Joined:"
-seen = ["Seen:", " ago"]
+seen = "Seen:" # Last seen: ____
 practice_progress = "Practice Mode Progress:"
 ranked_elo = "Rating:"
 infinity_leaderboard_position = "Global Ranking:"
@@ -152,6 +153,8 @@ create_button = "Create Account"
 agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
+js-username_reserved = "That username is reserved"
+js-username_length = "Username must be between 3-20 characters"
 js-username_tooshort = "Username must be at least 3 characters long"
 js-username_wrongenc = "Username must only contain letters A-Z and numbers 0-9"
 js-email_invalid = "This is not a valid email"
@@ -485,6 +488,7 @@ too_many_sockets = "Too many sockets"
 origin_error = "Origin error."
 connection_closed = "Connection closed unexpectedly. Server message:"
 please_report_bug = "This should never happen, please report this bug!"
+malformed_message = "Received unexpected websocket message. Please report this bug!"
 
 [play.javascript.termination] # What caused the termination of the game, in spoken language
 checkmate = "Checkmate"
@@ -561,7 +565,7 @@ fair_play_paragraph1 = ["You cannot have more than one account."]
 fair_play_paragraph2 = "To keep play fun and fair for everyone, you must NOT:"
 fair_play_rules = [
 "Modify or manipulate the code in any way, including but not limited to: Using console commands, local overrides, custom scripts, modifying http requests, websocket messages, etc. This can be done to intentionally break the game, play otherwise illegal moves, or to give you an advantage.",
-"Abuse bugs or glitches in order to abort the game, or give you an advantantage.",
+"Abuse bugs or glitches in order to abort the game, or give you an advantage.",
 "In rated games, receive help/advice from another person or program as to what you should play. (Creating an engine is ok and encouraged, but you must limit its use to unrated, casual, games)",
 "Trade elo points with other people by purposefully losing with intent to boost the elo of your opponent, or by receiving elo points from an opponent that intends to lose to boost your own rating. This abuses the system and creates unaccurate ratings according to your level of skill."
 ]
@@ -631,11 +635,9 @@ ws-incorrect_password = "Password is incorrect"
 ws-login_failure_retry_in = "Failed to login, try again in"
 ws-seconds = "seconds" # unit of time
 ws-second = "second" # unit of time
-ws-username_length = "Username must be between 3-20 characters"
 ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
 ws-username_taken = "That username is taken"
 ws-username_bad_word = "That username contains a word that is not allowed"
-ws-username_reserved = "That username is reserved"
 ws-email_too_long = "Your email is too looooooong."
 ws-email_invalid = "This is not a valid email"
 ws-email_in_use = "This email is already in use"

@@ -6,36 +6,35 @@
  * Here we also read allowinvites.js to see if we are currently allowing new invites or not.
  */
 
+import type { Rating } from '../../database/leaderboardsManager.js';
+import type { Invite } from './inviteutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { ServerUsernameContainer } from '../../../shared/types.js';
+
 import * as z from 'zod';
 
-// @ts-ignore
+import uuid from '../../../shared/util/uuid.js';
+import variant from '../../../shared/chess/variants/variant.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
+import {
+	Leaderboards,
+	VariantLeaderboards,
+} from '../../../shared/chess/variants/validleaderboard.js';
+
+import timecontrol from '../timecontrol.js';
 import { getTranslation } from '../../utility/translate.js';
-// @ts-ignore
-import clockweb from '../clockweb.js';
-import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
+import { isServerRestarting } from '../updateServerRestart.js';
 import { printActiveGameCount } from '../gamemanager/gamecount.js';
+import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
+import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	existingInviteHasID,
 	userHasInvite,
 	addInvite,
 	IDLengthOfInvites,
 } from './invitesmanager.js';
-import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { isServerRestarting } from '../updateServerRestart.js';
-import uuid from '../../../shared/util/uuid.js';
-import variant from '../../../shared/chess/variants/variant.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
-import {
-	Leaderboards,
-	VariantLeaderboards,
-} from '../../../shared/chess/variants/validleaderboard.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
-import type { Invite } from './inviteutility.js';
-import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
@@ -44,8 +43,8 @@ const createinviteschem = z
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
-			.refine(clockweb.isClockValueValid, { error: 'Invalid clock value.' }),
-		color: z.literal([players.WHITE, players.BLACK, players.NEUTRAL]),
+			.refine((c) => timecontrol.isValid(c), { error: 'Invalid clock value.' }),
+		color: z.literal([p.WHITE, p.BLACK, null]),
 		publicity: z.enum(['public', 'private']),
 		rated: z.enum(['casual', 'rated']),
 		tag: z.string().length(8),
@@ -57,7 +56,7 @@ const createinviteschem = z
 				// Rated game validation...
 				if (!(val.variant in VariantLeaderboards)) return false; // Invalid variant for a rated game.
 				if (val.clock === '-') return false; // Invalid clock for a rated game.
-				if (val.color !== players.NEUTRAL && val.publicity !== 'private') return false; // Specific colors are only allowed if the rated game is also private.
+				if (val.color !== null && val.publicity !== 'private') return false; // Specific colors are only allowed if the rated game is also private.
 			}
 			return true; // Casual games can have any properties.
 		},

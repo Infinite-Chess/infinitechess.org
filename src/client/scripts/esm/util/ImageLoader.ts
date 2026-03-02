@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/ImageLoader.ts
+
 import { retryFetch, RetryFetchOptions } from './httputils';
 
 class ImageLoader {

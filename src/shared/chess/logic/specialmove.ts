@@ -1,15 +1,17 @@
+// src/shared/chess/logic/specialmove.ts
+
 /** This script stores the default methods for EXECUTING special moves */
 
-import boardutil from '../util/boardutil.js';
-import boardchanges from './boardchanges.js';
-import state from './state.js';
-import { rawTypes } from '../util/typeutil.js';
-
-import type { RawTypeGroup } from '../util/typeutil.js';
-import type { Coords } from '../util/coordutil.js';
-import type { Edit, MoveDraft } from './movepiece.js';
 import type { Piece } from '../util/boardutil.js';
 import type { Board } from './gamefile.js';
+import type { Coords } from '../util/coordutil.js';
+import type { RawTypeGroup } from '../util/typeutil.js';
+import type { Edit, MoveDraft } from './movepiece.js';
+
+import state from './state.js';
+import boardutil from '../util/boardutil.js';
+import boardchanges from './boardchanges.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 /**
  * Function that queues all of the changes a special move makes when executed.
@@ -32,10 +34,10 @@ type SpecialVicinity = RawTypeGroup<Coords[]>;
 // In the future, parameters can be added if variants have
 // different special moves for pieces.
 const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
-	[rawTypes.KING]: kings,
-	[rawTypes.ROYALCENTAUR]: kings,
-	[rawTypes.PAWN]: pawns,
-	[rawTypes.ROSE]: roses,
+	[r.KING]: kings,
+	[r.ROYALCENTAUR]: kings,
+	[r.PAWN]: pawns,
+	[r.ROSE]: roses,
 };
 
 // A custom special move needs to be able to:
@@ -132,9 +134,9 @@ function roses(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 function getDefaultSpecialVicinitiesByPiece(): SpecialVicinity {
 	// prettier-ignore
 	return {
-		[rawTypes.PAWN]: [[-1n,1n],[1n,1n],[-1n,-1n],[1n,-1n]], // All squares a pawn could potentially capture on.
+		[r.PAWN]: [[-1n,1n],[1n,1n],[-1n,-1n],[1n,-1n]], // All squares a pawn could potentially capture on.
 		// All squares a rose piece could potentially capture on.
-		[rawTypes.ROSE]: [[-2n,-1n],[-3n,-3n],[-2n,-5n],[0n,-6n],[2n,-5n],[3n,-3n],[2n,-1n],[-4n,0n],[-5n,2n],[-4n,4n],[-2n,5n],[0n,4n],[1n,2n],[-1n,-2n],[0n,-4n],[4n,-4n],[5n,-2n],[4n,0n],[2n,1n],[-5n,-2n],[-6n,0n],[-3n,3n],[-1n,2n],[1n,-2n],[6n,0n],[5n,2n],[3n,3n],[-4n,-4n],[-2n,1n],[4n,4n],[2n,5n],[0n,6n]],
+		[r.ROSE]: [[-2n,-1n],[-3n,-3n],[-2n,-5n],[0n,-6n],[2n,-5n],[3n,-3n],[2n,-1n],[-4n,0n],[-5n,2n],[-4n,4n],[-2n,5n],[0n,4n],[1n,2n],[-1n,-2n],[0n,-4n],[4n,-4n],[5n,-2n],[4n,0n],[2n,1n],[-5n,-2n],[-6n,0n],[-3n,3n],[-1n,2n],[1n,-2n],[6n,0n],[5n,2n],[3n,3n],[-4n,-4n],[-2n,1n],[4n,4n],[2n,5n],[0n,6n]],
 	};
 }
 

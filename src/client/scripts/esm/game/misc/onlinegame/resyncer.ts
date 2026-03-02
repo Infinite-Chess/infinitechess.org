@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/resyncer.ts
+
 /**
  * This script handles game updates and recyning an online game,
  * when for one reason or another we become out of sync.
@@ -10,27 +12,28 @@
  * or it could be because the socket closed...
  */
 
-import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Mesh } from '../../rendering/piecemodels.js';
+import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameUpdateMessage,
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
-import type { Mesh } from '../../rendering/piecemodels.js';
 
-import movesendreceive from './movesendreceive.js';
-import onlinegame from './onlinegame.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import selection from '../../chess/selection.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import gameslot from '../../chess/gameslot.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import movesequence from '../../chess/movesequence.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import animation from '../../rendering/animation.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+
+import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
+import selection from '../../chess/selection.js';
+import animation from '../../rendering/animation.js';
+import onlinegame from './onlinegame.js';
+import movesequence from '../../chess/movesequence.js';
+import movesendreceive from './movesendreceive.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
-import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
 // Functions -----------------------------------------------------------------------------
 
@@ -91,7 +94,7 @@ function synchronizeMovesList(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
 	moves: ServerGameMoveMessage[],
-	claimedGameConclusion: string | undefined,
+	claimedGameConclusion: GameConclusion | undefined,
 ): { opponentPlayedIllegalMove: boolean } {
 	const { boardsim } = gamefile;
 	// console.log("Resyncing...");

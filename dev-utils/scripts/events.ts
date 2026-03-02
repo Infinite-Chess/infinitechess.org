@@ -1,3 +1,5 @@
+// dev-utils/scripts/events.ts
+
 
 /**
  * A script that was intended for managing gamefile events for games
@@ -9,7 +11,6 @@
 // Disabling this  cause will be using func types lots
 /* eslint-disable no-unused-vars */
 
-// @ts-ignore
 import type gamefile from "../../src/client/scripts/esm/chess/logic/gamefile";
 
 type ExtractArr<T extends any[]> = T extends (infer U)[] ? U : never
@@ -47,7 +48,7 @@ function removeEventListener<E extends Eventlist, N extends keyof E, L extends E
 	if (listeners === undefined) {
 		return false;
 	}
-	for (let i = 0; i <= listeners.length; i++ ) {
+	for (let i = 0; i < listeners.length; i++ ) {
 		if (listeners[i] !== listener) continue;
 		listeners.splice(i, 1);
 		return true;

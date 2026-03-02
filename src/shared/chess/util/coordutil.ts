@@ -1,3 +1,5 @@
+// src/shared/chess/util/coordutil.ts
+
 /**
  * This script contains utility methods for working with coordinates [x,y].
  *
@@ -6,7 +8,7 @@
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// Type Definitions ------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * A length-2 array of coordinates: `[x,y]`

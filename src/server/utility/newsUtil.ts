@@ -104,4 +104,4 @@ function getUnreadNewsDates(lastReadDate: string | null): string[] {
 	return allDates.filter((date) => date > lastReadDate);
 }
 
-export { getLatestNewsDate, getAllNewsDates, countUnreadNews, getUnreadNewsDates };
+export { getLatestNewsDate, countUnreadNews, getUnreadNewsDates };

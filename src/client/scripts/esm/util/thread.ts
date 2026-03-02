@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/thread.ts
+
 /**
  * This script contains a sleep method for the javascript thread.
  *

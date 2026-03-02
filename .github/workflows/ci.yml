@@ -2,6 +2,10 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - 'update-*'
+      - distance-display
     paths-ignore:
       - '*.md'
       - 'docs/**'
@@ -29,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -53,7 +57,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -74,7 +78,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -87,7 +91,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [lint, type-check, test]
 
     steps:
       - name: Checkout repository
@@ -96,7 +99,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies

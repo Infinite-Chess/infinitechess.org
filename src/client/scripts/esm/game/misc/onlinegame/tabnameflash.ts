@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/onlinegame/tabnameflash.ts
+
 /**
  * This script controls the flashing of the tab name "YOUR MOVE"
  * when it is your turn and your in another tab.
@@ -5,9 +7,10 @@
 
 import bd from '@naviary/bigdecimal';
 
-import gameslot from '../../chess/gameslot.js';
-import afk from './afk.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+
+import afk from './afk.js';
+import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import loadbalancer from '../loadbalancer.js';
 

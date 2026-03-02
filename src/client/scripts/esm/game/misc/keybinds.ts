@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/misc/keybinds.ts
+
 /**
  * This script will store the keybinds for various game actions.
  *
@@ -5,9 +7,9 @@
  * But in the future we can expand this with perhaps an option menu.
  */
 
-import guinavigation from '../gui/guinavigation.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
+import guinavigation from '../gui/guinavigation.js';
 import { Mouse, MouseButton } from '../input.js';
 
 /** Returns the mouse button currently assigned to board dragging. */

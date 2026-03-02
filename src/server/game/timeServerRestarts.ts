@@ -1,3 +1,5 @@
+// src/server/game/timeServerRestarts.ts
+
 /**
  * This script keeps track of the time the server will be restarting, if it is going to be.
  * This is determined by database/allowinvites.json. Whenever an invite is attempted to be

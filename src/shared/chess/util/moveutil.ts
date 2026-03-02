@@ -1,19 +1,21 @@
+// src/shared/chess/util/moveutil.ts
+
 /**
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
-import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
-import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board } from '../logic/gamefile.js';
 import type { GameRules } from '../variants/gamerules.js';
+import type { Game, Board } from '../logic/gamefile.js';
+import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { _Move_Compact } from '../logic/icn/icnconverter.js';
+import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
-import { players } from './typeutil.js';
+import { players as p } from './typeutil.js';
 
-// Type Definitions ------------------------------------------------------------------------------
+// Types -----------------------------------------------------------------------------------------
 
 /**
  * The format of outdated 2D moves list in game ICN notation.
@@ -188,13 +190,13 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
  * @returns Moves converted to the new 1D array format
  */
 function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[]; turn: Player } {
-	let turn: Player = players.WHITE;
+	let turn: Player = p.WHITE;
 	const moves1D: MoveDraft[] = [];
 	for (let a = 0; a < moves.length; a++) {
 		const thisPair = moves[a]!;
 		for (let b = 0; b < thisPair.length; b++) {
 			const thisMove = thisPair[b]!;
-			if (thisMove === null) turn = players.BLACK;
+			if (thisMove === null) turn = p.BLACK;
 			else moves1D.push(thisMove as MoveDraft);
 		}
 	}

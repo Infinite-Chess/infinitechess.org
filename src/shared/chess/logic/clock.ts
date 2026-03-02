@@ -1,3 +1,5 @@
+// src/shared/chess/logic/clock.ts
+
 /**
  * This script keeps track of both players timer,
  * updates them each frame,
@@ -5,18 +7,18 @@
  * if somebody loses on time.
  */
 
+import type { Player } from '../util/typeutil.js';
+import type { PlayerGroup } from '../util/typeutil.js';
+import type { TimeControl } from '../util/metadata.js';
+import type { ClockDependant, Game } from './gamefile.js';
+
+import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import timeutil from '../../util/timeutil.js';
-import gamefileutility from '../util/gamefileutility.js';
-import typeutil from '../util/typeutil.js';
 import clockutil from '../util/clockutil.js';
+import gamefileutility from '../util/gamefileutility.js';
 
-// Type Definitions ---------------------------------------------------------------
-
-import type { PlayerGroup } from '../util/typeutil.js';
-import type { MetaData } from '../util/metadata.js';
-import type { ClockDependant, Game } from './gamefile.js';
-import type { Player } from '../util/typeutil.js';
+// Types --------------------------------------------------------------------------
 
 /** An object containg the values of each color's clock, and which one is currently counting down, if any. */
 interface ClockValues {
@@ -83,7 +85,7 @@ type ClockData = {
  * Sets the clocks. If no current clock values are specified, clocks will
  * be set to the starting values, according to the game's TimeControl metadata.
  */
-function init(players: Iterable<Player>, time_control: MetaData['TimeControl']): ClockDependant {
+function init(players: Iterable<Player>, time_control: TimeControl): ClockDependant {
 	const untimed = clockutil.isClockValueInfinite(time_control);
 	if (untimed) return { untimed: true, clocks: undefined };
 	const clockPartsSplit = clockutil.getMinutesAndIncrementFromClock(time_control)!; // { minutes, increment }
@@ -269,4 +271,4 @@ export default {
 	printClocks,
 };
 
-export type { ClockValues, ClockData, ClockDependant };
+export type { ClockValues, ClockData };

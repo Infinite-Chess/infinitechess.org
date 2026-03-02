@@ -5,37 +5,33 @@
  */
 
 import jsutil from '../../shared/util/jsutil.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+
 import db from './database.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
-import type { RunResult } from 'better-sqlite3';
+// Types ----------------------------------------------------------------------------------------------
 
-// Type Definitions -----------------------------------------------------------------------------------
-
-/** Structure of a games record. This is all allowed columns of a game_id. */
-interface GamesRecord {
-	game_id?: number;
-	date?: string;
-	base_time_seconds?: number | null;
-	increment_seconds?: number | null;
-	variant?: string;
+/** Structure of a complete games record. */
+export interface GamesRecord {
+	game_id: number;
+	date: string;
+	base_time_seconds: number | null;
+	increment_seconds: number | null;
+	variant: string;
 	/** 0 => false  1 => true */
-	rated?: 0 | 1;
-	leaderboard_id?: number | null;
+	rated: 0 | 1;
+	leaderboard_id: number | null;
 	/** 0 => false  1 => true */
-	private?: 0 | 1;
-	result?: string;
-	termination?: string;
-	move_count?: number;
-	time_duration_millis?: number | null;
-	icn?: string;
+	private: 0 | 1;
+	result: string;
+	termination: string;
+	move_count: number;
+	time_duration_millis: number | null;
+	icn: string;
 }
 
-/** The result of add/update operations */
-type ModifyGameQueryResult =
-	| { success: true; result: RunResult }
-	| { success: false; reason: string };
+type GamesColumn = keyof GamesRecord;
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -89,9 +85,12 @@ function isGameIdTaken(game_id: number): boolean {
  * Fetches specified columns of a single game from the games table based on game_id
  * @param game_id - The game_id of the game
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
- * @returns - An object containing the requested columns, or undefined if no match is found.
+ * @returns An object containing the requested columns, or undefined if no match is found.
  */
-function getGameData(game_id: number, columns: string[]): GamesRecord | undefined {
+function getGameData<K extends GamesColumn>(
+	game_id: number,
+	columns: K[],
+): Pick<GamesRecord, K> | undefined {
 	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
@@ -118,7 +117,7 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
 
 	try {
 		// Execute the query and fetch result
-		const row = db.get<GamesRecord>(query, [game_id]);
+		const row = db.get<Pick<GamesRecord, K>>(query, [game_id]);
 
 		// If no row is found, return undefined
 		if (!row) {
@@ -146,10 +145,13 @@ function getGameData(game_id: number, columns: string[]): GamesRecord | undefine
  * Fetches specified columns of multiple games from the games table based on list of game_ids
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
- * @returns - An array of GamesRecord objects, or undefined if no matches found.
+ * @returns An array of objects with the requested columns, or undefined if no matches found.
  */
-function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRecord[] | undefined {
-	// Guard clauses... Validating the arguments...#
+function getMultipleGameData<K extends GamesColumn>(
+	game_id_list: number[],
+	columns: K[],
+): Pick<GamesRecord, K>[] | undefined {
+	// Guard clauses... Validating the arguments...
 
 	if (!Array.isArray(columns)) {
 		logEventsAndPrint(
@@ -176,7 +178,7 @@ function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRe
 
 	try {
 		// Execute the query and fetch result
-		const rows = db.all<GamesRecord>(query, game_id_list);
+		const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
 
 		// If no rows found, return undefined
 		if (!rows || rows.length === 0) {
@@ -197,111 +199,6 @@ function getMultipleGameData(game_id_list: number[], columns: string[]): GamesRe
 			'errLog.txt',
 		);
 		return undefined;
-	}
-}
-
-/**
- * Updates multiple column values in the games table for a given game.
- *
- * GOOD TO HAVE. BUT SHOULD NEVER BE USED EXCEPT FOR EXTREME CIRCUMSTANCES.
- * All added games should have correct values from the start.
- * @param game_id - The game ID of the games.
- * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns - A result object indicating success or failure.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function updateGameColumns(game_id: number, columnsAndValues: GamesRecord): ModifyGameQueryResult {
-	// Ensure columnsAndValues is an object and not empty
-	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEventsAndPrint(
-			`Invalid or empty columns and values provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-			'errLog.txt',
-		); // Detailed logging for debugging
-		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
-	}
-
-	for (const column in columnsAndValues) {
-		// Validate all provided columns
-		if (!allGamesColumns.includes(column)) {
-			logEventsAndPrint(
-				`Invalid column "${column}" provided for game ID "${game_id}" when updating games columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-				'errLog.txt',
-			); // Detailed logging for debugging
-			return { success: false, reason: 'Invalid column.' }; // Generic error message
-		}
-	}
-
-	// Dynamically build the SET part of the query
-	const setStatements = Object.keys(columnsAndValues)
-		.map((column) => `${column} = ?`)
-		.join(', ');
-	const values = Object.values(columnsAndValues);
-
-	// Add the game_id as the last parameter for the WHERE clause
-	values.push(game_id);
-
-	// Update query to modify multiple columns
-	const updateQuery = `UPDATE games SET ${setStatements} WHERE game_id = ?`;
-
-	try {
-		// Execute the update query
-		const result = db.run(updateQuery, values);
-
-		// Check if the update was successful
-		if (result.changes > 0) return { success: true, result };
-		else {
-			logEventsAndPrint(
-				`No changes made when updating games table columns ${JSON.stringify(columnsAndValues)} for game in games table with id "${game_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-				'errLog.txt',
-			); // Detailed logging for debugging
-			return { success: false, reason: 'No changes made.' }; // Generic error message
-		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(
-			`Error updating games table columns ${JSON.stringify(columnsAndValues)} for game ID "${game_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-			'errLog.txt',
-		); // Detailed logging for debugging
-		// Return an error message
-		return { success: false, reason: `Database error.` }; // Generic error message
-	}
-}
-
-/**
- * Deletes a game from the games table.
- *
- * Maybe useful to have? SHOULD NEVER BE USED THOUGH EXCEPT FOR EXTREME CIRCUMSTANCES.
- * NOT EVEN WHEN A USER DELETES THEIR ACCOUNT. Games are public information.
- * If a game is deleted, but a user isn't, then their game history will point to a game that doesn't exist.
- * @param game_id - The ID of the game to delete.
- * @returns - A result object indicating success or failure.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function deleteGame(game_id: number): ModifyGameQueryResult {
-	// SQL query to delete a game by its game_id
-	const query = 'DELETE FROM games WHERE game_id = ?';
-
-	try {
-		// Execute the delete query
-		const result = db.run(query, [game_id]); // { changes: 1 }
-
-		// Check if any rows were deleted
-		if (result.changes === 0) {
-			logEventsAndPrint(
-				`Cannot delete game of ID "${game_id}", it was not found.`,
-				'errLog.txt',
-			); // Detailed logging for debugging
-			return { success: false, reason: 'Game not found.' }; // Generic error message
-		}
-
-		return { success: true, result }; // Deletion made successfully
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(`Error deleting game with ID "${game_id}": ${message}`, 'errLog.txt'); // Detailed logging for debugging
-		// Return an error message
-		return { success: false, reason: 'Database error.' }; // Generic error message
 	}
 }
 

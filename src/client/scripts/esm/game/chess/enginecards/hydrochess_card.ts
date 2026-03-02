@@ -2,15 +2,50 @@
 
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 
+import bimath from '../../../../../../shared/util/math/bimath';
+import bounds from '../../../../../../shared/util/math/bounds';
+import coordutil from '../../../../../../shared/chess/util/coordutil';
 import typeutil, {
 	Player,
-	rawTypes,
 	RawType,
 	PlayerGroup,
+	rawTypes as r,
+	players as p,
 } from '../../../../../../shared/chess/util/typeutil';
-import bimath from '../../../../../../shared/util/math/bimath';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
+
+// Constants -------------------------------------------------------------
+
+/** Maximum signed 64-bit integer value (2^63 - 1). Used in Rust. */
+const I64_MAX = 2n ** 63n - 1n;
+
+/** The maximum world border distance the engine can handle. */
+const BORDER_CAP = I64_MAX - 1000n; // Small cushion
+
+const SUPPORTED_VARIANTS = new Set([
+	'Classical',
+	'Confined_Classical',
+	'Classical_Plus',
+	'Core',
+	'CoaIP',
+	'CoaIP_HO',
+	'CoaIP_RO',
+	'CoaIP_NO',
+	'Palace',
+	'Pawndard',
+	'Standarch',
+	'Space_Classic',
+	'Space',
+	'Abundance',
+	'Pawn_Horde',
+	'Knightline',
+	'Obstocean',
+	'Chess',
+	'Omega',
+]);
+
+// Functions -------------------------------------------------------------
 
 /**
  * Determines whether the given position is supported by the engine.
@@ -33,11 +68,10 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	}
 
 	// 2. World border larger than i64 is unsupported.
-	const cap = 1_000_000_000_000_000_000n; // About 10% the max, for cushion
 	if (
 		!variantOptions.gameRules.worldBorder ||
 		Object.values(variantOptions.gameRules.worldBorder).some(
-			(dist) => dist === null || bimath.abs(dist) > cap,
+			(dist) => dist === null || bimath.abs(dist) > BORDER_CAP,
 		)
 	) {
 		return {
@@ -46,7 +80,21 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		};
 	}
 
-	// 3. Maximum of one promotion line per player.
+	// 3. Boundary of all pieces is entirely contained within world border (no piece out of bounds)
+	if (variantOptions.gameRules.worldBorder) {
+		const allCoords = [...variantOptions.position.keys()].map((coordsKey) =>
+			coordutil.getCoordsFromKey(coordsKey),
+		);
+		const piecesBox = bounds.getBoxFromCoordsList(allCoords);
+
+		if (!bounds.boxContainsBox(variantOptions.gameRules.worldBorder, piecesBox))
+			return {
+				supported: false,
+				reason: `Pieces are out of bounds.`,
+			};
+	}
+
+	// 4. Maximum of one promotion line per player.
 	if (variantOptions.gameRules.promotionRanks) {
 		for (const playerRanks of Object.values(variantOptions.gameRules.promotionRanks)) {
 			if (playerRanks.length > 1) {
@@ -58,39 +106,44 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 4. Not too many pieces in total.
+	// 5. Not too many pieces in total, excluding neutral pieces (voids/obstacles).
 	const maxPieces = 200;
-	if (variantOptions.position.size > maxPieces) {
+	let nonNeutralCount = 0;
+	for (const type of variantOptions.position.values()) {
+		const color = typeutil.getColorFromType(type);
+		if (color !== p.NEUTRAL) nonNeutralCount++;
+	}
+	if (nonNeutralCount > maxPieces) {
 		return {
 			supported: false,
-			reason: `Too many pieces: ${variantOptions.position.size} (max ${maxPieces}).`,
+			reason: `Too many pieces: ${nonNeutralCount} (max ${maxPieces}).`,
 		};
 	}
 
-	// 5. Only suppported pieces may be present.
+	// 6. Only suppported pieces may be present.
 	const supportedPieces: RawType[] = [
-		rawTypes.VOID,
-		rawTypes.OBSTACLE,
-		rawTypes.KING,
-		rawTypes.GIRAFFE,
-		rawTypes.CAMEL,
-		rawTypes.ZEBRA,
-		rawTypes.KNIGHTRIDER,
-		rawTypes.AMAZON,
-		rawTypes.QUEEN,
+		r.VOID,
+		r.OBSTACLE,
+		r.KING,
+		r.GIRAFFE,
+		r.CAMEL,
+		r.ZEBRA,
+		r.KNIGHTRIDER,
+		r.AMAZON,
+		r.QUEEN,
 		// rawTypes.ROYALQUEEN, // Not extensively tested
-		rawTypes.HAWK,
-		rawTypes.CHANCELLOR,
-		rawTypes.ARCHBISHOP,
-		rawTypes.CENTAUR,
-		rawTypes.ROYALCENTAUR,
-		rawTypes.ROSE,
-		rawTypes.KNIGHT,
-		rawTypes.GUARD,
-		rawTypes.HUYGEN,
-		rawTypes.ROOK,
-		rawTypes.BISHOP,
-		rawTypes.PAWN,
+		r.HAWK,
+		r.CHANCELLOR,
+		r.ARCHBISHOP,
+		r.CENTAUR,
+		r.ROYALCENTAUR,
+		r.ROSE,
+		r.KNIGHT,
+		r.GUARD,
+		r.HUYGEN,
+		r.ROOK,
+		r.BISHOP,
+		r.PAWN,
 	];
 	for (const type of variantOptions.position.values()) {
 		const rawType = typeutil.getRawType(type);
@@ -102,7 +155,7 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 		}
 	}
 
-	// 6. Maximum of 1 royal per side.
+	// 7. Maximum of 1 royal per side.
 	const royalsCountByPlayer: PlayerGroup<number> = {};
 	for (const type of variantOptions.position.values()) {
 		const rawType = typeutil.getRawType(type);
@@ -121,4 +174,11 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	return { supported: true };
 }
 
-export default { isPositionSupported };
+export default {
+	// Constants
+	I64_MAX,
+	BORDER_CAP,
+	SUPPORTED_VARIANTS,
+	// Functions
+	isPositionSupported,
+};

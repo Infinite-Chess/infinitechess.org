@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/gamecount.ts
+
 /**
  * This script only stores the number of active games,
  * that is games that are not over (falsey gameConclusion).

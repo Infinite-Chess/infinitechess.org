@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/post_processing/passes/HeatWavePass.ts
 
-import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 import type { PostProcessPass } from '../PostProcessingPipeline';
+import type { ProgramManager, ProgramMap } from '../../ProgramManager';
 
 /**
  * A post-processing pass that applies a rising, shimmering heat distortion effect.

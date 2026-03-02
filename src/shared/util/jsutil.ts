@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/jsutil.ts
+// src/shared/util/jsutil.ts
 
 /**
  * This scripts contains utility methods for working with javascript objects.
@@ -154,11 +154,6 @@ function removeObjectFromArray(array: any[], object: any): void {
 			`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`,
 		);
 }
-
-// // Returns true if provided object is a float32array
-// function isFloat32Array(param: any): boolean {
-// 	return param instanceof Float32Array;
-// }
 
 /**
  * Copies the properties from one object to another,
@@ -460,7 +455,6 @@ export default {
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
 	deleteElementFromOrganizedArray,
-	// isFloat32Array,
 	copyPropertiesToObject,
 	isEmpty,
 	isJson,

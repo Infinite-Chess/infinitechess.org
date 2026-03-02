@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/gui.ts
+
 /**
  * This script adds event listeners for our main overlay html element that
  * contains all of our gui pages.
@@ -7,12 +9,12 @@
 
 import bd from '@naviary/bigdecimal';
 
-// @ts-ignore
-import statustext from './statustext.js';
-import loadbalancer from '../misc/loadbalancer.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
+
+import toast from './toast.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
-import vectors from '../../../../../shared/util/math/vectors.js';
+import loadbalancer from '../misc/loadbalancer.js';
 
 // Functions ------------------------------------------------------------------------------
 
@@ -37,7 +39,7 @@ function randomizePanVelDir(): void {
 
 /** Displays the status message on screen "Feature is planned". */
 function displayStatus_FeaturePlanned(): void {
-	statustext.showStatus(translations['planned_feature']);
+	toast.show(translations.planned_feature);
 }
 
 export default {

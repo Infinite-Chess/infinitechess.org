@@ -1,3 +1,5 @@
+// src/shared/chess/logic/fourdimensionalmoves.ts
+
 /**
  * This script contains overrides for calculating the legal moves
  * of pieces in four dimensional variants, and for executing those moves.
@@ -7,23 +9,23 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { CoordsSpecial } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { Game, Board, FullGame } from './gamefile.js';
+import type { CoordsSpecial } from './movepiece.js';
 import type { MoveDraftEdit } from './specialmove.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
+import type { Game, Board, FullGame } from './gamefile.js';
 
+import state from './state.js';
+import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
-import boardchanges from './boardchanges.js';
-import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
-import state from './state.js';
-import specialdetect from './specialdetect.js';
-import bimath from '../../util/math/bimath.js';
 import legalmoves from './legalmoves.js';
-import { players } from '../util/typeutil.js';
+import boardchanges from './boardchanges.js';
+import specialdetect from './specialdetect.js';
+import { players as p } from '../util/typeutil.js';
+import fourdimensionalgenerator from '../variants/fourdimensionalgenerator.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
@@ -60,7 +62,7 @@ function pawnLegalMoves(
 	const distance_complement = movetype === 'spacelike' ? dim.BOARD_SPACING : 1n;
 
 	// White and black pawns move and capture in opposite directions.
-	const yDistanceParity = color === players.WHITE ? distance : -distance;
+	const yDistanceParity = color === p.WHITE ? distance : -distance;
 	const individualMoves: Coords[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
@@ -189,7 +191,7 @@ function addPossibleEnPassant(
 	const xDifference = boardsim.state.global.enpassant.square[0] - coords[0];
 	if (bimath.abs(xDifference) !== xdistance) return; // Not immediately left or right of us
 	// prettier-ignore
-	const yDistanceParity = color === players.WHITE ? ydistance : color === players.BLACK ? -ydistance : (() => { throw new Error("Invalid color!"); })();
+	const yDistanceParity = color === p.WHITE ? ydistance : color === p.BLACK ? -ydistance : (() => { throw new Error("Invalid color!"); })();
 
 	if (coords[1] + yDistanceParity !== boardsim.state.global.enpassant.square[1]) return; // Not one in front of us
 
@@ -217,8 +219,8 @@ function appendPawnMoveAndAttachPromoteFlag(
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color]!;
-		if (teamPromotionRanks.includes(landCoords[1])) landCoords.promoteTrigger = true;
+		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
 	individualMoves.push(landCoords);

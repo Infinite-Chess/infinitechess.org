@@ -1,3 +1,5 @@
+// src/client/scripts/esm/components/header/currpage-greyer.ts
+
 // Greys the background color of the header navigation link of the page we are currently on
 
 import docutil from '../../util/docutil.js';

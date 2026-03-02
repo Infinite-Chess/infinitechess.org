@@ -1,4 +1,5 @@
 name = "Polski" # Polish - Name of language
+english_name = "Polish"
 direction = "ltr" # Change to "rtl" for right to left languages
 version = "22"
 maintainer = "Apsurt"

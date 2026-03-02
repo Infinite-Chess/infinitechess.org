@@ -1,14 +1,17 @@
+// src/server/api/PracticeProgress.ts
+
 /**
  * This script updates the checkmates_beaten list in the database when a user submits a newly completed checkmate
  */
 
-import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+import type { Request, Response } from 'express';
+import type { ParsedCookies } from '../types.js';
+
 import jsutil from '../../shared/util/jsutil.js';
+import validcheckmates from '../../shared/chess/util/validcheckmates.js';
+
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
-
-import type { IdentifiedRequest, ParsedCookies } from '../types.js';
-import type { Request, Response } from 'express';
 
 // Functions -------------------------------------------------------------
 
@@ -121,8 +124,8 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
  * @param req - Express request object
  * @param res - Express response object
  */
-function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
-	if (!req.memberInfo.signedIn) {
+function postCheckmateBeaten(req: Request, res: Response): void {
+	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(
 			"User tried to save checkmates_beaten when they weren't signed in!",
 			'errLog.txt',
@@ -193,9 +196,4 @@ function postCheckmateBeaten(req: IdentifiedRequest, res: Response): void {
 	}
 }
 
-export {
-	setPracticeProgressCookie,
-	deletePracticeProgressCookie,
-	getCheckmatesBeaten,
-	postCheckmateBeaten,
-};
+export { setPracticeProgressCookie, deletePracticeProgressCookie, postCheckmateBeaten };

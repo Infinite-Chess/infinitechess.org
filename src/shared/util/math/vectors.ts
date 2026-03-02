@@ -1,18 +1,18 @@
-// src/client/scripts/esm/util/math/vectors.ts
+// src/shared/util/math/vectors.ts
 
 /**
  * This script contains methods for performing vector calculations,
  * such as calculating angles, distances, and other operations.
  */
 
+import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bimath from './bimath.js';
-
-import type { BDCoords, Coords, DoubleCoords } from '../../chess/util/coordutil.js';
 import bdcoords from '../../chess/util/bdcoords.js';
 
-// Type Definitions -----------------------------------------------------------
+// Types ----------------------------------------------------------------------
 
 /** A length-2 number array. Commonly used for storing directions. */
 type Vec2 = [bigint, bigint];

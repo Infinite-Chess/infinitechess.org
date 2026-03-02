@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/logic/insufficientmaterial.ts
+// src/shared/chess/logic/insufficientmaterial.ts
 
 /**
  * This script detects draws by insufficient material
@@ -6,15 +6,15 @@
  * @maintainer tsevasa
  */
 
-import moveutil from '../util/moveutil.js';
+import type { GameRules } from '../variants/gamerules.js';
+import type { Board, GameConclusion } from './gamefile.js';
+
+import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
+import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../variants/gamerules.js';
-import { rawTypes as r, ext as e, players, TypeGroup } from '../util/typeutil.js';
-import bimath from '../../util/math/bimath.js';
-
-import type { GameRules } from '../variants/gamerules.js';
-import type { Board } from './gamefile.js';
+import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
@@ -203,18 +203,21 @@ function ordered_tuple_descending(tuple: [number, number]): [number, number] {
  * Detects if the game is drawn for insufficient material
  * @param gameRules
  * @param boardsim
- * @returns '0 insuffmat', if the game is over by the insufficient material, otherwise *undefined*.
+ * @returns `{ victor: 0, condition: 'insuffmat' }`, if the game is over by the insufficient material, otherwise *undefined*.
  */
-function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): string | undefined {
+function detectInsufficientMaterial(
+	gameRules: GameRules,
+	boardsim: Board,
+): GameConclusion | undefined {
 	// Only make the draw check if the win condition is checkmate for both players
 	if (
-		!gamerules.doesColorHaveWinCondition(gameRules, players.WHITE, 'checkmate') ||
-		!gamerules.doesColorHaveWinCondition(gameRules, players.BLACK, 'checkmate')
+		!gamerules.doesColorHaveWinCondition(gameRules, p.WHITE, 'checkmate') ||
+		!gamerules.doesColorHaveWinCondition(gameRules, p.BLACK, 'checkmate')
 	)
 		return undefined;
 	if (
-		gamerules.getWinConditionCountOfColor(gameRules, players.WHITE) !== 1 ||
-		gamerules.getWinConditionCountOfColor(gameRules, players.BLACK) !== 1
+		gamerules.getWinConditionCountOfColor(gameRules, p.WHITE) !== 1 ||
+		gamerules.getWinConditionCountOfColor(gameRules, p.BLACK) !== 1
 	)
 		return undefined;
 
@@ -226,7 +229,7 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	if (
 		boardutil.getPieceCountOfGame(boardsim.pieces, {
 			ignoreRawTypes: new Set([r.OBSTACLE]),
-			ignoreColors: new Set([players.NEUTRAL]),
+			ignoreColors: new Set([p.NEUTRAL]),
 		}) +
 			boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >=
 		11
@@ -259,8 +262,8 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as
 				| 0
 				| 1;
-			if (color === players.WHITE) bishopsW_count[parity] += 1;
-			else if (color === players.BLACK) bishopsB_count[parity] += 1;
+			if (color === p.WHITE) bishopsW_count[parity] += 1;
+			else if (color === p.BLACK) bishopsB_count[parity] += 1;
 		} else if (piece.type in scenario) {
 			const currentCount = scenario[piece.type];
 			if (typeof currentCount === 'number') {
@@ -279,10 +282,10 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 	// This is fully enough for the checkmate practice mode, for now
 	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
 	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![players.WHITE]!;
-		const promotionListBlack = gameRules.promotionsAllowed![players.BLACK]!;
-		if (r.PAWN + e.W in scenario && promotionListWhite.length !== 0) return undefined;
-		if (r.PAWN + e.B in scenario && promotionListBlack.length !== 0) return undefined;
+		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
+		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
+		if (r.PAWN + e.W in scenario && promotionListWhite?.length !== 0) return undefined;
+		if (r.PAWN + e.B in scenario && promotionListBlack?.length !== 0) return undefined;
 	}
 
 	// Create scenario object with inverted players
@@ -294,9 +297,9 @@ function detectInsufficientMaterial(gameRules: GameRules, boardsim: Board): stri
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
 	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
-		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'insuffmat' };
 	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
-		return `${players.NEUTRAL} insuffmat`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'insuffmat' };
 	else return undefined;
 }
 

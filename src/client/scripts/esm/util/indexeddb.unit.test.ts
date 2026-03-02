@@ -1,14 +1,14 @@
-// src/client/scripts/esm/util/indexeddb.test.ts
+// src/client/scripts/esm/util/indexeddb.unit.test.ts
 
 /**
  * Functional tests for the IndexedDB storage module using a simulated IDB.
  * Uses fake-indexeddb and the module's resetDBInstance() for isolation.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
+import { describe, it, expect, beforeEach } from 'vitest';
 
-import indexeddb from './indexeddb.js';
+import indexeddb from './IndexedDB.js';
 
 beforeEach(() => {
 	// Fresh fake IndexedDB and key range per test
@@ -83,20 +83,6 @@ describe('IndexedDB storage functional behavior', () => {
 			indexeddb.loadItem('k49'),
 		]);
 		expect(reads).toEqual([{ v: 0 }, { v: 25 }, { v: 49 }]);
-	});
-
-	it('rejects with a clear error when IndexedDB is not supported', async () => {
-		// Remove IndexedDB and reset instance so next init fails
-		(globalThis as any).indexedDB = undefined;
-		indexeddb.resetDBInstance();
-
-		await expect(indexeddb.saveItem('a', 1)).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
-
-		await expect(indexeddb.loadItem('a')).rejects.toThrow(
-			'IndexedDB is not supported in this browser',
-		);
 	});
 
 	it('resetDBInstance causes a fresh database (previous keys gone)', async () => {

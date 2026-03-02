@@ -1,3 +1,5 @@
+// src/client/scripts/esm/chess/rendering/spritesheetGenerator.ts
+
 /**
  * This script takes a list of images, and converts it into a renderable
  * spritesheet, also returning the textue locations of each image.

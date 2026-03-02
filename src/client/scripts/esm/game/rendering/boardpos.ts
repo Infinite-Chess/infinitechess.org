@@ -1,22 +1,24 @@
+// src/client/scripts/esm/game/rendering/boardpos.ts
+
 /**
  * This script stores the board position and scale,
  * and updates them according to their velocity.
  */
 
+import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-// @ts-ignore
-import guipause from '../gui/guipause.js';
-import loadbalancer from '../misc/loadbalancer.js';
-import camera from './camera.js';
-import perspective from './perspective.js';
-import Transition from './transitions/Transition.js';
-import frametracker from './frametracker.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
+import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
-import type { BDCoords, DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
+import camera from './camera.js';
+import guipause from '../gui/guipause.js';
+import Transition from './transitions/Transition.js';
+import perspective from './perspective.js';
+import loadbalancer from '../misc/loadbalancer.js';
+import frametracker from './frametracker.js';
 
 // BigDecimal Constants ---------------------------------------------------
 

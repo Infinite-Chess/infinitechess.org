@@ -4,15 +4,15 @@
  * This script handles copying games
  */
 
-// @ts-ignore
-import statustext from '../gui/statustext.js';
-import docutil from '../../util/docutil.js';
-import gameslot, { PresetAnnotes } from './gameslot.js';
-import gamecompressor from './gamecompressor.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+
+import toast from '../gui/toast.js';
+import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import gamecompressor from './gamecompressor.js';
+import gameslot, { PresetAnnotes } from './gameslot.js';
 
 const variantsTooBigToCopyPositionToICN: string[] = [
 	'Omega_Squared',
@@ -50,6 +50,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 	// Convert the variant metadata code to spoken language if translation is available
 	if (longformatIn.metadata.Variant)
+		// @ts-ignore
 		longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 
 	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);
@@ -65,7 +66,7 @@ function copyGame(copySinglePosition: boolean): void {
 	});
 
 	docutil.copyToClipboard(shortformat);
-	statustext.showStatus(translations['copypaste'].copied_game);
+	toast.show(translations.copypaste.copied_game);
 }
 
 export default {

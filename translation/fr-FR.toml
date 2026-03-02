@@ -1,4 +1,5 @@
 name = "Français" # Name of language
+english_name = "French"
 direction = "ltr"
 version = "17"
 maintainer = "Life Enjoyer,cycy98,Heinrich Xiao"

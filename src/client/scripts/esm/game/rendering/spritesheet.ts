@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/rendering/spritesheet.ts
+
 /**
  * This script stores the spritesheet FOR THE CURRENT GAME,
  * and all the piece's texture coordinates within it.
@@ -9,12 +11,13 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+
 import imagecache from '../../chess/rendering/imagecache.js';
+import { GameBus } from '../GameBus.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { generateSpritesheet } from '../../chess/rendering/spritesheetGenerator.js';
-import { GameBus } from '../GameBus.js';
 
-// Type Definitions ---------------------------------------------------------------------
+// Types --------------------------------------------------------------------------------
 
 /** A bounding box storing texture coords info. */
 interface TextureData {
@@ -82,7 +85,6 @@ function getSpritesheetDataTexLocation(type: number): DoubleCoords {
 /** Loads the spritesheet texture we'll be using to render the provided gamefile's pieces */
 async function initSpritesheetForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
 	// Filter our voids from all types in the game.
-	// @ts-ignore
 	const types: number[] = boardsim.existingTypes.filter(
 		(type) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type)),
 	);

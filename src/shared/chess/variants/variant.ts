@@ -1,25 +1,27 @@
+// src/shared/chess/variants/variant.ts
+
 /**
  * This script stores our variants, and contains methods for
  * retrieving the game rules, or movesets of any given variant.
  */
 
-import type { Movesets, PieceMoveset } from '../logic/movesets.js';
-import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from './gamerules.js';
+import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
+import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import timeutil from '../../util/timeutil.js';
-import fourdimensionalgenerator from './fourdimensionalgenerator.js';
-import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import movesets from '../logic/movesets.js';
-import { rawTypes as r, players as p } from '../util/typeutil.js';
-import icnconverter from '../logic/icn/icnconverter.js';
 import specialmove from '../logic/specialmove.js';
+import icnconverter from '../logic/icn/icnconverter.js';
 import omega3generator from './omega3generator.js';
 import omega4generator from './omega4generator.js';
+import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
+import fourdimensionalgenerator from './fourdimensionalgenerator.js';
+import { rawTypes as r, players as p } from '../util/typeutil.js';
 
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
@@ -581,7 +583,7 @@ function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModi
 
 /**
  * Returns default gamerules with provided modifications
- * @param modifications - The modifications to the default gamerules. This can include `position` to determine the promotionsAllowed.
+ * @param modifications - The modifications to the default gamerules.
  * @returns The gamerules
  */
 function getGameRules(modifications: GameRuleModifications = {}): GameRules {

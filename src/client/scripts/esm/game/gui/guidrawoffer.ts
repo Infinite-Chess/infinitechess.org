@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/gui/guidrawoffer.ts
+
 /**
  * This script opens and closes our Draw Offer UI
  * on the bottom navigation bar.
@@ -6,10 +8,10 @@
  * nor does it keep track of our current offers!
  */
 
-import guigameinfo from './guigameinfo.js';
 import gameslot from '../chess/gameslot.js';
-import drawoffers from '../misc/onlinegame/drawoffers.js';
 import guiclock from './guiclock.js';
+import drawoffers from '../misc/onlinegame/drawoffers.js';
+import guigameinfo from './guigameinfo.js';
 
 // Variables -------------------------------------------------------------------
 

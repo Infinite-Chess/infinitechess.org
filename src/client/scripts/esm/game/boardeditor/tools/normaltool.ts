@@ -6,17 +6,19 @@
  * This tool can drag pieces around.
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile';
-import type { _Move_Compact } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { Mesh } from '../../rendering/piecemodels';
 import type { Edit } from '../boardeditor';
+import type { _Move_Compact } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
-import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import state from '../../../../../../shared/chess/logic/state';
+import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
-import movesequence from '../../chess/movesequence';
+
 import boardeditor from '../boardeditor';
+import { GameBus } from '../../GameBus';
+import movesequence from '../../chess/movesequence';
 
 // Making Move Edits in the Game ---------------------------------------------
 
@@ -28,6 +30,8 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
 	const edit = generateMoveEdit(gamefile.boardsim, moveDraft);
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
+	GameBus.dispatch('physical-move');
+
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
 
 	boardeditor.addEditToHistory(edit);

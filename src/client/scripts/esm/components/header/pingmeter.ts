@@ -1,5 +1,7 @@
+// src/client/scripts/esm/components/header/pingmeter.ts
+
 /**
- * This script opens and closes our settings drop-down menu when it is clicked.
+ * This script manages the display and updates of the ping meter.
  */
 
 // Document Elements -------------------------------------------------------------------------

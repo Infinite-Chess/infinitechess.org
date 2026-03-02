@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/rendering/checkerboardgenerator.js
+// src/client/scripts/esm/chess/rendering/checkerboardgenerator.ts
 
 /**
  * This script can create a 2x2 checkerboard texture of any color for

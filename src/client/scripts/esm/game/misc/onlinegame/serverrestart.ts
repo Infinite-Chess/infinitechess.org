@@ -1,10 +1,13 @@
+// src/client/scripts/esm/game/misc/onlinegame/serverrestart.ts
+
 /**
  * This script manages the periodic messages that display on-screen when you're in a game,
  * stating the server will restart in N minutes.
  */
 
-// @ts-ignore
-import statustext from '../../gui/statustext.js';
+import toast from '../../gui/toast.js';
+
+// Constants -----------------------------------------------------------------------
 
 /** The minute intervals at which to display on scree, reminding the user the server is restarting. */
 const keyMinutes: number[] = [30, 20, 15, 10, 5, 2, 1, 0];
@@ -34,16 +37,15 @@ function initServerRestart(timeToRestart: number): void {
 /** Displays the next "Server restaring..." message, and schedules the next one. */
 function displayServerRestarting(minutesLeft: number): void {
 	if (minutesLeft === 0) {
-		statustext.showStatus(translations['onlinegame'].server_restarting, false, 2);
+		toast.show(translations.onlinegame.server_restarting, { durationMultiplier: 2 });
 		time = undefined;
 		return; // Print no more server restarting messages
 	}
 	const minutes_plurality =
-		minutesLeft === 1 ? translations['onlinegame'].minute : translations['onlinegame'].minutes;
-	statustext.showStatus(
-		`${translations['onlinegame'].server_restarting_in} ${minutesLeft} ${minutes_plurality}...`,
-		false,
-		2,
+		minutesLeft === 1 ? translations.onlinegame.minute : translations.onlinegame.minutes;
+	toast.show(
+		`${translations.onlinegame.server_restarting_in} ${minutesLeft} ${minutes_plurality}...`,
+		{ durationMultiplier: 2 },
 	);
 	let nextKeyMinute: number;
 	for (const keyMinute of keyMinutes) {

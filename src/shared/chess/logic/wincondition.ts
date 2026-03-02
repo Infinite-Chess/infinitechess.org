@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/logic/wincondition.js
+// src/shared/chess/logic/wincondition.ts
 
 /**
  * This script contains the methods for calculating if the
@@ -6,22 +6,22 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
-import insufficientmaterial from './insufficientmaterial.js';
-import gamefileutility from '../util/gamefileutility.js';
-import boardutil from '../util/boardutil.js';
+import type { Coords } from '../util/coordutil.js';
+import type { Board, FullGame, GameConclusion } from './gamefile.js';
+
 import moveutil from '../util/moveutil.js';
-import typeutil, { RawType } from '../util/typeutil.js';
+import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
+import gamefileutility from '../util/gamefileutility.js';
+import insufficientmaterial from './insufficientmaterial.js';
+import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
+import { rawTypes as r, Player } from '../util/typeutil.js';
 import {
 	detectCheckmateOrStalemate,
 	pieceCountToDisableCheckmate,
 	royalCountToDisableCheckmate,
 } from './checkmate.js';
-import { players, rawTypes, Player } from '../util/typeutil.js';
-
-import type { Board, FullGame } from './gamefile.js';
-import type { Coords } from '../util/coordutil.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore
@@ -30,11 +30,11 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
 /**
  * Tests if the game is over by the win condition used, and if so,
  * returns the `gameConclusion` property of the gamefile.
- * For example, "1 checkmate", or "0 stalemate".
+ * For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`.
  * @param gamefile - The gamefile
- * @returns The conclusion string, if the game is over. For example, "1 checkmate", or "0 stalemate". If the game isn't over, this returns *undefined*.
+ * @returns The conclusion object, if the game is over. For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`. If the game isn't over, this returns *undefined*.
  */
-function getGameConclusion(gamefile: FullGame): string | undefined {
+function getGameConclusion(gamefile: FullGame): GameConclusion | undefined {
 	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
 		throw new Error("Cannot perform game over checks when we're not on the last move.");
 
@@ -55,7 +55,7 @@ function getGameConclusion(gamefile: FullGame): string | undefined {
 	); // No win condition passed. No game conclusion!
 }
 
-function detectRoyalCapture({ boardsim, basegame }: FullGame): string | undefined {
+function detectRoyalCapture({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture'))
 		return undefined; // Not using this gamerule
 
@@ -65,13 +65,13 @@ function detectRoyalCapture({ boardsim, basegame }: FullGame): string | undefine
 			basegame,
 			boardsim.moves.length - 1,
 		);
-		return `${colorThatWon} royalcapture`;
+		return { victor: colorThatWon, condition: 'royalcapture' };
 	}
 
 	return undefined;
 }
 
-function detectAllroyalscaptured({ boardsim, basegame }: FullGame): string | undefined {
+function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
 			basegame,
@@ -94,13 +94,13 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): string | und
 			basegame,
 			boardsim.moves.length - 1,
 		);
-		return `${colorThatWon} allroyalscaptured`;
+		return { victor: colorThatWon, condition: 'allroyalscaptured' };
 	}
 
 	return undefined;
 }
 
-function detectAllpiecescaptured({ boardsim, basegame }: FullGame): string | undefined {
+function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
 			basegame,
@@ -118,20 +118,20 @@ function detectAllpiecescaptured({ boardsim, basegame }: FullGame): string | und
 			basegame,
 			boardsim.moves.length - 1,
 		);
-		return `${colorThatWon} allpiecescaptured`;
+		return { victor: colorThatWon, condition: 'allpiecescaptured' };
 	}
 
 	return undefined;
 }
 
-function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
+function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
 	const lastMove = moveutil.getLastMove(boardsim.moves);
 	if (!lastMove) return undefined;
-	if (typeutil.getRawType(lastMove.type) !== rawTypes.KING) return undefined;
+	if (typeutil.getRawType(lastMove.type) !== r.KING) return undefined;
 
 	let kingInCenter = false;
 	for (const thisCenterSquare of kothCenterSquares) {
@@ -140,7 +140,7 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
 			thisCenterSquare,
 		);
 		if (typeAtSquare === undefined) continue;
-		if (typeutil.getRawType(typeAtSquare) === rawTypes.KING) {
+		if (typeutil.getRawType(typeAtSquare) === r.KING) {
 			kingInCenter = true;
 			break;
 		}
@@ -151,7 +151,7 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
 			basegame,
 			boardsim.moves.length - 1,
 		);
-		return `${colorThatWon} koth`;
+		return { victor: colorThatWon, condition: 'koth' };
 	}
 
 	return undefined;
@@ -160,12 +160,12 @@ function detectKoth({ boardsim, basegame }: FullGame): string | undefined {
 /**
  * Detects if the game is over by, for example, the 50-move rule.
  * @param gamefile - The gamefile
- * @returns '0 moverule', if the game is over by the move-rule, otherwise *undefined*.
+ * @returns `{ victor: 0, condition: 'moverule' }`, if the game is over by the move-rule, otherwise *undefined*.
  */
-function detectMoveRule({ boardsim, basegame }: FullGame): string | undefined {
+function detectMoveRule({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
 	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) {
-		return `${players.NEUTRAL} moverule`; // Victor of player NEUTRAL means it was a draw.
+		return { victor: null, condition: 'moverule' };
 	}
 	return undefined;
 }

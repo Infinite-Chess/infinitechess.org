@@ -1,3 +1,5 @@
+// src/client/scripts/esm/game/chess/gameloader.ts
+
 /**
  * This script contains the logic for loading any kind of game onto our game board:
  * * Local
@@ -9,37 +11,39 @@
  * but also prepares and opens the UI elements for that type of game.
  */
 
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
+import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type {
 	ParticipantState,
 	ServerGameMoveMessage,
 } from '../../../../../server/game/gamemanager/gameutility.js';
-import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 
-import perspective from '../rendering/perspective.js';
-import Transition from '../rendering/transitions/Transition.js';
-import gui from '../gui/gui.js';
-import gameslot from './gameslot.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
-import loadingscreen from '../gui/loadingscreen.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import guinavigation from '../gui/guinavigation.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import indexeddb from '../../util/indexeddb.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+
+import gui from '../gui/gui.js';
+import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
+import IndexedDB from '../../util/IndexedDB.js';
+import Transition from '../rendering/transitions/Transition.js';
+import onlinegame from '../misc/onlinegame/onlinegame.js';
+import perspective from '../rendering/perspective.js';
+import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
+import loadingscreen from '../gui/loadingscreen.js';
+import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import jsutil from '../../../../../shared/util/jsutil.js';
+import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -119,7 +123,7 @@ function update(): void {
 async function startLocalGame(options: {
 	/** Must be one of the valid variants in variant.ts */
 	Variant: string;
-	TimeControl: MetaData['TimeControl'];
+	TimeControl: TimeControl;
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
@@ -129,6 +133,7 @@ async function startLocalGame(options: {
 
 	const metadata = {
 		...options,
+		// @ts-ignore
 		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
 		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
 		Round: '-' as '-',
@@ -164,7 +169,7 @@ async function startOnlineGame(options: {
 	gameInfo: ServerGameInfo;
 	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
 	metadata: MetaData;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMoveMessage[];
 	clockValues?: ClockValues;
@@ -185,7 +190,7 @@ async function startOnlineGame(options: {
 	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: await indexeddb.loadItem<VariantOptions>(storageKey),
+		variantOptions: await IndexedDB.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
@@ -194,7 +199,7 @@ async function startOnlineGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
-			viewWhitePerspective: options.youAreColor === players.WHITE,
+			viewWhitePerspective: options.youAreColor === p.WHITE,
 			allowEditCoords: false,
 			additional,
 		})
@@ -230,7 +235,7 @@ async function startEngineGame(options: {
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
-	TimeControl?: MetaData['TimeControl'];
+	TimeControl?: TimeControl;
 	youAreColor: Player;
 	currentEngine: validEngineName;
 	engineConfig: EngineConfig;
@@ -256,13 +261,13 @@ async function startEngineGame(options: {
 		Round: '-',
 		TimeControl: options.TimeControl ?? '-',
 		White:
-			options.youAreColor === players.WHITE
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+			options.youAreColor === p.WHITE
+				? translations.you_indicator
+				: translations.engine_indicator,
 		Black:
-			options.youAreColor === players.BLACK
-				? translations['you_indicator']
-				: translations['engine_indicator'],
+			options.youAreColor === p.BLACK
+				? translations.you_indicator
+				: translations.engine_indicator,
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
@@ -271,7 +276,7 @@ async function startEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
-		viewWhitePerspective: options.youAreColor === players.WHITE,
+		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
@@ -387,7 +392,7 @@ async function startCustomEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata: options.metadata,
-		viewWhitePerspective: options.youAreColor === players.WHITE,
+		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
@@ -452,8 +457,6 @@ async function startBoardEditorFromCustomPosition(
 
 	await guiboardeditor.initUI();
 	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
-
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
 }
 
 /**
@@ -535,6 +538,13 @@ function openGameinfoBarAndConcludeGameIfOver(
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
 }
 
+function unloadLogicalAndRendering(): void {
+	gameslot.unloadGame();
+	perspective.disable();
+	boardpos.eraseMomentum();
+	Transition.terminate();
+}
+
 function unloadGame(): void {
 	// console.log("Game loader unloading game...");
 
@@ -546,11 +556,8 @@ function unloadGame(): void {
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
-	gameslot.unloadGame();
-	perspective.disable();
+	unloadLogicalAndRendering();
 	typeOfGameWeAreIn = undefined;
-	boardpos.eraseMomentum();
-	Transition.terminate();
 
 	gui.prepareForOpen();
 }
@@ -574,5 +581,6 @@ export default {
 	startBoardEditorFromCustomPosition,
 	pasteGame,
 	openGameinfoBarAndConcludeGameIfOver,
+	unloadLogicalAndRendering,
 	unloadGame,
 };

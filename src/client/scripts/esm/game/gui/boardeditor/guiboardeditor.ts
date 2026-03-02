@@ -1,37 +1,44 @@
 // src/client/scripts/esm/game/gui/boardeditor/guiboardeditor.ts
 
-/*
+/**
  * Handles the Board Editor GUI
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Tool } from '../../boardeditor/boardeditor.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorAutosave } from '../../boardeditor/eautosave.js';
+import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
-// @ts-ignore
-import statustext from '../statustext.js';
-import typeutil, { rawTypes, players } from '../../../../../../shared/chess/util/typeutil.js';
-import gameloader from '../../chess/gameloader.js';
-import boardeditor from '../../boardeditor/boardeditor.js';
+import timeutil from '../../../../../../shared/util/timeutil.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import typeutil, {
+	rawTypes as r,
+	players as p,
+} from '../../../../../../shared/chess/util/typeutil.js';
+
+import esave from '../../boardeditor/actions/esave.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import tooltips from '../../../util/tooltips.js';
-import eactions from '../../boardeditor/eactions.js';
+import eactions from '../../boardeditor/actions/eactions.js';
+import IndexedDB from '../../../util/IndexedDB.js';
+import eautosave from '../../boardeditor/actions/eautosave.js';
+import gameloader from '../../chess/gameloader.js';
+import boardeditor from '../../boardeditor/boardeditor.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
+import guiloadposition from './guiloadposition.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
-import indexeddb from '../../../util/indexeddb.js';
-import timeutil from '../../../../../../shared/util/timeutil.js';
+import guiresetposition from './guiresetposition.js';
+import guiclearposition from './guiclearposition.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
-import guifloatingwindow from './guifloatingwindow.js';
 
 // Elements ---------------------------------------------------------------
 
 const element_menu = document.getElementById('editor-menu')!;
+const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
 
 const elements_tools = [
 	document.getElementById('normal')!,
@@ -48,7 +55,9 @@ const elements_actions = [
 	// Position
 	document.getElementById('reset')!,
 	document.getElementById('clearall')!,
-	document.getElementById('saved-positions')!,
+	document.getElementById('load-position')!,
+	document.getElementById('save-position-as')!,
+	document.getElementById('save-position')!,
 	document.getElementById('copy-notation')!,
 	document.getElementById('paste-notation')!,
 	document.getElementById('gamerules')!,
@@ -82,30 +91,30 @@ const element_neutralTypes: Array<Element> = [];
 
 /** Player pieces in the order they will appear */
 const coloredTypes = [
-	rawTypes.KING,
-	rawTypes.QUEEN,
-	rawTypes.ROOK,
-	rawTypes.BISHOP,
-	rawTypes.KNIGHT,
-	rawTypes.PAWN,
-	rawTypes.CHANCELLOR,
-	rawTypes.ARCHBISHOP,
-	rawTypes.AMAZON,
-	rawTypes.GUARD,
-	rawTypes.CENTAUR,
-	rawTypes.HAWK,
-	rawTypes.KNIGHTRIDER,
-	rawTypes.HUYGEN,
-	rawTypes.ROSE,
-	rawTypes.CAMEL,
-	rawTypes.GIRAFFE,
-	rawTypes.ZEBRA,
-	rawTypes.ROYALCENTAUR,
-	rawTypes.ROYALQUEEN,
+	r.KING,
+	r.QUEEN,
+	r.ROOK,
+	r.BISHOP,
+	r.KNIGHT,
+	r.PAWN,
+	r.CHANCELLOR,
+	r.ARCHBISHOP,
+	r.AMAZON,
+	r.GUARD,
+	r.CENTAUR,
+	r.HAWK,
+	r.KNIGHTRIDER,
+	r.HUYGEN,
+	r.ROSE,
+	r.CAMEL,
+	r.GIRAFFE,
+	r.ZEBRA,
+	r.ROYALCENTAUR,
+	r.ROYALQUEEN,
 ];
 
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
-const neutralTypes = [rawTypes.OBSTACLE];
+const neutralTypes = [r.OBSTACLE];
 
 // State -------------------------------------------------------------------
 
@@ -121,15 +130,30 @@ let boardEditorOpen = false;
 
 // Initialization ---------------------------------------------------------
 
+/**
+ * Open the board editor GUI
+ */
 async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
 
-	const editorAutosave = await indexeddb.loadItem<EditorAutosave>('editor-autosave');
-	if (editorAutosave === undefined || editorAutosave.variantOptions === undefined)
+	// Try to read in autosave and initialize board editor
+	// If there is no autosave, initialize board editor with Classical position
+	const editorSaveStateRaw = await IndexedDB.loadItem(eautosave.EDITOR_AUTOSAVE_NAME);
+	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+
+	if (!editorSaveStateParsed.success) {
+		// Missing or corrupted autosave
+		if (editorSaveStateRaw !== undefined) {
+			// If corrupted, delete
+			console.error('Corrupted board editor autosave data found, clearing autosave.');
+			eautosave.clearAutosave();
+		}
+		boardeditor.setActivePositionName(undefined);
 		await gameloader.startBoardEditor();
-	else {
+	} else {
+		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
@@ -140,25 +164,19 @@ async function open(): Promise<void> {
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
 
-		try {
-			await gameloader.startBoardEditorFromCustomPosition(
-				{
-					metadata,
-					additional: {
-						variantOptions: editorAutosave.variantOptions,
-					},
+		boardeditor.setActivePositionName(editorSaveState.positionname);
+		await gameloader.startBoardEditorFromCustomPosition(
+			{
+				metadata,
+				additional: {
+					variantOptions: editorSaveState.variantOptions,
 				},
-				editorAutosave.pawnDoublePush,
-				editorAutosave.castling,
-			);
-		} catch (err) {
-			// If indexeddb was corrupted for some reason and startBoardEditorFromCustomPosition fails,
-			// then do not lock user out of board editor
-			console.error('Failed to load autosaved board editor position when opening it:', err);
-
-			await gameloader.startBoardEditor();
-		}
+			},
+			editorSaveState.pawnDoublePush,
+			editorSaveState.castling,
+		);
 	}
+
 	initListeners();
 }
 
@@ -170,7 +188,7 @@ function isOpen(): boolean {
 function close(): void {
 	if (!boardEditorOpen) return;
 
-	guifloatingwindow.windowClosingManager.closeAndResetAll(); // Close and reset the positioning and contents of all floating windows
+	closeAllFloatingWindows(true);
 
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
@@ -202,6 +220,16 @@ function closeListeners(): void {
 	});
 }
 
+/** Close and reset the positioning and contents of all floating windows */
+function closeAllFloatingWindows(resetPositioning: boolean): void {
+	guiresetposition.close(resetPositioning);
+	guiclearposition.close(resetPositioning);
+	guiloadposition.close(resetPositioning);
+	guigamerules.close(resetPositioning);
+	guistartlocalgame.close(resetPositioning);
+	guistartenginegame.close(resetPositioning);
+}
+
 async function initUI(): Promise<void> {
 	if (initialized) return;
 	const uniquePlayers = _getPlayersInOrder();
@@ -229,10 +257,11 @@ async function initUI(): Promise<void> {
 			else if (i % 4 === 3) pieceContainer.classList.add('tooltip-dl');
 			else pieceContainer.classList.add('tooltip-d');
 			const localized_piece_name =
-				translations['piecenames'][typeutil.getRawTypeStr(coloredTypes[i]!)!];
+				// @ts-ignore
+				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
 			const piece_abbreviation = icnconverter.piece_codes_raw[coloredTypes[i]!];
 			const modified_piece_abbreviation =
-				player === players.WHITE
+				player === p.WHITE
 					? piece_abbreviation.toUpperCase()
 					: piece_abbreviation.toLowerCase();
 			pieceContainer.setAttribute(
@@ -249,7 +278,7 @@ async function initUI(): Promise<void> {
 	// Neutral pieces
 	const neutral_svgs = await svgcache.getSVGElements(
 		neutralTypes.map((rawType) => {
-			return typeutil.buildType(rawType, players.NEUTRAL);
+			return typeutil.buildType(rawType, p.NEUTRAL);
 		}),
 	);
 	const neutralPieces = document.createElement('div');
@@ -262,8 +291,9 @@ async function initUI(): Promise<void> {
 
 	// Void tooltip
 	element_void.classList.add('tooltip-dr');
-	const localized_void_name = translations['piecenames'][typeutil.getRawTypeStr(rawTypes.VOID)!];
-	const void_abbreviation = icnconverter.piece_codes_raw[rawTypes.VOID];
+	// @ts-ignore
+	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(r.VOID)!];
+	const void_abbreviation = icnconverter.piece_codes_raw[r.VOID];
 	element_void.setAttribute('data-tooltip', `${localized_void_name} (${void_abbreviation})`);
 
 	element_neutralTypes.push(element_void);
@@ -279,7 +309,8 @@ async function initUI(): Promise<void> {
 		else if (i % 4 === 2) pieceContainer.classList.add('tooltip-dl');
 		else pieceContainer.classList.add('tooltip-d');
 		const localized_piece_name =
-			translations['piecenames'][typeutil.getRawTypeStr(neutralTypes[i]!)!];
+			// @ts-ignore
+			translations.piecenames[typeutil.getRawTypeStr(neutralTypes[i]!)!];
 		const piece_abbreviation = icnconverter.piece_codes_raw[neutralTypes[i]!];
 		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
 		pieceContainer.setAttribute(
@@ -339,6 +370,20 @@ function onClearSelection(): void {
 	});
 }
 
+// Active position name display control -------------------------------------
+
+function updateActivePositionElement(positionname: string | undefined): void {
+	if (positionname === undefined) {
+		positionname = 'New position';
+		element_activePositionNameDisplay.classList.add('italic');
+	} else {
+		element_activePositionNameDisplay.classList.remove('italic');
+	}
+
+	element_activePositionNameDisplay.textContent = positionname;
+	element_activePositionNameDisplay.title = positionname;
+}
+
 // Helper Functions ---------------------------------------------------------
 
 /** Helper Function: Returns an array of players based on the current gamefile's turn order. */
@@ -371,30 +416,73 @@ function callback_Action(e: Event): void {
 
 	switch (action) {
 		// Position ---------------------
-		case 'reset':
-			eactions.reset();
+		case 'reset': {
+			const wasOpen = guiresetposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiresetposition.open();
 			return;
-		case 'clearall':
-			eactions.clearAll();
+		}
+		case 'clearall': {
+			const wasOpen = guiclearposition.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guiclearposition.open();
 			return;
-		case 'saved-positions':
-			statustext.showStatus('Not implemented yet.');
+		}
+		case 'load-position': {
+			const wasOpen = guiloadposition.getMode() !== 'load';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openLoadPosition();
 			return;
+		}
+		case 'save-position-as': {
+			const wasOpen = guiloadposition.getMode() !== 'save-as';
+			closeAllFloatingWindows(false);
+			if (wasOpen) guiloadposition.openSavePositionAs();
+			return;
+		}
+		case 'save-position': {
+			const active_positionname = boardeditor.getActivePositionName();
+			if (active_positionname === undefined) {
+				// If there is no active position name, treat this the same way as "Save as" if that window is not open
+				const wasOpen = guiloadposition.getMode() !== 'save-as';
+				if (wasOpen) {
+					closeAllFloatingWindows(false);
+					guiloadposition.openSavePositionAs();
+				}
+			} else {
+				// If there is an active position name, simply overwrite save
+				esave.save(active_positionname);
+
+				// Update UI if necessary
+				if (guiloadposition.getMode() !== undefined)
+					guiloadposition.updateSavedPositionListUI();
+			}
+			return;
+		}
 		case 'copy-notation':
-			eactions.save();
+			eactions.copy();
 			return;
 		case 'paste-notation':
-			eactions.load();
+			eactions.paste();
 			return;
-		case 'gamerules':
-			guigamerules.toggle();
+		case 'gamerules': {
+			const wasOpen = guigamerules.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guigamerules.open();
 			return;
-		case 'start-local-game':
-			guistartlocalgame.toggle();
+		}
+		case 'start-local-game': {
+			const wasOpen = guistartlocalgame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartlocalgame.open();
 			return;
-		case 'start-engine-game':
-			guistartenginegame.toggle();
+		}
+		case 'start-engine-game': {
+			const wasOpen = guistartenginegame.isOpen();
+			closeAllFloatingWindows(false);
+			if (!wasOpen) guistartenginegame.open();
 			return;
+		}
 		// Selection (buttons that are always active)
 		case 'select-all':
 			selectiontool.selectAll();
@@ -485,7 +573,7 @@ function updatePieceColors(newColor: Player): void {
 	drawingtool.setColor(newColor);
 
 	// Update currentPieceType, if necessary
-	if (typeutil.getColorFromType(drawingtool.getPiece()) !== players.NEUTRAL) {
+	if (typeutil.getColorFromType(drawingtool.getPiece()) !== p.NEUTRAL) {
 		const currentPieceType = typeutil.buildType(
 			typeutil.getRawType(drawingtool.getPiece()),
 			newColor,
@@ -507,4 +595,5 @@ export default {
 	onNewSelection,
 	onClearSelection,
 	updatePieceColors,
+	updateActivePositionElement,
 };

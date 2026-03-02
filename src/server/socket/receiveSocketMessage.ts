@@ -5,27 +5,23 @@
  * cancels their echo timer, sends an echo, then sends the message to our router.
  */
 
+import type { IncomingMessage } from 'http';
+import type { CustomWebSocket } from './socketUtility.js';
+
 import * as z from 'zod';
 
-// @ts-ignore
-import { rateLimitWebSocket } from '../middleware/rateLimit.js';
-// @ts-ignore
-import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
-import { deleteEchoTimerForMessageID } from './echoTracker.js';
-import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
-import { routeIncomingSocketMessage } from './socketRouter.js';
-import { logZodError } from '../utility/zodlogger.js';
 import socketUtility from './socketUtility.js';
-
-// Zod schemas
-import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
+import { logZodError } from '../utility/zodlogger.js';
+import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
 import { GeneralSchema } from './generalrouter.js';
+import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+import { routeIncomingSocketMessage } from './socketRouter.js';
+import { deleteEchoTimerForMessageID } from './echoTracker.js';
+import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
+import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 
-// Type Definitions ---------------------------------------------------------------------------
-
-import type { CustomWebSocket } from './socketUtility.js';
-import type { IncomingMessage } from 'http';
+// Types --------------------------------------------------------------------------------------
 
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
@@ -34,24 +30,32 @@ const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
 /** Represents all possible types a non-echo incoming websocket message could be! */
-type WebsocketInMessage = z.infer<typeof MasterSchema>;
+export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** This is the id of the message being replied to. */
-const EchoSchema = z.int();
-type EchoMessage = z.infer<typeof EchoSchema>;
+const EchoSchema = z.strictObject({
+	/** The route to forward the message to (e.g., "general", "invites", "game"). */
+	route: z.literal('echo'),
+	/** The contents of the message, for the router to read. */
+	contents: z.int(),
+});
 
 /** The schema for validating all incoming websocket messages, including echos. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [
-	z.strictObject({
-		/** The route to forward the message to (e.g., "general", "invites", "game"). */
-		route: z.literal('echo'),
-		/** The contents of the message, for the router to read. */
-		contents: EchoSchema,
-	}),
-	MasterSchema,
-]);
-/** Represents all possible types an incoming websocket message could be, including echos! */
-type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
+const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
+
+// Constants ---------------------------------------------------------------------------
+
+/**
+ * The maximum size of an incoming websocket message, in bytes.
+ * Above this will be rejected, and an error sent to the client.
+ *
+ * DIRECTLY CONTROLS THE maximum distance players can move in online games!
+ * 500 KB allows moves up to 1e100000 squares away, with some padding.
+ * On mobile it would take 6 hours of zooming out at
+ * MAXIMUM speed to reach that distance, without rest.
+ * It would take WAYYYY longer on desktop!
+ */
+const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
 
 // Functions ---------------------------------------------------------------------------
 
@@ -61,6 +65,14 @@ type WebsocketInMessageOrEcho = z.infer<typeof MasterSchemaWithEchos>;
  * logs the message, then routes the message where it needs to go.
  */
 function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
+	// Test if the message is too big. People could DDOS this way
+	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
+	if (Buffer.byteLength(rawMessage) > maxWebsocketMessageSizeBytes) {
+		logEvents(`Client sent too big a websocket message.`, 'reqLogRateLimited.txt');
+		ws.close(1009, 'Message Too Big');
+		return;
+	}
+
 	const messageStr = rawMessage.toString('utf8');
 
 	let parsedUnvalidatedMessage: any;
@@ -94,10 +106,10 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// Validation was a success! Message contains valid parameters.
 
-	const message: WebsocketInMessageOrEcho = zod_result.data;
+	const message = zod_result.data;
 
 	if (message.route === 'echo') {
-		const incomingEcho: EchoMessage = message.contents;
+		const incomingEcho: number = message.contents;
 		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
@@ -138,5 +150,3 @@ function rateLimitAndLogMessage(
 }
 
 export { onmessage };
-
-export type { WebsocketInMessage };

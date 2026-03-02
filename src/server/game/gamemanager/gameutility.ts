@@ -1,3 +1,5 @@
+// src/server/game/gamemanager/gameutility.ts
+
 /**
  * This script contains our Game constructor for the server-side,
  * and contains many utility methods for working with them!
@@ -5,45 +7,38 @@
  * At most this ever handles a single game, not multiple.
  */
 
-// Middleware & other imports
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
-// @ts-ignore
-import { getTranslation } from '../../utility/translate.js';
+import type { Rating } from '../../database/leaderboardsManager.js';
+import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
+import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
+import type { RatingData } from './ratingcalculation.js';
+import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 
-// Custom imports
-import timeutil from '../../../shared/util/timeutil.js';
-import typeutil from '../../../shared/chess/util/typeutil.js';
 import uuid from '../../../shared/util/uuid.js';
+import clock from '../../../shared/chess/logic/clock.js';
+import typeutil from '../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
-import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
-import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { players } from '../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
-// @ts-ignore
+
+import { getTranslation } from '../../utility/translate.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
-// @ts-ignore
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
+import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-// @ts-ignore
-import winconutil from '../../../shared/chess/util/winconutil.js';
-import clock from '../../../shared/chess/logic/clock.js';
 
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
-import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
-import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { AuthMemberInfo } from '../../types.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../shared/chess/util/metadata.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
-import type { RatingData } from './ratingcalculation.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
-
-// Type Definitions -----------------------------------------------------------------------------
+// Types ----------------------------------------------------------------------------------------
 
 type ServerGameMoveMessage = { compact: string; clockStamp?: number };
 
@@ -51,7 +46,7 @@ type ServerGameMoveMessage = { compact: string; clockStamp?: number };
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
 	move: ServerGameMoveMessage;
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number;
 	/** If the game is timed, this will be the current clock values. */
@@ -60,7 +55,7 @@ interface OpponentsMoveMessage {
 
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
-	gameConclusion?: string;
+	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
 	moves: ServerGameMoveMessage[];
 	participantState: ParticipantState;
@@ -243,26 +238,26 @@ function initMatch(
  * - `playerColors`: the colors of each player, in order of ascending player number.
  */
 function assignWhiteBlackPlayersFromInvite(
-	inviteColor: Player,
+	inviteColor: Player | null,
 	player1: AuthMemberInfo,
 	player2: AuthMemberInfo,
 ): PlayerGroup<AuthMemberInfo> {
 	// { id, owner, variant, clock, color, rated, publicity }
 	const colorData: PlayerGroup<AuthMemberInfo> = {};
-	if (inviteColor === players.WHITE) {
-		colorData[players.WHITE] = player1;
-		colorData[players.BLACK] = player2;
-	} else if (inviteColor === players.BLACK) {
-		colorData[players.WHITE] = player2;
-		colorData[players.BLACK] = player1;
-	} else if (inviteColor === players.NEUTRAL) {
+	if (inviteColor === p.WHITE) {
+		colorData[p.WHITE] = player1;
+		colorData[p.BLACK] = player2;
+	} else if (inviteColor === p.BLACK) {
+		colorData[p.WHITE] = player2;
+		colorData[p.BLACK] = player1;
+	} else if (inviteColor === null) {
 		// Random
 		if (Math.random() > 0.5) {
-			colorData[players.WHITE] = player1;
-			colorData[players.BLACK] = player2;
+			colorData[p.WHITE] = player1;
+			colorData[p.BLACK] = player2;
 		} else {
-			colorData[players.WHITE] = player2;
-			colorData[players.BLACK] = player1;
+			colorData[p.WHITE] = player2;
+			colorData[p.BLACK] = player1;
 		}
 	} else throw Error(`Unsupported color ${inviteColor} when assigning players to game.`);
 
@@ -390,16 +385,18 @@ function getRatingDataForGamePlayers(
 function constructMetadataOfGame(
 	rated: boolean,
 	variant: string,
-	clock: MetaData['TimeControl'],
+	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const white = playerdata[players.WHITE]!.identifier;
-	const black = playerdata[players.BLACK]!.identifier;
+	const white = playerdata[p.WHITE]!.identifier;
+	const black = playerdata[p.BLACK]!.identifier;
 	const guest_indicator = getTranslation('play.javascript.guest_indicator');
+	// @ts-ignore - variant is dynamic but always maps to a valid translation key
+	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
 	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${variant}`)} infinite chess game`,
+		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		Variant: variant,
@@ -413,15 +410,15 @@ function constructMetadataOfGame(
 		// White is a member
 		const base62 = uuid.base10ToBase62(white.user_id);
 		gameMetadata.WhiteID = base62;
-		if (playerdata[players.WHITE] !== undefined)
-			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[players.WHITE]!.rating!);
+		if (playerdata[p.WHITE] !== undefined)
+			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!);
 	}
 	if (black.signedIn) {
 		// Black is a member
 		const base62 = uuid.base10ToBase62(black.user_id);
 		gameMetadata.BlackID = base62;
-		if (playerdata[players.BLACK])
-			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[players.BLACK]!.rating!);
+		if (playerdata[p.BLACK])
+			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!);
 	}
 
 	return gameMetadata;
@@ -693,7 +690,7 @@ function isAutoResignDisconnectTimerActiveForColor(match: MatchInfo, color: Play
  * @param servergame - The game
  */
 function sendUpdatedClockToColor(servergame: ServerGame, color: Player): void {
-	if (color !== players.BLACK && color !== players.WHITE) {
+	if (color !== p.BLACK && color !== p.WHITE) {
 		logEventsAndPrint(
 			`Color must be white or black when sending clock to color! Got: ${color}`,
 			'errLog.txt',
@@ -826,22 +823,25 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - moverule is an array in TOML
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
+		// @ts-ignore - moverule is an array type, so we know these exist!
 		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
 	}
+	// @ts-ignore - condition is dynamic but always maps to a valid translation key
 	return getTranslation(`play.javascript.termination.${condition}`);
 }
 
-function setConclusion(basegame: Game, conclusion: string | undefined): void {
+function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;
 
 	// Add on the Result and Termination metadata
 	if (conclusion) {
-		const { victor, condition } =
-			winconutil.getVictorAndConditionFromGameConclusion(conclusion);
-		basegame.metadata.Result = metadata.getResultFromVictor(victor);
-		basegame.metadata.Termination = getTerminationInEnglish(basegame.gameRules, condition);
+		basegame.metadata.Result = metadata.getResultFromVictor(conclusion.victor);
+		basegame.metadata.Termination = getTerminationInEnglish(
+			basegame.gameRules,
+			conclusion.condition,
+		);
 	} else {
 		delete basegame.metadata.Result;
 		delete basegame.metadata.Termination;
@@ -851,7 +851,6 @@ function setConclusion(basegame: Game, conclusion: string | undefined): void {
 export type {
 	ServerGame,
 	MatchInfo,
-	PlayerData,
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,

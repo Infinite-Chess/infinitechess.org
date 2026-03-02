@@ -1,32 +1,38 @@
+// src/client/scripts/esm/game/chess/checkmatepractice.ts
+
 /**
  * This script handles checkmate practice logic
  */
 
-import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import localstorage from '../../util/localstorage.js';
-import coordutil from '../../../../../shared/chess/util/coordutil.js';
-import gameslot from './gameslot.js';
-import guipractice from '../gui/guipractice.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
-import gameloader from './gameloader.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import movesequence from '../chess/movesequence.js';
-import selection from '../chess/selection.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import animation from '../rendering/animation.js';
-import validatorama from '../../util/validatorama.js';
-import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import docutil from '../../util/docutil.js';
-import { players, ext as e, rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
-import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import coordutil from '../../../../../shared/chess/util/coordutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
+import {
+	players as p,
+	ext as e,
+	rawTypes as r,
+} from '../../../../../shared/chess/util/typeutil.js';
+
+import docutil from '../../util/docutil.js';
+import gameslot from './gameslot.js';
+import selection from '../chess/selection.js';
+import animation from '../rendering/animation.js';
+import gameloader from './gameloader.js';
+import guipractice from '../gui/guipractice.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import movesequence from '../chess/movesequence.js';
+import validatorama from '../../util/validatorama.js';
+import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
+import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -54,7 +60,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  *
  * This will be initialized when guipractice calls {@link updateCompletedCheckmates} for the first time!
- * If we initialize it right here, we crash in production, because localstorage is not defined yet in app.js
+ * If we initialize it right here, we crash in production, because LocalStorage is not defined yet.
  * @type {string[]}
  */
 let completedCheckmates: string[];
@@ -101,7 +107,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 
 	const options = {
 		Event: 'Infinite chess checkmate practice',
-		youAreColor: players.WHITE,
+		youAreColor: p.WHITE,
 		currentEngine,
 		engineConfig: {
 			checkmateSelectedID: checkmateSelectedID,
@@ -158,7 +164,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 
 		// place amount many pieces of type piece
 		while (amount !== 0) {
-			if (typeutil.getColorFromType(piece) === players.WHITE) {
+			if (typeutil.getColorFromType(piece) === p.WHITE) {
 				if (blackpieceplaced)
 					throw Error('Must place all white pieces before placing black pieces.');
 
@@ -233,7 +239,7 @@ function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): 
  * Call {@link checkmatepractice.eraseCheckmatePracticeProgressFromLocalStorage} in developer tools to use this
  */
 function eraseCheckmatePracticeProgressFromLocalStorage(): void {
-	localstorage.deleteItem(nameOfCompletedCheckmatesInStorage);
+	LocalStorage.deleteItem(nameOfCompletedCheckmatesInStorage);
 	console.log('DELETED all checkmate practice progress.');
 	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
 	completedCheckmates.length = 0;
@@ -250,8 +256,8 @@ function updateCompletedCheckmates(): void {
 		// console.log("checkmates_beaten cookie was present!");
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
-		// Else, use localstorage as a fallback
-		completedCheckmates = localstorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
+		// Else, use LocalStorage as a fallback
+		completedCheckmates = LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) || [];
 	}
 	guipractice.updateCheckmatesBeaten(completedCheckmates);
 }
@@ -271,9 +277,9 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		completedCheckmates.push(checkmatePracticeID);
 	console.log('Marked checkmate practice as completed!');
 
-	// Update localstorage and exit, if we are not logged in
+	// Update LocalStorage and exit, if we are not logged in
 	if (!validatorama.areWeLoggedIn()) {
-		localstorage.saveItem(
+		LocalStorage.saveItem(
 			nameOfCompletedCheckmatesInStorage,
 			completedCheckmates,
 			expiryOfCompletedCheckmatesMillis,
@@ -342,16 +348,15 @@ function onEngineGameConclude(): void {
 	// Were we doing checkmate practice
 	if (!inCheckmatePractice) return; // Not in checkmate practice
 
-	const gameConclusion: string | undefined = gameslot.getGamefile()!.basegame.gameConclusion;
+	const gameConclusion: GameConclusion | undefined =
+		gameslot.getGamefile()!.basegame.gameConclusion;
 	if (gameConclusion === undefined)
 		throw Error('Game conclusion is undefined, should not have called onEngineGameConclude()');
 
 	// Did we win or lose?
-	const victor: Player | undefined =
-		winconutil.getVictorAndConditionFromGameConclusion(gameConclusion).victor;
-	if (victor === undefined)
+	if (gameConclusion.victor === undefined)
 		throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!(enginegame.getOurColor() === victor)) return; // Lost
+	if (!(enginegame.getOurColor() === gameConclusion.victor)) return; // Lost
 
 	// WON!!! 🎉
 

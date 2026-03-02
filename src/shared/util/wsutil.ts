@@ -1,7 +1,17 @@
+// src/shared/util/wsutil.ts
+
 /*
  * This script should contain utility methods regarding
  * sockets that both the CLIENT and server can use.
  */
+
+// Constants ---------------------------------------------------------------------------------
+
+/**
+ * After this much time of no messages sent, the server sends a
+ * 'renewconnection' keepalive expecting an echo back.
+ */
+const timeOfInactivityToRenewConnection = 10000;
 
 // Variables ---------------------------------------------------------------------------------
 
@@ -89,5 +99,6 @@ function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean
 // -----------------------------------------------------------------------------------------
 
 export default {
+	timeOfInactivityToRenewConnection,
 	wasSocketClosureNotByTheirChoice,
 };

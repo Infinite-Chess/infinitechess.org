@@ -1,3 +1,5 @@
+// src/shared/util/uuid.ts
+
 /**
  * This script generates unique identifiers for us.
  *
@@ -49,9 +51,7 @@ function genUniqueID(length: number, object: Record<string, any>): string {
 	return id;
 }
 
-/**
- * Generates a random numeric ID of the provided length, with the numbers 0-9.
- */
+/** Generates a random numeric ID of the provided length, with the numbers 0-9. */
 function generateNumbID(length: number): number {
 	const zeroOne = Math.random();
 	const multiplier = 10 ** length;

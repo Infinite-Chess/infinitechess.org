@@ -1,3 +1,5 @@
+// src/client/scripts/esm/util/tooltips.ts
+
 /**
  * This script creates event listeners for managing the current classes
  * of all elements with a tooltip available.

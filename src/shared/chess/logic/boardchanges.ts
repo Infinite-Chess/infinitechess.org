@@ -1,3 +1,5 @@
+// src/shared/chess/logic/boardchanges.ts
+
 /**
  * This script both contructs the changes list of a Move, and executes them
  * when requested, modifying the piece lists according to what moved
@@ -8,10 +10,10 @@
  * know how to change the mesh, or what to animate.
  */
 
-import organizedpieces from './organizedpieces.js';
 import jsutil from '../../util/jsutil.js';
-import boardutil from '../util/boardutil.js';
 import typeutil from '../util/typeutil.js';
+import boardutil from '../util/boardutil.js';
+import organizedpieces from './organizedpieces.js';
 import coordutil, { CoordsKey } from '../util/coordutil.js';
 
 // Variables -------------------------------------------------------------------------
@@ -391,7 +393,7 @@ function wasACapture(move: Move): boolean {
 
 // Exports ----------------------------------------------------------------------------------------
 
-export type { genericChangeFunc, ActionList, ChangeApplication, Change };
+export type { genericChangeFunc, ChangeApplication, Change };
 
 export default {
 	changeFuncs,
