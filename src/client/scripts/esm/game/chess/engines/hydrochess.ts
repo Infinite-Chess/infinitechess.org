@@ -117,6 +117,7 @@ self.onmessage = async function (e: MessageEvent<EngineWorkerMessage>): Promise<
 		if (data.requestGeneratedMoves === true) {
 			const legalMoves: WasmBestMoveResult[] = engine.get_legal_moves_js();
 			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`);
+			// Send the generated moves back to the main thread for rendering
 			postMessage({ type: 'generatedMoves', data: formattedMoves });
 			engine.free();
 			return;
