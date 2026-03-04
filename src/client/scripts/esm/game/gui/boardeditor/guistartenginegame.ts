@@ -98,6 +98,7 @@ function initEngineGameUIListeners(): void {
 	});
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
+	document.addEventListener('keydown', onKeyDown);
 }
 
 function closeEngineGameUIListeners(): void {
@@ -106,9 +107,16 @@ function closeEngineGameUIListeners(): void {
 	});
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
+	document.removeEventListener('keydown', onKeyDown);
 }
 
 // Utilities ----------------------------------------------------------------------
+
+function onKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter' && !(e.target instanceof HTMLInputElement && e.target.type === 'text'))
+		onYesButtonPress();
+	else if (e.key === 'Escape') onNoButtonPress();
+}
 
 function onYesButtonPress(): void {
 	const engineUIConfig = readEngineUIConfig();

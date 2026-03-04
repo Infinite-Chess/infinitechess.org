@@ -169,10 +169,12 @@ function closeModal(): void {
 
 function initSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.addEventListener('click', onSaveButtonPress);
+	document.addEventListener('keydown', onSaveKeyDown);
 }
 
 function closeSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.removeEventListener('click', onSaveButtonPress);
+	document.removeEventListener('keydown', onSaveKeyDown);
 }
 
 function unregisterAllPositionButtonListeners(): void {
@@ -242,6 +244,10 @@ async function onModalYesButtonPress(): Promise<void> {
 	}
 
 	closeModal();
+}
+
+function onSaveKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter' && modal_config === undefined) onSaveButtonPress();
 }
 
 /**
