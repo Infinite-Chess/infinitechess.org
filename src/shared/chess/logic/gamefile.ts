@@ -144,7 +144,7 @@ function initGame(
 	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
-		metadata.TimeControl,
+		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
 		metadata,
