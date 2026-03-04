@@ -1693,7 +1693,7 @@ svg.collapse {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: var(--grid-layout) max-content max-content;
+	grid-template-columns: var(--grid-layout) max-content max-content max-content;
 	padding: 0 0.5em;
 }
 
@@ -1778,6 +1778,16 @@ svg.collapse {
 .saved-position-btn svg {
 	width: 22px;
 	aspect-ratio: 1;
+}
+
+/* Cloud save button: greyed-out when position is local (not yet on cloud) */
+.cloud-save.cloud-save-local svg {
+	opacity: 0.35;
+}
+
+/* Expand header actions width when cloud button is present (user logged in) */
+.saved-positions--with-cloud {
+	--w-header-actions: 78px;
 }
 
 /* The overlay covers ONLY the load-position-UI */

@@ -4,9 +4,14 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
+import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+import type { CloudSaveListRecord } from '../../boardeditor/actions/editorSavesAPI';
 import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
 
 import editorutil from '../../../../../../shared/editor/editorutil';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
@@ -14,6 +19,8 @@ import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../../boardeditor/boardeditor';
+import validatorama from '../../../util/validatorama';
+import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
 import guifloatingwindow from './guifloatingwindow';
 
 // Types -------------------------------------------------------------------------
@@ -27,10 +34,14 @@ type ButtonHandlerPair = {
 /** Different modes for the modal confirmation dialog */
 type ModalMode = 'load' | 'delete' | 'overwrite_save';
 
+/** Whether a position is stored locally (IndexedDB) or on the server */
+type StorageType = 'local' | 'cloud';
+
 /** Type for current config of the confirmation dialog modal */
 type ModalConfig = {
 	mode: ModalMode;
 	positionname: string;
+	storageType: StorageType;
 	saveinfo_key: string;
 	save_key: string;
 };
@@ -59,6 +70,9 @@ const element_saveAsPositionName = document.getElementById(
 )! as HTMLInputElement;
 /** "Save" button in UI */
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
+
+/** The outer container for the saved positions section (used to toggle cloud class) */
+const element_savedPositions = document.querySelector('.saved-positions')! as HTMLElement;
 
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
@@ -142,8 +156,9 @@ function openModal(
 	positionname: string,
 	saveinfo_key: string,
 	save_key: string,
+	storageType: StorageType = 'local',
 ): void {
-	modal_config = { mode, positionname, saveinfo_key, save_key };
+	modal_config = { mode, positionname, saveinfo_key, save_key, storageType };
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
@@ -217,25 +232,81 @@ async function onModalYesButtonPress(): Promise<void> {
 		closeModal();
 		return;
 	} else if (modal_config.mode === 'delete') {
-		// Delete position
-		await deleteSavedPosition(modal_config);
+		if (modal_config.storageType === 'cloud') {
+			// Delete cloud position
+			try {
+				await editorSavesAPI.deletePosition(modal_config.positionname);
+			} catch (err) {
+				console.error('Failed to delete cloud position:', err);
+				toast.show('Failed to delete cloud position.', { error: true });
+				closeModal();
+				return;
+			}
+			// If deleted position was active, set active position name to undefined
+			if (boardeditor.getActivePositionName() === modal_config.positionname)
+				boardeditor.setActivePositionName(undefined);
+		} else {
+			// Delete local position
+			await deleteSavedPosition(modal_config);
+		}
 		updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
-		// Load position
-		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
-		const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
-		if (!editorSaveStateParsed.success) {
-			console.error(
-				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
-			);
-			toast.show(`The position was corrupted.`, { error: true });
-			await deleteSavedPosition(modal_config);
-			updateSavedPositionListUI();
-			return;
+		if (modal_config.storageType === 'cloud') {
+			// Load cloud position
+			let cloudPosition;
+			try {
+				cloudPosition = await editorSavesAPI.getPosition(modal_config.positionname);
+			} catch (err) {
+				console.error('Failed to load cloud position:', err);
+				toast.show('Failed to load cloud position.', { error: true });
+				closeModal();
+				return;
+			}
+			let longFormOut;
+			try {
+				longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
+			} catch (err) {
+				console.error('Failed to parse cloud position ICN:', err);
+				toast.show('The cloud position was corrupted.', { error: true });
+				closeModal();
+				return;
+			}
+			const variantOptions: VariantOptions = {
+				position: longFormOut.position ?? new Map(),
+				gameRules: longFormOut.gameRules,
+				state_global: {
+					...longFormOut.state_global,
+					specialRights: longFormOut.state_global.specialRights ?? new Set(),
+				},
+				fullMove: longFormOut.fullMove,
+			};
+			const editorSaveState: EditorSaveState = {
+				positionname: modal_config.positionname,
+				timestamp: Date.now(),
+				pieceCount: variantOptions.position.size,
+				variantOptions,
+				pawnDoublePush: cloudPosition.pawn_double_push,
+				castling: cloudPosition.castling,
+			};
+			floatingWindow.close(false);
+			eactions.load(editorSaveState);
+		} else {
+			// Load local position
+			const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
+			const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+			if (!editorSaveStateParsed.success) {
+				console.error(
+					`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
+				);
+				toast.show(`The position was corrupted.`, { error: true });
+				await deleteSavedPosition(modal_config);
+				updateSavedPositionListUI();
+				return;
+			}
+			const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
+			floatingWindow.close(false);
+			eactions.load(editorSaveState);
 		}
-		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
-		floatingWindow.close(false);
-		eactions.load(editorSaveState);
 	} else if (modal_config.mode === 'overwrite_save') {
 		await esave.save(modal_config.positionname);
 		updateSavedPositionListUI();
@@ -295,6 +366,10 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-load"/></svg>
  *   </button>
+ *   <!-- Cloud Save (only when logged in) -->
+ *   <button class="btn saved-position-btn cloud-save [greyed-out]">
+ *     <svg><use href="#svg-cloud-save"/></svg>
+ *   </button>
  *   <!-- Delete -->
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-delete"/></svg>
@@ -304,6 +379,8 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
 function generateRowForSavedPositionsElement(
 	saveinfo_key: string,
 	editorAbridgedSaveState: EditorAbridgedSaveState,
+	storageType: StorageType,
+	showCloudButton: boolean,
 ): HTMLDivElement {
 	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
 	const row = document.createElement('div');
@@ -342,18 +419,187 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	registerButtonClick(loadBtn, () => openModal('load', positionname, saveinfo_key, save_key));
+	registerButtonClick(loadBtn, () =>
+		openModal('load', positionname, saveinfo_key, save_key, storageType),
+	);
 	row.appendChild(loadBtn);
+
+	// "Cloud Save" button (only when logged in)
+	if (showCloudButton) {
+		const cloudBtn = createButtonElement('#svg-cloud-save');
+		cloudBtn.classList.add('cloud-save');
+		if (storageType === 'local') {
+			// Local save: greyed-out cloud button (not yet on cloud)
+			cloudBtn.classList.add('cloud-save-local');
+		}
+		registerButtonClick(cloudBtn, () =>
+			onCloudButtonPress(
+				positionname,
+				saveinfo_key,
+				save_key,
+				storageType,
+				timestamp,
+				cloudBtn,
+			),
+		);
+		row.appendChild(cloudBtn);
+	}
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
-	registerButtonClick(deleteBtn, () => openModal('delete', positionname, saveinfo_key, save_key));
+	registerButtonClick(deleteBtn, () =>
+		openModal('delete', positionname, saveinfo_key, save_key, storageType),
+	);
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
 	if (boardeditor.getActivePositionName() === positionname) row.classList.add('active-position');
 
 	return row;
+}
+
+/**
+ * Handles pressing the cloud-save button for a position row.
+ * - If local: uploads to server and deletes local copy.
+ * - If cloud: downloads from server (saves locally) and deletes from server.
+ */
+async function onCloudButtonPress(
+	positionname: string,
+	saveinfo_key: string,
+	save_key: string,
+	storageType: StorageType,
+	originalTimestamp: number,
+	cloudBtn: HTMLButtonElement,
+): Promise<void> {
+	cloudBtn.disabled = true;
+
+	if (storageType === 'local') {
+		// Upload local → cloud
+		const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
+		const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+		if (!editorSaveStateParsed.success) {
+			console.error(
+				`Invalid EditorSaveState "${save_key}" in IndexedDB: ${editorSaveStateParsed.error}`,
+			);
+			toast.show('The position data was corrupted.', { error: true });
+			cloudBtn.disabled = false;
+			return;
+		}
+		const editorSaveState = editorSaveStateParsed.data;
+
+		// Convert variantOptions to ICN
+		const longFormatIn: LongFormatIn = {
+			metadata: {} as MetaData, // Empty metadata: the server stores metadata (name, timestamp, etc.) separately
+			position: editorSaveState.variantOptions.position,
+			gameRules: editorSaveState.variantOptions.gameRules,
+			state_global: editorSaveState.variantOptions.state_global,
+			fullMove: editorSaveState.variantOptions.fullMove ?? 1,
+		};
+		let icn: string;
+		try {
+			icn = icnconverter.LongToShort_Format(longFormatIn, {
+				skipPosition: false,
+				compact: true,
+				spaces: false,
+				comments: false,
+				make_new_lines: false,
+				move_numbers: false,
+			});
+		} catch (err) {
+			console.error('Failed to convert position to ICN:', err);
+			toast.show('Failed to convert position for upload.', { error: true });
+			cloudBtn.disabled = false;
+			return;
+		}
+
+		try {
+			await editorSavesAPI.savePosition(
+				positionname,
+				editorSaveState.pieceCount,
+				editorSaveState.timestamp,
+				icn,
+				editorSaveState.pawnDoublePush ?? false,
+				editorSaveState.castling ?? false,
+			);
+		} catch (err) {
+			console.error('Failed to upload position to cloud:', err);
+			toast.show(err instanceof Error ? err.message : 'Failed to upload position to cloud.', {
+				error: true,
+			});
+			cloudBtn.disabled = false;
+			return;
+		}
+
+		// Delete local copy
+		await Promise.all([IndexedDB.deleteItem(saveinfo_key), IndexedDB.deleteItem(save_key)]);
+		if (boardeditor.getActivePositionName() === positionname)
+			boardeditor.setActivePositionName(undefined);
+
+		toast.show('Position saved to cloud.');
+	} else {
+		// Download cloud → local
+		let cloudPosition;
+		try {
+			cloudPosition = await editorSavesAPI.getPosition(positionname);
+		} catch (err) {
+			console.error('Failed to download cloud position:', err);
+			toast.show('Failed to download cloud position.', { error: true });
+			cloudBtn.disabled = false;
+			return;
+		}
+
+		let longFormOut;
+		try {
+			longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
+		} catch (err) {
+			console.error('Failed to parse cloud position ICN:', err);
+			toast.show('The cloud position was corrupted.', { error: true });
+			cloudBtn.disabled = false;
+			return;
+		}
+
+		const variantOptions: VariantOptions = {
+			position: longFormOut.position ?? new Map(),
+			gameRules: longFormOut.gameRules,
+			state_global: {
+				...longFormOut.state_global,
+				specialRights: longFormOut.state_global.specialRights ?? new Set(),
+			},
+			fullMove: longFormOut.fullMove,
+		};
+
+		// Save locally (preserve the original cloud save timestamp)
+		await Promise.all([
+			IndexedDB.saveItem(save_key, {
+				positionname,
+				timestamp: originalTimestamp,
+				pieceCount: variantOptions.position.size,
+				variantOptions,
+				pawnDoublePush: cloudPosition.pawn_double_push,
+				castling: cloudPosition.castling,
+			}),
+			IndexedDB.saveItem(saveinfo_key, {
+				positionname,
+				timestamp: originalTimestamp,
+				pieceCount: variantOptions.position.size,
+			}),
+		]);
+
+		// Delete from server
+		try {
+			await editorSavesAPI.deletePosition(positionname);
+		} catch (err) {
+			console.error('Failed to delete cloud position after download:', err);
+			toast.show('Failed to remove position from cloud.', { error: true });
+			cloudBtn.disabled = false;
+			return;
+		}
+
+		toast.show('Position saved locally.');
+	}
+
+	cloudBtn.disabled = false;
+	await updateSavedPositionListUI();
 }
 
 /**
@@ -388,27 +634,87 @@ async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
+	const isLoggedIn = validatorama.areWeLoggedIn();
+
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('saved-positions--with-cloud', isLoggedIn);
+
+	// Fetch cloud saves if logged in
+	const cloudSavesMap = new Map<string, CloudSaveListRecord>();
+	if (isLoggedIn) {
+		try {
+			const cloudSaves = await editorSavesAPI.getSavedPositions();
+			for (const save of cloudSaves) cloudSavesMap.set(save.name, save);
+		} catch (err) {
+			console.error('Failed to fetch cloud saves:', err);
+			toast.show('Failed to fetch cloud saves.', { error: true });
+		}
+	}
+
 	// Get a list of all saveinfo_keys
 	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
 		key.startsWith(esave.EDITOR_SAVEINFO_PREFIX),
 	);
 
 	// Load all editorAbridgedSaveStates simultaneously into a single list
-	const editorSaveInfoList = (
+	const localSaveInfoList = (
 		await Promise.all(saveinfo_keys.map((saveinfo_key) => loadSinglePositionInfo(saveinfo_key)))
 	).filter((x) => x !== undefined);
 
-	// Sort editorSaveInfoList by timestamp (newest first)
-	editorSaveInfoList.sort(
-		(a, b) => b.editorAbridgedSaveState.timestamp - a.editorAbridgedSaveState.timestamp,
+	// Build unified list (local + cloud)
+	type UnifiedSave =
+		| {
+				storageType: 'local';
+				saveinfo_key: string;
+				editorAbridgedSaveState: EditorAbridgedSaveState;
+		  }
+		| { storageType: 'cloud'; record: CloudSaveListRecord };
+
+	const allSaves: UnifiedSave[] = [];
+
+	// Add local saves
+	for (const localSave of localSaveInfoList) {
+		allSaves.push({ storageType: 'local', ...localSave });
+	}
+
+	// Add cloud saves that are not already saved locally
+	const localNames = new Set(
+		localSaveInfoList.map((l) => l.editorAbridgedSaveState.positionname),
 	);
+	for (const [name, record] of cloudSavesMap) {
+		if (!localNames.has(name)) {
+			allSaves.push({ storageType: 'cloud', record });
+		}
+	}
+
+	// Sort by timestamp (newest first)
+	allSaves.sort((a, b) => {
+		const ta =
+			a.storageType === 'local' ? a.editorAbridgedSaveState.timestamp : a.record.timestamp;
+		const tb =
+			b.storageType === 'local' ? b.editorAbridgedSaveState.timestamp : b.record.timestamp;
+		return tb - ta;
+	});
 
 	// Generate and append row by row to saved positions UI
-	for (const editorSaveInfo of editorSaveInfoList) {
-		const row = generateRowForSavedPositionsElement(
-			editorSaveInfo.saveinfo_key,
-			editorSaveInfo.editorAbridgedSaveState,
-		);
+	for (const save of allSaves) {
+		let row: HTMLDivElement;
+		if (save.storageType === 'local') {
+			row = generateRowForSavedPositionsElement(
+				save.saveinfo_key,
+				save.editorAbridgedSaveState,
+				'local',
+				isLoggedIn,
+			);
+		} else {
+			const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${save.record.name}`;
+			const abridged: EditorAbridgedSaveState = {
+				positionname: save.record.name,
+				timestamp: save.record.timestamp,
+				pieceCount: save.record.piece_count,
+			};
+			row = generateRowForSavedPositionsElement(saveinfo_key, abridged, 'cloud', isLoggedIn);
+		}
 		element_savedPositionsToLoad.appendChild(row);
 	}
 }
