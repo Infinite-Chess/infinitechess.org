@@ -489,7 +489,7 @@ please_report_bug = "Tämän ei pitäisi tapahtua, ilmoita tästä bugista!"
 
 [play.javascript.termination] # What caused the termination of the game, in spoken language
 checkmate = "Shakkimatti"
-stalemate = "Umpikuja"
+stalemate = "Patti"
 repetition = "Kolminkertainen toisto"
 moverule = ["", "-siirron sääntö"]  # The game inserts a number inbetween these two strings
 insuffmat = "Ei tarpeeksi materiaalia"
@@ -513,7 +513,7 @@ you_allroyalscaptured = "Sinä voitit kaappaamalla kaikki kuninkaaliset!"
 you_allpiecescaptured = "Sinä voitit kaappaamalla kaikki nappulat!"
 you_koth = "Sinä voitit olemalla kukkulan kuningas!"
 you_generic = "Sinä voitit!"
-draw_stalemate = "Tasapeli umpikujasta!"
+draw_stalemate = "Tasapeli patista!"
 draw_repetition = "Tasapeli kertaamisesta!"
 draw_moverule = ["Tasapeli ", "-siirron-säännollä!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Tasapeli tarvitulla materiaalilla!"
