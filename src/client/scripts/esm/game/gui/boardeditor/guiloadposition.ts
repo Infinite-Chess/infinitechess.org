@@ -430,7 +430,7 @@ function generateRowForSavedPositionsElement(
 		cloudBtn.classList.add('cloud-save');
 		if (storageType === 'local') {
 			// Local save: greyed-out cloud button (not yet on cloud)
-			cloudBtn.classList.add('cloud-save-local');
+			cloudBtn.classList.add('local');
 		}
 		registerButtonClick(cloudBtn, () =>
 			onCloudButtonPress(

@@ -1781,7 +1781,7 @@ svg.collapse {
 }
 
 /* Cloud save button: greyed-out when position is local (not yet on cloud) */
-.cloud-save.cloud-save-local svg {
+.cloud-save.local svg {
 	opacity: 0.35;
 }
 
