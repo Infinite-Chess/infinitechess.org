@@ -279,19 +279,9 @@ function getPlayerNamesForGame(metadata: MetaData): {
 					: 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
-		const currentEngine = enginegame.getCurrentEngine();
-		const engineName = currentEngine
-			? enginegame.engineDisplayNamesDict[currentEngine as validEngineName]
-			: 'Engine';
 		return {
-			white:
-				metadata.White === translations.you_indicator
-					? translations.you_indicator
-					: engineName,
-			black:
-				metadata.Black === translations.you_indicator
-					? translations.you_indicator
-					: engineName,
+			white: metadata.White!,
+			black: metadata.Black!,
 			white_type: metadata.White === translations.you_indicator ? 'guest' : 'engine',
 			black_type: metadata.Black === translations.you_indicator ? 'guest' : 'engine',
 		};

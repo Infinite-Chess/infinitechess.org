@@ -72,11 +72,24 @@ const engineDisplayNamesDict: { [key in validEngineName]: string } = {
 };
 
 /**
+ * The maximum strength level for each engine.
+ * If the current strength level is the maximum, it is omitted from the display name.
+ */
+const engineMaxStrengthLevelDict: { [key in validEngineName]: number } = {
+	engineCheckmatePractice: 1,
+	hydrochess: 3,
+};
+
+/**
  * Returns a formatted engine name string, optionally including its strength level.
+ * If the provided strength level is the maximum for the engine, it is omitted.
  */
 function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
 	const name = engineDisplayNamesDict[engineName];
-	return strengthLevel !== undefined ? `${name} (Level ${strengthLevel})` : name;
+	const maxLevel = engineMaxStrengthLevelDict[engineName];
+	return strengthLevel !== undefined && strengthLevel !== maxLevel
+		? `${name} (Level ${strengthLevel})`
+		: name;
 }
 
 // Variables --------------------------------------------------------------------

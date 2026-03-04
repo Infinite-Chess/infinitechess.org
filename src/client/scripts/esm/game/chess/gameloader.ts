@@ -388,16 +388,6 @@ async function startCustomEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
-		options.currentEngine,
-		options.engineConfig.strengthLevel,
-	);
-
-	options.metadata.White =
-		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
-	options.metadata.Black =
-		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
-
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata: options.metadata,
