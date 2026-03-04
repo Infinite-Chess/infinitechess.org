@@ -72,8 +72,8 @@ const element_saveAsPositionName = document.getElementById(
 /** "Save" button in UI */
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
 
-/** The outer container for the saved positions section (used to toggle cloud class) */
-const element_savedPositions = document.querySelector('.saved-positions')! as HTMLElement;
+/** The outer container for the saved positions section */
+const element_savedPositions = document.querySelector('.saved-positions')!;
 
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
@@ -216,7 +216,7 @@ async function deleteLocalPosition(position_name: string): Promise<void> {
 
 /**
  * Deletes a position from the server.
- * Returns true on success, false if the server request failed.
+ * @returns Whether the server request succeeded.
  */
 async function deleteCloudPosition(position_name: string): Promise<boolean> {
 	try {
@@ -224,14 +224,14 @@ async function deleteCloudPosition(position_name: string): Promise<boolean> {
 		return true;
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
-		toast.show('Failed to delete cloud position.', { error: true });
+		toast.show('Failed to delete position from the cloud.', { error: true });
 		return false;
 	}
 }
 
 /**
  * Loads a position from the server.
- * Returns an EditorSaveState on success, undefined on failure.
+ * @returns An EditorSaveState on success, undefined on failure.
  */
 async function loadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
 	let cloudPosition;
@@ -239,7 +239,7 @@ async function loadCloudPosition(position_name: string): Promise<EditorSaveState
 		cloudPosition = await editorSavesAPI.getPosition(position_name);
 	} catch (err) {
 		console.error('Failed to load cloud position:', err);
-		toast.show('Failed to load cloud position.', { error: true });
+		toast.show('Failed to load position from the cloud.', { error: true });
 		return;
 	}
 	let longFormOut;
@@ -247,7 +247,7 @@ async function loadCloudPosition(position_name: string): Promise<EditorSaveState
 		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
 	} catch (err) {
 		console.error('Failed to parse cloud position ICN:', err);
-		toast.show('The cloud position was corrupted.', { error: true });
+		toast.show('The position was corrupted.', { error: true });
 		return;
 	}
 	const variantOptions: VariantOptions = {
