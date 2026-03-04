@@ -73,7 +73,6 @@ const engineDisplayNamesDict: { [key in validEngineName]: string } = {
 
 /**
  * The maximum strength level for each engine.
- * If the current strength level is the maximum, it is omitted from the display name.
  */
 const engineMaxStrengthLevelDict: { [key in validEngineName]: number } = {
 	engineCheckmatePractice: 1,
