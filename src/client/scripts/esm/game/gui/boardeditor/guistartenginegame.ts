@@ -12,7 +12,9 @@ import { players as p } from '../../../../../../shared/chess/util/typeutil';
 
 import eactions from '../../boardeditor/actions/eactions';
 import gameslot from '../../chess/gameslot';
+import guipause from '../guipause';
 import guifloatingwindow from './guifloatingwindow';
+import { listener_document } from '../../chess/game';
 
 // Types -------------------------------------------------------------
 
@@ -115,7 +117,11 @@ function closeEngineGameUIListeners(): void {
 function onKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter' && !(e.target instanceof HTMLInputElement && e.target.type === 'text'))
 		onYesButtonPress();
-	else if (e.key === 'Escape') onNoButtonPress();
+	else if (e.key === 'Escape') {
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		onNoButtonPress();
+	}
 }
 
 function onYesButtonPress(): void {

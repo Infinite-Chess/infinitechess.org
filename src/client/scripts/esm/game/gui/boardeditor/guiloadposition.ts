@@ -12,9 +12,11 @@ import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
+import guipause from '../guipause';
 import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../../boardeditor/boardeditor';
 import guifloatingwindow from './guifloatingwindow';
+import { listener_document } from '../../chess/game';
 
 // Types -------------------------------------------------------------------------
 
@@ -188,15 +190,26 @@ function initModalListeners(): void {
 	element_modalCloseButton.addEventListener('click', closeModal);
 	element_modalNoButton.addEventListener('click', closeModal);
 	element_modalYesButton.addEventListener('click', onModalYesButtonPress);
+	document.addEventListener('keydown', onModalKeyDown);
 }
 
 function closeModalListeners(): void {
 	element_modalCloseButton.removeEventListener('click', closeModal);
 	element_modalNoButton.removeEventListener('click', closeModal);
 	element_modalYesButton.removeEventListener('click', onModalYesButtonPress);
+	document.removeEventListener('keydown', onModalKeyDown);
 }
 
 // Functions -----------------------------------------------------------------
+
+function onModalKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter') onModalYesButtonPress();
+	else if (e.key === 'Escape') {
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		closeModal();
+	}
+}
 
 /**
  * Delete saved position according to provided modal_config argument,

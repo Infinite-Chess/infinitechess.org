@@ -5,7 +5,9 @@
  */
 
 import eactions from '../../boardeditor/actions/eactions';
+import guipause from '../guipause';
 import guifloatingwindow from './guifloatingwindow';
+import { listener_document } from '../../chess/game';
 
 // Elements ----------------------------------------------------------
 
@@ -61,7 +63,11 @@ function closeResetPositionUIListeners(): void {
 
 function onKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter') onYesButtonPress();
-	else if (e.key === 'Escape') onNoButtonPress();
+	else if (e.key === 'Escape') {
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		onNoButtonPress();
+	}
 }
 
 function onYesButtonPress(): void {
