@@ -18,9 +18,9 @@ import boardeditor from '../boardeditor';
 
 /** Minimal information about a saved position */
 interface EditorAbridgedSaveState {
-	positionname?: string;
+	position_name?: string;
 	timestamp: number;
-	pieceCount: number;
+	piece_count: number;
 }
 
 /** Complete information about a saved position */
@@ -42,9 +42,9 @@ const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
 
 /** Schema for validating an EditorAbridgedSaveState */
 const EditorAbridgedSaveStateSchema = z.strictObject({
-	positionname: z.string().min(1, 'Position name is required').optional(),
+	position_name: z.string().min(1, 'Position name is required').optional(),
 	timestamp: z.number(),
-	pieceCount: z.number().int('Piece count must be an integer'),
+	piece_count: z.number().int('Piece count must be an integer'),
 });
 
 /** Schema for validating an EditorSaveState */

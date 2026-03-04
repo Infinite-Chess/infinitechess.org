@@ -287,9 +287,9 @@ async function onModalYesButtonPress(): Promise<void> {
 				fullMove: longFormOut.fullMove,
 			};
 			const editorSaveState: EditorSaveState = {
-				positionname: modal_config.position_name,
+				position_name: modal_config.position_name,
 				timestamp: Date.now(),
-				pieceCount: variantOptions.position.size,
+				piece_count: variantOptions.position.size,
 				variantOptions,
 				pawnDoublePush: cloudPosition.pawn_double_push,
 				castling: cloudPosition.castling,
@@ -394,17 +394,17 @@ function generateRowForSavedPositionsElement(
 
 	// Name
 	const name_cell = document.createElement('div');
-	const positionname = editorAbridgedSaveState.positionname ?? '';
-	name_cell.textContent = positionname;
-	name_cell.title = positionname; // Let's browser's automatic tooltips show the full title on hover, if it's truncated via ellipsis
+	const position_name = editorAbridgedSaveState.position_name ?? '';
+	name_cell.textContent = position_name;
+	name_cell.title = position_name; // Let's browser's automatic tooltips show the full title on hover, if it's truncated via ellipsis
 	row.appendChild(name_cell);
 
 	// Piececount
 	const piececount_cell = document.createElement('div');
 	piececount_cell.classList.add('piece-count');
-	const piececount = String(editorAbridgedSaveState.pieceCount);
-	piececount_cell.textContent = piececount;
-	piececount_cell.title = piececount;
+	const piece_count = String(editorAbridgedSaveState.piece_count);
+	piececount_cell.textContent = piece_count;
+	piececount_cell.title = piece_count;
 	row.appendChild(piececount_cell);
 
 	// Date
@@ -426,7 +426,7 @@ function generateRowForSavedPositionsElement(
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
 	registerButtonClick(loadBtn, () =>
-		openModal('load', positionname, saveinfo_key, save_key, storageType),
+		openModal('load', position_name, saveinfo_key, save_key, storageType),
 	);
 	row.appendChild(loadBtn);
 
@@ -440,7 +440,7 @@ function generateRowForSavedPositionsElement(
 		}
 		registerButtonClick(cloudBtn, () =>
 			onCloudButtonPress(
-				positionname,
+				position_name,
 				saveinfo_key,
 				save_key,
 				storageType,
@@ -454,12 +454,12 @@ function generateRowForSavedPositionsElement(
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
 	registerButtonClick(deleteBtn, () =>
-		openModal('delete', positionname, saveinfo_key, save_key, storageType),
+		openModal('delete', position_name, saveinfo_key, save_key, storageType),
 	);
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
-	if (boardeditor.getActivePositionName() === positionname) row.classList.add('active-position');
+	if (boardeditor.getActivePositionName() === position_name) row.classList.add('active-position');
 
 	return row;
 }
@@ -521,7 +521,7 @@ async function onCloudButtonPress(
 		try {
 			await editorSavesAPI.savePosition(
 				positionname,
-				editorSaveState.pieceCount,
+				editorSaveState.piece_count,
 				editorSaveState.timestamp,
 				icn,
 				editorSaveState.pawnDoublePush ?? false,
@@ -685,7 +685,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 
 	// Add cloud saves that are not already saved locally
 	const localNames = new Set(
-		localSaveInfoList.map((l) => l.editorAbridgedSaveState.positionname),
+		localSaveInfoList.map((l) => l.editorAbridgedSaveState.position_name),
 	);
 	for (const [name, record] of cloudSavesMap) {
 		if (!localNames.has(name)) {
@@ -715,9 +715,9 @@ async function updateSavedPositionListUI(): Promise<void> {
 		} else {
 			const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${save.record.name}`;
 			const abridged: EditorAbridgedSaveState = {
-				positionname: save.record.name,
+				position_name: save.record.name,
 				timestamp: save.record.timestamp,
-				pieceCount: save.record.piece_count,
+				piece_count: save.record.piece_count,
 			};
 			row = generateRowForSavedPositionsElement(saveinfo_key, abridged, 'cloud', isLoggedIn);
 		}

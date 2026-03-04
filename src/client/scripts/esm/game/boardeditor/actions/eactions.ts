@@ -141,7 +141,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	boardeditor.setActivePositionName(editorSaveState.positionname);
+	boardeditor.setActivePositionName(editorSaveState.position_name);
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
