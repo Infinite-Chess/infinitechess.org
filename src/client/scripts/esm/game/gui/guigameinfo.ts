@@ -19,10 +19,10 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../chess/gameslot.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import gameloader from '../chess/gameloader.js';
+import enginegame from '../misc/enginegame.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import frametracker from '../rendering/frametracker.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import enginegame, { validEngineName } from '../misc/enginegame.js';
 
 // Elements ---------------------------------------------------
 

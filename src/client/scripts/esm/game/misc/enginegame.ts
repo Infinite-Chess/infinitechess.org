@@ -67,7 +67,7 @@ const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: numbe
  * Display names for each engine.
  */
 const engineDisplayNamesDict: { [key in validEngineName]: string } = {
-	engineCheckmatePractice: 'Checkmate Practice',
+	engineCheckmatePractice: 'Practice Bot',
 	hydrochess: 'HydroChess',
 };
 
