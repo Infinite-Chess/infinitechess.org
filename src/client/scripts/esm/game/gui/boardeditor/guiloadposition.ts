@@ -203,8 +203,10 @@ function closeModalListeners(): void {
 // Functions -----------------------------------------------------------------
 
 function onModalKeyDown(e: KeyboardEvent): void {
-	if (e.key === 'Enter') onModalYesButtonPress();
-	else if (e.key === 'Escape') {
+	if (e.key === 'Enter') {
+		e.preventDefault(); // Prevent browser from firing a synthetic click on the focused "Save" button
+		onModalYesButtonPress();
+	} else if (e.key === 'Escape') {
 		// Ensure priority when deciding who gets the escape key event
 		if (guipause.areWePaused()) return;
 		listener_document.claimKey('Escape');
