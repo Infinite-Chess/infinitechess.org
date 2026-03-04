@@ -205,6 +205,7 @@ function closeModalListeners(): void {
 function onModalKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter') onModalYesButtonPress();
 	else if (e.key === 'Escape') {
+		// Ensure priority when deciding who gets the escape key event
 		if (guipause.areWePaused()) return;
 		listener_document.claimKey('Escape');
 		closeModal();

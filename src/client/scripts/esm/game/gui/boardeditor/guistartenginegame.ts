@@ -118,6 +118,7 @@ function onKeyDown(e: KeyboardEvent): void {
 	if (e.key === 'Enter' && !(e.target instanceof HTMLInputElement && e.target.type === 'text'))
 		onYesButtonPress();
 	else if (e.key === 'Escape') {
+		// Ensure priority when deciding who gets the escape key event
 		if (guipause.areWePaused()) return;
 		listener_document.claimKey('Escape');
 		onNoButtonPress();
