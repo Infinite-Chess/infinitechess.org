@@ -58,14 +58,14 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const positionname = boardeditor.getActivePositionName();
+		const position_name = boardeditor.getActivePositionName();
 		const timestamp = Date.now();
-		const pieceCount = variantOptions.position.size;
+		const piece_count = variantOptions.position.size;
 
 		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
-			positionname,
+			position_name,
 			timestamp,
-			pieceCount,
+			piece_count,
 			variantOptions,
 			pawnDoublePush,
 			castling,

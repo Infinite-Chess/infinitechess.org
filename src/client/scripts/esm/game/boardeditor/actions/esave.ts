@@ -67,7 +67,7 @@ let positionSavePending = false;
 // Actions ----------------------------------------------------------------------
 
 /** Saves current position under "positionname". */
-async function save(positionname: string): Promise<void> {
+async function save(position_name: string): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	// Coalesce: if a save is already running, request another and return.
@@ -83,23 +83,23 @@ async function save(positionname: string): Promise<void> {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 		const timestamp = Date.now();
-		const pieceCount = variantOptions.position.size;
+		const piece_count = variantOptions.position.size;
 
 		await Promise.all([
 			// Save full info for loading purposes
-			IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${positionname}`, {
-				positionname,
+			IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${position_name}`, {
+				position_name,
 				timestamp,
-				pieceCount,
+				piece_count,
 				variantOptions,
 				pawnDoublePush,
 				castling,
 			}),
 			// Save abridged info for display purposes
-			IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${positionname}`, {
-				positionname,
+			IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${position_name}`, {
+				position_name,
 				timestamp,
-				pieceCount,
+				piece_count,
 			}),
 		]);
 	} catch (err) {
@@ -111,9 +111,9 @@ async function save(positionname: string): Promise<void> {
 		// If something changed while saving, immediately save again (latest wins).
 		if (positionSavePending) {
 			positionSavePending = false;
-			await save(positionname);
+			await save(position_name);
 		} else {
-			boardeditor.setActivePositionName(positionname);
+			boardeditor.setActivePositionName(position_name);
 			toast.show('Position successfully saved in browser.');
 		}
 	}
