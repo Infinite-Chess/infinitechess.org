@@ -40,8 +40,8 @@ type StorageType = 'local' | 'cloud';
 /** Type for current config of the confirmation dialog modal */
 type ModalConfig = {
 	mode: ModalMode;
-	positionname: string;
-	storageType: StorageType;
+	position_name: string;
+	storage_type: StorageType;
 	saveinfo_key: string;
 	save_key: string;
 };
@@ -153,22 +153,28 @@ function getMode(): typeof mode {
 
 function openModal(
 	mode: ModalMode,
-	positionname: string,
+	position_name: string,
 	saveinfo_key: string,
 	save_key: string,
-	storageType: StorageType = 'local',
+	storage_type: StorageType,
 ): void {
-	modal_config = { mode, positionname, saveinfo_key, save_key, storageType };
+	modal_config = {
+		mode,
+		position_name,
+		saveinfo_key,
+		save_key,
+		storage_type,
+	};
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
-		element_modalMessage.textContent = `Are you sure that you want to delete position "${positionname}"? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to delete position "${position_name}"? This cannot be undone.`;
 	} else if (modal_config.mode === 'load') {
 		element_modalTitle.textContent = 'Load position?';
-		element_modalMessage.textContent = `Are you sure that you want to load position "${positionname}"? Unsaved changes to the current position will be lost.`;
+		element_modalMessage.textContent = `Are you sure that you want to load position "${position_name}"? Unsaved changes to the current position will be lost.`;
 	} else if (modal_config.mode === 'overwrite_save') {
 		element_modalTitle.textContent = 'Overwrite position?';
-		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${positionname}"? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${position_name}"? This cannot be undone.`;
 	}
 	element_modal.classList.remove('hidden');
 	initModalListeners();
@@ -223,7 +229,7 @@ async function deleteSavedPosition(modal_config: ModalConfig): Promise<void> {
 	]);
 
 	// If deleted position was active, set active position name to undefined
-	if (boardeditor.getActivePositionName() === modal_config.positionname)
+	if (boardeditor.getActivePositionName() === modal_config.position_name)
 		boardeditor.setActivePositionName(undefined);
 }
 
@@ -232,10 +238,10 @@ async function onModalYesButtonPress(): Promise<void> {
 		closeModal();
 		return;
 	} else if (modal_config.mode === 'delete') {
-		if (modal_config.storageType === 'cloud') {
+		if (modal_config.storage_type === 'cloud') {
 			// Delete cloud position
 			try {
-				await editorSavesAPI.deletePosition(modal_config.positionname);
+				await editorSavesAPI.deletePosition(modal_config.position_name);
 			} catch (err) {
 				console.error('Failed to delete cloud position:', err);
 				toast.show('Failed to delete cloud position.', { error: true });
@@ -243,7 +249,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				return;
 			}
 			// If deleted position was active, set active position name to undefined
-			if (boardeditor.getActivePositionName() === modal_config.positionname)
+			if (boardeditor.getActivePositionName() === modal_config.position_name)
 				boardeditor.setActivePositionName(undefined);
 		} else {
 			// Delete local position
@@ -251,11 +257,11 @@ async function onModalYesButtonPress(): Promise<void> {
 		}
 		updateSavedPositionListUI();
 	} else if (modal_config.mode === 'load') {
-		if (modal_config.storageType === 'cloud') {
+		if (modal_config.storage_type === 'cloud') {
 			// Load cloud position
 			let cloudPosition;
 			try {
-				cloudPosition = await editorSavesAPI.getPosition(modal_config.positionname);
+				cloudPosition = await editorSavesAPI.getPosition(modal_config.position_name);
 			} catch (err) {
 				console.error('Failed to load cloud position:', err);
 				toast.show('Failed to load cloud position.', { error: true });
@@ -281,7 +287,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				fullMove: longFormOut.fullMove,
 			};
 			const editorSaveState: EditorSaveState = {
-				positionname: modal_config.positionname,
+				positionname: modal_config.position_name,
 				timestamp: Date.now(),
 				pieceCount: variantOptions.position.size,
 				variantOptions,
@@ -308,7 +314,7 @@ async function onModalYesButtonPress(): Promise<void> {
 			eactions.load(editorSaveState);
 		}
 	} else if (modal_config.mode === 'overwrite_save') {
-		await esave.save(modal_config.positionname);
+		await esave.save(modal_config.position_name);
 		updateSavedPositionListUI();
 	}
 
@@ -337,7 +343,7 @@ async function onSaveButtonPress(): Promise<void> {
 		// If there is no previous valid EditorAbridgedSaveState, save under positionname
 		await esave.save(positionname);
 		updateSavedPositionListUI();
-	} else openModal('overwrite_save', positionname, saveinfo_key, save_key);
+	} else openModal('overwrite_save', positionname, saveinfo_key, save_key, 'local');
 }
 
 /** Create a button element for one position row, with given SVG href. */
@@ -489,7 +495,7 @@ async function onCloudButtonPress(
 
 		// Convert variantOptions to ICN
 		const longFormatIn: LongFormatIn = {
-			metadata: {} as MetaData, // Empty metadata: the server stores metadata (name, timestamp, etc.) separately
+			metadata: {} as MetaData, // Required for icnconverter
 			position: editorSaveState.variantOptions.position,
 			gameRules: editorSaveState.variantOptions.gameRules,
 			state_global: editorSaveState.variantOptions.state_global,
@@ -637,7 +643,7 @@ async function updateSavedPositionListUI(): Promise<void> {
 	const isLoggedIn = validatorama.areWeLoggedIn();
 
 	// Toggle CSS class to adjust header column widths for cloud button
-	element_savedPositions.classList.toggle('saved-positions--with-cloud', isLoggedIn);
+	element_savedPositions.classList.toggle('with-cloud', isLoggedIn);
 
 	// Fetch cloud saves if logged in
 	const cloudSavesMap = new Map<string, CloudSaveListRecord>();
