@@ -448,12 +448,7 @@ function render(): void {
 
 // Export ---------------------------------------------------------------------------------
 
-export {
-	engineWorldBorderDict,
-	engineDefaultTimeLimitPerMoveMillisDict,
-	engineDisplayNamesDict,
-	getFormattedEngineName,
-};
+export { engineWorldBorderDict, engineDefaultTimeLimitPerMoveMillisDict };
 
 export default {
 	areInEngineGame,
@@ -467,7 +462,6 @@ export default {
 	toggleDebug,
 	render,
 	onViewMove,
-	engineDisplayNamesDict,
 	getFormattedEngineName,
 };
 
