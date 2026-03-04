@@ -30,11 +30,11 @@ interface MetaData {
 	 */
 	TimeControl?: TimeControl;
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
-	Round: '-';
+	Round?: '-';
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
-	UTCDate: string;
+	UTCDate?: string;
 	/** The UTC time the game started, in the format `"HH:MM:SS"` */
-	UTCTime: string;
+	UTCTime?: string;
 	/** If it's not a custom position, this must be one of the valid variants in variant.ts*/
 	Variant?: string;
 	White?: string;
