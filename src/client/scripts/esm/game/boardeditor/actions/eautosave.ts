@@ -3,7 +3,6 @@
 /**
  * This script handles autosaving the board editor position
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
- * It also autosaves when leaving the editor
  */
 
 import eactions from './eactions';
@@ -104,9 +103,6 @@ function startPositionAutosave(): void {
 
 		void autosaveCurrentPositionOnce();
 	}, positionAutosaveIntervalMillis);
-
-	// Save when leaving the page
-	window.addEventListener('beforeunload', onPageUnload);
 }
 
 /** Kill running autosave interval */
@@ -115,14 +111,6 @@ function stopPositionAutosave(): void {
 		clearInterval(positionAutosaveTimer);
 		positionAutosaveTimer = undefined;
 	}
-
-	window.removeEventListener('beforeunload', onPageUnload);
-}
-
-function onPageUnload(): void {
-	// Do a final save when leaving the page
-	positionDirty = true;
-	void autosaveCurrentPositionOnce();
 }
 
 function clearAutosave(): void {
