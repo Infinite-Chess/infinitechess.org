@@ -79,18 +79,6 @@ const engineMaxStrengthLevelDict: { [key in validEngineName]: number } = {
 	hydrochess: 3,
 };
 
-/**
- * Returns a formatted engine name string, optionally including its strength level.
- * If the provided strength level is the maximum for the engine, it is omitted.
- */
-function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
-	const name = engineDisplayNamesDict[engineName];
-	const maxLevel = engineMaxStrengthLevelDict[engineName];
-	return strengthLevel !== undefined && strengthLevel !== maxLevel
-		? `${name} (Level ${strengthLevel})`
-		: name;
-}
-
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -119,6 +107,18 @@ GameBus.addEventListener('game-concluded', () => {
 });
 
 // Functions ------------------------------------------------------------------------
+
+/**
+ * Returns a formatted engine name string, optionally including its strength level.
+ * If the provided strength level is the maximum for the engine, it is omitted.
+ */
+function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
+	const name = engineDisplayNamesDict[engineName];
+	const maxLevel = engineMaxStrengthLevelDict[engineName];
+	return strengthLevel !== undefined && strengthLevel !== maxLevel
+		? `${name} (Level ${strengthLevel})`
+		: name;
+}
 
 function areInEngineGame(): boolean {
 	return inEngineGame;
