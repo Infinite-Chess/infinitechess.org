@@ -55,7 +55,7 @@ import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/enginecards/hydrochess_card';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import {
+import enginegame, {
 	engineDefaultTimeLimitPerMoveMillisDict,
 	engineWorldBorderDict,
 } from '../../misc/enginegame';
@@ -303,6 +303,11 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
+	const formattedEngineName = enginegame.getFormattedEngineName(
+		currentEngine,
+		engineUIConfig.strengthLevel,
+	);
+
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
@@ -312,11 +317,11 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		White:
 			engineUIConfig.youAreColor === p.WHITE
 				? translations.you_indicator
-				: translations.engine_indicator,
+				: formattedEngineName,
 		Black:
 			engineUIConfig.youAreColor === p.BLACK
 				? translations.you_indicator
-				: translations.engine_indicator,
+				: formattedEngineName,
 		UTCDate,
 		UTCTime,
 	};

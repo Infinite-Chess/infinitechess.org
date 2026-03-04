@@ -333,55 +333,55 @@ function gameEnd(conclusion?: GameConclusion): void {
 		const ourRole = gameloader.getOurColor()!;
 
 		if (ourRole === victor) element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.you_checkmate
-                                                                            : condition === 'time' ? resultTranslations.you_time
-                                                                            : condition === 'resignation' ? resultTranslations.you_resignation
-                                                                            : condition === 'disconnect' ? resultTranslations.you_disconnect
-                                                                            : condition === 'royalcapture' ? resultTranslations.you_royalcapture
-                                                                            : condition === 'allroyalscaptured' ? resultTranslations.you_allroyalscaptured
-                                                                            : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
-                                                                            : condition === 'koth' ? resultTranslations.you_koth
-												: resultTranslations.you_generic;
+															 : condition === 'time' ? resultTranslations.you_time
+															 : condition === 'resignation' ? resultTranslations.you_resignation
+															 : condition === 'disconnect' ? resultTranslations.you_disconnect
+															 : condition === 'royalcapture' ? resultTranslations.you_royalcapture
+															 : condition === 'allroyalscaptured' ? resultTranslations.you_allroyalscaptured
+															 : condition === 'allpiecescaptured' ? resultTranslations.you_allpiecescaptured
+															 : condition === 'koth' ? resultTranslations.you_koth
+															 : resultTranslations.you_generic;
 		else if (victor === null) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
-                                                                    : condition === 'repetition' ? resultTranslations.draw_repetition
-                                                                    : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
-                                                                    : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
-                                                                    : condition === 'agreement' ? resultTranslations.draw_agreement
-									: resultTranslations.draw_generic;
+                                                               : condition === 'repetition' ? resultTranslations.draw_repetition
+                                                               : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
+                                                               : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
+                                                               : condition === 'agreement' ? resultTranslations.draw_agreement
+															   : resultTranslations.draw_generic;
 		else if (condition === 'aborted') element_whosturn.textContent = resultTranslations.aborted;
 		else /* loss */ element_whosturn.textContent = condition === 'checkmate' ? resultTranslations.opponent_checkmate
-                                                            : condition === 'time' ? resultTranslations.opponent_time
-                                                            : condition === 'resignation' ? resultTranslations.opponent_resignation
-                                                            : condition === 'disconnect' ? resultTranslations.opponent_disconnect
-                                                            : condition === 'royalcapture' ? resultTranslations.opponent_royalcapture
-                                                            : condition === 'allroyalscaptured' ? resultTranslations.opponent_allroyalscaptured
-                                                            : condition === 'allpiecescaptured' ? resultTranslations.opponent_allpiecescaptured
-                                                            : condition === 'koth' ? resultTranslations.opponent_koth
-												: resultTranslations.opponent_generic;
+                                                     : condition === 'time' ? resultTranslations.opponent_time
+                                                     : condition === 'resignation' ? resultTranslations.opponent_resignation
+                                                     : condition === 'disconnect' ? resultTranslations.opponent_disconnect
+                                                     : condition === 'royalcapture' ? resultTranslations.opponent_royalcapture
+                                                     : condition === 'allroyalscaptured' ? resultTranslations.opponent_allroyalscaptured
+                                                     : condition === 'allpiecescaptured' ? resultTranslations.opponent_allpiecescaptured
+                                                     : condition === 'koth' ? resultTranslations.opponent_koth
+													 : resultTranslations.opponent_generic;
 	} else { // Local game, OR spectating an online game
 		if (condition === 'checkmate') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_checkmate
                                                                     : victor === p.BLACK ? resultTranslations.black_checkmate
-						: `${resultTranslations.bug_generic} Ending: checkmate`;
+																	: `${resultTranslations.bug_generic} Ending: checkmate`;
 		else if (condition === 'time') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_time
                                                                     : victor === p.BLACK ? resultTranslations.black_time
-						: `${resultTranslations.bug_generic} Ending: time`;
+																	: `${resultTranslations.bug_generic} Ending: time`;
 		else if (condition === 'resignation') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_resignation
 																		   : victor === p.BLACK ? resultTranslations.black_resignation
-						: `${resultTranslations.bug_generic} Ending: resignation`;
+																		   : `${resultTranslations.bug_generic} Ending: resignation`;
 		else if (condition === 'disconnect') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_disconnect
-																			: victor === p.BLACK ? resultTranslations.black_disconnect
-						: `${resultTranslations.bug_generic} Ending: disconnect`;
+																		  : victor === p.BLACK ? resultTranslations.black_disconnect
+																		  : `${resultTranslations.bug_generic} Ending: disconnect`;
 		else if (condition === 'royalcapture') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_royalcapture
                                                                             : victor === p.BLACK ? resultTranslations.black_royalcapture
-						: `${resultTranslations.bug_generic} Ending: royalcapture`;
+																			: `${resultTranslations.bug_generic} Ending: royalcapture`;
 		else if (condition === 'allroyalscaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allroyalscaptured
-                                                                                : victor === p.BLACK ? resultTranslations.black_allroyalscaptured
-						: `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
+                                                                                 : victor === p.BLACK ? resultTranslations.black_allroyalscaptured
+																				 : `${resultTranslations.bug_generic} Ending: allroyalscaptured`;
 		else if (condition === 'allpiecescaptured') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_allpiecescaptured
-                                                                                : victor === p.BLACK ? resultTranslations.black_allpiecescaptured
-						: `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
+                                                                                 : victor === p.BLACK ? resultTranslations.black_allpiecescaptured
+																				 : `${resultTranslations.bug_generic} Ending: allpiecescaptured`;
 		else if (condition === 'koth') element_whosturn.textContent = victor === p.WHITE ? resultTranslations.white_koth
                                                                     : victor === p.BLACK ? resultTranslations.black_koth
-						: `${resultTranslations.bug_generic} Ending: koth`;
+																	: `${resultTranslations.bug_generic} Ending: koth`;
 		else if (condition === 'stalemate')
 			element_whosturn.textContent = resultTranslations.draw_stalemate;
 		else if (condition === 'repetition')
