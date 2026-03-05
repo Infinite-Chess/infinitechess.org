@@ -299,7 +299,7 @@ async function downloadCloudPosition(position_name: string): Promise<EditorSaveS
 		toast.show('Failed to load position from the cloud: ' + errMsg, { error: true });
 		return;
 	}
-	return parseCloudPosition(position_name, cloudPosition); // Timestamp is a placeholder; not read by eactions.load()
+	return parseCloudPosition(position_name, cloudPosition);
 }
 
 /**
@@ -553,18 +553,10 @@ async function performCloudUpload(
 
 /** Transfers a local position to the server and removes the local copy. */
 async function transferPositionToCloud(position_name: string): Promise<void> {
-	const save_key = `${esave.EDITOR_SAVE_PREFIX}${position_name}`;
-	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
-	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
-	if (!editorSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorSaveState "${save_key}" in IndexedDB: ${editorSaveStateParsed.error}`,
-		);
-		toast.show('The position data was corrupted.', { error: true });
-		return;
-	}
+	const editorSaveState = await readLocalPosition(position_name);
+	if (editorSaveState === undefined) return;
 
-	const success = await performCloudUpload(position_name, editorSaveStateParsed.data);
+	const success = await performCloudUpload(position_name, editorSaveState);
 	if (!success) return;
 
 	// Success! Delete local copy now.
