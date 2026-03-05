@@ -441,8 +441,8 @@ function callback_Action(e: Event): void {
 			return;
 		}
 		case 'save-position': {
-			const active_positionname = boardeditor.getActivePositionName();
-			if (active_positionname === undefined) {
+			const active_position_name = boardeditor.getActivePositionName();
+			if (active_position_name === undefined) {
 				// If there is no active position name, treat this the same way as "Save as" if that window is not open
 				const wasOpen = guiloadposition.getMode() !== 'save-as';
 				if (wasOpen) {
@@ -451,7 +451,7 @@ function callback_Action(e: Event): void {
 				}
 			} else {
 				// If there is an active position name, simply overwrite save
-				esave.save(active_positionname);
+				esave.save(active_position_name);
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)

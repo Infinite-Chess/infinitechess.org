@@ -11,6 +11,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { StorageType } from '../gui/boardeditor/guiloadposition.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
@@ -88,11 +89,8 @@ let initial_pawnDoublePush: boolean | undefined = true;
 /** The value of the castling game rule in the initial zeroth edit */
 let initial_castling: boolean | undefined = true;
 
-/** Name of active position, as displayed on editor bar and used for "Save" button by default */
-let active_positionname: string | undefined = undefined;
-
-/** Whether the active position is stored locally or on the cloud */
-let active_positionname_storage_type: 'local' | 'cloud' | undefined = undefined;
+/** The active position, if any, as displayed on editor bar and used for "Save" button by default */
+let active_position: { name: string; storage_type: StorageType } | undefined = undefined;
 
 // Initialization ------------------------------------------------------------------------
 
@@ -459,20 +457,20 @@ function stealPointer(pointerIdToSteal: string): void {
 }
 
 function getActivePositionName(): string | undefined {
-	return active_positionname;
+	return active_position?.name;
 }
 
 function getActivePositionStorageType(): 'local' | 'cloud' | undefined {
-	return active_positionname_storage_type;
+	return active_position?.storage_type;
 }
 
 function setActivePositionName(
-	positionname: string | undefined,
+	position_name: string | undefined,
 	storage_type: 'local' | 'cloud' = 'local',
 ): void {
-	active_positionname = positionname;
-	active_positionname_storage_type = positionname !== undefined ? storage_type : undefined;
-	guiboardeditor.updateActivePositionElement(positionname);
+	active_position =
+		position_name !== undefined ? { name: position_name, storage_type } : undefined;
+	guiboardeditor.updateActivePositionElement(position_name);
 }
 
 // Rendering ------------------------------------------------------------------

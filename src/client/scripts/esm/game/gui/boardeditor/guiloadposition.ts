@@ -40,7 +40,7 @@ type ButtonHandlerPair = {
 type ModalMode = 'load' | 'delete' | 'overwrite_save';
 
 /** Whether a position is stored locally (IndexedDB) or on the server */
-type StorageType = 'local' | 'cloud';
+export type StorageType = 'local' | 'cloud';
 
 /** A unified save entry for display, regardless of whether it's stored locally or on the cloud */
 type UnifiedSave = { storage_type: StorageType } & EditorAbridgedSaveState;
