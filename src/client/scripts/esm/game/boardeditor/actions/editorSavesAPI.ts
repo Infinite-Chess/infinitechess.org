@@ -17,6 +17,7 @@ export interface CloudSaveListRecord {
 
 /** Full position info returned by getPosition */
 export interface CloudPositionRecord {
+	timestamp: number;
 	icn: string;
 	pawn_double_push: boolean;
 	castling: boolean;

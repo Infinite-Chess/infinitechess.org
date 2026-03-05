@@ -251,19 +251,13 @@ async function deleteCloudPosition(position_name: string): Promise<void> {
 }
 
 /**
- * Downloads a position from the server.
- * @returns An EditorSaveState on success, undefined on failure.
+ * Parses a CloudPositionRecord into an EditorSaveState.
+ * @returns An EditorSaveState on success, undefined if ICN parsing fails.
  */
-async function downloadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
-	let cloudPosition: CloudPositionRecord;
-	try {
-		cloudPosition = await editorSavesAPI.getPosition(position_name);
-	} catch (err) {
-		console.error('Failed to load cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to load position from the cloud: ' + errMsg, { error: true });
-		return;
-	}
+function parseCloudPosition(
+	position_name: string,
+	cloudPosition: CloudPositionRecord,
+): EditorSaveState | undefined {
 	let longFormOut;
 	try {
 		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
@@ -283,12 +277,29 @@ async function downloadCloudPosition(position_name: string): Promise<EditorSaveS
 	};
 	return {
 		position_name,
-		timestamp: Date.now(), // Placeholder timestamp which isn't read by eactions.load()
+		timestamp: cloudPosition.timestamp,
 		piece_count: variantOptions.position.size,
 		variantOptions,
 		pawnDoublePush: cloudPosition.pawn_double_push,
 		castling: cloudPosition.castling,
 	};
+}
+
+/**
+ * Downloads a position from the server.
+ * @returns An EditorSaveState on success, undefined on failure.
+ */
+async function downloadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
+	let cloudPosition: CloudPositionRecord;
+	try {
+		cloudPosition = await editorSavesAPI.getPosition(position_name);
+	} catch (err) {
+		console.error('Failed to load cloud position:', err);
+		const errMsg = err instanceof Error ? err.message : String(err);
+		toast.show('Failed to load position from the cloud: ' + errMsg, { error: true });
+		return;
+	}
+	return parseCloudPosition(position_name, cloudPosition); // Timestamp is a placeholder; not read by eactions.load()
 }
 
 /**
@@ -467,7 +478,7 @@ function generateRowForSavedPositionsElement(
 			cloudBtn.classList.add('local');
 		}
 		registerButtonClick(cloudBtn, () =>
-			onCloudButtonPress(position_name, save.storage_type, timestamp, cloudBtn),
+			onCloudButtonPress(position_name, save.storage_type, cloudBtn),
 		);
 		row.appendChild(cloudBtn);
 	}
@@ -589,7 +600,7 @@ async function uploadCurrentPositionToCloud(position_name: string): Promise<void
  * Downloads a cloud position to local storage and removes it from the server.
  * @returns Whether the operation succeeded.
  */
-async function removePositionFromCloud(position_name: string, timestamp: number): Promise<void> {
+async function removePositionFromCloud(position_name: string): Promise<void> {
 	let cloudPosition;
 	try {
 		cloudPosition = await editorSavesAPI.getPosition(position_name);
@@ -600,14 +611,8 @@ async function removePositionFromCloud(position_name: string, timestamp: number)
 		return;
 	}
 
-	let longFormOut;
-	try {
-		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
-	} catch (err) {
-		console.error('Failed to parse cloud position ICN:', err);
-		toast.show('The cloud position was corrupted.', { error: true });
-		return;
-	}
+	const editorSaveState = parseCloudPosition(position_name, cloudPosition);
+	if (editorSaveState === undefined) return;
 
 	// Delete from server
 	try {
@@ -620,23 +625,7 @@ async function removePositionFromCloud(position_name: string, timestamp: number)
 	}
 
 	// Success! Save locally now.
-	const variantOptions: VariantOptions = {
-		position: longFormOut.position ?? new Map(),
-		gameRules: longFormOut.gameRules,
-		state_global: {
-			...longFormOut.state_global,
-			specialRights: longFormOut.state_global.specialRights ?? new Set(),
-		},
-		fullMove: longFormOut.fullMove,
-	};
-	await esave.saveState({
-		position_name,
-		timestamp,
-		piece_count: variantOptions.position.size,
-		variantOptions,
-		pawnDoublePush: cloudPosition.pawn_double_push,
-		castling: cloudPosition.castling,
-	});
+	await esave.saveState(editorSaveState);
 
 	if (boardeditor.getActivePositionName() === position_name)
 		boardeditor.setActivePositionName(position_name, 'local');
@@ -652,7 +641,6 @@ async function removePositionFromCloud(position_name: string, timestamp: number)
 async function onCloudButtonPress(
 	position_name: string,
 	storage_type: StorageType,
-	timestamp: number,
 	cloudBtn: HTMLButtonElement,
 ): Promise<void> {
 	// Disable cloud button to prevent multiple clicks while operation is in-flight
@@ -661,7 +649,7 @@ async function onCloudButtonPress(
 	if (storage_type === 'local') {
 		await transferPositionToCloud(position_name);
 	} else {
-		await removePositionFromCloud(position_name, timestamp);
+		await removePositionFromCloud(position_name);
 	}
 
 	// Re-enable cloud button and refresh UI
