@@ -376,9 +376,8 @@ async function onSaveButtonPress(): Promise<void> {
 		return;
 	}
 
+	// Else if a local save already exists, ask to overwrite it locally
 	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
-
-	// If a local save already exists, ask to overwrite it locally
 	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
 	const previous_saveinfoParsed =
 		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
