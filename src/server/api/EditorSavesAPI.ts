@@ -39,7 +39,7 @@ const SavePositionBodySchema = z.strictObject({
 		),
 	pawn_double_push: z.boolean(),
 	castling: z.boolean(),
-	compression: z.enum(['none', 'deflate-raw']).optional().default('none'),
+	compression: z.enum(['none', 'deflate-raw', 'deflate-raw-dict']).optional().default('none'),
 });
 
 /** Schema for validating position_name in URL params */

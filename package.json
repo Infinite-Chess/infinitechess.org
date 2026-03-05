@@ -20,6 +20,7 @@
     "ejs": "^3.1.10",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
+    "fflate": "^0.8.2",
     "helmet": "^8.1.0",
     "i18next": "^23.12.1",
     "i18next-http-middleware": "^3.6.0",
