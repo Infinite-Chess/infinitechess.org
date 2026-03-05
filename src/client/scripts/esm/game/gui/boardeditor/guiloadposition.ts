@@ -367,6 +367,15 @@ async function onSaveButtonPress(): Promise<void> {
 		);
 		return;
 	}
+	// If the active position is a cloud save with this name, ask to overwrite it on the cloud
+	if (
+		boardeditor.getActivePositionName() === positionname &&
+		boardeditor.getActivePositionStorageType() === 'cloud'
+	) {
+		openModal('overwrite_save', positionname, 'cloud');
+		return;
+	}
+
 	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
 
 	// If a local save already exists, ask to overwrite it locally
@@ -375,16 +384,6 @@ async function onSaveButtonPress(): Promise<void> {
 		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
 	if (previous_saveinfoParsed.success) {
 		openModal('overwrite_save', positionname, 'local');
-		return;
-	}
-
-	// If the active position is a cloud save with this name, ask to overwrite it on the cloud
-	if (
-		validatorama.areWeLoggedIn() &&
-		boardeditor.getActivePositionName() === positionname &&
-		boardeditor.getActivePositionStorageType() === 'cloud'
-	) {
-		openModal('overwrite_save', positionname, 'cloud');
 		return;
 	}
 
