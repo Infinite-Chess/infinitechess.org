@@ -62,10 +62,7 @@ function parseCloudPosition(
  * Does NOT modify local storage or the active position state.
  * @returns Whether the upload succeeded (errors are toasted internally).
  */
-async function saveCloudState(
-	position_name: string,
-	editorSaveState: EditorSaveState,
-): Promise<boolean> {
+async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean> {
 	// Convert variantOptions to ICN
 	const longFormatIn: LongFormatIn = {
 		metadata: {} as MetaData, // Empty metadata object required by ICN converter
@@ -92,7 +89,7 @@ async function saveCloudState(
 
 	try {
 		await editorSavesAPI.savePosition(
-			position_name,
+			editorSaveState.position_name!,
 			editorSaveState.piece_count,
 			editorSaveState.timestamp,
 			icn,
@@ -130,7 +127,7 @@ async function saveCloud(position_name: string): Promise<void> {
 		castling,
 	};
 
-	await saveCloudState(position_name, editorSaveState);
+	await saveCloudState(editorSaveState);
 }
 
 /**
@@ -166,13 +163,16 @@ async function transferPositionToCloud(position_name: string): Promise<void> {
 	const editorSaveState = await esave.readLocal(position_name);
 	if (editorSaveState === undefined) return;
 
-	const success = await saveCloudState(position_name, editorSaveState);
+	const success = await saveCloudState(editorSaveState);
 	if (!success) return;
 
 	// Success! Delete local copy now.
 	await esave.deleteLocal(position_name);
 
-	if (boardeditor.getActivePositionName() === position_name)
+	if (
+		boardeditor.getActivePositionName() === position_name &&
+		boardeditor.getActivePositionStorageType() === 'local'
+	)
 		boardeditor.setActivePositionName(position_name, 'cloud');
 }
 
@@ -180,17 +180,7 @@ async function transferPositionToCloud(position_name: string): Promise<void> {
  * Downloads a cloud position to local storage and removes it from the server.
  */
 async function removePositionFromCloud(position_name: string): Promise<void> {
-	let cloudPosition;
-	try {
-		cloudPosition = await editorSavesAPI.getPosition(position_name);
-	} catch (err) {
-		console.error('Failed to download cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to download cloud position: ' + errMsg, { error: true });
-		return;
-	}
-
-	const editorSaveState = parseCloudPosition(position_name, cloudPosition);
+	const editorSaveState = await readCloud(position_name);
 	if (editorSaveState === undefined) return;
 
 	// Delete from server
@@ -206,7 +196,10 @@ async function removePositionFromCloud(position_name: string): Promise<void> {
 	// Success! Save locally now.
 	await esave.saveState(editorSaveState);
 
-	if (boardeditor.getActivePositionName() === position_name)
+	if (
+		boardeditor.getActivePositionName() === position_name &&
+		boardeditor.getActivePositionStorageType() === 'cloud'
+	)
 		boardeditor.setActivePositionName(position_name, 'local');
 
 	toast.show('Position saved locally.');

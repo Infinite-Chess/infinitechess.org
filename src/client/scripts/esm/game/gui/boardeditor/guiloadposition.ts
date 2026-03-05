@@ -235,7 +235,10 @@ async function onModalYesButtonPress(): Promise<void> {
 			await esave.deleteLocal(position_name);
 		}
 		// Clear active position name if the deleted position was active
-		if (boardeditor.getActivePositionName() === position_name)
+		if (
+			boardeditor.getActivePositionName() === position_name &&
+			boardeditor.getActivePositionStorageType() === storage_type
+		)
 			boardeditor.setActivePositionName(undefined);
 		updateSavedPositionListUI();
 	} else if (mode === 'load') {
