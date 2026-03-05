@@ -153,6 +153,7 @@ function openSavePositionAs(): void {
 	floatingWindow.open();
 	mode = 'save-as';
 	initSavePositionUIListeners();
+	element_saveAsPositionName.focus();
 }
 
 function onClose(resetPositioning = false): void {
