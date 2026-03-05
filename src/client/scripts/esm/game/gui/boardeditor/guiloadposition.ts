@@ -6,7 +6,7 @@
 
 import type { StorageType } from '../../boardeditor/boardeditor';
 import type { CloudSaveListRecord } from '../../boardeditor/actions/editorSavesAPI';
-import type { EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
+import type { EditorAbridgedSaveState } from '../../boardeditor/editortypes';
 
 import editorutil from '../../../../../../shared/editor/editorutil';
 
@@ -235,11 +235,8 @@ async function onModalYesButtonPress(): Promise<void> {
 			await esave.deleteLocal(position_name);
 		}
 		// Clear active position name if the deleted position was active
-		if (
-			boardeditor.getActivePositionName() === position_name &&
-			boardeditor.getActivePositionStorageType() === storage_type
-		)
-			boardeditor.setActivePositionName(undefined);
+		if (boardeditor.isActivePosition(position_name, storage_type))
+			boardeditor.clearActivePosition();
 		updateSavedPositionListUI();
 	} else if (mode === 'load') {
 		// Load position
@@ -249,9 +246,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				: await esave.readLocal(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
-			await eactions.load(editorSaveState);
-			if (storage_type === 'cloud')
-				boardeditor.setActivePositionName(editorSaveState.position_name, 'cloud');
+			await eactions.load(editorSaveState, storage_type);
 		}
 	} else if (mode === 'overwrite_save') {
 		await esave.saveLocal(position_name);
@@ -386,10 +381,7 @@ function generateRowForSavedPositionsElement(
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
-	if (
-		boardeditor.getActivePositionName() === position_name &&
-		boardeditor.getActivePositionStorageType() === save.storage_type
-	)
+	if (boardeditor.isActivePosition(position_name, save.storage_type))
 		row.classList.add('active-position');
 
 	return row;

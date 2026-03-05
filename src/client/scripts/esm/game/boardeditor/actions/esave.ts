@@ -4,31 +4,14 @@
  * Handles the saving of positions in boardeditor
  */
 
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
-
-import * as z from 'zod';
+import type { EditorAbridgedSaveState, EditorSaveState } from '../editortypes';
 
 import toast from '../../gui/toast';
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
+import editortypes from '../editortypes';
 import boardeditor from '../boardeditor';
-
-// Types ------------------------------------------------------------------
-
-/** Minimal information about a saved position */
-interface EditorAbridgedSaveState {
-	position_name?: string;
-	timestamp: number;
-	piece_count: number;
-}
-
-/** Complete information about a saved position */
-interface EditorSaveState extends EditorAbridgedSaveState {
-	variantOptions: VariantOptions;
-	pawnDoublePush?: boolean;
-	castling?: boolean;
-}
 
 // Constants ----------------------------------------------------------------------
 
@@ -37,25 +20,6 @@ const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
 
 /** Prefix for editor saveinfo in local storage */
 const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
-
-// Zod Schemas --------------------------------------------------------------------
-
-/** Schema for validating an EditorAbridgedSaveState */
-const EditorAbridgedSaveStateSchema = z.strictObject({
-	position_name: z.string().min(1, 'Position name is required').optional(),
-	timestamp: z.number(),
-	piece_count: z.number().int('Piece count must be an integer'),
-});
-
-/** Schema for validating an EditorSaveState */
-const EditorSaveStateSchema = EditorAbridgedSaveStateSchema.extend({
-	variantOptions: z
-		.object()
-		.loose()
-		.transform((v) => v as unknown as VariantOptions), // Workaround, for lack of VariantOptions schema
-	pawnDoublePush: z.boolean().optional(),
-	castling: z.boolean().optional(),
-});
 
 // Variables --------------------------------------------------------------------
 
@@ -104,14 +68,14 @@ async function saveLocal(position_name: string): Promise<void> {
 			positionSavePending = false;
 			await saveLocal(position_name);
 		} else {
-			boardeditor.setActivePositionName(position_name);
-			toast.show('Position successfully saved in browser.');
+			boardeditor.setActivePosition(position_name, 'local');
+			toast.show('Position saved in browser.');
 		}
 	}
 }
 
 /**
- * Persists a fully constructed EditorSaveState to IndexedDB.
+ * Persists a fully constructed SaveState to IndexedDB.
  * Writes both the full save (for loading) and the abridged save (for display).
  */
 async function saveState(editorSaveState: EditorSaveState): Promise<void> {
@@ -140,7 +104,7 @@ async function deleteLocal(position_name: string): Promise<void> {
 async function localSaveExists(position_name: string): Promise<boolean> {
 	const saveinfo_key = `${EDITOR_SAVEINFO_PREFIX}${position_name}`;
 	const raw = await IndexedDB.loadItem(saveinfo_key);
-	return EditorAbridgedSaveStateSchema.safeParse(raw).success;
+	return editortypes.AbridgedSaveStateSchema.safeParse(raw).success;
 }
 
 /**
@@ -154,11 +118,9 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 	const results = await Promise.all(
 		saveinfo_keys.map(async (key) => {
 			const raw = await IndexedDB.loadItem(key);
-			const parsed = EditorAbridgedSaveStateSchema.safeParse(raw);
+			const parsed = editortypes.AbridgedSaveStateSchema.safeParse(raw);
 			if (!parsed.success) {
-				console.error(
-					`Invalid EditorAbridgedSaveState "${key}" in IndexedDB: ${parsed.error}`,
-				);
+				console.error(`Invalid AbridgedSaveState "${key}" in IndexedDB: ${parsed.error}`);
 				return undefined;
 			}
 			return parsed.data;
@@ -174,7 +136,7 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
 	const save_key = `${EDITOR_SAVE_PREFIX}${position_name}`;
 	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
-	const editorSaveStateParsed = EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+	const editorSaveStateParsed = editortypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
 		console.error(
 			`Invalid EditorSaveState ${save_key} in IndexedDB ${editorSaveStateParsed.error}`,
@@ -188,8 +150,6 @@ async function readLocal(position_name: string): Promise<EditorSaveState | undef
 // Exports --------------------------------------------------------------------
 
 export default {
-	EditorSaveStateSchema,
-
 	saveLocal,
 	saveState,
 	deleteLocal,
@@ -197,5 +157,3 @@ export default {
 	localSaveExists,
 	getAllLocalSaveInfos,
 };
-
-export type { EditorAbridgedSaveState, EditorSaveState };

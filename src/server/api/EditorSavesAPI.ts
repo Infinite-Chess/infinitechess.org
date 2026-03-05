@@ -187,6 +187,7 @@ function getPosition(req: Request, res: Response): void {
 		}
 
 		res.json({
+			timestamp: position.timestamp,
 			icn: position.icn,
 			pawn_double_push: Boolean(position.pawn_double_push),
 			castling: Boolean(position.castling),

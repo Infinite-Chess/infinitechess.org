@@ -34,30 +34,13 @@ import gameloader from '../chess/gameloader.js';
 import drawingtool from './tools/drawingtool.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
+import editortypes from './editortypes.js';
 import movesequence from '../chess/movesequence.js';
 import guinavigation from '../gui/guinavigation.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import stransformations from './tools/selection/stransformations.js';
 import { listener_document } from '../chess/game.js';
-
-// Types ------------------------------------------------------------------------
-
-type Tool = (typeof validTools)[number];
-
-/** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
-export type StorageType = 'local' | 'cloud';
-
-/**
- * An edit that also keeps track of the state of certain position dependent game rules AFTER the edit is made.
- * Used exclusively for game history purposes.
- */
-interface EditWithRules extends Edit {
-	/** The state of the pawn double push gamerules checkbox AFTER this edit was made. */
-	pawnDoublePush?: boolean;
-	/** The state of the castling gamerules checkbox AFTER this edit was made. */
-	castling?: boolean;
-}
 
 // Constants --------------------------------------------------------------------
 
@@ -73,6 +56,27 @@ const validTools = ['normal', 'placer', 'eraser', 'specialrights', 'selection-to
  * I guess maybe a max of 8 million could be safe on most machines?
  */
 const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
+
+// Types ------------------------------------------------------------------------
+
+type Tool = (typeof validTools)[number];
+
+/** The active position loaded in the board editor, if any. */
+export type ActivePosition = { name: string; storage_type: StorageType };
+
+/** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
+export type StorageType = (typeof editortypes)['STORAGE_TYPES'][number];
+
+/**
+ * An edit that also keeps track of the state of certain position dependent game rules AFTER the edit is made.
+ * Used exclusively for game history purposes.
+ */
+interface EditWithRules extends Edit {
+	/** The state of the pawn double push gamerules checkbox AFTER this edit was made. */
+	pawnDoublePush?: boolean;
+	/** The state of the castling gamerules checkbox AFTER this edit was made. */
+	castling?: boolean;
+}
 
 // State -------------------------------------------------------------------------
 
@@ -92,7 +96,7 @@ let initial_pawnDoublePush: boolean | undefined = true;
 let initial_castling: boolean | undefined = true;
 
 /** The active position, if any, as displayed on editor bar and used for "Save" button by default */
-let active_position: { name: string; storage_type: StorageType } | undefined = undefined;
+let active_position: ActivePosition | undefined = undefined;
 
 // Initialization ------------------------------------------------------------------------
 
@@ -458,21 +462,27 @@ function stealPointer(pointerIdToSteal: string): void {
 		drawingtool.stealPointer(pointerIdToSteal);
 }
 
-function getActivePositionName(): string | undefined {
-	return active_position?.name;
+function getActivePosition(): ActivePosition | undefined {
+	return active_position;
 }
 
-function getActivePositionStorageType(): 'local' | 'cloud' | undefined {
-	return active_position?.storage_type;
+/** Returns true if the provided position name and storage type match the current active position. */
+function isActivePosition(name: string, storage_type: StorageType): boolean {
+	return (
+		active_position !== undefined &&
+		active_position.name === name &&
+		active_position.storage_type === storage_type
+	);
 }
 
-function setActivePositionName(
-	position_name: string | undefined,
-	storage_type: 'local' | 'cloud' = 'local',
-): void {
-	active_position =
-		position_name !== undefined ? { name: position_name, storage_type } : undefined;
-	guiboardeditor.updateActivePositionElement(position_name);
+function setActivePosition(name: string, storage_type: StorageType): void {
+	active_position = { name, storage_type };
+	guiboardeditor.updateActivePositionElement(name);
+}
+
+function clearActivePosition(): void {
+	active_position = undefined;
+	guiboardeditor.updateActivePositionElement(undefined);
 }
 
 // Rendering ------------------------------------------------------------------
@@ -513,9 +523,10 @@ export default {
 	canRedo,
 	isLeftMouseReserved,
 	stealPointer,
-	getActivePositionName,
-	getActivePositionStorageType,
-	setActivePositionName,
+	getActivePosition,
+	isActivePosition,
+	setActivePosition,
+	clearActivePosition,
 	// Rendering
 	render,
 };

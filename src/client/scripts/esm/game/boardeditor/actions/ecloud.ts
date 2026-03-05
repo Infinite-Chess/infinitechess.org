@@ -8,7 +8,7 @@
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
-import type { EditorSaveState } from './esave';
+import type { EditorSaveState } from '../editortypes';
 import type { CloudPositionRecord } from './editorSavesAPI';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
@@ -89,7 +89,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean
 
 	try {
 		await editorSavesAPI.savePosition(
-			editorSaveState.position_name!,
+			editorSaveState.position_name,
 			editorSaveState.piece_count,
 			editorSaveState.timestamp,
 			icn,
@@ -169,11 +169,8 @@ async function transferPositionToCloud(position_name: string): Promise<void> {
 	// Success! Delete local copy now.
 	await esave.deleteLocal(position_name);
 
-	if (
-		boardeditor.getActivePositionName() === position_name &&
-		boardeditor.getActivePositionStorageType() === 'local'
-	)
-		boardeditor.setActivePositionName(position_name, 'cloud');
+	if (boardeditor.isActivePosition(position_name, 'local'))
+		boardeditor.setActivePosition(position_name, 'cloud');
 }
 
 /**
@@ -196,11 +193,8 @@ async function removePositionFromCloud(position_name: string): Promise<void> {
 	// Success! Save locally now.
 	await esave.saveState(editorSaveState);
 
-	if (
-		boardeditor.getActivePositionName() === position_name &&
-		boardeditor.getActivePositionStorageType() === 'cloud'
-	)
-		boardeditor.setActivePositionName(position_name, 'local');
+	if (boardeditor.isActivePosition(position_name, 'cloud'))
+		boardeditor.setActivePosition(position_name, 'local');
 
 	toast.show('Position saved locally.');
 }

@@ -5,10 +5,14 @@
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
  */
 
+import type { EditorAutosaveState } from '../editortypes';
+
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
+
+export type { EditorAutosaveState };
 
 // Constants -------------------------------------------------------------
 
@@ -58,18 +62,15 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const position_name = boardeditor.getActivePositionName();
-		const timestamp = Date.now();
-		const piece_count = variantOptions.position.size;
 
 		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
-			position_name,
-			timestamp,
-			piece_count,
+			active_position: boardeditor.getActivePosition(),
+			timestamp: Date.now(),
+			piece_count: variantOptions.position.size,
 			variantOptions,
 			pawnDoublePush,
 			castling,
-		});
+		} satisfies EditorAutosaveState);
 
 		positionDirty = false;
 	} catch (err) {
