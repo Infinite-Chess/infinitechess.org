@@ -288,9 +288,9 @@ function onSaveKeyDown(e: KeyboardEvent): void {
 async function onSaveButtonPress(): Promise<void> {
 	const positionname = element_saveAsPositionName.value;
 	if (positionname === '') return;
-	if (positionname.length > editorutil.POSITION_NAME_MAX_LENGTH) {
+	if (positionname.length > editorutil.MAX_POSITION_NAME_LENGTH) {
 		console.error(
-			`This should not happen, position name input box is restricted to ${editorutil.POSITION_NAME_MAX_LENGTH} chars, you submitted ${positionname.length} chars.`,
+			`This should not happen, position name input box is restricted to ${editorutil.MAX_POSITION_NAME_LENGTH} chars, you submitted ${positionname.length} chars.`,
 		);
 		return;
 	}

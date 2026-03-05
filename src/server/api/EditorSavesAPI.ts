@@ -22,8 +22,8 @@ const SavePositionBodySchema = z.strictObject({
 		.string()
 		.min(1, 'Name is required')
 		.max(
-			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+			editorutil.MAX_POSITION_NAME_LENGTH,
+			`Name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 	piece_count: z
 		.number()
@@ -48,8 +48,8 @@ const PositionNameParamSchema = z.strictObject({
 		.string()
 		.min(1, 'Position name is required')
 		.max(
-			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Position name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+			editorutil.MAX_POSITION_NAME_LENGTH,
+			`Position name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 });
 

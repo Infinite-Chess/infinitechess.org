@@ -152,7 +152,7 @@ describe('EditorSavesAPI Integration', () => {
 
 		it('should return 400 if name exceeds max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const longName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH + 1);
+			const longName = 'a'.repeat(editorutil.MAX_POSITION_NAME_LENGTH + 1);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -544,7 +544,7 @@ describe('EditorSavesAPI Integration', () => {
 		it('should handle name at max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
-			const maxLengthName = 'a'.repeat(editorutil.POSITION_NAME_MAX_LENGTH);
+			const maxLengthName = 'a'.repeat(editorutil.MAX_POSITION_NAME_LENGTH);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
