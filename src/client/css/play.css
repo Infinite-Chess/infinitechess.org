@@ -1805,6 +1805,25 @@ svg.collapse {
 	opacity: 0.35;
 }
 
+/* Fixed-position tooltip for buttons in the saved-positions list.
+ * Uses position:fixed so it overflows the scroll/overflow containers that would otherwise clip it. */
+.saved-position-btn-tooltip {
+	position: fixed;
+	background-color: black;
+	color: rgb(236, 236, 236);
+	text-align: center;
+	border-radius: 6px;
+	font-size: 12px;
+	width: max-content;
+	max-width: 150px;
+	padding: 5px;
+	pointer-events: none;
+	z-index: 10000;
+	word-wrap: break-word;
+	word-break: break-word;
+	white-space: normal;
+}
+
 /* The overlay covers ONLY the load-position-UI */
 .load-position-modal-overlay {
 	position: absolute;

@@ -99,6 +99,57 @@ let modal_config: ModalConfig | undefined = undefined;
 /** Count of in-flight API requests — spinner is visible whenever this is > 0 */
 let activeRequestCount = 0;
 
+// Fixed-position tooltips for position list buttons -----------------
+
+/** Delay before showing a tooltip, matching the main tooltip system (see tooltips.ts). */
+const POSITION_BTN_TOOLTIP_DELAY_MS = 500;
+
+/** The currently visible fixed tooltip element, if any. */
+let activePositionTooltip: HTMLDivElement | null = null;
+
+/** Timer handle for a pending tooltip appearance. */
+let positionTooltipTimeout: ReturnType<typeof setTimeout> | undefined;
+
+/** Removes the currently visible tooltip and cancels any pending one. */
+function removeActivePositionTooltip(): void {
+	clearTimeout(positionTooltipTimeout);
+	positionTooltipTimeout = undefined;
+	activePositionTooltip?.remove();
+	activePositionTooltip = null;
+}
+
+/**
+ * Attaches a fixed-position tooltip to a button so it is never clipped
+ * by overflow containers. The tooltip is appended to document.body and
+ * positioned above the button using getBoundingClientRect().
+ * Only activates on pointer-fine (mouse) devices, matching the existing tooltip system.
+ */
+function attachFixedTooltip(button: HTMLButtonElement, text: string): void {
+	if (!window.matchMedia('(pointer: fine)').matches) return;
+
+	button.addEventListener('mouseenter', () => {
+		positionTooltipTimeout = setTimeout(() => {
+			removeActivePositionTooltip();
+
+			const tip = document.createElement('div');
+			tip.className = 'saved-position-btn-tooltip';
+			tip.textContent = text;
+			document.body.appendChild(tip);
+			activePositionTooltip = tip;
+
+			// Position centered above the button, clamped to the viewport width
+			const rect = button.getBoundingClientRect();
+			const tipRect = tip.getBoundingClientRect();
+			const left = rect.left + rect.width / 2 - tipRect.width / 2;
+			tip.style.left = `${Math.max(0, Math.min(left, window.innerWidth - tipRect.width))}px`;
+			tip.style.top = `${Math.max(0, rect.top - tipRect.height - 8)}px`;
+		}, POSITION_BTN_TOOLTIP_DELAY_MS);
+	});
+
+	button.addEventListener('mouseleave', removeActivePositionTooltip);
+	button.addEventListener('mousedown', removeActivePositionTooltip);
+}
+
 // Loading animation -----------------------------------------------
 
 /** Runs an async API call while showing the loading spinner, hiding it when done. */
@@ -158,6 +209,7 @@ function openSavePositionAs(): void {
 function onClose(resetPositioning = false): void {
 	if (resetPositioning) floatingWindow.resetPositioning();
 	closeModal();
+	removeActivePositionTooltip();
 	element_loadbutton.classList.remove('active');
 	element_saveasbutton.classList.remove('active');
 	mode = undefined;
@@ -382,8 +434,7 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	loadBtn.classList.add('tooltip-u');
-	loadBtn.dataset['tooltip'] = 'Load position';
+	attachFixedTooltip(loadBtn, 'Load position');
 	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
 	row.appendChild(loadBtn);
 
@@ -391,13 +442,12 @@ function generateRowForSavedPositionsElement(
 	if (showCloudButton) {
 		const cloudBtn = createButtonElement('#svg-cloud-save');
 		cloudBtn.classList.add('cloud-save');
-		cloudBtn.classList.add('tooltip-u');
 		if (save.storage_type === 'local') {
 			// Local save: greyed-out cloud button (not yet on cloud)
 			cloudBtn.classList.add('local');
-			cloudBtn.dataset['tooltip'] = 'Save to cloud';
+			attachFixedTooltip(cloudBtn, 'Save to cloud');
 		} else {
-			cloudBtn.dataset['tooltip'] = 'Remove from cloud';
+			attachFixedTooltip(cloudBtn, 'Remove from cloud');
 		}
 		registerButtonClick(cloudBtn, () =>
 			onCloudButtonPress(position_name, save.storage_type, cloudBtn),
@@ -407,8 +457,7 @@ function generateRowForSavedPositionsElement(
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
-	deleteBtn.classList.add('tooltip-u');
-	deleteBtn.dataset['tooltip'] = 'Delete position';
+	attachFixedTooltip(deleteBtn, 'Delete position');
 	registerButtonClick(deleteBtn, () => openModal('delete', position_name, save.storage_type));
 	row.appendChild(deleteBtn);
 
@@ -492,11 +541,15 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 
 	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
 	unregisterAllPositionButtonListeners();
+	removeActivePositionTooltip();
 	// Toggle CSS class to adjust header column widths for cloud button
 	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
 	element_savedPositionsToLoad.replaceChildren(...newRows);
 }
+
+// Dismiss any pending fixed tooltip when the list scrolls (its position would be stale)
+element_savedPositionsToLoad.addEventListener('scroll', removeActivePositionTooltip);
 
 // Exports -----------------------------------------------------------------
 
