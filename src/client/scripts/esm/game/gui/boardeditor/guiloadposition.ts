@@ -22,7 +22,6 @@ import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
 import guipause from '../guipause';
 import IndexedDB from '../../../util/IndexedDB';
-import egamerules from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
@@ -337,11 +336,14 @@ async function onModalYesButtonPress(): Promise<void> {
 				: await readLocalPosition(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
-			eactions.load(editorSaveState);
+			await eactions.load(editorSaveState);
+			if (storage_type === 'cloud')
+				boardeditor.setActivePositionName(editorSaveState.position_name, 'cloud');
 		}
 	} else if (mode === 'overwrite_save') {
 		if (storage_type === 'cloud') {
-			await saveCurrentPositionToCloud(position_name);
+			await esave.save(position_name);
+			await uploadPositionToCloud(position_name);
 		} else {
 			await esave.save(position_name);
 		}
@@ -376,21 +378,14 @@ async function onSaveButtonPress(): Promise<void> {
 		return;
 	}
 
-	// If a cloud save already exists, ask to overwrite it on the cloud
-	if (validatorama.areWeLoggedIn()) {
-		let cloudSaves: CloudSaveListRecord[] = [];
-		try {
-			cloudSaves = await editorSavesAPI.getSavedPositions();
-		} catch (err) {
-			// If we can't reach the server, fall through to local save
-			console.error('Failed to check cloud saves:', err);
-			const errMsg = err instanceof Error ? err.message : String(err);
-			toast.show('Could not check cloud saves — saving locally: ' + errMsg, { error: true });
-		}
-		if (cloudSaves.some((s) => s.name === positionname)) {
-			openModal('overwrite_save', positionname, 'cloud');
-			return;
-		}
+	// If the active position is a cloud save with this name, ask to overwrite it on the cloud
+	if (
+		validatorama.areWeLoggedIn() &&
+		boardeditor.getActivePositionName() === positionname &&
+		boardeditor.getActivePositionStorageType() === 'cloud'
+	) {
+		openModal('overwrite_save', positionname, 'cloud');
+		return;
 	}
 
 	// No existing save found — save locally
@@ -503,62 +498,6 @@ function generateRowForSavedPositionsElement(
 }
 
 /**
- * Saves the current editor position directly to the cloud (used when overwriting a cloud save from Save Position As).
- * Any existing local copy with the same name is removed.
- */
-async function saveCurrentPositionToCloud(position_name: string): Promise<void> {
-	const variantOptions = eactions.getCurrentPositionInformation(false);
-	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-	const piece_count = variantOptions.position.size;
-	const timestamp = Date.now();
-
-	// Convert variantOptions to ICN
-	const longFormatIn: LongFormatIn = {
-		metadata: {} as MetaData, // Empty metadata object required by ICN converter
-		position: variantOptions.position,
-		gameRules: variantOptions.gameRules,
-		state_global: variantOptions.state_global,
-		fullMove: variantOptions.fullMove ?? 1,
-	};
-	let icn: string;
-	try {
-		icn = icnconverter.LongToShort_Format(longFormatIn, {
-			skipPosition: false,
-			compact: true,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		});
-	} catch (err) {
-		console.error('Failed to convert position to ICN:', err);
-		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
-		return;
-	}
-
-	try {
-		await editorSavesAPI.savePosition(
-			position_name,
-			piece_count,
-			timestamp,
-			icn,
-			pawnDoublePush ?? false,
-			castling ?? false,
-		);
-	} catch (err) {
-		console.error('Failed to save position to cloud:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to save position to cloud: ' + errMsg, { error: true });
-		return;
-	}
-
-	// Remove any local copy with the same name
-	await deleteLocalPosition(position_name);
-	boardeditor.setActivePositionName(position_name);
-	toast.show('Position saved to cloud.');
-}
-
-/**
  * Uploads a local position to the server and removes the local copy.
  * @returns Whether the operation succeeded.
  */
@@ -618,7 +557,7 @@ async function uploadPositionToCloud(position_name: string): Promise<void> {
 	// Success! Delete local copy now.
 	await deleteLocalPosition(position_name);
 	if (boardeditor.getActivePositionName() === position_name)
-		boardeditor.setActivePositionName(undefined);
+		boardeditor.setActivePositionName(position_name, 'cloud');
 
 	toast.show('Position saved to cloud.');
 }

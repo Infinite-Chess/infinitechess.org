@@ -91,6 +91,9 @@ let initial_castling: boolean | undefined = true;
 /** Name of active position, as displayed on editor bar and used for "Save" button by default */
 let active_positionname: string | undefined = undefined;
 
+/** Whether the active position is stored locally or on the cloud */
+let active_positionname_storage_type: 'local' | 'cloud' | undefined = undefined;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
@@ -459,8 +462,16 @@ function getActivePositionName(): string | undefined {
 	return active_positionname;
 }
 
-function setActivePositionName(positionname: string | undefined): void {
+function getActivePositionStorageType(): 'local' | 'cloud' | undefined {
+	return active_positionname_storage_type;
+}
+
+function setActivePositionName(
+	positionname: string | undefined,
+	storage_type: 'local' | 'cloud' = 'local',
+): void {
 	active_positionname = positionname;
+	active_positionname_storage_type = positionname !== undefined ? storage_type : undefined;
 	guiboardeditor.updateActivePositionElement(positionname);
 }
 
@@ -503,6 +514,7 @@ export default {
 	isLeftMouseReserved,
 	stealPointer,
 	getActivePositionName,
+	getActivePositionStorageType,
 	setActivePositionName,
 	// Rendering
 	render,
