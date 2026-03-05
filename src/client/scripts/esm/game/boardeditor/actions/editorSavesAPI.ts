@@ -9,14 +9,14 @@ import validatorama from '../../../util/validatorama';
 // Types ----------------------------------------------------------------------------
 
 /** Abridged info returned by getSavedPositions */
-interface CloudSaveListRecord {
+export interface CloudSaveListRecord {
 	name: string;
 	piece_count: number;
 	timestamp: number;
 }
 
 /** Full position info returned by getPosition */
-interface CloudPositionRecord {
+export interface CloudPositionRecord {
 	icn: string;
 	pawn_double_push: boolean;
 	castling: boolean;
@@ -112,8 +112,6 @@ async function deletePosition(position_name: string): Promise<void> {
 }
 
 // Exports -------------------------------------------------------------------------
-
-export type { CloudSaveListRecord, CloudPositionRecord };
 
 export default {
 	getSavedPositions,
