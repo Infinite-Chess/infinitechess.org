@@ -456,7 +456,7 @@ function callback_Action(e: Event): void {
 					guiloadposition.uploadCurrentPositionToCloud(active_position_name);
 				} else {
 					// If it's a local save, simply overwrite in IndexedDB
-					esave.save(active_position_name);
+					esave.saveLocal(active_position_name);
 				}
 
 				// Update UI if necessary

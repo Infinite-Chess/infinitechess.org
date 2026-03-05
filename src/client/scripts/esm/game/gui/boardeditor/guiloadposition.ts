@@ -342,7 +342,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				boardeditor.setActivePositionName(editorSaveState.position_name, 'cloud');
 		}
 	} else if (mode === 'overwrite_save') {
-		await esave.save(position_name);
+		await esave.saveLocal(position_name);
 		updateSavedPositionListUI();
 	}
 }
@@ -375,7 +375,7 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 
 	// No existing save found — save locally
-	await esave.save(positionname);
+	await esave.saveLocal(positionname);
 	updateSavedPositionListUI();
 }
 
@@ -590,9 +590,6 @@ async function uploadCurrentPositionToCloud(position_name: string): Promise<void
  * @returns Whether the operation succeeded.
  */
 async function removePositionFromCloud(position_name: string, timestamp: number): Promise<void> {
-	const save_key = `${esave.EDITOR_SAVE_PREFIX}${position_name}`;
-	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${position_name}`;
-
 	let cloudPosition;
 	try {
 		cloudPosition = await editorSavesAPI.getPosition(position_name);
@@ -632,21 +629,14 @@ async function removePositionFromCloud(position_name: string, timestamp: number)
 		},
 		fullMove: longFormOut.fullMove,
 	};
-	await Promise.all([
-		IndexedDB.saveItem(save_key, {
-			position_name,
-			timestamp,
-			piece_count: variantOptions.position.size,
-			variantOptions,
-			pawnDoublePush: cloudPosition.pawn_double_push,
-			castling: cloudPosition.castling,
-		}),
-		IndexedDB.saveItem(saveinfo_key, {
-			position_name,
-			timestamp,
-			piece_count: variantOptions.position.size,
-		}),
-	]);
+	await esave.saveState({
+		position_name,
+		timestamp,
+		piece_count: variantOptions.position.size,
+		variantOptions,
+		pawnDoublePush: cloudPosition.pawn_double_push,
+		castling: cloudPosition.castling,
+	});
 
 	if (boardeditor.getActivePositionName() === position_name)
 		boardeditor.setActivePositionName(position_name, 'local');

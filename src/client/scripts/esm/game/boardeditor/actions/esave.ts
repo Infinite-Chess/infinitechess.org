@@ -67,7 +67,7 @@ let positionSavePending = false;
 // Actions ----------------------------------------------------------------------
 
 /** Saves current position under "positionname". */
-async function save(position_name: string): Promise<void> {
+async function saveLocal(position_name: string): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	// Coalesce: if a save is already running, request another and return.
@@ -85,23 +85,14 @@ async function save(position_name: string): Promise<void> {
 		const timestamp = Date.now();
 		const piece_count = variantOptions.position.size;
 
-		await Promise.all([
-			// Save full info for loading purposes
-			IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${position_name}`, {
-				position_name,
-				timestamp,
-				piece_count,
-				variantOptions,
-				pawnDoublePush,
-				castling,
-			}),
-			// Save abridged info for display purposes
-			IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${position_name}`, {
-				position_name,
-				timestamp,
-				piece_count,
-			}),
-		]);
+		await saveState({
+			position_name,
+			timestamp,
+			piece_count,
+			variantOptions,
+			pawnDoublePush,
+			castling,
+		});
 	} catch (err) {
 		// Don't crash the editor over failed save
 		console.error('Failed to save board editor position:', err);
@@ -111,12 +102,30 @@ async function save(position_name: string): Promise<void> {
 		// If something changed while saving, immediately save again (latest wins).
 		if (positionSavePending) {
 			positionSavePending = false;
-			await save(position_name);
+			await saveLocal(position_name);
 		} else {
 			boardeditor.setActivePositionName(position_name);
 			toast.show('Position successfully saved in browser.');
 		}
 	}
+}
+
+/**
+ * Persists a fully constructed EditorSaveState to IndexedDB.
+ * Writes both the full save (for loading) and the abridged save (for display).
+ */
+async function saveState(editorSaveState: EditorSaveState): Promise<void> {
+	const { position_name, timestamp, piece_count } = editorSaveState;
+	await Promise.all([
+		// Save full info for loading purposes
+		IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${position_name}`, editorSaveState),
+		// Save abridged info for display purposes
+		IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${position_name}`, {
+			position_name,
+			timestamp,
+			piece_count,
+		}),
+	]);
 }
 
 // Exports --------------------------------------------------------------------
@@ -128,7 +137,8 @@ export default {
 	EditorAbridgedSaveStateSchema,
 	EditorSaveStateSchema,
 
-	save,
+	saveLocal,
+	saveState,
 };
 
 export type { EditorAbridgedSaveState, EditorSaveState };
