@@ -435,13 +435,7 @@ async function onCloudButtonPress(
  * Update the saved positions list
  */
 async function updateSavedPositionListUI(): Promise<void> {
-	unregisterAllPositionButtonListeners(); // unregister position button listeners
-	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
-
 	const areLoggedIn = validatorama.areWeLoggedIn();
-
-	// Toggle CSS class to adjust header column widths for cloud button
-	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 
 	// Build unified list (local + cloud)
 	const allSaves: UnifiedSave[] = [];
@@ -478,11 +472,12 @@ async function updateSavedPositionListUI(): Promise<void> {
 	// Sort by timestamp (newest first)
 	allSaves.sort((a, b) => b.timestamp - a.timestamp);
 
-	// Generate and append row by row to saved positions UI
-	for (const save of allSaves) {
-		const row = generateRowForSavedPositionsElement(save, areLoggedIn);
-		element_savedPositionsToLoad.appendChild(row);
-	}
+	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
+	unregisterAllPositionButtonListeners();
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
+	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
+	element_savedPositionsToLoad.replaceChildren(...newRows);
 }
 
 // Exports -----------------------------------------------------------------
