@@ -12,8 +12,6 @@ import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
 
-export type { EditorAutosaveState };
-
 // Constants -------------------------------------------------------------
 
 /** Name of editor autosave in local storage */
