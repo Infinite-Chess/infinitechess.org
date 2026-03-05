@@ -11,7 +11,6 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { StorageType } from '../gui/boardeditor/guiloadposition.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
@@ -45,6 +44,9 @@ import { listener_document } from '../chess/game.js';
 // Types ------------------------------------------------------------------------
 
 type Tool = (typeof validTools)[number];
+
+/** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
+export type StorageType = 'local' | 'cloud';
 
 /**
  * An edit that also keeps track of the state of certain position dependent game rules AFTER the edit is made.

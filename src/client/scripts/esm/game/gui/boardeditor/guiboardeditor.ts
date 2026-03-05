@@ -17,6 +17,7 @@ import typeutil, {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 import esave from '../../boardeditor/actions/esave.js';
+import ecloud from '../../boardeditor/actions/ecloud.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import tooltips from '../../../util/tooltips.js';
@@ -453,7 +454,7 @@ function callback_Action(e: Event): void {
 				// If there is an active position name, simply overwrite save
 				if (boardeditor.getActivePositionStorageType() === 'cloud') {
 					// If it's a cloud save, upload to cloud (which will overwrite)
-					guiloadposition.uploadCurrentPositionToCloud(active_position_name);
+					ecloud.saveCloud(active_position_name);
 				} else {
 					// If it's a local save, simply overwrite in IndexedDB
 					esave.saveLocal(active_position_name);

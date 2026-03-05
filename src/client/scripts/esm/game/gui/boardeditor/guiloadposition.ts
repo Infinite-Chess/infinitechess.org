@@ -4,25 +4,18 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
-import type { MetaData } from '../../../../../../shared/chess/util/metadata';
-import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
-import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
-import type {
-	CloudPositionRecord,
-	CloudSaveListRecord,
-} from '../../boardeditor/actions/editorSavesAPI';
+import type { StorageType } from '../../boardeditor/boardeditor';
+import type { CloudSaveListRecord } from '../../boardeditor/actions/editorSavesAPI';
+import type { EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
 
 import editorutil from '../../../../../../shared/editor/editorutil';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import toast from '../toast';
+import ecloud from '../../boardeditor/actions/ecloud';
 import eactions from '../../boardeditor/actions/eactions';
 import guipause from '../guipause';
-import IndexedDB from '../../../util/IndexedDB';
-import egamerules from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
@@ -39,9 +32,6 @@ type ButtonHandlerPair = {
 
 /** Different modes for the modal confirmation dialog */
 type ModalMode = 'load' | 'delete' | 'overwrite_save';
-
-/** Whether a position is stored locally (IndexedDB) or on the server */
-export type StorageType = 'local' | 'cloud';
 
 /** A unified save entry for display, regardless of whether it's stored locally or on the cloud */
 type UnifiedSave = { storage_type: StorageType } & EditorAbridgedSaveState;
@@ -228,98 +218,6 @@ function onModalKeyDown(e: KeyboardEvent): void {
 	}
 }
 
-/** Deletes a position locally from IndexedDB. */
-async function deleteLocalPosition(position_name: string): Promise<void> {
-	await Promise.all([
-		IndexedDB.deleteItem(`${esave.EDITOR_SAVEINFO_PREFIX}${position_name}`),
-		IndexedDB.deleteItem(`${esave.EDITOR_SAVE_PREFIX}${position_name}`),
-	]);
-}
-
-/**
- * Deletes a position from the server.
- * @returns Whether the server request succeeded.
- */
-async function deleteCloudPosition(position_name: string): Promise<void> {
-	try {
-		await editorSavesAPI.deletePosition(position_name);
-	} catch (err) {
-		console.error('Failed to delete cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to delete position from the cloud: ' + errMsg, { error: true });
-	}
-}
-
-/**
- * Parses a CloudPositionRecord into an EditorSaveState.
- * @returns An EditorSaveState on success, undefined if ICN parsing fails.
- */
-function parseCloudPosition(
-	position_name: string,
-	cloudPosition: CloudPositionRecord,
-): EditorSaveState | undefined {
-	let longFormOut;
-	try {
-		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
-	} catch (err) {
-		console.error('Failed to parse cloud position ICN:', err);
-		toast.show('The position was corrupted.', { error: true });
-		return;
-	}
-	const variantOptions: VariantOptions = {
-		position: longFormOut.position ?? new Map(),
-		gameRules: longFormOut.gameRules,
-		state_global: {
-			...longFormOut.state_global,
-			specialRights: longFormOut.state_global.specialRights ?? new Set(),
-		},
-		fullMove: longFormOut.fullMove,
-	};
-	return {
-		position_name,
-		timestamp: cloudPosition.timestamp,
-		piece_count: variantOptions.position.size,
-		variantOptions,
-		pawnDoublePush: cloudPosition.pawn_double_push,
-		castling: cloudPosition.castling,
-	};
-}
-
-/**
- * Downloads a position from the server.
- * @returns An EditorSaveState on success, undefined on failure.
- */
-async function downloadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
-	let cloudPosition: CloudPositionRecord;
-	try {
-		cloudPosition = await editorSavesAPI.getPosition(position_name);
-	} catch (err) {
-		console.error('Failed to load cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to load position from the cloud: ' + errMsg, { error: true });
-		return;
-	}
-	return parseCloudPosition(position_name, cloudPosition);
-}
-
-/**
- * Reads a position from IndexedDB.
- * @returns An EditorSaveState on success, undefined on failure.
- */
-async function readLocalPosition(position_name: string): Promise<EditorSaveState | undefined> {
-	const save_key = `${esave.EDITOR_SAVE_PREFIX}${position_name}`;
-	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
-	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
-	if (!editorSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorSaveState ${save_key} in IndexedDB ${editorSaveStateParsed.error}`,
-		);
-		toast.show(`The position was corrupted.`, { error: true });
-		return;
-	}
-	return editorSaveStateParsed.data;
-}
-
 async function onModalYesButtonPress(): Promise<void> {
 	if (modal_config === undefined) {
 		closeModal();
@@ -332,9 +230,9 @@ async function onModalYesButtonPress(): Promise<void> {
 	if (mode === 'delete') {
 		// Delete position
 		if (storage_type === 'cloud') {
-			await deleteCloudPosition(position_name);
+			await ecloud.deleteCloud(position_name);
 		} else {
-			await deleteLocalPosition(position_name);
+			await esave.deleteLocal(position_name);
 		}
 		// Clear active position name if the deleted position was active
 		if (boardeditor.getActivePositionName() === position_name)
@@ -344,8 +242,8 @@ async function onModalYesButtonPress(): Promise<void> {
 		// Load position
 		const editorSaveState =
 			storage_type === 'cloud'
-				? await downloadCloudPosition(position_name)
-				: await readLocalPosition(position_name);
+				? await ecloud.readCloud(position_name)
+				: await esave.readLocal(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
 			await eactions.load(editorSaveState);
@@ -376,11 +274,7 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 
 	// If a local save already exists, ask to overwrite it locally
-	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
-	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
-	const previous_saveinfoParsed =
-		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
-	if (previous_saveinfoParsed.success) {
+	if (await esave.localSaveExists(positionname)) {
 		openModal('overwrite_save', positionname, 'local');
 		return;
 	}
@@ -499,133 +393,6 @@ function generateRowForSavedPositionsElement(
 }
 
 /**
- * Converts an EditorSaveState to ICN and uploads it to the cloud.
- * Does NOT modify local storage or the active position state.
- * @returns Whether the upload succeeded (errors are toasted internally).
- */
-async function performCloudUpload(
-	position_name: string,
-	editorSaveState: EditorSaveState,
-): Promise<boolean> {
-	// Convert variantOptions to ICN
-	const longFormatIn: LongFormatIn = {
-		metadata: {} as MetaData, // Empty metadata object required by ICN converter
-		position: editorSaveState.variantOptions.position,
-		gameRules: editorSaveState.variantOptions.gameRules,
-		state_global: editorSaveState.variantOptions.state_global,
-		fullMove: editorSaveState.variantOptions.fullMove ?? 1,
-	};
-	let icn: string;
-	try {
-		icn = icnconverter.LongToShort_Format(longFormatIn, {
-			skipPosition: false,
-			compact: true,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		});
-	} catch (err) {
-		console.error('Failed to convert position to ICN:', err);
-		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
-		return false;
-	}
-
-	try {
-		await editorSavesAPI.savePosition(
-			position_name,
-			editorSaveState.piece_count,
-			editorSaveState.timestamp,
-			icn,
-			editorSaveState.pawnDoublePush ?? false,
-			editorSaveState.castling ?? false,
-		);
-	} catch (err) {
-		console.error('Failed to upload position to cloud:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to upload position to cloud: ' + errMsg, { error: true });
-		return false;
-	}
-
-	toast.show('Position saved to cloud.');
-	return true;
-}
-
-/** Transfers a local position to the server and removes the local copy. */
-async function transferPositionToCloud(position_name: string): Promise<void> {
-	const editorSaveState = await readLocalPosition(position_name);
-	if (editorSaveState === undefined) return;
-
-	const success = await performCloudUpload(position_name, editorSaveState);
-	if (!success) return;
-
-	// Success! Delete local copy now.
-	await deleteLocalPosition(position_name);
-
-	if (boardeditor.getActivePositionName() === position_name)
-		boardeditor.setActivePositionName(position_name, 'cloud');
-}
-
-/**
- * Uploads the currently loaded editor position to
- * the cloud, saving over whatever is already there.
- */
-async function uploadCurrentPositionToCloud(position_name: string): Promise<void> {
-	const variantOptions = eactions.getCurrentPositionInformation(false);
-	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-	const timestamp = Date.now();
-	const piece_count = variantOptions.position.size;
-
-	const editorSaveState: EditorSaveState = {
-		position_name,
-		timestamp,
-		piece_count,
-		variantOptions,
-		pawnDoublePush,
-		castling,
-	};
-
-	await performCloudUpload(position_name, editorSaveState);
-}
-
-/**
- * Downloads a cloud position to local storage and removes it from the server.
- * @returns Whether the operation succeeded.
- */
-async function removePositionFromCloud(position_name: string): Promise<void> {
-	let cloudPosition;
-	try {
-		cloudPosition = await editorSavesAPI.getPosition(position_name);
-	} catch (err) {
-		console.error('Failed to download cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to download cloud position: ' + errMsg, { error: true });
-		return;
-	}
-
-	const editorSaveState = parseCloudPosition(position_name, cloudPosition);
-	if (editorSaveState === undefined) return;
-
-	// Delete from server
-	try {
-		await editorSavesAPI.deletePosition(position_name);
-	} catch (err) {
-		console.error('Failed to delete cloud position after download:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to remove position from cloud: ' + errMsg, { error: true });
-		return;
-	}
-
-	// Success! Save locally now.
-	await esave.saveState(editorSaveState);
-
-	if (boardeditor.getActivePositionName() === position_name)
-		boardeditor.setActivePositionName(position_name, 'local');
-
-	toast.show('Position saved locally.');
-}
-
-/**
  * Handles pressing the cloud-save button for a position row.
  * - If local: uploads to server and deletes local copy.
  * - If cloud: downloads from server, deletes from server, and saves locally.
@@ -639,33 +406,14 @@ async function onCloudButtonPress(
 	cloudBtn.disabled = true;
 
 	if (storage_type === 'local') {
-		await transferPositionToCloud(position_name);
+		await ecloud.transferPositionToCloud(position_name);
 	} else {
-		await removePositionFromCloud(position_name);
+		await ecloud.removePositionFromCloud(position_name);
 	}
 
 	// Re-enable cloud button and refresh UI
 	cloudBtn.disabled = false;
 	updateSavedPositionListUI();
-}
-
-/**
- * Given a saveinfo_key, read the entry from IndexedDB and return an EditorAbridgedSaveState if successful.
- */
-async function loadSinglePositionInfo(
-	saveinfo_key: string,
-): Promise<EditorAbridgedSaveState | undefined> {
-	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
-	const editorAbridgedSaveStateParsed = esave.EditorAbridgedSaveStateSchema.safeParse(
-		editorAbridgedSaveStateRaw,
-	);
-	if (!editorAbridgedSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorAbridgedSaveState "${saveinfo_key}" in IndexedDB: ${editorAbridgedSaveStateParsed.error}`,
-		);
-		return;
-	}
-	return editorAbridgedSaveStateParsed.data;
 }
 
 /**
@@ -704,15 +452,8 @@ async function updateSavedPositionListUI(): Promise<void> {
 		}
 	}
 
-	// Get a list of all saveinfo_keys
-	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
-		key.startsWith(esave.EDITOR_SAVEINFO_PREFIX),
-	);
-
 	// Load all local saves
-	const localSaveList = (
-		await Promise.all(saveinfo_keys.map((saveinfo_key) => loadSinglePositionInfo(saveinfo_key)))
-	).filter((x) => x !== undefined);
+	const localSaveList = await esave.getAllLocalSaveInfos();
 
 	// Add local saves
 	for (const abridged of localSaveList) {
@@ -737,5 +478,4 @@ export default {
 	close: floatingWindow.close,
 	getMode,
 	updateSavedPositionListUI,
-	uploadCurrentPositionToCloud,
 };
