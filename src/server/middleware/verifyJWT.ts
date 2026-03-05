@@ -72,7 +72,7 @@ function verifyAccessToken(req: IdentifiedRequest, res: Response): boolean {
 
 	// Token is valid and hasn't hit the 15m expiry
 
-	console.log('A valid access token was used! :D :D');
+	// console.log('A valid access token was used! :D :D');
 
 	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
 	return true;
