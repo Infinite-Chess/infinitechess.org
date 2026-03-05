@@ -282,7 +282,7 @@ async function downloadCloudPosition(position_name: string): Promise<EditorSaveS
 	};
 	return {
 		position_name,
-		timestamp: Date.now(),
+		timestamp: Date.now(), // Placeholder timestamp which isn't read by eactions.load()
 		piece_count: variantOptions.position.size,
 		variantOptions,
 		pawnDoublePush: cloudPosition.pawn_double_push,
