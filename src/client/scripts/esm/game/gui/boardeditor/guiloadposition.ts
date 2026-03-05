@@ -554,6 +554,7 @@ async function transferPositionToCloud(position_name: string): Promise<void> {
 
 	// Success! Delete local copy now.
 	await deleteLocalPosition(position_name);
+
 	if (boardeditor.getActivePositionName() === position_name)
 		boardeditor.setActivePositionName(position_name, 'cloud');
 }
@@ -642,6 +643,9 @@ async function removePositionFromCloud(position_name: string, timestamp: number)
 			piece_count: variantOptions.position.size,
 		}),
 	]);
+
+	if (boardeditor.getActivePositionName() === position_name)
+		boardeditor.setActivePositionName(position_name, 'local');
 
 	toast.show('Position saved locally.');
 }
