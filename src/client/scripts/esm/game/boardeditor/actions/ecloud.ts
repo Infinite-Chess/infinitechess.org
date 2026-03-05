@@ -11,6 +11,7 @@ import type { VariantOptions } from '../../../../../../shared/chess/logic/initva
 import type { EditorSaveState } from '../editortypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
+import editorutil from '../../../../../../shared/editor/editorutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import toast from '../../gui/toast';
@@ -86,6 +87,11 @@ async function saveCloudState(
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
 		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
+		return { success: false };
+	}
+
+	if (icn.length > editorutil.MAX_ICN_LENGTH) {
+		toast.show(`Position is too large to save to the cloud.`, { error: true });
 		return { success: false };
 	}
 

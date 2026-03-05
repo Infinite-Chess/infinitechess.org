@@ -205,7 +205,7 @@ describe('EditorSavesAPI Integration', () => {
 
 		it('should return 400 if icn exceeds max length', async () => {
 			const user = await integrationUtils.createAndLoginUser();
-			const longIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH + 1);
+			const longIcn = 'a'.repeat(editorutil.MAX_ICN_LENGTH + 1);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -521,7 +521,7 @@ describe('EditorSavesAPI Integration', () => {
 		it('should handle very long ICN within limit', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
-			const maxLengthIcn = 'a'.repeat(EditorSavesAPI.MAX_ICN_LENGTH);
+			const maxLengthIcn = 'a'.repeat(editorutil.MAX_ICN_LENGTH);
 
 			const response = await testRequest()
 				.post('/api/editor-saves')
