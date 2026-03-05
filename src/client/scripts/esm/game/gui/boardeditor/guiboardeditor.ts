@@ -7,7 +7,6 @@
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorAutosaveState } from '../../boardeditor/editortypes.js';
 
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -22,10 +21,8 @@ import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import tooltips from '../../../util/tooltips.js';
 import eactions from '../../boardeditor/actions/eactions.js';
-import IndexedDB from '../../../util/IndexedDB.js';
 import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
-import editortypes from '../../boardeditor/editortypes.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
 import guigamerules from './guigamerules.js';
@@ -142,20 +139,12 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveStateRaw = await IndexedDB.loadItem(eautosave.EDITOR_AUTOSAVE_NAME);
-	const editorSaveStateParsed = editortypes.AutosaveStateSchema.safeParse(editorSaveStateRaw);
+	const editorSaveState = await eautosave.loadAutosave();
 
-	if (!editorSaveStateParsed.success) {
-		// Missing or corrupted autosave
-		if (editorSaveStateRaw !== undefined) {
-			// If corrupted, delete
-			console.error('Corrupted board editor autosave data found, clearing autosave.');
-			eautosave.clearAutosave();
-		}
+	if (editorSaveState === undefined) {
 		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {
-		const editorSaveState: EditorAutosaveState = editorSaveStateParsed.data;
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
