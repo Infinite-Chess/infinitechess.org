@@ -60,11 +60,11 @@ function parseCloudPosition(
 /**
  * Converts an EditorSaveState to ICN and uploads it to the cloud.
  * Does NOT modify local storage or the active position state.
- * @returns The updated cloud saves list on success, false on failure (errors are toasted internally).
+ * @returns `{ success: true, saves }` on success, `{ success: false }` on failure (errors are toasted internally).
  */
 async function saveCloudState(
 	editorSaveState: EditorSaveState,
-): Promise<CloudSaveListRecord[] | false> {
+): Promise<{ success: true; saves: CloudSaveListRecord[] } | { success: false }> {
 	// Convert variantOptions to ICN
 	const longFormatIn: LongFormatIn = {
 		metadata: {} as MetaData, // Empty metadata object required by ICN converter
@@ -86,7 +86,7 @@ async function saveCloudState(
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
 		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
-		return false;
+		return { success: false };
 	}
 
 	let saves: CloudSaveListRecord[];
@@ -103,11 +103,11 @@ async function saveCloudState(
 		console.error('Failed to upload position to cloud:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show('Failed to upload position to cloud: ' + errMsg, { error: true });
-		return false;
+		return { success: false };
 	}
 
 	toast.show('Position saved to cloud.');
-	return saves;
+	return { success: true, saves };
 }
 
 /**
@@ -175,8 +175,8 @@ async function transferPositionToCloud(
 	const editorSaveState = await esave.readLocal(position_name);
 	if (editorSaveState === undefined) return;
 
-	const saves = await saveCloudState(editorSaveState);
-	if (saves === false) return;
+	const result = await saveCloudState(editorSaveState);
+	if (!result.success) return;
 
 	// Success! Delete local copy now.
 	await esave.deleteLocal(position_name);
@@ -184,7 +184,7 @@ async function transferPositionToCloud(
 	if (boardeditor.isActivePosition(position_name, 'local'))
 		boardeditor.setActivePosition(position_name, 'cloud');
 
-	return saves;
+	return result.saves;
 }
 
 /**
