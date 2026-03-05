@@ -51,8 +51,6 @@ type ModalConfig = {
 	mode: ModalMode;
 	position_name: string;
 	storage_type: StorageType;
-	/** The server-side timestamp for the position; only used when loading from cloud */
-	timestamp?: number;
 };
 
 // Elements ----------------------------------------------------------
@@ -160,13 +158,8 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-function openModal(
-	mode: ModalMode,
-	position_name: string,
-	storage_type: StorageType,
-	timestamp?: number,
-): void {
-	modal_config = { mode, position_name, storage_type, timestamp };
+function openModal(mode: ModalMode, position_name: string, storage_type: StorageType): void {
+	modal_config = { mode, position_name, storage_type };
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
@@ -259,13 +252,9 @@ async function deleteCloudPosition(position_name: string): Promise<void> {
 
 /**
  * Downloads a position from the server.
- * @param timestamp - The server-side timestamp for this position.
  * @returns An EditorSaveState on success, undefined on failure.
  */
-async function downloadCloudPosition(
-	position_name: string,
-	timestamp: number,
-): Promise<EditorSaveState | undefined> {
+async function downloadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
 	let cloudPosition: CloudPositionRecord;
 	try {
 		cloudPosition = await editorSavesAPI.getPosition(position_name);
@@ -294,7 +283,7 @@ async function downloadCloudPosition(
 	};
 	return {
 		position_name,
-		timestamp,
+		timestamp: Date.now(),
 		piece_count: variantOptions.position.size,
 		variantOptions,
 		pawnDoublePush: cloudPosition.pawn_double_push,
@@ -326,7 +315,7 @@ async function onModalYesButtonPress(): Promise<void> {
 		return;
 	}
 
-	const { mode, position_name, storage_type, timestamp } = modal_config; // Pull properties before clearing its state
+	const { mode, position_name, storage_type } = modal_config; // Pull properties before clearing its state
 	closeModal(); // Close modal immediately to clear UI
 
 	if (mode === 'delete') {
@@ -344,7 +333,7 @@ async function onModalYesButtonPress(): Promise<void> {
 		// Load position
 		const editorSaveState =
 			storage_type === 'cloud'
-				? await downloadCloudPosition(position_name, timestamp ?? Date.now())
+				? await downloadCloudPosition(position_name)
 				: await readLocalPosition(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
@@ -485,9 +474,7 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	registerButtonClick(loadBtn, () =>
-		openModal('load', position_name, save.storage_type, timestamp),
-	);
+	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
 	row.appendChild(loadBtn);
 
 	// "Cloud Save" button (only when logged in)
