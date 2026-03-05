@@ -109,7 +109,7 @@ async function localSaveExists(position_name: string): Promise<boolean> {
 
 /**
  * Returns an array of all abridged save states stored locally.
- * Skips and logs any corrupted entries.
+ * Deletes and logs any corrupted entries.
  */
 async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
@@ -120,7 +120,11 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 			const raw = await IndexedDB.loadItem(key);
 			const parsed = editortypes.AbridgedSaveStateSchema.safeParse(raw);
 			if (!parsed.success) {
-				console.error(`Invalid AbridgedSaveState "${key}" in IndexedDB: ${parsed.error}`);
+				const position_name = key.slice(EDITOR_SAVEINFO_PREFIX.length);
+				console.error(
+					`Corrupted local save "${position_name}" found, deleting it. Error: ${parsed.error}`,
+				);
+				await deleteLocal(position_name);
 				return undefined;
 			}
 			return parsed.data;
