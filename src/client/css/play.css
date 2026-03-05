@@ -1669,7 +1669,7 @@ svg.collapse {
 }
 
 /* Expand header actions width when cloud button is present (user logged in) */
-saved-positions.with-cloud {
+.saved-positions.with-cloud {
 	--w-header-actions: 78px;
 }
 
