@@ -478,7 +478,11 @@ function generateRowForSavedPositionsElement(
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
-	if (boardeditor.getActivePositionName() === position_name) row.classList.add('active-position');
+	if (
+		boardeditor.getActivePositionName() === position_name &&
+		boardeditor.getActivePositionStorageType() === save.storage_type
+	)
+		row.classList.add('active-position');
 
 	return row;
 }
