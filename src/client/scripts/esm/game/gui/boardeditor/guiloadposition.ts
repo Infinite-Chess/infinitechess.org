@@ -22,6 +22,7 @@ import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
 import guipause from '../guipause';
 import IndexedDB from '../../../util/IndexedDB';
+import egamerules from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
@@ -341,12 +342,7 @@ async function onModalYesButtonPress(): Promise<void> {
 				boardeditor.setActivePositionName(editorSaveState.position_name, 'cloud');
 		}
 	} else if (mode === 'overwrite_save') {
-		if (storage_type === 'cloud') {
-			await esave.save(position_name);
-			await uploadPositionToCloud(position_name);
-		} else {
-			await esave.save(position_name);
-		}
+		await esave.save(position_name);
 		updateSavedPositionListUI();
 	}
 }
@@ -367,16 +363,8 @@ async function onSaveButtonPress(): Promise<void> {
 		);
 		return;
 	}
-	// If the active position is a cloud save with this name, ask to overwrite it on the cloud
-	if (
-		boardeditor.getActivePositionName() === positionname &&
-		boardeditor.getActivePositionStorageType() === 'cloud'
-	) {
-		openModal('overwrite_save', positionname, 'cloud');
-		return;
-	}
 
-	// Else if a local save already exists, ask to overwrite it locally
+	// If a local save already exists, ask to overwrite it locally
 	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
 	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
 	const previous_saveinfoParsed =
@@ -496,22 +484,14 @@ function generateRowForSavedPositionsElement(
 }
 
 /**
- * Uploads a local position to the server and removes the local copy.
- * @returns Whether the operation succeeded.
+ * Converts an EditorSaveState to ICN and uploads it to the cloud.
+ * Does NOT modify local storage or the active position state.
+ * @returns Whether the upload succeeded (errors are toasted internally).
  */
-async function uploadPositionToCloud(position_name: string): Promise<void> {
-	const save_key = `${esave.EDITOR_SAVE_PREFIX}${position_name}`;
-	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
-	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
-	if (!editorSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorSaveState "${save_key}" in IndexedDB: ${editorSaveStateParsed.error}`,
-		);
-		toast.show('The position data was corrupted.', { error: true });
-		return;
-	}
-	const editorSaveState = editorSaveStateParsed.data;
-
+async function performCloudUpload(
+	position_name: string,
+	editorSaveState: EditorSaveState,
+): Promise<boolean> {
 	// Convert variantOptions to ICN
 	const longFormatIn: LongFormatIn = {
 		metadata: {} as MetaData, // Empty metadata object required by ICN converter
@@ -533,7 +513,7 @@ async function uploadPositionToCloud(position_name: string): Promise<void> {
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
 		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
-		return;
+		return false;
 	}
 
 	try {
@@ -549,15 +529,55 @@ async function uploadPositionToCloud(position_name: string): Promise<void> {
 		console.error('Failed to upload position to cloud:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show('Failed to upload position to cloud: ' + errMsg, { error: true });
+		return false;
+	}
+
+	toast.show('Position saved to cloud.');
+	return true;
+}
+
+/** Transfers a local position to the server and removes the local copy. */
+async function transferPositionToCloud(position_name: string): Promise<void> {
+	const save_key = `${esave.EDITOR_SAVE_PREFIX}${position_name}`;
+	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
+	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+	if (!editorSaveStateParsed.success) {
+		console.error(
+			`Invalid EditorSaveState "${save_key}" in IndexedDB: ${editorSaveStateParsed.error}`,
+		);
+		toast.show('The position data was corrupted.', { error: true });
 		return;
 	}
+
+	const success = await performCloudUpload(position_name, editorSaveStateParsed.data);
+	if (!success) return;
 
 	// Success! Delete local copy now.
 	await deleteLocalPosition(position_name);
 	if (boardeditor.getActivePositionName() === position_name)
 		boardeditor.setActivePositionName(position_name, 'cloud');
+}
 
-	toast.show('Position saved to cloud.');
+/**
+ * Uploads the currently loaded editor position to
+ * the cloud, saving over whatever is already there.
+ */
+async function uploadCurrentPositionToCloud(position_name: string): Promise<void> {
+	const variantOptions = eactions.getCurrentPositionInformation(false);
+	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+	const timestamp = Date.now();
+	const piece_count = variantOptions.position.size;
+
+	const editorSaveState: EditorSaveState = {
+		position_name,
+		timestamp,
+		piece_count,
+		variantOptions,
+		pawnDoublePush,
+		castling,
+	};
+
+	await performCloudUpload(position_name, editorSaveState);
 }
 
 /**
@@ -641,7 +661,7 @@ async function onCloudButtonPress(
 	cloudBtn.disabled = true;
 
 	if (storage_type === 'local') {
-		await uploadPositionToCloud(position_name);
+		await transferPositionToCloud(position_name);
 	} else {
 		await removePositionFromCloud(position_name, timestamp);
 	}
@@ -739,4 +759,5 @@ export default {
 	close: floatingWindow.close,
 	getMode,
 	updateSavedPositionListUI,
+	uploadCurrentPositionToCloud,
 };

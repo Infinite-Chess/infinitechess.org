@@ -451,7 +451,13 @@ function callback_Action(e: Event): void {
 				}
 			} else {
 				// If there is an active position name, simply overwrite save
-				esave.save(active_position_name);
+				if (boardeditor.getActivePositionStorageType() === 'cloud') {
+					// If it's a cloud save, upload to cloud (which will overwrite)
+					guiloadposition.uploadCurrentPositionToCloud(active_position_name);
+				} else {
+					// If it's a local save, simply overwrite in IndexedDB
+					esave.save(active_position_name);
+				}
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)
