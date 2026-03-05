@@ -63,6 +63,22 @@ const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: numbe
 	hydrochess: 4000,
 };
 
+/**
+ * Display names for each engine.
+ */
+const engineDisplayNamesDict: { [key in validEngineName]: string } = {
+	engineCheckmatePractice: 'Practice Bot',
+	hydrochess: 'HydroChess',
+};
+
+/**
+ * The maximum strength level for each engine.
+ */
+const engineMaxStrengthLevelDict: { [key in validEngineName]: number } = {
+	engineCheckmatePractice: 1,
+	hydrochess: 3,
+};
+
 // Variables --------------------------------------------------------------------
 
 /** Whether we are currently in an engine game. */
@@ -91,6 +107,18 @@ GameBus.addEventListener('game-concluded', () => {
 });
 
 // Functions ------------------------------------------------------------------------
+
+/**
+ * Returns a formatted engine name string, optionally including its strength level.
+ * If the provided strength level is the maximum for the engine, it is omitted.
+ */
+function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
+	const name = engineDisplayNamesDict[engineName];
+	const maxLevel = engineMaxStrengthLevelDict[engineName];
+	return strengthLevel !== undefined && strengthLevel !== maxLevel
+		? `${name} (Level ${strengthLevel})`
+		: name;
+}
 
 function areInEngineGame(): boolean {
 	return inEngineGame;
@@ -434,6 +462,7 @@ export default {
 	toggleDebug,
 	render,
 	onViewMove,
+	getFormattedEngineName,
 };
 
 export type { EngineConfig, validEngineName };

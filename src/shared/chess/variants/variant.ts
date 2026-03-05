@@ -83,8 +83,8 @@ interface Variant {
 
 interface VariantContext {
 	Variant?: string;
-	UTCDate: string;
-	UTCTime: string;
+	UTCDate?: string;
+	UTCTime?: string;
 }
 
 const positionStringOfClassical =
@@ -512,10 +512,10 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 			positionString = variantEntry.positionString;
 		} else {
 			// Multiple position string entries for different timestamps
-			positionString = getApplicableTimestampEntry(variantEntry.positionString, {
-				UTCDate: metadata.UTCDate,
-				UTCTime: metadata.UTCTime,
-			});
+			positionString = getApplicableTimestampEntry(
+				variantEntry.positionString,
+				resolveTimestamp(metadata),
+			);
 		}
 
 		return icnconverter.generatePositionFromShortForm(positionString);
@@ -523,10 +523,7 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 		const generator =
 			'algorithm' in variantEntry.generator
 				? variantEntry.generator
-				: getApplicableTimestampEntry(variantEntry.generator, {
-						UTCDate: metadata.UTCDate,
-						UTCTime: metadata.UTCTime,
-					});
+				: getApplicableTimestampEntry(variantEntry.generator, resolveTimestamp(metadata));
 
 		// Generate the starting position
 		position = generator.algorithm();
@@ -544,9 +541,8 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 
 /**
  * Returns the variant's gamerules at the provided date in time.
- * THE METADATA MUST CONTAIN THE PROPERTIES `Variant`, `UTCDate`, and `UTCTime` OR THERE
- * WILL BE A SERVER CRASH WHEN STARTING GAMES OF VARIANTS WITH TIME VARIANT PROPERTIES!!!
- * @param options - An object containing the metadata `Variant`, and if desired, `Date`.
+ * If `UTCDate` or `UTCTime` are not specified in the metadata, they default to the current date/time.
+ * @param options - An object containing the metadata `Variant`, and optionally `UTCDate` & `UTCTime`.
  * @param options.Variant - The name of the variant for which to get the gamerules.
  * @returns The gamerules object for the variant.
  */
@@ -571,10 +567,10 @@ function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModi
 	// We use hasOwnProperty() because it is true even if the property is set as `undefined`, which in this case would mean zero gamerule modifications.
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
 		// Multiple UTC timestamps
-		return getApplicableTimestampEntry(variantEntry.gameruleModifications, {
-			UTCDate: metadata.UTCDate,
-			UTCTime: metadata.UTCTime,
-		});
+		return getApplicableTimestampEntry(
+			variantEntry.gameruleModifications,
+			resolveTimestamp(metadata),
+		);
 	} else {
 		// Just one gameruleModifications entry
 		return variantEntry.gameruleModifications;
@@ -639,6 +635,17 @@ function getBareMinimumGameRules(): GameRules {
 // }
 
 /**
+ * Resolves UTCDate and UTCTime from metadata, falling back to the current date/time if not specified.
+ * Used by variant functions that must select a time-variant property from the variant dictionary.
+ */
+function resolveTimestamp(metadata: VariantContext): { UTCDate: string; UTCTime: string } {
+	return {
+		UTCDate: metadata.UTCDate ?? timeutil.getCurrentUTCDate(),
+		UTCTime: metadata.UTCTime ?? timeutil.getCurrentUTCTime(),
+	};
+}
+
+/**
  * Accepts either a `positionString` or `gameruleModifications` property of a variant entry,
  * and a date, returns the value that should be used according to the date.
  * @param object - Either `positionString` or `gameruleModifications`
@@ -700,10 +707,10 @@ function getMovesetsOfVariant(
 			return getMovesets(
 				{},
 				slideLimit ??
-					getApplicableTimestampEntry(variantEntry.gameruleModifications, {
-						UTCDate: metadata.UTCDate,
-						UTCTime: metadata.UTCTime,
-					}).slideLimit,
+					getApplicableTimestampEntry(
+						variantEntry.gameruleModifications,
+						resolveTimestamp(metadata),
+					).slideLimit,
 			);
 		} else {
 			// Just one movesetGenerator entry
@@ -718,10 +725,10 @@ function getMovesetsOfVariant(
 	let movesetModifications: Movesets;
 	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) {
 		// Multiple UTC timestamps
-		movesetModifications = getApplicableTimestampEntry(variantEntry.movesetGenerator, {
-			UTCDate: metadata.UTCDate,
-			UTCTime: metadata.UTCTime,
-		})();
+		movesetModifications = getApplicableTimestampEntry(
+			variantEntry.movesetGenerator,
+			resolveTimestamp(metadata),
+		)();
 	} else {
 		// Just one movesetGenerator entry
 		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
@@ -766,10 +773,10 @@ function getSpecialMovesOfVariant(metadata: VariantContext): RawTypeGroup<Specia
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
 
-	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, {
-		UTCDate: metadata.UTCDate,
-		UTCTime: metadata.UTCTime,
-	});
+	const overrides = getApplicableTimestampEntry(
+		variantEntry.specialMoves,
+		resolveTimestamp(metadata),
+	);
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
 }
@@ -784,10 +791,10 @@ function getSpecialVicinityOfVariant(metadata: VariantContext): SpecialVicinity 
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
-	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, {
-		UTCDate: metadata.UTCDate,
-		UTCTime: metadata.UTCTime,
-	});
+	const overrides = getApplicableTimestampEntry(
+		variantEntry.specialVicinity,
+		resolveTimestamp(metadata),
+	);
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
 	return defaultSpecialVicinityByPiece;
 }

@@ -20,12 +20,14 @@ import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
+import guipause from '../guipause';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
 import guifloatingwindow from './guifloatingwindow';
+import { listener_document } from '../../chess/game';
 
 // Types -------------------------------------------------------------------------
 
@@ -190,10 +192,12 @@ function closeModal(): void {
 
 function initSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.addEventListener('click', onSaveButtonPress);
+	document.addEventListener('keydown', onSaveKeyDown);
 }
 
 function closeSavePositionUIListeners(): void {
 	element_saveCurrentPositionButton.removeEventListener('click', onSaveButtonPress);
+	document.removeEventListener('keydown', onSaveKeyDown);
 }
 
 function unregisterAllPositionButtonListeners(): void {
@@ -207,15 +211,29 @@ function initModalListeners(): void {
 	element_modalCloseButton.addEventListener('click', closeModal);
 	element_modalNoButton.addEventListener('click', closeModal);
 	element_modalYesButton.addEventListener('click', onModalYesButtonPress);
+	document.addEventListener('keydown', onModalKeyDown);
 }
 
 function closeModalListeners(): void {
 	element_modalCloseButton.removeEventListener('click', closeModal);
 	element_modalNoButton.removeEventListener('click', closeModal);
 	element_modalYesButton.removeEventListener('click', onModalYesButtonPress);
+	document.removeEventListener('keydown', onModalKeyDown);
 }
 
 // Functions -----------------------------------------------------------------
+
+function onModalKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter') {
+		e.preventDefault(); // Prevent browser from firing a synthetic click on the focused "Save" button
+		onModalYesButtonPress();
+	} else if (e.key === 'Escape') {
+		// Ensure priority when deciding who gets the escape key event
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		closeModal();
+	}
+}
 
 /** Deletes a position locally from IndexedDB. */
 async function deleteLocalPosition(position_name: string): Promise<void> {
@@ -340,6 +358,10 @@ async function onModalYesButtonPress(): Promise<void> {
 		}
 		updateSavedPositionListUI();
 	}
+}
+
+function onSaveKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter' && modal_config === undefined) onSaveButtonPress();
 }
 
 /**
