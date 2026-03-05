@@ -478,11 +478,23 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 function setActivePosition(name: string, storage_type: StorageType): void {
 	active_position = { name, storage_type };
 	guiboardeditor.updateActivePositionElement(name);
+	flushActivePositionToAutosave();
 }
 
 function clearActivePosition(): void {
 	active_position = undefined;
 	guiboardeditor.updateActivePositionElement(undefined);
+	flushActivePositionToAutosave();
+}
+
+/**
+ * Immediately flushes the autosave so a page refresh immediately
+ * after a save/delete operation reflects the current active position.
+ */
+function flushActivePositionToAutosave(): void {
+	if (gameslot.getGamefile() === undefined) return; // Some callers run before the gamefile exists
+	eautosave.markPositionDirty();
+	void eautosave.autosaveCurrentPositionOnce();
 }
 
 // Rendering ------------------------------------------------------------------
