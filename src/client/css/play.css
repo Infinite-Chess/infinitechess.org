@@ -1679,6 +1679,7 @@ svg.collapse {
 	align-items: center;
 	padding: 0 0.5em;
 	margin-bottom: 0.4em;
+	position: relative;
 }
 
 .saved-position-header > div {
@@ -1686,6 +1687,20 @@ svg.collapse {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+/* The last column of the saved-position-header holds the loading animation */
+.saved-position-header > div:last-child {
+	display: flex;
+	justify-content: flex-end;
+	padding-right: 0;
+}
+
+/* Spinny pawn in the saved positions header — fixed size for grid context */
+.saved-position-header .svg-pawn {
+	height: 28px;
+	bottom: -2px;
+	position: absolute;
 }
 
 .saved-position-list {

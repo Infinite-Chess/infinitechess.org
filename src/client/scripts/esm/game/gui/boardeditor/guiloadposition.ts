@@ -74,6 +74,9 @@ const element_savedPositions = document.querySelector('.saved-positions')!;
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
 
+/** Spinny pawn loading animation shown during in-flight API requests */
+const element_loadingPawn = document.getElementById('load-position-loading-pawn')!;
+
 /** Confirmation dialog modal elements */
 const element_modal = document.getElementById('load-position-modal-overlay')!;
 const element_modalCloseButton = document.getElementById('close-load-position-modal')!;
@@ -89,6 +92,21 @@ let mode: 'load' | 'save-as' | undefined = undefined;
 
 /** The current config of the Confirmation dialog modal */
 let modal_config: ModalConfig | undefined = undefined;
+
+/** Count of in-flight API requests — spinner is visible whenever this is > 0 */
+let activeRequestCount = 0;
+
+// Loading animation -----------------------------------------------
+
+function startRequest(): void {
+	activeRequestCount++;
+	element_loadingPawn.classList.remove('hidden');
+}
+
+function endRequest(): void {
+	activeRequestCount = Math.max(0, activeRequestCount - 1);
+	if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
+}
 
 // Create floating window -------------------------------------
 
@@ -230,7 +248,12 @@ async function onModalYesButtonPress(): Promise<void> {
 	if (mode === 'delete') {
 		// Delete position
 		if (storage_type === 'cloud') {
-			await ecloud.deleteCloud(position_name);
+			startRequest();
+			try {
+				await ecloud.deleteCloud(position_name);
+			} finally {
+				endRequest();
+			}
 		} else {
 			await esave.deleteLocal(position_name);
 		}
@@ -240,10 +263,17 @@ async function onModalYesButtonPress(): Promise<void> {
 		updateSavedPositionListUI();
 	} else if (mode === 'load') {
 		// Load position
-		const editorSaveState =
-			storage_type === 'cloud'
-				? await ecloud.readCloud(position_name)
-				: await esave.readLocal(position_name);
+		let editorSaveState;
+		if (storage_type === 'cloud') {
+			startRequest();
+			try {
+				editorSaveState = await ecloud.readCloud(position_name);
+			} finally {
+				endRequest();
+			}
+		} else {
+			editorSaveState = await esave.readLocal(position_name);
+		}
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
 			await eactions.load(editorSaveState, storage_type);
@@ -399,15 +429,18 @@ async function onCloudButtonPress(
 ): Promise<void> {
 	// Disable cloud button to prevent multiple clicks while operation is in-flight
 	cloudBtn.disabled = true;
-
-	if (storage_type === 'local') {
-		await ecloud.transferPositionToCloud(position_name);
-	} else {
-		await ecloud.removePositionFromCloud(position_name);
+	startRequest();
+	try {
+		if (storage_type === 'local') {
+			await ecloud.transferPositionToCloud(position_name);
+		} else {
+			await ecloud.removePositionFromCloud(position_name);
+		}
+	} finally {
+		// Re-enable cloud button and refresh UI
+		cloudBtn.disabled = false;
+		endRequest();
 	}
-
-	// Re-enable cloud button and refresh UI
-	cloudBtn.disabled = false;
 	updateSavedPositionListUI();
 }
 
@@ -429,12 +462,15 @@ async function updateSavedPositionListUI(): Promise<void> {
 	// Fetch cloud saves if logged in
 	if (areLoggedIn) {
 		let cloudSaves: CloudSaveListRecord[] = [];
+		startRequest();
 		try {
 			cloudSaves = await editorSavesAPI.getSavedPositions();
 		} catch (err) {
 			console.error('Failed to fetch cloud saves:', err);
 			const errMsg = err instanceof Error ? err.message : String(err);
 			toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		} finally {
+			endRequest();
 		}
 
 		for (const save of cloudSaves) {
