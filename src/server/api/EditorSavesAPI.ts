@@ -39,6 +39,7 @@ const SavePositionBodySchema = z.strictObject({
 		),
 	pawn_double_push: z.boolean(),
 	castling: z.boolean(),
+	compression: z.enum(['none', 'deflate-raw']).optional().default('none'),
 });
 
 /** Schema for validating position_name in URL params */
@@ -118,7 +119,8 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, piece_count, timestamp, icn, pawn_double_push, castling } = parseResult.data;
+	const { name, piece_count, timestamp, icn, compression, pawn_double_push, castling } =
+		parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded)
@@ -128,6 +130,7 @@ function savePosition(req: Request, res: Response): void {
 			piece_count,
 			timestamp,
 			icn,
+			compression,
 			pawn_double_push,
 			castling,
 		);
@@ -188,6 +191,7 @@ function getPosition(req: Request, res: Response): void {
 		res.json({
 			timestamp: position.timestamp,
 			icn: position.icn,
+			compression: position.compression,
 			pawn_double_push: Boolean(position.pawn_double_push),
 			castling: Boolean(position.castling),
 		});

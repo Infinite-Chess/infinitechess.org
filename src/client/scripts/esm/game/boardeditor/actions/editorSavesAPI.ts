@@ -4,6 +4,8 @@
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
+import type { CompressionMode } from '../../../util/compression';
+
 import validatorama from '../../../util/validatorama';
 
 // Types ----------------------------------------------------------------------------
@@ -18,7 +20,10 @@ export interface CloudSaveListRecord {
 /** Full position info returned by getPosition */
 export interface CloudPositionRecord {
 	timestamp: number;
+	/** The compressed ICN */
 	icn: string;
+	/** Compression mode used for the ICN */
+	compression: CompressionMode;
 	pawn_double_push: boolean;
 	castling: boolean;
 }
@@ -64,6 +69,7 @@ async function savePosition(
 	piece_count: number,
 	timestamp: number,
 	icn: string,
+	compression: string,
 	pawn_double_push: boolean,
 	castling: boolean,
 ): Promise<CloudSaveListRecord[]> {
@@ -71,7 +77,15 @@ async function savePosition(
 	const response = await fetch('/api/editor-saves', {
 		method: 'POST',
 		headers,
-		body: JSON.stringify({ name, piece_count, timestamp, icn, pawn_double_push, castling }),
+		body: JSON.stringify({
+			name,
+			piece_count,
+			timestamp,
+			icn,
+			compression,
+			pawn_double_push,
+			castling,
+		}),
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { error?: string };

@@ -18,22 +18,34 @@ import toast from '../../gui/toast';
 import esave from './esave';
 import eactions from './eactions';
 import egamerules from '../egamerules';
+import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
 import editorSavesAPI from './editorSavesAPI';
 
 // Actions ----------------------------------------------------------------------
 
 /**
- * Parses a CloudPositionRecord into an EditorSaveState.
- * @returns An EditorSaveState on success, undefined if ICN parsing fails.
+ * Parses a CloudPositionRecord into an EditorSaveState, decompressing the ICN
+ * if necessary.
+ * @returns An EditorSaveState on success, undefined on failure (errors are toasted internally).
  */
-function parseCloudPosition(
+async function parseCloudPosition(
 	position_name: string,
 	cloudPosition: CloudPositionRecord,
-): EditorSaveState | undefined {
+): Promise<EditorSaveState | undefined> {
+	let icn: string;
+	try {
+		icn = await compression.decompressString(cloudPosition.icn, cloudPosition.compression);
+	} catch (err) {
+		const errMsg = err instanceof Error ? err.message : String(err);
+		console.error('Failed to decompress cloud position ICN:', err);
+		toast.show(`Failed to load position: ${errMsg}`, { error: true });
+		return undefined;
+	}
+
 	let longFormOut;
 	try {
-		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
+		longFormOut = icnconverter.ShortToLong_Format(icn);
 	} catch (err) {
 		console.error('Failed to parse cloud position ICN:', err);
 		toast.show('The position was corrupted.', { error: true });
@@ -90,7 +102,11 @@ async function saveCloudState(
 		return { success: false };
 	}
 
-	if (icn.length > editorutil.MAX_ICN_LENGTH) {
+	// Compress ICN first
+	const { data: compressedICN, compression: compressionMode } =
+		await compression.compressString(icn);
+
+	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) {
 		toast.show(`Position is too large to save to the cloud.`, { error: true });
 		return { success: false };
 	}
@@ -101,7 +117,8 @@ async function saveCloudState(
 			editorSaveState.position_name,
 			editorSaveState.piece_count,
 			editorSaveState.timestamp,
-			icn,
+			compressedICN,
+			compressionMode,
 			editorSaveState.pawnDoublePush ?? false,
 			editorSaveState.castling ?? false,
 		);
