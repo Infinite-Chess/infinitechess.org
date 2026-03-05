@@ -134,7 +134,8 @@ function savePosition(req: Request, res: Response): void {
 			castling,
 		);
 
-		res.status(201).json({ success: true });
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		res.status(201).json({ success: true, saves });
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
@@ -240,7 +241,8 @@ function deletePosition(req: Request, res: Response): void {
 			return;
 		}
 
-		res.json({ success: true });
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		res.json({ success: true, saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(

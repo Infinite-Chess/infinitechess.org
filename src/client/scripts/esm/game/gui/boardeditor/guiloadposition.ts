@@ -43,6 +43,9 @@ type ModalConfig = {
 	storage_type: StorageType;
 };
 
+/** Cloud saves list returned by a mutation, used to skip a follow-up GET */
+type PreloadedCloudSaves = CloudSaveListRecord[] | undefined;
+
 // Elements ----------------------------------------------------------
 
 /** Object to keep track of all position button listeners */
@@ -249,15 +252,16 @@ async function onModalYesButtonPress(): Promise<void> {
 
 	if (mode === 'delete') {
 		// Delete position
+		let preloadedCloudSaves: PreloadedCloudSaves;
 		if (storage_type === 'cloud') {
-			await withRequest(() => ecloud.deleteCloud(position_name));
+			preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
 		} else {
 			await esave.deleteLocal(position_name);
 		}
 		// Clear active position name if the deleted position was active
 		if (boardeditor.isActivePosition(position_name, storage_type))
 			boardeditor.clearActivePosition();
-		updateSavedPositionListUI();
+		updateSavedPositionListUI(preloadedCloudSaves);
 	} else if (mode === 'load') {
 		// Load position
 		const editorSaveState =
@@ -420,7 +424,7 @@ async function onCloudButtonPress(
 	// Disable cloud button to prevent multiple clicks while operation is in-flight
 	cloudBtn.disabled = true;
 
-	await withRequest(() =>
+	const preloadedCloudSaves = await withRequest(() =>
 		storage_type === 'local'
 			? ecloud.transferPositionToCloud(position_name)
 			: ecloud.removePositionFromCloud(position_name),
@@ -428,13 +432,14 @@ async function onCloudButtonPress(
 
 	// Re-enable cloud button regardless of success or failure
 	cloudBtn.disabled = false;
-	updateSavedPositionListUI();
+	updateSavedPositionListUI(preloadedCloudSaves);
 }
 
 /**
- * Update the saved positions list
+ * Update the saved positions list.
+ * @param preloadedCloudSaves If provided, skips the cloud GET request and uses this data directly.
  */
-async function updateSavedPositionListUI(): Promise<void> {
+async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
 	// Build unified list (local + cloud)
@@ -443,12 +448,17 @@ async function updateSavedPositionListUI(): Promise<void> {
 	// Fetch cloud saves if logged in
 	if (areLoggedIn) {
 		let cloudSaves: CloudSaveListRecord[] = [];
-		try {
-			cloudSaves = await withRequest(() => editorSavesAPI.getSavedPositions());
-		} catch (err) {
-			console.error('Failed to fetch cloud saves:', err);
-			const errMsg = err instanceof Error ? err.message : String(err);
-			toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		if (preloadedCloudSaves !== undefined) {
+			// Caller already has the updated list from a mutation response — no extra request needed
+			cloudSaves = preloadedCloudSaves;
+		} else {
+			try {
+				cloudSaves = await withRequest(() => editorSavesAPI.getSavedPositions());
+			} catch (err) {
+				console.error('Failed to fetch cloud saves:', err);
+				const errMsg = err instanceof Error ? err.message : String(err);
+				toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+			}
 		}
 
 		for (const save of cloudSaves) {

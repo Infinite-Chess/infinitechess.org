@@ -66,7 +66,7 @@ async function savePosition(
 	icn: string,
 	pawn_double_push: boolean,
 	castling: boolean,
-): Promise<void> {
+): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
 	const response = await fetch('/api/editor-saves', {
 		method: 'POST',
@@ -77,6 +77,8 @@ async function savePosition(
 		const errorData = (await response.json()) as { error?: string };
 		throw new Error(errorData.error || 'Failed to save position');
 	}
+	const data = (await response.json()) as { success: true; saves: CloudSaveListRecord[] };
+	return data.saves;
 }
 
 /**
@@ -100,7 +102,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  * DELETE /api/editor-saves/:position_name
  * Deletes a saved position from the server.
  */
-async function deletePosition(position_name: string): Promise<void> {
+async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
 	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
 		method: 'DELETE',
@@ -110,6 +112,8 @@ async function deletePosition(position_name: string): Promise<void> {
 		const errorData = (await response.json()) as { error?: string };
 		throw new Error(errorData.error || 'Failed to delete position');
 	}
+	const data = (await response.json()) as { success: true; saves: CloudSaveListRecord[] };
+	return data.saves;
 }
 
 // Exports -------------------------------------------------------------------------

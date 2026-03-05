@@ -471,7 +471,7 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual({ success: true });
+			expect(response.body).toMatchObject({ success: true, saves: [] });
 
 			// Verify the position was actually deleted from the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);

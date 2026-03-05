@@ -9,7 +9,7 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EditorSaveState } from '../editortypes';
-import type { CloudPositionRecord } from './editorSavesAPI';
+import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
@@ -60,9 +60,11 @@ function parseCloudPosition(
 /**
  * Converts an EditorSaveState to ICN and uploads it to the cloud.
  * Does NOT modify local storage or the active position state.
- * @returns Whether the upload succeeded (errors are toasted internally).
+ * @returns The updated cloud saves list on success, false on failure (errors are toasted internally).
  */
-async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean> {
+async function saveCloudState(
+	editorSaveState: EditorSaveState,
+): Promise<CloudSaveListRecord[] | false> {
 	// Convert variantOptions to ICN
 	const longFormatIn: LongFormatIn = {
 		metadata: {} as MetaData, // Empty metadata object required by ICN converter
@@ -87,8 +89,9 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean
 		return false;
 	}
 
+	let saves: CloudSaveListRecord[];
 	try {
-		await editorSavesAPI.savePosition(
+		saves = await editorSavesAPI.savePosition(
 			editorSaveState.position_name,
 			editorSaveState.piece_count,
 			editorSaveState.timestamp,
@@ -104,7 +107,7 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean
 	}
 
 	toast.show('Position saved to cloud.');
-	return true;
+	return saves;
 }
 
 /**
@@ -147,42 +150,57 @@ async function readCloud(position_name: string): Promise<EditorSaveState | undef
 	return parseCloudPosition(position_name, cloudPosition);
 }
 
-/** Deletes a position from the server. */
-async function deleteCloud(position_name: string): Promise<void> {
+/**
+ * Deletes a position from the server.
+ * @returns The updated cloud saves list on success, undefined on failure.
+ */
+async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[] | undefined> {
 	try {
-		await editorSavesAPI.deletePosition(position_name);
+		return await editorSavesAPI.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show('Failed to delete position from the cloud: ' + errMsg, { error: true });
+		return undefined;
 	}
 }
 
-/** Transfers a local position to the server and removes the local copy. */
-async function transferPositionToCloud(position_name: string): Promise<void> {
+/**
+ * Transfers a local position to the server and removes the local copy.
+ * @returns The updated cloud saves list on success, undefined on failure.
+ */
+async function transferPositionToCloud(
+	position_name: string,
+): Promise<CloudSaveListRecord[] | undefined> {
 	const editorSaveState = await esave.readLocal(position_name);
 	if (editorSaveState === undefined) return;
 
-	const success = await saveCloudState(editorSaveState);
-	if (!success) return;
+	const saves = await saveCloudState(editorSaveState);
+	if (saves === false) return;
 
 	// Success! Delete local copy now.
 	await esave.deleteLocal(position_name);
 
 	if (boardeditor.isActivePosition(position_name, 'local'))
 		boardeditor.setActivePosition(position_name, 'cloud');
+
+	return saves;
 }
 
 /**
  * Downloads a cloud position to local storage and removes it from the server.
+ * @returns The updated cloud saves list on success, undefined on failure.
  */
-async function removePositionFromCloud(position_name: string): Promise<void> {
+async function removePositionFromCloud(
+	position_name: string,
+): Promise<CloudSaveListRecord[] | undefined> {
 	const editorSaveState = await readCloud(position_name);
 	if (editorSaveState === undefined) return;
 
-	// Delete from server
+	// Delete from server (returns the updated list)
+	let saves: CloudSaveListRecord[];
 	try {
-		await editorSavesAPI.deletePosition(position_name);
+		saves = await editorSavesAPI.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position after download:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
@@ -197,6 +215,7 @@ async function removePositionFromCloud(position_name: string): Promise<void> {
 		boardeditor.setActivePosition(position_name, 'local');
 
 	toast.show('Position saved locally.');
+	return saves;
 }
 
 // Exports --------------------------------------------------------------------
