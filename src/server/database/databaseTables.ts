@@ -268,14 +268,6 @@ function generateTables(): void {
 		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
 	);
 
-	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Ensure the consumed_at column exists
-	if (!db.columnExists('refresh_tokens', 'consumed_at')) {
-		console.log('Adding consumed_at column to refresh_tokens table...');
-		db.run('ALTER TABLE refresh_tokens ADD COLUMN consumed_at INTEGER');
-		console.log('Successfully added consumed_at column.');
-	}
-
 	// Editor Saves table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS editor_saves (
@@ -284,6 +276,7 @@ function generateTables(): void {
 			piece_count INTEGER NOT NULL,
 			timestamp INTEGER NOT NULL,
 			icn TEXT NOT NULL,
+			compression TEXT NOT NULL DEFAULT 'none',
 			pawn_double_push BOOLEAN NOT NULL CHECK (pawn_double_push IN (0, 1)),
 			castling BOOLEAN NOT NULL CHECK (castling IN (0, 1)),
 
@@ -291,6 +284,14 @@ function generateTables(): void {
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
 		);
 	`);
+
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Ensure the compression column exists in editor_saves
+	if (!db.columnExists('editor_saves', 'compression')) {
+		console.log("Adding 'compression' column to editor_saves table...");
+		db.run(`ALTER TABLE editor_saves ADD COLUMN compression TEXT NOT NULL DEFAULT 'none'`);
+		console.log("Successfully added 'compression' column.");
+	}
 
 	// Blacklisted Emails table
 	db.run(`

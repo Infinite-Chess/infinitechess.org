@@ -43,6 +43,9 @@ type ModalConfig = {
 	storage_type: StorageType;
 };
 
+/** Cloud saves list returned by a mutation, used to skip a follow-up GET */
+type PreloadedCloudSaves = CloudSaveListRecord[] | undefined;
+
 // Elements ----------------------------------------------------------
 
 /** Object to keep track of all position button listeners */
@@ -74,6 +77,9 @@ const element_savedPositions = document.querySelector('.saved-positions')!;
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
 
+/** Spinny pawn loading animation shown during in-flight API requests */
+const element_loadingPawn = document.getElementById('load-position-loading-pawn')!;
+
 /** Confirmation dialog modal elements */
 const element_modal = document.getElementById('load-position-modal-overlay')!;
 const element_modalCloseButton = document.getElementById('close-load-position-modal')!;
@@ -89,6 +95,23 @@ let mode: 'load' | 'save-as' | undefined = undefined;
 
 /** The current config of the Confirmation dialog modal */
 let modal_config: ModalConfig | undefined = undefined;
+
+/** Count of in-flight API requests — spinner is visible whenever this is > 0 */
+let activeRequestCount = 0;
+
+// Loading animation -----------------------------------------------
+
+/** Runs an async API call while showing the loading spinner, hiding it when done. */
+async function withRequest<T>(fn: () => Promise<T>): Promise<T> {
+	activeRequestCount++;
+	element_loadingPawn.classList.remove('hidden');
+	try {
+		return await fn();
+	} finally {
+		activeRequestCount = Math.max(0, activeRequestCount - 1);
+		if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
+	}
+}
 
 // Create floating window -------------------------------------
 
@@ -229,20 +252,21 @@ async function onModalYesButtonPress(): Promise<void> {
 
 	if (mode === 'delete') {
 		// Delete position
+		let preloadedCloudSaves: PreloadedCloudSaves;
 		if (storage_type === 'cloud') {
-			await ecloud.deleteCloud(position_name);
+			preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
 		} else {
 			await esave.deleteLocal(position_name);
 		}
 		// Clear active position name if the deleted position was active
 		if (boardeditor.isActivePosition(position_name, storage_type))
 			boardeditor.clearActivePosition();
-		updateSavedPositionListUI();
+		updateSavedPositionListUI(preloadedCloudSaves);
 	} else if (mode === 'load') {
 		// Load position
 		const editorSaveState =
 			storage_type === 'cloud'
-				? await ecloud.readCloud(position_name)
+				? await withRequest(() => ecloud.readCloud(position_name))
 				: await esave.readLocal(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
@@ -400,28 +424,23 @@ async function onCloudButtonPress(
 	// Disable cloud button to prevent multiple clicks while operation is in-flight
 	cloudBtn.disabled = true;
 
-	if (storage_type === 'local') {
-		await ecloud.transferPositionToCloud(position_name);
-	} else {
-		await ecloud.removePositionFromCloud(position_name);
-	}
+	const preloadedCloudSaves = await withRequest(() =>
+		storage_type === 'local'
+			? ecloud.transferPositionToCloud(position_name)
+			: ecloud.removePositionFromCloud(position_name),
+	);
 
-	// Re-enable cloud button and refresh UI
+	// Re-enable cloud button regardless of success or failure
 	cloudBtn.disabled = false;
-	updateSavedPositionListUI();
+	updateSavedPositionListUI(preloadedCloudSaves);
 }
 
 /**
- * Update the saved positions list
+ * Update the saved positions list.
+ * @param preloadedCloudSaves If provided, skips the cloud GET request and uses this data directly.
  */
-async function updateSavedPositionListUI(): Promise<void> {
-	unregisterAllPositionButtonListeners(); // unregister position button listeners
-	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
-
+async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
 	const areLoggedIn = validatorama.areWeLoggedIn();
-
-	// Toggle CSS class to adjust header column widths for cloud button
-	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 
 	// Build unified list (local + cloud)
 	const allSaves: UnifiedSave[] = [];
@@ -429,12 +448,17 @@ async function updateSavedPositionListUI(): Promise<void> {
 	// Fetch cloud saves if logged in
 	if (areLoggedIn) {
 		let cloudSaves: CloudSaveListRecord[] = [];
-		try {
-			cloudSaves = await editorSavesAPI.getSavedPositions();
-		} catch (err) {
-			console.error('Failed to fetch cloud saves:', err);
-			const errMsg = err instanceof Error ? err.message : String(err);
-			toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		if (preloadedCloudSaves !== undefined) {
+			// Caller already has the updated list from a mutation response — no extra request needed
+			cloudSaves = preloadedCloudSaves;
+		} else {
+			try {
+				cloudSaves = await withRequest(() => editorSavesAPI.getSavedPositions());
+			} catch (err) {
+				console.error('Failed to fetch cloud saves:', err);
+				const errMsg = err instanceof Error ? err.message : String(err);
+				toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+			}
 		}
 
 		for (const save of cloudSaves) {
@@ -458,11 +482,12 @@ async function updateSavedPositionListUI(): Promise<void> {
 	// Sort by timestamp (newest first)
 	allSaves.sort((a, b) => b.timestamp - a.timestamp);
 
-	// Generate and append row by row to saved positions UI
-	for (const save of allSaves) {
-		const row = generateRowForSavedPositionsElement(save, areLoggedIn);
-		element_savedPositionsToLoad.appendChild(row);
-	}
+	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
+	unregisterAllPositionButtonListeners();
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
+	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
+	element_savedPositionsToLoad.replaceChildren(...newRows);
 }
 
 // Exports -----------------------------------------------------------------

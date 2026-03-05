@@ -9,30 +9,43 @@ import type { MetaData } from '../../../../../../shared/chess/util/metadata';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EditorSaveState } from '../editortypes';
-import type { CloudPositionRecord } from './editorSavesAPI';
+import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
+import editorutil from '../../../../../../shared/editor/editorutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import toast from '../../gui/toast';
 import esave from './esave';
 import eactions from './eactions';
 import egamerules from '../egamerules';
+import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
 import editorSavesAPI from './editorSavesAPI';
 
 // Actions ----------------------------------------------------------------------
 
 /**
- * Parses a CloudPositionRecord into an EditorSaveState.
- * @returns An EditorSaveState on success, undefined if ICN parsing fails.
+ * Parses a CloudPositionRecord into an EditorSaveState, decompressing the ICN
+ * if necessary.
+ * @returns An EditorSaveState on success, undefined on failure (errors are toasted internally).
  */
-function parseCloudPosition(
+async function parseCloudPosition(
 	position_name: string,
 	cloudPosition: CloudPositionRecord,
-): EditorSaveState | undefined {
+): Promise<EditorSaveState | undefined> {
+	let icn: string;
+	try {
+		icn = await compression.decompressString(cloudPosition.icn, cloudPosition.compression);
+	} catch (err) {
+		const errMsg = err instanceof Error ? err.message : String(err);
+		console.error('Failed to decompress cloud position ICN:', err);
+		toast.show(`Failed to load position: ${errMsg}`, { error: true });
+		return undefined;
+	}
+
 	let longFormOut;
 	try {
-		longFormOut = icnconverter.ShortToLong_Format(cloudPosition.icn);
+		longFormOut = icnconverter.ShortToLong_Format(icn);
 	} catch (err) {
 		console.error('Failed to parse cloud position ICN:', err);
 		toast.show('The position was corrupted.', { error: true });
@@ -60,9 +73,11 @@ function parseCloudPosition(
 /**
  * Converts an EditorSaveState to ICN and uploads it to the cloud.
  * Does NOT modify local storage or the active position state.
- * @returns Whether the upload succeeded (errors are toasted internally).
+ * @returns `{ success: true, saves }` on success, `{ success: false }` on failure (errors are toasted internally).
  */
-async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean> {
+async function saveCloudState(
+	editorSaveState: EditorSaveState,
+): Promise<{ success: true; saves: CloudSaveListRecord[] } | { success: false }> {
 	// Convert variantOptions to ICN
 	const longFormatIn: LongFormatIn = {
 		metadata: {} as MetaData, // Empty metadata object required by ICN converter
@@ -84,15 +99,26 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
 		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
-		return false;
+		return { success: false };
 	}
 
+	// Compress ICN first
+	const { data: compressedICN, compression: compressionMode } =
+		await compression.compressString(icn);
+
+	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) {
+		toast.show(`Position is too large to save to the cloud.`, { error: true });
+		return { success: false };
+	}
+
+	let saves: CloudSaveListRecord[];
 	try {
-		await editorSavesAPI.savePosition(
+		saves = await editorSavesAPI.savePosition(
 			editorSaveState.position_name,
 			editorSaveState.piece_count,
 			editorSaveState.timestamp,
-			icn,
+			compressedICN,
+			compressionMode,
 			editorSaveState.pawnDoublePush ?? false,
 			editorSaveState.castling ?? false,
 		);
@@ -100,11 +126,11 @@ async function saveCloudState(editorSaveState: EditorSaveState): Promise<boolean
 		console.error('Failed to upload position to cloud:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show('Failed to upload position to cloud: ' + errMsg, { error: true });
-		return false;
+		return { success: false };
 	}
 
 	toast.show('Position saved to cloud.');
-	return true;
+	return { success: true, saves };
 }
 
 /**
@@ -147,42 +173,57 @@ async function readCloud(position_name: string): Promise<EditorSaveState | undef
 	return parseCloudPosition(position_name, cloudPosition);
 }
 
-/** Deletes a position from the server. */
-async function deleteCloud(position_name: string): Promise<void> {
+/**
+ * Deletes a position from the server.
+ * @returns The updated cloud saves list on success, undefined on failure.
+ */
+async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[] | undefined> {
 	try {
-		await editorSavesAPI.deletePosition(position_name);
+		return await editorSavesAPI.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show('Failed to delete position from the cloud: ' + errMsg, { error: true });
+		return undefined;
 	}
 }
 
-/** Transfers a local position to the server and removes the local copy. */
-async function transferPositionToCloud(position_name: string): Promise<void> {
+/**
+ * Transfers a local position to the server and removes the local copy.
+ * @returns The updated cloud saves list on success, undefined on failure.
+ */
+async function transferPositionToCloud(
+	position_name: string,
+): Promise<CloudSaveListRecord[] | undefined> {
 	const editorSaveState = await esave.readLocal(position_name);
 	if (editorSaveState === undefined) return;
 
-	const success = await saveCloudState(editorSaveState);
-	if (!success) return;
+	const result = await saveCloudState(editorSaveState);
+	if (!result.success) return;
 
 	// Success! Delete local copy now.
 	await esave.deleteLocal(position_name);
 
 	if (boardeditor.isActivePosition(position_name, 'local'))
 		boardeditor.setActivePosition(position_name, 'cloud');
+
+	return result.saves;
 }
 
 /**
  * Downloads a cloud position to local storage and removes it from the server.
+ * @returns The updated cloud saves list on success, undefined on failure.
  */
-async function removePositionFromCloud(position_name: string): Promise<void> {
+async function removePositionFromCloud(
+	position_name: string,
+): Promise<CloudSaveListRecord[] | undefined> {
 	const editorSaveState = await readCloud(position_name);
 	if (editorSaveState === undefined) return;
 
-	// Delete from server
+	// Delete from server (returns the updated list)
+	let saves: CloudSaveListRecord[];
 	try {
-		await editorSavesAPI.deletePosition(position_name);
+		saves = await editorSavesAPI.deletePosition(position_name);
 	} catch (err) {
 		console.error('Failed to delete cloud position after download:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
@@ -197,6 +238,7 @@ async function removePositionFromCloud(position_name: string): Promise<void> {
 		boardeditor.setActivePosition(position_name, 'local');
 
 	toast.show('Position saved locally.');
+	return saves;
 }
 
 // Exports --------------------------------------------------------------------

@@ -4,6 +4,8 @@
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
+import type { CompressionMode } from '../../../util/compression';
+
 import validatorama from '../../../util/validatorama';
 
 // Types ----------------------------------------------------------------------------
@@ -18,7 +20,10 @@ export interface CloudSaveListRecord {
 /** Full position info returned by getPosition */
 export interface CloudPositionRecord {
 	timestamp: number;
+	/** The compressed ICN */
 	icn: string;
+	/** Compression mode used for the ICN */
+	compression: CompressionMode;
 	pawn_double_push: boolean;
 	castling: boolean;
 }
@@ -64,19 +69,30 @@ async function savePosition(
 	piece_count: number,
 	timestamp: number,
 	icn: string,
+	compression: string,
 	pawn_double_push: boolean,
 	castling: boolean,
-): Promise<void> {
+): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
 	const response = await fetch('/api/editor-saves', {
 		method: 'POST',
 		headers,
-		body: JSON.stringify({ name, piece_count, timestamp, icn, pawn_double_push, castling }),
+		body: JSON.stringify({
+			name,
+			piece_count,
+			timestamp,
+			icn,
+			compression,
+			pawn_double_push,
+			castling,
+		}),
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { error?: string };
 		throw new Error(errorData.error || 'Failed to save position');
 	}
+	const data = (await response.json()) as { success: true; saves: CloudSaveListRecord[] };
+	return data.saves;
 }
 
 /**
@@ -100,7 +116,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  * DELETE /api/editor-saves/:position_name
  * Deletes a saved position from the server.
  */
-async function deletePosition(position_name: string): Promise<void> {
+async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
 	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
 		method: 'DELETE',
@@ -110,6 +126,8 @@ async function deletePosition(position_name: string): Promise<void> {
 		const errorData = (await response.json()) as { error?: string };
 		throw new Error(errorData.error || 'Failed to delete position');
 	}
+	const data = (await response.json()) as { success: true; saves: CloudSaveListRecord[] };
+	return data.saves;
 }
 
 // Exports -------------------------------------------------------------------------

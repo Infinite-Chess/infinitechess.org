@@ -1138,9 +1138,6 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		}
 	}
 
-	if (!metadata['Variant'] && !position)
-		throw Error('Either Variant metadata or position must be defined in the ICN!');
-
 	// Now we can test if the moves section came *after* the positon section.
 	if (!moves) testNextSectionForMoves();
 
