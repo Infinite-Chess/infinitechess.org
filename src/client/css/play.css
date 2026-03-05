@@ -1699,7 +1699,7 @@ svg.collapse {
 /* Spinny pawn in the saved positions header — fixed size for grid context */
 .saved-position-header .svg-pawn {
 	height: 28px;
-	bottom: -2px;
+	bottom: -1px;
 	position: absolute;
 }
 
