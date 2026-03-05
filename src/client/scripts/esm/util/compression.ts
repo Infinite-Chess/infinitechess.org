@@ -20,7 +20,7 @@ export type CompressionMode = 'none' | 'deflate-raw';
  * - `console.time` timing for every compress/decompress call.
  * - After compression: before/after character counts, bytes saved, and ratio.
  */
-const DEBUG_COMPRESSION = true;
+const DEBUG_COMPRESSION = false;
 
 // Helpers ---------------------------------------------------------------------
 
