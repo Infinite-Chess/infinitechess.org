@@ -20,6 +20,7 @@ type EditorSavesListRecord = {
 
 /** Represents a saved position ICN record (icn, pawn_double_push, castling). */
 type EditorSavesIcnRecord = {
+	timestamp: number;
 	icn: string;
 	pawn_double_push: 0 | 1;
 	castling: 0 | 1;
@@ -144,7 +145,7 @@ function addSavedPosition(
  */
 function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
 	try {
-		const query = `SELECT icn, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
+		const query = `SELECT timestamp, icn, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
 		return db.get<EditorSavesIcnRecord>(query, [name, user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);

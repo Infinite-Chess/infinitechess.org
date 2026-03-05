@@ -7,7 +7,6 @@
 import type { Tool } from '../../boardeditor/boardeditor.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-import type { EditorSaveState } from '../../boardeditor/actions/esave.js';
 
 import timeutil from '../../../../../../shared/util/timeutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -17,11 +16,11 @@ import typeutil, {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 import esave from '../../boardeditor/actions/esave.js';
+import ecloud from '../../boardeditor/actions/ecloud.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
 import tooltips from '../../../util/tooltips.js';
 import eactions from '../../boardeditor/actions/eactions.js';
-import IndexedDB from '../../../util/IndexedDB.js';
 import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
@@ -140,20 +139,12 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveStateRaw = await IndexedDB.loadItem(eautosave.EDITOR_AUTOSAVE_NAME);
-	const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
+	const editorSaveState = await eautosave.loadAutosave();
 
-	if (!editorSaveStateParsed.success) {
-		// Missing or corrupted autosave
-		if (editorSaveStateRaw !== undefined) {
-			// If corrupted, delete
-			console.error('Corrupted board editor autosave data found, clearing autosave.');
-			eautosave.clearAutosave();
-		}
-		boardeditor.setActivePositionName(undefined);
+	if (editorSaveState === undefined) {
+		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {
-		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
@@ -164,7 +155,13 @@ async function open(): Promise<void> {
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
 
-		boardeditor.setActivePositionName(editorSaveState.positionname);
+		if (editorSaveState.active_position !== undefined)
+			boardeditor.setActivePosition(
+				editorSaveState.active_position.name,
+				editorSaveState.active_position.storage_type,
+			);
+		else boardeditor.clearActivePosition();
+
 		await gameloader.startBoardEditorFromCustomPosition(
 			{
 				metadata,
@@ -441,8 +438,8 @@ function callback_Action(e: Event): void {
 			return;
 		}
 		case 'save-position': {
-			const active_positionname = boardeditor.getActivePositionName();
-			if (active_positionname === undefined) {
+			const active_position = boardeditor.getActivePosition();
+			if (active_position === undefined) {
 				// If there is no active position name, treat this the same way as "Save as" if that window is not open
 				const wasOpen = guiloadposition.getMode() !== 'save-as';
 				if (wasOpen) {
@@ -451,7 +448,13 @@ function callback_Action(e: Event): void {
 				}
 			} else {
 				// If there is an active position name, simply overwrite save
-				esave.save(active_positionname);
+				if (active_position.storage_type === 'cloud') {
+					// If it's a cloud save, upload to cloud (which will overwrite)
+					ecloud.saveCloud(active_position.name);
+				} else {
+					// If it's a local save, simply overwrite in IndexedDB
+					esave.saveLocal(active_position.name);
+				}
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)

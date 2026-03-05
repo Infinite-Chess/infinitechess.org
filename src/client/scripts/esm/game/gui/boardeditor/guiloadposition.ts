@@ -4,17 +4,21 @@
  * Manages the GUI popup window for the Load Positions UI of the board editor
  */
 
-import type { EditorSaveState, EditorAbridgedSaveState } from '../../boardeditor/actions/esave';
+import type { StorageType } from '../../boardeditor/boardeditor';
+import type { CloudSaveListRecord } from '../../boardeditor/actions/editorSavesAPI';
+import type { EditorAbridgedSaveState } from '../../boardeditor/editortypes';
 
 import editorutil from '../../../../../../shared/editor/editorutil';
 
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
 import toast from '../toast';
+import ecloud from '../../boardeditor/actions/ecloud';
 import eactions from '../../boardeditor/actions/eactions';
 import guipause from '../guipause';
-import IndexedDB from '../../../util/IndexedDB';
 import boardeditor from '../../boardeditor/boardeditor';
+import validatorama from '../../../util/validatorama';
+import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
 import guifloatingwindow from './guifloatingwindow';
 import { listener_document } from '../../chess/game';
 
@@ -29,12 +33,14 @@ type ButtonHandlerPair = {
 /** Different modes for the modal confirmation dialog */
 type ModalMode = 'load' | 'delete' | 'overwrite_save';
 
+/** A unified save entry for display, regardless of whether it's stored locally or on the cloud */
+type UnifiedSave = { storage_type: StorageType } & EditorAbridgedSaveState;
+
 /** Type for current config of the confirmation dialog modal */
 type ModalConfig = {
 	mode: ModalMode;
-	positionname: string;
-	saveinfo_key: string;
-	save_key: string;
+	position_name: string;
+	storage_type: StorageType;
 };
 
 // Elements ----------------------------------------------------------
@@ -61,6 +67,9 @@ const element_saveAsPositionName = document.getElementById(
 )! as HTMLInputElement;
 /** "Save" button in UI */
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
+
+/** The outer container for the saved positions section. */
+const element_savedPositions = document.querySelector('.saved-positions')!;
 
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
@@ -139,23 +148,18 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-function openModal(
-	mode: ModalMode,
-	positionname: string,
-	saveinfo_key: string,
-	save_key: string,
-): void {
-	modal_config = { mode, positionname, saveinfo_key, save_key };
+function openModal(mode: ModalMode, position_name: string, storage_type: StorageType): void {
+	modal_config = { mode, position_name, storage_type };
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
-		element_modalMessage.textContent = `Are you sure that you want to delete position "${positionname}"? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to delete position "${position_name}"? This cannot be undone.`;
 	} else if (modal_config.mode === 'load') {
 		element_modalTitle.textContent = 'Load position?';
-		element_modalMessage.textContent = `Are you sure that you want to load position "${positionname}"? Unsaved changes to the current position will be lost.`;
+		element_modalMessage.textContent = `Are you sure that you want to load position "${position_name}"? Unsaved changes to the current position will be lost.`;
 	} else if (modal_config.mode === 'overwrite_save') {
 		element_modalTitle.textContent = 'Overwrite position?';
-		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${positionname}"? This cannot be undone.`;
+		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${position_name}"? This cannot be undone.`;
 	}
 	element_modal.classList.remove('hidden');
 	initModalListeners();
@@ -214,52 +218,40 @@ function onModalKeyDown(e: KeyboardEvent): void {
 	}
 }
 
-/**
- * Delete saved position according to provided modal_config argument,
- * and update the active position name if necessary.
- */
-async function deleteSavedPosition(modal_config: ModalConfig): Promise<void> {
-	// Delete saved position
-	await Promise.all([
-		IndexedDB.deleteItem(modal_config.saveinfo_key),
-		IndexedDB.deleteItem(modal_config.save_key),
-	]);
-
-	// If deleted position was active, set active position name to undefined
-	if (boardeditor.getActivePositionName() === modal_config.positionname)
-		boardeditor.setActivePositionName(undefined);
-}
-
 async function onModalYesButtonPress(): Promise<void> {
 	if (modal_config === undefined) {
 		closeModal();
 		return;
-	} else if (modal_config.mode === 'delete') {
-		// Delete position
-		await deleteSavedPosition(modal_config);
-		updateSavedPositionListUI();
-	} else if (modal_config.mode === 'load') {
-		// Load position
-		const editorSaveStateRaw = await IndexedDB.loadItem(modal_config.save_key);
-		const editorSaveStateParsed = esave.EditorSaveStateSchema.safeParse(editorSaveStateRaw);
-		if (!editorSaveStateParsed.success) {
-			console.error(
-				`Invalid EditorSaveState ${modal_config.save_key} in IndexedDB ${editorSaveStateParsed.error}`,
-			);
-			toast.show(`The position was corrupted.`, { error: true });
-			await deleteSavedPosition(modal_config);
-			updateSavedPositionListUI();
-			return;
-		}
-		const editorSaveState: EditorSaveState = editorSaveStateParsed.data;
-		floatingWindow.close(false);
-		eactions.load(editorSaveState);
-	} else if (modal_config.mode === 'overwrite_save') {
-		await esave.save(modal_config.positionname);
-		updateSavedPositionListUI();
 	}
 
-	closeModal();
+	const { mode, position_name, storage_type } = modal_config; // Pull properties before clearing its state
+	closeModal(); // Close modal immediately to clear UI
+
+	if (mode === 'delete') {
+		// Delete position
+		if (storage_type === 'cloud') {
+			await ecloud.deleteCloud(position_name);
+		} else {
+			await esave.deleteLocal(position_name);
+		}
+		// Clear active position name if the deleted position was active
+		if (boardeditor.isActivePosition(position_name, storage_type))
+			boardeditor.clearActivePosition();
+		updateSavedPositionListUI();
+	} else if (mode === 'load') {
+		// Load position
+		const editorSaveState =
+			storage_type === 'cloud'
+				? await ecloud.readCloud(position_name)
+				: await esave.readLocal(position_name);
+		if (editorSaveState !== undefined) {
+			floatingWindow.close(false);
+			await eactions.load(editorSaveState, storage_type);
+		}
+	} else if (mode === 'overwrite_save') {
+		await esave.saveLocal(position_name);
+		updateSavedPositionListUI();
+	}
 }
 
 function onSaveKeyDown(e: KeyboardEvent): void {
@@ -278,17 +270,16 @@ async function onSaveButtonPress(): Promise<void> {
 		);
 		return;
 	}
-	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
-	const save_key = `${esave.EDITOR_SAVE_PREFIX}${positionname}`;
 
-	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
-	const previous_saveinfoParsed =
-		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
-	if (!previous_saveinfoParsed.success) {
-		// If there is no previous valid EditorAbridgedSaveState, save under positionname
-		await esave.save(positionname);
-		updateSavedPositionListUI();
-	} else openModal('overwrite_save', positionname, saveinfo_key, save_key);
+	// If a local save already exists, ask to overwrite it locally
+	if (await esave.localSaveExists(positionname)) {
+		openModal('overwrite_save', positionname, 'local');
+		return;
+	}
+
+	// No existing save found — save locally
+	await esave.saveLocal(positionname);
+	updateSavedPositionListUI();
 }
 
 /** Create a button element for one position row, with given SVG href. */
@@ -305,7 +296,7 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
 }
 
 /**
- * Given a saveinfo_key and a editorAbridgedSaveState,
+ * Given a UnifiedSave entry,
  * generate a row for the list of saved positions.
  * A "row" has the following DOM structure:
  *
@@ -317,6 +308,10 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-load"/></svg>
  *   </button>
+ *   <!-- Cloud Save (only when logged in) -->
+ *   <button class="btn saved-position-btn cloud-save [local]">
+ *     <svg><use href="#svg-cloud-save"/></svg>
+ *   </button>
  *   <!-- Delete -->
  *   <button class="btn saved-position-btn">
  *     <svg><use href="#svg-delete"/></svg>
@@ -324,32 +319,31 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
  * </div>
  */
 function generateRowForSavedPositionsElement(
-	saveinfo_key: string,
-	editorAbridgedSaveState: EditorAbridgedSaveState,
+	save: UnifiedSave,
+	showCloudButton: boolean,
 ): HTMLDivElement {
-	const save_key = saveinfo_key.replace(esave.EDITOR_SAVEINFO_PREFIX, esave.EDITOR_SAVE_PREFIX);
 	const row = document.createElement('div');
 	row.classList.add('saved-position');
 
 	// Name
 	const name_cell = document.createElement('div');
-	const positionname = editorAbridgedSaveState.positionname ?? '';
-	name_cell.textContent = positionname;
-	name_cell.title = positionname; // Let's browser's automatic tooltips show the full title on hover, if it's truncated via ellipsis
+	const position_name = save.position_name ?? '';
+	name_cell.textContent = position_name;
+	name_cell.title = position_name; // Let's browser's automatic tooltips show the full title on hover, if it's truncated via ellipsis
 	row.appendChild(name_cell);
 
 	// Piececount
 	const piececount_cell = document.createElement('div');
 	piececount_cell.classList.add('piece-count');
-	const piececount = String(editorAbridgedSaveState.pieceCount);
-	piececount_cell.textContent = piececount;
-	piececount_cell.title = piececount;
+	const piece_count = String(save.piece_count);
+	piececount_cell.textContent = piece_count;
+	piececount_cell.title = piece_count;
 	row.appendChild(piececount_cell);
 
 	// Date
 	const date_cell = document.createElement('div');
 	date_cell.classList.add('date');
-	const timestamp = editorAbridgedSaveState.timestamp;
+	const timestamp = save.timestamp;
 	// Localize the date display to the user's locale
 	const dateObj = new Date(timestamp);
 	const localeDate = dateObj.toLocaleDateString(undefined, {
@@ -364,43 +358,57 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	registerButtonClick(loadBtn, () => openModal('load', positionname, saveinfo_key, save_key));
+	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
 	row.appendChild(loadBtn);
+
+	// "Cloud Save" button (only when logged in)
+	if (showCloudButton) {
+		const cloudBtn = createButtonElement('#svg-cloud-save');
+		cloudBtn.classList.add('cloud-save');
+		if (save.storage_type === 'local') {
+			// Local save: greyed-out cloud button (not yet on cloud)
+			cloudBtn.classList.add('local');
+		}
+		registerButtonClick(cloudBtn, () =>
+			onCloudButtonPress(position_name, save.storage_type, cloudBtn),
+		);
+		row.appendChild(cloudBtn);
+	}
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
-	registerButtonClick(deleteBtn, () => openModal('delete', positionname, saveinfo_key, save_key));
+	registerButtonClick(deleteBtn, () => openModal('delete', position_name, save.storage_type));
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
-	if (boardeditor.getActivePositionName() === positionname) row.classList.add('active-position');
+	if (boardeditor.isActivePosition(position_name, save.storage_type))
+		row.classList.add('active-position');
 
 	return row;
 }
 
 /**
- * Given a saveinfo_key, read the entry from IndexedDB and return { saveinfo_key, editorAbridgedSaveState } if successful
+ * Handles pressing the cloud-save button for a position row.
+ * - If local: uploads to server and deletes local copy.
+ * - If cloud: downloads from server, deletes from server, and saves locally.
  */
-async function loadSinglePositionInfo(saveinfo_key: string): Promise<
-	| {
-			saveinfo_key: string;
-			editorAbridgedSaveState: EditorAbridgedSaveState;
-	  }
-	| undefined
-> {
-	const editorAbridgedSaveStateRaw = await IndexedDB.loadItem(saveinfo_key);
-	const editorAbridgedSaveStateParsed = esave.EditorAbridgedSaveStateSchema.safeParse(
-		editorAbridgedSaveStateRaw,
-	);
-	if (!editorAbridgedSaveStateParsed.success) {
-		console.error(
-			`Invalid EditorAbridgedSaveState "${saveinfo_key}" in IndexedDB: ${editorAbridgedSaveStateParsed.error}`,
-		);
-		return;
-	}
-	const editorAbridgedSaveState: EditorAbridgedSaveState = editorAbridgedSaveStateParsed.data;
+async function onCloudButtonPress(
+	position_name: string,
+	storage_type: StorageType,
+	cloudBtn: HTMLButtonElement,
+): Promise<void> {
+	// Disable cloud button to prevent multiple clicks while operation is in-flight
+	cloudBtn.disabled = true;
 
-	return { saveinfo_key, editorAbridgedSaveState };
+	if (storage_type === 'local') {
+		await ecloud.transferPositionToCloud(position_name);
+	} else {
+		await ecloud.removePositionFromCloud(position_name);
+	}
+
+	// Re-enable cloud button and refresh UI
+	cloudBtn.disabled = false;
+	updateSavedPositionListUI();
 }
 
 /**
@@ -410,27 +418,49 @@ async function updateSavedPositionListUI(): Promise<void> {
 	unregisterAllPositionButtonListeners(); // unregister position button listeners
 	element_savedPositionsToLoad.replaceChildren(); // empty existing position list
 
-	// Get a list of all saveinfo_keys
-	const saveinfo_keys = (await IndexedDB.getAllKeys()).filter((key) =>
-		key.startsWith(esave.EDITOR_SAVEINFO_PREFIX),
-	);
+	const areLoggedIn = validatorama.areWeLoggedIn();
 
-	// Load all editorAbridgedSaveStates simultaneously into a single list
-	const editorSaveInfoList = (
-		await Promise.all(saveinfo_keys.map((saveinfo_key) => loadSinglePositionInfo(saveinfo_key)))
-	).filter((x) => x !== undefined);
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 
-	// Sort editorSaveInfoList by timestamp (newest first)
-	editorSaveInfoList.sort(
-		(a, b) => b.editorAbridgedSaveState.timestamp - a.editorAbridgedSaveState.timestamp,
-	);
+	// Build unified list (local + cloud)
+	const allSaves: UnifiedSave[] = [];
+
+	// Fetch cloud saves if logged in
+	if (areLoggedIn) {
+		let cloudSaves: CloudSaveListRecord[] = [];
+		try {
+			cloudSaves = await editorSavesAPI.getSavedPositions();
+		} catch (err) {
+			console.error('Failed to fetch cloud saves:', err);
+			const errMsg = err instanceof Error ? err.message : String(err);
+			toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		}
+
+		for (const save of cloudSaves) {
+			allSaves.push({
+				storage_type: 'cloud',
+				position_name: save.name,
+				timestamp: save.timestamp,
+				piece_count: save.piece_count,
+			});
+		}
+	}
+
+	// Load all local saves
+	const localSaveList = await esave.getAllLocalSaveInfos();
+
+	// Add local saves
+	for (const abridged of localSaveList) {
+		allSaves.push({ storage_type: 'local', ...abridged });
+	}
+
+	// Sort by timestamp (newest first)
+	allSaves.sort((a, b) => b.timestamp - a.timestamp);
 
 	// Generate and append row by row to saved positions UI
-	for (const editorSaveInfo of editorSaveInfoList) {
-		const row = generateRowForSavedPositionsElement(
-			editorSaveInfo.saveinfo_key,
-			editorSaveInfo.editorAbridgedSaveState,
-		);
+	for (const save of allSaves) {
+		const row = generateRowForSavedPositionsElement(save, areLoggedIn);
 		element_savedPositionsToLoad.appendChild(row);
 	}
 }

@@ -5,10 +5,13 @@
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
  */
 
+import type { EditorAutosaveState } from '../editortypes';
+
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
+import editortypes from '../editortypes';
 
 // Constants -------------------------------------------------------------
 
@@ -58,18 +61,15 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const positionname = boardeditor.getActivePositionName();
-		const timestamp = Date.now();
-		const pieceCount = variantOptions.position.size;
 
 		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
-			positionname,
-			timestamp,
-			pieceCount,
+			active_position: boardeditor.getActivePosition(),
+			timestamp: Date.now(),
+			piece_count: variantOptions.position.size,
 			variantOptions,
 			pawnDoublePush,
 			castling,
-		});
+		} satisfies EditorAutosaveState);
 
 		positionDirty = false;
 	} catch (err) {
@@ -119,12 +119,28 @@ function clearAutosave(): void {
 	});
 }
 
-export default {
-	EDITOR_AUTOSAVE_NAME,
+/**
+ * Reads and validates the autosave from IndexedDB.
+ * Clears and returns undefined if the data is corrupted.
+ * Returns undefined if no autosave exists.
+ */
+async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
+	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
+	if (raw === undefined) return undefined;
+	const parsed = editortypes.AutosaveStateSchema.safeParse(raw);
+	if (!parsed.success) {
+		console.error('Corrupted board editor autosave data found, clearing autosave.');
+		clearAutosave();
+		return undefined;
+	}
+	return parsed.data;
+}
 
+export default {
 	markPositionDirty,
 	startPositionAutosave,
 	autosaveCurrentPositionOnce,
 	stopPositionAutosave,
 	clearAutosave,
+	loadAutosave,
 };

@@ -1,0 +1,122 @@
+// src/client/scripts/esm/game/boardeditor/actions/editorSavesAPI.ts
+
+/**
+ * Client-side wrappers for the editor saves server API endpoints.
+ */
+
+import validatorama from '../../../util/validatorama';
+
+// Types ----------------------------------------------------------------------------
+
+/** Abridged info returned by getSavedPositions */
+export interface CloudSaveListRecord {
+	name: string;
+	piece_count: number;
+	timestamp: number;
+}
+
+/** Full position info returned by getPosition */
+export interface CloudPositionRecord {
+	timestamp: number;
+	icn: string;
+	pawn_double_push: boolean;
+	castling: boolean;
+}
+
+// Helpers --------------------------------------------------------------------------
+
+async function buildAuthHeaders(): Promise<Record<string, string>> {
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json',
+		'is-fetch-request': 'true',
+	};
+	const token = await validatorama.getAccessToken();
+	if (token) headers['Authorization'] = `Bearer ${token}`;
+	return headers;
+}
+
+// API Wrappers --------------------------------------------------------------------
+
+/**
+ * GET /api/editor-saves
+ * Returns an array of abridged save records for the logged-in user.
+ */
+async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
+	const headers = await buildAuthHeaders();
+	const response = await fetch('/api/editor-saves', {
+		method: 'GET',
+		headers,
+	});
+	if (!response.ok) {
+		const errorData = (await response.json()) as { error?: string };
+		throw new Error(errorData.error || 'Failed to get saved positions');
+	}
+	const data = (await response.json()) as { saves: CloudSaveListRecord[] };
+	return data.saves;
+}
+
+/**
+ * POST /api/editor-saves
+ * Saves a position to the server for the logged-in user.
+ */
+async function savePosition(
+	name: string,
+	piece_count: number,
+	timestamp: number,
+	icn: string,
+	pawn_double_push: boolean,
+	castling: boolean,
+): Promise<void> {
+	const headers = await buildAuthHeaders();
+	const response = await fetch('/api/editor-saves', {
+		method: 'POST',
+		headers,
+		body: JSON.stringify({ name, piece_count, timestamp, icn, pawn_double_push, castling }),
+	});
+	if (!response.ok) {
+		const errorData = (await response.json()) as { error?: string };
+		throw new Error(errorData.error || 'Failed to save position');
+	}
+}
+
+/**
+ * GET /api/editor-saves/:position_name
+ * Returns the full ICN and game rules for a saved position.
+ */
+async function getPosition(position_name: string): Promise<CloudPositionRecord> {
+	const headers = await buildAuthHeaders();
+	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
+		method: 'GET',
+		headers,
+	});
+	if (!response.ok) {
+		const errorData = (await response.json()) as { error?: string };
+		throw new Error(errorData.error || 'Failed to get position');
+	}
+	return (await response.json()) as CloudPositionRecord;
+}
+
+/**
+ * DELETE /api/editor-saves/:position_name
+ * Deletes a saved position from the server.
+ */
+async function deletePosition(position_name: string): Promise<void> {
+	const headers = await buildAuthHeaders();
+	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
+		method: 'DELETE',
+		headers,
+	});
+	if (!response.ok) {
+		const errorData = (await response.json()) as { error?: string };
+		throw new Error(errorData.error || 'Failed to delete position');
+	}
+}
+
+// Exports -------------------------------------------------------------------------
+
+export default {
+	getSavedPositions,
+	savePosition,
+	getPosition,
+	deletePosition,
+};

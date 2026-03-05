@@ -15,9 +15,10 @@
  */
 
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
-import type { EditorSaveState } from './esave';
+import type { EditorSaveState } from '../editortypes';
 import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 
@@ -79,7 +80,7 @@ async function reset(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Load default board editor position
-	boardeditor.setActivePositionName(undefined);
+	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditor();
 }
 
@@ -110,7 +111,7 @@ async function clearAll(): Promise<void> {
 		state_global,
 	};
 
-	boardeditor.setActivePositionName(undefined);
+	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
@@ -124,7 +125,7 @@ async function clearAll(): Promise<void> {
 }
 
 /** Loads a position from a savestate. */
-async function load(editorSaveState: EditorSaveState): Promise<void> {
+async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	// Unload logical and rendering parts of current position
@@ -141,7 +142,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	boardeditor.setActivePositionName(editorSaveState.positionname);
+	boardeditor.setActivePosition(editorSaveState.position_name, storage_type);
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
