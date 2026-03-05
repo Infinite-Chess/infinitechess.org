@@ -21,6 +21,7 @@ import style from '../style';
 import toast from '../toast';
 import eactions from '../../boardeditor/actions/eactions';
 import IndexedDB from '../../../util/IndexedDB';
+import egamerules from '../../boardeditor/egamerules';
 import boardeditor from '../../boardeditor/boardeditor';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
@@ -48,6 +49,8 @@ type ModalConfig = {
 	mode: ModalMode;
 	position_name: string;
 	storage_type: StorageType;
+	/** The server-side timestamp for the position; only used when loading from cloud */
+	timestamp?: number;
 };
 
 // Elements ----------------------------------------------------------
@@ -155,8 +158,13 @@ function getMode(): typeof mode {
 	return mode;
 }
 
-function openModal(mode: ModalMode, position_name: string, storage_type: StorageType): void {
-	modal_config = { mode, position_name, storage_type };
+function openModal(
+	mode: ModalMode,
+	position_name: string,
+	storage_type: StorageType,
+	timestamp?: number,
+): void {
+	modal_config = { mode, position_name, storage_type, timestamp };
 
 	if (modal_config.mode === 'delete') {
 		element_modalTitle.textContent = 'Delete position?';
@@ -233,9 +241,13 @@ async function deleteCloudPosition(position_name: string): Promise<void> {
 
 /**
  * Downloads a position from the server.
+ * @param timestamp - The server-side timestamp for this position.
  * @returns An EditorSaveState on success, undefined on failure.
  */
-async function downloadCloudPosition(position_name: string): Promise<EditorSaveState | undefined> {
+async function downloadCloudPosition(
+	position_name: string,
+	timestamp: number,
+): Promise<EditorSaveState | undefined> {
 	let cloudPosition: CloudPositionRecord;
 	try {
 		cloudPosition = await editorSavesAPI.getPosition(position_name);
@@ -264,7 +276,7 @@ async function downloadCloudPosition(position_name: string): Promise<EditorSaveS
 	};
 	return {
 		position_name,
-		timestamp: Date.now(),
+		timestamp,
 		piece_count: variantOptions.position.size,
 		variantOptions,
 		pawnDoublePush: cloudPosition.pawn_double_push,
@@ -296,7 +308,7 @@ async function onModalYesButtonPress(): Promise<void> {
 		return;
 	}
 
-	const { mode, position_name, storage_type } = modal_config; // Pull properties before clearing its state
+	const { mode, position_name, storage_type, timestamp } = modal_config; // Pull properties before clearing its state
 	closeModal(); // Close modal immediately to clear UI
 
 	if (mode === 'delete') {
@@ -314,14 +326,18 @@ async function onModalYesButtonPress(): Promise<void> {
 		// Load position
 		const editorSaveState =
 			storage_type === 'cloud'
-				? await downloadCloudPosition(position_name)
+				? await downloadCloudPosition(position_name, timestamp ?? Date.now())
 				: await readLocalPosition(position_name);
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
 			eactions.load(editorSaveState);
 		}
 	} else if (mode === 'overwrite_save') {
-		await esave.save(position_name);
+		if (storage_type === 'cloud') {
+			await saveCurrentPositionToCloud(position_name);
+		} else {
+			await esave.save(position_name);
+		}
 		updateSavedPositionListUI();
 	}
 }
@@ -340,14 +356,35 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 	const saveinfo_key = `${esave.EDITOR_SAVEINFO_PREFIX}${positionname}`;
 
+	// If a local save already exists, ask to overwrite it locally
 	const previous_saveinfoRaw = await IndexedDB.loadItem(saveinfo_key);
 	const previous_saveinfoParsed =
 		esave.EditorAbridgedSaveStateSchema.safeParse(previous_saveinfoRaw);
-	if (!previous_saveinfoParsed.success) {
-		// If there is no previous valid EditorAbridgedSaveState, save under positionname
-		await esave.save(positionname);
-		updateSavedPositionListUI();
-	} else openModal('overwrite_save', positionname, 'local');
+	if (previous_saveinfoParsed.success) {
+		openModal('overwrite_save', positionname, 'local');
+		return;
+	}
+
+	// If a cloud save already exists, ask to overwrite it on the cloud
+	if (validatorama.areWeLoggedIn()) {
+		let cloudSaves: CloudSaveListRecord[] = [];
+		try {
+			cloudSaves = await editorSavesAPI.getSavedPositions();
+		} catch (err) {
+			// If we can't reach the server, fall through to local save
+			console.error('Failed to check cloud saves:', err);
+			const errMsg = err instanceof Error ? err.message : String(err);
+			toast.show('Could not check cloud saves — saving locally: ' + errMsg, { error: true });
+		}
+		if (cloudSaves.some((s) => s.name === positionname)) {
+			openModal('overwrite_save', positionname, 'cloud');
+			return;
+		}
+	}
+
+	// No existing save found — save locally
+	await esave.save(positionname);
+	updateSavedPositionListUI();
 }
 
 /** Create a button element for one position row, with given SVG href. */
@@ -426,7 +463,9 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
+	registerButtonClick(loadBtn, () =>
+		openModal('load', position_name, save.storage_type, timestamp),
+	);
 	row.appendChild(loadBtn);
 
 	// "Cloud Save" button (only when logged in)
@@ -452,6 +491,62 @@ function generateRowForSavedPositionsElement(
 	if (boardeditor.getActivePositionName() === position_name) row.classList.add('active-position');
 
 	return row;
+}
+
+/**
+ * Saves the current editor position directly to the cloud (used when overwriting a cloud save from Save Position As).
+ * Any existing local copy with the same name is removed.
+ */
+async function saveCurrentPositionToCloud(position_name: string): Promise<void> {
+	const variantOptions = eactions.getCurrentPositionInformation(false);
+	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
+	const piece_count = variantOptions.position.size;
+	const timestamp = Date.now();
+
+	// Convert variantOptions to ICN
+	const longFormatIn: LongFormatIn = {
+		metadata: {} as MetaData, // Empty metadata object required by ICN converter
+		position: variantOptions.position,
+		gameRules: variantOptions.gameRules,
+		state_global: variantOptions.state_global,
+		fullMove: variantOptions.fullMove ?? 1,
+	};
+	let icn: string;
+	try {
+		icn = icnconverter.LongToShort_Format(longFormatIn, {
+			skipPosition: false,
+			compact: true,
+			spaces: false,
+			comments: false,
+			make_new_lines: false,
+			move_numbers: false,
+		});
+	} catch (err) {
+		console.error('Failed to convert position to ICN:', err);
+		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
+		return;
+	}
+
+	try {
+		await editorSavesAPI.savePosition(
+			position_name,
+			piece_count,
+			timestamp,
+			icn,
+			pawnDoublePush ?? false,
+			castling ?? false,
+		);
+	} catch (err) {
+		console.error('Failed to save position to cloud:', err);
+		const errMsg = err instanceof Error ? err.message : String(err);
+		toast.show('Failed to save position to cloud: ' + errMsg, { error: true });
+		return;
+	}
+
+	// Remove any local copy with the same name
+	await deleteLocalPosition(position_name);
+	boardeditor.setActivePositionName(position_name);
+	toast.show('Position saved to cloud.');
 }
 
 /**
