@@ -115,6 +115,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
 /**
  * DELETE /api/editor-saves/:position_name
  * Deletes a saved position from the server.
+ * Returns the updated list of abridged save records for the user.
  */
 async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
