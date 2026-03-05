@@ -649,7 +649,6 @@ async function updateSavedPositionListUI(): Promise<void> {
 		let cloudSaves: CloudSaveListRecord[] = [];
 		try {
 			cloudSaves = await editorSavesAPI.getSavedPositions();
-			for (const save of cloudSaves) cloudSaves.push(save);
 		} catch (err) {
 			console.error('Failed to fetch cloud saves:', err);
 			const errMsg = err instanceof Error ? err.message : String(err);
