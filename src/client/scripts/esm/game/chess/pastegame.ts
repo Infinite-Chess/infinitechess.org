@@ -263,9 +263,12 @@ function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else {
-		// No position specified in the ICN, extract from the Variant metadata (guaranteed)
+	} else if (longFormat.metadata.Variant) {
+		// No position specified in the ICN, extract from the Variant metadata
 		return variant.getStartingPositionOfVariant(longFormat.metadata);
+	} else {
+		// Empty position
+		return { position: new Map(), specialRights: new Set() };
 	}
 }
 
