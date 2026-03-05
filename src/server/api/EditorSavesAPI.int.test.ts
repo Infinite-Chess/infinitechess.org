@@ -399,11 +399,12 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual({
+			expect(response.body).toMatchObject({
 				icn: 'test-icn-data',
 				pawn_double_push: true,
 				castling: false,
 			});
+			expect(typeof response.body.timestamp).toBe('number');
 		});
 
 		it('should return 404 if position not found or not owned', async () => {
@@ -434,11 +435,12 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toEqual({
+			expect(response.body).toMatchObject({
 				icn: 'test-icn-spaces',
 				pawn_double_push: false,
 				castling: true,
 			});
+			expect(typeof response.body.timestamp).toBe('number');
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
