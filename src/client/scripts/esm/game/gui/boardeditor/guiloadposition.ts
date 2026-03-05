@@ -382,6 +382,8 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
+	loadBtn.classList.add('tooltip-u');
+	loadBtn.dataset['tooltip'] = 'Load position';
 	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
 	row.appendChild(loadBtn);
 
@@ -389,9 +391,13 @@ function generateRowForSavedPositionsElement(
 	if (showCloudButton) {
 		const cloudBtn = createButtonElement('#svg-cloud-save');
 		cloudBtn.classList.add('cloud-save');
+		cloudBtn.classList.add('tooltip-u');
 		if (save.storage_type === 'local') {
 			// Local save: greyed-out cloud button (not yet on cloud)
 			cloudBtn.classList.add('local');
+			cloudBtn.dataset['tooltip'] = 'Save to cloud';
+		} else {
+			cloudBtn.dataset['tooltip'] = 'Remove from cloud';
 		}
 		registerButtonClick(cloudBtn, () =>
 			onCloudButtonPress(position_name, save.storage_type, cloudBtn),
@@ -401,6 +407,8 @@ function generateRowForSavedPositionsElement(
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
+	deleteBtn.classList.add('tooltip-u');
+	deleteBtn.dataset['tooltip'] = 'Delete position';
 	registerButtonClick(deleteBtn, () => openModal('delete', position_name, save.storage_type));
 	row.appendChild(deleteBtn);
 
