@@ -21,12 +21,24 @@ const EDITOR_SAVE_PREFIX = 'editor-save-' as const;
 /** Prefix for editor saveinfo in local storage */
 const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-' as const;
 
-// Variables --------------------------------------------------------------------
+// State --------------------------------------------------------------------
 
 /** Prevent overlapping IndexedDB saves (single-flight): is save ongoing */
 let positionSaveInFlight = false;
 /** Prevent overlapping IndexedDB writes (single-flight): is save pending */
 let positionSavePending = false;
+
+// Helpers ----------------------------------------------------------------------
+
+/** Returns the IndexedDB key for the full save data of a position. */
+function saveKey(position_name: string): string {
+	return `${EDITOR_SAVE_PREFIX}${position_name}`;
+}
+
+/** Returns the IndexedDB key for the abridged save info of a position. */
+function saveinfoKey(position_name: string): string {
+	return `${EDITOR_SAVEINFO_PREFIX}${position_name}`;
+}
 
 // Actions ----------------------------------------------------------------------
 
@@ -82,9 +94,9 @@ async function saveState(editorSaveState: EditorSaveState): Promise<void> {
 	const { position_name, timestamp, piece_count } = editorSaveState;
 	await Promise.all([
 		// Save full info for loading purposes
-		IndexedDB.saveItem(`${EDITOR_SAVE_PREFIX}${position_name}`, editorSaveState),
+		IndexedDB.saveItem(saveKey(position_name), editorSaveState),
 		// Save abridged info for display purposes
-		IndexedDB.saveItem(`${EDITOR_SAVEINFO_PREFIX}${position_name}`, {
+		IndexedDB.saveItem(saveinfoKey(position_name), {
 			position_name,
 			timestamp,
 			piece_count,
@@ -95,15 +107,14 @@ async function saveState(editorSaveState: EditorSaveState): Promise<void> {
 /** Deletes a locally saved position from IndexedDB. */
 async function deleteLocal(position_name: string): Promise<void> {
 	await Promise.all([
-		IndexedDB.deleteItem(`${EDITOR_SAVEINFO_PREFIX}${position_name}`),
-		IndexedDB.deleteItem(`${EDITOR_SAVE_PREFIX}${position_name}`),
+		IndexedDB.deleteItem(saveinfoKey(position_name)),
+		IndexedDB.deleteItem(saveKey(position_name)),
 	]);
 }
 
 /** Returns true if a local save exists for the given position name. */
 async function localSaveExists(position_name: string): Promise<boolean> {
-	const saveinfo_key = `${EDITOR_SAVEINFO_PREFIX}${position_name}`;
-	const raw = await IndexedDB.loadItem(saveinfo_key);
+	const raw = await IndexedDB.loadItem(saveinfoKey(position_name));
 	return editortypes.AbridgedSaveStateSchema.safeParse(raw).success;
 }
 
@@ -138,12 +149,11 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
  * @returns An EditorSaveState on success, undefined if not found or corrupted.
  */
 async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
-	const save_key = `${EDITOR_SAVE_PREFIX}${position_name}`;
-	const editorSaveStateRaw = await IndexedDB.loadItem(save_key);
+	const editorSaveStateRaw = await IndexedDB.loadItem(saveKey(position_name));
 	const editorSaveStateParsed = editortypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
 		console.error(
-			`Invalid EditorSaveState ${save_key} in IndexedDB ${editorSaveStateParsed.error}`,
+			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,
 		);
 		toast.show(`The position was corrupted.`, { error: true });
 		return;
