@@ -377,12 +377,20 @@ function readGameRules(): void {
 	const mesh = gameslot.getMesh()!;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
-	// Update pawn double push specialrights of position
-	if (gameRules.pawnDoublePush !== undefined)
+	const previousPositionDependentGameRules = egamerules.getPositionDependentGameRules();
+
+	// Update pawn double push specialrights of position, only if the value changed
+	if (
+		gameRules.pawnDoublePush !== undefined &&
+		gameRules.pawnDoublePush !== previousPositionDependentGameRules.pawnDoublePush
+	)
 		egamerules.queueToggleGlobalPawnDoublePush(gameRules.pawnDoublePush, edit);
 
-	// Update castling with rooks specialrights of position
-	if (gameRules.castling !== undefined)
+	// Update castling with rooks specialrights of position, only if the value changed
+	if (
+		gameRules.castling !== undefined &&
+		gameRules.castling !== previousPositionDependentGameRules.castling
+	)
 		egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castling, edit);
 
 	// Upate boardeditor.gamerulesGUIinfo
