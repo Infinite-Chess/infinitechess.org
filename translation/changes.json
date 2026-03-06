@@ -1,4 +1,7 @@
 {
+  "88": {
+    "note": "Added rate-limiting.error on line 671."
+  },
   "87": {
     "note": "Added malformed_message on line 491 under play.javascript.websocket."
   },

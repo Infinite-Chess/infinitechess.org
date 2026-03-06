@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "87"
+version = "88"
 maintainer = "Naviary"
 
 [header]
@@ -668,3 +668,4 @@ ws-rated_invite_verification_needed = "To play ranked, you need to be signed in 
 
 [rate-limiting]
 generic = "You have made too many requests, please try again later."
+error = "Too many requests"

@@ -514,7 +514,8 @@ export type TranslationKeys =
 	| 'server.javascript.ws-invalid_code'
 	| 'server.javascript.ws-game_aborted'
 	| 'server.javascript.ws-rated_invite_verification_needed'
-	| 'rate-limiting.generic';
+	| 'rate-limiting.generic'
+	| 'rate-limiting.error';
 
 /**
  * Nested object type for client-side translation access.
@@ -1131,5 +1132,6 @@ export interface TranslationsObject {
 	};
 	'rate-limiting': {
 		generic: string;
+		error: string;
 	};
 }

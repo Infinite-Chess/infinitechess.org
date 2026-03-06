@@ -91,7 +91,7 @@ async function savePosition(
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Failed to save position');
+		throw new Error(errorData.error || 'Unknown error');
 	}
 	const data = (await response.json()) as { success: true; saves: CloudSaveListRecord[] };
 	return data.saves;
@@ -109,7 +109,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Failed to get position');
+		throw new Error(errorData.error || 'Unknown error');
 	}
 	return (await response.json()) as CloudPositionRecord;
 }

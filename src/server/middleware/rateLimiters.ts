@@ -14,8 +14,10 @@ import { getTranslationForReq } from '../utility/translate.js';
 
 /** A handler that returns a generic rate-limiting message. */
 function generic_handler(req: Request, res: Response): Response {
-	const msg = getTranslationForReq('rate-limiting.generic', req);
-	return res.status(429).json({ message: msg });
+	return res.status(429).json({
+		message: getTranslationForReq('rate-limiting.generic', req), // More detailed human readable
+		error: getTranslationForReq('rate-limiting.error', req), // Shorter concise message
+	});
 }
 
 /** Default options for all rate limiters. */
@@ -54,5 +56,27 @@ export const resendAccountVerificationLimiter = rateLimit({
 export const forgotPasswordLimiter = rateLimit({
 	windowMs: 1000 * 60 * 20,
 	max: 8,
+	...default_options,
+});
+
+/**
+ * Editor Save Limiter
+ * Rule: Max 10 position saves per 1 minute per IP
+ */
+export const editorSaveLimiter = rateLimit({
+	windowMs: 1000 * 60,
+	max: 10,
+	skip: () => process.env['NODE_ENV'] === 'test',
+	...default_options,
+});
+
+/**
+ * Editor Load Limiter
+ * Rule: Max 20 position loads per 1 minute per IP
+ */
+export const editorLoadLimiter = rateLimit({
+	windowMs: 1000 * 60,
+	max: 20,
+	skip: () => process.env['NODE_ENV'] === 'test',
 	...default_options,
 });

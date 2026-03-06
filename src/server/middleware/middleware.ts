@@ -51,6 +51,8 @@ import {
 	createAccountLimiter,
 	resendAccountVerificationLimiter,
 	forgotPasswordLimiter,
+	editorSaveLimiter,
+	editorLoadLimiter,
 } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
@@ -226,8 +228,8 @@ export function configureMiddleware(app: Express): void {
 
 	// Editor saves routes
 	app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
-	app.post('/api/editor-saves', EditorSavesAPI.savePosition);
-	app.get('/api/editor-saves/:position_name', EditorSavesAPI.getPosition);
+	app.post('/api/editor-saves', editorSaveLimiter, EditorSavesAPI.savePosition);
+	app.get('/api/editor-saves/:position_name', editorLoadLimiter, EditorSavesAPI.getPosition);
 	app.delete('/api/editor-saves/:position_name', EditorSavesAPI.deletePosition);
 
 	app.get('/logout', handleLogout);
