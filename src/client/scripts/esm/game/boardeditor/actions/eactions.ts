@@ -164,9 +164,6 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 function copy(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const gamefile = gameslot.getGamefile()!;
-	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
-
 	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
 		metadata:

@@ -121,11 +121,6 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
 	return o.types.length;
 }
 
-/** Returns whether there is at least one piece in the game, EXCLUDING undefined placeholders. */
-function hasAtleastOnePiece(o: OrganizedPieces): boolean {
-	return o.coords.size > 0;
-}
-
 // Getting All Pieces -------------------------------------------------------------------------------------------------
 
 /**
@@ -404,7 +399,6 @@ export default {
 	getPieceCountOfType,
 	getPieceCountOfTypeRange,
 	getPieceCount_IncludingUndefineds,
-	hasAtleastOnePiece,
 
 	getCoordsOfAllPieces,
 	getJumpingRoyalCoordsOfColor,
