@@ -140,6 +140,11 @@ async function saveCloudState(
  * Reads live game state instead of local storage.
  */
 async function saveCloud(position_name: string): Promise<void> {
+	if (!boardeditor.isPositionDirty()) {
+		toast.show('No changes made.');
+		return;
+	}
+
 	const variantOptions = eactions.getCurrentPositionInformation(false);
 	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 	const timestamp = Date.now();
