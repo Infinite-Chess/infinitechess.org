@@ -334,7 +334,7 @@ async function startBoardEditor(): Promise<void> {
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor();
+	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
 }
 
 /** Initializes a local game from a custom position. */
@@ -425,6 +425,8 @@ async function startBoardEditorFromCustomPosition(
 		};
 		presetAnnotes?: PresetAnnotes;
 	},
+	/** Whether the position has unsaved changes. Defaults to true (dirty). */
+	dirty: boolean,
 	/** Whether the pawnDoublePush flag should be set for the position in the editor game rules */
 	pawnDoublePush?: boolean,
 	/** Whether the castling flag should be set for the position in the editor game rules */
@@ -455,7 +457,7 @@ async function startBoardEditorFromCustomPosition(
 	// because the gui DEPENDS on the other stuff.
 
 	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
+	boardeditor.initBoardEditor(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 
 /**

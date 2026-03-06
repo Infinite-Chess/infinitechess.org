@@ -17,6 +17,7 @@ import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter'
 import toast from '../../gui/toast';
 import esave from './esave';
 import eactions from './eactions';
+import eautosave from './eautosave';
 import egamerules from '../egamerules';
 import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
@@ -153,7 +154,12 @@ async function saveCloud(position_name: string): Promise<void> {
 		castling,
 	};
 
-	await saveCloudState(editorSaveState);
+	const result = await saveCloudState(editorSaveState);
+	if (result.success) {
+		boardeditor.markPositionClean();
+		eautosave.markPositionDirty();
+		void eautosave.autosaveCurrentPositionOnce();
+	}
 }
 
 /**

@@ -139,9 +139,9 @@ async function open(): Promise<void> {
 
 	// Try to read in autosave and initialize board editor
 	// If there is no autosave, initialize board editor with Classical position
-	const editorSaveState = await eautosave.loadAutosave();
+	const autoSaveState = await eautosave.loadAutosave();
 
-	if (editorSaveState === undefined) {
+	if (autoSaveState === undefined) {
 		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {
@@ -155,10 +155,10 @@ async function open(): Promise<void> {
 			UTCTime: timeutil.getCurrentUTCTime(),
 		};
 
-		if (editorSaveState.active_position !== undefined)
+		if (autoSaveState.active_position !== undefined)
 			boardeditor.setActivePosition(
-				editorSaveState.active_position.name,
-				editorSaveState.active_position.storage_type,
+				autoSaveState.active_position.name,
+				autoSaveState.active_position.storage_type,
 			);
 		else boardeditor.clearActivePosition();
 
@@ -166,11 +166,12 @@ async function open(): Promise<void> {
 			{
 				metadata,
 				additional: {
-					variantOptions: editorSaveState.variantOptions,
+					variantOptions: autoSaveState.variantOptions,
 				},
 			},
-			editorSaveState.pawnDoublePush,
-			editorSaveState.castling,
+			autoSaveState.dirty,
+			autoSaveState.pawnDoublePush,
+			autoSaveState.castling,
 		);
 	}
 

@@ -150,6 +150,7 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 				variantOptions: editorSaveState.variantOptions,
 			},
 		},
+		false, // Clean position (no unsaved changes) since we're loading one that was already saved
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);

@@ -246,6 +246,10 @@ function closeModalListeners(): void {
 	document.removeEventListener('keydown', onModalKeyDown);
 }
 
+function onSaveKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter' && modal_config === undefined) onSaveButtonPress();
+}
+
 // Functions -----------------------------------------------------------------
 
 function onModalKeyDown(e: KeyboardEvent): void {
@@ -269,43 +273,49 @@ async function onModalYesButtonPress(): Promise<void> {
 	const { mode, position_name, storage_type } = modal_config; // Pull properties before clearing its state
 	closeModal(); // Close modal immediately to clear UI
 
-	if (mode === 'delete') {
-		// Delete position
-		let preloadedCloudSaves: PreloadedCloudSaves;
-		if (storage_type === 'cloud') {
-			preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
-		} else {
-			await esave.deleteLocal(position_name);
-		}
-		// Clear active position name if the deleted position was active
-		if (boardeditor.isActivePosition(position_name, storage_type))
-			boardeditor.clearActivePosition();
-		updateSavedPositionListUI(preloadedCloudSaves);
-	} else if (mode === 'load') {
-		// Load position
-		const initialLoadCount = load_counter;
-		const editorSaveState =
-			storage_type === 'cloud'
-				? await withRequest(() => ecloud.readCloud(position_name))
-				: await esave.readLocal(position_name);
-		// If the load count changed while the request was in-flight, the user already
-		// loaded a different position — discard this stale result.
-		if (load_counter !== initialLoadCount) {
-			console.log(`Discarding cloud load result`);
-			return;
-		}
-		if (editorSaveState !== undefined) {
-			floatingWindow.close(false);
-			await eactions.load(editorSaveState, storage_type);
-		}
+	if (mode === 'load') {
+		await performLoad(position_name, storage_type);
+	} else if (mode === 'delete') {
+		await performDelete(position_name, storage_type);
 	} else if (mode === 'overwrite_save') {
 		await esave.saveLocal(position_name);
+		boardeditor.setActivePosition(position_name, 'local');
 		updateSavedPositionListUI();
 	}
 }
 
-function onSaveKeyDown(e: KeyboardEvent): void {
-	if (e.key === 'Enter' && modal_config === undefined) onSaveButtonPress();
+/** Performs the actual load operation for a saved position, bypassing the modal. */
+async function performLoad(position_name: string, storage_type: StorageType): Promise<void> {
+	const initialLoadCount = load_counter;
+	const editorSaveState =
+		storage_type === 'cloud'
+			? await withRequest(() => ecloud.readCloud(position_name))
+			: await esave.readLocal(position_name);
+	// If the load count changed while the request was in-flight, the user already
+	// loaded a different position — discard this stale result.
+	if (load_counter !== initialLoadCount) {
+		console.log(`Discarding cloud load result`);
+		return;
+	}
+	if (editorSaveState !== undefined) {
+		floatingWindow.close(false);
+		await eactions.load(editorSaveState, storage_type);
+	}
+}
+
+/** Performs the actual delete operation for a saved position, bypassing the modal. */
+async function performDelete(position_name: string, storage_type: StorageType): Promise<void> {
+	// Delete position
+	let preloadedCloudSaves: PreloadedCloudSaves;
+	if (storage_type === 'cloud') {
+		preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
+	} else {
+		await esave.deleteLocal(position_name);
+	}
+	// Clear active position name if the deleted position was active
+	if (boardeditor.isActivePosition(position_name, storage_type))
+		boardeditor.clearActivePosition();
+	updateSavedPositionListUI(preloadedCloudSaves);
 }
 
 /**
@@ -329,6 +339,7 @@ async function onSaveButtonPress(): Promise<void> {
 
 	// No existing save found — save locally
 	await esave.saveLocal(positionname);
+	boardeditor.setActivePosition(positionname, 'local');
 	element_saveAsPositionName.value = '';
 	updateSavedPositionListUI();
 }
@@ -409,7 +420,14 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
-	registerButtonClick(loadBtn, () => openModal('load', position_name, save.storage_type));
+	registerButtonClick(loadBtn, () => {
+		// Skip confirmation modal if the position has no unsaved changes
+		if (!boardeditor.isPositionDirty()) {
+			performLoad(position_name, save.storage_type);
+		} else {
+			openModal('load', position_name, save.storage_type);
+		}
+	});
 	row.appendChild(loadBtn);
 
 	// "Cloud Save" button (only when logged in)

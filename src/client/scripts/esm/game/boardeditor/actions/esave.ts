@@ -9,6 +9,7 @@ import type { EditorAbridgedSaveState, EditorSaveState } from '../editortypes';
 import toast from '../../gui/toast';
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
+import eautosave from './eautosave';
 import egamerules from '../egamerules';
 import editortypes from '../editortypes';
 import boardeditor from '../boardeditor';
@@ -42,7 +43,7 @@ function saveinfoKey(position_name: string): string {
 
 // Actions ----------------------------------------------------------------------
 
-/** Saves current position under "positionname". */
+/** Saves current position under "position_name". */
 async function saveLocal(position_name: string): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
@@ -80,7 +81,9 @@ async function saveLocal(position_name: string): Promise<void> {
 			positionSavePending = false;
 			await saveLocal(position_name);
 		} else {
-			boardeditor.setActivePosition(position_name, 'local');
+			boardeditor.markPositionClean();
+			eautosave.markPositionDirty();
+			void eautosave.autosaveCurrentPositionOnce();
 			toast.show('Position saved in browser.');
 		}
 	}

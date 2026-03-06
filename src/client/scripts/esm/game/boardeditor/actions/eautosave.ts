@@ -64,6 +64,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 
 		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
 			active_position: boardeditor.getActivePosition(),
+			dirty: boardeditor.isPositionDirty(),
 			timestamp: Date.now(),
 			piece_count: variantOptions.position.size,
 			variantOptions,

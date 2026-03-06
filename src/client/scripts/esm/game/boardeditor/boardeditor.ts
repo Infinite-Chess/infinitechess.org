@@ -98,6 +98,9 @@ let initial_castling: boolean | undefined = true;
 /** The active position, if any, as displayed on editor bar and used for "Save" button by default */
 let active_position: ActivePosition | undefined = undefined;
 
+/** Whether the current board position has unsaved changes. */
+let positionDirty = false;
+
 // Initialization ------------------------------------------------------------------------
 
 /**
@@ -106,6 +109,8 @@ let active_position: ActivePosition | undefined = undefined;
  * May optionally be supplied with custom game rules.
  */
 async function initBoardEditor(
+	/** Whether the position has unsaved changes. */
+	dirty: boolean,
 	variantOptions?: VariantOptions,
 	pawnDoublePush?: boolean,
 	castling?: boolean,
@@ -113,6 +118,8 @@ async function initBoardEditor(
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
+	positionDirty = dirty;
+	// console.error('Board editor initialized with dirty = ' + dirty);
 
 	setTool('normal');
 
@@ -157,6 +164,7 @@ async function initBoardEditor(
 }
 
 function closeBoardEditor(): void {
+	// Perform last autosave
 	eautosave.markPositionDirty();
 	void eautosave.autosaveCurrentPositionOnce();
 	eautosave.stopPositionAutosave();
@@ -298,7 +306,7 @@ function addEditToHistory(edit: Edit): void {
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 
-	eautosave.markPositionDirty();
+	markPositionDirty();
 }
 
 function undo(): void {
@@ -328,7 +336,7 @@ function undo(): void {
 
 	guinavigation.update_EditButtons();
 
-	eautosave.markPositionDirty();
+	markPositionDirty();
 }
 
 function redo(): void {
@@ -349,7 +357,7 @@ function redo(): void {
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 
-	eautosave.markPositionDirty();
+	markPositionDirty();
 }
 
 // Queuing Edits ---------------------------------------------------------------
@@ -437,6 +445,27 @@ function areInBoardEditor(): boolean {
 	return inBoardEditor;
 }
 
+/** Returns true if the current board position has unsaved changes. */
+function isPositionDirty(): boolean {
+	return positionDirty;
+}
+
+/**
+ * Marks the current board position as having unsaved changes,
+ * and notifies eautosave to schedule a background autosave.
+ */
+function markPositionDirty(): void {
+	// console.error('Position marked dirty');
+	positionDirty = true;
+	eautosave.markPositionDirty();
+}
+
+/** Marks the current board position as clean (saved). */
+function markPositionClean(): void {
+	// console.error('Position marked clean');
+	positionDirty = false;
+}
+
 function canUndo(): boolean {
 	// comparing undefined always returns false
 	return indexOfThisEdit !== undefined && indexOfThisEdit > 0;
@@ -483,6 +512,7 @@ function setActivePosition(name: string, storage_type: StorageType): void {
 
 function clearActivePosition(): void {
 	active_position = undefined;
+	markPositionDirty();
 	guiboardeditor.updateActivePositionElement(undefined);
 	flushActivePositionToAutosave();
 }
@@ -531,6 +561,9 @@ export default {
 	queueRemovePiece,
 	queueSpecialRights,
 	// Utility
+	isPositionDirty,
+	markPositionDirty,
+	markPositionClean,
 	canUndo,
 	canRedo,
 	isLeftMouseReserved,

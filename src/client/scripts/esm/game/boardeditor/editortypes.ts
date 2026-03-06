@@ -47,6 +47,8 @@ export interface EditorSaveState extends EditorPositionData {
  */
 export interface EditorAutosaveState extends EditorPositionData {
 	active_position?: ActivePosition;
+	/** Whether the position has unsaved changes. */
+	dirty: boolean;
 }
 
 // Zod Schemas --------------------------------------------------------------------
@@ -83,6 +85,7 @@ const SaveStateSchema = z.strictObject({
 /** Schema for validating an AutosaveState */
 const AutosaveStateSchema = z.strictObject({
 	active_position: z.object({ name: z.string(), storage_type: z.enum(STORAGE_TYPES) }).optional(),
+	dirty: z.boolean(),
 	...positionDataFields,
 });
 

@@ -18,7 +18,6 @@ import typeutil, {
 } from '../../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../../chess/gameslot';
-import eautosave from '../../boardeditor/actions/eautosave';
 import boardeditor from '../../boardeditor/boardeditor';
 import guifloatingwindow from './guifloatingwindow';
 import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
@@ -391,7 +390,9 @@ function readGameRules(): void {
 
 	boardeditor.runEdit(gamefile, mesh, edit, true);
 	boardeditor.addEditToHistory(edit);
-	eautosave.markPositionDirty();
+	// Mark as dirty anyway, since boardeditor.addEditToHistory() may early exit
+	// if the edit has no changes, but gamerule changes still consider the position dirty.
+	boardeditor.markPositionDirty();
 }
 
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
