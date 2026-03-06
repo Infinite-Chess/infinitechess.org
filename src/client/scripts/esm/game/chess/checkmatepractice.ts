@@ -31,8 +31,8 @@ import guigameinfo from '../gui/guigameinfo.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
+import enginegame, { engineDictionary } from '../misc/enginegame.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
-import enginegame, { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -111,7 +111,8 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		currentEngine,
 		engineConfig: {
 			checkmateSelectedID: checkmateSelectedID,
-			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			engineTimeLimitPerMoveMillis:
+				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
 		},
 		variantOptions,
 		showGameControlButtons: true as true,

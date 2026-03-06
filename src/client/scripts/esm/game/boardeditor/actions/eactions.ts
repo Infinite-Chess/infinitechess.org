@@ -56,10 +56,7 @@ import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/enginecards/hydrochess_card';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import enginegame, {
-	engineDefaultTimeLimitPerMoveMillisDict,
-	engineWorldBorderDict,
-} from '../../misc/enginegame';
+import enginegame, { engineDictionary } from '../../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
 
@@ -268,7 +265,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		 * 2. Capped at engine's cap
 		 */
 
-		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
 		const cap = hydrochess_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
@@ -334,7 +331,8 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		youAreColor: engineUIConfig.youAreColor,
 		currentEngine,
 		engineConfig: {
-			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			engineTimeLimitPerMoveMillis:
+				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
 			strengthLevel: engineUIConfig.strengthLevel,
 		},
 	});

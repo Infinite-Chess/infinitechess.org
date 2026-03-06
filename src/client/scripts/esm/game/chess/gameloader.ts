@@ -43,7 +43,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
+import enginegame, { engineDictionary } from '../misc/enginegame.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -279,7 +279,7 @@ async function startEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
-			worldBorderDist: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
 	});
 
@@ -395,7 +395,7 @@ async function startCustomEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
-			worldBorderDist: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
 	});
 
