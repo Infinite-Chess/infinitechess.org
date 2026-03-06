@@ -268,6 +268,19 @@ function generateTables(): void {
 		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);`,
 	);
 
+	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Migrate pawn_double_push and castling from BOOLEAN (0,1) to tristate INTEGER (-1,0,1).
+	// The table is empty on prod, so we can simply drop and recreate it.
+	{
+		const tableSchema = db.get<{ sql: string }>(
+			`SELECT sql FROM sqlite_master WHERE type='table' AND name='editor_saves'`,
+		);
+		if (tableSchema && /pawn_double_push BOOLEAN/.test(tableSchema.sql)) {
+			db.run(`DROP TABLE editor_saves`);
+			console.log('Dropped editor_saves table for migration.');
+		}
+	}
+
 	// Editor Saves table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS editor_saves (
@@ -277,8 +290,8 @@ function generateTables(): void {
 			timestamp INTEGER NOT NULL,
 			icn TEXT NOT NULL,
 			compression TEXT NOT NULL DEFAULT 'none',
-			pawn_double_push BOOLEAN NOT NULL CHECK (pawn_double_push IN (0, 1)),
-			castling BOOLEAN NOT NULL CHECK (castling IN (0, 1)),
+			pawn_double_push INTEGER NOT NULL CHECK (pawn_double_push IN (-1, 0, 1)),
+			castling INTEGER NOT NULL CHECK (castling IN (-1, 0, 1)),
 
 			PRIMARY KEY (user_id, name),
 			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE

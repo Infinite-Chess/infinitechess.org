@@ -119,8 +119,8 @@ async function saveCloudState(
 			editorSaveState.timestamp,
 			compressedICN,
 			compressionMode,
-			editorSaveState.pawnDoublePush ?? false,
-			editorSaveState.castling ?? false,
+			editorSaveState.pawnDoublePush,
+			editorSaveState.castling,
 		);
 	} catch (err) {
 		console.error('Failed to upload position to cloud:', err);

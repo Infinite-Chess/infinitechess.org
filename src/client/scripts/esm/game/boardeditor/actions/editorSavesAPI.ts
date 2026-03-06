@@ -24,8 +24,10 @@ export interface CloudPositionRecord {
 	icn: string;
 	/** Compression mode used for the ICN */
 	compression: CompressionMode;
-	pawn_double_push: boolean;
-	castling: boolean;
+	/** undefined represents the indeterminate (third) tristate */
+	pawn_double_push?: boolean;
+	/** undefined represents the indeterminate (third) tristate */
+	castling?: boolean;
 }
 
 // Helpers --------------------------------------------------------------------------
@@ -70,8 +72,8 @@ async function savePosition(
 	timestamp: number,
 	icn: string,
 	compression: string,
-	pawn_double_push: boolean,
-	castling: boolean,
+	pawn_double_push?: boolean,
+	castling?: boolean,
 ): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
 	const response = await fetch('/api/editor-saves', {

@@ -37,9 +37,10 @@ const SavePositionBodySchema = z.strictObject({
 			editorutil.MAX_ICN_LENGTH,
 			`ICN must be ${editorutil.MAX_ICN_LENGTH} characters or less`,
 		),
-	pawn_double_push: z.boolean(),
-	castling: z.boolean(),
-	compression: z.enum(['none', 'deflate-raw']).optional().default('none'),
+	compression: z.enum(['none', 'deflate-raw']),
+	// undefined represents the indeterminate (third) state
+	pawn_double_push: z.boolean().optional(),
+	castling: z.boolean().optional(),
 });
 
 /** Schema for validating position_name in URL params */
@@ -91,7 +92,7 @@ function getSavedPositions(req: Request, res: Response): void {
 /**
  * API endpoint to save a new position for the current user.
  * If a position with the same name already exists, it will be overwritten.
- * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push: boolean, castling: boolean } in request body.
+ * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push?: boolean, castling?: boolean } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -192,8 +193,10 @@ function getPosition(req: Request, res: Response): void {
 			timestamp: position.timestamp,
 			icn: position.icn,
 			compression: position.compression,
-			pawn_double_push: Boolean(position.pawn_double_push),
-			castling: Boolean(position.castling),
+			// Decode tristate: -1 → undefined, 0 → false, 1 → true
+			pawn_double_push:
+				position.pawn_double_push === -1 ? undefined : Boolean(position.pawn_double_push),
+			castling: position.castling === -1 ? undefined : Boolean(position.castling),
 		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);

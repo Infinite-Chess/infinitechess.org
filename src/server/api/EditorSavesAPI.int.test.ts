@@ -37,6 +37,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 32,
 				timestamp: Date.now(),
 				icn: 'icn-data-1',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: true,
 			};
@@ -46,6 +47,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 76,
 				timestamp: Date.now(),
 				icn: 'icn-data-2',
+				compression: 'none',
 				pawn_double_push: false,
 				castling: true,
 			};
@@ -96,6 +98,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 32,
 				timestamp: Date.now(),
 				icn: 'test-icn-data',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: false,
 			};
@@ -117,6 +120,33 @@ describe('EditorSavesAPI Integration', () => {
 			});
 		});
 
+		it('should save and retrieve undefined (indeterminate) tristate for pawn_double_push and castling', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+
+			const response = await testRequest()
+				.post('/api/editor-saves')
+				.set('Cookie', user.cookie)
+				.send({
+					name: 'Tristate Position',
+					piece_count: 5,
+					timestamp: Date.now(),
+					icn: 'test-icn-tristate',
+					compression: 'none',
+					pawn_double_push: undefined,
+					castling: undefined,
+				});
+
+			expect(response.status).toBe(201);
+
+			// Verify raw DB values: -1 = indeterminate
+			const icnData = editorSavesManager.getSavedPositionICN(
+				'Tristate Position',
+				user.user_id,
+			);
+			expect(icnData?.pawn_double_push).toBe(-1);
+			expect(icnData?.castling).toBe(-1);
+		});
+
 		it('should return 400 if name is missing', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const response = await testRequest()
@@ -126,6 +156,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 10,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -143,6 +174,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 13,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: false,
 				});
@@ -162,6 +194,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 13,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -178,6 +211,7 @@ describe('EditorSavesAPI Integration', () => {
 					name: 'Test Position',
 					piece_count: 13,
 					timestamp: Date.now(),
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -195,6 +229,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 0,
 					timestamp: Date.now(),
 					icn: '',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: false,
 				});
@@ -214,6 +249,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 278_569,
 					timestamp: Date.now(),
 					icn: longIcn,
+					compression: 'none',
 					pawn_double_push: true,
 					castling: false,
 				});
@@ -234,6 +270,7 @@ describe('EditorSavesAPI Integration', () => {
 						piece_count: 8,
 						timestamp: Date.now(),
 						icn: 'test-icn',
+						compression: 'none',
 						pawn_double_push: true,
 						castling: true,
 					});
@@ -248,6 +285,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 13,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: false,
 				});
@@ -264,6 +302,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 10,
 				timestamp: 1000,
 				icn: 'test-icn-1',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: false,
 			});
@@ -277,6 +316,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 20,
 					timestamp: 2000,
 					icn: 'test-icn-2',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: true,
 				});
@@ -307,6 +347,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 13,
 				timestamp: Date.now(),
 				icn: 'test-icn-data',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: true,
 			});
@@ -323,6 +364,7 @@ describe('EditorSavesAPI Integration', () => {
 					name: 'Test Position',
 					piece_count: 13,
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -339,6 +381,7 @@ describe('EditorSavesAPI Integration', () => {
 					name: 'Test Position',
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -346,7 +389,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(400);
 		});
 
-		it('should return 400 if pawn_double_push is missing', async () => {
+		it('should treat missing pawn_double_push as indeterminate and save successfully', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -356,13 +399,18 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 13,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					castling: true,
 				});
 
-			expect(response.status).toBe(400);
+			expect(response.status).toBe(201);
+
+			// Omitted field should be stored as -1 (indeterminate)
+			const icnData = editorSavesManager.getSavedPositionICN('Test Position', user.user_id);
+			expect(icnData?.pawn_double_push).toBe(-1);
 		});
 
-		it('should return 400 if castling is missing', async () => {
+		it('should treat missing castling as indeterminate and save successfully', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 			const response = await testRequest()
 				.post('/api/editor-saves')
@@ -372,10 +420,15 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 13,
 					timestamp: Date.now(),
 					icn: 'test-icn-data',
+					compression: 'none',
 					pawn_double_push: true,
 				});
 
-			expect(response.status).toBe(400);
+			expect(response.status).toBe(201);
+
+			// Omitted field should be stored as -1 (indeterminate)
+			const icnData = editorSavesManager.getSavedPositionICN('Test Position', user.user_id);
+			expect(icnData?.castling).toBe(-1);
 		});
 	});
 
@@ -389,6 +442,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 13,
 				timestamp: Date.now(),
 				icn: 'test-icn-data',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: false,
 			});
@@ -425,6 +479,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 16,
 				timestamp: Date.now(),
 				icn: 'test-icn-spaces',
+				compression: 'none',
 				pawn_double_push: false,
 				castling: true,
 			});
@@ -440,6 +495,28 @@ describe('EditorSavesAPI Integration', () => {
 				castling: true,
 			});
 			expect(typeof response.body.timestamp).toBe('number');
+		});
+
+		it('should return undefined for indeterminate (tristate) pawn_double_push and castling', async () => {
+			const user = await integrationUtils.createAndLoginUser();
+
+			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
+				name: 'Tristate Get Test',
+				piece_count: 3,
+				timestamp: Date.now(),
+				icn: 'test-icn-tristate',
+				compression: 'none',
+				pawn_double_push: undefined,
+				castling: undefined,
+			});
+
+			const response = await testRequest()
+				.get(`/api/editor-saves/${encodeURIComponent('Tristate Get Test')}`)
+				.set('Cookie', user.cookie);
+
+			expect(response.status).toBe(200);
+			expect(response.body.pawn_double_push).toBeUndefined();
+			expect(response.body.castling).toBeUndefined();
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -461,6 +538,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 13,
 				timestamp: Date.now(),
 				icn: 'test-icn-data',
+				compression: 'none',
 				pawn_double_push: true,
 				castling: true,
 			});
@@ -496,6 +574,7 @@ describe('EditorSavesAPI Integration', () => {
 				piece_count: 8,
 				timestamp: Date.now(),
 				icn: 'test-icn',
+				compression: 'none',
 				pawn_double_push: false,
 				castling: false,
 			});
@@ -530,6 +609,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 250_592,
 					timestamp: Date.now(),
 					icn: maxLengthIcn,
+					compression: 'none',
 					pawn_double_push: true,
 					castling: false,
 				});
@@ -554,6 +634,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 4,
 					timestamp: Date.now(),
 					icn: 'test',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: true,
 				});
@@ -578,6 +659,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 100,
 					timestamp: Date.now(),
 					icn,
+					compression: 'none',
 					pawn_double_push: true,
 					castling: true,
 				});
@@ -602,6 +684,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 10,
 					timestamp: Date.now(),
 					icn: 'icn-user1',
+					compression: 'none',
 					pawn_double_push: true,
 					castling: false,
 				});
@@ -614,6 +697,7 @@ describe('EditorSavesAPI Integration', () => {
 					piece_count: 10,
 					timestamp: Date.now(),
 					icn: 'icn-user2',
+					compression: 'none',
 					pawn_double_push: false,
 					castling: true,
 				});
