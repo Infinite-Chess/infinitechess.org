@@ -201,6 +201,9 @@ function openModal(mode: ModalMode, position_name: string, storage_type: Storage
 		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${position_name}"? This cannot be undone.`;
 	}
 	element_modal.classList.remove('hidden');
+	// Blur the triggering button so that when the modal closes via keyboard (Escape/Enter),
+	// focus doesn't snap back to it and show an unwanted blue outline.
+	(document.activeElement as HTMLElement)?.blur();
 	initModalListeners();
 }
 
