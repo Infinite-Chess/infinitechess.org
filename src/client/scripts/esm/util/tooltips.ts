@@ -32,6 +32,20 @@ const tooltipClasses_Dotted = tooltipClasses.map((cls) => '.' + cls);
 const TOOLTIP_GAP = 8;
 /** Half the CSS border-width used for the arrow (px). Full arrow size = 2 × ARROW_HALF. */
 const ARROW_HALF = 5;
+/**
+ * Vertical offset (px) that places the arrow tip slightly inside the target element edge,
+ * creating a seamless visual connection between the target and the tooltip box.
+ * Matches the original CSS: arrow top was at targetRect.bottom - 1.5 for down-arrows.
+ */
+const ARROW_OVERLAP_DOWN = 1.5;
+/**
+ * Vertical offset (px) for up-arrows so the arrow tip overlaps the tooltip bottom edge
+ * by half a pixel, mirroring the ARROW_OVERLAP_DOWN relationship symmetrically.
+ */
+const ARROW_OVERLAP_UP = 0.5;
+/** Duration (ms) to wait after fading out before removing the tooltip from the DOM.
+ * Should be slightly longer than the CSS opacity transition (0.1 s = 100 ms). */
+const FADE_OUT_REMOVE_DELAY_MS = 150;
 
 /** The delay before a tooltip appears on hover. */
 const tooltipDelayMillis: number = 500;
@@ -128,13 +142,13 @@ function showTooltipFor(target: HTMLElement, direction: string): void {
 	let arrowTop: number;
 	if (isDown) {
 		tipTop = targetRect.bottom + TOOLTIP_GAP;
-		// Arrow sits in the gap; its top edge is 1.5 px above target bottom, matching the original CSS.
-		arrowTop = targetRect.bottom - ARROW_HALF * 2 + 1.5;
+		// Arrow sits in the gap; its top edge overlaps the target bottom slightly.
+		arrowTop = targetRect.bottom - ARROW_HALF * 2 + ARROW_OVERLAP_DOWN;
 		arrow.className = 'tooltip-arrow-down';
 	} else {
 		tipTop = targetRect.top - TOOLTIP_GAP - tipHeight;
-		// Arrow tip touches the tooltip bottom; arrow top is (TOOLTIP_GAP + 0.5) above target top.
-		arrowTop = targetRect.top - TOOLTIP_GAP - ARROW_HALF * 2 + 0.5;
+		// Arrow tip overlaps tooltip bottom slightly, mirroring the down-arrow relationship.
+		arrowTop = targetRect.top - TOOLTIP_GAP - ARROW_HALF * 2 + ARROW_OVERLAP_UP;
 		arrow.className = 'tooltip-arrow-up';
 	}
 
@@ -161,8 +175,8 @@ function showTooltipFor(target: HTMLElement, direction: string): void {
 	arrow.style.left = `${arrowLeft}px`;
 	arrow.style.opacity = '0';
 
-	// Two rAF frames ensure the browser has painted opacity:0 before animating to 1,
-	// so the CSS transition fires correctly.
+	// Two rAF frames ensure the browser has committed the opacity:0 paint before
+	// animating to opacity:1, so the CSS transition fires correctly from 0 → 1.
 	requestAnimationFrame(() => {
 		requestAnimationFrame(() => {
 			tip.style.opacity = '1';
@@ -177,11 +191,10 @@ function hideTooltipDiv(): void {
 	tooltipDiv.style.opacity = '0';
 	arrowDiv.style.opacity = '0';
 	clearTimeout(hideTimer);
-	// 150 ms is slightly longer than the 0.1 s CSS fade-out transition.
 	hideTimer = setTimeout(() => {
 		tooltipDiv?.remove();
 		arrowDiv?.remove();
-	}, 150);
+	}, FADE_OUT_REMOVE_DELAY_MS);
 }
 
 /** Discovers new tooltip elements and attaches event listeners to them. */
