@@ -1825,7 +1825,7 @@ svg.collapse {
 .load-position-modal-overlay {
 	position: absolute;
 	inset: 0;
-	z-index: 1000;
+	z-index: 100;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1853,7 +1853,7 @@ svg.collapse {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	z-index: 1001; /* Must be above .load-position-modal-overlay (z-index: 1000) */
+	z-index: 200; /* Must be above .load-position-modal-overlay (z-index: 100) */
 	background-color: rgba(0, 0, 0, 0.849);
 	padding-bottom: 15vh;
 	display: grid;
