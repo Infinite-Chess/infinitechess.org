@@ -1824,6 +1824,19 @@ svg.collapse {
 	white-space: normal;
 }
 
+/* Downward-pointing arrow below the tooltip box */
+.saved-position-btn-tooltip::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 5px;
+	border-style: solid;
+	border-color: black transparent transparent transparent;
+	pointer-events: none;
+}
+
 /* The overlay covers ONLY the load-position-UI */
 .load-position-modal-overlay {
 	position: absolute;
