@@ -298,14 +298,6 @@ function generateTables(): void {
 		);
 	`);
 
-	// DELETE AFTER PROD DB MIGRATES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Ensure the compression column exists in editor_saves
-	if (!db.columnExists('editor_saves', 'compression')) {
-		console.log("Adding 'compression' column to editor_saves table...");
-		db.run(`ALTER TABLE editor_saves ADD COLUMN compression TEXT NOT NULL DEFAULT 'none'`);
-		console.log("Successfully added 'compression' column.");
-	}
-
 	// Blacklisted Emails table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS email_blacklist (
