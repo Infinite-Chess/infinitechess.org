@@ -79,9 +79,25 @@ button {
 	margin: 0.2em 0.2em;
 }
 
+/* The row containing the position name and dirty indicator. */
+.editor-positionname-row {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.35em;
+	padding: 0.3em 1em;
+}
+
+/* Dirty (unsaved changes) indicator: an amber dot immediately left of the position name */
+.dirty-indicator {
+	flex-shrink: 0;
+	width: 0.6em;
+	height: 0.6em;
+	border-radius: 50%;
+	background-color: #f59e0b;
+}
+
 .editor-positionname {
-	text-align: center;
-	margin: 0.3em 1em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

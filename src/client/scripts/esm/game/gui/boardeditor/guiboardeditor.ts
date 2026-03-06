@@ -38,6 +38,7 @@ import guistartenginegame from './guistartenginegame.js';
 
 const element_menu = document.getElementById('editor-menu')!;
 const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
+const element_dirtyIndicator = document.getElementById('position-dirty-indicator')!;
 
 const elements_tools = [
 	document.getElementById('normal')!,
@@ -382,6 +383,12 @@ function updateActivePositionElement(positionname: string | undefined): void {
 	element_activePositionNameDisplay.title = positionname;
 }
 
+/** Shows or hides the dirty indicator dot next to the position name. */
+function updateDirtyIndicator(dirty: boolean): void {
+	if (dirty) element_dirtyIndicator.classList.remove('hidden');
+	else element_dirtyIndicator.classList.add('hidden');
+}
+
 // Helper Functions ---------------------------------------------------------
 
 /** Helper Function: Returns an array of players based on the current gamefile's turn order. */
@@ -600,4 +607,5 @@ export default {
 	onClearSelection,
 	updatePieceColors,
 	updateActivePositionElement,
+	updateDirtyIndicator,
 };

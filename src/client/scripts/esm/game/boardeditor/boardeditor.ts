@@ -118,7 +118,8 @@ async function initBoardEditor(
 	inBoardEditor = true;
 	edits = [];
 	indexOfThisEdit = 0;
-	positionDirty = dirty;
+	if (dirty) markPositionDirty();
+	else markPositionClean();
 	// console.error('Board editor initialized with dirty = ' + dirty);
 
 	setTool('normal');
@@ -457,6 +458,7 @@ function isPositionDirty(): boolean {
 function markPositionDirty(): void {
 	// console.error('Position marked dirty');
 	positionDirty = true;
+	guiboardeditor.updateDirtyIndicator(true);
 	eautosave.markPositionDirty();
 }
 
@@ -464,6 +466,7 @@ function markPositionDirty(): void {
 function markPositionClean(): void {
 	// console.error('Position marked clean');
 	positionDirty = false;
+	guiboardeditor.updateDirtyIndicator(false);
 }
 
 function canUndo(): boolean {
