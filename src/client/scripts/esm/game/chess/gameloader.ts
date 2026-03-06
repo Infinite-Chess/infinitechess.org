@@ -37,13 +37,14 @@ import guiclock from '../gui/guiclock.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import enginegame from '../misc/enginegame.js';
 import perspective from '../rendering/perspective.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import enginegame, { engineDictionary } from '../misc/enginegame.js';
+import { engineDictionary } from '../misc/engine.js';
 
 // Variables --------------------------------------------------------------------
 

@@ -26,12 +26,13 @@ import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
+import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
-import enginegame, { engineDictionary } from '../misc/enginegame.js';
+import { engineDictionary } from '../misc/engine.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 
 // Variables ----------------------------------------------------------------------------

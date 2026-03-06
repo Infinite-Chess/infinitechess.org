@@ -3,6 +3,7 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { validEngineName } from './engine.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
@@ -23,13 +24,10 @@ import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from '../chess/graphicalchanges.js';
-import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
+import { engineDictionary } from './engine.js';
 
 // Types ------------------------------------------------------------------------
-
-/** List of valid engines */
-type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
 
 interface EngineConfig {
 	/** Hard time limit for the engine to think in milliseconds */
@@ -39,47 +37,6 @@ interface EngineConfig {
 	strengthLevel?: number;
 	multiPv?: number;
 }
-
-// Constants --------------------------------------------------------------------
-
-/** A single engine entry object in the engine dictionary. */
-interface Engine {
-	/**
-	 * World border distance for this engine.
-	 * Engine games have a world border enabled so as to keep the position within safe floating point range.
-	 * If the variant's world border is smaller, that will be used instead.
-	 */
-	worldBorder: bigint;
-	/**
-	 * The number of milliseconds the engine thinks when Time Control is unlimited.
-	 * May vary from engine to engine because of different engine speeds and requirements.
-	 */
-	defaultTimeLimitPerMoveMillis: number;
-	/** Display name shown in the UI for this engine. */
-	displayName: string;
-	/** The maximum strength level supported by this engine. */
-	maxStrengthLevel: number;
-}
-
-/**
- * Centralized data structure for all engine properties.
- * Add a new entry here when adding a new engine.
- */
-const engineDictionary: { [key in validEngineName]: Engine } = {
-	engineCheckmatePractice: {
-		// worldBorder: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
-		worldBorder: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-		defaultTimeLimitPerMoveMillis: 500,
-		displayName: 'Practice Bot',
-		maxStrengthLevel: 1,
-	},
-	hydrochess: {
-		worldBorder: hydrochess_card.I64_MAX - 2000n,
-		defaultTimeLimitPerMoveMillis: 4000,
-		displayName: 'HydroChess',
-		maxStrengthLevel: 3,
-	},
-};
 
 // Variables --------------------------------------------------------------------
 
@@ -449,8 +406,6 @@ function render(): void {
 }
 
 // Export ---------------------------------------------------------------------------------
-
-export { engineDictionary };
 
 export default {
 	areInEngineGame,
