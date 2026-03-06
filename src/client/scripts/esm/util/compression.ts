@@ -140,18 +140,21 @@ async function compressString(
  */
 async function decompressString(data: string, mode: CompressionMode): Promise<string> {
 	if (mode === 'none') return data;
-	if (typeof DecompressionStream === 'undefined') {
-		throw new Error('Browser does not support DecompressionStream.');
+	if (mode === 'deflate-raw') {
+		if (typeof DecompressionStream === 'undefined') {
+			throw new Error('Browser does not support DecompressionStream.');
+		}
+
+		const label = `Decompressed ${data.length} characters`;
+		if (DEBUG_COMPRESSION) console.time(label);
+
+		const result = await decompressStringBase64(data);
+
+		if (DEBUG_COMPRESSION) console.timeEnd(label);
+
+		return result;
 	}
-
-	const label = `Decompressed ${data.length} characters`;
-	if (DEBUG_COMPRESSION) console.time(label);
-
-	const result = await decompressStringBase64(data);
-
-	if (DEBUG_COMPRESSION) console.timeEnd(label);
-
-	return result;
+	throw new Error(`Unsupported compression mode: "${mode}"`);
 }
 
 // Exports ---------------------------------------------------------------------
