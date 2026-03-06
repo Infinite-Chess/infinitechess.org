@@ -91,7 +91,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 
 /** Initialize new autosave interval */
 function startPositionAutosave(): void {
-	stopPositionAutosave(); // safety to avoid double intervals
+	stopPositionAutosave(); // Stop existing interval if we opened a new save
 
 	// Do an initial save after init (for safety)
 	positionDirty = true;
