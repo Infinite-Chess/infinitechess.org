@@ -165,6 +165,7 @@ function onClose(resetPositioning = false): void {
 	unregisterAllPositionButtonListeners();
 	element_savedPositionsToLoad.replaceChildren();
 	closeSavePositionUIListeners();
+	element_saveAsPositionName.value = '';
 }
 
 /** Gets the current open/close mode of the Load Position UI */
@@ -304,6 +305,7 @@ async function onSaveButtonPress(): Promise<void> {
 
 	// No existing save found — save locally
 	await esave.saveLocal(positionname);
+	element_saveAsPositionName.value = '';
 	updateSavedPositionListUI();
 }
 
