@@ -17,6 +17,7 @@ import ecloud from '../../boardeditor/actions/ecloud';
 import eactions from '../../boardeditor/actions/eactions';
 import guipause from '../guipause';
 import boardeditor from '../../boardeditor/boardeditor';
+import { GameBus } from '../../GameBus';
 import validatorama from '../../../util/validatorama';
 import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
 import guifloatingwindow from './guifloatingwindow';
@@ -96,8 +97,21 @@ let mode: 'load' | 'save-as' | undefined = undefined;
 /** The current config of the Confirmation dialog modal */
 let modal_config: ModalConfig | undefined = undefined;
 
+/**
+ * A counter for tracking new position loads. Cloud load position
+ * requests are discarded if this different when they return.
+ */
+let load_counter = 0;
+
 /** Count of in-flight API requests — spinner is visible whenever this is > 0 */
 let activeRequestCount = 0;
+
+// Load Counter ----------------------------------------------------------
+
+GameBus.addEventListener('game-loaded', () => {
+	load_counter++;
+	console.log('Incremented positionLoadEpoch');
+});
 
 // Loading animation -----------------------------------------------
 
@@ -266,10 +280,17 @@ async function onModalYesButtonPress(): Promise<void> {
 		updateSavedPositionListUI(preloadedCloudSaves);
 	} else if (mode === 'load') {
 		// Load position
+		const initialLoadCount = load_counter;
 		const editorSaveState =
 			storage_type === 'cloud'
 				? await withRequest(() => ecloud.readCloud(position_name))
 				: await esave.readLocal(position_name);
+		// If the load count changed while the request was in-flight, the user already
+		// loaded a different position — discard this stale result.
+		if (load_counter !== initialLoadCount) {
+			console.log(`Discarding cloud load result`);
+			return;
+		}
 		if (editorSaveState !== undefined) {
 			floatingWindow.close(false);
 			await eactions.load(editorSaveState, storage_type);

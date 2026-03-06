@@ -217,6 +217,7 @@ async function transferPositionToCloud(
 async function removePositionFromCloud(
 	position_name: string,
 ): Promise<CloudSaveListRecord[] | undefined> {
+	// Read first so that we don't lose the position if the delete succeeds but request doesn't return
 	const editorSaveState = await readCloud(position_name);
 	if (editorSaveState === undefined) return;
 
