@@ -763,9 +763,11 @@ function LongToShort_Format(
 			throw Error('longformat.position must be specified when skipPosition = false');
 		if (longformat.state_global.specialRights === undefined)
 			throw Error('longformat.specialRights must be specified when skipPosition = false');
-		positionSegments.push(
-			getShortFormPosition(longformat.position, longformat.state_global.specialRights),
-		);
+		// Position can be empty in the editor. This avoids a trailing space in the ICN
+		if (longformat.position.size > 0)
+			positionSegments.push(
+				getShortFormPosition(longformat.position, longformat.state_global.specialRights),
+			);
 	} else if (
 		!longformat.metadata.Variant ||
 		!longformat.metadata.UTCDate ||
