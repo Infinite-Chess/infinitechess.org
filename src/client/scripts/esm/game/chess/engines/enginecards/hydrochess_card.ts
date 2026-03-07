@@ -1,17 +1,17 @@
-// src/client/scripts/esm/game/chess/enginecards/hydrochess_card.ts
+// src/client/scripts/esm/game/chess/engines/enginecards/hydrochess_card.ts
 
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
+import type { VariantOptions } from '../../../../../../../shared/chess/logic/initvariant';
 
-import bimath from '../../../../../../shared/util/math/bimath';
-import bounds from '../../../../../../shared/util/math/bounds';
-import coordutil from '../../../../../../shared/chess/util/coordutil';
+import bimath from '../../../../../../../shared/util/math/bimath';
+import bounds from '../../../../../../../shared/util/math/bounds';
+import coordutil from '../../../../../../../shared/chess/util/coordutil';
 import typeutil, {
 	Player,
 	RawType,
 	PlayerGroup,
 	rawTypes as r,
 	players as p,
-} from '../../../../../../shared/chess/util/typeutil';
+} from '../../../../../../../shared/chess/util/typeutil';
 
 type SupportedResult = { supported: true } | { supported: false; reason: string };
 

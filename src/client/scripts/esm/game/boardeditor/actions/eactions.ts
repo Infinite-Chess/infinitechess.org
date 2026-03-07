@@ -53,13 +53,10 @@ import annotations from '../../rendering/highlights/annotations/annotations';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
-import hydrochess_card from '../../chess/enginecards/hydrochess_card';
+import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import enginegame, {
-	engineDefaultTimeLimitPerMoveMillisDict,
-	engineWorldBorderDict,
-} from '../../misc/enginegame';
 
 // Constants ----------------------------------------------------------------------
 
@@ -268,7 +265,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		 * 2. Capped at engine's cap
 		 */
 
-		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
 		const cap = hydrochess_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
@@ -302,10 +299,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
-		currentEngine,
-		engineUIConfig.strengthLevel,
-	);
+	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
 
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
@@ -334,7 +328,8 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		youAreColor: engineUIConfig.youAreColor,
 		currentEngine,
 		engineConfig: {
-			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			engineTimeLimitPerMoveMillis:
+				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
 			strengthLevel: engineUIConfig.strengthLevel,
 		},
 	});
