@@ -3,7 +3,7 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { validEngineName } from './engine.js';
+import type { ValidEngine } from './engine.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
@@ -71,7 +71,7 @@ GameBus.addEventListener('game-concluded', () => {
  * Returns a formatted engine name string, optionally including its strength level.
  * If the provided strength level is the maximum for the engine, it is omitted.
  */
-function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
+function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {
 	const name = engineDictionary[engineName].displayName;
 	const maxLevel = engineDictionary[engineName].maxStrengthLevel;
 	return strengthLevel !== undefined && strengthLevel !== maxLevel
@@ -422,4 +422,4 @@ export default {
 	getFormattedEngineName,
 };
 
-export type { EngineConfig, validEngineName };
+export type { EngineConfig, ValidEngine };

@@ -1,17 +1,16 @@
 // src/client/scripts/esm/game/misc/engine.ts
 
-// This module contains the centralized data structure for all engines.
-// Add a new entry to engineDictionary (and to validEngineName) when adding a new engine.
+/*
+ * This module contains the centralized data structure for all engines.
+ * Add a new entry to engineDictionary when adding a new engine.
+ */
 
 import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 
 // Types ------------------------------------------------------------------------
 
-/** List of valid engines */
-type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
-
 /** A single engine entry object in the engine dictionary. */
-interface Engine {
+export interface Engine {
 	/**
 	 * World border distance for this engine.
 	 * Engine games have a world border enabled so as to keep the position within safe floating point range.
@@ -35,7 +34,7 @@ interface Engine {
  * Centralized data structure for all engine properties.
  * Add a new entry here when adding a new engine.
  */
-const engineDictionary: { [key in validEngineName]: Engine } = {
+export const engineDictionary = {
 	engineCheckmatePractice: {
 		// worldBorder: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
 		worldBorder: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
@@ -49,10 +48,7 @@ const engineDictionary: { [key in validEngineName]: Engine } = {
 		displayName: 'HydroChess',
 		maxStrengthLevel: 3,
 	},
-};
+} satisfies { [key: string]: Engine };
 
-// Export ---------------------------------------------------------------------------------
-
-export { engineDictionary };
-
-export type { validEngineName, Engine };
+/** Union of all valid engine names, derived from the keys of engineDictionary. */
+export type ValidEngine = keyof typeof engineDictionary;

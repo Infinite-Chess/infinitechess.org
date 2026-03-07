@@ -18,8 +18,8 @@ import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { EngineConfig, ValidEngine } from '../misc/enginegame.js';
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type {
 	ParticipantState,
 	ServerGameMoveMessage,
@@ -238,7 +238,7 @@ async function startEngineGame(options: {
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
 	TimeControl?: TimeControl;
 	youAreColor: Player;
-	currentEngine: validEngineName;
+	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
@@ -378,7 +378,7 @@ async function startCustomEngineGame(options: {
 	presetAnnotes?: PresetAnnotes;
 	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
-	currentEngine: validEngineName;
+	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
