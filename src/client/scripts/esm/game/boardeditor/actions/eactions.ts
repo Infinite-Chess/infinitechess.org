@@ -118,7 +118,7 @@ async function clearAll(): Promise<void> {
 				variantOptions,
 			},
 		},
-		true,
+		true, // Dirty position (unsaved changes)
 		false,
 	);
 }
