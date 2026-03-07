@@ -263,6 +263,7 @@ function removeCopyPasteGameListeners(): void {
 
 function callbackCopy(_event: Event): void {
 	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
 	copygame.copyGame(false);
 }
 

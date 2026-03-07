@@ -36,6 +36,7 @@ function removeEventListeners(): void {
 /** Custom Board Editor handler for the Copy event. */
 function onCopy(): void {
 	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		// Copy game notation
@@ -51,6 +52,7 @@ function onCopy(): void {
 /** Board Editor handler for the Cut event. */
 function onCut(): void {
 	if (document.activeElement !== document.body) return; // Don't cut if the user is typing in an input field
+	if (window.getSelection()?.toString()) return; // Don't cut if the user has text selected in the UI
 
 	if (etoolmanager.getTool() !== 'selection-tool' || !selectiontool.isExistingSelection()) return;
 
