@@ -39,11 +39,11 @@ const ARROW_HALF = 5;
 const FADE_OUT_REMOVE_DELAY_MS = 150;
 
 /** The delay before a tooltip appears on hover. */
-const tooltipDelayMillis: number = 500;
+const TOOLTIP_DELAY_MILLIS: number = 500;
 /** Time after a click before the tooltip can reappear while still hovering. */
-const timeToReAddTooltipAfterClickMillis: number = 2000;
+const SILENCE_COOLDOWN_MILLIS: number = 2000;
 /** If no new tooltip is viewed within this window, fast-transition mode turns off. */
-const fastTransitionCooldownMillis: number = 750;
+const FAST_TRANSITION_COOLDOWN_MILLIS: number = 750;
 
 // State ---------------------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ let tooltipDiv: HTMLDivElement | null = null;
 /** The shared arrow element, created once and reused. */
 let arrowDiv: HTMLDivElement | null = null;
 /** Timer to remove the tooltip elements from the DOM after they fade out. */
-let hideTimer: ReturnType<typeof setTimeout> | undefined;
+let hideTimer: number | undefined;
 
 // Functions ----------------------------------------------------------------------------
 
@@ -188,7 +188,7 @@ function hideTooltipDiv(): void {
 	tooltipDiv.style.opacity = '0';
 	arrowDiv.style.opacity = '0';
 	clearTimeout(hideTimer);
-	hideTimer = setTimeout(() => {
+	hideTimer = window.setTimeout(() => {
 		tooltipDiv?.remove();
 		arrowDiv?.remove();
 	}, FADE_OUT_REMOVE_DELAY_MS);
@@ -228,7 +228,7 @@ function addListeners(): void {
 			if (fastTransitionMode) {
 				tryShow();
 			} else {
-				hoveringTimer = window.setTimeout(() => tryShow(), tooltipDelayMillis);
+				hoveringTimer = window.setTimeout(() => tryShow(), TOOLTIP_DELAY_MILLIS);
 			}
 		}
 
@@ -248,7 +248,7 @@ function addListeners(): void {
 			suppressTimer = window.setTimeout(() => {
 				suppressed = false;
 				if (isHovering && !isHolding) tryShow();
-			}, timeToReAddTooltipAfterClickMillis);
+			}, SILENCE_COOLDOWN_MILLIS);
 		}
 
 		if (docutil.isMouseSupported()) {
@@ -272,7 +272,7 @@ function addListeners(): void {
 					enableFastTransition();
 					fastTransitionTimeoutID = window.setTimeout(
 						() => disableFastTransition(),
-						fastTransitionCooldownMillis,
+						FAST_TRANSITION_COOLDOWN_MILLIS,
 					);
 				}
 
@@ -295,7 +295,7 @@ function addListeners(): void {
 			// Touch devices: show tooltip on press, hide on release.
 			target.addEventListener('touchstart', () => {
 				isHovering = true;
-				hoveringTimer = window.setTimeout(() => tryShow(), tooltipDelayMillis);
+				hoveringTimer = window.setTimeout(() => tryShow(), TOOLTIP_DELAY_MILLIS);
 			});
 
 			target.addEventListener('touchend', () => {
