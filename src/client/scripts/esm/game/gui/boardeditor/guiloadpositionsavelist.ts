@@ -12,13 +12,11 @@ import type { EditorAbridgedSaveState } from '../../boardeditor/editortypes';
 
 import esave from '../../boardeditor/actions/esave';
 import style from '../style';
-import toast from '../toast';
 import ecloud from '../../boardeditor/actions/ecloud';
 import eactions from '../../boardeditor/actions/eactions';
 import boardeditor from '../../boardeditor/boardeditor';
 import { GameBus } from '../../GameBus';
 import validatorama from '../../../util/validatorama';
-import editorSavesAPI from '../../boardeditor/actions/editorSavesAPI';
 import guiloadpositionmodal from './guiloadpositionmodal';
 
 // Types -------------------------------------------------------------------------
@@ -292,28 +290,17 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 
 	// Fetch cloud saves if logged in
 	if (areLoggedIn) {
-		let cloudSaves: CloudSaveListRecord[] = [];
-		if (preloadedCloudSaves !== undefined) {
-			// Caller already has the updated list from a mutation response — no extra request needed
-			cloudSaves = preloadedCloudSaves;
-		} else {
-			try {
-				cloudSaves = await withRequest(() => editorSavesAPI.getSavedPositions());
-			} catch (err) {
-				console.error('Failed to fetch cloud saves:', err);
-				const errMsg = err instanceof Error ? err.message : String(err);
-				toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
-			}
-		}
+		const cloudSaves: CloudSaveListRecord[] =
+			preloadedCloudSaves ?? (await withRequest(() => ecloud.getAllCloudSaveInfos()));
 
-		for (const save of cloudSaves) {
+		cloudSaves.forEach((save) => {
 			allSaves.push({
 				storage_type: 'cloud',
 				position_name: save.name,
 				timestamp: save.timestamp,
 				piece_count: save.piece_count,
 			});
-		}
+		});
 	}
 
 	// Load all local saves
