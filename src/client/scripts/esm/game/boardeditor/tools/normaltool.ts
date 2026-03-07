@@ -7,7 +7,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels';
-import type { Edit } from '../boardeditor';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { _Move_Compact } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile';
 

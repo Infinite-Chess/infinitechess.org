@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/etoolmanager.ts
+// src/client/scripts/esm/game/boardeditor/tools/etoolmanager.ts
 
 /**
  * Tool Manager for the Board Editor.
@@ -7,18 +7,18 @@
  * keyboard shortcuts, and pointer reservation.
  */
 
-import selection from '../chess/selection.js';
-import drawingtool from './tools/drawingtool.js';
-import perspective from '../rendering/perspective.js';
-import boardeditor from './boardeditor.js';
-import edithistory from './edithistory.js';
-import selectiontool from './tools/selection/selectiontool.js';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import { listener_document } from '../chess/game.js';
+import selection from '../../chess/selection.js';
+import drawingtool from './drawingtool.js';
+import perspective from '../../rendering/perspective.js';
+import boardeditor from '../boardeditor.js';
+import edithistory from '../edithistory.js';
+import selectiontool from './selection/selectiontool.js';
+import guiboardeditor from '../../gui/boardeditor/guiboardeditor.js';
+import { listener_document } from '../../chess/game.js';
 
 // Types ----------------------------------------------------------------------
 
-type Tool = (typeof validTools)[number];
+export type Tool = (typeof validTools)[number];
 
 // Constants ------------------------------------------------------------------
 
@@ -101,8 +101,6 @@ function testShortcuts(): void {
 }
 
 // Exports --------------------------------------------------------------------
-
-export type { Tool };
 
 export default {
 	// Initialization

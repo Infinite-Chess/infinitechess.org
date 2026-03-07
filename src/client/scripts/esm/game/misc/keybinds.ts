@@ -8,7 +8,7 @@
  */
 
 import perspective from '../rendering/perspective.js';
-import etoolmanager from '../boardeditor/etoolmanager.js';
+import etoolmanager from '../boardeditor/tools/etoolmanager.js';
 import guinavigation from '../gui/guinavigation.js';
 import { Mouse, MouseButton } from '../input.js';
 

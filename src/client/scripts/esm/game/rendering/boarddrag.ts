@@ -21,7 +21,7 @@ import selection from '../chess/selection.js';
 import Transition from './transitions/Transition.js';
 import drawarrows from './highlights/annotations/drawarrows.js';
 import perspective from './perspective.js';
-import etoolmanager from '../boardeditor/etoolmanager.js';
+import etoolmanager from '../boardeditor/tools/etoolmanager.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_overlay } from '../chess/game.js';
 

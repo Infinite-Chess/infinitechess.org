@@ -7,7 +7,6 @@
  * active position tracking, and the main update/render loop.
  */
 
-import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -21,7 +20,7 @@ import eclipboard from './eclipboard.js';
 import drawingtool from './tools/drawingtool.js';
 import editortypes from './editortypes.js';
 import edithistory from './edithistory.js';
-import etoolmanager from './etoolmanager.js';
+import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import stransformations from './tools/selection/stransformations.js';
@@ -218,8 +217,6 @@ function flushActivePositionToAutosave(): void {
 }
 
 // Exports --------------------------------------------------------------------
-
-export type { Edit };
 
 export default {
 	// State

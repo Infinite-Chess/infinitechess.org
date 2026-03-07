@@ -4,7 +4,7 @@
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Edit } from '../../boardeditor/boardeditor';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Coords } from '../../../../../../shared/chess/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
 

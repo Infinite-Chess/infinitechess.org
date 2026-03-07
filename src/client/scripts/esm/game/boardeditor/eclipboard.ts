@@ -11,7 +11,7 @@ import toast from '../gui/toast.js';
 import gameslot from '../chess/gameslot.js';
 import eactions from './actions/eactions.js';
 import gameloader from '../chess/gameloader.js';
-import etoolmanager from './etoolmanager.js';
+import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import stransformations from './tools/selection/stransformations.js';
 

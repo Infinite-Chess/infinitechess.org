@@ -14,7 +14,7 @@
  * * Start local game from position
  */
 
-import type { Edit } from '../boardeditor';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
 import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';

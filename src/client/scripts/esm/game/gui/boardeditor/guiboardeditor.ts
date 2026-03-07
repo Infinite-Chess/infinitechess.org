@@ -4,7 +4,7 @@
  * Handles the Board Editor GUI
  */
 
-import type { Tool } from '../../boardeditor/etoolmanager.js';
+import type { Tool } from '../../boardeditor/tools/etoolmanager.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 
@@ -25,7 +25,7 @@ import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
-import etoolmanager from '../../boardeditor/etoolmanager.js';
+import etoolmanager from '../../boardeditor/tools/etoolmanager.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import guiloadposition from './guiloadposition.js';

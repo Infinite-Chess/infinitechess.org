@@ -8,7 +8,7 @@
  */
 
 import type { Mesh } from '../../../rendering/piecemodels';
-import type { Edit } from '../../boardeditor';
+import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
 import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
 import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
 

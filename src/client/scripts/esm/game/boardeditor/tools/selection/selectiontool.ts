@@ -23,7 +23,7 @@ import arrows from '../../../rendering/arrows/arrows';
 import meshes from '../../../rendering/meshes';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
-import etoolmanager from '../../etoolmanager';
+import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
 import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';

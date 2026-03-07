@@ -6,7 +6,7 @@
  * Manages the game rules of the board editor position.
  */
 
-import type { Edit } from './boardeditor';
+import type { Edit } from '../../../../../shared/chess/logic/movepiece';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 import type { Coords } from '../../../../../shared/chess/util/coordutil';
 import type { GameRules } from '../../../../../shared/chess/variants/gamerules';

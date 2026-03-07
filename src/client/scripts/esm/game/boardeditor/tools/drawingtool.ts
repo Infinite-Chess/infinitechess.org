@@ -6,8 +6,8 @@
  * Manages all drawing tools
  */
 
-import type { Edit } from '../boardeditor';
-import type { Tool } from '../etoolmanager';
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
+import type { Tool } from './etoolmanager';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
