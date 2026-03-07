@@ -14,6 +14,7 @@
  * * Start local game from position
  */
 
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
 import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
@@ -50,11 +51,12 @@ import pastegame from '../../chess/pastegame';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
+import boardeditor from '../boardeditor';
+import edithistory from '../edithistory';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
-import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 
@@ -341,7 +343,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
+		edithistory.queueRemovePiece(gamefile, edit, pieceToDelete);
 	}
 }
 
@@ -477,7 +479,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
-		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+		edithistory.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 
 		if (!keepTrackOfGlobalSpecialRights) continue; // One if statement cost is very tiny per iteration
 
@@ -503,8 +505,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
 
-	boardeditor.runEdit(thisGamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
+	edithistory.runEdit(thisGamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
 	annotations.resetState(); // Clear all annotations
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
