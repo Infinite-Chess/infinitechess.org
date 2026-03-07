@@ -54,9 +54,9 @@ import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
-import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
+import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 
 // Constants ----------------------------------------------------------------------
 
