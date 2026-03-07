@@ -713,10 +713,12 @@ p.theme-title {
 	}
 }
 
-/* Tooltips */
-
-/* The JS tooltip system injects a fixed #tooltip-popup div and #tooltip-arrow div
- * directly into document.body, so they are never clipped by overflow:hidden containers. */
+/*
+ * Tooltips
+ *
+ * The JS tooltip system injects a fixed #tooltip-popup div and #tooltip-arrow div
+ * directly into document.body, so no chance of being clipped by their parent containers.
+ */
 
 /* Tooltip box */
 #tooltip-popup {
@@ -748,7 +750,7 @@ p.theme-title {
 	opacity: 0;
 	transition: opacity 0.1s ease-in-out;
 	pointer-events: none;
-	z-index: 10001;
+	z-index: 10000;
 }
 
 /* Arrow pointing downward (used for tooltip-d / tooltip-dl / tooltip-dr) */
