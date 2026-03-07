@@ -377,6 +377,7 @@ function readGameRules(): void {
 	const mesh = gameslot.getMesh()!;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
+	// Fetch previous values before updating, to skip queuing when unchanged and prevent unnecessary edit history bloat.
 	const previousPositionDependentGameRules = egamerules.getPositionDependentGameRules();
 
 	// Update pawn double push specialrights of position, only if the value changed
