@@ -283,6 +283,8 @@ function hideTooltipDiv(): void {
 /** Shows the tooltip if conditions allow. */
 function tryShow(target: HTMLElement, state: TooltipState, direction: string): void {
 	if (!state.isHovering || state.isHolding || state.suppressed) return;
+	// If the element is no longer in the DOM, don't show the tooltip.
+	if (!target.isConnected) return;
 	state.tooltipVisible = true;
 	showTooltipFor(target, direction);
 }
