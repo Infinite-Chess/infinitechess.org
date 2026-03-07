@@ -16,14 +16,14 @@ import selectiontool from './tools/selection/selectiontool.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import { listener_document } from '../chess/game.js';
 
+// Types ----------------------------------------------------------------------
+
+type Tool = (typeof validTools)[number];
+
 // Constants ------------------------------------------------------------------
 
 /** All tools that can be used in the board editor. */
 const validTools = ['normal', 'placer', 'eraser', 'specialrights', 'selection-tool'] as const;
-
-// Types ----------------------------------------------------------------------
-
-type Tool = (typeof validTools)[number];
 
 // State ----------------------------------------------------------------------
 

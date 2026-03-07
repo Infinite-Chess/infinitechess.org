@@ -5,8 +5,6 @@
  *
  * Handles the lifecycle (open/close), dirty/clean state,
  * active position tracking, and the main update/render loop.
- * Edit history lives in edithistory.ts, tool management in etoolmanager.ts,
- * and clipboard operations in eclipboard.ts.
  */
 
 import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';

@@ -30,18 +30,6 @@ import boardeditor from './boardeditor.js';
 import movesequence from '../chess/movesequence.js';
 import guinavigation from '../gui/guinavigation.js';
 
-// Constants ------------------------------------------------------------------
-
-/**
- * The maximum allowed summed changes in the edit history before oldest edits are pruned.
- * This is to prevent excessive memory usage crashing the browser.
- *
- * Naviary's machine got to 26 million changes before slowing, then crashing.
- * The tab was using roughly 5 GB of memory at that point.
- * I guess maybe a max of 8 million could be safe on most machines?
- */
-const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
-
 // Types ----------------------------------------------------------------------
 
 /**
@@ -54,6 +42,18 @@ interface EditWithRules extends Edit {
 	/** The state of the castling gamerules checkbox AFTER this edit was made. */
 	castling?: boolean;
 }
+
+// Constants ------------------------------------------------------------------
+
+/**
+ * The maximum allowed summed changes in the edit history before oldest edits are pruned.
+ * This is to prevent excessive memory usage crashing the browser.
+ *
+ * Naviary's machine got to 26 million changes before slowing, then crashing.
+ * The tab was using roughly 5 GB of memory at that point.
+ * I guess maybe a max of 8 million could be safe on most machines?
+ */
+const EDIT_HISTORY_MAX_CHANGES = 8_000_000;
 
 // State ----------------------------------------------------------------------
 
@@ -88,7 +88,9 @@ function reset(): void {
 function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true): void {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
-	movepiece.applyEdit(gamefile, edit, forward, true); // Apply the logical changes to the board state
+
+	// Run logical changes
+	movepiece.applyEdit(gamefile, edit, forward, true);
 	GameBus.dispatch('physical-move');
 
 	// Run graphical changes
