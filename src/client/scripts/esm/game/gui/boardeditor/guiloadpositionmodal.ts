@@ -99,7 +99,7 @@ function onModalKeyDown(e: KeyboardEvent): void {
 	}
 }
 
-async function onModalYesButtonPress(): Promise<void> {
+function onModalYesButtonPress(): void {
 	if (modal_config === undefined) {
 		closeModal();
 		return;
@@ -107,7 +107,7 @@ async function onModalYesButtonPress(): Promise<void> {
 
 	const { onConfirm } = modal_config; // Pull callback before clearing state
 	closeModal(); // Close modal immediately to clear UI
-	await onConfirm();
+	onConfirm();
 }
 
 /** Returns true if the confirmation modal is currently open. */
