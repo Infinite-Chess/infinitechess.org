@@ -19,7 +19,6 @@ import esave from '../../boardeditor/actions/esave.js';
 import ecloud from '../../boardeditor/actions/ecloud.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import gameslot from '../../chess/gameslot.js';
-import tooltips from '../../../util/tooltips.js';
 import eactions from '../../boardeditor/actions/eactions.js';
 import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
@@ -319,9 +318,6 @@ async function initUI(): Promise<void> {
 		neutralPieces.appendChild(pieceContainer);
 	}
 	element_neutralTypesContainer.appendChild(neutralPieces);
-
-	// Re-init tooltip listeners after pushing elements to the document with additional tooltips.
-	tooltips.initTooltips();
 
 	initialized = true;
 }

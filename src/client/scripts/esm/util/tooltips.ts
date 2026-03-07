@@ -1,8 +1,9 @@
 // src/client/scripts/esm/util/tooltips.ts
 
 /**
- * JS-based tooltip system. A single fixed div is appended to document.body
- * when the user hovers a tooltip element, avoiding any clipping issues from parent containers.
+ * JS-based tooltip system using event delegation.
+ * A single set of listeners on `document.body` handles all tooltip elements —
+ * no `initTooltips()` call is needed when new tooltip elements are added to the document.
  *
  * Tooltip direction is determined by the element's class:
  *   tooltip-d   – below, centered
@@ -25,7 +26,8 @@ const tooltipClasses: string[] = [
 	'tooltip-u',
 	'tooltip-ul',
 ];
-const tooltipClasses_Dotted = tooltipClasses.map((cls) => '.' + cls);
+/** CSS selector matching any element that is a tooltip target (has both a direction class and data-tooltip). */
+const TOOLTIP_SELECTOR = tooltipClasses.map((cls) => `.${cls}[data-tooltip]`).join(', ');
 
 /** Pixels between the target element edge and the tooltip box. */
 const TOOLTIP_GAP = 8;
@@ -47,6 +49,22 @@ const FAST_TRANSITION_COOLDOWN_MILLIS: number = 750;
 
 // State ---------------------------------------------------------------------------------
 
+/** Per-element hover/click state, lazily created on first interaction. */
+interface TooltipState {
+	isHovering: boolean;
+	isHolding: boolean;
+	tooltipVisible: boolean;
+	/** Timer to show the tooltip after the hover delay. */
+	hoveringTimer: number | undefined;
+	/** Timer after which tooltip suppression (from a click) is cleared. */
+	suppressTimer: number | undefined;
+	/** True while the tooltip is temporarily suppressed due to a click. */
+	suppressed: boolean;
+}
+
+/** Per-element state map. WeakMap ensures GC when elements are removed from the DOM. */
+const elementStates = new WeakMap<Element, TooltipState>();
+
 /** If true, tooltips appear immediately without the hover delay. */
 let fastTransitionMode = false;
 /** Timer ID for turning off fast-transition mode after the cooldown. */
@@ -61,13 +79,29 @@ let hideTimer: number | undefined;
 
 // Functions ----------------------------------------------------------------------------
 
-/** Creates the singleton tooltip box and arrow elements (called once on first use). */
-function createTooltipElements(): void {
-	tooltipDiv = document.createElement('div');
-	tooltipDiv.id = 'tooltip-popup';
+/** Returns or creates the per-element state for a tooltip target. */
+function getOrCreateState(el: Element): TooltipState {
+	let state = elementStates.get(el);
+	if (!state) {
+		state = {
+			isHovering: false,
+			isHolding: false,
+			tooltipVisible: false,
+			hoveringTimer: undefined,
+			suppressTimer: undefined,
+			suppressed: false,
+		};
+		elementStates.set(el, state);
+	}
+	return state;
+}
 
-	arrowDiv = document.createElement('div');
-	arrowDiv.id = 'tooltip-arrow';
+/**
+ * Returns the nearest ancestor (or self) of `el` that is a tooltip target,
+ * or null if none exists. Uses the browser-optimized `Element.closest()`.
+ */
+function findTooltipAncestor(el: Element | null): HTMLElement | null {
+	return el?.closest<HTMLElement>(TOOLTIP_SELECTOR) ?? null;
 }
 
 /**
@@ -78,11 +112,18 @@ function getTooltipClass(element: Element): string | null {
 	return tooltipClasses.find((cls) => element.classList.contains(cls)) ?? null;
 }
 
+/** Creates the singleton tooltip box and arrow elements (called once on first use). */
+function createTooltipElements(): void {
+	tooltipDiv = document.createElement('div');
+	tooltipDiv.id = 'tooltip-popup';
+
+	arrowDiv = document.createElement('div');
+	arrowDiv.id = 'tooltip-arrow';
+}
+
 /** Enables fast-transition mode so the next tooltip appears without delay. */
 function enableFastTransition(): void {
-	if (fastTransitionMode) return; // Already on!
-
-	// console.log("Enabled fast transition");
+	if (fastTransitionMode) return;
 	fastTransitionMode = true;
 }
 
@@ -95,8 +136,6 @@ function cancelFastTransitionExpiryTimer(): void {
 /** Disables fast-transition mode. */
 function disableFastTransition(): void {
 	if (!fastTransitionMode) return;
-
-	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
 }
@@ -194,137 +233,143 @@ function hideTooltipDiv(): void {
 	}, FADE_OUT_REMOVE_DELAY_MS);
 }
 
-/** Discovers new tooltip elements and attaches event listeners to them. */
-function addListeners(): void {
-	const allTooltips = document.querySelectorAll<HTMLElement>(tooltipClasses_Dotted.join(', '));
+/** Shows the tooltip if conditions allow. */
+function tryShow(target: HTMLElement, state: TooltipState, direction: string): void {
+	if (!state.isHovering || state.isHolding || state.suppressed) return;
+	state.tooltipVisible = true;
+	showTooltipFor(target, direction);
+}
 
-	allTooltips.forEach((target) => {
-		if (target.dataset['tooltip_initialized'] === 'true') return; // Already initialized.
-		target.dataset['tooltip_initialized'] = 'true';
+/** Schedules (or immediately triggers) showing the tooltip. */
+function scheduleShow(target: HTMLElement, state: TooltipState, direction: string): void {
+	clearTimeout(state.hoveringTimer);
+	if (fastTransitionMode) {
+		tryShow(target, state, direction);
+	} else {
+		state.hoveringTimer = window.setTimeout(
+			() => tryShow(target, state, direction),
+			TOOLTIP_DELAY_MILLIS,
+		);
+	}
+}
 
+/** Hides the tooltip and suppresses it temporarily (used on click). */
+function suppress(state: TooltipState): void {
+	state.suppressed = true;
+	state.tooltipVisible = false;
+	clearTimeout(state.hoveringTimer);
+	state.hoveringTimer = undefined;
+	hideTooltipDiv();
+	disableFastTransition();
+}
+
+/** Schedules the end of the click-suppression window. */
+function resetSuppressTimer(target: HTMLElement, state: TooltipState, direction: string): void {
+	clearTimeout(state.suppressTimer);
+	state.suppressTimer = window.setTimeout(() => {
+		state.suppressed = false;
+		if (state.isHovering && !state.isHolding) tryShow(target, state, direction);
+	}, SILENCE_COOLDOWN_MILLIS);
+}
+
+// Delegated event listeners ------------------------------------------------------------
+
+if (docutil.isMouseSupported()) {
+	// mouseover/mouseout bubble, letting us simulate mouseenter/mouseleave via delegation.
+	document.body.addEventListener('mouseover', (e: MouseEvent) => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
+
+		// Only fire "enter" when arriving from outside the tooltip element.
+		const from = e.relatedTarget as Element | null;
+		if (from && target.contains(from)) return;
+
+		const state = getOrCreateState(target);
 		const direction = getTooltipClass(target)!;
-
-		let isHovering = false;
-		let isHolding = false;
-		let tooltipVisible = false;
-
-		/** Timer to show the tooltip after the hover delay. */
-		let hoveringTimer: number | undefined;
-		/** Timer after which tooltip suppression (from a click) is cleared. */
-		let suppressTimer: number | undefined;
-		/** True while the tooltip is temporarily suppressed due to a click. */
-		let suppressed = false;
-
-		/** Shows the tooltip if conditions allow. */
-		function tryShow(): void {
-			if (!isHovering || isHolding || suppressed) return;
-			tooltipVisible = true;
-			showTooltipFor(target, direction);
-		}
-
-		/** Schedules (or immediately triggers) showing the tooltip. */
-		function scheduleShow(): void {
-			clearTimeout(hoveringTimer);
-			if (fastTransitionMode) {
-				tryShow();
-			} else {
-				hoveringTimer = window.setTimeout(() => tryShow(), TOOLTIP_DELAY_MILLIS);
-			}
-		}
-
-		/** Hides the tooltip and suppresses it temporarily (used on click). */
-		function suppress(): void {
-			suppressed = true;
-			tooltipVisible = false;
-			clearTimeout(hoveringTimer);
-			hoveringTimer = undefined;
-			hideTooltipDiv();
-			disableFastTransition();
-		}
-
-		/** Schedules the end of the click-suppression window. */
-		function resetSuppressTimer(): void {
-			clearTimeout(suppressTimer);
-			suppressTimer = window.setTimeout(() => {
-				suppressed = false;
-				if (isHovering && !isHolding) tryShow();
-			}, SILENCE_COOLDOWN_MILLIS);
-		}
-
-		if (docutil.isMouseSupported()) {
-			target.addEventListener('mouseenter', () => {
-				isHovering = true;
-				cancelFastTransitionExpiryTimer();
-				scheduleShow();
-			});
-
-			target.addEventListener('mouseleave', () => {
-				isHovering = false;
-				isHolding = false;
-				clearTimeout(hoveringTimer);
-
-				// Immediately clear suppression so re-hovering works normally.
-				suppressed = false;
-				clearTimeout(suppressTimer);
-				suppressTimer = undefined;
-
-				if (tooltipVisible) {
-					enableFastTransition();
-					fastTransitionTimeoutID = window.setTimeout(
-						() => disableFastTransition(),
-						FAST_TRANSITION_COOLDOWN_MILLIS,
-					);
-				}
-
-				tooltipVisible = false;
-				hideTooltipDiv();
-			});
-
-			target.addEventListener('mousedown', () => {
-				isHolding = true;
-				suppress();
-				resetSuppressTimer();
-			});
-
-			target.addEventListener('mouseup', () => {
-				isHolding = false;
-				suppress();
-				resetSuppressTimer();
-			});
-		} else {
-			// Touch devices: show tooltip on press, hide on release.
-			target.addEventListener('touchstart', () => {
-				isHovering = true;
-				hoveringTimer = window.setTimeout(() => tryShow(), TOOLTIP_DELAY_MILLIS);
-			});
-
-			target.addEventListener('touchend', () => {
-				isHovering = false;
-				clearTimeout(hoveringTimer);
-				tooltipVisible = false;
-				hideTooltipDiv();
-			});
-
-			target.addEventListener('touchcancel', () => {
-				isHovering = false;
-				clearTimeout(hoveringTimer);
-				tooltipVisible = false;
-				hideTooltipDiv();
-			});
-		}
+		state.isHovering = true;
+		cancelFastTransitionExpiryTimer();
+		scheduleShow(target, state, direction);
 	});
-}
 
-/** Initializes listeners for all un-initialized tooltip elements on the page. */
-function initTooltips(): void {
-	addListeners();
-}
+	document.body.addEventListener('mouseout', (e: MouseEvent) => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
 
-initTooltips();
+		// Only fire "leave" when moving to outside the tooltip element.
+		const to = e.relatedTarget as Element | null;
+		if (to && target.contains(to)) return;
+
+		const state = getOrCreateState(target);
+		state.isHovering = false;
+		state.isHolding = false;
+		clearTimeout(state.hoveringTimer);
+
+		// Immediately clear suppression so re-hovering works normally.
+		state.suppressed = false;
+		clearTimeout(state.suppressTimer);
+		state.suppressTimer = undefined;
+
+		if (state.tooltipVisible) {
+			enableFastTransition();
+			fastTransitionTimeoutID = window.setTimeout(
+				() => disableFastTransition(),
+				FAST_TRANSITION_COOLDOWN_MILLIS,
+			);
+		}
+
+		state.tooltipVisible = false;
+		hideTooltipDiv();
+	});
+
+	document.body.addEventListener('mousedown', (e: MouseEvent) => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
+		const state = getOrCreateState(target);
+		const direction = getTooltipClass(target)!;
+		state.isHolding = true;
+		suppress(state);
+		resetSuppressTimer(target, state, direction);
+	});
+
+	document.body.addEventListener('mouseup', (e: MouseEvent) => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
+		const state = getOrCreateState(target);
+		const direction = getTooltipClass(target)!;
+		state.isHolding = false;
+		suppress(state);
+		resetSuppressTimer(target, state, direction);
+	});
+} else {
+	// Touch devices: show tooltip on press, hide on release/cancel.
+	document.body.addEventListener('touchstart', (e: TouchEvent) => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
+		const state = getOrCreateState(target);
+		const direction = getTooltipClass(target)!;
+		state.isHovering = true;
+		state.hoveringTimer = window.setTimeout(
+			() => tryShow(target, state, direction),
+			TOOLTIP_DELAY_MILLIS,
+		);
+	});
+
+	const onTouchEnd = (e: TouchEvent): void => {
+		const target = findTooltipAncestor(e.target as Element | null);
+		if (!target) return;
+		const state = getOrCreateState(target);
+		state.isHovering = false;
+		clearTimeout(state.hoveringTimer);
+		state.tooltipVisible = false;
+		hideTooltipDiv();
+	};
+
+	document.body.addEventListener('touchend', onTouchEnd);
+	document.body.addEventListener('touchcancel', onTouchEnd);
+}
 
 // -------------------------------------------------------------------------------------------
 
-// Export so that it can be imported on every page. Otherwise esbuild won't include it.
-export default {
-	initTooltips,
-};
+// This module registers its event listeners as a side effect of being imported.
+// It must be imported on every page; without an export, esbuild would tree-shake it out.
+export default {};
