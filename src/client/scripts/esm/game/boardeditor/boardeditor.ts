@@ -102,6 +102,9 @@ async function initBoardEditor(
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.boardsim.state.local.inCheck = false;
 	gamefile.boardsim.state.local.attackers = [];
+	// Also set gameConclusion to undefined. Otherwise, starting from a position that
+	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
+	gamefile.basegame.gameConclusion = undefined;
 
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();
