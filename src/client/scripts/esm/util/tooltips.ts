@@ -1,9 +1,11 @@
 // src/client/scripts/esm/util/tooltips.ts
 
 /**
- * JS-based tooltip system using event delegation.
- * A single set of listeners on `document.body` handles all tooltip elements —
- * no `initTooltips()` call is needed when new tooltip elements are added to the document.
+ * JS-based tooltip system using event delegation. A single fixed div is appended to document.body
+ * when the user hovers a tooltip element, avoiding any clipping issues from parent containers.
+ *
+ * A single set of listeners on `document.body` handles all tooltip elements,
+ * new elements with tooltips can be added to the document at any time.
  *
  * Tooltip direction is determined by the element's class:
  *   tooltip-d   – below, centered
@@ -43,7 +45,7 @@ const FADE_OUT_REMOVE_DELAY_MS = 150;
 /** The delay before a tooltip appears on hover. */
 const TOOLTIP_DELAY_MILLIS: number = 500;
 /** Time after a click before the tooltip can reappear while still hovering. */
-const SILENCE_COOLDOWN_MILLIS: number = 2000;
+const SUPPRESS_COOLDOWN_MILLIS: number = 2000;
 /** If no new tooltip is viewed within this window, fast-transition mode turns off. */
 const FAST_TRANSITION_COOLDOWN_MILLIS: number = 750;
 
@@ -123,7 +125,9 @@ function createTooltipElements(): void {
 
 /** Enables fast-transition mode so the next tooltip appears without delay. */
 function enableFastTransition(): void {
-	if (fastTransitionMode) return;
+	if (fastTransitionMode) return; // Already on!
+
+	// console.log("Enabled fast transition");
 	fastTransitionMode = true;
 }
 
@@ -136,6 +140,8 @@ function cancelFastTransitionExpiryTimer(): void {
 /** Disables fast-transition mode. */
 function disableFastTransition(): void {
 	if (!fastTransitionMode) return;
+
+	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
 }
@@ -269,7 +275,7 @@ function resetSuppressTimer(target: HTMLElement, state: TooltipState, direction:
 	state.suppressTimer = window.setTimeout(() => {
 		state.suppressed = false;
 		if (state.isHovering && !state.isHolding) tryShow(target, state, direction);
-	}, SILENCE_COOLDOWN_MILLIS);
+	}, SUPPRESS_COOLDOWN_MILLIS);
 }
 
 // Delegated event listeners ------------------------------------------------------------
