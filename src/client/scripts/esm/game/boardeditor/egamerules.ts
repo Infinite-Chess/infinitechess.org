@@ -294,9 +294,10 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (castlingTypes.includes(typeutil.getRawType(piece.type)))
+		const rawType = typeutil.getRawType(piece.type);
+		if (castlingTypes.includes(rawType))
 			edithistory.queueSpecialRights(gamefile, edit, piece.coords, castling);
-		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
+		else if (!pawnDoublePushTypes.includes(rawType))
 			edithistory.queueSpecialRights(gamefile, edit, piece.coords, false);
 	}
 }
