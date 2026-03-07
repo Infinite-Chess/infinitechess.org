@@ -123,6 +123,44 @@ function createTooltipElements(): void {
 	arrowDiv.id = 'tooltip-arrow';
 }
 
+/**
+ * Shrinks the tooltip box to the minimum width that still fits the wrapped text,
+ * removing excess horizontal padding caused by short last lines.
+ * When text fits on a single line, this is a no-op.
+ * The element must already be in the DOM.
+ */
+function shrinkWrapTooltip(el: HTMLDivElement): void {
+	// Reset any width set by a previous call so CSS takes over.
+	el.style.width = '';
+
+	// Measure height at CSS max-width (text may already be wrapped).
+	const wrappedHeight = el.offsetHeight;
+
+	// Temporarily remove the max-width cap to measure the natural (single-line) width.
+	el.style.maxWidth = 'none';
+	el.style.width = 'max-content';
+	const naturalWidth = el.offsetWidth;
+
+	// Restore CSS constraints and re-read the capped width.
+	el.style.width = '';
+	el.style.maxWidth = '';
+	const cappedWidth = el.offsetWidth; // = min(naturalWidth, CSS max-width)
+
+	if (naturalWidth <= cappedWidth) return; // no wrapping; nothing to shrink
+
+	// Text wraps. Binary-search for the narrowest box that keeps the same
+	// rendered height (i.e., the same number of wrapped lines).
+	let lo = 0;
+	let hi = cappedWidth;
+	while (hi - lo > 1) {
+		const mid = Math.ceil((lo + hi) / 2);
+		el.style.width = `${mid}px`;
+		if (el.offsetHeight <= wrappedHeight) hi = mid;
+		else lo = mid;
+	}
+	el.style.width = `${hi}px`;
+}
+
 /** Enables fast-transition mode so the next tooltip appears without delay. */
 function enableFastTransition(): void {
 	if (fastTransitionMode) return; // Already on!
@@ -170,6 +208,9 @@ function showTooltipFor(target: HTMLElement, direction: string): void {
 	// Ensure elements are in the DOM so we can measure them.
 	if (!tip.isConnected) document.body.appendChild(tip);
 	if (!arrow.isConnected) document.body.appendChild(arrow);
+
+	// Shrink the box width to the minimum needed for the wrapped text.
+	shrinkWrapTooltip(tip);
 
 	// Force a layout reflow to get accurate dimensions.
 	const targetRect = target.getBoundingClientRect();
