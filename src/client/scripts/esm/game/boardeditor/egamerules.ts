@@ -21,6 +21,7 @@ import typeutil, { players as p, rawTypes as r } from '../../../../../shared/che
 
 import gameslot from '../chess/gameslot';
 import boardeditor from './boardeditor';
+import edithistory from './edithistory';
 import guigamerules from '../gui/boardeditor/guigamerules';
 
 // Types -------------------------------------------------------------------------
@@ -280,7 +281,7 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): v
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
 	}
 }
 
@@ -294,9 +295,9 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		if (castlingTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, castling);
 		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, false);
 	}
 }
 

@@ -19,6 +19,7 @@ import typeutil, {
 
 import gameslot from '../../chess/gameslot';
 import boardeditor from '../../boardeditor/boardeditor';
+import edithistory from '../../boardeditor/edithistory';
 import guifloatingwindow from './guifloatingwindow';
 import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
 
@@ -397,9 +398,9 @@ function readGameRules(): void {
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
 
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
-	// Mark as dirty anyway, since boardeditor.addEditToHistory() may early exit
+	edithistory.runEdit(gamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
+	// Mark as dirty anyway, since edithistory.addEditToHistory() may early exit
 	// if the edit has no changes, but gamerule changes still consider the position dirty.
 	boardeditor.markPositionDirty();
 }

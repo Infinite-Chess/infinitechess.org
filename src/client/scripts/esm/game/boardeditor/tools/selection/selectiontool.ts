@@ -23,7 +23,7 @@ import arrows from '../../../rendering/arrows/arrows';
 import meshes from '../../../rendering/meshes';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
-import boardeditor from '../../boardeditor';
+import etoolmanager from '../../etoolmanager';
 import stoolgraphics from './stoolgraphics';
 import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';
@@ -223,7 +223,7 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 
 /** Selects all pieces in the current position, and transitions to the selection. */
 function selectAll(): void {
-	boardeditor.setTool('selection-tool'); // Switch if we're not already using
+	etoolmanager.setTool('selection-tool'); // Switch if we're not already using
 
 	const box = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces);
 

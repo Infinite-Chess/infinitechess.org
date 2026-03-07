@@ -16,7 +16,7 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
 
-import boardeditor from '../boardeditor';
+import edithistory from '../edithistory';
 import { GameBus } from '../../GameBus';
 import movesequence from '../../chess/movesequence';
 
@@ -34,7 +34,7 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
 
 	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
 
-	boardeditor.addEditToHistory(edit);
+	edithistory.addEditToHistory(edit);
 
 	return edit;
 }

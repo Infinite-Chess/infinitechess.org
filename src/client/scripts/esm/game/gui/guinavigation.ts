@@ -23,7 +23,7 @@ import selection from '../chess/selection.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import Transition from '../rendering/transitions/Transition.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import boardeditor from '../boardeditor/boardeditor.js';
+import edithistory from '../boardeditor/edithistory.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
@@ -763,10 +763,10 @@ function isItOkayToUndoEditOrRedoEdit(): boolean {
  * the very beginning or end of the edits.
  */
 function update_EditButtons(): void {
-	if (boardeditor.canUndo()) element_undoEdit.classList.remove('opacity-0_5');
+	if (edithistory.canUndo()) element_undoEdit.classList.remove('opacity-0_5');
 	else element_undoEdit.classList.add('opacity-0_5');
 
-	if (boardeditor.canRedo()) element_redoEdit.classList.remove('opacity-0_5');
+	if (edithistory.canRedo()) element_redoEdit.classList.remove('opacity-0_5');
 	else element_redoEdit.classList.add('opacity-0_5');
 }
 
@@ -893,14 +893,14 @@ function testIfRedoEdit(): void {
 function callback_UndoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
 	lastRewindOrEdit = Date.now();
-	boardeditor.undo();
+	edithistory.undo();
 }
 
 /** Redoes one edit. */
 function callback_RedoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
 	lastRewindOrEdit = Date.now();
-	boardeditor.redo();
+	edithistory.redo();
 }
 
 export default {

@@ -4,7 +4,7 @@
  * Handles the Board Editor GUI
  */
 
-import type { Tool } from '../../boardeditor/boardeditor.js';
+import type { Tool } from '../../boardeditor/etoolmanager.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
 
@@ -25,6 +25,7 @@ import eautosave from '../../boardeditor/actions/eautosave.js';
 import gameloader from '../../chess/gameloader.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
 import drawingtool from '../../boardeditor/tools/drawingtool.js';
+import etoolmanager from '../../boardeditor/etoolmanager.js';
 import guigamerules from './guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
 import guiloadposition from './guiloadposition.js';
@@ -342,7 +343,7 @@ function markTool(tool: Tool): void {
 
 /** Adds/removes the 'active' class from the piece svgs in the Palette, changing their style. */
 function markPiece(type: number | null): void {
-	const placerToolActive = boardeditor.getTool() === 'placer';
+	const placerToolActive = etoolmanager.getTool() === 'placer';
 
 	_getActivePieceElements().forEach((element) => {
 		const element_type = Number.parseInt(element.id);
@@ -410,7 +411,7 @@ function callback_ChangeTool(e: Event): void {
 	const target = e.currentTarget as HTMLElement;
 	const tool = target.getAttribute('data-tool');
 	if (tool === null) throw new Error('Tool attribute is null');
-	boardeditor.setTool(tool);
+	etoolmanager.setTool(tool);
 }
 
 function callback_Action(e: Event): void {
@@ -546,7 +547,7 @@ function callback_ChangePieceType(e: Event): void {
 	const currentPieceType = Number.parseInt(target.id);
 	if (isNaN(currentPieceType)) return console.error(`Invalid piece type: ${currentPieceType}`);
 	drawingtool.setPiece(currentPieceType);
-	boardeditor.setTool('placer');
+	etoolmanager.setTool('placer');
 	markPiece(currentPieceType);
 }
 

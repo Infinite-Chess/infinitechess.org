@@ -8,6 +8,7 @@
  */
 
 import type { Mesh } from '../../../rendering/piecemodels';
+import type { Edit } from '../../boardeditor';
 import type { FullGame } from '../../../../../../../shared/chess/logic/gamefile';
 import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
 
@@ -22,8 +23,8 @@ import vectors, { Vec2 } from '../../../../../../../shared/util/math/vectors';
 import boardutil, { Piece } from '../../../../../../../shared/chess/util/boardutil';
 import coordutil, { BDCoords, Coords } from '../../../../../../../shared/chess/util/coordutil';
 
+import edithistory from '../../edithistory';
 import selectiontool from './selectiontool';
-import boardeditor, { Edit } from '../../boardeditor';
 
 // Types ---------------------------------------------------------------------
 
@@ -153,7 +154,7 @@ function Fill(
 			if (partial && !bounds.boxContainsSquare(fillBox, translatedCoords)) continue;
 			// Queue the addition of the piece at its new location
 			const hasSpecialRights = specialRights.has(getKey(piece.coords));
-			boardeditor.queueAddPiece(
+			edithistory.queueAddPiece(
 				gamefile,
 				edit,
 				translatedCoords,
@@ -252,7 +253,7 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 			for (const piece of clipboard) {
 				const translatedCoords = coordutil.addCoords(piece.coords, thisTranslation);
 				// Queue the addition of the piece at its new location
-				boardeditor.queueAddPiece(
+				edithistory.queueAddPiece(
 					gamefile,
 					edit,
 					translatedCoords,
@@ -469,7 +470,7 @@ function Transform(
 	// Clear the destination area of any pieces not part of the original selection
 	for (const piece of piecesInDestination) {
 		if (bounds.boxContainsSquare(sourceBox, piece.coords)) continue;
-		boardeditor.queueRemovePiece(gamefile, edit, piece);
+		edithistory.queueRemovePiece(gamefile, edit, piece);
 	}
 
 	// Delete all pieces in the original selection area
@@ -491,7 +492,7 @@ function Transform(
 			continue;
 		// Queue the addition of the piece at its new location
 		const hasSpecialRights = specialRights.has(getKey(piece.coords));
-		boardeditor.queueAddPiece(
+		edithistory.queueAddPiece(
 			gamefile,
 			edit,
 			transformed.coords,
@@ -512,7 +513,7 @@ function Transform(
 /** Queues all the pieces in the list to be removed in this Edit. */
 function removeAllPieces(gamefile: FullGame, edit: Edit, pieces: Piece[]): void {
 	for (const piece of pieces) {
-		boardeditor.queueRemovePiece(gamefile, edit, piece);
+		edithistory.queueRemovePiece(gamefile, edit, piece);
 	}
 }
 
@@ -521,8 +522,8 @@ function applyEdit(gamefile: FullGame, mesh: Mesh, edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.global.length === 0) return; // No changes made => don't need to apply
 
 	// Apply the collective edit and add it to the history
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
+	edithistory.runEdit(gamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
 }
 
 /** Calculates all pieces within the given box area. */
