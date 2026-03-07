@@ -47,6 +47,7 @@ async function buildAuthHeaders(): Promise<Record<string, string>> {
 /**
  * GET /api/editor-saves
  * Returns an array of abridged save records for the logged-in user.
+ * @throws If the request fails or the server returns a non-OK response.
  */
 async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
@@ -65,6 +66,7 @@ async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
 /**
  * POST /api/editor-saves
  * Saves a position to the server for the logged-in user.
+ * @throws If the request fails or the server returns a non-OK response.
  */
 async function savePosition(
 	name: string,
@@ -100,6 +102,7 @@ async function savePosition(
 /**
  * GET /api/editor-saves/:position_name
  * Returns the full ICN and game rules for a saved position.
+ * @throws If the request fails or the server returns a non-OK response.
  */
 async function getPosition(position_name: string): Promise<CloudPositionRecord> {
 	const headers = await buildAuthHeaders();
@@ -118,6 +121,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  * DELETE /api/editor-saves/:position_name
  * Deletes a saved position from the server.
  * Returns the updated list of abridged save records for the user.
+ * @throws If the request fails or the server returns a non-OK response.
  */
 async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
