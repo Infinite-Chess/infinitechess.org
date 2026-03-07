@@ -421,13 +421,17 @@ function callback_Action(e: Event): void {
 		case 'reset': {
 			const wasOpen = guiresetposition.isOpen();
 			closeAllFloatingWindows(false);
-			if (!wasOpen) guiresetposition.open();
+			// Skip confirmation dialog if there are no unsaved changes
+			if (!boardeditor.isPositionDirty()) eactions.reset();
+			else if (!wasOpen) guiresetposition.open();
 			return;
 		}
 		case 'clearall': {
 			const wasOpen = guiclearposition.isOpen();
 			closeAllFloatingWindows(false);
-			if (!wasOpen) guiclearposition.open();
+			// Skip confirmation dialog if there are no unsaved changes
+			if (!boardeditor.isPositionDirty()) eactions.clearAll();
+			else if (!wasOpen) guiclearposition.open();
 			return;
 		}
 		case 'load-position': {
