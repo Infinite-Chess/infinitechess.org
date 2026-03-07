@@ -272,6 +272,8 @@ function generateRowForSavedPositionsElement(
 
 	// "Load" button
 	const loadBtn = createButtonElement('#svg-load');
+	loadBtn.classList.add('tooltip-d');
+	loadBtn.dataset['tooltip'] = 'Load position';
 	registerButtonClick(loadBtn, () => {
 		// Skip confirmation modal if the position has no unsaved changes
 		if (!boardeditor.isPositionDirty()) {
@@ -288,9 +290,13 @@ function generateRowForSavedPositionsElement(
 	if (showCloudButton) {
 		const cloudBtn = createButtonElement('#svg-cloud-save');
 		cloudBtn.classList.add('cloud-save');
+		cloudBtn.classList.add('tooltip-d');
 		if (save.storage_type === 'local') {
 			// Local save: greyed-out cloud button (not yet on cloud)
 			cloudBtn.classList.add('local');
+			cloudBtn.dataset['tooltip'] = 'Save to cloud';
+		} else {
+			cloudBtn.dataset['tooltip'] = 'Remove from cloud';
 		}
 		registerButtonClick(cloudBtn, () =>
 			onCloudButtonPress(position_name, save.storage_type, cloudBtn),
@@ -300,6 +306,8 @@ function generateRowForSavedPositionsElement(
 
 	// "Delete" button
 	const deleteBtn = createButtonElement('#svg-delete');
+	deleteBtn.classList.add('tooltip-d');
+	deleteBtn.dataset['tooltip'] = 'Delete position';
 	registerButtonClick(deleteBtn, () =>
 		guiloadpositionmodal.openModal('delete', position_name, () =>
 			performDelete(position_name, save.storage_type),
