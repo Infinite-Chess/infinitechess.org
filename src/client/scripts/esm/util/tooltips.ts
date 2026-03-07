@@ -2,8 +2,7 @@
 
 /**
  * JS-based tooltip system. A single fixed div is appended to document.body
- * when the user hovers a tooltip element, avoiding clip issues caused by
- * parent containers with overflow:hidden.
+ * when the user hovers a tooltip element, avoiding any clipping issues from parent containers.
  *
  * Tooltip direction is determined by the element's class:
  *   tooltip-d   – below, centered
@@ -76,7 +75,9 @@ function getTooltipClass(element: Element): string | null {
 
 /** Enables fast-transition mode so the next tooltip appears without delay. */
 function enableFastTransition(): void {
-	if (fastTransitionMode) return;
+	if (fastTransitionMode) return; // Already on!
+
+	// console.log("Enabled fast transition");
 	fastTransitionMode = true;
 }
 
@@ -89,6 +90,8 @@ function cancelFastTransitionExpiryTimer(): void {
 /** Disables fast-transition mode. */
 function disableFastTransition(): void {
 	if (!fastTransitionMode) return;
+
+	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
 }
@@ -191,7 +194,7 @@ function addListeners(): void {
 	const allTooltips = document.querySelectorAll<HTMLElement>(tooltipClasses_Dotted.join(', '));
 
 	allTooltips.forEach((target) => {
-		if (target.dataset['tooltip_initialized'] === 'true') return;
+		if (target.dataset['tooltip_initialized'] === 'true') return; // Already initialized.
 		target.dataset['tooltip_initialized'] = 'true';
 
 		const direction = getTooltipClass(target)!;
