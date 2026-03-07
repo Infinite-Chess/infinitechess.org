@@ -17,9 +17,9 @@ import docutil from '../../util/docutil.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
-import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
+import hydrochess_card from '../chess/engines/enginecards/hydrochess_card.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import { engineDictionary } from '../misc/engine.js';
+import { engineDictionary } from '../chess/engines/engine.js';
 
 // Elements --------------------------------------------------------------------
 

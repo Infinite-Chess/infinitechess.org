@@ -1,11 +1,11 @@
-// src/client/scripts/esm/game/misc/engine.ts
+// src/client/scripts/esm/game/chess/engines/engine.ts
 
 /*
  * This module contains the centralized data structure for all engines.
  * Add a new entry to engineDictionary when adding a new engine.
  */
 
-import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
+import hydrochess_card from './enginecards/hydrochess_card.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -52,3 +52,17 @@ export const engineDictionary = {
 
 /** Union of all valid engine names, derived from the keys of engineDictionary. */
 export type ValidEngine = keyof typeof engineDictionary;
+
+// Functions --------------------------------------------------------------------
+
+/**
+ * Returns a formatted engine name string, optionally including its strength level.
+ * If the provided strength level is the maximum for the engine, it is omitted.
+ */
+export function getFormattedEngineName(engineName: ValidEngine, strengthLevel?: number): string {
+	const name = engineDictionary[engineName].displayName;
+	const maxLevel = engineDictionary[engineName].maxStrengthLevel;
+	return strengthLevel !== undefined && strengthLevel !== maxLevel
+		? `${name} (Level ${strengthLevel})`
+		: name;
+}

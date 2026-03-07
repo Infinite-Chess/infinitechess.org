@@ -15,10 +15,11 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { ValidEngine } from './engines/engine.js';
+import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { EngineConfig, ValidEngine } from '../misc/enginegame.js';
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ParticipantState,
@@ -44,7 +45,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import { engineDictionary } from '../misc/engine.js';
+import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -256,7 +257,7 @@ async function startEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
+	const formattedEngineName = getFormattedEngineName(
 		options.currentEngine,
 		options.engineConfig.strengthLevel,
 	);

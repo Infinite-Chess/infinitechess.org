@@ -32,7 +32,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
-import { engineDictionary } from '../misc/engine.js';
+import { engineDictionary } from './engines/engine.js';
 import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
 
 // Variables ----------------------------------------------------------------------------

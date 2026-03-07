@@ -49,13 +49,12 @@ import gameslot from '../../chess/gameslot';
 import pastegame from '../../chess/pastegame';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
-import enginegame from '../../misc/enginegame';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
-import hydrochess_card from '../../chess/enginecards/hydrochess_card';
-import { engineDictionary } from '../../misc/engine';
+import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 import boardeditor, { Edit } from '../boardeditor';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -300,10 +299,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
-		currentEngine,
-		engineUIConfig.strengthLevel,
-	);
+	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
 
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
