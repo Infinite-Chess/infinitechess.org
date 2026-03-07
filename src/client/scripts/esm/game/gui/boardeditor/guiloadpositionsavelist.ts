@@ -67,16 +67,20 @@ GameBus.addEventListener('game-loaded', () => {
 
 // Loading animation -----------------------------------------------
 
-/** Runs an async API call while showing the loading spinner, hiding it when done. */
+/**
+ * Runs an async API call while showing the loading spinner, hiding it when done.
+ * @param fn The async function that performs the API call. All errors should be caught internally, this wrapper does not catch errors!
+ */
 async function withRequest<T>(fn: () => Promise<T>): Promise<T> {
 	activeRequestCount++;
 	element_loadingPawn.classList.remove('hidden');
-	try {
-		return await fn();
-	} finally {
-		activeRequestCount = Math.max(0, activeRequestCount - 1);
-		if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
-	}
+
+	const result = await fn();
+
+	activeRequestCount = Math.max(0, activeRequestCount - 1);
+	if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
+
+	return result;
 }
 
 // Utilities----------------------------------------------------------------
