@@ -253,6 +253,22 @@ async function removePositionFromCloud(
 	return saves;
 }
 
+/**
+ * Fetches all cloud saves for the current user.
+ * Mirrors esave.getAllLocalSaveInfos() for cloud storage.
+ * @returns An array of cloud save records, or an empty array on failure.
+ */
+async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {
+	try {
+		return await editorSavesAPI.getSavedPositions();
+	} catch (err) {
+		console.error('Failed to fetch cloud saves:', err);
+		const errMsg = err instanceof Error ? err.message : String(err);
+		toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		return [];
+	}
+}
+
 // Exports --------------------------------------------------------------------
 
 export default {
@@ -261,4 +277,5 @@ export default {
 	deleteCloud,
 	transferPositionToCloud,
 	removePositionFromCloud,
+	getAllCloudSaveInfos,
 };

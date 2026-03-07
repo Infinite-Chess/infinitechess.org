@@ -34,6 +34,7 @@ import guiresetposition from './guiresetposition.js';
 import guiclearposition from './guiclearposition.js';
 import guistartlocalgame from './guistartlocalgame.js';
 import guistartenginegame from './guistartenginegame.js';
+import guiloadpositionsavelist from './guiloadpositionsavelist.js';
 
 // Elements ---------------------------------------------------------------
 
@@ -467,7 +468,7 @@ function callback_Action(e: Event): void {
 
 				// Update UI if necessary
 				if (guiloadposition.getMode() !== undefined)
-					guiloadposition.updateSavedPositionListUI();
+					guiloadpositionsavelist.updateSavedPositionListUI();
 			}
 			return;
 		}
