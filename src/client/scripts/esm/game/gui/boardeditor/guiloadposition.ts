@@ -150,5 +150,4 @@ export default {
 	openSavePositionAs,
 	close: floatingWindow.close,
 	getMode,
-	updateSavedPositionListUI: guiloadpositionsavelist.updateSavedPositionListUI,
 };
