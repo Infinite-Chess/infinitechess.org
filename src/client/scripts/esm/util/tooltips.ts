@@ -29,7 +29,10 @@ const tooltipClasses_Dotted = tooltipClasses.map((cls) => '.' + cls);
 
 /** Pixels between the target element edge and the tooltip box. */
 const TOOLTIP_GAP = 8;
-/** Half the CSS border-width used for the arrow (px). Full arrow size = 2 × ARROW_HALF. */
+/**
+ * Half the CSS border-width used for the arrow (px). Full arrow size = 2 × ARROW_HALF.
+ * MUST match the `border-width` value on `#tooltip-arrow` in header.css.
+ */
 const ARROW_HALF = 5;
 /** Duration (ms) to wait after fading out before removing the tooltip from the DOM.
  * Should be slightly longer than the CSS opacity transition (0.1 s = 100 ms). */
@@ -39,13 +42,15 @@ const FADE_OUT_REMOVE_DELAY_MS = 150;
 const tooltipDelayMillis: number = 500;
 /** Time after a click before the tooltip can reappear while still hovering. */
 const timeToReAddTooltipAfterClickMillis: number = 2000;
+/** If no new tooltip is viewed within this window, fast-transition mode turns off. */
+const fastTransitionCooldownMillis: number = 750;
+
+// State ---------------------------------------------------------------------------------
 
 /** If true, tooltips appear immediately without the hover delay. */
 let fastTransitionMode = false;
 /** Timer ID for turning off fast-transition mode after the cooldown. */
-let fastTransitionTimeoutID: ReturnType<typeof setTimeout> | undefined;
-/** If no new tooltip is viewed within this window, fast-transition mode turns off. */
-const fastTransitionCooldownMillis: number = 750;
+let fastTransitionTimeoutID: number | undefined;
 
 /** The shared tooltip box element, created once and reused. */
 let tooltipDiv: HTMLDivElement | null = null;
@@ -204,9 +209,9 @@ function addListeners(): void {
 		let tooltipVisible = false;
 
 		/** Timer to show the tooltip after the hover delay. */
-		let hoveringTimer: ReturnType<typeof setTimeout> | undefined;
+		let hoveringTimer: number | undefined;
 		/** Timer after which tooltip suppression (from a click) is cleared. */
-		let suppressTimer: ReturnType<typeof setTimeout> | undefined;
+		let suppressTimer: number | undefined;
 		/** True while the tooltip is temporarily suppressed due to a click. */
 		let suppressed = false;
 
@@ -223,7 +228,7 @@ function addListeners(): void {
 			if (fastTransitionMode) {
 				tryShow();
 			} else {
-				hoveringTimer = setTimeout(tryShow, tooltipDelayMillis);
+				hoveringTimer = window.setTimeout(() => tryShow(), tooltipDelayMillis);
 			}
 		}
 
@@ -240,7 +245,7 @@ function addListeners(): void {
 		/** Schedules the end of the click-suppression window. */
 		function resetSuppressTimer(): void {
 			clearTimeout(suppressTimer);
-			suppressTimer = setTimeout(() => {
+			suppressTimer = window.setTimeout(() => {
 				suppressed = false;
 				if (isHovering && !isHolding) tryShow();
 			}, timeToReAddTooltipAfterClickMillis);
@@ -265,8 +270,8 @@ function addListeners(): void {
 
 				if (tooltipVisible) {
 					enableFastTransition();
-					fastTransitionTimeoutID = setTimeout(
-						disableFastTransition,
+					fastTransitionTimeoutID = window.setTimeout(
+						() => disableFastTransition(),
 						fastTransitionCooldownMillis,
 					);
 				}
@@ -290,7 +295,7 @@ function addListeners(): void {
 			// Touch devices: show tooltip on press, hide on release.
 			target.addEventListener('touchstart', () => {
 				isHovering = true;
-				hoveringTimer = setTimeout(tryShow, tooltipDelayMillis);
+				hoveringTimer = window.setTimeout(() => tryShow(), tooltipDelayMillis);
 			});
 
 			target.addEventListener('touchend', () => {

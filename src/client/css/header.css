@@ -745,7 +745,7 @@ p.theme-title {
 	position: fixed;
 	width: 0;
 	height: 0;
-	border-width: 5px;
+	border-width: 5px; /* MUST match ARROW_HALF in tooltips.ts */
 	border-style: solid;
 	opacity: 0;
 	transition: opacity 0.1s ease-in-out;
