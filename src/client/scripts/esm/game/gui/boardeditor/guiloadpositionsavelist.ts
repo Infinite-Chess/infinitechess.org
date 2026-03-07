@@ -124,6 +124,30 @@ async function performLoad(position_name: string, storage_type: StorageType): Pr
 	}
 }
 
+/**
+ * Handles pressing the cloud-save button for a position row.
+ * - If local: uploads to server and deletes local copy.
+ * - If cloud: downloads from server, deletes from server, and saves locally.
+ */
+async function onCloudButtonPress(
+	position_name: string,
+	storage_type: StorageType,
+	cloudBtn: HTMLButtonElement,
+): Promise<void> {
+	// Disable cloud button to prevent multiple clicks while operation is in-flight
+	cloudBtn.disabled = true;
+
+	const preloadedCloudSaves = await withRequest(() =>
+		storage_type === 'local'
+			? ecloud.transferPositionToCloud(position_name)
+			: ecloud.removePositionFromCloud(position_name),
+	);
+
+	// Re-enable cloud button regardless of success or failure
+	cloudBtn.disabled = false;
+	updateSavedPositionListUI(preloadedCloudSaves);
+}
+
 /** Performs the actual delete operation for a saved position, bypassing the modal. */
 async function performDelete(position_name: string, storage_type: StorageType): Promise<void> {
 	let preloadedCloudSaves: PreloadedCloudSaves;
@@ -140,17 +164,48 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 
 // Row generation ---------------------------------------------------------------
 
-/** Create a button element for one position row, with given SVG href. */
-function createButtonElement(svgHref: string): HTMLButtonElement {
-	const button = document.createElement('button');
-	const svg = document.createElementNS(style.SVG_NS, 'svg');
-	const use = document.createElementNS(style.SVG_NS, 'use');
-	use.setAttribute('href', svgHref);
-	svg.appendChild(use);
-	button.appendChild(svg);
-	button.classList.add('btn');
-	button.classList.add('saved-position-btn');
-	return button;
+/**
+ * Update the saved positions list.
+ * @param preloadedCloudSaves If provided, skips the cloud GET request and uses this data directly.
+ */
+async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
+	const areLoggedIn = validatorama.areWeLoggedIn();
+
+	// Build unified list (local + cloud)
+	const allSaves: UnifiedSave[] = [];
+
+	// Fetch cloud saves if logged in
+	if (areLoggedIn) {
+		const cloudSaves: CloudSaveListRecord[] =
+			preloadedCloudSaves ?? (await withRequest(() => ecloud.getAllCloudSaveInfos()));
+
+		cloudSaves.forEach((save) => {
+			allSaves.push({
+				storage_type: 'cloud',
+				position_name: save.name,
+				timestamp: save.timestamp,
+				piece_count: save.piece_count,
+			});
+		});
+	}
+
+	// Load all local saves
+	const localSaveList = await esave.getAllLocalSaveInfos();
+
+	// Add local saves
+	for (const abridged of localSaveList) {
+		allSaves.push({ storage_type: 'local', ...abridged });
+	}
+
+	// Sort by timestamp (newest first)
+	allSaves.sort((a, b) => b.timestamp - a.timestamp);
+
+	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
+	unregisterAllPositionButtonListeners();
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
+	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
+	element_savedPositionsToLoad.replaceChildren(...newRows);
 }
 
 /**
@@ -258,72 +313,17 @@ function generateRowForSavedPositionsElement(
 	return row;
 }
 
-/**
- * Handles pressing the cloud-save button for a position row.
- * - If local: uploads to server and deletes local copy.
- * - If cloud: downloads from server, deletes from server, and saves locally.
- */
-async function onCloudButtonPress(
-	position_name: string,
-	storage_type: StorageType,
-	cloudBtn: HTMLButtonElement,
-): Promise<void> {
-	// Disable cloud button to prevent multiple clicks while operation is in-flight
-	cloudBtn.disabled = true;
-
-	const preloadedCloudSaves = await withRequest(() =>
-		storage_type === 'local'
-			? ecloud.transferPositionToCloud(position_name)
-			: ecloud.removePositionFromCloud(position_name),
-	);
-
-	// Re-enable cloud button regardless of success or failure
-	cloudBtn.disabled = false;
-	updateSavedPositionListUI(preloadedCloudSaves);
-}
-
-/**
- * Update the saved positions list.
- * @param preloadedCloudSaves If provided, skips the cloud GET request and uses this data directly.
- */
-async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
-	const areLoggedIn = validatorama.areWeLoggedIn();
-
-	// Build unified list (local + cloud)
-	const allSaves: UnifiedSave[] = [];
-
-	// Fetch cloud saves if logged in
-	if (areLoggedIn) {
-		const cloudSaves: CloudSaveListRecord[] =
-			preloadedCloudSaves ?? (await withRequest(() => ecloud.getAllCloudSaveInfos()));
-
-		cloudSaves.forEach((save) => {
-			allSaves.push({
-				storage_type: 'cloud',
-				position_name: save.name,
-				timestamp: save.timestamp,
-				piece_count: save.piece_count,
-			});
-		});
-	}
-
-	// Load all local saves
-	const localSaveList = await esave.getAllLocalSaveInfos();
-
-	// Add local saves
-	for (const abridged of localSaveList) {
-		allSaves.push({ storage_type: 'local', ...abridged });
-	}
-
-	// Sort by timestamp (newest first)
-	allSaves.sort((a, b) => b.timestamp - a.timestamp);
-
-	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
-	unregisterAllPositionButtonListeners();
-	// Toggle CSS class to adjust header column widths for cloud button
-	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
-	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
-	element_savedPositionsToLoad.replaceChildren(...newRows);
+/** Create a button element for one position row, with given SVG href. */
+function createButtonElement(svgHref: string): HTMLButtonElement {
+	const button = document.createElement('button');
+	const svg = document.createElementNS(style.SVG_NS, 'svg');
+	const use = document.createElementNS(style.SVG_NS, 'use');
+	use.setAttribute('href', svgHref);
+	svg.appendChild(use);
+	button.appendChild(svg);
+	button.classList.add('btn');
+	button.classList.add('saved-position-btn');
+	return button;
 }
 
 // Injected close callback -------------------------------------------------------
