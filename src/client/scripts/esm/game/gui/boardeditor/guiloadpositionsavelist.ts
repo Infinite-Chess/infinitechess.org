@@ -17,6 +17,7 @@ import eactions from '../../boardeditor/actions/eactions';
 import boardeditor from '../../boardeditor/boardeditor';
 import { GameBus } from '../../GameBus';
 import validatorama from '../../../util/validatorama';
+import guiloadposition from './guiloadposition';
 import guiloadpositionmodal from './guiloadpositionmodal';
 
 // Types -------------------------------------------------------------------------
@@ -119,7 +120,7 @@ async function performLoad(position_name: string, storage_type: StorageType): Pr
 	}
 	if (editorSaveState !== undefined) {
 		// Pass false to skip resetting the window's position on screen
-		floatingWindowClose(false);
+		guiloadposition.close(false);
 		await eactions.load(editorSaveState, storage_type);
 	}
 }
@@ -326,22 +327,6 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
 	return button;
 }
 
-// Injected close callback -------------------------------------------------------
-
-/**
- * Stored reference to the floating window's close function.
- * Set by {@link setFloatingWindowClose} during initialization.
- */
-let floatingWindowClose: (resetPositioning: boolean) => void = () => {};
-
-/**
- * Provides the floating window's close function to this module.
- * Must be called once during initialization, before any load operations are triggered.
- */
-function setFloatingWindowClose(closeFn: (resetPositioning: boolean) => void): void {
-	floatingWindowClose = closeFn;
-}
-
 // Exports -----------------------------------------------------------------
 
 export default {
@@ -349,5 +334,4 @@ export default {
 	unregisterAllPositionButtonListeners,
 	clearSavedPositionList,
 	updateSavedPositionListUI,
-	setFloatingWindowClose,
 };

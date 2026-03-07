@@ -50,9 +50,6 @@ const floatingWindow = guifloatingwindow.create({
 	onClose,
 });
 
-// Provide the floating window's close function to the save list module
-guiloadpositionsavelist.setFloatingWindowClose(floatingWindow.close);
-
 // Toggling ------------------------------------------------
 
 function onOpen(): void {
