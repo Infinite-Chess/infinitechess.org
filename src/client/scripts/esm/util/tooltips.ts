@@ -373,9 +373,3 @@ if (docutil.isMouseSupported()) {
 	document.body.addEventListener('touchend', onTouchEnd);
 	document.body.addEventListener('touchcancel', onTouchEnd);
 }
-
-// -------------------------------------------------------------------------------------------
-
-// This module registers its event listeners as a side effect of being imported.
-// It must be imported on every page; without an export, esbuild would tree-shake it out.
-export default {};
