@@ -118,7 +118,7 @@ async function clearAll(): Promise<void> {
 				variantOptions,
 			},
 		},
-		false,
+		true,
 		false,
 	);
 }
