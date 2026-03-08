@@ -26,8 +26,8 @@ import gameslot from '../../chess/gameslot';
 import selection from '../../chess/selection';
 import { Mouse } from '../../input';
 import egamerules from '../egamerules';
+import guipalette from '../../gui/boardeditor/guipalette';
 import edithistory from '../edithistory';
-import guiboardeditor from '../../gui/boardeditor/guiboardeditor';
 import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
 
 // Constants -------------------------------------------------------
@@ -59,8 +59,8 @@ let addingSpecialRights: boolean | undefined;
 // Initialization ---------------------------------------------------------
 
 function init(): void {
-	guiboardeditor.updatePieceColors(currentColor);
-	guiboardeditor.markPiece(currentPieceType);
+	guipalette.updatePieceColors(currentColor);
+	guipalette.markPiece(currentPieceType);
 }
 
 function onCloseEditor(): void {
@@ -197,8 +197,8 @@ function onToolChange(tool: Tool): void {
 	if (tool === 'specialrights') specialrighthighlights.enable();
 	else specialrighthighlights.disable();
 
-	if (tool !== 'placer') guiboardeditor.markPiece(null);
-	else guiboardeditor.markPiece(currentPieceType);
+	if (tool !== 'placer') guipalette.markPiece(null);
+	else guipalette.markPiece(currentPieceType);
 }
 
 function isEditInProgress(): boolean {

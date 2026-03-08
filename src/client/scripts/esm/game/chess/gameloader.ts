@@ -39,6 +39,7 @@ import IndexedDB from '../../util/IndexedDB.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
+import guipalette from '../gui/boardeditor/guipalette.js';
 import perspective from '../rendering/perspective.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
@@ -335,7 +336,7 @@ async function startBoardEditor(): Promise<void> {
 		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	await guiboardeditor.initUI();
+	await guipalette.initUI();
 	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
 }
 
@@ -458,7 +459,7 @@ async function startBoardEditorFromCustomPosition(
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	await guiboardeditor.initUI();
+	await guipalette.initUI();
 	boardeditor.initBoardEditor(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 

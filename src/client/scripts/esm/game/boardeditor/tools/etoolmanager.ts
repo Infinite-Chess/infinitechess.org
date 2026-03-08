@@ -8,12 +8,12 @@
  */
 
 import selection from '../../chess/selection.js';
+import guitoolbar from '../../gui/boardeditor/guitoolbar.js';
 import drawingtool from './drawingtool.js';
 import perspective from '../../rendering/perspective.js';
 import boardeditor from '../boardeditor.js';
 import edithistory from '../edithistory.js';
 import selectiontool from './selection/selectiontool.js';
-import guiboardeditor from '../../gui/boardeditor/guiboardeditor.js';
 import { listener_document } from '../../chess/game.js';
 
 // Types ----------------------------------------------------------------------
@@ -35,7 +35,7 @@ let currentTool: Tool = 'normal';
 /** Resets the tool state when the board editor is closed. */
 function reset(): void {
 	currentTool = 'normal';
-	guiboardeditor.markTool(currentTool); // Effectively resets classes state
+	guitoolbar.markTool(currentTool); // Effectively resets classes state
 }
 
 // Tool Management ------------------------------------------------------------
@@ -56,7 +56,7 @@ function setTool(tool: string): void {
 	// Buttons that perform one-time actions like "clear" or "reset" should not be treated as tools.
 	selection.unselectPiece();
 
-	guiboardeditor.markTool(currentTool);
+	guitoolbar.markTool(currentTool);
 
 	// Reset selection tool state when switching to another tool
 	selectiontool.resetState();

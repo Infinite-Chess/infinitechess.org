@@ -22,8 +22,8 @@ import editortypes from './editortypes.js';
 import edithistory from './edithistory.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import stransformations from './tools/selection/stransformations.js';
+import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ function isPositionDirty(): boolean {
 function markPositionDirty(): void {
 	// console.error('Position marked dirty');
 	positionDirty = true;
-	guiboardeditor.updateDirtyIndicator(true);
+	guipositionheader.updateDirtyIndicator(true);
 	eautosave.markPositionDirty();
 }
 
@@ -178,7 +178,7 @@ function markPositionDirty(): void {
 function markPositionClean(): void {
 	// console.error('Position marked clean');
 	positionDirty = false;
-	guiboardeditor.updateDirtyIndicator(false);
+	guipositionheader.updateDirtyIndicator(false);
 }
 
 /** Returns the active position, if any. */
@@ -198,7 +198,7 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 /** Sets the currently active position and flushes the autosave. */
 function setActivePosition(name: string, storage_type: StorageType): void {
 	active_position = { name, storage_type };
-	guiboardeditor.updateActivePositionElement(name);
+	guipositionheader.updateActivePositionElement(name);
 	flushActivePositionToAutosave();
 }
 
@@ -206,7 +206,7 @@ function setActivePosition(name: string, storage_type: StorageType): void {
 function clearActivePosition(): void {
 	active_position = undefined;
 	markPositionDirty();
-	guiboardeditor.updateActivePositionElement(undefined);
+	guipositionheader.updateActivePositionElement(undefined);
 	flushActivePositionToAutosave();
 }
 

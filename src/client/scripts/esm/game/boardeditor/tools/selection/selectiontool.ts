@@ -25,8 +25,8 @@ import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
 import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
-import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';
+import guipositionheader from '../../../gui/boardeditor/guipositionheader';
 import { listener_document, listener_overlay } from '../../../chess/game';
 
 // State ----------------------------------------------
@@ -108,7 +108,7 @@ function endSelection(): void {
 
 	// Set the end point
 	endPoint = lastPointerCoords;
-	guiboardeditor.onNewSelection();
+	guipositionheader.onNewSelection();
 
 	selecting = false;
 	pointerId = undefined;
@@ -126,7 +126,7 @@ function resetState(): void {
 	endPoint = undefined;
 	sfill.resetState();
 	sdrag.resetState();
-	guiboardeditor.onClearSelection();
+	guipositionheader.onClearSelection();
 }
 
 /** Whether there is a current selection, NOT whether we are currently MAKING a selection. */
@@ -238,7 +238,7 @@ function selectAll(): void {
 	startPoint = [box.left, box.top];
 	endPoint = [box.right, box.bottom];
 
-	guiboardeditor.onNewSelection();
+	guipositionheader.onNewSelection();
 	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
 	// Transition.zoomToCoordsBox(box);
 }
