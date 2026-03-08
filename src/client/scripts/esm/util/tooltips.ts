@@ -291,10 +291,6 @@ function hideTooltipDiv(): void {
 	if (!tooltipDiv || !arrowDiv) return;
 	tooltipDiv.style.opacity = '0';
 	arrowDiv.style.opacity = '0';
-	if (positionLoopId !== undefined) {
-		cancelAnimationFrame(positionLoopId);
-		positionLoopId = undefined;
-	}
 	clearTimeout(hideTimer);
 	hideTimer = window.setTimeout(() => {
 		tooltipDiv?.remove();
