@@ -78,6 +78,8 @@ let tooltipDiv: HTMLDivElement | null = null;
 let arrowDiv: HTMLDivElement | null = null;
 /** Timer to remove the tooltip elements from the DOM after they fade out. */
 let hideTimer: number | undefined;
+/** The rAF id for the position-tracking loop, or undefined when not running. */
+let positionLoopId: number | undefined;
 
 // Functions ----------------------------------------------------------------------------
 
@@ -213,49 +215,65 @@ function showTooltipFor(target: HTMLElement, direction: string): void {
 	shrinkWrapTooltip(tip);
 
 	// Force a layout reflow to get accurate dimensions.
-	const targetRect = target.getBoundingClientRect();
 	const tipWidth = tip.offsetWidth;
 	const tipHeight = tip.offsetHeight;
 
 	const isDown =
 		direction === 'tooltip-d' || direction === 'tooltip-dl' || direction === 'tooltip-dr';
 
-	// Vertical positioning.
-	let tipTop: number;
-	let arrowTop: number;
-	if (isDown) {
-		tipTop = targetRect.bottom + TOOLTIP_GAP;
-		// Arrow bottom aligns exactly with tooltip box top, filling the gap cleanly.
-		arrowTop = targetRect.bottom + TOOLTIP_GAP - ARROW_HALF * 2;
-		arrow.className = 'tooltip-arrow-down';
-	} else {
-		tipTop = targetRect.top - TOOLTIP_GAP - tipHeight;
-		// Arrow top aligns exactly with tooltip box bottom, filling the gap cleanly.
-		arrowTop = targetRect.top - TOOLTIP_GAP;
-		arrow.className = 'tooltip-arrow-up';
-	}
+	/** Recomputes and applies the tooltip position relative to the current target rect. */
+	const updatePosition = (): void => {
+		const targetRect = target.getBoundingClientRect();
 
-	// Horizontal positioning of the tooltip box.
-	let tipLeft: number;
-	if (direction === 'tooltip-d' || direction === 'tooltip-u') {
-		// Centered on the target.
-		tipLeft = targetRect.left + targetRect.width / 2 - tipWidth / 2;
-	} else if (direction === 'tooltip-dl' || direction === 'tooltip-ul') {
-		// Right edge of tooltip aligns with right edge of target.
-		tipLeft = targetRect.right - tipWidth;
-	} else {
-		// tooltip-dr: left edge of tooltip aligns with left edge of target.
-		tipLeft = targetRect.left;
-	}
+		// Vertical positioning.
+		let tipTop: number;
+		let arrowTop: number;
+		if (isDown) {
+			tipTop = targetRect.bottom + TOOLTIP_GAP;
+			// Arrow bottom aligns exactly with tooltip box top, filling the gap cleanly.
+			arrowTop = targetRect.bottom + TOOLTIP_GAP - ARROW_HALF * 2;
+			arrow.className = 'tooltip-arrow-down';
+		} else {
+			tipTop = targetRect.top - TOOLTIP_GAP - tipHeight;
+			// Arrow top aligns exactly with tooltip box bottom, filling the gap cleanly.
+			arrowTop = targetRect.top - TOOLTIP_GAP;
+			arrow.className = 'tooltip-arrow-up';
+		}
 
-	// Arrow always centered horizontally on the target.
-	const arrowLeft = targetRect.left + targetRect.width / 2 - ARROW_HALF;
+		// Horizontal positioning of the tooltip box.
+		let tipLeft: number;
+		if (direction === 'tooltip-d' || direction === 'tooltip-u') {
+			// Centered on the target.
+			tipLeft = targetRect.left + targetRect.width / 2 - tipWidth / 2;
+		} else if (direction === 'tooltip-dl' || direction === 'tooltip-ul') {
+			// Right edge of tooltip aligns with right edge of target.
+			tipLeft = targetRect.right - tipWidth;
+		} else {
+			// tooltip-dr: left edge of tooltip aligns with left edge of target.
+			tipLeft = targetRect.left;
+		}
 
-	// Apply computed positions.
-	tip.style.top = `${tipTop}px`;
-	tip.style.left = `${tipLeft}px`;
-	arrow.style.top = `${arrowTop}px`;
-	arrow.style.left = `${arrowLeft}px`;
+		// Arrow always centered horizontally on the target.
+		const arrowLeft = targetRect.left + targetRect.width / 2 - ARROW_HALF;
+
+		// Apply computed positions.
+		tip.style.top = `${tipTop}px`;
+		tip.style.left = `${tipLeft}px`;
+		arrow.style.top = `${arrowTop}px`;
+		arrow.style.left = `${arrowLeft}px`;
+	};
+
+	updatePosition();
+
+	// Keep the tooltip in sync with the target element every frame in case it moves.
+	if (positionLoopId !== undefined) cancelAnimationFrame(positionLoopId);
+	const loop = (): void => {
+		if (!tip.isConnected) return;
+		updatePosition();
+		positionLoopId = requestAnimationFrame(loop);
+	};
+	positionLoopId = requestAnimationFrame(loop);
+
 	arrow.style.opacity = '0';
 
 	// Two rAF frames ensure the browser has committed the opacity:0 paint before
@@ -273,6 +291,10 @@ function hideTooltipDiv(): void {
 	if (!tooltipDiv || !arrowDiv) return;
 	tooltipDiv.style.opacity = '0';
 	arrowDiv.style.opacity = '0';
+	if (positionLoopId !== undefined) {
+		cancelAnimationFrame(positionLoopId);
+		positionLoopId = undefined;
+	}
 	clearTimeout(hideTimer);
 	hideTimer = window.setTimeout(() => {
 		tooltipDiv?.remove();
