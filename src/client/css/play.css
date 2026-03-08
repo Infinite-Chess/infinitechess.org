@@ -3,6 +3,7 @@
 	padding: 0;
 	font-family: Verdana;
 	border: 0;
+	-webkit-tap-highlight-color: transparent; /* Suppress blue flash on tap */
 	/* Enable temporarily during dev to see the borders of all elements */
 	/* outline: 1px solid rgba(0, 0, 0, 0.191); */
 }
