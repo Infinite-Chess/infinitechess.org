@@ -39,15 +39,17 @@ function updateDirtyIndicator(dirty: boolean): void {
 	else element_dirtyIndicator.classList.add('hidden');
 }
 
-/** Un-greys selection action buttons when a selection is made. */
+// Un-greys selection action buttons
 function onNewSelection(): void {
+	// Remove 'disabled' class to all children except those included in the alwaysActiveSelectionActions array
 	Array.from(element_selectionActions.children).forEach((child) => {
 		(child as HTMLElement).classList.remove('disabled');
 	});
 }
 
-/** Greys out selection action buttons when the selection is cleared. */
+// Greys out selection action buttons
 function onClearSelection(): void {
+	// Remove 'disabled' from all children except those included in the alwaysActiveSelectionActions array
 	Array.from(element_selectionActions.children).forEach((child) => {
 		if (!alwaysActiveSelectionActions.includes(child as HTMLElement)) {
 			(child as HTMLElement).classList.add('disabled');

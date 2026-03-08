@@ -178,7 +178,7 @@ function markPiece(type: number | null): void {
 	});
 }
 
-/** Updates which player's element container of their colored piece svgs are visible in the Palette. */
+/** Updates which players element container of their colored piece svgs are visible in the Palette. */
 function updatePieceColors(newColor: Player): void {
 	if (!initialized) return;
 
@@ -214,7 +214,7 @@ function updatePieceColors(newColor: Player): void {
 	markPiece(drawingtool.getPiece());
 }
 
-/** Swaps the color of pieces being drawn to the next color in the turn order. */
+/** Swaps the color of pieces being drawn. */
 function nextColor(): void {
 	const playersArray = _getPlayersInOrder();
 	const currentIndex = playersArray.indexOf(drawingtool.getColor());
@@ -236,14 +236,14 @@ function closeListeners(): void {
 
 // Helper Functions ---------------------------------------------------------
 
-/** Helper: Returns an array of players based on the current gamefile's turn order. */
+/** Helper Function: Returns an array of players based on the current gamefile's turn order. */
 function _getPlayersInOrder(): Player[] {
 	const gamefile = gameslot.getGamefile()!;
 	// Using a Set removes duplicates before converting to an array
 	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
 }
 
-/** Helper: Returns an array of all piece elements that are currently clickable (active color + neutral). */
+/** Helper Function: Returns an array of all piece elements that are currently clickable (active color + neutral). */
 function _getActivePieceElements(): Element[] {
 	const playerElements = element_playerTypes.get(drawingtool.getColor()) ?? [];
 	return [...playerElements, ...element_neutralTypes];
