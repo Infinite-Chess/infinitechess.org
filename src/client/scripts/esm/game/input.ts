@@ -729,7 +729,7 @@ function CreateInputListener(
 			)
 				e.preventDefault();
 			// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
-			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
+			if (document.activeElement instanceof HTMLInputElement) return; // Ignore events when the user is typing in a text box.
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
 			if (!keyDowns.some((keyInfo) => keyInfo.keyCode === e.code)) {
