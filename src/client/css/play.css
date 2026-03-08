@@ -55,7 +55,7 @@ button {
 	overflow-y: auto;
 	box-shadow: var(--editor-menu-shadow);
 	background-color: #ffffff;
-	z-index: 300; /* Stops nav bar shadow from being overtop the editor menu */
+	z-index: 4; /* Stops nav bar shadow from being overtop the editor menu */
 	/* Controls the size of all its children. */
 	font-size: 16px;
 	width: var(--editor-sidebar-width);
@@ -78,7 +78,7 @@ button {
 	clip-path: inset(-100px -100px -100px 0);
 	align-items: center;
 	justify-content: center;
-	z-index: 300; /* Must be above .load-position-modal */
+	z-index: 4; /* Must be above .load-position-modal */
 	font-size: 14px;
 	color: #333;
 	transition: var(--editor-transition);
@@ -1880,7 +1880,7 @@ svg.collapse {
 .load-position-modal-overlay {
 	position: absolute;
 	inset: 0;
-	z-index: 100;
+	z-index: 3;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1908,7 +1908,7 @@ svg.collapse {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	z-index: 400; /* Must be above .editor-menu-toggle */
+	z-index: 5; /* Must be above .editor-menu-toggle */
 	background-color: rgba(0, 0, 0, 0.849);
 	padding-bottom: 15vh;
 	display: grid;
