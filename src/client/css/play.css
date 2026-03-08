@@ -35,6 +35,11 @@ main {
 	right: 0;
 	display: flex;
 	flex-direction: row;
+	/* Board editor sidebar dimensions */
+	--editor-sidebar-width: 240px;
+	--editor-tab-width: 28px;
+	--editor-menu-shadow: 3px 0px 10px 0px rgba(0, 0, 0, 0.4);
+	--editor-transition: transform 0.25s ease;
 }
 
 button {
@@ -48,12 +53,72 @@ button {
 	height: 100%;
 	overflow-x: clip;
 	overflow-y: auto;
-	box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+	box-shadow: var(--editor-menu-shadow);
 	background-color: #ffffff;
 	z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
 	/* Controls the size of all its children. */
-	font-size: min(16px, 2.2vw);
-	width: 15em;
+	font-size: 16px;
+	width: var(--editor-sidebar-width);
+}
+
+/* Toggle button: only visible on narrow screens, positioned as a sibling of the sidebar */
+/* Uses transform (GPU-accelerated) to stay perfectly in sync with the sidebar animation */
+.editor-menu-toggle {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: var(--editor-tab-width);
+	height: 70px;
+	background-color: #ffffff;
+	border-radius: 0 6px 6px 0;
+	box-shadow: var(--editor-menu-shadow);
+	/* Clip any leftward shadow bleed so it doesn't visually separate from the sidebar */
+	clip-path: inset(-100px -100px -100px 0);
+	align-items: center;
+	justify-content: center;
+	z-index: 10;
+	font-size: 14px;
+	color: #333;
+	transition: var(--editor-transition);
+}
+
+.editor-menu-toggle::after {
+	content: '▶';
+}
+
+/*
+ * Narrow screens: sidebar becomes a collapsible overlay.
+ * MUST MATCH guifloatingwindow.NARROW_THRESHOLD
+ */
+@media only screen and (max-width: 727px) {
+	.editor-menu {
+		position: absolute;
+		transform: translateX(-100%);
+		transition: var(--editor-transition);
+	}
+
+	.editor-menu.expanded {
+		transform: translateX(0);
+	}
+
+	/* Show the toggle whenever the editor is open (sidebar not hidden) */
+	.editor-menu:not(.hidden) ~ .editor-menu-toggle {
+		display: flex;
+	}
+
+	/* Collapsed: only vertical centering — tab sits flush at left: 0 */
+	/* (inherits base transform: translateY(-50%) — no override needed) */
+
+	/* Expanded: tab slides to the right edge of the sidebar */
+	.editor-menu.expanded ~ .editor-menu-toggle {
+		transform: translateX(var(--editor-sidebar-width)) translateY(-50%);
+	}
+
+	.editor-menu.expanded ~ .editor-menu-toggle::after {
+		content: '◀';
+	}
 }
 
 .editor-header {

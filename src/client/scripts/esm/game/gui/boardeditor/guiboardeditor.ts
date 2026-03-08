@@ -38,6 +38,7 @@ import guiloadpositionsavelist from './guiloadpositionsavelist.js';
 // Elements ---------------------------------------------------------------
 
 const element_menu = document.getElementById('editor-menu')!;
+const element_menuToggle = document.getElementById('editor-menu-toggle')!;
 const element_activePositionNameDisplay = document.getElementById('active-position-name-display')!;
 const element_dirtyIndicator = document.getElementById('position-dirty-indicator')!;
 
@@ -190,6 +191,7 @@ function close(): void {
 
 	closeAllFloatingWindows(true);
 
+	element_menu.classList.remove('expanded');
 	element_menu.classList.add('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // The screen and canvas get effectively resized when the vertical board editor bar is toggled
 	closeListeners();
@@ -197,6 +199,7 @@ function close(): void {
 }
 
 function initListeners(): void {
+	element_menuToggle.addEventListener('click', callback_ToggleMenu);
 	elements_tools.forEach((element) => {
 		element.addEventListener('click', callback_ChangeTool);
 	});
@@ -209,6 +212,7 @@ function initListeners(): void {
 }
 
 function closeListeners(): void {
+	element_menuToggle.removeEventListener('click', callback_ToggleMenu);
 	elements_tools.forEach((element) => {
 		element.removeEventListener('click', callback_ChangeTool);
 	});
@@ -402,6 +406,16 @@ function _getActivePieceElements(): Element[] {
 }
 
 // Callbacks ---------------------------------------------------------------
+
+function callback_ToggleMenu(): void {
+	const expanded = element_menu.classList.toggle('expanded');
+	element_menuToggle.setAttribute(
+		'data-tooltip',
+		expanded ? 'Collapse sidebar' : 'Expand sidebar',
+	);
+	element_menuToggle.classList.toggle('tooltip-dr', !expanded);
+	element_menuToggle.classList.toggle('tooltip-d', expanded);
+}
 
 function callback_ChangeTool(e: Event): void {
 	const target = e.currentTarget as HTMLElement;
