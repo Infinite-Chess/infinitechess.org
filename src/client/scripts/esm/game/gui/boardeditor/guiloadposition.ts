@@ -114,7 +114,7 @@ function onSaveKeyDown(e: KeyboardEvent): void {
 
 /** Gets executed when the "save" button is pressed. */
 async function onSaveButtonPress(): Promise<void> {
-	const positionname = element_saveAsPositionName.value;
+	const positionname = element_saveAsPositionName.value.trim(); // Disallow pure whitespace names
 	if (positionname === '') return;
 	if (positionname.length > editorutil.MAX_POSITION_NAME_LENGTH) {
 		console.error(
