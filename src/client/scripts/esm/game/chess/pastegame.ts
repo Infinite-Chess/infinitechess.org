@@ -23,6 +23,7 @@ import icnconverter, {
 
 import toast from '../gui/toast.js';
 import guipause from '../gui/guipause.js';
+import eactions from '../boardeditor/actions/eactions.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
@@ -60,8 +61,8 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate', 'UTCTime'];
  * @param event - The event fired from the event listener
  */
 async function callbackPaste(_event: Event): Promise<void> {
-	// If we are in the board editor, let the board editor script handle this instead
-	if (boardeditor.areInBoardEditor()) return; // Editor has its own listener
+	// If we are in the board editor, delegate to the editor's paste function
+	if (boardeditor.areInBoardEditor()) return eactions.paste();
 
 	if (document.activeElement !== document.body && !guipause.areWePaused()) return; // Don't paste if the user is typing in an input field
 
