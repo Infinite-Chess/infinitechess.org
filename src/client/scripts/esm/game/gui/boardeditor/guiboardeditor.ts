@@ -408,7 +408,13 @@ function _getActivePieceElements(): Element[] {
 // Callbacks ---------------------------------------------------------------
 
 function callback_ToggleMenu(): void {
-	element_menu.classList.toggle('expanded');
+	const expanded = element_menu.classList.toggle('expanded');
+	element_menuToggle.setAttribute(
+		'data-tooltip',
+		expanded ? 'Collapse sidebar' : 'Expand sidebar',
+	);
+	element_menuToggle.classList.toggle('tooltip-dr', !expanded);
+	element_menuToggle.classList.toggle('tooltip-d', expanded);
 }
 
 function callback_ChangeTool(e: Event): void {
