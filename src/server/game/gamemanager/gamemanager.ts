@@ -343,7 +343,7 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 		};
 	}
 	console.log(
-		`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${servergame.basegame.gameConclusion}. Moves: ${servergame.basegame.moves.length}.`,
+		`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.basegame.gameConclusion)}. Moves: ${servergame.basegame.moves.length}.`,
 	);
 	printActiveGameCount();
 
