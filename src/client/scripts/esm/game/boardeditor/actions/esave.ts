@@ -84,7 +84,7 @@ async function saveLocal(position_name: string): Promise<void> {
 			boardeditor.markPositionClean();
 			eautosave.markPositionDirty();
 			void eautosave.autosaveCurrentPositionOnce();
-			toast.show('Position saved in browser.');
+			toast.show(translations.editor.saved_in_browser);
 		}
 	}
 }
@@ -158,7 +158,7 @@ async function readLocal(position_name: string): Promise<EditorSaveState | undef
 		console.error(
 			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,
 		);
-		toast.show(`The position was corrupted.`, { error: true });
+		toast.show(translations.editor.position_corrupted, { error: true });
 		return;
 	}
 	return editorSaveStateParsed.data;

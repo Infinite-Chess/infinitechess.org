@@ -1,4 +1,7 @@
 {
+  "89": {
+    "note": "Added [play.editor] section (lines 193-272) and [play.javascript.editor] section (lines 634-672)."
+  },
   "88": {
     "note": "Added rate-limiting.error on line 671."
   },

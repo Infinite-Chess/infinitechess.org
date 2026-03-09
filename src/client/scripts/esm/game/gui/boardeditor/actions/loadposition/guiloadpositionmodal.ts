@@ -49,14 +49,23 @@ function openModal(
 	modal_config = { mode, position_name, onConfirm };
 
 	if (modal_config.mode === 'delete') {
-		element_modalTitle.textContent = 'Delete position?';
-		element_modalMessage.textContent = `Are you sure that you want to delete position "${position_name}"? This cannot be undone.`;
+		element_modalTitle.textContent = translations.editor.delete_title;
+		element_modalMessage.textContent =
+			translations.editor.delete_message[0] +
+			position_name +
+			translations.editor.delete_message[1];
 	} else if (modal_config.mode === 'load') {
-		element_modalTitle.textContent = 'Load position?';
-		element_modalMessage.textContent = `Are you sure that you want to load position "${position_name}"? Unsaved changes to the current position will be lost.`;
+		element_modalTitle.textContent = translations.editor.load_title;
+		element_modalMessage.textContent =
+			translations.editor.load_message[0] +
+			position_name +
+			translations.editor.load_message[1];
 	} else if (modal_config.mode === 'overwrite_save') {
-		element_modalTitle.textContent = 'Overwrite position?';
-		element_modalMessage.textContent = `Are you sure that you want to overwrite position "${position_name}"? This cannot be undone.`;
+		element_modalTitle.textContent = translations.editor.overwrite_title;
+		element_modalMessage.textContent =
+			translations.editor.overwrite_message[0] +
+			position_name +
+			translations.editor.overwrite_message[1];
 	}
 	element_modal.classList.remove('hidden');
 	// Blur the triggering button so that when the modal closes via keyboard (Escape/Enter),
