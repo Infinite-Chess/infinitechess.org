@@ -6,6 +6,8 @@
  * Manages all drawing tools
  */
 
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
+import type { Tool } from './etoolmanager';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
@@ -24,9 +26,9 @@ import gameslot from '../../chess/gameslot';
 import selection from '../../chess/selection';
 import { Mouse } from '../../input';
 import egamerules from '../egamerules';
-import guiboardeditor from '../../gui/boardeditor/guiboardeditor';
+import guipalette from '../../gui/boardeditor/guipalette';
+import edithistory from '../edithistory';
 import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
-import boardeditor, { Edit, Tool } from '../boardeditor';
 
 // Constants -------------------------------------------------------
 
@@ -57,8 +59,8 @@ let addingSpecialRights: boolean | undefined;
 // Initialization ---------------------------------------------------------
 
 function init(): void {
-	guiboardeditor.updatePieceColors(currentColor);
-	guiboardeditor.markPiece(currentPieceType);
+	guipalette.updatePieceColors(currentColor);
+	guipalette.markPiece(currentPieceType);
 }
 
 function onCloseEditor(): void {
@@ -85,7 +87,7 @@ function beginEdit(): void {
 
 function endEdit(): void {
 	if (!drawing || !thisEdit) return;
-	boardeditor.addEditToHistory(thisEdit);
+	edithistory.addEditToHistory(thisEdit);
 	resetState();
 }
 
@@ -96,7 +98,7 @@ function cancelEdit(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 	// Undo the changes made during this edit
-	boardeditor.runEdit(gamefile, mesh, thisEdit, false);
+	edithistory.runEdit(gamefile, mesh, thisEdit, false);
 	resetState();
 }
 
@@ -135,7 +137,7 @@ function update(currentTool: Tool): void {
 		case 'placer': {
 			// Replace piece logic. If we need this in more than one place, we can then make a queueReplacePiece() method.
 			if (pieceHovered?.type === currentPieceType) break; // Equal to the new piece => don't replace
-			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
+			if (pieceHovered) edithistory.queueRemovePiece(gamefile, edit, pieceHovered); // Delete existing piece first
 			// Determine if special right should be given to the new piece, depending on gamerule checkboxes.
 			const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 			// prettier-ignore
@@ -143,11 +145,11 @@ function update(currentTool: Tool): void {
 				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
 				(!!castling && egamerules.castlingTypes.includes(typeutil.getRawType(currentPieceType)))
 			);
-			boardeditor.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
+			edithistory.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;
 		}
 		case 'eraser':
-			if (pieceHovered) boardeditor.queueRemovePiece(gamefile, edit, pieceHovered);
+			if (pieceHovered) edithistory.queueRemovePiece(gamefile, edit, pieceHovered);
 			break;
 		case 'specialrights':
 			queueToggleSpecialRight(gamefile, edit, pieceHovered);
@@ -162,7 +164,7 @@ function update(currentTool: Tool): void {
 		edit.state.global.length === 0
 	)
 		return;
-	boardeditor.runEdit(gamefile, mesh, edit, true);
+	edithistory.runEdit(gamefile, mesh, edit, true);
 	thisEdit.changes.push(...edit.changes);
 	thisEdit.state.local.push(...edit.state.local);
 	thisEdit.state.global.push(...edit.state.global);
@@ -195,8 +197,8 @@ function onToolChange(tool: Tool): void {
 	if (tool === 'specialrights') specialrighthighlights.enable();
 	else specialrighthighlights.disable();
 
-	if (tool !== 'placer') guiboardeditor.markPiece(null);
-	else guiboardeditor.markPiece(currentPieceType);
+	if (tool !== 'placer') guipalette.markPiece(null);
+	else guipalette.markPiece(currentPieceType);
 }
 
 function isEditInProgress(): boolean {

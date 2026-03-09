@@ -23,10 +23,10 @@ import arrows from '../../../rendering/arrows/arrows';
 import meshes from '../../../rendering/meshes';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
-import boardeditor from '../../boardeditor';
+import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
-import guiboardeditor from '../../../gui/boardeditor/guiboardeditor';
 import stransformations from './stransformations';
+import guipositionheader from '../../../gui/boardeditor/guipositionheader';
 import { listener_document, listener_overlay } from '../../../chess/game';
 
 // State ----------------------------------------------
@@ -108,7 +108,7 @@ function endSelection(): void {
 
 	// Set the end point
 	endPoint = lastPointerCoords;
-	guiboardeditor.onNewSelection();
+	guipositionheader.onNewSelection();
 
 	selecting = false;
 	pointerId = undefined;
@@ -126,7 +126,7 @@ function resetState(): void {
 	endPoint = undefined;
 	sfill.resetState();
 	sdrag.resetState();
-	guiboardeditor.onClearSelection();
+	guipositionheader.onClearSelection();
 }
 
 /** Whether there is a current selection, NOT whether we are currently MAKING a selection. */
@@ -223,7 +223,7 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 
 /** Selects all pieces in the current position, and transitions to the selection. */
 function selectAll(): void {
-	boardeditor.setTool('selection-tool'); // Switch if we're not already using
+	etoolmanager.setTool('selection-tool'); // Switch if we're not already using
 
 	const box = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces);
 
@@ -238,7 +238,7 @@ function selectAll(): void {
 	startPoint = [box.left, box.top];
 	endPoint = [box.right, box.bottom];
 
-	guiboardeditor.onNewSelection();
+	guipositionheader.onNewSelection();
 	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
 	// Transition.zoomToCoordsBox(box);
 }

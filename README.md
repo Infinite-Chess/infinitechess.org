@@ -10,7 +10,7 @@ What began as an indie project by [Naviary](https://www.youtube.com/@Naviary) in
 
 This project is open source! If you have skills in HTML, CSS, JavaScript, TypeScript, or Node.js, we welcome contributions!
 
-| 📚 Document                                                              | Description                               |
+| Document                                                                 | Description                               |
 | ------------------------------------------------------------------------ | ----------------------------------------- |
 | **[Setup Guide](./docs/SETUP.md)**                                       | Setup your contribution workflow          |
 | **[Navigation Guide](./docs/NAVIGATING.md)**                             | Get an overview of the codebase           |

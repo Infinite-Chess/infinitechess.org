@@ -763,9 +763,11 @@ function LongToShort_Format(
 			throw Error('longformat.position must be specified when skipPosition = false');
 		if (longformat.state_global.specialRights === undefined)
 			throw Error('longformat.specialRights must be specified when skipPosition = false');
-		positionSegments.push(
-			getShortFormPosition(longformat.position, longformat.state_global.specialRights),
-		);
+		// Position can be empty in the editor. This avoids a trailing space in the ICN
+		if (longformat.position.size > 0)
+			positionSegments.push(
+				getShortFormPosition(longformat.position, longformat.state_global.specialRights),
+			);
 	} else if (
 		!longformat.metadata.Variant ||
 		!longformat.metadata.UTCDate ||
@@ -1137,9 +1139,6 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			if (hasSpecialRight) specialRights!.add(coordsKey);
 		}
 	}
-
-	if (!metadata['Variant'] && !position)
-		throw Error('Either Variant metadata or position must be defined in the ICN!');
 
 	// Now we can test if the moves section came *after* the positon section.
 	if (!moves) testNextSectionForMoves();

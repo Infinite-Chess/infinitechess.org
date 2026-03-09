@@ -1,18 +1,20 @@
-// src/client/scripts/esm/game/gui/boardeditor/guistartenginegame.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guistartenginegame.ts
 
 /**
  * Manages the GUI popup window for the Start engine game button of the Board Editor
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil';
-import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
+import type { Player } from '../../../../../../../shared/chess/util/typeutil';
+import type { TimeControl } from '../../../../../../../shared/chess/util/metadata';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import { players as p } from '../../../../../../shared/chess/util/typeutil';
+import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
+import { players as p } from '../../../../../../../shared/chess/util/typeutil';
 
-import eactions from '../../boardeditor/actions/eactions';
-import gameslot from '../../chess/gameslot';
-import guifloatingwindow from './guifloatingwindow';
+import eactions from '../../../boardeditor/actions/eactions';
+import gameslot from '../../../chess/gameslot';
+import guipause from '../../guipause';
+import guifloatingwindow from '../guifloatingwindow';
+import { listener_document } from '../../../chess/game';
 
 // Types -------------------------------------------------------------
 
@@ -98,6 +100,7 @@ function initEngineGameUIListeners(): void {
 	});
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
+	document.addEventListener('keydown', onKeyDown);
 }
 
 function closeEngineGameUIListeners(): void {
@@ -106,9 +109,21 @@ function closeEngineGameUIListeners(): void {
 	});
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
+	document.removeEventListener('keydown', onKeyDown);
 }
 
 // Utilities ----------------------------------------------------------------------
+
+function onKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter' && !(e.target instanceof HTMLInputElement && e.target.type === 'text'))
+		onYesButtonPress();
+	else if (e.key === 'Escape') {
+		// Ensure priority when deciding who gets the escape key event
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		onNoButtonPress();
+	}
+}
 
 function onYesButtonPress(): void {
 	const engineUIConfig = readEngineUIConfig();

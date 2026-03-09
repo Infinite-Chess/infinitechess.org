@@ -2,7 +2,7 @@
 
 [← Back to Navigation Guide](./NAVIGATING.md) | [Setup Guide](./SETUP.md) | [Graphics Guide](./GRAPHICS.md)
 
-### All pull requests should only add **one** feature, fix **one** bug, or refactor **one** item.
+### All pull requests should only add **one** feature, fix **one** bug, or perform **one** refactoring.
 
 If your changes affect more than one feature, it **must** be refactored into multiple pull requests. If those additional PRs would depend on the code of the first PR, you must wait until the first one is merged before opening the additional ones. To avoid this, while you wait, try to work on features that have no overlap in the codebase, thus allowing multiple PRs at once.
 
@@ -20,7 +20,7 @@ Adding/removing package dependancies.
 
 Type or variable renames spanning several files (time consuming for me to review, but taking one minute to make the changes myself).
 
-Massive refactors covering dozens of files in the codebase.
+Massive refactors covering dozens of files in the codebase, unless it's required to fulfill the prompt.
 
 ## Code Standards
 

@@ -129,6 +129,74 @@ export type TranslationKeys =
 	| 'play.main-menu.practice'
 	| 'play.main-menu.guide'
 	| 'play.main-menu.editor'
+	| 'play.editor.position'
+	| 'play.editor.tools'
+	| 'play.editor.selection'
+	| 'play.editor.palette'
+	| 'play.editor.color'
+	| 'play.editor.tooltip_reset'
+	| 'play.editor.tooltip_clear'
+	| 'play.editor.tooltip_load'
+	| 'play.editor.tooltip_save_as'
+	| 'play.editor.tooltip_save'
+	| 'play.editor.tooltip_copy_notation'
+	| 'play.editor.tooltip_paste_notation'
+	| 'play.editor.tooltip_gamerules'
+	| 'play.editor.tooltip_start_local'
+	| 'play.editor.tooltip_start_engine'
+	| 'play.editor.tooltip_normal'
+	| 'play.editor.tooltip_eraser'
+	| 'play.editor.tooltip_selection_tool'
+	| 'play.editor.tooltip_specialrights'
+	| 'play.editor.tooltip_select_all'
+	| 'play.editor.tooltip_clear_selection'
+	| 'play.editor.tooltip_copy_selection'
+	| 'play.editor.tooltip_paste_selection'
+	| 'play.editor.tooltip_invert_color'
+	| 'play.editor.tooltip_rotate_left'
+	| 'play.editor.tooltip_rotate_right'
+	| 'play.editor.tooltip_flip_horizontal'
+	| 'play.editor.tooltip_flip_vertical'
+	| 'play.editor.reset_header'
+	| 'play.editor.reset_message'
+	| 'play.editor.clear_header'
+	| 'play.editor.clear_message'
+	| 'play.editor.enter_position_name'
+	| 'play.editor.save_button'
+	| 'play.editor.name_header'
+	| 'play.editor.pieces_header'
+	| 'play.editor.date_header'
+	| 'play.editor.gamerules_header'
+	| 'play.editor.player_to_move'
+	| 'play.editor.white'
+	| 'play.editor.black'
+	| 'play.editor.en_passant'
+	| 'play.editor.move_rule'
+	| 'play.editor.promotion_ranks_white'
+	| 'play.editor.promotion_ranks_black'
+	| 'play.editor.promotion_pieces'
+	| 'play.editor.global_special_rights'
+	| 'play.editor.pawn_double_push'
+	| 'play.editor.castling_label'
+	| 'play.editor.win_conditions'
+	| 'play.editor.checkmate'
+	| 'play.editor.royal_capture'
+	| 'play.editor.all_royals_captured'
+	| 'play.editor.all_pieces_captured'
+	| 'play.editor.world_border'
+	| 'play.editor.start_local_game'
+	| 'play.editor.start_local_game_message'
+	| 'play.editor.start_engine_game'
+	| 'play.editor.play_as'
+	| 'play.editor.time_control'
+	| 'play.editor.engine_difficulty'
+	| 'play.editor.easy'
+	| 'play.editor.medium'
+	| 'play.editor.hard'
+	| 'play.editor.use_default_border'
+	| 'play.editor.start_engine_game_message'
+	| 'play.editor.yes'
+	| 'play.editor.no'
 	| 'play.guide.title'
 	| 'play.guide.rules'
 	| 'play.guide.rules_paragraphs'
@@ -141,8 +209,6 @@ export type TranslationKeys =
 	| 'play.guide.keybinds_extra'
 	| 'play.guide.fairy_heading'
 	| 'play.guide.fairy_paragraph'
-	| 'play.guide.editing_heading'
-	| 'play.guide.editing_paragraphs'
 	| 'play.guide.back'
 	| 'play.guide.pieces.chancellor.name'
 	| 'play.guide.pieces.chancellor.description'
@@ -441,6 +507,38 @@ export type TranslationKeys =
 	| 'play.javascript.results.white_koth'
 	| 'play.javascript.results.black_koth'
 	| 'play.javascript.results.bug_generic'
+	| 'play.javascript.editor.expand_sidebar'
+	| 'play.javascript.editor.collapse_sidebar'
+	| 'play.javascript.editor.new_position'
+	| 'play.javascript.editor.load_position_header'
+	| 'play.javascript.editor.save_position_as_header'
+	| 'play.javascript.editor.delete_title'
+	| 'play.javascript.editor.delete_message'
+	| 'play.javascript.editor.load_title'
+	| 'play.javascript.editor.load_message'
+	| 'play.javascript.editor.overwrite_title'
+	| 'play.javascript.editor.overwrite_message'
+	| 'play.javascript.editor.tooltip_load_position'
+	| 'play.javascript.editor.tooltip_save_to_cloud'
+	| 'play.javascript.editor.tooltip_remove_from_cloud'
+	| 'play.javascript.editor.tooltip_delete_position'
+	| 'play.javascript.editor.position_loaded'
+	| 'play.javascript.editor.cannot_start_local_empty'
+	| 'play.javascript.editor.cannot_start_engine_empty'
+	| 'play.javascript.editor.position_not_supported'
+	| 'play.javascript.editor.saved_in_browser'
+	| 'play.javascript.editor.position_corrupted'
+	| 'play.javascript.editor.failed_to_load'
+	| 'play.javascript.editor.failed_to_convert_icn'
+	| 'play.javascript.editor.too_large_for_cloud'
+	| 'play.javascript.editor.failed_to_upload'
+	| 'play.javascript.editor.saved_to_cloud'
+	| 'play.javascript.editor.no_changes'
+	| 'play.javascript.editor.failed_to_load_cloud'
+	| 'play.javascript.editor.failed_to_delete_cloud'
+	| 'play.javascript.editor.failed_to_remove_cloud'
+	| 'play.javascript.editor.saved_locally'
+	| 'play.javascript.editor.failed_to_fetch_cloud'
 	| 'terms.title'
 	| 'terms.warning'
 	| 'terms.consent'
@@ -514,7 +612,8 @@ export type TranslationKeys =
 	| 'server.javascript.ws-invalid_code'
 	| 'server.javascript.ws-game_aborted'
 	| 'server.javascript.ws-rated_invite_verification_needed'
-	| 'rate-limiting.generic';
+	| 'rate-limiting.generic'
+	| 'rate-limiting.error';
 
 /**
  * Nested object type for client-side translation access.
@@ -673,6 +772,76 @@ export interface TranslationsObject {
 			guide: string;
 			editor: string;
 		};
+		editor: {
+			position: string;
+			tools: string;
+			selection: string;
+			palette: string;
+			color: string;
+			tooltip_reset: string;
+			tooltip_clear: string;
+			tooltip_load: string;
+			tooltip_save_as: string;
+			tooltip_save: string;
+			tooltip_copy_notation: string;
+			tooltip_paste_notation: string;
+			tooltip_gamerules: string;
+			tooltip_start_local: string;
+			tooltip_start_engine: string;
+			tooltip_normal: string;
+			tooltip_eraser: string;
+			tooltip_selection_tool: string;
+			tooltip_specialrights: string;
+			tooltip_select_all: string;
+			tooltip_clear_selection: string;
+			tooltip_copy_selection: string;
+			tooltip_paste_selection: string;
+			tooltip_invert_color: string;
+			tooltip_rotate_left: string;
+			tooltip_rotate_right: string;
+			tooltip_flip_horizontal: string;
+			tooltip_flip_vertical: string;
+			reset_header: string;
+			reset_message: string;
+			clear_header: string;
+			clear_message: string;
+			enter_position_name: string;
+			save_button: string;
+			name_header: string;
+			pieces_header: string;
+			date_header: string;
+			gamerules_header: string;
+			player_to_move: string;
+			white: string;
+			black: string;
+			en_passant: string;
+			move_rule: string;
+			promotion_ranks_white: string;
+			promotion_ranks_black: string;
+			promotion_pieces: string;
+			global_special_rights: string;
+			pawn_double_push: string;
+			castling_label: string;
+			win_conditions: string;
+			checkmate: string;
+			royal_capture: string;
+			all_royals_captured: string;
+			all_pieces_captured: string;
+			world_border: string;
+			start_local_game: string;
+			start_local_game_message: string;
+			start_engine_game: string;
+			play_as: string;
+			time_control: string;
+			engine_difficulty: string;
+			easy: string;
+			medium: string;
+			hard: string;
+			use_default_border: string;
+			start_engine_game_message: string;
+			yes: string;
+			no: string;
+		};
 		guide: {
 			title: string;
 			rules: string;
@@ -686,8 +855,6 @@ export interface TranslationsObject {
 			keybinds_extra: string[];
 			fairy_heading: string;
 			fairy_paragraph: string;
-			editing_heading: string;
-			editing_paragraphs: string[];
 			back: string;
 			pieces: {
 				chancellor: {
@@ -1038,6 +1205,40 @@ export interface TranslationsObject {
 				black_koth: string;
 				bug_generic: string;
 			};
+			editor: {
+				expand_sidebar: string;
+				collapse_sidebar: string;
+				new_position: string;
+				load_position_header: string;
+				save_position_as_header: string;
+				delete_title: string;
+				delete_message: string[];
+				load_title: string;
+				load_message: string[];
+				overwrite_title: string;
+				overwrite_message: string[];
+				tooltip_load_position: string;
+				tooltip_save_to_cloud: string;
+				tooltip_remove_from_cloud: string;
+				tooltip_delete_position: string;
+				position_loaded: string;
+				cannot_start_local_empty: string;
+				cannot_start_engine_empty: string;
+				position_not_supported: string;
+				saved_in_browser: string;
+				position_corrupted: string;
+				failed_to_load: string;
+				failed_to_convert_icn: string;
+				too_large_for_cloud: string;
+				failed_to_upload: string;
+				saved_to_cloud: string;
+				no_changes: string;
+				failed_to_load_cloud: string;
+				failed_to_delete_cloud: string;
+				failed_to_remove_cloud: string;
+				saved_locally: string;
+				failed_to_fetch_cloud: string;
+			};
 		};
 	};
 	terms: {
@@ -1131,5 +1332,6 @@ export interface TranslationsObject {
 	};
 	'rate-limiting': {
 		generic: string;
+		error: string;
 	};
 }

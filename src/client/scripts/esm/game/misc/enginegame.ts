@@ -23,13 +23,9 @@ import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
 import { animateMove } from '../chess/graphicalchanges.js';
-import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 
 // Types ------------------------------------------------------------------------
-
-/** List of valid engines */
-type validEngineName = 'engineCheckmatePractice' | 'hydrochess'; // Add more union types when more engines are added
 
 interface EngineConfig {
 	/** Hard time limit for the engine to think in milliseconds */
@@ -39,45 +35,6 @@ interface EngineConfig {
 	strengthLevel?: number;
 	multiPv?: number;
 }
-
-// Constants --------------------------------------------------------------------
-
-/**
- * World border config for each individual engine.
- * Engine games have a world border enabled so as to keep the position within safe floating point range.
- * If the variant's world border is smaller, that will be used instead.
- */
-const engineWorldBorderDict: { [key in validEngineName]: bigint } = {
-	// engineCheckmatePractice: BigInt(Number.MAX_SAFE_INTEGER), // FREEZES practice checkmate engine if you move to the border
-	engineCheckmatePractice: BigInt(1e15), // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
-	hydrochess: hydrochess_card.I64_MAX - 2000n,
-};
-
-/**
- * Default engine think time config.
- * This is the number of milliseconds that each engine thinks when Time Control is unlimited.
- * May vary from engine to engine because of different engine speeds and requirements.
- */
-const engineDefaultTimeLimitPerMoveMillisDict: { [key in validEngineName]: number } = {
-	engineCheckmatePractice: 500,
-	hydrochess: 4000,
-};
-
-/**
- * Display names for each engine.
- */
-const engineDisplayNamesDict: { [key in validEngineName]: string } = {
-	engineCheckmatePractice: 'Practice Bot',
-	hydrochess: 'HydroChess',
-};
-
-/**
- * The maximum strength level for each engine.
- */
-const engineMaxStrengthLevelDict: { [key in validEngineName]: number } = {
-	engineCheckmatePractice: 1,
-	hydrochess: 3,
-};
 
 // Variables --------------------------------------------------------------------
 
@@ -107,18 +64,6 @@ GameBus.addEventListener('game-concluded', () => {
 });
 
 // Functions ------------------------------------------------------------------------
-
-/**
- * Returns a formatted engine name string, optionally including its strength level.
- * If the provided strength level is the maximum for the engine, it is omitted.
- */
-function getFormattedEngineName(engineName: validEngineName, strengthLevel?: number): string {
-	const name = engineDisplayNamesDict[engineName];
-	const maxLevel = engineMaxStrengthLevelDict[engineName];
-	return strengthLevel !== undefined && strengthLevel !== maxLevel
-		? `${name} (Level ${strengthLevel})`
-		: name;
-}
 
 function areInEngineGame(): boolean {
 	return inEngineGame;
@@ -448,8 +393,6 @@ function render(): void {
 
 // Export ---------------------------------------------------------------------------------
 
-export { engineWorldBorderDict, engineDefaultTimeLimitPerMoveMillisDict };
-
 export default {
 	areInEngineGame,
 	getOurColor,
@@ -462,7 +405,6 @@ export default {
 	toggleDebug,
 	render,
 	onViewMove,
-	getFormattedEngineName,
 };
 
-export type { EngineConfig, validEngineName };
+export type { EngineConfig };

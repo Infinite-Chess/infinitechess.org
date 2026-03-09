@@ -3,6 +3,7 @@
 	padding: 0;
 	font-family: Verdana;
 	border: 0;
+	-webkit-tap-highlight-color: transparent; /* Suppress blue flash on tap */
 	/* Enable temporarily during dev to see the borders of all elements */
 	/* outline: 1px solid rgba(0, 0, 0, 0.191); */
 }
@@ -34,6 +35,11 @@ main {
 	right: 0;
 	display: flex;
 	flex-direction: row;
+	/* Board editor sidebar dimensions */
+	--editor-sidebar-width: 240px;
+	--editor-tab-width: 28px;
+	--editor-menu-shadow: 3px 0px 10px 0px rgba(0, 0, 0, 0.4);
+	--editor-transition: transform 0.25s ease;
 }
 
 button {
@@ -47,23 +53,72 @@ button {
 	height: 100%;
 	overflow-x: clip;
 	overflow-y: auto;
-	box-shadow: -1px 0px 7px 0px rgba(0, 0, 0, 0.659);
+	box-shadow: var(--editor-menu-shadow);
 	background-color: #ffffff;
-	z-index: 1; /* Stops nav bar shadow from being overtop the editor menu */
+	z-index: 4; /* Stops nav bar shadow from being overtop the editor menu */
 	/* Controls the size of all its children. */
-	font-size: min(16px, 2.2vw);
-	width: 15em;
+	font-size: 16px;
+	width: var(--editor-sidebar-width);
 }
 
-/* 
- * Overwrite the tooltip font size and max-width in the editor menu only.
- * This ensures that the editor tooltips do not get clipped on very small screens.
+/* Toggle button: only visible on narrow screens, positioned as a sibling of the sidebar */
+/* Uses transform (GPU-accelerated) to stay perfectly in sync with the sidebar animation */
+.editor-menu-toggle {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: var(--editor-tab-width);
+	height: 70px;
+	background-color: #ffffff;
+	border-radius: 0 6px 6px 0;
+	box-shadow: var(--editor-menu-shadow);
+	/* Clip any leftward shadow bleed so it doesn't visually separate from the sidebar */
+	clip-path: inset(-100px -100px -100px 0);
+	align-items: center;
+	justify-content: center;
+	z-index: 4; /* Must be above .load-position-modal */
+	font-size: 14px;
+	color: #333;
+	transition: var(--editor-transition);
+}
+
+.editor-menu-toggle::after {
+	content: '▶';
+}
+
+/*
+ * Narrow screens: sidebar becomes a collapsible overlay.
+ * MUST MATCH guifloatingwindow.NARROW_THRESHOLD
  */
-.editor-menu .tooltip-dl::before,
-.editor-menu .tooltip-d::before,
-.editor-menu .tooltip-dr::before {
-	font-size: calc(1em * 12 / 16);
-	max-width: calc(1em * 150 / 16);
+@media only screen and (max-width: 727px) {
+	.editor-menu {
+		position: absolute;
+		transform: translateX(-100%);
+		transition: var(--editor-transition);
+	}
+
+	.editor-menu.expanded {
+		transform: translateX(0);
+	}
+
+	/* Show the toggle whenever the editor is open (sidebar not hidden) */
+	.editor-menu:not(.hidden) ~ .editor-menu-toggle {
+		display: flex;
+	}
+
+	/* Collapsed: only vertical centering — tab sits flush at left: 0 */
+	/* (inherits base transform: translateY(-50%) — no override needed) */
+
+	/* Expanded: tab slides to the right edge of the sidebar */
+	.editor-menu.expanded ~ .editor-menu-toggle {
+		transform: translateX(var(--editor-sidebar-width)) translateY(-50%);
+	}
+
+	.editor-menu.expanded ~ .editor-menu-toggle::after {
+		content: '◀';
+	}
 }
 
 .editor-header {
@@ -79,9 +134,25 @@ button {
 	margin: 0.2em 0.2em;
 }
 
+/* The row containing the position name and dirty indicator. */
+.editor-positionname-row {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.35em;
+	padding: 0.3em 1em;
+}
+
+/* Dirty (unsaved changes) indicator: an amber dot immediately left of the position name */
+.dirty-indicator {
+	flex-shrink: 0;
+	width: 0.6em;
+	height: 0.6em;
+	border-radius: 50%;
+	background-color: #f59e0b;
+}
+
 .editor-positionname {
-	text-align: center;
-	margin: 0.3em 1em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1668,12 +1739,18 @@ svg.collapse {
 	min-height: 0;
 }
 
+/* Expand header actions width when cloud button is present (user logged in) */
+.saved-positions.with-cloud {
+	--w-header-actions: 78px;
+}
+
 .saved-position-header {
 	display: grid;
 	grid-template-columns: var(--grid-layout) var(--w-header-actions);
 	align-items: center;
 	padding: 0 0.5em;
 	margin-bottom: 0.4em;
+	position: relative;
 }
 
 .saved-position-header > div {
@@ -1681,6 +1758,20 @@ svg.collapse {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+/* The last column of the saved-position-header holds the loading animation */
+.saved-position-header > div:last-child {
+	display: flex;
+	justify-content: flex-end;
+	padding-right: 0;
+}
+
+/* Spinny pawn in the saved positions header — fixed size for grid context */
+.saved-position-header .svg-pawn {
+	height: 28px;
+	bottom: -1px;
+	position: absolute;
 }
 
 .saved-position-list {
@@ -1693,7 +1784,7 @@ svg.collapse {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 	display: grid;
 	align-items: center;
-	grid-template-columns: var(--grid-layout) max-content max-content;
+	grid-template-columns: var(--grid-layout) max-content max-content max-content;
 	padding: 0 0.5em;
 }
 
@@ -1780,11 +1871,16 @@ svg.collapse {
 	aspect-ratio: 1;
 }
 
+/* Cloud save button: greyed-out when position is local (not saved on cloud) */
+.cloud-save.local svg {
+	opacity: 0.35;
+}
+
 /* The overlay covers ONLY the load-position-UI */
 .load-position-modal-overlay {
 	position: absolute;
 	inset: 0;
-	z-index: 1000;
+	z-index: 3;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1812,6 +1908,7 @@ svg.collapse {
 	bottom: 0;
 	left: 0;
 	right: 0;
+	z-index: 5; /* Must be above .editor-menu-toggle */
 	background-color: rgba(0, 0, 0, 0.849);
 	padding-bottom: 15vh;
 	display: grid;

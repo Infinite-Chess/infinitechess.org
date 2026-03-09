@@ -253,16 +253,21 @@ function startStartingTransition(): void {
 function initCopyPastGameListeners(): void {
 	document.addEventListener('copy', callbackCopy);
 	document.addEventListener('paste', pastegame.callbackPaste);
+	document.addEventListener('copy-game', callbackCopy);
+	document.addEventListener('paste-game', pastegame.callbackPaste);
 }
 
 /** Called when a game is unloaded, closes the event listeners for being in a game. */
 function removeCopyPasteGameListeners(): void {
 	document.removeEventListener('copy', callbackCopy);
 	document.removeEventListener('paste', pastegame.callbackPaste);
+	document.removeEventListener('copy-game', callbackCopy);
+	document.removeEventListener('paste-game', pastegame.callbackPaste);
 }
 
 function callbackCopy(_event: Event): void {
-	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	if (document.activeElement instanceof HTMLInputElement) return; // Don't copy if the user is typing in an input field
+	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
 	copygame.copyGame(false);
 }
 

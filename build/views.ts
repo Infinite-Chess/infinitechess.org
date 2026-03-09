@@ -91,7 +91,7 @@ export async function buildViews(): Promise<void> {
 
 			// Custom included variables
 			ratingDeviationUncertaintyThreshold: UNCERTAIN_LEADERBOARD_RD,
-			editorPositionNameMaxLength: editorutil.POSITION_NAME_MAX_LENGTH,
+			editorPositionNameMaxLength: editorutil.MAX_POSITION_NAME_LENGTH,
 		};
 
 		// The output directory for this language's rendered templates

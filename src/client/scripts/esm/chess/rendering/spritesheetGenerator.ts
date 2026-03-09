@@ -14,7 +14,7 @@ type SpritesheetData = {
 };
 
 /**
- * The preferred image width each pieces image in a spreadsheet should be.
+ * The preferred image width each pieces image in a spritesheet should be.
  * This may be a little higher, in order to make the spritesheet's total width a POWER OF 2.
  * BUT, the spritesheet's width will NEVER exceed WebGL's capacity!
  */

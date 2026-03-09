@@ -19,22 +19,22 @@ import { players as p } from './typeutil.js';
 
 interface MetaData {
 	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
-	Event: string;
+	Event?: string;
 	/** What website the game was played on. Right now this has no application because infinitechess.org is the ONLY site you can play this game on. */
-	Site: 'https://www.infinitechess.org/';
+	Site?: 'https://www.infinitechess.org/';
 	/**
 	 * The clock value for the game, in the form `"s+s"`, where the left
 	 * is start time in seconds, and the right is increment in seconds.
 	 *
 	 * If the game is untimed, this should be `"-"`
 	 */
-	TimeControl: TimeControl;
+	TimeControl?: TimeControl;
 	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
-	Round: '-';
+	Round?: '-';
 	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
-	UTCDate: string;
+	UTCDate?: string;
 	/** The UTC time the game started, in the format `"HH:MM:SS"` */
-	UTCTime: string;
+	UTCTime?: string;
 	/** If it's not a custom position, this must be one of the valid variants in variant.ts*/
 	Variant?: string;
 	White?: string;

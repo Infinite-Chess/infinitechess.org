@@ -14,10 +14,12 @@
  * * Start local game from position
  */
 
+import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
-import type { EngineUIConfig } from '../../gui/boardeditor/guistartenginegame';
-import type { EditorSaveState } from './esave';
+import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
+import type { EditorSaveState } from '../editortypes';
 import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 
@@ -49,16 +51,14 @@ import pastegame from '../../chess/pastegame';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
+import boardeditor from '../boardeditor';
+import edithistory from '../edithistory';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
-import hydrochess_card from '../../chess/enginecards/hydrochess_card';
-import boardeditor, { Edit } from '../boardeditor';
+import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import enginegame, {
-	engineDefaultTimeLimitPerMoveMillisDict,
-	engineWorldBorderDict,
-} from '../../misc/enginegame';
+import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 
 // Constants ----------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ async function reset(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Load default board editor position
-	boardeditor.setActivePositionName(undefined);
+	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditor();
 }
 
@@ -110,7 +110,7 @@ async function clearAll(): Promise<void> {
 		state_global,
 	};
 
-	boardeditor.setActivePositionName(undefined);
+	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
@@ -118,13 +118,13 @@ async function clearAll(): Promise<void> {
 				variantOptions,
 			},
 		},
-		false,
+		true, // Dirty position (unsaved changes)
 		false,
 	);
 }
 
 /** Loads a position from a savestate. */
-async function load(editorSaveState: EditorSaveState): Promise<void> {
+async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	// Unload logical and rendering parts of current position
@@ -141,7 +141,7 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	boardeditor.setActivePositionName(editorSaveState.positionname);
+	boardeditor.setActivePosition(editorSaveState.position_name, storage_type);
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
@@ -149,10 +149,11 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
 				variantOptions: editorSaveState.variantOptions,
 			},
 		},
+		false, // Clean position (no unsaved changes) since we're loading one that was already saved
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
-	toast.show('Position successfully loaded.');
+	toast.show(translations.editor.position_loaded);
 }
 
 /**
@@ -162,9 +163,6 @@ async function load(editorSaveState: EditorSaveState): Promise<void> {
  */
 function copy(): void {
 	if (!boardeditor.areInBoardEditor()) return;
-
-	const gamefile = gameslot.getGamefile()!;
-	if (!boardutil.hasAtleastOnePiece(gamefile.boardsim.pieces)) return; // Don't copy empty positions
 
 	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
@@ -220,7 +218,7 @@ function startLocalGame(): void {
 
 	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
-		toast.show('Cannot start local game from empty position!', { error: true });
+		toast.show(translations.editor.cannot_start_local_empty, { error: true });
 		return;
 	}
 
@@ -254,7 +252,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Determine whether it's not supported...
 
 	if (variantOptions.position.size === 0) {
-		toast.show('Cannot start engine game from empty position!', { error: true });
+		toast.show(translations.editor.cannot_start_engine_empty, { error: true });
 		return;
 	}
 
@@ -269,7 +267,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		 * 2. Capped at engine's cap
 		 */
 
-		const worldBorderProperty = engineWorldBorderDict[currentEngine];
+		const worldBorderProperty = engineDictionary[currentEngine].worldBorder;
 		const cap = hydrochess_card.BORDER_CAP;
 
 		// How far can we extend in each direction before hitting ±limit?
@@ -297,16 +295,13 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
-		toast.show(`Position is not supported for reason: ${supported_result.reason}`, {
+		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
 			error: true,
 		});
 		return;
 	}
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
-		currentEngine,
-		engineUIConfig.strengthLevel,
-	);
+	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
 
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
@@ -335,7 +330,8 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		youAreColor: engineUIConfig.youAreColor,
 		currentEngine,
 		engineConfig: {
-			engineTimeLimitPerMoveMillis: engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+			engineTimeLimitPerMoveMillis:
+				engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
 			strengthLevel: engineUIConfig.strengthLevel,
 		},
 	});
@@ -347,7 +343,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		boardeditor.queueRemovePiece(gamefile, edit, pieceToDelete);
+		edithistory.queueRemovePiece(gamefile, edit, pieceToDelete);
 	}
 }
 
@@ -483,7 +479,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	for (const [coordKey, pieceType] of position.entries()) {
 		const coords = coordutil.getCoordsFromKey(coordKey);
 		const hasSpecialRights = specialRights.has(coordKey);
-		boardeditor.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+		edithistory.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
 
 		if (!keepTrackOfGlobalSpecialRights) continue; // One if statement cost is very tiny per iteration
 
@@ -502,15 +498,15 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	if (keepTrackOfGlobalSpecialRights) {
 		// prettier-ignore
-		pawnDoublePush = all_pawns_have_double_push || at_least_one_pawn_has_double_push ? undefined : false;
+		pawnDoublePush = at_least_one_pawn_has_double_push ? (all_pawns_have_double_push ? true : undefined) : false;
 		// prettier-ignore
-		castling = all_pieces_obey_normal_castling || at_least_one_piece_obeys_normal_castling ? undefined : false;
+		castling = at_least_one_piece_obeys_normal_castling ? (all_pieces_obey_normal_castling ? true : undefined) : false;
 	}
 
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
 
-	boardeditor.runEdit(thisGamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
+	edithistory.runEdit(thisGamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
 	annotations.resetState(); // Clear all annotations
 
 	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded

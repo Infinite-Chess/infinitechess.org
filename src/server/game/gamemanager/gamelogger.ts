@@ -178,9 +178,7 @@ function addGameRecordsInTransaction(
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
-	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(
-		basegame.metadata.TimeControl,
-	);
+	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
 	// --- Prepare ICN ---
 	const icn = getICNOfGame(basegame); // This will throw on failure.

@@ -21,7 +21,7 @@ import selection from '../chess/selection.js';
 import Transition from './transitions/Transition.js';
 import drawarrows from './highlights/annotations/drawarrows.js';
 import perspective from './perspective.js';
-import boardeditor from '../boardeditor/boardeditor.js';
+import etoolmanager from '../boardeditor/tools/etoolmanager.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_overlay } from '../chess/game.js';
 
@@ -173,7 +173,7 @@ function stealPointer(pointerId: string): void {
 	selection.stealPointer(pointerId);
 	drawarrows.stealPointer(pointerId);
 	drawrays.stealPointer(pointerId);
-	boardeditor.stealPointer(pointerId);
+	etoolmanager.stealPointer(pointerId);
 }
 
 /** Grabs board with the given pointer. */

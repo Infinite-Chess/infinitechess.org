@@ -6,6 +6,16 @@ import { logEventsAndPrint } from './logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
+	// Catches errors from for example the body parser, which can throw if the body is too large.
+	// This needs to be handled itself, as i18next was never defined.
+	if ('status' in err) {
+		const status = (err as Error & { status: number }).status;
+		if (status >= 400 && status < 500) {
+			res.status(status).json({ error: err.message || 'Bad request' });
+			return;
+		}
+	}
+
 	try {
 		const errMessage = `${err.stack}`;
 		logEventsAndPrint(errMessage, 'errLog.txt');

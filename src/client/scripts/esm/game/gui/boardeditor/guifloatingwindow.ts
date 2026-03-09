@@ -10,9 +10,22 @@
 
 import math from '../../../../../../shared/util/math/math';
 
+import guiboardeditor from './guiboardeditor.js';
+
 // Elements ----------------------------------------------------------
 
 const element_boardUI = document.getElementById('boardUI')!;
+const element_menu = document.getElementById('editor-menu')!;
+const element_menuToggle = document.getElementById('editor-menu-toggle')!;
+
+// Constants -----------------------------------------------------------
+
+/**
+ * The viewport width (px) below which the sidebar switches to overlay/collapsible mode.
+ * MUST MATCH the CSS @media max-width value in play.css — CSS variables cannot
+ * be used in media queries, so this value must be kept in sync manually.
+ */
+const NARROW_THRESHOLD = 727;
 
 // Types -------------------------------------------------------------
 
@@ -211,13 +224,78 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 		savedPos = undefined;
 	}
 
-	/** Open floating window */
+	/**
+	 * Returns the rendered width of the window.
+	 * If currently hidden, temporarily makes it invisible-but-laid-out to measure it.
+	 */
+	function measureWidth(): number {
+		if (!windowEl.classList.contains('hidden')) return windowEl.offsetWidth;
+		windowEl.style.visibility = 'hidden';
+		windowEl.classList.remove('hidden');
+		const w = windowEl.offsetWidth;
+		windowEl.classList.add('hidden');
+		windowEl.style.visibility = '';
+		return w;
+	}
+
+	/**
+	 * On narrow screens, computes the initial position for the floating window, placing it
+	 * to the right of the sidebar tab. Collapses the sidebar first if the window would not fit
+	 * alongside it. Returns undefined on wide screens (no special positioning needed).
+	 */
+	function computeNarrowInitialPos(): { left: number; top: number } | undefined {
+		if (window.innerWidth > NARROW_THRESHOLD) return undefined;
+
+		const winWidth = measureWidth();
+		const topPx = Math.round(element_boardUI.offsetHeight * 0.11);
+		const sidebarWidth = element_menu.offsetWidth;
+		const tabWidth = element_menuToggle.offsetWidth;
+		const expandedRightEdge = sidebarWidth + tabWidth;
+
+		if (
+			element_menu.classList.contains('expanded') &&
+			expandedRightEdge + winWidth <= window.innerWidth
+		) {
+			// Sidebar is open and the window fits alongside it
+			return { left: expandedRightEdge, top: topPx };
+		} else {
+			// Place window right of the collapsed tab
+			return { left: tabWidth, top: topPx };
+		}
+	}
+
+	/**
+	 * Opens the floating window, smartly positioning it if this is the first opening,
+	 * and potentially collapsing the sidebar in order for the window to be visible.
+	 */
 	function open(): void {
+		let effectiveLeft: number | undefined;
+
 		if (savedPos !== undefined) {
+			// Restore previous drag position
 			windowEl.style.left = `${savedPos.left}px`;
 			windowEl.style.top = `${savedPos.top}px`;
+			effectiveLeft = savedPos.left;
+		} else {
+			// No saved drag position - compute smart initial position
+			const initialPos = computeNarrowInitialPos();
+			if (initialPos !== undefined) {
+				windowEl.style.left = `${initialPos.left}px`;
+				windowEl.style.top = `${initialPos.top}px`;
+				effectiveLeft = initialPos.left;
+			}
 		}
 
+		// On narrow screens, collapse the sidebar if it would overlap the window
+		if (
+			window.innerWidth <= NARROW_THRESHOLD &&
+			effectiveLeft !== undefined &&
+			effectiveLeft < element_menu.offsetWidth + element_menuToggle.offsetWidth
+		) {
+			guiboardeditor.setSidebarExpanded(false);
+		}
+
+		// Open the window
 		windowEl.classList.remove('hidden');
 
 		// Ensure it’s inside bounds on open (and after becoming visible)

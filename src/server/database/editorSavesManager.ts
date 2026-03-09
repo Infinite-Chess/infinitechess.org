@@ -18,11 +18,15 @@ type EditorSavesListRecord = {
 	timestamp: number;
 };
 
-/** Represents a saved position ICN record (icn, pawn_double_push, castling). */
+/** Represents a saved position ICN record (icn, pawn_double_push, castling, compression). */
 type EditorSavesIcnRecord = {
+	timestamp: number;
+	compression: string;
 	icn: string;
-	pawn_double_push: 0 | 1;
-	castling: 0 | 1;
+	/** -1 = Indeterminate tristate */
+	pawn_double_push: -1 | 0 | 1;
+	/** -1 = Indeterminate tristate */
+	castling: -1 | 0 | 1;
 };
 
 // Constants ---------------------------------------------------------------------------------
@@ -65,8 +69,9 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @param piece_count - The client-provided piece count of the position
  * @param timestamp - The timestamp when the position was saved
  * @param icn - The ICN notation of the position
- * @param pawn_double_push - Whether the pawn double push gamerule is enabled
- * @param castling - Whether the castling gamerule is enabled
+ * @param compression - The compression mode used for the ICN
+ * @param pawn_double_push - Whether the pawn double push gamerule is enabled, or undefined if indeterminate
+ * @param castling - Whether the castling gamerule is enabled, or undefined if indeterminate
  * @returns The RunResult.
  * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, or a generic database error.
  */
@@ -76,8 +81,9 @@ function addSavedPosition(
 	piece_count: number,
 	timestamp: number,
 	icn: string,
-	pawn_double_push: boolean,
-	castling: boolean,
+	compression: string,
+	pawn_double_push?: boolean,
+	castling?: boolean,
 ): RunResult {
 	try {
 		const transaction = db.transaction(() => {
@@ -104,8 +110,8 @@ function addSavedPosition(
 
 			// Insert the record (overwrites any existing one)
 			const insertQuery = `
-            INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, pawn_double_push, castling)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 			return db.run(insertQuery, [
 				user_id,
@@ -113,8 +119,10 @@ function addSavedPosition(
 				piece_count,
 				timestamp,
 				icn,
-				pawn_double_push ? 1 : 0,
-				castling ? 1 : 0,
+				compression,
+				// Encode tristate
+				pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
+				castling === undefined ? -1 : castling ? 1 : 0,
 			]);
 		});
 
@@ -144,7 +152,7 @@ function addSavedPosition(
  */
 function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
 	try {
-		const query = `SELECT icn, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
+		const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
 		return db.get<EditorSavesIcnRecord>(query, [name, user_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);

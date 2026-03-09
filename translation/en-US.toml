@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "87"
+version = "90"
 maintainer = "Naviary"
 
 [header]
@@ -190,6 +190,87 @@ practice = "Practice"
 guide = "Guide"
 editor = "Board Editor"
 
+[play.editor]
+# Sidebar section headers
+position = "Position"
+tools = "Tools"
+selection = "Selection"
+palette = "Palette"
+color = "Color"
+# Sidebar button tooltips
+tooltip_reset = "Reset position"
+tooltip_clear = "Clear position"
+tooltip_load = "Load position"
+tooltip_save_as = "Save position as"
+tooltip_save = "Save position"
+tooltip_copy_notation = "Copy notation"
+tooltip_paste_notation = "Paste notation"
+tooltip_gamerules = "Game rules"
+tooltip_start_local = "Start local game from position"
+tooltip_start_engine = "Start engine game from position"
+# Tool tooltips
+tooltip_normal = "Normal (F)"
+tooltip_eraser = "Eraser (G)"
+tooltip_selection_tool = "Selection (H)"
+tooltip_specialrights = "Special rights toggle (J)"
+# Selection tooltips
+tooltip_select_all = "Select all (Ctrl+A)"
+tooltip_clear_selection = "Clear selection (Del)"
+tooltip_copy_selection = "Copy selection (Ctrl+C)"
+tooltip_paste_selection = "Paste selection (Ctrl+V)"
+tooltip_invert_color = "Invert selection color"
+tooltip_rotate_left = "Rotate selection left"
+tooltip_rotate_right = "Rotate selection right"
+tooltip_flip_horizontal = "Flip selection horizontally"
+tooltip_flip_vertical = "Flip selection vertically"
+# Reset Position window
+reset_header = "Reset position"
+reset_message = "Do you want to reset the board and create a new position? Unsaved changes will be lost."
+# Clear Position window
+clear_header = "Clear position"
+clear_message = "Do you want to clear the board and create a new position? Unsaved changes will be lost."
+# Load Position window
+enter_position_name = "Enter position name:"
+save_button = "Save"
+name_header = "Name"
+pieces_header = "Pieces" # Represent piece count
+date_header = "Date" # Represents date last modified
+# Game Rules window
+gamerules_header = "Game Rules"
+player_to_move = "Player to move:"
+white = "White"
+black = "Black"
+en_passant = "En passant square:"
+move_rule = "Move rule state:"
+promotion_ranks_white = "Promotion ranks (White):"
+promotion_ranks_black = "Promotion ranks (Black):"
+promotion_pieces = "Promotion pieces:"
+global_special_rights = "Global special rights:"
+pawn_double_push = "Pawn double push"
+castling_label = "Castling"
+win_conditions = "Win conditions:"
+checkmate = "Checkmate"
+royal_capture = "Royal capture"
+all_royals_captured = "All royals captured"
+all_pieces_captured = "All pieces captured"
+world_border = "World Border:"
+# Start Local Game window
+start_local_game = "Start local game"
+start_local_game_message = "Do you want to leave the board editor and start a local game from this position? Changes will be saved."
+# Start Engine Game window
+start_engine_game = "Start engine game"
+play_as = "Play as:"
+time_control = "Time Control (leave blank for unlimited time):"
+engine_difficulty = "Engine difficulty:"
+easy = "Easy"
+medium = "Medium"
+hard = "Hard"
+use_default_border = "Use default engine world border:"
+start_engine_game_message = "Do you want to leave the board editor and start an engine game from this position? Changes will be saved."
+# Common
+yes = "Yes"
+no = "No"
+
 [play.guide]
 title = "Guide"
 rules = "Rules"
@@ -225,12 +306,6 @@ keybinds_extra = [
 ]
 fairy_heading = "Fairy Pieces"
 fairy_paragraph = "You already know what you need to know to play the default \"Classical\" variant. Fairy chess pieces are not used in conventional chess, but are incorporated into other variants! If you find yourself in a variant with some pieces you haven't seen before, learn how they work here!"
-editing_heading = "Board Editing"
-editing_paragraphs = [
-["There is an external ", "board editor", " currently available on a public Google Sheet! It includes instructions on how to use it. This requires some basic Google Sheets knowledge. After setup, you will be able to create and import custom positions into the game via the \"Paste Game\" button in the options menu!"],
-"To play a custom position with a friend, have them join a private invite, then both of you can paste the game code to start playing!",
-"An in-game board editor is still planned.",
-]
 back = "Back"
 
 [play.guide.pieces]
@@ -550,6 +625,46 @@ white_koth = "White wins by king of the hill!"
 black_koth = "Black wins by king of the hill!"
 bug_generic = "This is a bug, please report!"
 
+[play.javascript.editor]
+# Sidebar toggle
+expand_sidebar = "Expand sidebar"
+collapse_sidebar = "Collapse sidebar"
+# Position header
+new_position = "New position"
+# Load/Save Position window headers
+load_position_header = "Load Position"
+save_position_as_header = "Save Position As"
+# Confirmation modal
+delete_title = "Delete position?"
+delete_message = ["Are you sure that you want to delete position \"", "\"? This cannot be undone."]
+load_title = "Load position?"
+load_message = ["Are you sure that you want to load position \"", "\"? Unsaved changes to the current position will be lost."]
+overwrite_title = "Overwrite position?"
+overwrite_message = ["Are you sure that you want to overwrite position \"", "\"? This cannot be undone."]
+# Save list row tooltips
+tooltip_load_position = "Load position"
+tooltip_save_to_cloud = "Save to cloud"
+tooltip_remove_from_cloud = "Remove from cloud"
+tooltip_delete_position = "Delete position"
+# Toast messages
+position_loaded = "Position successfully loaded."
+cannot_start_local_empty = "Cannot start local game from empty position!"
+cannot_start_engine_empty = "Cannot start engine game from empty position!"
+position_not_supported = "Position is not supported for reason:"
+saved_in_browser = "Position saved in browser."
+position_corrupted = "The position was corrupted."
+failed_to_load = "Failed to load position:"
+failed_to_convert_icn = "Failed to convert position to ICN for cloud upload."
+too_large_for_cloud = "Position is too large to save to the cloud."
+failed_to_upload = "Failed to upload position to cloud:"
+saved_to_cloud = "Position saved to cloud."
+no_changes = "No changes made."
+failed_to_load_cloud = "Failed to load position from the cloud:"
+failed_to_delete_cloud = "Failed to delete position from the cloud:"
+failed_to_remove_cloud = "Failed to remove position from cloud:"
+saved_locally = "Position saved locally."
+failed_to_fetch_cloud = "Failed to fetch cloud saves:"
+
 [terms]
 title = "Terms of Service"
 warning = ["THIS DOCUMENT IS NOT LEGALLY BINDING. We are only accountable for the English version of this document. This translation is provided solely for general informational purposes. You can access the official English version ", "here", "."]
@@ -668,3 +783,4 @@ ws-rated_invite_verification_needed = "To play ranked, you need to be signed in 
 
 [rate-limiting]
 generic = "You have made too many requests, please try again later."
+error = "Too many requests"

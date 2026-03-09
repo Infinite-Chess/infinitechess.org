@@ -133,6 +133,8 @@ interface InputListener {
 	isKeyDown(_keyCode: string, _requireMetaKey?: boolean, _requireShiftKey?: boolean): boolean;
 	/** Whether the provided keyboard key is currently being held down. */
 	isKeyHeld(_keyCode: string): boolean;
+	/** Removes the key-down event for the given key code so that other scripts don't also use it. */
+	claimKey(_keyCode: string): void;
 	/** Call when done with the input listener. This closes all its event listeners. */
 	removeEventListeners(): void;
 	/** The element this input listener is attached to. */
@@ -727,7 +729,7 @@ function CreateInputListener(
 			)
 				e.preventDefault();
 			// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
-			if (document.activeElement !== document.body) return; // This ignores the event fired when the user is typing for example in a text box.
+			if (document.activeElement instanceof HTMLInputElement) return; // Ignore events when the user is typing in a text box.
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
 			if (!keyDowns.some((keyInfo) => keyInfo.keyCode === e.code)) {
@@ -877,6 +879,10 @@ function CreateInputListener(
 			);
 		},
 		isKeyHeld: (keyCode: string): boolean => keyHelds.includes(keyCode),
+		claimKey: (keyCode: string): void => {
+			const index = keyDowns.findIndex((k) => k.keyCode === keyCode);
+			if (index !== -1) keyDowns.splice(index, 1);
+		},
 		removeEventListeners: (): void => {
 			Object.keys(eventHandlers).forEach((eventType) => {
 				const { target, handler } = eventHandlers[eventType]!;

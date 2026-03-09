@@ -17,9 +17,9 @@ import docutil from '../../util/docutil.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
-import hydrochess_card from '../chess/enginecards/hydrochess_card.js';
+import hydrochess_card from '../chess/engines/enginecards/hydrochess_card.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
-import { engineDefaultTimeLimitPerMoveMillisDict } from '../misc/enginegame.js';
+import { engineDictionary } from '../chess/engines/engine.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -316,7 +316,7 @@ function callback_createInvite(): void {
 			currentEngine,
 			engineConfig: {
 				engineTimeLimitPerMoveMillis:
-					engineDefaultTimeLimitPerMoveMillisDict[currentEngine],
+					engineDictionary[currentEngine].defaultTimeLimitPerMoveMillis,
 				strengthLevel,
 			},
 		});

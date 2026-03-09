@@ -14,21 +14,17 @@ import { logZodError } from '../utility/zodlogger.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-// Constants ---------------------------------------------------------------------------------
-
-/** Maximum length for ICN notation (also determines max size) */
-const MAX_ICN_LENGTH = 1_000_000;
-
 // Zod Schemas -------------------------------------------------------------------------------
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
 const SavePositionBodySchema = z.strictObject({
 	name: z
 		.string()
+		.trim()
 		.min(1, 'Name is required')
 		.max(
-			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+			editorutil.MAX_POSITION_NAME_LENGTH,
+			`Name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 	piece_count: z
 		.number()
@@ -38,19 +34,25 @@ const SavePositionBodySchema = z.strictObject({
 	icn: z
 		.string()
 		.min(1, 'ICN is required')
-		.max(MAX_ICN_LENGTH, `ICN must be ${MAX_ICN_LENGTH} characters or less`),
-	pawn_double_push: z.boolean(),
-	castling: z.boolean(),
+		.max(
+			editorutil.MAX_ICN_LENGTH,
+			`ICN must be ${editorutil.MAX_ICN_LENGTH} characters or less`,
+		),
+	compression: z.enum(['none', 'deflate-raw']),
+	// undefined represents the indeterminate (third) state
+	pawn_double_push: z.boolean().optional(),
+	castling: z.boolean().optional(),
 });
 
 /** Schema for validating position_name in URL params */
 const PositionNameParamSchema = z.strictObject({
 	position_name: z
 		.string()
+		.trim()
 		.min(1, 'Position name is required')
 		.max(
-			editorutil.POSITION_NAME_MAX_LENGTH,
-			`Position name must be ${editorutil.POSITION_NAME_MAX_LENGTH} characters or less`,
+			editorutil.MAX_POSITION_NAME_LENGTH,
+			`Position name must be ${editorutil.MAX_POSITION_NAME_LENGTH} characters or less`,
 		),
 });
 
@@ -92,7 +94,7 @@ function getSavedPositions(req: Request, res: Response): void {
 /**
  * API endpoint to save a new position for the current user.
  * If a position with the same name already exists, it will be overwritten.
- * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push: boolean, castling: boolean } in request body.
+ * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push?: boolean, castling?: boolean } in request body.
  * Returns { success: true } on success.
  * Requires authentication.
  */
@@ -120,7 +122,8 @@ function savePosition(req: Request, res: Response): void {
 		return;
 	}
 
-	const { name, piece_count, timestamp, icn, pawn_double_push, castling } = parseResult.data;
+	const { name, piece_count, timestamp, icn, compression, pawn_double_push, castling } =
+		parseResult.data;
 
 	try {
 		// Add the saved position to the database (throws on quota exceeded)
@@ -130,11 +133,13 @@ function savePosition(req: Request, res: Response): void {
 			piece_count,
 			timestamp,
 			icn,
+			compression,
 			pawn_double_push,
 			castling,
 		);
 
-		res.status(201).json({ success: true });
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		res.status(201).json({ success: true, saves });
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
@@ -187,9 +192,13 @@ function getPosition(req: Request, res: Response): void {
 		}
 
 		res.json({
+			timestamp: position.timestamp,
 			icn: position.icn,
-			pawn_double_push: Boolean(position.pawn_double_push),
-			castling: Boolean(position.castling),
+			compression: position.compression,
+			// Decode tristate: -1 → undefined, 0 → false, 1 → true
+			pawn_double_push:
+				position.pawn_double_push === -1 ? undefined : Boolean(position.pawn_double_push),
+			castling: position.castling === -1 ? undefined : Boolean(position.castling),
 		});
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -239,7 +248,8 @@ function deletePosition(req: Request, res: Response): void {
 			return;
 		}
 
-		res.json({ success: true });
+		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		res.json({ success: true, saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
@@ -253,8 +263,6 @@ function deletePosition(req: Request, res: Response): void {
 // Exports -----------------------------------------------------------------------------------
 
 export default {
-	// Constants
-	MAX_ICN_LENGTH,
 	// Endpoints
 	getSavedPositions,
 	savePosition,

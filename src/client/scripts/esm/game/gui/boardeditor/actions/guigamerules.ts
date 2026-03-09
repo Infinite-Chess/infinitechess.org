@@ -1,26 +1,27 @@
-// src/client/scripts/esm/game/gui/boardeditor/guigamerules.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guigamerules.ts
 
 /**
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Edit } from '../../boardeditor/boardeditor';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil';
-import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
+import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
+import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds';
 
-import bounds from '../../../../../../shared/util/math/bounds';
-import boardutil from '../../../../../../shared/chess/util/boardutil';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import bounds from '../../../../../../../shared/util/math/bounds';
+import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, {
 	players as p,
 	rawTypes as r,
 	RawType,
-} from '../../../../../../shared/chess/util/typeutil';
+} from '../../../../../../../shared/chess/util/typeutil';
 
-import gameslot from '../../chess/gameslot';
-import boardeditor from '../../boardeditor/boardeditor';
-import guifloatingwindow from './guifloatingwindow';
-import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
+import gameslot from '../../../chess/gameslot';
+import boardeditor from '../../../boardeditor/boardeditor';
+import edithistory from '../../../boardeditor/edithistory';
+import guifloatingwindow from '../guifloatingwindow';
+import egamerules, { GameRulesGUIinfo } from '../../../boardeditor/egamerules';
 
 // Elements ----------------------------------------------------------
 
@@ -377,19 +378,31 @@ function readGameRules(): void {
 	const mesh = gameslot.getMesh()!;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
-	// Update pawn double push specialrights of position
-	if (gameRules.pawnDoublePush !== undefined)
+	// Fetch previous values before updating, to skip queuing when unchanged and prevent unnecessary edit history bloat.
+	const previousPositionDependentGameRules = egamerules.getPositionDependentGameRules();
+
+	// Update pawn double push specialrights of position, only if the value changed
+	if (
+		gameRules.pawnDoublePush !== undefined &&
+		gameRules.pawnDoublePush !== previousPositionDependentGameRules.pawnDoublePush
+	)
 		egamerules.queueToggleGlobalPawnDoublePush(gameRules.pawnDoublePush, edit);
 
-	// Update castling with rooks specialrights of position
-	if (gameRules.castling !== undefined)
+	// Update castling with rooks specialrights of position, only if the value changed
+	if (
+		gameRules.castling !== undefined &&
+		gameRules.castling !== previousPositionDependentGameRules.castling
+	)
 		egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castling, edit);
 
 	// Upate boardeditor.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
 
-	boardeditor.runEdit(gamefile, mesh, edit, true);
-	boardeditor.addEditToHistory(edit);
+	edithistory.runEdit(gamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
+	// Mark as dirty anyway, since edithistory.addEditToHistory() may early exit
+	// if the edit has no changes, but gamerule changes still consider the position dirty.
+	boardeditor.markPositionDirty();
 }
 
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/

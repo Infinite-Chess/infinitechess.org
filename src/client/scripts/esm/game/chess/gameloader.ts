@@ -15,11 +15,12 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { ValidEngine } from './engines/engine.js';
+import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
-import type { EngineConfig, validEngineName } from '../misc/enginegame.js';
 import type {
 	ParticipantState,
 	ServerGameMoveMessage,
@@ -37,13 +38,15 @@ import guiclock from '../gui/guiclock.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
+import enginegame from '../misc/enginegame.js';
+import guipalette from '../gui/boardeditor/guipalette.js';
 import perspective from '../rendering/perspective.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import enginegame, { engineWorldBorderDict } from '../misc/enginegame.js';
+import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -237,7 +240,7 @@ async function startEngineGame(options: {
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
 	TimeControl?: TimeControl;
 	youAreColor: Player;
-	currentEngine: validEngineName;
+	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
@@ -255,7 +258,7 @@ async function startEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const formattedEngineName = enginegame.getFormattedEngineName(
+	const formattedEngineName = getFormattedEngineName(
 		options.currentEngine,
 		options.engineConfig.strengthLevel,
 	);
@@ -279,7 +282,7 @@ async function startEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
-			worldBorderDist: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
 	});
 
@@ -333,8 +336,8 @@ async function startBoardEditor(): Promise<void> {
 		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor();
+	await guipalette.initUI();
+	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
 }
 
 /** Initializes a local game from a custom position. */
@@ -377,7 +380,7 @@ async function startCustomEngineGame(options: {
 	presetAnnotes?: PresetAnnotes;
 	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
-	currentEngine: validEngineName;
+	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
@@ -395,7 +398,7 @@ async function startCustomEngineGame(options: {
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
-			worldBorderDist: engineWorldBorderDict[options.currentEngine],
+			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
 	});
 
@@ -425,6 +428,8 @@ async function startBoardEditorFromCustomPosition(
 		};
 		presetAnnotes?: PresetAnnotes;
 	},
+	/** Whether the position has unsaved changes. Defaults to true (dirty). */
+	dirty: boolean,
 	/** Whether the pawnDoublePush flag should be set for the position in the editor game rules */
 	pawnDoublePush?: boolean,
 	/** Whether the castling flag should be set for the position in the editor game rules */
@@ -454,8 +459,8 @@ async function startBoardEditorFromCustomPosition(
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	await guiboardeditor.initUI();
-	boardeditor.initBoardEditor(variantOptionsCopy, pawnDoublePush, castling);
+	await guipalette.initUI();
+	boardeditor.initBoardEditor(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 
 /**

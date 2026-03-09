@@ -160,6 +160,11 @@ interface MatchInfo {
 	publicity: 'public' | 'private';
 	/** Whether the match is rated. */
 	rated: boolean;
+	/**
+	 * The time control of the game (e.g. `"600+5"` or `"-"` for untimed).
+	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
+	 */
+	clock: TimeControl;
 	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 
@@ -221,6 +226,7 @@ function initMatch(
 		timeCreated: Date.now(),
 		publicity: invite.publicity,
 		rated: invite.rated === 'rated',
+		clock: invite.clock,
 		positionPasted: false,
 	};
 }

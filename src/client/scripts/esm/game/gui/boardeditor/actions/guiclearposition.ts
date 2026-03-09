@@ -1,11 +1,13 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiclearposition.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guiclearposition.ts
 
 /**
  * Manages the GUI popup window for the Clear position button of the Board Editor
  */
 
-import eactions from '../../boardeditor/actions/eactions';
-import guifloatingwindow from './guifloatingwindow';
+import eactions from '../../../boardeditor/actions/eactions';
+import guipause from '../../guipause';
+import guifloatingwindow from '../guifloatingwindow';
+import { listener_document } from '../../../chess/game';
 
 // Elements ----------------------------------------------------------
 
@@ -48,14 +50,26 @@ function onClose(resetPositioning: boolean): void {
 function initClearPositionUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
+	document.addEventListener('keydown', onKeyDown);
 }
 
 function closeClearPositionUIListeners(): void {
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
+	document.removeEventListener('keydown', onKeyDown);
 }
 
 // Utilities---------------------------------------------------------------------
+
+function onKeyDown(e: KeyboardEvent): void {
+	if (e.key === 'Enter') onYesButtonPress();
+	else if (e.key === 'Escape') {
+		// Ensure priority when deciding who gets the escape key event
+		if (guipause.areWePaused()) return;
+		listener_document.claimKey('Escape');
+		onNoButtonPress();
+	}
+}
 
 function onYesButtonPress(): void {
 	eactions.clearAll();

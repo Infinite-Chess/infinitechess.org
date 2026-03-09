@@ -17,6 +17,7 @@ import bounds, {
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
 import arrows from '../../../rendering/arrows/arrows';
+import docutil from '../../../../util/docutil.js';
 import scursor from './scursor';
 import gameslot from '../../../chess/gameslot';
 import { Mouse } from '../../../input';
@@ -27,7 +28,10 @@ import stransformations from './stransformations';
 // Constants -----------------------------------------
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
-const GRABBABLE_DIST = 6;
+const GRABBABLE_DIST = {
+	DESKTOP: 6,
+	MOBILE: 18,
+};
 
 // State ---------------------------------------------
 
@@ -44,6 +48,11 @@ let lastPointerCoords: Coords | undefined;
 let anchorCoords: Coords | undefined = undefined;
 
 // Methods -------------------------------------------
+
+/** Returns the grabbable distance in virtual pixels depending on whether a mouse or touch input is being used. */
+function getGrabbableDist(): number {
+	return docutil.isMouseSupported() ? GRABBABLE_DIST.DESKTOP : GRABBABLE_DIST.MOBILE;
+}
 
 /**
  * Updates the logic that handles dragging the selection box from the edges.
@@ -96,7 +105,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
-	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(GRABBABLE_DIST);
+	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(getGrabbableDist());
 
 	// Determine if the mouse is within the grabbable edge area.
 	// This is true if the mouse is inside the selection box expanded by the grab distance,
@@ -207,7 +216,7 @@ function render(): void {
 // Exports -----------------------------------------------
 
 export default {
-	GRABBABLE_DIST,
+	getGrabbableDist,
 	update,
 	resetState,
 	render,

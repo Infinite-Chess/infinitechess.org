@@ -102,7 +102,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
-	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(sdrag.GRABBABLE_DIST);
+	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(sdrag.getGrabbableDist());
 
 	// Determine the distance from the mouse to the fill handle corner
 	const distToFillHandle = vectors.chebyshevDistanceDoubles(mouseWorld, fillHandleCorner);

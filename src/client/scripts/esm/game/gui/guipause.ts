@@ -9,11 +9,9 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import toast from './toast.js';
 import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
-import copygame from '../chess/copygame.js';
 import guititle from './guititle.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
-import pastegame from '../chess/pastegame.js';
 import boarddrag from '../rendering/boarddrag.js';
 import { Mouse } from '../input.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
@@ -204,7 +202,7 @@ function initListeners(): void {
 	element_resume.addEventListener('click', callback_Resume);
 	element_pointers.addEventListener('click', callback_ToggleArrows);
 	element_copygame.addEventListener('click', callback_CopyGame);
-	element_pastegame.addEventListener('click', pastegame.callbackPaste);
+	element_pastegame.addEventListener('click', callback_PasteGame);
 	element_mainmenu.addEventListener('click', callback_MainMenu);
 	element_practicemenu.addEventListener('click', callback_PracticeMenu);
 	element_offerDraw.addEventListener('click', callback_OfferDraw);
@@ -216,7 +214,7 @@ function closeListeners(): void {
 	element_resume.removeEventListener('click', callback_Resume);
 	element_pointers.removeEventListener('click', callback_ToggleArrows);
 	element_copygame.removeEventListener('click', callback_CopyGame);
-	element_pastegame.removeEventListener('click', pastegame.callbackPaste);
+	element_pastegame.removeEventListener('click', callback_PasteGame);
 	element_mainmenu.removeEventListener('click', callback_MainMenu);
 	element_practicemenu.removeEventListener('click', callback_PracticeMenu);
 	element_offerDraw.removeEventListener('click', callback_OfferDraw);
@@ -225,7 +223,12 @@ function closeListeners(): void {
 
 /** Called when the copy game button is clicked. */
 function callback_CopyGame(_event: Event): void {
-	copygame.copyGame(false);
+	document.dispatchEvent(new Event('copy-game'));
+}
+
+/** Called when the paste game button is clicked. */
+function callback_PasteGame(_event: Event): void {
+	document.dispatchEvent(new Event('paste-game'));
 }
 
 /** Called when the resume button is clicked. */

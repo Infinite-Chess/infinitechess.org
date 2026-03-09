@@ -6,7 +6,7 @@
  * Manages the game rules of the board editor position.
  */
 
-import type { Edit } from './boardeditor';
+import type { Edit } from '../../../../../shared/chess/logic/movepiece';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 import type { Coords } from '../../../../../shared/chess/util/coordutil';
 import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
@@ -21,7 +21,8 @@ import typeutil, { players as p, rawTypes as r } from '../../../../../shared/che
 
 import gameslot from '../chess/gameslot';
 import boardeditor from './boardeditor';
-import guigamerules from '../gui/boardeditor/guigamerules';
+import edithistory from './edithistory';
+import guigamerules from '../gui/boardeditor/actions/guigamerules';
 
 // Types -------------------------------------------------------------------------
 
@@ -142,10 +143,7 @@ function setGamerulesGUIinfo(
 ): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	// prettier-ignore
-	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? "white" : firstPlayer === p.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
-
-	if (gameRules.turnOrder[0] === p.WHITE) gamerulesGUIinfo.playerToMove = 'white';
-	else gamerulesGUIinfo.playerToMove = 'black';
+	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? 'white' : firstPlayer === p.BLACK ? 'black' : (() => { throw new Error('Invalid first player'); })(); // Future protection
 
 	if (state_global.enpassant !== undefined) {
 		gamerulesGUIinfo.enPassant = {
@@ -280,7 +278,7 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): v
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
 	}
 }
 
@@ -293,10 +291,11 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (castlingTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, castling);
-		else if (!pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
-			boardeditor.queueSpecialRights(gamefile, edit, piece.coords, false);
+		const rawType = typeutil.getRawType(piece.type);
+		if (castlingTypes.includes(rawType))
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, castling);
+		else if (!pawnDoublePushTypes.includes(rawType))
+			edithistory.queueSpecialRights(gamefile, edit, piece.coords, false);
 	}
 }
 

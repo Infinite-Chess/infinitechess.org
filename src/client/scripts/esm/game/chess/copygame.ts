@@ -27,8 +27,7 @@ const variantsTooBigToCopyPositionToICN: string[] = [
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition: boolean): void {
-	// If we are in the board editor, let the board editor script handle this instead
-	if (boardeditor.areInBoardEditor()) return; // Editor has its own listener
+	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
 	const Variant = gamefile.basegame.metadata.Variant!;

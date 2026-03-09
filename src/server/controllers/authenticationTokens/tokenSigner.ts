@@ -29,8 +29,9 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 // Session tokens expiry times ------------------------------------------------------
 
 const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
+// const accessTokenExpiryMillis = 1000 * 20; // 20 seconds, for testing purposes.
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 20; // 20 seconds
+// const refreshTokenExpiryMillis = 1000 * 20; // 20 seconds, for testing purposes.
 
 /** The window where a "consumed" token is still accepted. */
 const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
