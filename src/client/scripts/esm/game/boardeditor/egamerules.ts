@@ -22,7 +22,7 @@ import typeutil, { players as p, rawTypes as r } from '../../../../../shared/che
 import gameslot from '../chess/gameslot';
 import boardeditor from './boardeditor';
 import edithistory from './edithistory';
-import guigamerules from '../gui/boardeditor/guigamerules';
+import guigamerules from '../gui/boardeditor/actions/guigamerules';
 
 // Types -------------------------------------------------------------------------
 

@@ -1,12 +1,12 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiloadpositionmodal.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/loadposition/guiloadpositionmodal.ts
 
 /**
  * Manages the confirmation dialog modal for the Load Position UI of the board editor.
  * Accepts a generic onConfirm callback so it stays decoupled from the list and save-form modules.
  */
 
-import guipause from '../guipause';
-import { listener_document } from '../../chess/game';
+import guipause from '../../../guipause';
+import { listener_document } from '../../../../chess/game';
 
 // Types -------------------------------------------------------------------------
 

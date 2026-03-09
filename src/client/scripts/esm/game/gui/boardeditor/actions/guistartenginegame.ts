@@ -1,20 +1,20 @@
-// src/client/scripts/esm/game/gui/boardeditor/guistartenginegame.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guistartenginegame.ts
 
 /**
  * Manages the GUI popup window for the Start engine game button of the Board Editor
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil';
-import type { TimeControl } from '../../../../../../shared/chess/util/metadata';
+import type { Player } from '../../../../../../../shared/chess/util/typeutil';
+import type { TimeControl } from '../../../../../../../shared/chess/util/metadata';
 
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
-import { players as p } from '../../../../../../shared/chess/util/typeutil';
+import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
+import { players as p } from '../../../../../../../shared/chess/util/typeutil';
 
-import eactions from '../../boardeditor/actions/eactions';
-import gameslot from '../../chess/gameslot';
-import guipause from '../guipause';
-import guifloatingwindow from './guifloatingwindow';
-import { listener_document } from '../../chess/game';
+import eactions from '../../../boardeditor/actions/eactions';
+import gameslot from '../../../chess/gameslot';
+import guipause from '../../guipause';
+import guifloatingwindow from '../guifloatingwindow';
+import { listener_document } from '../../../chess/game';
 
 // Types -------------------------------------------------------------
 

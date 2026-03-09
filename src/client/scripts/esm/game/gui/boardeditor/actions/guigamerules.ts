@@ -1,27 +1,27 @@
-// src/client/scripts/esm/game/gui/boardeditor/guigamerules.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guigamerules.ts
 
 /**
  * Manages the GUI popup window for the Game Rules of the Board Editor
  */
 
-import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { Coords } from '../../../../../../shared/chess/util/coordutil';
-import type { UnboundedRectangle } from '../../../../../../shared/util/math/bounds';
+import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
+import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds';
 
-import bounds from '../../../../../../shared/util/math/bounds';
-import boardutil from '../../../../../../shared/chess/util/boardutil';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import bounds from '../../../../../../../shared/util/math/bounds';
+import boardutil from '../../../../../../../shared/chess/util/boardutil';
+import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import typeutil, {
 	players as p,
 	rawTypes as r,
 	RawType,
-} from '../../../../../../shared/chess/util/typeutil';
+} from '../../../../../../../shared/chess/util/typeutil';
 
-import gameslot from '../../chess/gameslot';
-import boardeditor from '../../boardeditor/boardeditor';
-import edithistory from '../../boardeditor/edithistory';
-import guifloatingwindow from './guifloatingwindow';
-import egamerules, { GameRulesGUIinfo } from '../../boardeditor/egamerules';
+import gameslot from '../../../chess/gameslot';
+import boardeditor from '../../../boardeditor/boardeditor';
+import edithistory from '../../../boardeditor/edithistory';
+import guifloatingwindow from '../guifloatingwindow';
+import egamerules, { GameRulesGUIinfo } from '../../../boardeditor/egamerules';
 
 // Elements ----------------------------------------------------------
 

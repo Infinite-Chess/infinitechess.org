@@ -1,15 +1,15 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiloadposition.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guiloadposition.ts
 
 /**
  * Manages the GUI popup window for the Load Positions UI of the board editor.
  * Coordinates the floating window, save-as form, confirmation modal, and position list.
  */
 
-import editorutil from '../../../../../../shared/editor/editorutil';
+import editorutil from '../../../../../../../shared/editor/editorutil';
 
-import esave from '../../boardeditor/actions/esave';
-import boardeditor from '../../boardeditor/boardeditor';
-import guifloatingwindow from './guifloatingwindow';
+import esave from '../../../boardeditor/actions/esave';
+import boardeditor from '../../../boardeditor/boardeditor';
+import guifloatingwindow from '../guifloatingwindow';
 import guiloadpositionmodal from './guiloadpositionmodal';
 import guiloadpositionsavelist from './guiloadpositionsavelist';
 

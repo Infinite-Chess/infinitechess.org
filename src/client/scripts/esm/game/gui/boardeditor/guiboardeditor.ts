@@ -18,15 +18,15 @@ import gameloader from '../../chess/gameloader.js';
 import guitoolbar from './guitoolbar.js';
 import guipalette from './guipalette.js';
 import boardeditor from '../../boardeditor/boardeditor.js';
-import guigamerules from './guigamerules.js';
+import guigamerules from './actions/guigamerules.js';
 import selectiontool from '../../boardeditor/tools/selection/selectiontool.js';
-import guiloadposition from './guiloadposition.js';
+import guiloadposition from './actions/loadposition/guiloadposition.js';
 import stransformations from '../../boardeditor/tools/selection/stransformations.js';
-import guiresetposition from './guiresetposition.js';
-import guiclearposition from './guiclearposition.js';
-import guistartlocalgame from './guistartlocalgame.js';
-import guistartenginegame from './guistartenginegame.js';
-import guiloadpositionsavelist from './guiloadpositionsavelist.js';
+import guiresetposition from './actions/guiresetposition.js';
+import guiclearposition from './actions/guiclearposition.js';
+import guistartlocalgame from './actions/guistartlocalgame.js';
+import guistartenginegame from './actions/guistartenginegame.js';
+import guiloadpositionsavelist from './actions/loadposition/guiloadpositionsavelist.js';
 
 // Elements ---------------------------------------------------------------
 

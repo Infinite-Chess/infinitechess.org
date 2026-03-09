@@ -1,26 +1,26 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiresetposition.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guistartlocalgame.ts
 
 /**
- * Manages the GUI popup window for the Reset position button of the Board Editor
+ * Manages the GUI popup window for the Start local game button of the Board Editor
  */
 
-import eactions from '../../boardeditor/actions/eactions';
-import guipause from '../guipause';
-import guifloatingwindow from './guifloatingwindow';
-import { listener_document } from '../../chess/game';
+import eactions from '../../../boardeditor/actions/eactions';
+import guipause from '../../guipause';
+import guifloatingwindow from '../guifloatingwindow';
+import { listener_document } from '../../../chess/game';
 
 // Elements ----------------------------------------------------------
 
 /** The button the toggles visibility of the Start local game popup window. */
-const element_resetbutton = document.getElementById('reset')!;
+const element_localgamebutton = document.getElementById('start-local-game')!;
 
 /** The actual window of the Game Rules popup. */
-const element_window = document.getElementById('reset-position-UI')!;
-const element_header = document.getElementById('reset-position-UI-header')!;
-const element_closeButton = document.getElementById('close-reset-position-UI')!;
+const element_window = document.getElementById('local-game-UI')!;
+const element_header = document.getElementById('local-game-UI-header')!;
+const element_closeButton = document.getElementById('close-local-game-UI')!;
 
-const yesButton = document.getElementById('reset-position-yes')!;
-const noButton = document.getElementById('reset-position-no')!;
+const yesButton = document.getElementById('start-local-game-yes')!;
+const noButton = document.getElementById('start-local-game-no')!;
 
 // Create floating window -------------------------------------
 
@@ -35,25 +35,25 @@ const floatingWindow = guifloatingwindow.create({
 // Toggling ---------------------------------------------
 
 function onOpen(): void {
-	element_resetbutton.classList.add('active');
-	initResetPositionUIListeners();
+	element_localgamebutton.classList.add('active');
+	initLocalGameUIListeners();
 }
 
 function onClose(resetPositioning: boolean): void {
 	if (resetPositioning) floatingWindow.resetPositioning();
-	element_resetbutton.classList.remove('active');
-	closeResetPositionUIListeners();
+	element_localgamebutton.classList.remove('active');
+	closeLocalGameUIListeners();
 }
 
 // Gamerules-specific listeners -------------------------------------------
 
-function initResetPositionUIListeners(): void {
+function initLocalGameUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);
 	noButton.addEventListener('click', onNoButtonPress);
 	document.addEventListener('keydown', onKeyDown);
 }
 
-function closeResetPositionUIListeners(): void {
+function closeLocalGameUIListeners(): void {
 	yesButton.removeEventListener('click', onYesButtonPress);
 	noButton.removeEventListener('click', onNoButtonPress);
 	document.removeEventListener('keydown', onKeyDown);
@@ -72,8 +72,7 @@ function onKeyDown(e: KeyboardEvent): void {
 }
 
 function onYesButtonPress(): void {
-	eactions.reset();
-	floatingWindow.close(false);
+	eactions.startLocalGame();
 }
 
 function onNoButtonPress(): void {

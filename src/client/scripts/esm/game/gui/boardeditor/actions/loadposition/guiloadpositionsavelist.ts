@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiloadpositionsavelist.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/loadposition/guiloadpositionsavelist.ts
 
 /**
  * Manages the saved-positions list for the Load Position UI of the board editor:
@@ -6,17 +6,17 @@
  * and refreshing the list from local and cloud storage.
  */
 
-import type { StorageType } from '../../boardeditor/boardeditor';
-import type { CloudSaveListRecord } from '../../boardeditor/actions/editorSavesAPI';
-import type { EditorAbridgedSaveState } from '../../boardeditor/editortypes';
+import type { StorageType } from '../../../../boardeditor/boardeditor';
+import type { CloudSaveListRecord } from '../../../../boardeditor/actions/editorSavesAPI';
+import type { EditorAbridgedSaveState } from '../../../../boardeditor/editortypes';
 
-import esave from '../../boardeditor/actions/esave';
-import style from '../style';
-import ecloud from '../../boardeditor/actions/ecloud';
-import eactions from '../../boardeditor/actions/eactions';
-import boardeditor from '../../boardeditor/boardeditor';
-import { GameBus } from '../../GameBus';
-import validatorama from '../../../util/validatorama';
+import esave from '../../../../boardeditor/actions/esave';
+import style from '../../../style';
+import ecloud from '../../../../boardeditor/actions/ecloud';
+import eactions from '../../../../boardeditor/actions/eactions';
+import boardeditor from '../../../../boardeditor/boardeditor';
+import { GameBus } from '../../../../GameBus';
+import validatorama from '../../../../../util/validatorama';
 import guiloadposition from './guiloadposition';
 import guiloadpositionmodal from './guiloadpositionmodal';
 

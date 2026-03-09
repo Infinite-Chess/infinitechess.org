@@ -1,13 +1,13 @@
-// src/client/scripts/esm/game/gui/boardeditor/guiclearposition.ts
+// src/client/scripts/esm/game/gui/boardeditor/actions/guiclearposition.ts
 
 /**
  * Manages the GUI popup window for the Clear position button of the Board Editor
  */
 
-import eactions from '../../boardeditor/actions/eactions';
-import guipause from '../guipause';
-import guifloatingwindow from './guifloatingwindow';
-import { listener_document } from '../../chess/game';
+import eactions from '../../../boardeditor/actions/eactions';
+import guipause from '../../guipause';
+import guifloatingwindow from '../guifloatingwindow';
+import { listener_document } from '../../../chess/game';
 
 // Elements ----------------------------------------------------------
 
