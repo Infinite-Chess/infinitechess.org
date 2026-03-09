@@ -52,7 +52,16 @@ const newsFolder = path.join(translationsFolder, 'news');
 /** The folder path containing English markdown news posts. */
 const englishNewsFolder = path.join(newsFolder, DEFAULT_LANGUAGE);
 
-const xss_options: IFilterXSSOptions = { whiteList: {} };
+const xss_options: IFilterXSSOptions = {
+	// Allows using these html tags in translation key strings for formatting.
+	whiteList: {
+		em: [],
+		strong: [],
+		b: [],
+		i: [],
+		br: [],
+	},
+};
 const custom_xss = new FilterXSS(xss_options);
 
 // Functions -----------------------------------------------------------------
