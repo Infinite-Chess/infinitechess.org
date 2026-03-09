@@ -20,6 +20,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 const SavePositionBodySchema = z.strictObject({
 	name: z
 		.string()
+		.trim()
 		.min(1, 'Name is required')
 		.max(
 			editorutil.MAX_POSITION_NAME_LENGTH,
@@ -47,6 +48,7 @@ const SavePositionBodySchema = z.strictObject({
 const PositionNameParamSchema = z.strictObject({
 	position_name: z
 		.string()
+		.trim()
 		.min(1, 'Position name is required')
 		.max(
 			editorutil.MAX_POSITION_NAME_LENGTH,
