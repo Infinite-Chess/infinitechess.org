@@ -41,7 +41,7 @@ function updateDirtyIndicator(dirty: boolean): void {
 
 /** Un-greys selection action buttons when a selection is made. */
 function onNewSelection(): void {
-	// Remove 'disabled' class from all children except those included in the alwaysActiveSelectionActions array
+	// Remove 'disabled' class from all children
 	Array.from(element_selectionActions.children).forEach((child) => {
 		(child as HTMLElement).classList.remove('disabled');
 	});
