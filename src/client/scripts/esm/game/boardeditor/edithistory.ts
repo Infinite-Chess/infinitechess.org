@@ -74,6 +74,7 @@ function init(pawnDoublePush: boolean | undefined, castling: boolean | undefined
 	indexOfThisEdit = 0;
 	initial_pawnDoublePush = pawnDoublePush;
 	initial_castling = castling;
+	guinavigation.update_EditButtons();
 }
 
 /** Resets the edit history state when the board editor is closed. */
