@@ -143,10 +143,7 @@ function setGamerulesGUIinfo(
 ): void {
 	const firstPlayer = gameRules.turnOrder[0];
 	// prettier-ignore
-	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? "white" : firstPlayer === p.BLACK ? "black" : (() => { throw new Error("Invalid first player"); })(); // Future protection
-
-	if (gameRules.turnOrder[0] === p.WHITE) gamerulesGUIinfo.playerToMove = 'white';
-	else gamerulesGUIinfo.playerToMove = 'black';
+	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? 'white' : firstPlayer === p.BLACK ? 'black' : (() => { throw new Error('Invalid first player'); })(); // Future protection
 
 	if (state_global.enpassant !== undefined) {
 		gamerulesGUIinfo.enPassant = {

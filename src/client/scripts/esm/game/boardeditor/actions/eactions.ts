@@ -498,9 +498,9 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	if (keepTrackOfGlobalSpecialRights) {
 		// prettier-ignore
-		pawnDoublePush = all_pawns_have_double_push || at_least_one_pawn_has_double_push ? undefined : false;
+		pawnDoublePush = at_least_one_pawn_has_double_push ? (all_pawns_have_double_push ? true : undefined) : false;
 		// prettier-ignore
-		castling = all_pieces_obey_normal_castling || at_least_one_piece_obeys_normal_castling ? undefined : false;
+		castling = at_least_one_piece_obeys_normal_castling ? (all_pieces_obey_normal_castling ? true : undefined) : false;
 	}
 
 	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
