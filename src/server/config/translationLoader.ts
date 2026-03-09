@@ -75,7 +75,45 @@ function loadTranslations(): Translations {
 		translations[languageCode] = { default: toml_sanitized };
 	});
 
+	// Deep-merge the English (fallback) translations into every other language so that
+	// missing nested keys are always present. i18next's fallbackLng only handles leaf-key
+	// lookups; when an EJS template calls t('some.section', { returnObjects: true }) it
+	// receives the language's partial object with no further fallback for missing sub-trees.
+	const englishTranslations = translations[DEFAULT_LANGUAGE]!.default;
+	for (const [languageCode, languageTranslations] of Object.entries(translations)) {
+		if (languageCode === DEFAULT_LANGUAGE) continue;
+		translations[languageCode] = {
+			default: deepMerge(englishTranslations, languageTranslations.default),
+		};
+	}
+
 	return translations;
+}
+
+/**
+ * Deep-merges `source` into `target`, returning a new object.
+ * Keys present in `source` but absent in `target` are copied from `source` (English fallback).
+ * Keys present in both are recursively merged when both values are plain objects;
+ * otherwise the `target` value takes precedence.
+ */
+function deepMerge(source: Record<string, any>, target: Record<string, any>): Record<string, any> {
+	const result: Record<string, any> = { ...source };
+	for (const [key, targetValue] of Object.entries(target)) {
+		const sourceValue = result[key];
+		if (
+			targetValue !== null &&
+			typeof targetValue === 'object' &&
+			!Array.isArray(targetValue) &&
+			sourceValue !== null &&
+			typeof sourceValue === 'object' &&
+			!Array.isArray(sourceValue)
+		) {
+			result[key] = deepMerge(sourceValue, targetValue);
+		} else {
+			result[key] = targetValue;
+		}
+	}
+	return result;
 }
 
 /** Loads the English TOML changelog file into an object. */
