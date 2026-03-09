@@ -141,7 +141,7 @@ function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
  * @returns Whether the paste was successful
  */
 function pasteGame(longformOut: LongFormatOut): void {
-	console.log(translations.copypaste.pasting_game);
+	console.log('Pasting game...');
 
 	// Create a new gamefile from the longformat...
 
@@ -245,7 +245,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 		}
 	});
 
-	console.log(translations.copypaste.loaded_from_clipboard);
+	console.log('Loaded game from clipboard!');
 }
 
 /**
