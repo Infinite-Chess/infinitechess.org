@@ -661,7 +661,7 @@ saved_to_cloud = "Asetelma tallennettu pilveen."
 no_changes = "Muutoksia ei tapahtunut."
 failed_to_load_cloud = "Asetelman avaaminen pilvestä epäonnistui:"
 failed_to_delete_cloud = "Asetelman postaminen pilvestä epäonnistui:"
-failed_to_remove_cloud = "Asetelman lataaminen ja poistaminen pilvestä epäonnistui:"
+failed_to_remove_cloud = "Asetelman siirto pilvestä epäonnistui:"
 saved_locally = "Asetelma tallennettu paikallisesti."
 failed_to_fetch_cloud = "Pilvitallennusten hakeminen epäonnistui:"
 
