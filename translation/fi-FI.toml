@@ -156,13 +156,13 @@ agreement = ["Minä suostun ", "Käyttöehtoihin", "."]  # the middle entry is a
 js-username_reserved = "Tämä käyttäjänimi on varattu"
 js-username_length = "KKäyttäjänimen täytyy olla 3-20 kirjainta pitkä"
 js-username_tooshort = "Käyttäjänimen täytyy olla vähintään 3 kirjainta pitkä"
-js-username_wrongenc = "Käyttäjänimen pitää sisältää vain kirjaimia A-Z ja numeroita 0-9"
+js-username_wrongenc = "Käyttäjänimen täytyy sisältää vain kirjaimia A-Z ja numeroita 0-9"
 js-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 js-email_too_long = "Tämä sähköpostiosoite on liian pitkä"
 js-email_inuse = "Sähköpostiosoite on jo käytössä"
 
 [reset-password.javascript]
-js-pwd_no_match = "Salasanat eivät vastaa toisiaan."
+js-pwd_no_match = "Salasanat eivät täsmää."
 reset-password = "Palauta salasana"
 processing = "Käsitellään..."
 network-error = "Verkkovirhe tapahtui. Yritä uudelleen."
@@ -199,7 +199,7 @@ palette = "Paletti"
 color = "Väri"
 # Sidebar button tooltips
 tooltip_reset = "Palauta asetelma"
-tooltip_clear = "Tythjennä asetelma"
+tooltip_clear = "Tyhjennä asetelma"
 tooltip_load = "Avaa asetelma"
 tooltip_save_as = "Tallenna asetelma nimellä"
 tooltip_save = "Tallenna asetelma"
@@ -260,7 +260,7 @@ start_local_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa pai
 # Start Engine Game window
 start_engine_game = "Aloita tietokonepeli"
 play_as = "Pelaa:"
-time_control = "Aika (jätä tyhjäksi äärettömäksi ajaksi):"
+time_control = "Aika (tyhjä = ääretön aika):"
 engine_difficulty = "Tietokoneen taso:"
 easy = "helppo"
 medium = "Keskivaikea"
@@ -283,7 +283,7 @@ rules_paragraphs = [
 ]
 careful_heading = "Ole varovainen!"
 careful_paragraphs = [
-"Äärettömän laudan avoinnaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
+"Äärettömän laudan avonaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
 "Monet muut variantit on luotu sinun taaimmaisen puolen vahvistamiseen."
 ]
 controls_heading = "Ohjaimet"
