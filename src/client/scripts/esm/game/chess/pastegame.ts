@@ -22,7 +22,6 @@ import icnconverter, {
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
-import guipause from '../gui/guipause.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
