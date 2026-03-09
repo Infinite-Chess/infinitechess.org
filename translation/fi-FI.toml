@@ -59,7 +59,7 @@ secondary_title = "Virallinen nettisivu livenä pelaamiseen!"
 what_is_it_title = "Mitä se on?"
 what_is_it_pargaraphs = [
 "Infinite Chess on shakkivariantti, jossa ei ole reunoja, mikä tekee siitä paljon suuremman kuin tuttu 8x8 shakkilauta. Kuningattarilla, torneilla, ja lähettiläillä <em>ei ole rajoja</em> niiden liikkumiseen yhden vuoron aikana. Valitse mikä tahansa kokonaisluku äärettömään asti!",
-"Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asetelmia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimattikellossa!",
+"Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asemia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimattikellossa!",
 "Kuten voit kuvitella, on olemassa äärettömästi mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, mikä tarvitsee uusia taktiikoita, koska ei ole olemassa reunoja, joihin vastustajan kuninkaan voisi vangita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakkipelit. Sotilaat edelleen korontuvat riveillä 1 ja 8!",
 ]
 how_to_title = "Miten voin pelata?"
@@ -192,22 +192,22 @@ editor = "Laudan muokkaaja"
 
 [play.editor]
 # Sidebar section headers
-position = "Asetelma"
+position = "Asema"
 tools = "Työkalut"
 selection = "Valitseminen"
 palette = "Paletti"
 color = "Väri"
 # Sidebar button tooltips
-tooltip_reset = "Palauta asetelma"
-tooltip_clear = "Tyhjennä asetelma"
-tooltip_load = "Avaa asetelma"
-tooltip_save_as = "Tallenna asetelma nimellä"
-tooltip_save = "Tallenna asetelma"
+tooltip_reset = "Palauta asema"
+tooltip_clear = "Tyhjennä asema"
+tooltip_load = "Avaa asema"
+tooltip_save_as = "Tallenna asema nimellä"
+tooltip_save = "Tallenna asema"
 tooltip_copy_notation = "Kopioi merkintä"
 tooltip_paste_notation = "Liitä merkintä"
 tooltip_gamerules = "Pelisäännöt"
-tooltip_start_local = "Aloita paikallinen peli asetelmasta"
-tooltip_start_engine = "Aloita tietokonepeli asetelmasta"
+tooltip_start_local = "Aloita paikallinen peli asemasta"
+tooltip_start_engine = "Aloita tietokonepeli asemasta"
 # Tool tooltips
 tooltip_normal = "Tavallinen (F)"
 tooltip_eraser = "Pyyhekumi (G)"
@@ -224,13 +224,13 @@ tooltip_rotate_right = "Käännä valinta oikealla"
 tooltip_flip_horizontal = "Käännä valinta vaakasuorassa"
 tooltip_flip_vertical = "Käännä valinta pystysuunnassa"
 # Reset Position window
-reset_header = "Palauta asetelma"
-reset_message = "Haluatko palauttaa asetelman ja luoda uuden? Tallentamattomat muutokset menetetään."
+reset_header = "Palauta asema"
+reset_message = "Haluatko palauttaa aseman ja luoda uuden? Tallentamattomat muutokset menetetään."
 # Clear Position window
-clear_header = "Tyhjennä asetelma"
-clear_message = "Haluatko tyhjentää asetelman ja luoda uuden? Tallentamattomat muutokset menetetään."
+clear_header = "Tyhjennä asema"
+clear_message = "Haluatko tyhjentää aseman ja luoda uuden? Tallentamattomat muutokset menetetään."
 # Load Position window
-enter_position_name = "Syötä asetelman nimi:"
+enter_position_name = "Syötä aseman nimi:"
 save_button = "Tallenna"
 name_header = "Nimi"
 pieces_header = "Nappulat" # Represent piece count
@@ -256,7 +256,7 @@ all_pieces_captured = "Kaikkien nappuloiden syönti"
 world_border = "Laudan reuna:"
 # Start Local Game window
 start_local_game = "Aloita paikallinen peli"
-start_local_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa paikallisen pelin tästä asetelmasta? Muutokset tallentuvat."
+start_local_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa paikallisen pelin tästä asemasta? Muutokset tallentuvat."
 # Start Engine Game window
 start_engine_game = "Aloita tietokonepeli"
 play_as = "Pelaa:"
@@ -266,7 +266,7 @@ easy = "helppo"
 medium = "Keskivaikea"
 hard = "Vaikea"
 use_default_border = "Käytä tavallista tietokoneen kentän kokoa:"
-start_engine_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa tietokonepelin tästä asetelmasta? Muutokset tallentuvat."
+start_engine_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa tietokonepelin tästä asemasta? Muutokset tallentuvat."
 # Common
 yes = "Kyllä"
 no = "Ei"
@@ -630,39 +630,39 @@ bug_generic = "Tämä on bugi, ilmoita meille!"
 expand_sidebar = "Avaa sivuvalikko"
 collapse_sidebar = "Sulje sivuvalikko"
 # Position header
-new_position = "Uusi asetelma"
+new_position = "Uusi asema"
 # Load/Save Position window headers
-load_position_header = "Avaa asetelma"
-save_position_as_header = "Tallenna asetelma nimellä"
+load_position_header = "Avaa asema"
+save_position_as_header = "Tallenna asema nimellä"
 # Confirmation modal
-delete_title = "Poista asetelma?"
-delete_message = ["Oletko varma, että haluat poistaa tämän asetelman \"", "\"? Tätä ei voi perua."]
-load_title = "Avaa asetelma?"
-load_message = ["Oletko varma, että haluat avata tämän asetelman \"", "\"? Tallentamattomat muutokset tämänhetkiseen asetelmaan menetetään."]
-overwrite_title = "Korvaa asetelma?"
-overwrite_message = ["Oletko varma, että haluat korvata asetelman \"", "\"? Tätä ei voi perua."]
+delete_title = "Poista asema?"
+delete_message = ["Oletko varma, että haluat poistaa tämän aseman \"", "\"? Tätä ei voi perua."]
+load_title = "Avaa asema?"
+load_message = ["Oletko varma, että haluat avata tämän aseman \"", "\"? Tallentamattomat muutokset tämänhetkiseen asemaan menetetään."]
+overwrite_title = "Korvaa asema?"
+overwrite_message = ["Oletko varma, että haluat korvata tämän aseman \"", "\"? Tätä ei voi perua."]
 # Save list row tooltips
-tooltip_load_position = "Avaa asetelma"
+tooltip_load_position = "Avaa asema"
 tooltip_save_to_cloud = "Tallenna pilveen"
 tooltip_remove_from_cloud = "Poista pilvestä"
-tooltip_delete_position = "Poista asetelma"
+tooltip_delete_position = "Poista asema"
 # Toast messages
-position_loaded = "Asetelma avattu onnistuneesti."
-cannot_start_local_empty = "Paikallista peliä ei voi aloittaa tyhjästä asetelmasta!"
-cannot_start_engine_empty = "Tietokonepeliä ei voi aloittaa tyhjästä asetelmasta!"
-position_not_supported = "Asetelmaa ei tueta syystä:"
-saved_in_browser = "Asetelma on tallennettu selaimeen."
-position_corrupted = "Asetelma on vioittunut."
-failed_to_load = "Asetelman avaaminen epäonnistui:"
-failed_to_convert_icn = "Asetelman muuntaminen ICN-muotoon pilvilatausta varten epäonnistui."
-too_large_for_cloud = "Asetelma on liian suuri pilvitallennusta varten."
-failed_to_upload = "Asetelman lataus pilveen epäonnistui:"
-saved_to_cloud = "Asetelma tallennettu pilveen."
+position_loaded = "Asema avattu onnistuneesti."
+cannot_start_local_empty = "Paikallista peliä ei voi aloittaa tyhjästä asemasta!"
+cannot_start_engine_empty = "Tietokonepeliä ei voi aloittaa tyhjästä asemasta!"
+position_not_supported = "Asemaa ei tueta syystä:"
+saved_in_browser = "Asema on tallennettu selaimeen."
+position_corrupted = "Asema on vioittunut."
+failed_to_load = "Aseman avaaminen epäonnistui:"
+failed_to_convert_icn = "Aseman muuntaminen ICN-muotoon pilvilatausta varten epäonnistui."
+too_large_for_cloud = "Asema on liian suuri pilvitallennusta varten."
+failed_to_upload = "Aseman lataus pilveen epäonnistui:"
+saved_to_cloud = "Asema tallennettu pilveen."
 no_changes = "Muutoksia ei tapahtunut."
-failed_to_load_cloud = "Asetelman avaaminen pilvestä epäonnistui:"
-failed_to_delete_cloud = "Asetelman postaminen pilvestä epäonnistui:"
-failed_to_remove_cloud = "Asetelman siirto pilvestä epäonnistui:"
-saved_locally = "Asetelma tallennettu paikallisesti."
+failed_to_load_cloud = "Aseman avaaminen pilvestä epäonnistui:"
+failed_to_delete_cloud = "Aseman postaminen pilvestä epäonnistui:"
+failed_to_remove_cloud = "Aseman siirto pilvestä epäonnistui:"
+saved_locally = "Asema tallennettu paikallisesti."
 failed_to_fetch_cloud = "Pilvitallennusten hakeminen epäonnistui:"
 
 [terms]
