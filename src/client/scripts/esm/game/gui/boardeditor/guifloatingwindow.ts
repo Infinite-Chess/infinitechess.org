@@ -291,7 +291,7 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 			effectiveLeft < element_menu.offsetWidth + element_menuToggle.offsetWidth
 		) {
 			element_menu.classList.remove('expanded');
-			element_menuToggle.setAttribute('data-tooltip', 'Expand sidebar');
+			element_menuToggle.setAttribute('data-tooltip', translations.editor.expand_sidebar);
 		}
 
 		// Open the window

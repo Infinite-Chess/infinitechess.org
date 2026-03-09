@@ -23,7 +23,7 @@ const alwaysActiveSelectionActions = [document.getElementById('select-all')!];
 /** Updates the displayed active position name. */
 function updateActivePositionElement(positionname: string | undefined): void {
 	if (positionname === undefined) {
-		positionname = 'New position';
+		positionname = translations.editor.new_position;
 		element_activePositionNameDisplay.classList.add('italic');
 	} else {
 		element_activePositionNameDisplay.classList.remove('italic');

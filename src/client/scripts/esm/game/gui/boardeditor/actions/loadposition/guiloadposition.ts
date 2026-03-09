@@ -57,7 +57,7 @@ function onOpen(): void {
 }
 
 function openLoadPosition(): void {
-	element_headerText.textContent = 'Load Position';
+	element_headerText.textContent = translations.editor.load_position_header;
 	element_enterPositionName.classList.add('hidden');
 	element_loadbutton.classList.add('active');
 	element_saveasbutton.classList.remove('active');
@@ -66,7 +66,7 @@ function openLoadPosition(): void {
 }
 
 function openSavePositionAs(): void {
-	element_headerText.textContent = 'Save Position As';
+	element_headerText.textContent = translations.editor.save_position_as_header;
 	element_enterPositionName.classList.remove('hidden');
 	element_saveasbutton.classList.add('active');
 	element_loadbutton.classList.remove('active');

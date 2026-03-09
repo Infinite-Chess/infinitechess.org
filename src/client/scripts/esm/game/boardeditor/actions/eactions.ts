@@ -153,7 +153,7 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
 	);
-	toast.show('Position successfully loaded.');
+	toast.show(translations.editor.position_loaded);
 }
 
 /**
@@ -218,7 +218,7 @@ function startLocalGame(): void {
 
 	const variantOptions = getCurrentPositionInformation(true);
 	if (variantOptions.position.size === 0) {
-		toast.show('Cannot start local game from empty position!', { error: true });
+		toast.show(translations.editor.cannot_start_local_empty, { error: true });
 		return;
 	}
 
@@ -252,7 +252,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Determine whether it's not supported...
 
 	if (variantOptions.position.size === 0) {
-		toast.show('Cannot start engine game from empty position!', { error: true });
+		toast.show(translations.editor.cannot_start_engine_empty, { error: true });
 		return;
 	}
 
@@ -295,7 +295,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	// Does the engine support the position and settings?
 	const supported_result = hydrochess_card.isPositionSupported(variantOptions);
 	if (!supported_result.supported) {
-		toast.show(`Position is not supported for reason: ${supported_result.reason}`, {
+		toast.show(`${translations.editor.position_not_supported} ${supported_result.reason}`, {
 			error: true,
 		});
 		return;

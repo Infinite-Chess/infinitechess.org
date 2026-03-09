@@ -40,7 +40,7 @@ async function parseCloudPosition(
 	} catch (err) {
 		const errMsg = err instanceof Error ? err.message : String(err);
 		console.error('Failed to decompress cloud position ICN:', err);
-		toast.show(`Failed to load position: ${errMsg}`, { error: true });
+		toast.show(`${translations.editor.failed_to_load} ${errMsg}`, { error: true });
 		return undefined;
 	}
 
@@ -49,7 +49,7 @@ async function parseCloudPosition(
 		longFormOut = icnconverter.ShortToLong_Format(icn);
 	} catch (err) {
 		console.error('Failed to parse cloud position ICN:', err);
-		toast.show('The position was corrupted.', { error: true });
+		toast.show(translations.editor.position_corrupted, { error: true });
 		return;
 	}
 	const variantOptions: VariantOptions = {
@@ -99,7 +99,7 @@ async function saveCloudState(
 		});
 	} catch (err) {
 		console.error('Failed to convert position to ICN:', err);
-		toast.show('Failed to convert position to ICN for cloud upload.', { error: true });
+		toast.show(translations.editor.failed_to_convert_icn, { error: true });
 		return { success: false };
 	}
 
@@ -108,7 +108,7 @@ async function saveCloudState(
 		await compression.compressString(icn);
 
 	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) {
-		toast.show(`Position is too large to save to the cloud.`, { error: true });
+		toast.show(translations.editor.too_large_for_cloud, { error: true });
 		return { success: false };
 	}
 
@@ -126,11 +126,11 @@ async function saveCloudState(
 	} catch (err) {
 		console.error('Failed to upload position to cloud:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to upload position to cloud: ' + errMsg, { error: true });
+		toast.show(translations.editor.failed_to_upload + ' ' + errMsg, { error: true });
 		return { success: false };
 	}
 
-	toast.show('Position saved to cloud.');
+	toast.show(translations.editor.saved_to_cloud);
 	return { success: true, saves };
 }
 
@@ -141,7 +141,7 @@ async function saveCloudState(
  */
 async function saveCloud(position_name: string): Promise<void> {
 	if (!boardeditor.isPositionDirty()) {
-		toast.show('No changes made.');
+		toast.show(translations.editor.no_changes);
 		return;
 	}
 
@@ -178,7 +178,7 @@ async function readCloud(position_name: string): Promise<EditorSaveState | undef
 	} catch (err) {
 		console.error('Failed to load cloud position:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to load position from the cloud: ' + errMsg, { error: true });
+		toast.show(translations.editor.failed_to_load_cloud + ' ' + errMsg, { error: true });
 		return;
 	}
 	return parseCloudPosition(position_name, cloudPosition);
@@ -194,7 +194,7 @@ async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[]
 	} catch (err) {
 		console.error('Failed to delete cloud position:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to delete position from the cloud: ' + errMsg, { error: true });
+		toast.show(translations.editor.failed_to_delete_cloud + ' ' + errMsg, { error: true });
 		return undefined;
 	}
 }
@@ -239,7 +239,7 @@ async function removePositionFromCloud(
 	} catch (err) {
 		console.error('Failed to delete cloud position after download:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to remove position from cloud: ' + errMsg, { error: true });
+		toast.show(translations.editor.failed_to_remove_cloud + ' ' + errMsg, { error: true });
 		return;
 	}
 
@@ -249,7 +249,7 @@ async function removePositionFromCloud(
 	if (boardeditor.isActivePosition(position_name, 'cloud'))
 		boardeditor.setActivePosition(position_name, 'local');
 
-	toast.show('Position saved locally.');
+	toast.show(translations.editor.saved_locally);
 	return saves;
 }
 
@@ -264,7 +264,7 @@ async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {
 	} catch (err) {
 		console.error('Failed to fetch cloud saves:', err);
 		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show('Failed to fetch cloud saves: ' + errMsg, { error: true });
+		toast.show(translations.editor.failed_to_fetch_cloud + ' ' + errMsg, { error: true });
 		return [];
 	}
 }
