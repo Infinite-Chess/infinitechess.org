@@ -139,7 +139,7 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 					`Corrupted local save "${position_name}" found, deleting it. Error: ${parsed.error}`,
 				);
 				await deleteLocal(position_name);
-				return undefined;
+				return;
 			}
 			return parsed.data;
 		}),
