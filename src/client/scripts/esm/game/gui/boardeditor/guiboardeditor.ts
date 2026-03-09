@@ -163,7 +163,15 @@ function closeAllFloatingWindows(resetPositioning: boolean): void {
 // Callbacks ---------------------------------------------------------------
 
 function callback_ToggleMenu(): void {
-	const expanded = element_menu.classList.toggle('expanded');
+	setSidebarExpanded(!element_menu.classList.contains('expanded'));
+}
+
+/**
+ * Sets the sidebar expanded/collapsed state, correctly updating all related elements:
+ * the `expanded` class on the menu, the tooltip text, and the tooltip direction classes.
+ */
+function setSidebarExpanded(expanded: boolean): void {
+	element_menu.classList.toggle('expanded', expanded);
 	element_menuToggle.setAttribute(
 		'data-tooltip',
 		expanded ? translations.editor.collapse_sidebar : translations.editor.expand_sidebar,
@@ -310,4 +318,5 @@ export default {
 	open,
 	isOpen,
 	close,
+	setSidebarExpanded,
 };

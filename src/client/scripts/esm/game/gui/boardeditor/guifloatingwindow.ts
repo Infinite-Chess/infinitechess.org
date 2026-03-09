@@ -10,6 +10,8 @@
 
 import math from '../../../../../../shared/util/math/math';
 
+import guiboardeditor from './guiboardeditor.js';
+
 // Elements ----------------------------------------------------------
 
 const element_boardUI = document.getElementById('boardUI')!;
@@ -290,8 +292,7 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 			effectiveLeft !== undefined &&
 			effectiveLeft < element_menu.offsetWidth + element_menuToggle.offsetWidth
 		) {
-			element_menu.classList.remove('expanded');
-			element_menuToggle.setAttribute('data-tooltip', translations.editor.expand_sidebar);
+			guiboardeditor.setSidebarExpanded(false);
 		}
 
 		// Open the window
