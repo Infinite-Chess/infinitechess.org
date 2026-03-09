@@ -209,8 +209,6 @@ export type TranslationKeys =
 	| 'play.guide.keybinds_extra'
 	| 'play.guide.fairy_heading'
 	| 'play.guide.fairy_paragraph'
-	| 'play.guide.editing_heading'
-	| 'play.guide.editing_paragraphs'
 	| 'play.guide.back'
 	| 'play.guide.pieces.chancellor.name'
 	| 'play.guide.pieces.chancellor.description'
@@ -857,8 +855,6 @@ export interface TranslationsObject {
 			keybinds_extra: string[];
 			fairy_heading: string;
 			fairy_paragraph: string;
-			editing_heading: string;
-			editing_paragraphs: string[];
 			back: string;
 			pieces: {
 				chancellor: {

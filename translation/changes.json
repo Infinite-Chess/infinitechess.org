@@ -1,4 +1,7 @@
 {
+  "90": {
+    "note": "Removed editing_heading and editing_paragraphs from [play.guide] lines 309-314"
+  },
   "89": {
     "note": "Added [play.editor] section (lines 193-272) and [play.javascript.editor] section (lines 634-672)."
   },
