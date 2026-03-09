@@ -9,7 +9,6 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import toast from '../gui/toast.js';
 import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
-import eactions from '../boardeditor/actions/eactions.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
@@ -28,8 +27,7 @@ const variantsTooBigToCopyPositionToICN: string[] = [
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition: boolean): void {
-	// If we are in the board editor, delegate to the editor's copy function
-	if (boardeditor.areInBoardEditor()) return eactions.copy();
+	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
 	const Variant = gamefile.basegame.metadata.Variant!;

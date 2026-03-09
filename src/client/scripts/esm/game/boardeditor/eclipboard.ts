@@ -22,6 +22,8 @@ function addEventListeners(): void {
 	document.addEventListener('copy', onCopy);
 	document.addEventListener('cut', onCut);
 	document.addEventListener('paste', onPaste);
+	document.addEventListener('copy-game', onCopyGame);
+	document.addEventListener('paste-game', onPasteGame);
 }
 
 /** Removes the copy/cut/paste event listeners from the document. */
@@ -29,18 +31,20 @@ function removeEventListeners(): void {
 	document.removeEventListener('copy', onCopy);
 	document.removeEventListener('cut', onCut);
 	document.removeEventListener('paste', onPaste);
+	document.removeEventListener('copy-game', onCopyGame);
+	document.removeEventListener('paste-game', onPasteGame);
 }
 
 // Handlers -------------------------------------------------------------------
 
 /** Custom Board Editor handler for the Copy event. */
 function onCopy(): void {
-	if (document.activeElement !== document.body) return; // Don't copy if the user is typing in an input field
+	if (document.activeElement instanceof HTMLInputElement) return; // Don't copy if the user is typing in an input field
 	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		// Copy game notation
-		eactions.copy();
+		document.dispatchEvent(new Event('copy-game'));
 	} else if (selectiontool.isExistingSelection()) {
 		// Copy current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -51,7 +55,7 @@ function onCopy(): void {
 
 /** Board Editor handler for the Cut event. */
 function onCut(): void {
-	if (document.activeElement !== document.body) return; // Don't cut if the user is typing in an input field
+	if (document.activeElement instanceof HTMLInputElement) return; // Don't cut if the user is typing in an input field
 	if (window.getSelection()?.toString()) return; // Don't cut if the user has text selected in the UI
 
 	if (etoolmanager.getTool() !== 'selection-tool' || !selectiontool.isExistingSelection()) return;
@@ -66,12 +70,12 @@ function onCut(): void {
 
 /** Custom Board Editor handler for the Paste event. */
 function onPaste(): void {
-	if (document.activeElement !== document.body) return; // Don't paste if the user is typing in an input field
+	if (document.activeElement instanceof HTMLInputElement) return; // Don't paste if the user is typing in an input field
 	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		// Paste game notation
-		eactions.paste();
+		document.dispatchEvent(new Event('paste-game'));
 	} else if (selectiontool.isExistingSelection()) {
 		// Paste clipboard at current selection
 		const gamefile = gameslot.getGamefile()!;
@@ -79,6 +83,16 @@ function onPaste(): void {
 		const selectionBox = selectiontool.getSelectionIntBox()!;
 		stransformations.Paste(gamefile, mesh, selectionBox);
 	}
+}
+
+/** Board Editor handler for the 'copy-game' custom event. Copies the full position as game notation. */
+function onCopyGame(): void {
+	eactions.copy();
+}
+
+/** Board Editor handler for the 'paste-game' custom event. Pastes game notation from the clipboard. */
+function onPasteGame(): void {
+	eactions.paste();
 }
 
 // Exports --------------------------------------------------------------------
