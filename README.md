@@ -23,7 +23,7 @@ This project is open source! If you have skills in HTML, CSS, JavaScript, TypeSc
 
 There are still MANY more items I have planned for this project. Just a few of them are:
 
-- Board Editor
+- Modern website design
 - Games with infinitely many pieces
 - 4 Player
 - Massive Multiplayer Online
