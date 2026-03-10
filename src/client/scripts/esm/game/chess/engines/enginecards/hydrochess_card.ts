@@ -6,9 +6,7 @@ import bimath from '../../../../../../../shared/util/math/bimath';
 import bounds from '../../../../../../../shared/util/math/bounds';
 import coordutil from '../../../../../../../shared/chess/util/coordutil';
 import typeutil, {
-	Player,
 	RawType,
-	PlayerGroup,
 	rawTypes as r,
 	players as p,
 } from '../../../../../../../shared/chess/util/typeutil';
@@ -151,22 +149,6 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 			return {
 				supported: false,
 				reason: `Unsupported piece type: ${typeutil.getRawTypeStr(rawType)}.`,
-			};
-		}
-	}
-
-	// 7. Maximum of 1 royal per side.
-	const royalsCountByPlayer: PlayerGroup<number> = {};
-	for (const type of variantOptions.position.values()) {
-		const rawType = typeutil.getRawType(type);
-		if (!typeutil.royals.includes(rawType)) continue; // Not a royal piece.
-
-		const player: Player = typeutil.getColorFromType(type);
-		royalsCountByPlayer[player] = (royalsCountByPlayer[player] || 0) + 1;
-		if (royalsCountByPlayer[player] > 1) {
-			return {
-				supported: false,
-				reason: `Multiple royal pieces per player.`,
 			};
 		}
 	}
