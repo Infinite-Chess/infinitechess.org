@@ -300,7 +300,7 @@ function playMove(
 		const rawTrauma =
 			(bd.log10(distanceMoved) - SHAKE_CONFIG.minDist) * SHAKE_CONFIG.traumaMultiplier;
 		const trauma = math.clamp(rawTrauma, 0, 1);
-		if (trauma > 0) screenshake.trigger(trauma); // Delay slightly so it syncs better with the audio
+		if (trauma > 0) screenshake.trigger(trauma);
 
 		if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 			// Move is large enough to play the bell sound too
