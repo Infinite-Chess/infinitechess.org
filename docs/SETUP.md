@@ -2,7 +2,7 @@
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine.
 
-[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./CONTRIBUTING.md) | [Translation Guide](./TRANSLATIONS.md)
+[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./GUIDELINES.md) | [Translation Guide](./TRANSLATIONS.md)
 
 This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 
@@ -133,7 +133,7 @@ Let's move on to learn how to suggest changes to the repository! Or, skip right 
 
 ## Creating a Pull Request
 
-All pull requests MUST meet the standards outlined in the [Contributing Guide](./CONTRIBUTING.md)!
+All pull requests MUST meet the standards outlined in the [Contributing Guide](./GUIDELINES.md)!
 
 After you have made some changes to the code, you can push those changes to your personal fork by going to the Source Control tab.
 
@@ -165,4 +165,4 @@ Next, read the [Navigation Guide](./NAVIGATING.md) to get a rundown of the proje
 
 For a list of available tasks, please see the [Issues](https://github.com/Infinite-Chess/infinitechess.org/issues), or inquire in the [discord server](https://discord.gg/NFWFGZeNh5).
 
-Also, read the [Contributing Guide](./CONTRIBUTING.md) to adopt the coding standards of the project!
+Also, read the [Contributing Guide](./GUIDELINES.md) to adopt the coding standards of the project!

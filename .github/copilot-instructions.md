@@ -1,6 +1,6 @@
 # Copilot Instructions for infinitechess.org
 
-### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/CONTRIBUTING.md`!
+### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/GUIDELINES.md`!
 
 Each session requires installing dependancies via `npm i --silent`.
 
@@ -12,7 +12,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 2. Maintain existing code structure, organization, and consistency.
 3. Perform testing for new complex functions to ensure their output is as expected.
 4. Actual unit/integration tests are not required, unless explicitly asked for.
-5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/CONTRIBUTING.md`.
+5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/GUIDELINES.md`.
 
 ## Project Architecture
 

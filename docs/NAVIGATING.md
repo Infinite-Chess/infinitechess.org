@@ -2,7 +2,7 @@
 
 This guide gives you several pointers on the project structure, to help you get started with collaborating!
 
-[← Back to Setup Guide](./SETUP.md) | [Contributing Guide](./CONTRIBUTING.md) | [Graphics Guide](./GRAPHICS.md)
+[← Back to Setup Guide](./SETUP.md) | [Contributing Guide](./GUIDELINES.md) | [Graphics Guide](./GRAPHICS.md)
 
 It is assumed you have already gone through the Setup Guide.
 
@@ -57,7 +57,7 @@ While in-game, there are a few keys that will activate useful debugging modes-
 
 ## Making changes to the repository
 
-All pull requests MUST meet the standards outlined in the [Contributing Guide](./CONTRIBUTING.md)!
+All pull requests MUST meet the standards outlined in the [Contributing Guide](./GUIDELINES.md)!
 
 Please seek approval in the [discord server](https://discord.com/channels/1114425729569017918/1115358966642393190) before you start making changes you expect will be merged! I am very particular about what gets added, I have a vision for the course of the project. Generally, if you've spoken about the desired change with me, and we're on the same page about how it will be implemented, you don't have to worry! Also, check out the [list of open issues](https://github.com/Infinite-Chess/infinitechess.org/issues) for tasks you could claim!
 

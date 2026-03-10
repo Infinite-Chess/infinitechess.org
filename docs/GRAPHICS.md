@@ -1,6 +1,6 @@
 # Graphics Rendering Guide
 
-[← Back to Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./CONTRIBUTING.md)
+[← Back to Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./GUIDELINES.md)
 
 This guide explains how graphics rendering works on the board, and how to add new visuals. An infinite board provides a few unique considerations to the rendering system than typical 2D games.
 
