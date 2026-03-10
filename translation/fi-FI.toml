@@ -783,3 +783,4 @@ ws-rated_invite_verification_needed = "Pelataksesi arvosteltuja pelejä sinun on
 
 [rate-limiting]
 generic = "Teit liian monta pyyntöä, kokeile myöhemmin uudelleen."
+error = "Liian monta pyyntöä"
