@@ -233,7 +233,7 @@ clear_message = "Do you want to clear the board and create a new position? Unsav
 enter_position_name = "Enter position name:"
 save_button = "Save"
 name_header = "Name"
-pieces_header = "Pieces" # Represent piece count
+pieces_header = "Pieces" # Represents piece count
 date_header = "Date" # Represents date last modified
 # Game Rules window
 gamerules_header = "Game Rules"
@@ -644,7 +644,7 @@ overwrite_message = ["Are you sure that you want to overwrite position \"", "\"?
 # Save list row tooltips
 tooltip_load_position = "Load position"
 tooltip_save_to_cloud = "Save to cloud"
-tooltip_remove_from_cloud = "Remove from cloud"
+tooltip_remove_from_cloud = "Remove from cloud" # Transfer position from cloud to local browser
 tooltip_delete_position = "Delete position"
 # Toast messages
 position_loaded = "Position successfully loaded."
