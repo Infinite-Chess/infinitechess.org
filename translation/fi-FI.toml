@@ -1,7 +1,7 @@
 name = "Suomi" # Name of language
 english_name = "Finnish"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "84"
+version = "90"
 maintainer = "ThisIsNotAvailable"
 
 [header]
@@ -59,7 +59,7 @@ secondary_title = "Virallinen nettisivu livenä pelaamiseen!"
 what_is_it_title = "Mitä se on?"
 what_is_it_pargaraphs = [
 "Infinite Chess on shakkivariantti, jossa ei ole reunoja, mikä tekee siitä paljon suuremman kuin tuttu 8x8 shakkilauta. Kuningattarilla, torneilla, ja lähettiläillä <em>ei ole rajoja</em> niiden liikkumiseen yhden vuoron aikana. Valitse mikä tahansa kokonaisluku äärettömään asti!",
-"Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asetelmia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimattikellossa!",
+"Ilman rajoituksia sille, kuinka pitkälle voit liikkua, on olemassa asemia, joissa tuomiopäivän kello, tai shakkimatti-<em>jossain</em>-siirrossa, numero on edustettuna ensimmäisellä äärettömällä järjestysluvulla, <strong>omegalla ω</strong>. Tutkijat ovat todistaneet, että <strong>mikä tahansa</strong> laskettava järjestysluku on saavutettavissa shakkimattikellossa!",
 "Kuten voit kuvitella, on olemassa äärettömästi mahdollisuuksia aloituskokoonpanoille, joista monta voi pelata kilpailullisesti! Pyrit edelleen shakkimattiin, mikä tarvitsee uusia taktiikoita, koska ei ole olemassa reunoja, joihin vastustajan kuninkaan voisi vangita. Pelit eivät yleensä kestä paljon pidempään kuin tavalliset shakkipelit. Sotilaat edelleen korontuvat riveillä 1 ja 8!",
 ]
 how_to_title = "Miten voin pelata?"
@@ -129,7 +129,7 @@ verify_message = "Tarkista sähköpostisi vahvistaaksesi tilisi. Vahvistamattoma
 resend_message = ["Etkö saanut sähköpostia? Tarkista roskapostisi. Jos et löydä sitä sieltä, ", "lähetä se uudelleen.", " Jos et vieläkään löydä sitä, ", "ota meihin yhteyttä."]
 verify_confirm = "Kiitos! Tilisi on vahvistettu."
 joined = "Liityi:"
-seen = ["Nähty:", " sitten"]
+seen = "Nähty:" # Last seen: ____
 practice_progress = "Harjoitustilan edistys:"
 ranked_elo = "Luokitus:"
 infinity_leaderboard_position = "Sijoitus:"
@@ -153,14 +153,16 @@ create_button = "Luo tili"
 agreement = ["Minä suostun ", "Käyttöehtoihin", "."]  # the middle entry is a hyperlink, the others are not
 
 [create-account.javascript]
+js-username_reserved = "Tämä käyttäjänimi on varattu"
+js-username_length = "KKäyttäjänimen täytyy olla 3-20 kirjainta pitkä"
 js-username_tooshort = "Käyttäjänimen täytyy olla vähintään 3 kirjainta pitkä"
-js-username_wrongenc = "Käyttäjänimen pitää sisältää vain kirjaimia A-Z ja numeroita 0-9"
+js-username_wrongenc = "Käyttäjänimen täytyy sisältää vain kirjaimia A-Z ja numeroita 0-9"
 js-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 js-email_too_long = "Tämä sähköpostiosoite on liian pitkä"
 js-email_inuse = "Sähköpostiosoite on jo käytössä"
 
 [reset-password.javascript]
-js-pwd_no_match = "Salasanat eivät vastaa toisiaan."
+js-pwd_no_match = "Salasanat eivät täsmää."
 reset-password = "Palauta salasana"
 processing = "Käsitellään..."
 network-error = "Verkkovirhe tapahtui. Yritä uudelleen."
@@ -188,6 +190,87 @@ practice = "Harjoittele"
 guide = "Opas"
 editor = "Laudan muokkaaja"
 
+[play.editor]
+# Sidebar section headers
+position = "Asema"
+tools = "Työkalut"
+selection = "Valitseminen"
+palette = "Paletti"
+color = "Väri"
+# Sidebar button tooltips
+tooltip_reset = "Palauta asema"
+tooltip_clear = "Tyhjennä asema"
+tooltip_load = "Avaa asema"
+tooltip_save_as = "Tallenna asema nimellä"
+tooltip_save = "Tallenna asema"
+tooltip_copy_notation = "Kopioi merkintä"
+tooltip_paste_notation = "Liitä merkintä"
+tooltip_gamerules = "Pelisäännöt"
+tooltip_start_local = "Aloita paikallinen peli asemasta"
+tooltip_start_engine = "Aloita tietokonepeli asemasta"
+# Tool tooltips
+tooltip_normal = "Tavallinen (F)"
+tooltip_eraser = "Pyyhekumi (G)"
+tooltip_selection_tool = "Valitseminen (H)"
+tooltip_specialrights = "Erityisoikeuksien vaihto (J)"
+# Selection tooltips
+tooltip_select_all = "Valitse kaikki (Ctrl+A)"
+tooltip_clear_selection = "Tyhjennä valinta (Del)"
+tooltip_copy_selection = "Kopioi valinta (Ctrl+C)"
+tooltip_paste_selection = "Liitä valinta (Ctrl+V)"
+tooltip_invert_color = "Vaihda valinnan väri"
+tooltip_rotate_left = "Käännä valinta vasemmalle"
+tooltip_rotate_right = "Käännä valinta oikealla"
+tooltip_flip_horizontal = "Käännä valinta vaakasuorassa"
+tooltip_flip_vertical = "Käännä valinta pystysuunnassa"
+# Reset Position window
+reset_header = "Palauta asema"
+reset_message = "Haluatko palauttaa aseman ja luoda uuden? Tallentamattomat muutokset menetetään."
+# Clear Position window
+clear_header = "Tyhjennä asema"
+clear_message = "Haluatko tyhjentää aseman ja luoda uuden? Tallentamattomat muutokset menetetään."
+# Load Position window
+enter_position_name = "Syötä aseman nimi:"
+save_button = "Tallenna"
+name_header = "Nimi"
+pieces_header = "Nappulat" # Represent piece count
+date_header = "Päiväys" # Represents date last modified
+# Game Rules window
+gamerules_header = "Pelisäännöt"
+player_to_move = "Aloittava pelaaja:"
+white = "Valkoinen"
+black = "Musta"
+en_passant = "Ohestalyönti neliö:"
+move_rule = "Siirtosäännön tila:"
+promotion_ranks_white = "Ylennysrivit (Valkoinen):"
+promotion_ranks_black = "Ylennysrivit (Musta):"
+promotion_pieces = "Ylennettävät nappulat:"
+global_special_rights = "Yleiset erityisoikeudet:"
+pawn_double_push = "Sotilaan kaksoissiirto"
+castling_label = "Linnoittuminen"
+win_conditions = "Voittoehdot:"
+checkmate = "Shakkimatti"
+royal_capture = "Kuninkaallisen kaappaus"
+all_royals_captured = "Kaikkien kuninkaalisten syönti"
+all_pieces_captured = "Kaikkien nappuloiden syönti"
+world_border = "Laudan reuna:"
+# Start Local Game window
+start_local_game = "Aloita paikallinen peli"
+start_local_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa paikallisen pelin tästä asemasta? Muutokset tallentuvat."
+# Start Engine Game window
+start_engine_game = "Aloita tietokonepeli"
+play_as = "Pelaa:"
+time_control = "Aika (tyhjä = ääretön aika):"
+engine_difficulty = "Tietokoneen taso:"
+easy = "helppo"
+medium = "Keskivaikea"
+hard = "Vaikea"
+use_default_border = "Käytä tavallista tietokoneen kentän kokoa:"
+start_engine_game_message = "Haluatko poistua laudan muokkaajasta ja aloittaa tietokonepelin tästä asemasta? Muutokset tallentuvat."
+# Common
+yes = "Kyllä"
+no = "Ei"
+
 [play.guide]
 title = "Opas"
 rules = "Säännöt"
@@ -200,7 +283,7 @@ rules_paragraphs = [
 ]
 careful_heading = "Ole varovainen!"
 careful_paragraphs = [
-"Äärettömän laudan avoinnaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
+"Äärettömän laudan avonaisuus tarkoitta sitä, että on todella helppoa hyväksikäytää haarukoita ja vartaita, koska sinun taaimmainen puoli on usein todella haavoittuvainen. Yritä huomata tälläiset taktiikat! Ole luova suojelun luomisessa sinun kuninkaalle ja torneille! Avausstrategia on todella erilainen kuin tavallisessa shakissa.",
 "Monet muut variantit on luotu sinun taaimmaisen puolen vahvistamiseen."
 ]
 controls_heading = "Ohjaimet"
@@ -223,12 +306,6 @@ keybinds_extra = [
 ]
 fairy_heading = "Erikoisnappulat"
 fairy_paragraph = "Osaat jo pelata oletusvarianttia \"Klassinen\". Erikoisnappuloita ei käytetä tavallisessa shakissa, mutta ne ovat mukana muissa varianteissa! Jos kohtaat variantin, jossa on uusia nappuloita, opi miten ne toimivat täällä!"
-editing_heading = "Laudan muokkaus"
-editing_paragraphs = [
-["On olemassa ulkoinen ", "laudan muokkaaja", " julkisella google sheetillä! Siellä on käyttöohjeet. Tämä vaatii perustason google sheets -osaamista. Kun muutokset on tehty, voit luoda ja tuoda omia asemia peliin \"Liitä peli\" -painikkeella valikossa!"],
-"Pelataksesi oman aseman kaverin kanssa, pyydä häntä liittymään yksityiseen kutsuun, ja molemmat liittävät pelin koodin ennen pelin aloittamista!",
-"Pelin sisäinen laudan muokkaaja on edelleen suunnitteilla.",
-]
 back = "Takaisin"
 
 [play.guide.pieces]
@@ -486,10 +563,11 @@ too_many_sockets = "Liian monta socketia"
 origin_error = "Alkuperä virhe."
 connection_closed = "Yhteys katkaistiin yllättäen. Palvelimen viesti:"
 please_report_bug = "Tämän ei pitäisi tapahtua, ilmoita tästä bugista!"
+malformed_message = "Vastaanotettu odottamaton websocket-viesti. Ilmoita tästä bugista!"
 
 [play.javascript.termination] # What caused the termination of the game, in spoken language
 checkmate = "Shakkimatti"
-stalemate = "Umpikuja"
+stalemate = "Patti"
 repetition = "Kolminkertainen toisto"
 moverule = ["", "-siirron sääntö"]  # The game inserts a number inbetween these two strings
 insuffmat = "Ei tarpeeksi materiaalia"
@@ -513,7 +591,7 @@ you_allroyalscaptured = "Sinä voitit kaappaamalla kaikki kuninkaaliset!"
 you_allpiecescaptured = "Sinä voitit kaappaamalla kaikki nappulat!"
 you_koth = "Sinä voitit olemalla kukkulan kuningas!"
 you_generic = "Sinä voitit!"
-draw_stalemate = "Tasapeli umpikujasta!"
+draw_stalemate = "Tasapeli patista!"
 draw_repetition = "Tasapeli kertaamisesta!"
 draw_moverule = ["Tasapeli ", "-siirron-säännollä!"] # The game inserts a number inbetween these two strings
 draw_insuffmat = "Tasapeli tarvitulla materiaalilla!"
@@ -535,8 +613,8 @@ white_time = "Valkoinen voittaa ajassa!"
 black_time = "Musta voittaa ajassa!"
 white_resignation = "Valkoisen vetäytyminen"
 black_resignation = "Mustan vetäytyminen"
-white_disconnect = "Valkoisen yhteyden katkaiseminen"
-black_disconnect = "Mustan yhteyden katkaiseminen"
+white_disconnect = "Valkoisen yhteyden katkeaminen"
+black_disconnect = "Mustan yhteyden katkeaminen"
 white_royalcapture = "Valkoinen voittaa kaappaamalla kuninkaalisen!"
 black_royalcapture = "Musta voittaa kaappaamalla kuninkaalisen!"
 white_allroyalscaptured = "Valkoinen voittaa kaappaamalla kaikki kuninkaaliset!"
@@ -546,6 +624,46 @@ black_allpiecescaptured = "Musta voittaa kaappaamalla kaikki nappulat!"
 white_koth = "Valkoinen voittaa olemalla kukkulan kuningas!"
 black_koth = "Musta voittaa olemalla kukkulan kuningas!"
 bug_generic = "Tämä on bugi, ilmoita meille!"
+
+[play.javascript.editor]
+# Sidebar toggle
+expand_sidebar = "Avaa sivuvalikko"
+collapse_sidebar = "Sulje sivuvalikko"
+# Position header
+new_position = "Uusi asema"
+# Load/Save Position window headers
+load_position_header = "Avaa asema"
+save_position_as_header = "Tallenna asema nimellä"
+# Confirmation modal
+delete_title = "Poista asema?"
+delete_message = ["Oletko varma, että haluat poistaa tämän aseman \"", "\"? Tätä ei voi perua."]
+load_title = "Avaa asema?"
+load_message = ["Oletko varma, että haluat avata tämän aseman \"", "\"? Tallentamattomat muutokset tämänhetkiseen asemaan menetetään."]
+overwrite_title = "Korvaa asema?"
+overwrite_message = ["Oletko varma, että haluat korvata tämän aseman \"", "\"? Tätä ei voi perua."]
+# Save list row tooltips
+tooltip_load_position = "Avaa asema"
+tooltip_save_to_cloud = "Tallenna pilveen"
+tooltip_remove_from_cloud = "Poista pilvestä"
+tooltip_delete_position = "Poista asema"
+# Toast messages
+position_loaded = "Asema avattu onnistuneesti."
+cannot_start_local_empty = "Paikallista peliä ei voi aloittaa tyhjästä asemasta!"
+cannot_start_engine_empty = "Tietokonepeliä ei voi aloittaa tyhjästä asemasta!"
+position_not_supported = "Asemaa ei tueta syystä:"
+saved_in_browser = "Asema on tallennettu selaimeen."
+position_corrupted = "Asema on vioittunut."
+failed_to_load = "Aseman avaaminen epäonnistui:"
+failed_to_convert_icn = "Aseman muuntaminen ICN-muotoon pilvilatausta varten epäonnistui."
+too_large_for_cloud = "Asema on liian suuri pilvitallennusta varten."
+failed_to_upload = "Aseman lataus pilveen epäonnistui:"
+saved_to_cloud = "Asema tallennettu pilveen."
+no_changes = "Muutoksia ei tapahtunut."
+failed_to_load_cloud = "Aseman avaaminen pilvestä epäonnistui:"
+failed_to_delete_cloud = "Aseman postaminen pilvestä epäonnistui:"
+failed_to_remove_cloud = "Aseman siirto pilvestä epäonnistui:"
+saved_locally = "Asema tallennettu paikallisesti."
+failed_to_fetch_cloud = "Pilvitallennusten hakeminen epäonnistui:"
 
 [terms]
 title = "Käyttöehdot"
@@ -632,11 +750,9 @@ ws-incorrect_password = "Salasana on väärä"
 ws-login_failure_retry_in = "Sisäänkirjautuminen epäonnistui, yritä uudelleen"
 ws-seconds = "sekunnissa" # unit of time
 ws-second = "sekunnissa" # unit of time
-ws-username_length = "Käyttäjänimen tulee olla 3-20 kirjainta pitkä"
 ws-username_letters = "Käyttäjänimessä saa sisältää vain kirjaimia A-Z ja numeroita 0-9"
 ws-username_taken = "Käyttäjänimi on otettu"
 ws-username_bad_word = "Käyttäjänimi sisältää sanan, joka on kielletty"
-ws-username_reserved = "Käyttäjänimi on varattu"
 ws-email_too_long = "Sinun sähköpostiosoitteesi on liian piiitkä."
 ws-email_invalid = "Tämä ei ole oikea sähköpostiosoite"
 ws-email_in_use = "Sähköposti on jo käytössä"
@@ -667,3 +783,4 @@ ws-rated_invite_verification_needed = "Pelataksesi arvosteltuja pelejä sinun on
 
 [rate-limiting]
 generic = "Teit liian monta pyyntöä, kokeile myöhemmin uudelleen."
+error = "Liian monta pyyntöä"
