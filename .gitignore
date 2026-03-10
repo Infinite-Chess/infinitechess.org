@@ -16,6 +16,13 @@ dist
 *.db-journal
 *.sqlite-journal
 *.sqlite3-journal
+# SQLite WAL mode sidecar files (created when journal_mode = WAL is enabled)
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 
 # Visual Studio automatically generated directories
 node_modules
