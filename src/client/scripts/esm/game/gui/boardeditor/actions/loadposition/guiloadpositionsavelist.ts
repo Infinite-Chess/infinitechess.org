@@ -172,6 +172,9 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
+	// Toggle CSS class to adjust header column widths for cloud button
+	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
+
 	// Build unified list (local + cloud)
 	const allSaves: UnifiedSave[] = [];
 
@@ -203,8 +206,6 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 
 	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
 	unregisterAllPositionButtonListeners();
-	// Toggle CSS class to adjust header column widths for cloud button
-	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
 	element_savedPositionsToLoad.replaceChildren(...newRows);
 }
