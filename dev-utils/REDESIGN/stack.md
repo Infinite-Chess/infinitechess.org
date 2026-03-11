@@ -2,57 +2,69 @@
 
 The website will undergo a complete redesign to modernize its look and feel, making it much more professional and expandable.
 
-## Website Info
+## Deployment Environment
 
-The website is self-hosted on a mac, no VPS. SSD storage. Cloudflare is used. 
+Self-hosted on a Mac, no VPS. SSD storage. Cloudflare in front. Low traffic — a few hundred unique visitors per day.
 
-Traffic is low, only a few hundred unique visitors per day, that is our scale.
+## Infrastructure Prerequisites
 
-## Pre-Redesign Infrastructure Work
+These three things must be in place before the redesign begins, as the redesign depends on them.
 
-- **Live game state persistence to SQLite.** On each move, write game state (game JSON, clock values, whose turn, timestamp) to a `live_games` table. On server startup, rehydrate in-memory game objects from this table. This enables the server to resume interrupted games after a restart instead of losing them. Do not yet worry about adding time to their clock depending on how long the server was down.
-
-- **Process manager for the production server process.** The Node.js server must run independently of any terminal or IDE session, survive reboots, and support zero-downtime reloads. Use PM2. Zero changes to directory structure — server still runs from the same working directory. PM2 only manages the running process itself. PM2 installs once on the machine, not as a project dependancy. Manual update deploy becomes: `git pull && npm ci --silent && npm run build && pm2 reload infinitechess` in any terminal window that is cd'd into the project directory. The terminal may be safely closed afterwards. To keep track of whenever the server restarts, add a new `startupLog.txt` log and log the start date and time to this log on server startup, e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`. To view server console logs while running under PM2, use `pm2 logs infinitechess`. To monitor the amount of space logs take up, use `du -sh ~/.pm2/logs/*`.
-
-- **Automated deployment via self-hosted GitHub Actions runner.** Install the runner as a system service on the server machine (starts automatically on boot, requires no ongoing maintenance). All development and PR merges go into `main`. When ready to release, merge `main` → `prod`. The deploy workflow has three triggers: (1) push to `prod` — full deploy (`git pull && npm ci && npm run build && pm2 reload infinitechess`); (2) `workflow_dispatch` — manual trigger from the GitHub Actions UI or via `gh workflow run deploy.yml`, with an optional `warning_seconds` input (GitHub UI renders this as a form field with the default pre-filled); (3) `repository_dispatch: hydrochess-release` — triggered from hydrochess's `build-wasm.yml` after a new engine release is published, which rebuilds (downloading the new WASM artifacts), and reloads (skipping `git pull`). The runner interacts with the live server by making an HTTP request to a new endpoint (`POST /API/prepare-restart`) — since the runner runs on the same machine, it hits `localhost`. That endpoint broadcasts a countdown warning to all connected clients. The `allowinvites.json` file and its polling mechanism are removed entirely — game state persistence makes blocking new games unnecessary. When the countdown expires, clients currently in a game see "Server is restarting, your game will resume soon" rather than "Server is restarting shortly". After the warning period, the runner proceeds with the deploy sequence and calls `pm2 reload`. Generate a RESTART_SECRET, put it in the web server's .env, and in the GitHub Actions secrets. Then the runner will include this secret in the request header when calling the endpoint.
-
-- **Automated DB backups.** The server creates a backup automatically once per day and again immediately before every deploy. Backups are stored in a `backups/` directory with timestamped filenames. A retention policy purges backups older than 30 days automatically.
+- **Live game state persistence to SQLite.** On each move, write game state (game JSON, clock values, whose turn, timestamp) to a `live_games` table. On server startup, rehydrate in-memory game objects from this table so interrupted games survive restarts. All active game timers must be reinstated. Don't worry yet about compensating clocks for downtime duration.
 
 
+- **PM2 as the process manager.** PM2 keeps the Node.js server running independently of any terminal session, survives reboots, and supports zero-downtime reloads. It installs once on the machine (not as a project dependency) and doesn't change the directory structure. Manual deploy command: `git pull && npm ci --silent && npm run build && pm2 reload infinitechess`. On each server startup, log the timestamp and PID to `logs/startupLog.txt` (e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`). Useful commands: `pm2 logs infinitechess` to tail logs; `du -sh ~/.pm2/logs/*` to check log disk usage.
 
-## Redesign Stack and Principles
+
+- **Automated deployment via self-hosted GitHub Actions runner.** The runner installs as a system service on the server machine (auto-starts on boot, no maintenance). All development and PR merges go into `main`; merge `main` → `prod` to release. Three workflow triggers: (1) **push to `prod`** — full deploy (`git pull && npm ci && npm run build && pm2 reload infinitechess`); (2) **`workflow_dispatch`** — manual trigger from the GitHub Actions UI or CLI, with an optional `warning_seconds` input; (3) **`repository_dispatch: hydrochess-release`** — triggered by hydrochess's `build-wasm.yml` after a new engine release, rebuilds with the new WASM artifacts and reloads (skips `git pull`). Before deploying, the runner calls `POST /API/prepare-restart` on `localhost` (authenticated via a `RESTART_SECRET` shared between `.env` and GitHub Actions secrets), which broadcasts a countdown warning to all connected clients. After the warning expires, clients in a game see "Server is restarting, your game will resume soon" and the deploy proceeds. `allowinvites.json` and its polling mechanism are removed entirely — game state persistence makes blocking new games before a restart unnecessary. When the countdown expires, clients currently in a game see "Server is restarting, your game will resume soon" rather than "Server is restarting shortly". We can now record the exact time server shut down, and use that to give players clocks back the time they lost during the restart.
+
+
+- **Automated DB backups.** The server creates a backup once per day and immediately before every deploy. Backups go in a `backups/` directory with timestamped filenames. Backups older than 30 days are purged automatically.
+
+## Technical Stack & Decisions
 
 ### Build Pipeline
 
 - **esbuild:** Extend the existing pipeline in `build/`. Two additions to `build/client.ts`: (1) `entryNames: '[dir]/[name]-[hash]'` for content-hashed output filenames; (2) `metafile: true` plus a `writeManifest()` post-build function that reads esbuild's input→output map and writes `dist/manifest.json`. The server loads this manifest at startup and injects the correct hashed filenames into every Nunjucks render.
+
 - **Content-hashed asset caching:** JS and CSS files are emitted as `main.[hash].js` / `styles.[hash].css` and served with `Cache-Control: immutable, max-age=31536000` — browsers cache them forever and fetch a new URL automatically when content (and thus the file fingerprint) changes. HTML is served with `Cache-Control: no-store` and always embeds the current hashed filesnames. For images and other static assets referenced directly in templates (e.g. `<img src="/img/king_w.png">`), use `Cache-Control: max-age=31536000` (without `immutable`) and append a `?v=2` query string manually in the template when the file changes. Reserve `immutable` only for build-pipeline-hashed files.
+
 - **Nunjucks** replaces EJS as the server-side templating engine. Layout inheritance is the key benefit: one `layout.njk` defines the full `<html>`/`<head>`/`<body>` shell with named `{% block %}` slots, and every page file just `{% extends "layout.njk" %}` and fills in its title, styles, and body content. Changing a favicon or global meta tag means editing one file. Logic stays in route handlers; templates only use `{% for %}` / `{% if %}`. `build/views.ts` is deleted entirely — it only existed to pre-render every EJS template × every language to static `.html` files because the old server had no SSR capability. With Nunjucks, HTML is rendered at request time, `dist/client/views/` no longer exists, `root.ts` switches from `res.sendFile()` to `res.render()`, and `nodemon.json` no longer needs to watch `src/client/views`.
 
 ### Page Architecture
 
 - **Proper MPA.** Each major feature lives on its own page — no cramming everything into one giant page. Pages are bandwidth-aware: each page only loads the JS it needs. This matters slightly less now that scripts are indefinitely cached after the first load, but it still keeps things clean and fast on first visit.
+
 - **SSR everything that affects the first paint.** The server renders the full HTML — header auth state, notification badge count, member profile data, news "NEW" badges — before sending the response. The client never needs to fetch these or patch the DOM on load. Use client-side fetching only for things triggered by user interaction or that need live updates (e.g. leaderboard "Show More", editor saves, preferences writes).
+
 - **Snabbdom for data-driven in-page reactivity.** Use it when DOM content is generated from data at runtime — leaderboard lists, chat windows, live game panels. Don't use it for static content known at author time (e.g. the fairy piece carousel in the Guide), or for pre-authored fixed elements like modals and tab panels that are simply shown/hidden.
 
 ### CSS & Styling
 
 - **CSS methodology:** One shared stylesheet for global styles, plus a per-page stylesheet for each page. Short, descriptive class names scoped with native CSS nesting — no BEM, no prefixes. Each page's stylesheet has one top-level block matching its `<main>` class (e.g. `.login { .form-field {} }`), preventing any bleed between pages. lightningcss in the existing build pipeline handles transpilation for older browsers. Utility classes (`.hidden`, `.italic`, `.flex`, etc.) are hand-rolled and added to the shared stylesheet when redundancy appears — no Tailwind. CSS files are colocated with the component they style (e.g. `src/client/components/header/header.css`).
+
 - **CSS custom property theme system.** A `[data-theme]` attribute on `<html>` (e.g. `data-theme="dark"`) selects a block of ~30 semantic CSS variables (`--c-bg`, `--c-surface`, `--c-text`, `--c-brand`, `--c-border`, etc.) defined in the shared stylesheet. Switching themes is one `setAttribute` call plus a `localStorage` write. A small inline `<script>` in `<head>` reads `localStorage` and sets the attribute before any CSS loads, preventing a flash of the wrong theme on page load.
+
 - **Header layout without JS measurement.** The header renders its correct auth state (logged-in vs. logged-out) entirely server-side. CSS container queries or a CSS-only overflow fallback handle layout at different widths. Language-width variation is the remaining open challenge.
 
 ### Auth & Session
 
 - **Keep the existing dual-token auth system unchanged** — no backend migration needed. The refresh token (`jwt`) is already an `httpOnly` cookie sent on every request including page navigations. `verifyJWT` middleware already reads it and sets `req.memberInfo`, so Nunjucks SSR gets full auth context for free. Short-lived access tokens (managed by `validatorama.ts`) are kept for API calls — they encapsulate the DB-skipping refresh logic and have only 3 call sites. The one known limitation: pages without a websocket (currently only the editor) can go stale after logout in another tab, which we accept.
+
 - **Logout in another tab:** When a socket-connected page receives the logout event, call `window.location.reload()` rather than trying to swap out header elements on the client. This lets the server re-render the correct logged-out state with no need to hide/show DOM elements in JS.
+
 - **Defer non-critical DB writes with `res.on('finish')`.** Since SSR means the server is doing more DB work per request, use `res.on('finish')` to delay writes that don't affect the response — e.g. updating the user's last-active timestamp or marking notifications as read — until after the response has already been sent.
 
 ### Localization
 
 - **Weblate-compatible translation system.** One TOML file per website feature (header nav, game UI, settings, leaderboard, profile, etc.) — dozens of components total. Weblate automatically marks strings in other languages as stale when the English source changes, so no `removeOutdated()` function is needed. Stale translations are rendered as-is rather than falling back to English. `deepMerge()` is still kept for strings that are entirely absent in a given language (true fallback to English). Markdown/article content is not run through Weblate but can be translated manually. Component's no longer need a version field for versioning, `loadTranslations()` should not support versioning.
+
 - **No translations for ToS or Privacy Policy** — English only, sourced from markdown files. Include a notice in the document that the English version takes precedence in any conflict. Markdown is too hard to version-control for translators in a way that communicates exactly what changed, so these pages are excluded from the translation pipeline.
 
 ### Late-Stage Polish
 
 - **`<link rel="modulepreload">`** for each page's JS entry points, injected into the page HTML. This lets the browser fetch all ES modules in parallel from the first response, eliminating the waterfall of sequential import round trips. Add this last, once each page's import graph is finalized. Lower priority since scripts are cached indefinitely after the first load anyway.
+
 - **White flash on navigation.** `@view-transition { navigation: auto }` with `::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s }` in the shared stylesheet eliminates a potential white flash between page loads by holding the old page visible until the new one is ready to paint — no crossfade, just an instant cut.
+
 - **Audio autoplay fallback.** If the browser blocks move sounds before the first user gesture on a fresh page load, refer to Lichess's approach as a reference: they show a small red mute icon in the header when audio is blocked. See: https://lichess.org/faq#autoplay
