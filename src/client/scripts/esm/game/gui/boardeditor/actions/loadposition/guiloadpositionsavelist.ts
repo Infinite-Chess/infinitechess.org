@@ -172,8 +172,7 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSaves): Promise<void> {
 	const areLoggedIn = validatorama.areWeLoggedIn();
 
-	// Toggle CSS class immediately (login state is known synchronously),
-	// so the header column widths are correct before the cloud request returns.
+	// Toggle CSS class to adjust header column widths for cloud button
 	element_savedPositions.classList.toggle('with-cloud', areLoggedIn);
 
 	// Build unified list (local + cloud)
