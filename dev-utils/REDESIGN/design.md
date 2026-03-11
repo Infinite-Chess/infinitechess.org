@@ -26,6 +26,8 @@
 
 ## Games
 - Online games navigatable to via a link. Allows spectating if still live. Allows accepting a private invite if not yet joined.
+- One vertical bar with clocks, moves, and chat, and material lost per side. Does chat have reporting? Do laws require it have reporting?
+- The moves bar uses silhouettes of the piece svgs.
 
 ## Analysis Board
 - Make, undo, change move history to perform analysis on positions.

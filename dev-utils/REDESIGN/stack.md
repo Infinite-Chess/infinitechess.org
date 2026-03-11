@@ -45,6 +45,8 @@ These three things must be in place before the redesign begins, as the redesign 
 
 - **CSS custom property theme system.** A `[data-theme]` attribute on `<html>` (e.g. `data-theme="dark"`) selects a block of ~30 semantic CSS variables (`--c-bg`, `--c-surface`, `--c-text`, `--c-brand`, `--c-border`, etc.) defined in the shared stylesheet. Switching themes is one `setAttribute` call plus a `localStorage` write. A small inline `<script>` in `<head>` reads `localStorage` and sets the attribute before any CSS loads, preventing a flash of the wrong theme on page load.
 
+- **Font stack:** `Verdana, "Noto Sans", sans-serif` for headings and text ≥16px; `"Noto Sans", Verdana, sans-serif` (Lichess font) for text ≤14px. Noto Sans is self-hosted (not loaded from Google Fonts CDN) to avoid the extra DNS/connection overhead and the 1-day CSS cache expiry that Google Fonts carries. Font files are served with `Cache-Control: immutable, max-age=31536000` alongside JS/CSS. Ensure our middleware is capable of serving fonts, with the same cache-control as other static assets.
+
 - **Header layout without JS measurement.** The header renders its correct auth state (logged-in vs. logged-out) entirely server-side. CSS container queries or a CSS-only overflow fallback handle layout at different widths. Language-width variation is the remaining open challenge.
 
 ### Auth & Session
