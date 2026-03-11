@@ -4,9 +4,10 @@
 
 - Site name + logo -> Home page
 - News
-- Leaderboard
+- Practice
 - Editor
 - Analysis
+- Leaderboard
 - Donate
 - Profile/Login
 - Register/Logout
