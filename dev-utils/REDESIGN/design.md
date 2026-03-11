@@ -1,11 +1,44 @@
 # Summary of everything the new header needs to include
 
-## Links
+## Header
 
 - Site name + logo -> Home page
-- News -> News page
-- Donate -> Donation page
-- Leaderboard -> Leaderboard page
+- News
+- Leaderboard
+- Editor
+- Analysis
+- Donate
+- Profile/Login
+- Register/Logout
+- Settings
+
+
+## Homepage
+- Scrolling perspective mode board? Generally across the site though, a static 2D checkerboard background like that of the chess stack exchange.
+- Lobby sits on the homepage.
+- Below that: Spectate live games.
+
+## Lobby
+- [ ] Determine the maximum piece count where images are barely below recognizable. Convert that to characters
+- Modal for creating an invite. Public/Private option. Private creates a url your friend can visit to view the invite and its properties. Option to provide custom position via ICN. Button to take selected variant to the editor. Maximum piece count prevents dirty images. Game modes available: Chess, 4 Dimensions, Showcases. Each has their own dropdowns with respective variants.
+- Hovering over invites renders a small tooltip-popup window that previews the board, and custom gamerules, if any.
+
+## Games
+- Online games navigatable to via a link. Allows spectating if still live. Allows accepting a private invite if not yet joined.
+
+## Analysis Board
+- Make, undo, change move history to perform analysis on positions.
+- Turn on the engine to display the top move, and the score.
+
+## Board Editor
+- Share games via url. Next to the link to copy notation. Maximum piece count / icn length prevents dirty images.
+- Create an invite from the position. Maximum piece count / icn length prevents dirty images. Same model popup as creating an invite from the lobby.
+- Move to Analysis Board
+
+## Profile
+
+- Game history
+- Change username
 
 
 
