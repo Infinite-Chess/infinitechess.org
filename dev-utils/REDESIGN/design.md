@@ -41,6 +41,14 @@
 - Game history
 - Change username
 
+## Donation Page
+
+Anyone that becomes a patron gets a cool badge next to their username.
+Any monthly donation gives you the badge. $1+
+When monthly dontations stop, badge is removed.
+Maybe a lifetime donation amount where the badge is permanent?
+Lichess offers golden wings after 5 years of active patron status. And instantly after a liftime donation, unlocking all colors.
+
 
 
 
