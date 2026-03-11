@@ -2,6 +2,12 @@
 
 The website will undergo a complete redesign to modernize its look and feel, making it much more professional and expandable.
 
+## Website Info
+
+The website is self-hosted on a mac, no VPS. SSD storage. Cloudflare is used. 
+
+Traffic is low, only a few hundred unique visitors per day.
+
 ## Pre-Redesign Infrastructure Work
 
 - **Live game state persistence to SQLite.** On each move, write game state (game JSON, clock values, whose turn, timestamp) to a `live_games` table. On server startup, rehydrate in-memory game objects from this table. This enables the server to resume interrupted games after a restart instead of losing them. Do not yet worry about adding time to their clock depending on how long the server was down.
