@@ -5,7 +5,7 @@
  * Coordinates the floating window, save-as form, confirmation modal, and position list.
  */
 
-import editorutil from '../../../../../../../../shared/editor/editorutil';
+import editorutil from '../../../../../../../../shared/util/editorutil';
 
 import esave from '../../../../boardeditor/actions/esave';
 import boardeditor from '../../../../boardeditor/boardeditor';

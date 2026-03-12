@@ -11,7 +11,7 @@ import type { VariantOptions } from '../../../../../../shared/chess/logic/initva
 import type { EditorSaveState } from '../editortypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
-import editorutil from '../../../../../../shared/editor/editorutil';
+import editorutil from '../../../../../../shared/util/editorutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import toast from '../../gui/toast';

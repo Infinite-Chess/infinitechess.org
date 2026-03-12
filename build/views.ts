@@ -10,7 +10,7 @@ import i18next from 'i18next';
 import ejs, { Data } from 'ejs';
 import { fileURLToPath } from 'node:url';
 
-import editorutil from '../src/shared/editor/editorutil.js';
+import editorutil from '../src/shared/util/editorutil.js';
 
 import translationLoader from '../src/server/config/translationLoader.js';
 import { DEFAULT_LANGUAGE } from '../src/server/utility/translate.js';

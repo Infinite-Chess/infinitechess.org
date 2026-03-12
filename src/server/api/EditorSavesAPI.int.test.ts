@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 
-import editorutil from '../../shared/editor/editorutil.js';
+import editorutil from '../../shared/util/editorutil.js';
 
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
