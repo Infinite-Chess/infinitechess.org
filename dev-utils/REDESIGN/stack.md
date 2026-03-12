@@ -37,7 +37,7 @@ These three things must be in place before the redesign begins, as the redesign 
 
 - **SSR everything that affects the first paint.** The server renders the full HTML — header auth state, notification badge count, member profile data, news "NEW" badges — before sending the response. The client never needs to fetch these or patch the DOM on load. Use client-side fetching only for things triggered by user interaction or that need live updates (e.g. leaderboard "Show More", editor saves, preferences writes).
 
-- **Snabbdom for data-driven in-page reactivity.** Use it when DOM content is generated from data at runtime — leaderboard lists, chat windows, live game panels. Don't use it for static content known at author time (e.g. the fairy piece carousel in the Guide), or for pre-authored fixed elements like modals and tab panels that are simply shown/hidden.
+- **Snabbdom for data-driven in-page reactivity.** Use it when DOM content is generated from data at runtime — leaderboard lists, chat windows, live game panels. Don't use it for static content known at author time (e.g. the fairy piece carousel in the Guide), or for pre-authored fixed elements like modals and tab panels that are simply shown/hidden. Each Snabbdom component needs a plain module-level `state` object and a `render(state)` function that should return a virtual DOM tree via `h()`. State a plain JS object updated directly on socket events or user interactions.
 
 ### CSS & Styling
 
