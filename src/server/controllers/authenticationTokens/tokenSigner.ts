@@ -12,6 +12,8 @@ import type { Role } from '../roles.js';
 
 import jwt from 'jsonwebtoken';
 
+import tokenConfig from '../../../shared/util/tokenConfig.js';
+
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /** The payload of the JWT token, containing user information. */
@@ -28,8 +30,6 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 // Session tokens expiry times ------------------------------------------------------
 
-const accessTokenExpiryMillis = 1000 * 60 * 15; // 15 minutes
-// const accessTokenExpiryMillis = 1000 * 20; // 20 seconds, for testing purposes.
 const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
 // const refreshTokenExpiryMillis = 1000 * 20; // 20 seconds, for testing purposes.
 
@@ -43,7 +43,7 @@ const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
  */
 function signAccessToken(user_id: number, username: string, roles: Role[] | null): string {
 	const payload = generatePayload(user_id, username, roles);
-	const accessTokenExpirySecs = accessTokenExpiryMillis / 1000;
+	const accessTokenExpirySecs = tokenConfig.ACCESS_TOKEN_EXPIRY_MILLIS / 1000;
 	return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: accessTokenExpirySecs }); // Typically short-lived, for in-memory storage only.
 }
 
