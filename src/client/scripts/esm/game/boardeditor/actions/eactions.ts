@@ -16,12 +16,12 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { MetaData } from '../../../../../../shared/chess/util/metadata';
-import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
 import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
+import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
@@ -54,6 +54,7 @@ import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
+import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import gameformulator from '../../chess/gameformulator';
@@ -142,7 +143,13 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
 
-	boardeditor.setActivePosition(editorSaveState.position_name, storage_type);
+	// prettier-ignore
+	const new_active_position: ActivePosition =
+		storage_type === 'cloud'
+			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
+			: { name: editorSaveState.position_name, storage_type: 'local' };
+	boardeditor.setActivePosition(new_active_position);
+
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,

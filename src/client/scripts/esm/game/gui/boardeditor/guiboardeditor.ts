@@ -93,10 +93,7 @@ async function open(): Promise<void> {
 		};
 
 		if (autoSaveState.active_position !== undefined)
-			boardeditor.setActivePosition(
-				autoSaveState.active_position.name,
-				autoSaveState.active_position.storage_type,
-			);
+			boardeditor.setActivePosition(autoSaveState.active_position);
 		else boardeditor.clearActivePosition();
 
 		await gameloader.startBoardEditorFromCustomPosition(

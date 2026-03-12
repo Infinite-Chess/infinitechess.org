@@ -127,7 +127,7 @@ async function onSaveButtonPress(): Promise<void> {
 	if (await esave.localSaveExists(positionname)) {
 		guiloadpositionmodal.openModal('overwrite_save', positionname, async () => {
 			await esave.saveLocal(positionname);
-			boardeditor.setActivePosition(positionname, 'local');
+			boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
 			guiloadpositionsavelist.updateSavedPositionListUI();
 		});
 		return;
@@ -135,7 +135,7 @@ async function onSaveButtonPress(): Promise<void> {
 
 	// No existing save found — save locally
 	await esave.saveLocal(positionname);
-	boardeditor.setActivePosition(positionname, 'local');
+	boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
 	element_saveAsPositionName.value = '';
 	guiloadpositionsavelist.updateSavedPositionListUI();
 }

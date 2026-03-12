@@ -63,7 +63,7 @@ let activeRequestCount = 0;
 
 GameBus.addEventListener('game-loaded', () => {
 	load_counter++;
-	console.log('Incremented positionLoadEpoch');
+	// console.log('Incremented positionLoadEpoch');
 });
 
 // Loading animation -----------------------------------------------

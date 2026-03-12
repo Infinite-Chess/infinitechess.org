@@ -84,7 +84,12 @@ const SaveStateSchema = z.strictObject({
 
 /** Schema for validating an AutosaveState */
 const AutosaveStateSchema = z.strictObject({
-	active_position: z.object({ name: z.string(), storage_type: z.enum(STORAGE_TYPES) }).optional(),
+	active_position: z
+		.union([
+			z.object({ name: z.string(), storage_type: z.literal('local') }),
+			z.object({ name: z.string(), storage_type: z.literal('cloud'), owner: z.string() }),
+		])
+		.optional(),
 	dirty: z.boolean(),
 	...positionDataFields,
 });

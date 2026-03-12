@@ -28,7 +28,9 @@ import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 // Types ------------------------------------------------------------------------
 
 /** The active position loaded in the board editor, if any. */
-export type ActivePosition = { name: string; storage_type: StorageType };
+export type ActivePosition =
+	| { name: string; storage_type: 'local' }
+	| { name: string; storage_type: 'cloud'; owner: string };
 
 /** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
 export type StorageType = (typeof editortypes)['STORAGE_TYPES'][number];
@@ -196,9 +198,9 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 }
 
 /** Sets the currently active position and flushes the autosave. */
-function setActivePosition(name: string, storage_type: StorageType): void {
-	active_position = { name, storage_type };
-	guipositionheader.updateActivePositionElement(name);
+function setActivePosition(new_position: ActivePosition): void {
+	active_position = new_position;
+	guipositionheader.updateActivePositionElement(new_position.name);
 	flushActivePositionToAutosave();
 }
 

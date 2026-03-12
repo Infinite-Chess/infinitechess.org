@@ -21,6 +21,7 @@ import eautosave from './eautosave';
 import egamerules from '../egamerules';
 import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
+import validatorama from '../../../util/validatorama';
 import editorSavesAPI from './editorSavesAPI';
 
 // Actions ----------------------------------------------------------------------
@@ -216,7 +217,11 @@ async function transferPositionToCloud(
 	await esave.deleteLocal(position_name);
 
 	if (boardeditor.isActivePosition(position_name, 'local'))
-		boardeditor.setActivePosition(position_name, 'cloud');
+		boardeditor.setActivePosition({
+			name: position_name,
+			storage_type: 'cloud',
+			owner: validatorama.getOurUsername()!,
+		});
 
 	return result.saves;
 }
@@ -247,7 +252,7 @@ async function removePositionFromCloud(
 	await esave.saveState(editorSaveState);
 
 	if (boardeditor.isActivePosition(position_name, 'cloud'))
-		boardeditor.setActivePosition(position_name, 'local');
+		boardeditor.setActivePosition({ name: position_name, storage_type: 'local' });
 
 	toast.show(translations.editor.saved_locally);
 	return saves;
