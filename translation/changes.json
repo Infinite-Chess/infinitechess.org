@@ -1,4 +1,7 @@
 {
+  "91": {
+    "note": "Added illegal_position_king_capture line 654."
+  },
   "90": {
     "note": "Removed editing_heading and editing_paragraphs from [play.guide] lines 309-314"
   },

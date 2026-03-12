@@ -27,6 +27,7 @@ import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
 import timeutil from '../../../../../../shared/util/timeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
@@ -217,6 +218,10 @@ function startLocalGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const variantOptions = getCurrentPositionInformation(true);
+	if (isPositionIllegal(variantOptions)) {
+		toast.show(translations.editor.illegal_position_king_capture, { error: true });
+		return;
+	}
 	if (variantOptions.position.size === 0) {
 		toast.show(translations.editor.cannot_start_local_empty, { error: true });
 		return;
@@ -248,6 +253,10 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 
 	// Get current position
 	const variantOptions = getCurrentPositionInformation(true);
+	if (isPositionIllegal(variantOptions)) {
+		toast.show(translations.editor.illegal_position_king_capture, { error: true });
+		return;
+	}
 
 	// Determine whether it's not supported...
 
@@ -338,6 +347,26 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 }
 
 // Helpers ----------------------------------------------------------------
+
+/**
+ * Returns true if the current editor position is illegal to start a checkmate game from,
+ * because the 2nd player to move is already in check on turn 1 — meaning the 1st player
+ * could immediately capture their royal piece, which can only happen in illegal positions.
+ */
+function isPositionIllegal(variantOptions: VariantOptions): boolean {
+	// Only applicable when checkmate is used by any player
+	const checkmateUsed = Object.values(variantOptions.gameRules.winConditions).some((conds) =>
+		conds.includes('checkmate'),
+	);
+	if (!checkmateUsed) return false; // King capture legal in non-checkmate variants
+
+	// The 2nd player to move is the one whose royal could be captured on the 1st move
+	const secondPlayer = variantOptions.gameRules.turnOrder[1];
+	if (secondPlayer === undefined) return false; // Umm why did this happen?
+
+	const result = checkdetection.detectCheck(gameslot.getGamefile()!, secondPlayer);
+	return result.check; // Illegal position (allows king capture)
+}
 
 /** Queues the removal of all pieces from the position. */
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {

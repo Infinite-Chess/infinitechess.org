@@ -526,6 +526,7 @@ export type TranslationKeys =
 	| 'play.javascript.editor.cannot_start_local_empty'
 	| 'play.javascript.editor.cannot_start_engine_empty'
 	| 'play.javascript.editor.position_not_supported'
+	| 'play.javascript.editor.illegal_position_king_capture'
 	| 'play.javascript.editor.saved_in_browser'
 	| 'play.javascript.editor.position_corrupted'
 	| 'play.javascript.editor.failed_to_load'
@@ -1225,6 +1226,7 @@ export interface TranslationsObject {
 				cannot_start_local_empty: string;
 				cannot_start_engine_empty: string;
 				position_not_supported: string;
+				illegal_position_king_capture: string;
 				saved_in_browser: string;
 				position_corrupted: string;
 				failed_to_load: string;

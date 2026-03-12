@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "90"
+version = "91"
 maintainer = "Naviary"
 
 [header]
@@ -651,6 +651,7 @@ position_loaded = "Position successfully loaded."
 cannot_start_local_empty = "Cannot start local game from empty position!"
 cannot_start_engine_empty = "Cannot start engine game from empty position!"
 position_not_supported = "Position is not supported for reason:"
+illegal_position_king_capture = "Illegal position: King capture possible on turn 1."
 saved_in_browser = "Position saved in browser."
 position_corrupted = "The position was corrupted."
 failed_to_load = "Failed to load position:"
