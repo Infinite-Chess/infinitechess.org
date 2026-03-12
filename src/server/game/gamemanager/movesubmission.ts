@@ -8,15 +8,19 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { FullGame, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import * as z from 'zod';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import moveutil from '../../../shared/chess/util/moveutil.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
+import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 
 import socketUtility from '../../socket/socketUtility.js';
 import { declineDraw } from './onOfferDraw.js';
@@ -121,25 +125,66 @@ function submitMove(
 		return;
 	}
 
-	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
-		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
-	}
+	let move: BaseMove; // The move we'll send to the opponent
 
-	const move: BaseMove = {
-		startCoords: moveDraft.startCoords,
-		endCoords: moveDraft.endCoords,
-		compact: moveDraft.compact,
-		// clockStamp added below
-	};
-	if (moveDraft.promotion !== undefined) move.promotion = moveDraft.promotion;
-	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-	servergame.basegame.moves.push(move); // Add the move to the list!
-	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
-	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
-	if (clockStamp !== undefined) move.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
-	setGameConclusion(servergame, messageContents.gameConclusion);
+	if (servergame.boardsim !== undefined) {
+		// Server-side move legality validation path
+		const fullgame: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim };
+
+		const validationResult = movevalidation.isEnginesMoveLegal(fullgame, messageContents.move);
+		if (!validationResult.valid) {
+			const errString = `Player sent an illegal move. Reason: ${validationResult.reason}. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+			logEventsAndPrint(errString, 'hackLog.txt');
+			sendSocketMessage(ws, 'general', 'printerror', 'Illegal move rejected.');
+			return;
+		}
+
+		// Apply the move to both boardsim and basegame using makeMove,
+		// which pushes to boardsim.moves, basegame.moves, updates check state, etc.
+		const fullMove = movepiece.generateMove(fullgame, validationResult.draft);
+		movepiece.makeMove(fullgame, fullMove); // Pushes to both boardsim.moves AND basegame.moves
+
+		// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
+		// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
+		const baseMove = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
+		const clockStamp = pushGameClock(servergame);
+		if (clockStamp !== undefined) {
+			fullMove.clockStamp = clockStamp;
+			baseMove.clockStamp = clockStamp;
+		}
+
+		// The server determines the game conclusion; discard any client-claimed conclusion.
+		const conclusion = wincondition.getGameConclusion(fullgame);
+		if (conclusion !== undefined && winconutil.isGameConclusionDecisive(conclusion)) {
+			moveutil.flagLastMoveAsMate(fullgame.boardsim);
+		}
+		setGameConclusion(servergame, conclusion);
+
+		move = baseMove;
+	} else {
+		// Client-reported conclusion path (for large variants without server-side validation)
+		if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
+			const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+			logEventsAndPrint(errString, 'hackLog.txt');
+			return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		}
+
+		const baseMove: BaseMove = {
+			startCoords: moveDraft.startCoords,
+			endCoords: moveDraft.endCoords,
+			compact: moveDraft.compact,
+			// clockStamp added below
+		};
+		if (moveDraft.promotion !== undefined) baseMove.promotion = moveDraft.promotion;
+		// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
+		servergame.basegame.moves.push(baseMove); // Add the move to the list!
+		// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
+		const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
+		if (clockStamp !== undefined) baseMove.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
+		setGameConclusion(servergame, messageContents.gameConclusion);
+
+		move = baseMove;
+	}
 
 	// console.log(`Accepted a move! Their websocket message data:`)
 	// console.log(messageContents)

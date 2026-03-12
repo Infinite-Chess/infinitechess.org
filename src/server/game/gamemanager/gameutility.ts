@@ -15,8 +15,8 @@ import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
@@ -195,7 +195,16 @@ interface MatchInfo {
 }
 
 /** The game stored in the server */
-type ServerGame = { basegame: Game; match: MatchInfo };
+type ServerGame = {
+	basegame: Game;
+	match: MatchInfo;
+	/**
+	 * The board simulation for this game, used for server-side move legality validation.
+	 * Present only for variants with a position string length within the threshold
+	 * (see `doesVariantSupportServerValidation`). Absent for large variants like Omega Squared.
+	 */
+	boardsim?: Board;
+};
 
 // Functions --------------------------------------------------------------------------------------
 
