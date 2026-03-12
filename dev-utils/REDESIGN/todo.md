@@ -36,6 +36,8 @@
 
 - Update static asset middleware: serve hashed JS/CSS with `Cache-Control: immutable, max-age=31536000`; serve HTML with `Cache-Control: no-store`; serve images/fonts with `Cache-Control: max-age=31536000` (without `immutable`).
 
+- Add to the Pull Request Requirements and Guidelines that whenever an image or font asset changes, we must append a `?v=2` manually in the template so browsers know to fetch the new version instead of using the cached one. (Not needed for JS/CSS since those are content-hashed).
+
 ---
 
 ## Nunjucks Migration
@@ -66,7 +68,7 @@
 
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
 
-- Update `loadTranslations()` to remove versioning support entirely; delete `removeOutdated()`.
+- Update `loadTranslations()` to remove versioning support entirely; delete `removeOutdated()`. Keep `deepMerge()` (fallback to English for missing keys).
 
 ---
 
