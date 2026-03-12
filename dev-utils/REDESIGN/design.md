@@ -1,4 +1,4 @@
-# Summary of everything the new header needs to include
+# Summary of what should go on each page/component
 
 ## Header
 
@@ -12,7 +12,6 @@
 - Profile/Login
 - Register/Logout
 - Settings
-
 
 ## Homepage
 - Scrolling perspective mode board? Generally across the site though, a static 2D checkerboard background like that of the chess stack exchange.
@@ -51,8 +50,7 @@ When monthly dontations stop, badge is removed.
 Maybe a lifetime donation amount where the badge is permanent?
 Lichess offers golden wings after 5 years of active patron status. And instantly after a liftime donation, unlocking all colors.
 
-
-
+## Light and Dark Theme
 
 For light and dark themes, store colors once per theme as a small set of semantic variables, and every element in the entire codebase references those variables.
 
