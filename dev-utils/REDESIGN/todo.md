@@ -60,6 +60,8 @@
 
 - Create a `@font-face` declaration for Noto Sans and the font-stack CSS into the shared stylesheet.
 
+- Ensure our middleware is capable of serving fonts, with the same cache-control as other static assets.
+
 - Add other CSS rules we think will be shared across all pages.
 
 ---
