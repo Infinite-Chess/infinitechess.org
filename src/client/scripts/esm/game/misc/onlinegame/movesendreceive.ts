@@ -114,18 +114,19 @@ function handleOpponentsMove(
 			`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
 		);
 	}
-	if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
+	if (
+		!moveValidationResult.valid &&
+		!onlinegame.getIsPrivate() &&
+		!doesVariantSupportServerValidation(gamefile.basegame.metadata)
+	) {
 		// Only report cheating in non-private games where server-side validation is NOT active.
 		// If the server validates moves, it will already have rejected illegal moves before
 		// forwarding them to us, so reporting is unnecessary (and would never trigger).
-		const serverValidates = doesVariantSupportServerValidation(gamefile.basegame.metadata);
-		if (!serverValidates) {
-			onlinegame.reportOpponentsMove(moveValidationResult.reason);
-			// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
-			premoves.applyPremoves(gamefile, mesh);
-			premoves.cancelPremoves(gamefile, mesh);
-			return;
-		}
+		onlinegame.reportOpponentsMove(moveValidationResult.reason);
+		// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
+		premoves.applyPremoves(gamefile, mesh);
+		premoves.cancelPremoves(gamefile, mesh);
+		return;
 	}
 
 	// At this stage, the move is legal, or allowed anyway in a private game. Apply it.

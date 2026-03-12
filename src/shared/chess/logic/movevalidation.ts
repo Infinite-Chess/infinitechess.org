@@ -88,7 +88,7 @@ function isOpponentsMoveLegal(
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function isEnginesMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
+function isCompactMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
 	if (typeof compact !== 'string') return { valid: false, reason: 'Not a string.' };
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
@@ -275,6 +275,6 @@ function validateConclusion(
 }
 
 export default {
-	isEnginesMoveLegal,
+	isCompactMoveLegal,
 	isOpponentsMoveLegal,
 };

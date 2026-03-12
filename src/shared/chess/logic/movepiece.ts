@@ -482,7 +482,7 @@ function makeAllMovesInGame(
 
 		// If validateMoves flag is true, check if the move is actually legal!
 		if (validateMoves) {
-			const validationResult = movevalidation.isEnginesMoveLegal(gamefile, shortmove.compact);
+			const validationResult = movevalidation.isCompactMoveLegal(gamefile, shortmove.compact);
 			if (!validationResult.valid) {
 				throw Error(
 					`Move ${i + 1} is illegal: ${shortmove.compact}. Reason: ${validationResult.reason}`,

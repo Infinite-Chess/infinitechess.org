@@ -90,7 +90,7 @@ function submitMove(
 	const expectedMoveNumber = servergame.basegame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		console.error(
-			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`,
 		);
 		return resyncToGame(ws, servergame.match.id);
 	}
@@ -107,14 +107,14 @@ function submitMove(
 	// Legality checks...
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
-		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
 	}
 
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveDraft, servergame.match.timeCreated)) {
-		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		sendSocketMessage(
 			ws,
@@ -128,21 +128,29 @@ function submitMove(
 	let move: BaseMove; // The move we'll send to the opponent
 
 	if (servergame.boardsim !== undefined) {
-		// Server-side move legality validation path
-		const fullgame: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim };
+		// Verify move legality
 
-		const validationResult = movevalidation.isEnginesMoveLegal(fullgame, messageContents.move);
+		// Makes ts happy knowing boardsim is already defined
+		const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim };
+
+		const validationResult = movevalidation.isCompactMoveLegal(gamefile, messageContents.move);
 		if (!validationResult.valid) {
-			const errString = `Player sent an illegal move. Reason: ${validationResult.reason}. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+			const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 			logEventsAndPrint(errString, 'hackLog.txt');
-			sendSocketMessage(ws, 'general', 'printerror', 'Illegal move rejected.');
+			sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				'Oops! That was an illegal move. If this is a bug, please report it!',
+			);
+			// Send the sender a gameupdate to correct their board if a bug somehow caused this
+			gameutility.sendGameUpdateToColor(servergame, color);
 			return;
 		}
 
-		// Apply the move to both boardsim and basegame using makeMove,
-		// which pushes to boardsim.moves, basegame.moves, updates check state, etc.
-		const fullMove = movepiece.generateMove(fullgame, validationResult.draft);
-		movepiece.makeMove(fullgame, fullMove); // Pushes to both boardsim.moves AND basegame.moves
+		// Generate and make the move in the logical game
+		const fullMove = movepiece.generateMove(gamefile, validationResult.draft);
+		movepiece.makeMove(gamefile, fullMove); // Pushes to both boardsim.moves AND basegame.moves
 
 		// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
 		// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
@@ -154,9 +162,9 @@ function submitMove(
 		}
 
 		// The server determines the game conclusion; discard any client-claimed conclusion.
-		const conclusion = wincondition.getGameConclusion(fullgame);
+		const conclusion = wincondition.getGameConclusion(gamefile);
 		if (conclusion !== undefined && winconutil.isGameConclusionDecisive(conclusion)) {
-			moveutil.flagLastMoveAsMate(fullgame.boardsim);
+			moveutil.flagLastMoveAsMate(gamefile.boardsim);
 		}
 		setGameConclusion(servergame, conclusion);
 
@@ -164,7 +172,7 @@ function submitMove(
 	} else {
 		// Client-reported conclusion path (for large variants without server-side validation)
 		if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
-			const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+			const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 			logEventsAndPrint(errString, 'hackLog.txt');
 			return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
 		}

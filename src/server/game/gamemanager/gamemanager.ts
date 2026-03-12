@@ -113,6 +113,11 @@ function createGame(
 		? gamefile.initBoard(basegame.gameRules, metadata)
 		: undefined;
 
+	if (boardsim !== undefined)
+		console.log(
+			`Server-side move validation ENABLED for game ${gameID} (variant: ${metadata.Variant}).`,
+		);
+
 	const servergame: ServerGame = { basegame, match, boardsim };
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
