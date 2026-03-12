@@ -174,11 +174,7 @@ function validateTermination(
 		return;
 	}
 	if (termination === 'Loss on time') {
-		if (gameConclusion !== undefined)
-			throw new Error(
-				`Termination is Loss on time but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
-			);
-		return;
+		throw new Error(`Termination is "Loss on time"`);
 	}
 	if (gameConclusion === undefined) {
 		if (termination)
