@@ -621,6 +621,18 @@ function moveTowards(s: number, e: number, progress: number): number {
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
 /**
+ * Generates a full Move from a MoveDraft, then immediately applies it to the gamefile.
+ * @param gamefile - The gamefile
+ * @param moveDraft - The move draft to generate and make
+ * @returns The generated Move object
+ */
+function generateAndMakeMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
+	const move = generateMove(gamefile, moveDraft);
+	makeMove(gamefile, move);
+	return move;
+}
+
+/**
  * Wraps a function in a simulated move.
  * The callback may be used to obtain whatever
  * property of the gamefile we want after the move is made.
@@ -628,8 +640,7 @@ function moveTowards(s: number, e: number, progress: number): number {
  * @returns Whatever is returned by the callback
  */
 function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callback: () => R): R {
-	const move = generateMove(gamefile, moveDraft);
-	makeMove(gamefile, move);
+	generateAndMakeMove(gamefile, moveDraft);
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
 	rewindMove(gamefile);
@@ -668,6 +679,7 @@ export default {
 	queueSpecialRightDeletionStateChanges,
 	hasCastlingPartner,
 	makeMove,
+	generateAndMakeMove,
 	updateTurn,
 	goToMove,
 	makeAllMovesInGame,

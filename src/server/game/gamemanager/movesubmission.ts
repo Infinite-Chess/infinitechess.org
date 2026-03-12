@@ -22,7 +22,6 @@ import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 
-import socketUtility from '../../socket/socketUtility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -127,7 +126,12 @@ function submitMove(
 
 	let move: BaseMove; // The move we'll send to the opponent
 
-	if (servergame.boardsim !== undefined) {
+	// Use server-side validation if the boardsim exists, UNLESS the game is private with a pasted position
+	// (in that case the position may differ from what the boardsim tracks, so we trust the client).
+	if (
+		servergame.boardsim !== undefined &&
+		!(servergame.match.positionPasted && servergame.match.publicity === 'private')
+	) {
 		// Verify move legality
 
 		// Makes ts happy knowing boardsim is already defined
@@ -149,8 +153,7 @@ function submitMove(
 		}
 
 		// Generate and make the move in the logical game
-		const fullMove = movepiece.generateMove(gamefile, validationResult.draft);
-		movepiece.makeMove(gamefile, fullMove); // Pushes to both boardsim.moves AND basegame.moves
+		const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.draft);
 
 		// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
 		// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
