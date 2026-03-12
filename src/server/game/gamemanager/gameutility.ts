@@ -466,10 +466,7 @@ function resyncToGame(
 		subscribeClientToGame(servergame, ws, colorPlayingAs, { sendGameInfo: false });
 
 	// This function ALREADY sends all the information the client needs to resync!
-	sendGameUpdateToColor(servergame, colorPlayingAs, {
-		replyTo: replyToMessageID,
-		forceSync: false,
-	});
+	sendGameUpdateToColor(servergame, colorPlayingAs, false, { replyTo: replyToMessageID });
 }
 
 /**
@@ -479,7 +476,7 @@ function resyncToGame(
  */
 function broadcastGameUpdate(servergame: ServerGame): void {
 	for (const player in servergame.match.playerData) {
-		sendGameUpdateToColor(servergame, Number(player) as Player, { forceSync: false });
+		sendGameUpdateToColor(servergame, Number(player) as Player, false);
 	}
 }
 
@@ -488,14 +485,14 @@ function broadcastGameUpdate(servergame: ServerGame): void {
  * and the current moves list and timers.
  * @param servergame - The game
  * @param color - The color of the player
- * @param options - Additional options
+ * @param forceSync - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
  * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
- * @param options.forceSync - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
  */
 function sendGameUpdateToColor(
 	servergame: ServerGame,
 	color: Player,
-	{ replyTo, forceSync }: { replyTo?: number; forceSync: boolean },
+	forceSync: boolean,
+	{ replyTo }: { replyTo?: number } = {},
 ): void {
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message

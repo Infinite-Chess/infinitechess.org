@@ -148,7 +148,7 @@ function submitMove(
 				'Oops! That was an illegal move. If this is a bug, please report it!',
 			);
 			// Send the sender a gameupdate to correct their board if a bug somehow caused this
-			gameutility.sendGameUpdateToColor(servergame, color, { forceSync: true });
+			gameutility.sendGameUpdateToColor(servergame, color, true);
 			return;
 		}
 
@@ -205,7 +205,7 @@ function submitMove(
 	declineDraw(ws, servergame); // Auto-decline any open draw offer on move submissions
 
 	if (gameutility.isGameOver(servergame.basegame))
-		gameutility.sendGameUpdateToColor(servergame, color, { forceSync: false });
+		gameutility.sendGameUpdateToColor(servergame, color, false);
 	else gameutility.sendUpdatedClockToColor(servergame, color);
 	gameutility.sendMoveToColor(servergame, opponentColor, move); // Send their move to their opponent.
 }
