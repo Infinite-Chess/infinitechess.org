@@ -13,6 +13,17 @@
 - Register/Logout
 - Settings
 
+## Footer
+
+- About Infinite Chess
+- Contact
+- Terms of Service
+- Privacy
+- GitHub
+- Discord
+- Youtube
+
+
 ## Homepage
 - Scrolling perspective mode board? Generally across the site though, a static 2D checkerboard background like that of the chess stack exchange.
 - Lobby sits on the homepage.
