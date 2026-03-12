@@ -1,18 +1,5 @@
 # GitHub Actions Runner — How It Works
 
-**On your first question: macOS login requirement**
-
-On macOS, `./svc.sh install` installs the runner as a **LaunchAgent** — a user-level service that only runs while a specific user is logged in. It will *not* run on the login screen or with no user session active. For a server Mac that might reboot after a power cut, you'd either need:
-
-- **Auto-login enabled** (System Settings → Users & Groups → Automatic login) — the simplest and most common approach for a dedicated server machine
-- Or manually convert it to a **LaunchDaemon** (system-level service, runs without any login), which requires running it as root and is more involved
-
-Auto-login on a machine that's behind a locked door and behind Cloudflare is completely standard.
-
----
-
-**On the runner internals — the full picture:**
-
 **What the runner process actually is**
 
 The self-hosted runner is a long-running background process (the GitHub `Runner.Listener` binary) that opens a persistent long-poll connection to GitHub's API (`api.github.com`). It sits there doing nothing, just waiting. When a workflow is triggered, GitHub queues a job, the runner picks it up over that connection, downloads the job instructions, runs the steps, and streams logs back to GitHub.
