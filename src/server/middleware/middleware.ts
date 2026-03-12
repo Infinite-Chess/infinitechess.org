@@ -89,7 +89,12 @@ export function configureMiddleware(app: Express): void {
 			contentSecurityPolicy: {
 				directives: {
 					defaultSrc: ["'self'"],
-					scriptSrc: ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"], // Allows inline scripts
+					scriptSrc: [
+						"'self'",
+						"'unsafe-inline'",
+						"'wasm-unsafe-eval'",
+						'https://static.cloudflareinsights.com',
+					], // Allows inline scripts
 					scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
 					objectSrc: ["'none'"],
 					frameSrc: ["'self'", 'https://www.youtube.com'],
