@@ -18,7 +18,7 @@ These three things must be in place before the redesign begins, as the redesign 
 
 - Be aware we might have to change the websocket reconnection logic to use exponential backoff. Decide whether this is necessary depending on how well/quickly clients reconnect after a restart with current logic.
 
-- **Automated DB backups.** The server creates a backup once per day and immediately before every deploy. Backups go in a `backups/` directory with timestamped filenames. Backups older than 30 days are purged automatically.
+- **Automated DB backups.** Currently, the OS is performing automatic backups, and I am doing manual ones on server updates. Let's have the server itself create a backup once per day and immediately before every deploy. Backups go in a `backups/` directory with timestamped filenames. Backups older than 30 days are purged automatically.
 
 ## Technical Stack & Decisions
 
