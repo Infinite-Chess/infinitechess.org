@@ -126,12 +126,8 @@ function submitMove(
 
 	let move: BaseMove; // The move we'll send to the opponent
 
-	// Use server-side validation if the boardsim exists, UNLESS the game is private with a pasted position
-	// (in that case the position may differ from what the boardsim tracks, so we trust the client).
-	if (
-		servergame.boardsim !== undefined &&
-		!(servergame.match.positionPasted && servergame.match.publicity === 'private')
-	) {
+	// Use server-side validation if the boardsim exists
+	if (servergame.boardsim !== undefined) {
 		// Verify move legality
 
 		// Makes ts happy knowing boardsim is already defined
@@ -148,7 +144,7 @@ function submitMove(
 				'Oops! That was an illegal move. If this is a bug, please report it!',
 			);
 			// Send the sender a gameupdate to correct their board if a bug somehow caused this
-			gameutility.sendGameUpdateToColor(servergame, color, true);
+			gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
 			return;
 		}
 
