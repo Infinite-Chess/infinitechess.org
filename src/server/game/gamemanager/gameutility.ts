@@ -68,7 +68,7 @@ interface GameUpdateMessage {
 	 * Used when the server rejects an illegal move: the client must revert it rather
 	 * than re-submitting it.
 	 */
-	forceSync?: true;
+	forceSync: boolean;
 }
 
 type PlayerRatingChangeInfo = {
@@ -466,7 +466,10 @@ function resyncToGame(
 		subscribeClientToGame(servergame, ws, colorPlayingAs, { sendGameInfo: false });
 
 	// This function ALREADY sends all the information the client needs to resync!
-	sendGameUpdateToColor(servergame, colorPlayingAs, { replyTo: replyToMessageID });
+	sendGameUpdateToColor(servergame, colorPlayingAs, {
+		replyTo: replyToMessageID,
+		forceSync: false,
+	});
 }
 
 /**
@@ -476,7 +479,7 @@ function resyncToGame(
  */
 function broadcastGameUpdate(servergame: ServerGame): void {
 	for (const player in servergame.match.playerData) {
-		sendGameUpdateToColor(servergame, Number(player) as Player);
+		sendGameUpdateToColor(servergame, Number(player) as Player, { forceSync: false });
 	}
 }
 
@@ -487,18 +490,18 @@ function broadcastGameUpdate(servergame: ServerGame): void {
  * @param color - The color of the player
  * @param options - Additional options
  * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
- * @param [options.forceSync] - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
+ * @param options.forceSync - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
  */
 function sendGameUpdateToColor(
 	servergame: ServerGame,
 	color: Player,
-	{ replyTo, forceSync }: { replyTo?: number; forceSync?: true } = {},
+	{ replyTo, forceSync }: { replyTo?: number; forceSync: boolean },
 ): void {
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
 	const messageContents = getGameUpdateMessageContents(servergame, color);
-	if (forceSync) messageContents.forceSync = true;
+	messageContents.forceSync = forceSync;
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
@@ -507,6 +510,7 @@ function getGameUpdateMessageContents(servergame: ServerGame, color: Player): Ga
 		gameConclusion: servergame.basegame.gameConclusion,
 		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
 		participantState: getParticipantState(servergame.match, color),
+		forceSync: false,
 	};
 
 	// Include timer info if it's timed

@@ -102,7 +102,7 @@ function synchronizeMovesList(
 	mesh: Mesh | undefined,
 	moves: ServerGameMoveMessage[],
 	claimedGameConclusion: GameConclusion | undefined,
-	forceSync?: true,
+	forceSync: boolean,
 ): { opponentPlayedIllegalMove: boolean } {
 	const { boardsim } = gamefile;
 	// console.log("Resyncing...");

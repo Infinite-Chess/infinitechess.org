@@ -205,7 +205,7 @@ function submitMove(
 	declineDraw(ws, servergame); // Auto-decline any open draw offer on move submissions
 
 	if (gameutility.isGameOver(servergame.basegame))
-		gameutility.sendGameUpdateToColor(servergame, color);
+		gameutility.sendGameUpdateToColor(servergame, color, { forceSync: false });
 	else gameutility.sendUpdatedClockToColor(servergame, color);
 	gameutility.sendMoveToColor(servergame, opponentColor, move); // Send their move to their opponent.
 }

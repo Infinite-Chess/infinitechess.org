@@ -64,7 +64,12 @@ const GameSchema = z.discriminatedUnion('action', [
 	}),
 	z.strictObject({ action: z.literal('move'), value: z.custom<OpponentsMoveMessage>() }),
 	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),
-	z.strictObject({ action: z.literal('gameupdate'), value: z.custom<GameUpdateMessage>() }),
+	z.strictObject({
+		action: z.literal('gameupdate'),
+		value: z.custom<GameUpdateMessage>(
+			(v) => typeof (v as GameUpdateMessage).forceSync === 'boolean',
+		),
+	}),
 	z.strictObject({
 		action: z.literal('gameratingchange'),
 		value: z.custom<PlayerGroup<PlayerRatingChangeInfo>>(),
