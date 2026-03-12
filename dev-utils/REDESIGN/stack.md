@@ -8,7 +8,7 @@ Self-hosted on a Mac, no VPS. SSD storage. Cloudflare in front. Low traffic — 
 
 ## Infrastructure Prerequisites
 
-These three things must be in place before the redesign begins, as the redesign depends on them.
+These things must be in place before the redesign begins.
 
 - **Live game state persistence to SQLite.** On each move, write game state (game JSON, clock values, whose turn, timestamp) to a `live_games` table. On server startup, rehydrate in-memory game objects from this table so interrupted games survive restarts. All active game timers must be reinstated. Don't worry yet about compensating clocks for downtime duration.
 
