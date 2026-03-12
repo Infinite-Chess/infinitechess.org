@@ -2,6 +2,10 @@
 
 ## Infrastructure Prerequisites
 
+- **Perform move legality checks server-side** for all variants without a ton of pieces. Reject illegal moves instead of continuing to depend on cheat reports from the opponent. Also perform game over checks instead of trusting the client's claimed game conclusion. Question: Should the client still send the game conclusion with move submissions? At least, they should be able to see checkmate happen instantly instead of waiting for the server's game update. For these variants, turn off opponent reporting.
+
+- Write a script that iterates through all games in the database, processes them, and flags any with illegal moves played (can only happen if the opponent failed to report). If there are any, decide whether to keep or delete them.
+
 - Determine the minimum live game properties required to reconstruct the in-memory game state, and timer states, on a server restart.
 
 - Create the `live_games` SQLite table and write full game state to it on every move / game update.

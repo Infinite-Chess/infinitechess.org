@@ -10,6 +10,8 @@ Self-hosted on a Mac, no VPS. SSD storage. Cloudflare in front. Low traffic — 
 
 These things must be in place before the redesign begins.
 
+- **Perform move legality checks server-side** for all variants without a ton of pieces. Reject illegal moves instead of continuing to depend on cheat reports from the opponent.
+
 - **Live game state persistence to SQLite.** On each move, write game state (game JSON, clock values, whose turn, timestamp) to a `live_games` table. On server startup, rehydrate in-memory game objects from this table so interrupted games survive restarts. All active game timers must be reinstated. Don't worry yet about compensating clocks for downtime duration.
 
 - **PM2 as the process manager.** PM2 keeps the Node.js server running independently of any terminal session, survives reboots, and supports zero-downtime reloads. It installs once on the machine (not as a project dependency) and doesn't change the directory structure. Manual deploy command: `git pull && npm ci --silent && npm run build && pm2 reload infinitechess`. On each server startup, log the timestamp and PID to `logs/startupLog.txt` (e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`). Useful commands: `pm2 logs infinitechess` to tail logs; `du -sh ~/.pm2/logs/*` to check log disk usage. Very whether downtime is enough to noticeably interrupt games. If so, implement the warning mechanism described in the next section. To get the server auto-starting when logging in after a reboot, run `pm2 startup` and follow the instructions it outputs.
