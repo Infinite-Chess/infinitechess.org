@@ -24,6 +24,13 @@ const dbLocation: string =
 const db = new Database(dbLocation);
 // const db = new Database(dbLocation, { verbose: console.log }); // Optional for logging queries
 
+// Enable WAL (Write-Ahead Logging) mode for better concurrency and crash safety.
+// Writers no longer block readers, and the main database file is never modified mid-write.
+db.pragma('journal_mode = WAL');
+// With WAL, NORMAL synchronous is safe and faster than the default FULL.
+// WAL provides its own durability guarantees that make FULL redundant.
+db.pragma('synchronous = NORMAL');
+
 // Variables ----------------------------------------------------------------------------------------------
 
 // Prepared statements cache
