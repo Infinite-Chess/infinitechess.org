@@ -147,6 +147,16 @@ interface Move extends Edit, MoveDraft, BaseMove {
 // Move Generating --------------------------------------------------------------------------------------------------
 
 /**
+ * Generates a full Move from a MoveDraft, then immediately applies it to the gamefile.
+ * @returns The generated Move object
+ */
+function generateAndMakeMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
+	const move = generateMove(gamefile, moveDraft);
+	makeMove(gamefile, move);
+	return move;
+}
+
+/**
  * Generates a full Move object from a MoveDraft,
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
@@ -478,8 +488,6 @@ function makeAllMovesInGame(
 	for (let i = 0; i < moves.length; i++) {
 		const shortmove = moves[i]!;
 
-		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
-
 		// If validateMoves flag is true, check if the move is actually legal!
 		if (validateMoves) {
 			const validationResult = movevalidation.isCompactMoveLegal(gamefile, shortmove.compact);
@@ -490,6 +498,7 @@ function makeAllMovesInGame(
 			}
 		}
 
+		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
 		makeMove(gamefile, move);
 
 		// Also if validateMoves flag is true, any move that comes AFTER
@@ -619,18 +628,6 @@ function moveTowards(s: number, e: number, progress: number): number {
 }
 
 // Move Wrappers ----------------------------------------------------------------------------------------------------
-
-/**
- * Generates a full Move from a MoveDraft, then immediately applies it to the gamefile.
- * @param gamefile - The gamefile
- * @param moveDraft - The move draft to generate and make
- * @returns The generated Move object
- */
-function generateAndMakeMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
-	const move = generateMove(gamefile, moveDraft);
-	makeMove(gamefile, move);
-	return move;
-}
 
 /**
  * Wraps a function in a simulated move.

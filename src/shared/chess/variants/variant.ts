@@ -826,14 +826,10 @@ function getVariantWorldBorder(Variant: string | undefined): bigint | undefined 
  */
 function getVariantPositionString(metadata: VariantContext): string | undefined {
 	if (!isVariantValid(metadata.Variant)) return undefined;
-	const variantEntry = variantDictionary[metadata.Variant as string];
+	const variantEntry = variantDictionary[metadata.Variant!];
 	if (!variantEntry) return undefined;
 
 	if (!variantEntry.positionString) return undefined; // Generator-based variant
-
-	if (typeof variantEntry.positionString === 'string') {
-		return variantEntry.positionString; // Single position string
-	}
 
 	// Multiple position strings for different timestamps
 	return getApplicableTimestampEntry(variantEntry.positionString, resolveTimestamp(metadata));

@@ -238,5 +238,4 @@ function synchronizeMovesList(
 
 export default {
 	handleServerGameUpdate,
-	synchronizeMovesList,
 };

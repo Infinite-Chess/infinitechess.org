@@ -65,8 +65,7 @@ interface GameUpdateMessage {
 	/**
 	 * When true, the client's resync logic should force its move list to exactly match
 	 * the server's, even if the client has one extra move at the end that is "ours".
-	 * Used when the server rejects an illegal move: the client must revert it rather
-	 * than re-submitting it.
+	 * The client must revert it rather than re-submitting it.
 	 */
 	forceSync: boolean;
 }
@@ -206,9 +205,8 @@ type ServerGame = {
 	basegame: Game;
 	match: MatchInfo;
 	/**
-	 * The board simulation for this game, used for server-side move legality validation.
-	 * Present only for variants with a position string length within the threshold
-	 * (see `doesVariantSupportServerValidation`). Absent for large variants like Omega Squared.
+	 * Used for server-side move legality validation.
+	 * Present only for small variants.
 	 */
 	boardsim?: Board;
 };
@@ -362,7 +360,7 @@ function sendGameInfoToPlayer(
 		servergame.basegame.metadata.Variant!,
 	);
 
-	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor);
+	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
 
 	const messageContents = {
 		gameInfo: {
@@ -497,17 +495,20 @@ function sendGameUpdateToColor(
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
-	const messageContents = getGameUpdateMessageContents(servergame, color);
-	messageContents.forceSync = forceSync;
+	const messageContents = getGameUpdateMessageContents(servergame, color, forceSync);
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
-function getGameUpdateMessageContents(servergame: ServerGame, color: Player): GameUpdateMessage {
+function getGameUpdateMessageContents(
+	servergame: ServerGame,
+	color: Player,
+	forceSync: boolean,
+): GameUpdateMessage {
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.basegame.gameConclusion,
 		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
 		participantState: getParticipantState(servergame.match, color),
-		forceSync: false,
+		forceSync,
 	};
 
 	// Include timer info if it's timed

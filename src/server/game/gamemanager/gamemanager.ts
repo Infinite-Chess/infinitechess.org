@@ -107,16 +107,10 @@ function createGame(
 	const basegame = gamefile.initGame(metadata);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
-	// Construct the board simulation for server-side move legality validation,
-	// only for variants small enough that it won't consume too much memory/compute.
+	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(metadata)
 		? gamefile.initBoard(basegame.gameRules, metadata)
 		: undefined;
-
-	if (boardsim !== undefined)
-		console.log(
-			`Server-side move validation ENABLED for game ${gameID} (variant: ${metadata.Variant}).`,
-		);
 
 	const servergame: ServerGame = { basegame, match, boardsim };
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
