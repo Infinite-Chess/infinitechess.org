@@ -1,6 +1,6 @@
 # Website Redesign Plan
 
-The website will undergo a complete redesign to modernize its look and feel, making it much more professional and expandable.
+The website will undergo a complete redesign to modernize its look and feel, making it much more professional and expandable. Every single page is going to be overhauled- their look, and their underlying code.
 
 ## Deployment Environment
 
