@@ -62,6 +62,13 @@ interface GameUpdateMessage {
 	clockValues?: ClockValues;
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number;
+	/**
+	 * When true, the client's resync logic should force its move list to exactly match
+	 * the server's, even if the client has one extra move at the end that is "ours".
+	 * Used when the server rejects an illegal move: the client must revert it rather
+	 * than re-submitting it.
+	 */
+	forceSync?: true;
 }
 
 type PlayerRatingChangeInfo = {
@@ -480,16 +487,18 @@ function broadcastGameUpdate(servergame: ServerGame): void {
  * @param color - The color of the player
  * @param options - Additional options
  * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
+ * @param [options.forceSync] - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
  */
 function sendGameUpdateToColor(
 	servergame: ServerGame,
 	color: Player,
-	{ replyTo }: { replyTo?: number } = {},
+	{ replyTo, forceSync }: { replyTo?: number; forceSync?: true } = {},
 ): void {
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
 	const messageContents = getGameUpdateMessageContents(servergame, color);
+	if (forceSync) messageContents.forceSync = true;
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 

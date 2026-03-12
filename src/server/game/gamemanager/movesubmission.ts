@@ -148,7 +148,7 @@ function submitMove(
 				'Oops! That was an illegal move. If this is a bug, please report it!',
 			);
 			// Send the sender a gameupdate to correct their board if a bug somehow caused this
-			gameutility.sendGameUpdateToColor(servergame, color);
+			gameutility.sendGameUpdateToColor(servergame, color, { forceSync: true });
 			return;
 		}
 
