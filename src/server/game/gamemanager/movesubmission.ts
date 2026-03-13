@@ -102,7 +102,7 @@ function submitMove(
 		return;
 	}
 
-	// Legality checks...
+	// Verify the move is in the correct format
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
@@ -127,7 +127,7 @@ function submitMove(
 	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
 	const baseMove =
 		servergame.boardsim !== undefined
-			? applyServerValidatedMove(ws, servergame, messageContents, color)
+			? applyServerValidatedMove(ws, servergame, messageContents, moveDraft, color)
 			: applyClientReportedMove(ws, servergame, messageContents, moveDraft, color);
 	if (baseMove === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
@@ -152,12 +152,13 @@ function applyServerValidatedMove(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 	messageContents: SubmitMoveMessage,
+	moveDraft: _Move_Out,
 	color: Player,
 ): BaseMove | undefined {
 	// Makes ts happy knowing boardsim is already defined
 	const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim! };
 
-	const validationResult = movevalidation.isCompactMoveLegal(gamefile, messageContents.move);
+	const validationResult = movevalidation.validateMove(gamefile, moveDraft);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -270,12 +271,9 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
 	// Is the move in the correct format? "x,y>x,y=N"
 	let moveDraft: _Move_Out;
 	try {
-		// THIS AUTOMATICALLY CHECKS if any coordinate would
-		// become Infinity when cast to a number!
 		moveDraft = icnconverter.parseCompactMove(move);
 	} catch {
-		// It either didn't pass the regex, or one of the coordinates is Infinity,
-		// OR the promoted piece abbreviation was invalid.
+		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
 		return false;
 	}
 
