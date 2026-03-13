@@ -7,7 +7,6 @@
  */
 
 import type { GameRules } from '../variants/gamerules.js';
-import type { GameConclusion } from '../logic/gamefile.js';
 
 /** All possible game conclusion terminations. */
 const ALL_CONDITIONS = [
@@ -46,11 +45,11 @@ const validWinConditions = [
 ];
 
 /**
- * List of all win conditions that happen after a move being made.
- * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
+ * List of all conclusions that are triggered by a move being made.
+ * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement,
  * which can happen at any point in time.
  */
-const decisiveGameConclusions = [
+const moveTriggeredConclusions = [
 	...validWinConditions,
 	'stalemate',
 	'repetition',
@@ -69,34 +68,15 @@ function isWinConditionValid(winCondition: string): boolean {
 }
 
 /**
- * Calculates if the provided game conclusion is a decisive conclusion.
+ * Calculates if the provided condition is move-triggered.
  * This is any conclusion that can happen after a move is made.
- * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
- * which can happen at any point in time.
- * @param gameConclusion - The gameConclusion
- * @returns *true* if the gameConclusion is decisive.
+ * Excludes conclusions like resignation, time, aborted, disconnect,
+ * and agreement, which can happen at any point in time.
+ * @param condition - The `condition` property of a `GameConclusion` object.
+ * @returns *true* if the condition is move-triggered.
  */
-function isGameConclusionDecisive(gameConclusion: GameConclusion | undefined): boolean {
-	if (gameConclusion === undefined) {
-		throw new Error(
-			'Should not be be testing if game conclusion is decisive when game is not over!',
-		);
-	}
-	return isConclusionDecisive(gameConclusion.condition);
-}
-
-/**
- * A variant of {@link isGameConclusionDecisive} with the game conclusion PRE-SPLIT to remove the victor from the first half of it!
- *
- * Calculates if the provided conclusion is a decisive conclusion.
- * This is any conclusion that can happen after a move is made.
- * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
- * which can happen at any point in time.
- * @param condition - The gameConclusion
- * @returns *true* if the gameConclusion is decisive.
- */
-function isConclusionDecisive(condition: string): boolean {
-	return decisiveGameConclusions.includes(condition);
+function isConclusionMoveTriggered(condition: string): boolean {
+	return moveTriggeredConclusions.includes(condition);
 }
 
 /**
@@ -117,7 +97,6 @@ export default {
 	ALL_CONDITIONS,
 
 	isWinConditionValid,
-	isGameConclusionDecisive,
-	isConclusionDecisive,
+	isConclusionMoveTriggered,
 	getTerminationInEnglish,
 };

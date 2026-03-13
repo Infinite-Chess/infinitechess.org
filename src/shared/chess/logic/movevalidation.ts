@@ -252,9 +252,9 @@ function validateConclusion(
 ): ConclusionValidityResult {
 	if (
 		claimedGameConclusion !== undefined &&
-		!winconutil.isGameConclusionDecisive(claimedGameConclusion)
+		!winconutil.isConclusionMoveTriggered(claimedGameConclusion.condition)
 	) {
-		// "Undecisive" (e.g. resignation, time, abort) conclusions are always valid since the server handles those.
+		// Non-move-triggered (e.g. resignation, time, abort) conclusions are always valid since the server handles those.
 		return { valid: true };
 	}
 

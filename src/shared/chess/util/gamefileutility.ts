@@ -91,8 +91,8 @@ function isOpponentUsingWinCondition(
 function doGameOverChecks(gamefile: FullGame): void {
 	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);
 	if (
-		isGameOver(gamefile.basegame) &&
-		winconutil.isGameConclusionDecisive(gamefile.basegame.gameConclusion)
+		gamefile.basegame.gameConclusion !== undefined &&
+		winconutil.isConclusionMoveTriggered(gamefile.basegame.gameConclusion.condition)
 	)
 		moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
