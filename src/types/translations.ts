@@ -397,7 +397,6 @@ export type TranslationKeys =
 	| 'play.javascript.copypaste.clipboard_denied'
 	| 'play.javascript.copypaste.clipboard_invalid'
 	| 'play.javascript.copypaste.game_needs_to_specify'
-	| 'play.javascript.copypaste.invalid_wincon'
 	| 'play.javascript.copypaste.pasting_game'
 	| 'play.javascript.copypaste.pasting_in_private'
 	| 'play.javascript.copypaste.piece_count'
@@ -1083,7 +1082,6 @@ export interface TranslationsObject {
 				clipboard_denied: string;
 				clipboard_invalid: string;
 				game_needs_to_specify: string;
-				invalid_wincon: string;
 				pasting_game: string;
 				pasting_in_private: string;
 				piece_count: string;
