@@ -18,6 +18,7 @@ import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -106,7 +107,12 @@ function createGame(
 	const basegame = gamefile.initGame(metadata);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
-	const servergame: ServerGame = { basegame, match };
+	// If the variant is small, construct the board for server-side move legality validation.
+	const boardsim = doesVariantSupportServerValidation(metadata)
+		? gamefile.initBoard(basegame.gameRules, metadata)
+		: undefined;
+
+	const servergame: ServerGame = { basegame, match, boardsim };
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
 		if (socket)

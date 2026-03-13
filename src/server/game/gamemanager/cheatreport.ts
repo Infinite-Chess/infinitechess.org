@@ -44,6 +44,21 @@ function onReport(
 		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
+	// If the game performs server-side move validation, cheat reports are not needed.
+	// The server already rejects any illegal moves automatically.
+	if (servergame.boardsim !== undefined) {
+		const errString = `Player tried to report cheating in a server-validated game. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		gameutility.sendMessageToSocketOfColor(
+			servergame.match,
+			ourColor,
+			'general',
+			'printerror',
+			'Cannot report opponent. Server validation is boss.',
+		);
+		return;
+	}
+
 	if (servergame.match.publicity === 'private') {
 		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');

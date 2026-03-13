@@ -147,6 +147,16 @@ interface Move extends Edit, MoveDraft, BaseMove {
 // Move Generating --------------------------------------------------------------------------------------------------
 
 /**
+ * Generates a full Move from a MoveDraft, then immediately applies it to the gamefile.
+ * @returns The generated Move object
+ */
+function generateAndMakeMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
+	const move = generateMove(gamefile, moveDraft);
+	makeMove(gamefile, move);
+	return move;
+}
+
+/**
  * Generates a full Move object from a MoveDraft,
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
@@ -478,11 +488,9 @@ function makeAllMovesInGame(
 	for (let i = 0; i < moves.length; i++) {
 		const shortmove = moves[i]!;
 
-		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
-
 		// If validateMoves flag is true, check if the move is actually legal!
 		if (validateMoves) {
-			const validationResult = movevalidation.isEnginesMoveLegal(gamefile, shortmove.compact);
+			const validationResult = movevalidation.isCompactMoveLegal(gamefile, shortmove.compact);
 			if (!validationResult.valid) {
 				throw Error(
 					`Move ${i + 1} is illegal: ${shortmove.compact}. Reason: ${validationResult.reason}`,
@@ -490,6 +498,7 @@ function makeAllMovesInGame(
 			}
 		}
 
+		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
 		makeMove(gamefile, move);
 
 		// Also if validateMoves flag is true, any move that comes AFTER
@@ -628,8 +637,7 @@ function moveTowards(s: number, e: number, progress: number): number {
  * @returns Whatever is returned by the callback
  */
 function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callback: () => R): R {
-	const move = generateMove(gamefile, moveDraft);
-	makeMove(gamefile, move);
+	generateAndMakeMove(gamefile, moveDraft);
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
 	rewindMove(gamefile);
@@ -668,6 +676,7 @@ export default {
 	queueSpecialRightDeletionStateChanges,
 	hasCastlingPartner,
 	makeMove,
+	generateAndMakeMove,
 	updateTurn,
 	goToMove,
 	makeAllMovesInGame,

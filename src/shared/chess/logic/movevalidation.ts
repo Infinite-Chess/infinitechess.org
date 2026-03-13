@@ -7,8 +7,8 @@ import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
 import { FullGame, GameConclusion } from './gamefile.js';
-import icnconverter, { _Move_Compact } from './icn/icnconverter.js';
 import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
+import icnconverter, { _Move_Compact, _Move_Out } from './icn/icnconverter.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -88,13 +88,13 @@ function isOpponentsMoveLegal(
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function isEnginesMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
+function isCompactMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
 	if (typeof compact !== 'string') return { valid: false, reason: 'Not a string.' };
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
-	let move_compact: MoveDraft;
+	let move_compact: _Move_Out;
 	try {
-		move_compact = icnconverter.parseMoveFromShortFormMove(compact);
+		move_compact = icnconverter.parseCompactMove(compact);
 	} catch (error: unknown) {
 		const msg = error instanceof Error ? error.message : String(error);
 		console.error(`Invalid format error when parsing compact move "${compact}": ${msg}`);
@@ -109,6 +109,7 @@ function isEnginesMoveLegal(gamefile: FullGame, compact: unknown): MoveValidatio
 
 /**
  * CORE LOGIC: Checks validity of a move.
+ * REQUIRES you to be viewing the head of the game.
  * @param gamefile - The gamefile
  * @param move_compact - The move to validate in compact JSON format, without special flags attached.
  * @returns An object containing either:
@@ -275,6 +276,7 @@ function validateConclusion(
 }
 
 export default {
-	isEnginesMoveLegal,
+	isCompactMoveLegal,
 	isOpponentsMoveLegal,
+	validateMove,
 };

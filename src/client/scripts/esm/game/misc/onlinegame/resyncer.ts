@@ -56,7 +56,13 @@ function handleServerGameUpdate(
 	 * We need to do this because sometimes the game can end before the
 	 * server sees our move, but on our screen we have still played it.
 	 */
-	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
+	const result = synchronizeMovesList(
+		gamefile,
+		mesh,
+		message.moves,
+		claimedGameConclusion,
+		message.forceSync,
+	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
 	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
@@ -88,6 +94,7 @@ function handleServerGameUpdate(
  * @param gamefile - The gamefile
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
+ * @param forceSync - If true, skip the early-exit re-submit path and force our move list to exactly match the server's
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(
@@ -95,6 +102,7 @@ function synchronizeMovesList(
 	mesh: Mesh | undefined,
 	moves: ServerGameMoveMessage[],
 	claimedGameConclusion: GameConclusion | undefined,
+	forceSync: boolean,
 ): { opponentPlayedIllegalMove: boolean } {
 	const { boardsim } = gamefile;
 	// console.log("Resyncing...");
@@ -102,6 +110,8 @@ function synchronizeMovesList(
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
 	// just re-submit our move!
+	// Skip this if forceSync is set — the server wants us to match its state exactly
+	// (e.g. it rejected our last move as illegal).
 	const hasOneMoreMoveThanServer = boardsim.moves.length === moves.length + 1;
 	const finalMoveIsOurMove =
 		boardsim.moves.length > 0 &&
@@ -115,6 +125,7 @@ function synchronizeMovesList(
 			moves.length > 0 &&
 			previousMove!.compact === moves[moves.length - 1]!.compact);
 	if (
+		!forceSync &&
 		!claimedGameConclusion &&
 		hasOneMoreMoveThanServer &&
 		finalMoveIsOurMove &&
@@ -227,5 +238,4 @@ function synchronizeMovesList(
 
 export default {
 	handleServerGameUpdate,
-	synchronizeMovesList,
 };

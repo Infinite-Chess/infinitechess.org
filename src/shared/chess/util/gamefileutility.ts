@@ -17,13 +17,9 @@ import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GA
 
 // Methods -------------------------------------------------------------
 
-/**
- * Returns true if the game is over (gameConclusion is truthy).
- * If the game is over, it will be a string. If not, it will be false.
- */
+/** Returns true if the game is over. */
 function isGameOver(basegame: Game): boolean {
-	if (basegame.gameConclusion) return true;
-	return false;
+	return basegame.gameConclusion !== undefined;
 }
 
 /**
@@ -88,7 +84,9 @@ function isOpponentUsingWinCondition(
 // FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 /**
- * Tests if the game is over by the used win condition, and if so, sets the `gameConclusion` property according to how the game was terminated.
+ * Tests if the game is over by the used win condition, andif so,
+ * sets the `gameConclusion` property according to how the game was terminated,
+ * and adds the respective mate flag on the last move played.
  */
 function doGameOverChecks(gamefile: FullGame): void {
 	gamefile.basegame.gameConclusion = wincondition.getGameConclusion(gamefile);

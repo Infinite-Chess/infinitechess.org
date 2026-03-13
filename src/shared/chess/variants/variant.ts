@@ -819,6 +819,22 @@ function getVariantWorldBorder(Variant: string | undefined): bigint | undefined 
 	return variantDictionary[Variant]?.worldBorderDist;
 }
 
+/**
+ * Returns the position string for the given variant at the specified date,
+ * or `undefined` if the variant uses a generator (no fixed position string) or is invalid.
+ * @param metadata - An object containing the `Variant` name, and optionally `UTCDate` and `UTCTime`.
+ */
+function getVariantPositionString(metadata: VariantContext): string | undefined {
+	if (!isVariantValid(metadata.Variant)) return undefined;
+	const variantEntry = variantDictionary[metadata.Variant!];
+	if (!variantEntry) return undefined;
+
+	if (!variantEntry.positionString) return undefined; // Generator-based variant
+
+	// Multiple position strings for different timestamps
+	return getApplicableTimestampEntry(variantEntry.positionString, resolveTimestamp(metadata));
+}
+
 // Exports ------------------------------------------------------------------
 
 export default {
@@ -833,4 +849,5 @@ export default {
 	getSquarePresets,
 	getRayPresets,
 	getVariantWorldBorder,
+	getVariantPositionString,
 };

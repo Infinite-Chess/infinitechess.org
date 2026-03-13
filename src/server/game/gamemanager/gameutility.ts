@@ -15,8 +15,8 @@ import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
@@ -62,6 +62,12 @@ interface GameUpdateMessage {
 	clockValues?: ClockValues;
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
 	serverRestartingAt?: number;
+	/**
+	 * When true, the client's resync logic should force its move list to exactly match
+	 * the server's, even if the client has one extra move at the end that is "ours".
+	 * The client must revert it rather than re-submitting it.
+	 */
+	forceSync: boolean;
 }
 
 type PlayerRatingChangeInfo = {
@@ -195,7 +201,15 @@ interface MatchInfo {
 }
 
 /** The game stored in the server */
-type ServerGame = { basegame: Game; match: MatchInfo };
+type ServerGame = {
+	basegame: Game;
+	match: MatchInfo;
+	/**
+	 * Used for server-side move legality validation.
+	 * Present only for small variants.
+	 */
+	boardsim?: Board;
+};
 
 // Functions --------------------------------------------------------------------------------------
 
@@ -346,7 +360,7 @@ function sendGameInfoToPlayer(
 		servergame.basegame.metadata.Variant!,
 	);
 
-	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor);
+	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
 
 	const messageContents = {
 		gameInfo: {
@@ -450,7 +464,7 @@ function resyncToGame(
 		subscribeClientToGame(servergame, ws, colorPlayingAs, { sendGameInfo: false });
 
 	// This function ALREADY sends all the information the client needs to resync!
-	sendGameUpdateToColor(servergame, colorPlayingAs, { replyTo: replyToMessageID });
+	sendGameUpdateToColor(servergame, colorPlayingAs, false, { replyTo: replyToMessageID });
 }
 
 /**
@@ -460,7 +474,7 @@ function resyncToGame(
  */
 function broadcastGameUpdate(servergame: ServerGame): void {
 	for (const player in servergame.match.playerData) {
-		sendGameUpdateToColor(servergame, Number(player) as Player);
+		sendGameUpdateToColor(servergame, Number(player) as Player, false);
 	}
 }
 
@@ -469,26 +483,32 @@ function broadcastGameUpdate(servergame: ServerGame): void {
  * and the current moves list and timers.
  * @param servergame - The game
  * @param color - The color of the player
- * @param options - Additional options
+ * @param forceSync - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
  * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
  */
 function sendGameUpdateToColor(
 	servergame: ServerGame,
 	color: Player,
+	forceSync: boolean,
 	{ replyTo }: { replyTo?: number } = {},
 ): void {
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
-	const messageContents = getGameUpdateMessageContents(servergame, color);
+	const messageContents = getGameUpdateMessageContents(servergame, color, forceSync);
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
-function getGameUpdateMessageContents(servergame: ServerGame, color: Player): GameUpdateMessage {
+function getGameUpdateMessageContents(
+	servergame: ServerGame,
+	color: Player,
+	forceSync: boolean,
+): GameUpdateMessage {
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.basegame.gameConclusion,
 		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
 		participantState: getParticipantState(servergame.match, color),
+		forceSync,
 	};
 
 	// Include timer info if it's timed
@@ -838,6 +858,10 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 	return getTranslation(`play.javascript.termination.${condition}`);
 }
 
+/**
+ * Sets the conclusion of the game, and adds on the Result and Termination metadata if the game has ended.
+ * If the conclusion is undefined, it removes the Result and Termination metadata, essentially unconcluding the game if it was already.
+ */
 function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;
 

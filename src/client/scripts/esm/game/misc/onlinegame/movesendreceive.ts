@@ -14,6 +14,7 @@ import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { doesVariantSupportServerValidation } from '../../../../../../shared/chess/variants/servervalidation.js';
 import icnconverter, {
 	_Move_Compact,
 } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -113,8 +114,14 @@ function handleOpponentsMove(
 			`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
 		);
 	}
-	if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
-		// Only report cheating in non-private games
+	if (
+		!moveValidationResult.valid &&
+		!onlinegame.getIsPrivate() &&
+		!doesVariantSupportServerValidation(gamefile.basegame.metadata)
+	) {
+		// Only report cheating in non-private games where server-side validation is NOT active.
+		// If the server validates moves, it will already have rejected illegal moves before
+		// forwarding them to us, so reporting is unnecessary (and would never trigger).
 		onlinegame.reportOpponentsMove(moveValidationResult.reason);
 		// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
 		premoves.applyPremoves(gamefile, mesh);

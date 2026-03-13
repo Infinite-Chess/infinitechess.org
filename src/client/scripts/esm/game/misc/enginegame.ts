@@ -271,7 +271,7 @@ function makeEngineMove(compactMove: unknown): void {
 	// Rewind all premoves to get the real game state before making any other board changes
 	premoves.rewindPremoves(gamefile, mesh);
 
-	const moveValidationResults = movevalidation.isEnginesMoveLegal(gamefile, compactMove);
+	const moveValidationResults = movevalidation.isCompactMoveLegal(gamefile, compactMove);
 
 	if (!moveValidationResults.valid) {
 		toast.show(

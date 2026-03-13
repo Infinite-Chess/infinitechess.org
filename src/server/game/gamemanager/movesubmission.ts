@@ -8,17 +8,19 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { FullGame, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import * as z from 'zod';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import movevalidation from '../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 
-import socketUtility from '../../socket/socketUtility.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -78,39 +80,40 @@ function submitMove(
 	const opponentColor = typeutil.invertPlayer(color);
 
 	// If the game is already over, don't accept it.
-	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
-	// The ACTUAL game conclusion SHOULD already be on the way to them so....
 	if (gameutility.isGameOver(servergame.basegame)) return;
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = servergame.basegame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		console.error(
-			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
-		return resyncToGame(ws, servergame.match.id);
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		resyncToGame(ws, servergame.match.id);
+		return;
 	}
 
 	// Make sure it's their turn
-	if (servergame.basegame.whosTurn !== color)
-		return sendSocketMessage(
+	if (servergame.basegame.whosTurn !== color) {
+		sendSocketMessage(
 			ws,
 			'general',
 			'printerror',
 			"Cannot submit a move when it's not your turn.",
 		);
+		return;
+	}
 
-	// Legality checks...
+	// Verify the move is in the correct format
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
-		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
+		sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
+		return;
 	}
 
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveDraft, servergame.match.timeCreated)) {
-		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		sendSocketMessage(
 			ws,
@@ -121,25 +124,12 @@ function submitMove(
 		return;
 	}
 
-	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
-		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: ${JSON.stringify(messageContents)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
-	}
-
-	const move: BaseMove = {
-		startCoords: moveDraft.startCoords,
-		endCoords: moveDraft.endCoords,
-		compact: moveDraft.compact,
-		// clockStamp added below
-	};
-	if (moveDraft.promotion !== undefined) move.promotion = moveDraft.promotion;
-	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-	servergame.basegame.moves.push(move); // Add the move to the list!
-	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
-	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
-	if (clockStamp !== undefined) move.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
-	setGameConclusion(servergame, messageContents.gameConclusion);
+	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
+	const baseMove =
+		servergame.boardsim !== undefined
+			? applyServerValidatedMove(ws, servergame, messageContents, moveDraft, color)
+			: applyClientReportedMove(ws, servergame, messageContents, moveDraft, color);
+	if (baseMove === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
 	// console.log(messageContents)
@@ -149,9 +139,92 @@ function submitMove(
 	declineDraw(ws, servergame); // Auto-decline any open draw offer on move submissions
 
 	if (gameutility.isGameOver(servergame.basegame))
-		gameutility.sendGameUpdateToColor(servergame, color);
+		gameutility.sendGameUpdateToColor(servergame, color, false);
 	else gameutility.sendUpdatedClockToColor(servergame, color);
-	gameutility.sendMoveToColor(servergame, opponentColor, move); // Send their move to their opponent.
+	gameutility.sendMoveToColor(servergame, opponentColor, baseMove); // Send their move to their opponent.
+}
+
+/**
+ * Validates the move against the server-side board simulation, makes it, and updates the game state.
+ * Returns the resulting BaseMove, or undefined if the move was illegal (error messages are sent to the client).
+ */
+function applyServerValidatedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+	moveDraft: _Move_Out,
+	color: Player,
+): BaseMove | undefined {
+	// Makes ts happy knowing boardsim is already defined
+	const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim! };
+
+	const validationResult = movevalidation.validateMove(gamefile, moveDraft);
+	if (!validationResult.valid) {
+		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		sendSocketMessage(
+			ws,
+			'general',
+			'notifyerror',
+			'Oops! That was an illegal move. If this is a bug, please report it!',
+		);
+		// Send the sender a gameupdate to correct their board if a bug somehow caused this
+		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
+		return;
+	}
+
+	// Generate and make the move in the logical game
+	const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.draft);
+
+	// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
+	// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
+	const baseMove = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
+	const clockStamp = pushGameClock(servergame);
+	if (clockStamp !== undefined) {
+		fullMove.clockStamp = clockStamp;
+		baseMove.clockStamp = clockStamp;
+	}
+
+	// The server determines the game conclusion; discard any client-claimed conclusion.
+	gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
+	setGameConclusion(servergame, gamefile.basegame.gameConclusion);
+
+	return baseMove;
+}
+
+/**
+ * Accepts a move for large variants without server-side validation, and updates the game state.
+ * Returns the resulting BaseMove, or undefined if the claimed game conclusion was invalid.
+ */
+function applyClientReportedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+	moveDraft: _Move_Out,
+	color: Player,
+): BaseMove | undefined {
+	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		return;
+	}
+
+	const baseMove: BaseMove = {
+		startCoords: moveDraft.startCoords,
+		endCoords: moveDraft.endCoords,
+		compact: moveDraft.compact,
+		// clockStamp added below
+	};
+	if (moveDraft.promotion !== undefined) baseMove.promotion = moveDraft.promotion;
+	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
+	servergame.basegame.moves.push(baseMove); // Add the move to the list!
+	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
+	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
+	if (clockStamp !== undefined) baseMove.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
+	setGameConclusion(servergame, messageContents.gameConclusion);
+
+	return baseMove;
 }
 
 /**
@@ -198,12 +271,9 @@ function doesMoveCheckOut(move: string): _Move_Out | false {
 	// Is the move in the correct format? "x,y>x,y=N"
 	let moveDraft: _Move_Out;
 	try {
-		// THIS AUTOMATICALLY CHECKS if any coordinate would
-		// become Infinity when cast to a number!
 		moveDraft = icnconverter.parseCompactMove(move);
 	} catch {
-		// It either didn't pass the regex, or one of the coordinates is Infinity,
-		// OR the promoted piece abbreviation was invalid.
+		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
 		return false;
 	}
 

@@ -42,6 +42,9 @@ function onPaste(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// Flag the game to not be logged
 	servergame.match.positionPasted = true;
+
+	// Also delete boardsim, disabling server-side move validation.
+	delete servergame.boardsim;
 }
 
 export { onPaste };
