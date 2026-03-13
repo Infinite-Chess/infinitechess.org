@@ -15,12 +15,11 @@ import * as z from 'zod';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import moveutil from '../../../shared/chess/util/moveutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
-import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
+import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
@@ -161,11 +160,9 @@ function submitMove(
 		}
 
 		// The server determines the game conclusion; discard any client-claimed conclusion.
-		const conclusion = wincondition.getGameConclusion(gamefile);
-		if (conclusion !== undefined && winconutil.isGameConclusionDecisive(conclusion)) {
-			moveutil.flagLastMoveAsMate(gamefile.boardsim);
-		}
-		setGameConclusion(servergame, conclusion);
+		gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
+
+		setGameConclusion(servergame, gamefile.basegame.gameConclusion);
 
 		move = baseMove;
 	} else {

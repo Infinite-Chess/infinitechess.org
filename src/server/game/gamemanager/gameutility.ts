@@ -858,6 +858,10 @@ function getTerminationInEnglish(gameRules: GameRules, condition: string): strin
 	return getTranslation(`play.javascript.termination.${condition}`);
 }
 
+/**
+ * Sets the conclusion of the game, and adds on the Result and Termination metadata if the game has ended.
+ * If the conclusion is undefined, it removes the Result and Termination metadata, essentially unconcluding the game if it was already.
+ */
 function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;
 
