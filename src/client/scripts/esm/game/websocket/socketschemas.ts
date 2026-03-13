@@ -14,7 +14,7 @@
 import type { Invite } from '../misc/invites.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { JoinGameMessage, LoggedGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
+import type { JoinGameMessage } from '../misc/onlinegame/onlinegamerouter.js';
 import type {
 	GameUpdateMessage,
 	OpponentsMoveMessage,
@@ -59,7 +59,13 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame'), value: z.custom<JoinGameMessage>() }),
 	z.strictObject({
 		action: z.literal('logged-game-info'),
-		value: z.custom<LoggedGameInfo>(),
+		value: z.strictObject({
+			game_id: z.number().int().nonnegative(),
+			rated: z.literal([0, 1]),
+			private: z.literal([0, 1]),
+			termination: z.string(),
+			icn: z.string(),
+		}),
 	}),
 	z.strictObject({ action: z.literal('move'), value: z.custom<OpponentsMoveMessage>() }),
 	z.strictObject({ action: z.literal('clock'), value: z.custom<ClockValues>() }),

@@ -69,7 +69,7 @@ export interface JoinGameMessage extends GameUpdateMessage {
 }
 
 /** The game info of an ended game from the database, as sent by the server. */
-export type LoggedGameInfo = Required<
+type LoggedGameInfo = Required<
 	Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>
 >;
 
