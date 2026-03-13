@@ -123,72 +123,12 @@ function submitMove(
 		return;
 	}
 
-	let move: BaseMove; // The move we'll send to the opponent
-
-	// Use server-side validation if the boardsim exists
-	if (servergame.boardsim !== undefined) {
-		// Verify move legality
-
-		// Makes ts happy knowing boardsim is already defined
-		const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim };
-
-		const validationResult = movevalidation.isCompactMoveLegal(gamefile, messageContents.move);
-		if (!validationResult.valid) {
-			const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-			logEventsAndPrint(errString, 'hackLog.txt');
-			sendSocketMessage(
-				ws,
-				'general',
-				'notifyerror',
-				'Oops! That was an illegal move. If this is a bug, please report it!',
-			);
-			// Send the sender a gameupdate to correct their board if a bug somehow caused this
-			gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
-			return;
-		}
-
-		// Generate and make the move in the logical game
-		const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.draft);
-
-		// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
-		// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
-		const baseMove = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
-		const clockStamp = pushGameClock(servergame);
-		if (clockStamp !== undefined) {
-			fullMove.clockStamp = clockStamp;
-			baseMove.clockStamp = clockStamp;
-		}
-
-		// The server determines the game conclusion; discard any client-claimed conclusion.
-		gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
-
-		setGameConclusion(servergame, gamefile.basegame.gameConclusion);
-
-		move = baseMove;
-	} else {
-		// Client-reported conclusion path (for large variants without server-side validation)
-		if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
-			const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-			logEventsAndPrint(errString, 'hackLog.txt');
-			return sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
-		}
-
-		const baseMove: BaseMove = {
-			startCoords: moveDraft.startCoords,
-			endCoords: moveDraft.endCoords,
-			compact: moveDraft.compact,
-			// clockStamp added below
-		};
-		if (moveDraft.promotion !== undefined) baseMove.promotion = moveDraft.promotion;
-		// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-		servergame.basegame.moves.push(baseMove); // Add the move to the list!
-		// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
-		const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
-		if (clockStamp !== undefined) baseMove.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
-		setGameConclusion(servergame, messageContents.gameConclusion);
-
-		move = baseMove;
-	}
+	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
+	const baseMove =
+		servergame.boardsim !== undefined
+			? applyServerValidatedMove(ws, servergame, messageContents, color)
+			: applyClientReportedMove(ws, servergame, messageContents, moveDraft, color);
+	if (baseMove === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
 	// console.log(messageContents)
@@ -200,7 +140,89 @@ function submitMove(
 	if (gameutility.isGameOver(servergame.basegame))
 		gameutility.sendGameUpdateToColor(servergame, color, false);
 	else gameutility.sendUpdatedClockToColor(servergame, color);
-	gameutility.sendMoveToColor(servergame, opponentColor, move); // Send their move to their opponent.
+	gameutility.sendMoveToColor(servergame, opponentColor, baseMove); // Send their move to their opponent.
+}
+
+/**
+ * Validates the move against the server-side board simulation, makes it, and updates the game state.
+ * Returns the resulting BaseMove, or undefined if the move was illegal (error messages are sent to the client).
+ */
+function applyServerValidatedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+	color: Player,
+): BaseMove | undefined {
+	// Makes ts happy knowing boardsim is already defined
+	const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim! };
+
+	const validationResult = movevalidation.isCompactMoveLegal(gamefile, messageContents.move);
+	if (!validationResult.valid) {
+		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		sendSocketMessage(
+			ws,
+			'general',
+			'notifyerror',
+			'Oops! That was an illegal move. If this is a bug, please report it!',
+		);
+		// Send the sender a gameupdate to correct their board if a bug somehow caused this
+		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
+		return;
+	}
+
+	// Generate and make the move in the logical game
+	const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.draft);
+
+	// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
+	// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
+	const baseMove = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
+	const clockStamp = pushGameClock(servergame);
+	if (clockStamp !== undefined) {
+		fullMove.clockStamp = clockStamp;
+		baseMove.clockStamp = clockStamp;
+	}
+
+	// The server determines the game conclusion; discard any client-claimed conclusion.
+	gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
+	setGameConclusion(servergame, gamefile.basegame.gameConclusion);
+
+	return baseMove;
+}
+
+/**
+ * Accepts a move for large variants without server-side validation, and updates the game state.
+ * Returns the resulting BaseMove, or undefined if the claimed game conclusion was invalid.
+ */
+function applyClientReportedMove(
+	ws: CustomWebSocket,
+	servergame: ServerGame,
+	messageContents: SubmitMoveMessage,
+	moveDraft: _Move_Out,
+	color: Player,
+): BaseMove | undefined {
+	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
+		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
+		return;
+	}
+
+	const baseMove: BaseMove = {
+		startCoords: moveDraft.startCoords,
+		endCoords: moveDraft.endCoords,
+		compact: moveDraft.compact,
+		// clockStamp added below
+	};
+	if (moveDraft.promotion !== undefined) baseMove.promotion = moveDraft.promotion;
+	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
+	servergame.basegame.moves.push(baseMove); // Add the move to the list!
+	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
+	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
+	if (clockStamp !== undefined) baseMove.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
+	setGameConclusion(servergame, messageContents.gameConclusion);
+
+	return baseMove;
 }
 
 /**
