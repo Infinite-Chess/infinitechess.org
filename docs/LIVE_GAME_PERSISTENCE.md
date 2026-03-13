@@ -127,7 +127,7 @@ These are required to reconstruct each player's `AuthMemberInfo` for socket reco
 
 **Format rationale:** Each move's compact form (e.g., `"1,2>3,4"` or `"5,6>7,8=Q"`) is already a minimal atomic string encoding `startCoords`, `endCoords`, and optional `promotion`. Storing them pipe-delimited avoids the overhead of a separate table while keeping the format simple and non-JSON. Clock stamps are separated into their own column since they're nullable (untimed games) and semantically distinct.
 
-**Alternative: Normalized `live_game_moves` table.** A separate table with `(game_id, ply, compact, clock_stamp)` would be more normalized and efficient for append-only writes (INSERT per move vs UPDATE of a growing TEXT column). This is worth considering for production but is not strictly necessary for the minimal property analysis.
+**Alternative: Normalized `live_game_moves` table.** A separate table with `(game_id, ply, compact, clock_stamp)` would be more normalized and efficient for append-only writes: each move submission becomes a single INSERT rather than an UPDATE that rewrites the entire growing TEXT value. Since SQLite must rewrite the full row on any UPDATE, this overhead grows linearly with move count. For typical games (under ~200 moves), the TEXT approach is practical; for unusually long games, a normalized table avoids the rewrite cost. This is worth considering for production but is not strictly necessary for the minimal property analysis.
 
 ### Group 4: Clock State (for timed games only)
 
@@ -265,7 +265,7 @@ The `live_games` row should be written/updated at each game state change:
 
 ## Edge Cases & Policy Decisions
 
-1. **Games with pasted positions** (`position_pasted = true`): These cannot be logged to the permanent `games` table because the starting position is unknown. They should still be persisted for restart continuity but flagged for special handling. On restart, they can be restored normally since we replay from the variant's default position up to the paste point... actually, pasted positions replace the board state entirely, which means we'd need to store the custom position too. **Recommendation:** Either (a) exclude pasted-position games from persistence (abort them on restart), or (b) add an optional `custom_position_icn` TEXT column for the pasted position.
+1. **Games with pasted positions** (`position_pasted = true`): These cannot be logged to the permanent `games` table because the starting position is unknown. Since a pasted position entirely replaces the board state with an arbitrary position that cannot be derived from the variant alone, replaying moves from the variant's default position will not reproduce the correct game. **Recommendation:** Either (a) exclude pasted-position games from persistence (abort them on restart, which is the simplest approach), or (b) add an optional `custom_position_icn` TEXT column to store the full pasted position in ICN format, enabling correct reconstruction.
 
 2. **Nearly-concluded games**: If a game was concluded but not yet logged (within the 8-second `timeBeforeGameDeletionMillis` window), persist the conclusion. On restart, detect these and immediately run the logging pipeline.
 
@@ -273,6 +273,6 @@ The `live_games` row should be written/updated at each game state change:
 
 4. **Disconnect timers**: Not persisted. On restart, start fresh disconnect timers for all players with a generous grace period.
 
-5. **Guest players**: Guests are identified solely by `browser_id`. If a guest clears their cookies during a restart, they cannot be re-associated with their game. This is an existing limitation.
+5. **Guest players**: Guests are identified solely by `browser_id`. If a guest clears their cookies during a restart, they cannot be re-associated with their game. In this case, the game should proceed normally with disconnect timers running for the absent guest. If the guest fails to reconnect before the disconnect timer expires, the game concludes via the standard disconnect loss mechanism, just as it would for any player who loses connection and fails to return.
 
 6. **Games where clocks expired during downtime**: On restoration, if `adjustedTime <= 0` for the ticking player, immediately flag them as lost on time.
