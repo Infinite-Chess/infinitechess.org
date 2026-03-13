@@ -295,7 +295,7 @@ function doesGameConclusionCheckOut(
 	if (gameConclusion === undefined) return true;
 
 	const { victor, condition } = gameConclusion;
-	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of these which the client can claim the win from (the server has to tell them)
+	if (!winconutil.isConclusionDecisive(condition)) return false; // either resignation, time, or disconnect, or whatever nonsense they specified, none of which trigger from a physical move
 	// Game conclusion is decisive...
 	// We can't submit a move where our opponent wins
 	const oppositeColor = typeutil.invertPlayer(color);
