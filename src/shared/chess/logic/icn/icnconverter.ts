@@ -14,11 +14,13 @@ import type { BaseRay } from '../../../util/math/geometry.js';
 import type { MetaData } from '../../util/metadata.js';
 import type { GameRules } from '../../variants/gamerules.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
+import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
+import winconutil from '../../util/winconutil.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
 import {
@@ -233,7 +235,7 @@ function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
 }
 
 /** The default win condition for each player, if none specified in the ICN. */
-const default_win_condition = 'checkmate';
+const default_win_condition = 'checkmate' as const;
 /** The default turn order, if none specified in the ICN. */
 const defaultTurnOrder = [p.WHITE, p.BLACK];
 /** The default full move, if none specified in the ICN. */
@@ -407,7 +409,7 @@ const worldBorderRegex = new RegExp(
 	'y',
 );
 
-const singleWinConSource = '[a-z]{3,100}'; // 'royalcapture'   Minimum of 3 characters so it's impossible to confuse with turn order.
+const singleWinConSource = `(?:${winconutil.GAMERULE_WIN_CONDITIONS.join('|')})`; // 'royalcapture'
 const singlePlayerWinConSource = `${singleWinConSource}(?:,${singleWinConSource})*`; // 'royalcapture,koth'
 /** Captures the win conditions section in the ICN. */
 const winConditionRegex = new RegExp(
@@ -819,7 +821,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let fullMove: number; // Required
 	let promotionRanks: PlayerGroup<bigint[]> | undefined;
 	let promotionsAllowed: PlayerGroup<RawType[]> | undefined;
-	let winConditions: PlayerGroup<string[]> = {}; // Required
+	let winConditions: PlayerGroup<GameruleWinCondition[]> = {}; // Required
 	let worldBorder: UnboundedRectangle | undefined;
 	let presetSquares: Coords[] | undefined;
 	let presetRays: BaseRay[] | undefined;
@@ -1011,8 +1013,9 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		const winConStrings = winConditionsString.split('|'); // ['checkmate','checkmate,allpiecescaptured']
 		winConditions = {};
 		// If winConStrings.length is 1, all players have the same win conditions
-		if (winConStrings.length === 1) {
-			const winConArray = winConStrings[0]!.split(','); // ['checkmate','allpiecescaptured']
+		if (winConStrings.length === 1 && winConStrings[0] !== undefined) {
+			// The regex guarantees that the win conditions are valid
+			const winConArray = winConStrings[0].split(',') as GameruleWinCondition[]; // ['checkmate','allpiecescaptured']
 			for (const player of turnOrder) {
 				winConditions[player] = [...winConArray];
 			}
@@ -1025,7 +1028,8 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 				);
 			for (const player of uniquePlayers) {
 				const winConString = winConStrings.shift()!;
-				winConditions[player] = winConString.split(','); // ['checkmate','allpiecescaptured']
+				// The regex guarantees that the win conditions are valid
+				winConditions[player] = winConString.split(',') as GameruleWinCondition[]; // ['checkmate','allpiecescaptured']
 			}
 		}
 

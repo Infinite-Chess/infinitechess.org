@@ -13,6 +13,7 @@ import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
+import winconutil from './winconutil.js';
 import { players as p } from './typeutil.js';
 
 // Types --------------------------------------------------------------------------
@@ -91,14 +92,23 @@ function getGameConclusionFromResultAndTermination(
 	result: string,
 	termination: Condition,
 ): GameConclusion {
-	if (termination === 'aborted') return { condition: 'aborted' };
 	// prettier-ignore
-	const victor: Player | null =
+	const victor =
 		result === '1-0' ? p.WHITE :
 		result === '0-1' ? p.BLACK :
 		result === '1/2-1/2' ? null :
+		result === '*' ? undefined :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
-	return { victor, condition: termination };
+
+	const parseResult = winconutil.gameConclusionSchema.safeParse({
+		condition: termination,
+		victor,
+	});
+	if (!parseResult.success)
+		throw new Error(
+			`Invalid GameConclusion for result "${result}" and termination "${termination}": ${parseResult.error.message}`,
+		);
+	return parseResult.data;
 }
 
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */

@@ -1,4 +1,7 @@
 {
+  "92": {
+    "note": "Deleted invalid_wincon line 505"
+  },
   "91": {
     "note": "Added illegal_position_king_capture line 654."
   },

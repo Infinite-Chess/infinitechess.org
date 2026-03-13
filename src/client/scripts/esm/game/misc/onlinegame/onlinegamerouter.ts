@@ -233,7 +233,7 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 		gameInfo: {
 			id: message.game_id,
 			rated: Boolean(message.rated),
-			publicity: message.private ? ('private' as const) : ('public' as const),
+			publicity: message.private ? 'private' : 'public',
 			playerRatings,
 		},
 		metadata: parsedGame.metadata,

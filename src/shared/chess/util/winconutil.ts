@@ -6,66 +6,113 @@
  *
  */
 
+import type { Player } from './typeutil.js';
 import type { GameRules } from '../variants/gamerules.js';
 
-/** All possible game conclusion terminations. */
-const ALL_CONDITIONS = [
-	// Win/loss conditions (determined during gameplay)
+import * as z from 'zod';
+
+// Constants -----------------------------------------------------------------
+
+/**
+ * Win conditions that are valid gamerule options for either color.
+ * These are triggered by a move being made.
+ * This excludes action-based wins like time forfeit, resignation, and disconnect.
+ */
+const GAMERULE_WIN_CONDITIONS = [
 	'checkmate',
 	'royalcapture',
 	'allroyalscaptured',
 	'allpiecescaptured',
 	'koth', // King of the Hill
-	'time',
-	// Draw conditions
-	'stalemate',
-	'moverule',
-	'repetition',
-	'insuffmat', // insufficient material
-	'agreement',
-	// Game termination without completion
-	'resignation',
-	'disconnect',
-	'aborted',
 ] as const;
 
 /**
- * Union type of all possible game conclusion conditions.
- * Represents how a game can be terminated.
+ * Conditions where one player wins (victor is a Player).
+ * Covers both move-triggered wins and action-based wins.
  */
-export type Condition = (typeof ALL_CONDITIONS)[number];
+const WIN_CONDITIONS = [...GAMERULE_WIN_CONDITIONS, 'time', 'resignation', 'disconnect'] as const;
 
-/** Valid win conditions that either color can have. */
-const validWinConditions = [
-	'checkmate',
-	'royalcapture',
-	'allroyalscaptured',
-	'allpiecescaptured',
-	'koth',
-];
+/** Draw conditions that are triggered by a move being made. */
+const MOVE_TRIGGERED_DRAW_CONDITIONS = [
+	'stalemate',
+	'moverule',
+	'repetition',
+	'insuffmat', // Insufficient material
+] as const;
+
+/** Conditions that result in a draw (victor is null). */
+const DRAW_CONDITIONS = [...MOVE_TRIGGERED_DRAW_CONDITIONS, 'agreement'] as const;
 
 /**
  * List of all conclusions that are triggered by a move being made.
  * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement,
  * which can happen at any point in time.
  */
-const moveTriggeredConclusions = [
-	...validWinConditions,
-	'stalemate',
-	'repetition',
-	'moverule',
-	'insuffmat',
-];
+const MOVE_TRIGGERED_CONCLUSIONS = [
+	...GAMERULE_WIN_CONDITIONS,
+	...MOVE_TRIGGERED_DRAW_CONDITIONS,
+] as const;
+
+// Types --------------------------------------------------------------------------
+
+/** Condition where one player wins. victor will be a Player. */
+type WinCondition = (typeof WIN_CONDITIONS)[number];
+/** Win condition that is a valid gamerule option for either color. */
+export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
+/** Condition that results in a draw. victor will be null. */
+type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+/** Condition that aborts the game. victor will be undefined. */
+type AbortCondition = 'aborted';
+type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
+
+/** Game ended with a decisive result — one player won. */
+type WinConclusion = {
+	condition: WinCondition;
+	/** The player who won. */
+	victor: Player;
+};
+
+/** Game ended in a draw. */
+type DrawConclusion = {
+	condition: DrawCondition;
+	/** null indicates a draw. */
+	victor: null;
+};
+
+/** Game was aborted before completion — no result. */
+type AbortConclusion = {
+	condition: AbortCondition;
+	/** undefined indicates no result. */
+	victor?: undefined;
+};
+
+/** Stores the results of a game, including how it was terminated, and who won. */
+export type GameConclusion = WinConclusion | DrawConclusion | AbortConclusion;
 
 /**
- * true if the provided win condition is valid for any color to have in the gamerules.
- * This excludes draw conditions, and stuff like time forfeit or resignation.
- * @param winCondition - The win condition
- * @returns
+ * Union type of all possible game conclusion conditions.
+ * Represents how a game can be terminated.
  */
-function isWinConditionValid(winCondition: string): boolean {
-	return validWinConditions.includes(winCondition);
-}
+export type Condition = WinCondition | DrawCondition | AbortCondition;
+
+// Schemas --------------------------------------------------------------------------
+
+/** The zod schema for validating a GameConclusion object. */
+const gameConclusionSchema = z.discriminatedUnion('condition', [
+	z.strictObject({
+		condition: z.enum(WIN_CONDITIONS),
+		victor: z.number().int().nonnegative() as z.ZodType<Player>,
+	}),
+	z.strictObject({
+		condition: z.enum(DRAW_CONDITIONS),
+		victor: z.literal(null),
+	}),
+	z.strictObject({
+		condition: z.literal('aborted'),
+	}),
+]);
+
+// Functions --------------------------------------------------------------------------
 
 /**
  * Calculates if the provided condition is move-triggered.
@@ -76,7 +123,7 @@ function isWinConditionValid(winCondition: string): boolean {
  * @returns *true* if the condition is move-triggered.
  */
 function isConclusionMoveTriggered(condition: string): boolean {
-	return moveTriggeredConclusions.includes(condition);
+	return MOVE_TRIGGERED_CONCLUSIONS.includes(condition as MoveTriggeredCondition);
 }
 
 /**
@@ -94,9 +141,10 @@ function getTerminationInEnglish(gameRules: GameRules, condition: Condition): st
 }
 
 export default {
-	ALL_CONDITIONS,
+	gameConclusionSchema,
 
-	isWinConditionValid,
+	GAMERULE_WIN_CONDITIONS,
+
 	isConclusionMoveTriggered,
 	getTerminationInEnglish,
 };

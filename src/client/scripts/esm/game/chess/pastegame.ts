@@ -102,8 +102,6 @@ async function callbackPaste(_event: Event): Promise<void> {
 		return;
 	}
 
-	if (!verifyWinConditions(longformOut.gameRules.winConditions)) return;
-
 	// console.log(jsutil.deepCopyObject(longformOut));
 
 	pasteGame(longformOut);
@@ -111,24 +109,6 @@ async function callbackPaste(_event: Event): Promise<void> {
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
 		socketmessages.send('game', 'paste');
-}
-
-/** For now doesn't verify if the required royalty is present. */
-function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
-	let oneInvalid = false;
-	Object.values(winConditions)
-		.flat()
-		.forEach((winCondition) => {
-			if (!winconutil.isWinConditionValid(winCondition)) {
-				// Not valid ❌
-				toast.show(`${translations.copypaste.invalid_wincon} "${winCondition}".`, {
-					error: true,
-				});
-				oneInvalid = true;
-			} // else valid ✅
-		});
-
-	return !oneInvalid;
 }
 
 /**

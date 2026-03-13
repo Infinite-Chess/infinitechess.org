@@ -263,7 +263,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefile.basegame.gameConclusion = { victor: ourColor, condition: 'resignation' };
+		gamefile.basegame.gameConclusion = { condition: 'resignation', victor: ourColor! };
 		gameslot.concludeGame();
 		return;
 	}

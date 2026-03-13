@@ -6,6 +6,7 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
+import type { GameruleWinCondition } from './winconutil.js';
 import type { Game, Board, FullGame } from '../logic/gamefile.js';
 
 import typeutil from './typeutil.js';
@@ -71,12 +72,8 @@ function eraseTerminationMetadata(basegame: Game): void {
 function isOpponentUsingWinCondition(
 	basegame: Game,
 	friendlyColor: Player,
-	winCondition: string,
+	winCondition: GameruleWinCondition,
 ): boolean {
-	if (!winconutil.isWinConditionValid(winCondition))
-		throw new Error(
-			`Cannot test if opponent of color "${friendlyColor}" is using invalid win condition "${winCondition}"!`,
-		);
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
 	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }

@@ -32,14 +32,7 @@ import { pushGameClock, setGameConclusion } from './gamemanager.js';
 const submitmoveschem = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
-	gameConclusion: z
-		.strictObject({
-			condition: z.enum(winconutil.ALL_CONDITIONS),
-			victor: z.union([z.number().int().nonnegative(), z.null()]).optional() as z.ZodType<
-				Player | null | undefined
-			>,
-		})
-		.optional(),
+	gameConclusion: winconutil.gameConclusionSchema.optional(),
 });
 
 type SubmitMoveMessage = z.infer<typeof submitmoveschem>;

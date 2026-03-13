@@ -3,9 +3,9 @@
 import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
-import type { Condition } from '../util/winconutil.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { PieceMoveset } from './movesets.js';
+import type { GameConclusion } from '../util/winconutil.js';
 import type { Move, BaseMove } from './movepiece.js';
 import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
@@ -40,14 +40,6 @@ interface Snapshot {
 	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */
 	box: BoundingBox;
 }
-
-/** Stores the results of a game, including how it was terminated, and who won. */
-type GameConclusion = {
-	/** How the game terminated. */
-	condition: Condition;
-	/** Which player was victorious. null = DRAW. undefined = ABORTED */
-	victor?: Player | null;
-};
 
 /**
  * Purely game data

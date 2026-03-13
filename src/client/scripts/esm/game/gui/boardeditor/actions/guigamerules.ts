@@ -7,6 +7,7 @@
 import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
 import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
 import type { UnboundedRectangle } from '../../../../../../../shared/util/math/bounds';
+import type { GameruleWinCondition } from '../../../../../../../shared/chess/util/winconutil';
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 import boardutil from '../../../../../../../shared/chess/util/boardutil';
@@ -261,7 +262,7 @@ function readGameRules(): void {
 	}
 
 	// win conditions
-	const winConditions: string[] = [];
+	const winConditions: GameruleWinCondition[] = [];
 	if (element_checkmate.checked) winConditions.push('checkmate');
 	if (element_royalcapture.checked) winConditions.push('royalcapture');
 	if (element_allroyalscaptured.checked) winConditions.push('allroyalscaptured');
