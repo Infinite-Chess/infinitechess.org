@@ -14,7 +14,6 @@
 import type { Invite } from '../misc/invites.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { OpponentDisconnectValue } from '../misc/onlinegame/disconnect.js';
 import type { JoinGameMessage, LoggedGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type {
 	GameUpdateMessage,
@@ -83,7 +82,10 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('opponentafkreturn') }),
 	z.strictObject({
 		action: z.literal('opponentdisconnect'),
-		value: z.custom<OpponentDisconnectValue>(),
+		value: z.strictObject({
+			millisUntilAutoDisconnectResign: z.number(),
+			wasByChoice: z.boolean(),
+		}),
 	}),
 	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
 	z.strictObject({ action: z.literal('serverrestart'), value: z.number() }),
