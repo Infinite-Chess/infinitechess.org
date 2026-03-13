@@ -2,8 +2,6 @@
 
 ## Infrastructure Prerequisites
 
-- Output all games in the database in a json the same format the icnvalidator accepts. Determine if there are any with illegal moves played (can only happen if the opponent failed to report). If there are any, decide whether to keep or delete them.
-
 - Determine the minimum live game properties required to reconstruct the in-memory game state, and timer states, on a server restart.
 
 - Create the `live_games` SQLite table and write full game state to it on every move / game update.
