@@ -80,34 +80,35 @@ function submitMove(
 	const opponentColor = typeutil.invertPlayer(color);
 
 	// If the game is already over, don't accept it.
-	// Should we resync? Or tell the browser their move wasn't accepted? They will know if they need to resync.
-	// The ACTUAL game conclusion SHOULD already be on the way to them so....
 	if (gameutility.isGameOver(servergame.basegame)) return;
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = servergame.basegame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
-		console.error(
-			`Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`,
-		);
-		return resyncToGame(ws, servergame.match.id);
+		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
+		logEventsAndPrint(errString, 'hackLog.txt');
+		resyncToGame(ws, servergame.match.id);
+		return;
 	}
 
 	// Make sure it's their turn
-	if (servergame.basegame.whosTurn !== color)
-		return sendSocketMessage(
+	if (servergame.basegame.whosTurn !== color) {
+		sendSocketMessage(
 			ws,
 			'general',
 			'printerror',
 			"Cannot submit a move when it's not your turn.",
 		);
+		return;
+	}
 
 	// Legality checks...
 	const moveDraft = doesMoveCheckOut(messageContents.move);
 	if (moveDraft === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
-		return sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
+		sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
+		return;
 	}
 
 	// Check if the move exceeds the soft distance cap based on game duration
