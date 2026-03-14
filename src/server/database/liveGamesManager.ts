@@ -14,8 +14,12 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // Types ----------------------------------------------------------------------------------------------
 
 /** Structure of a complete live_games record. */
-export interface LiveGamesRecord {
+export interface LiveGamesRecord extends LiveGameData {
 	game_id: number;
+}
+
+/** Live game data columns, excluding the primary key. */
+export interface LiveGameData {
 	time_created: number;
 	variant: string;
 	clock: string;
@@ -93,7 +97,7 @@ function insertLiveGame(record: LiveGamesRecord): void {
  * @param game_id - The game to update.
  * @param updates - An object containing only the columns to update and their new values.
  */
-function updateLiveGame(game_id: number, updates: Partial<Omit<LiveGamesRecord, 'game_id'>>): void {
+function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 	const entries = Object.entries(updates);
 	if (entries.length === 0) return;
 

@@ -9,8 +9,8 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { ServerGame, PlayerData } from './gameutility.js';
+import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type {
 	LivePlayerData,
 	LivePlayerGamesRecord,
@@ -128,7 +128,7 @@ function onMoveSubmitted(servergame: ServerGame): void {
 	const { basegame, match } = servergame;
 	const now = Date.now();
 
-	const gameUpdates: Partial<Omit<LiveGamesRecord, 'game_id'>> = {
+	const gameUpdates: Partial<LiveGameData> = {
 		moves: getMovesString(servergame),
 		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
 	};
@@ -162,7 +162,7 @@ function onGameConcluded(servergame: ServerGame): void {
 	if (conclusion === undefined) return;
 
 	const now = Date.now();
-	const gameUpdates: Partial<Omit<LiveGamesRecord, 'game_id'>> = {
+	const gameUpdates: Partial<LiveGameData> = {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
 		time_ended: match.timeEnded ?? now,
