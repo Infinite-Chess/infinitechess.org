@@ -26,8 +26,9 @@ function onJoinGame(ws: CustomWebSocket): void {
 
 	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
 	if (servergame.basegame.whosTurn === colorPlayingAs) {
+		const hadAFKTimer = servergame.match.autoAFKResignTime !== undefined;
 		cancelAutoAFKResignTimer(servergame, true);
-		liveGameValues.onPlayerAFKReturn(servergame);
+		if (hadAFKTimer) liveGameValues.onPlayerAFKReturn(servergame);
 	}
 	cancelDisconnectTimer(servergame.match, colorPlayingAs);
 	liveGameValues.onPlayerReconnected(servergame, colorPlayingAs);

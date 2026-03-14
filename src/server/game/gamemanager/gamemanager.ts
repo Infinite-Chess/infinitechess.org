@@ -560,7 +560,7 @@ function restoreLiveGames(): void {
 			if (pendingTimers.deleteTimerMs <= 0) {
 				// Timer already expired, delete immediately
 				deleteGame(servergame);
-				continue; // Don't start other timers for a game that's being deleted
+				continue; // Skip to next game since this one is being deleted
 			}
 			servergame.match.deleteTimeoutID = setTimeout(
 				() => deleteGame(servergame),

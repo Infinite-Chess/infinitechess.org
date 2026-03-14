@@ -127,7 +127,7 @@ function restoreSingleGame(
 	const gameMetadata = reconstructMetadata(gameRow, playerRows, playerIdentities);
 
 	// 3. Reconstruct clock values for timed games
-	const clockValues = reconstructClockValues(gameRow, playerRows, now);
+	const clockValues = reconstructClockValues(gameRow, playerRows);
 
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
@@ -218,7 +218,15 @@ function reconstructPlayerIdentities(
 			);
 
 			if (memberData) {
-				const roles = memberData.roles ? JSON.parse(memberData.roles) : null;
+				let roles = null;
+				try {
+					roles = memberData.roles ? JSON.parse(memberData.roles) : null;
+				} catch {
+					logEventsAndPrint(
+						`Failed to parse roles for user_id ${row.user_id} during game restoration.`,
+						'errLog.txt',
+					);
+				}
 				identities[player] = {
 					signedIn: true,
 					user_id: row.user_id,
@@ -297,7 +305,6 @@ function reconstructMetadata(
 function reconstructClockValues(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
-	_now: number,
 ): ClockValues | undefined {
 	// Untimed games don't have clock values
 	if (gameRow.clock === '-') return undefined;
@@ -383,9 +390,7 @@ function reconstructMatchInfo(
 /**
  * Parses the moves string back into move objects.
  */
-function parseMoves(
-	movesString: string,
-): Array<{
+function parseMoves(movesString: string): Array<{
 	startCoords: [bigint, bigint];
 	endCoords: [bigint, bigint];
 	promotion?: number;
