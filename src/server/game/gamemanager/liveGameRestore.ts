@@ -173,24 +173,13 @@ function restoreSingleGame(
 	// 8. Reconstruct MatchInfo
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 9. Restore clock state for timed games
-	if (!basegame.untimed && basegame.clocks && gameRow.color_ticking !== null) {
-		// Adjust ticking player's time for elapsed time since snapshot
-		const elapsed = now - (gameRow.clock_snapshot_time ?? now);
-		const tickingPlayer = gameRow.color_ticking as Player;
-		const currentTime = basegame.clocks.currentTime[tickingPlayer];
-		if (currentTime !== undefined) {
-			basegame.clocks.currentTime[tickingPlayer] = currentTime - elapsed;
-		}
-		// Set clock to ticking state
-		basegame.clocks.colorTicking = tickingPlayer;
-		basegame.clocks.timeAtTurnStart = now;
-		basegame.clocks.timeRemainAtTurnStart = basegame.clocks.currentTime[tickingPlayer]!;
-	}
+	// Note: clock state (ticking color, elapsed-adjusted time remaining, timeAtTurnStart) is
+	// already set correctly by clock.edit() inside initGame() via the clockValues we pass in.
+	// timeColorTickingLosesAt in those clockValues encodes the snapshot-adjusted absolute expiry.
 
 	const servergame: ServerGame = { basegame, match: matchInfo, boardsim };
 
-	// 10. Compute pending timers
+	// 9. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame, now);
 
 	return { servergame, pendingTimers };
@@ -309,16 +298,27 @@ function reconstructClockValues(
 	// Untimed games don't have clock values
 	if (gameRow.clock === '-') return undefined;
 
-	const clocks: { [_color in Player]?: number } = {};
+	const clocks: PlayerGroup<number> = {};
 	for (const row of playerRows) {
 		if (row.time_remaining_ms !== null) {
 			clocks[row.player_number] = row.time_remaining_ms;
 		}
 	}
 
+	const colorTicking = gameRow.color_ticking === null ? undefined : gameRow.color_ticking;
+
+	// Set timeColorTickingLosesAt so that clock.edit() (called inside initGame) can
+	// correctly compute the time remaining, accounting for elapsed time since the snapshot.
+	let timeColorTickingLosesAt: number | undefined;
+	if (colorTicking !== undefined && clocks[colorTicking] !== undefined) {
+		const snapshotTime = gameRow.clock_snapshot_time ?? Date.now();
+		timeColorTickingLosesAt = snapshotTime + clocks[colorTicking]!;
+	}
+
 	return {
 		clocks,
-		colorTicking: gameRow.color_ticking as Player | undefined,
+		colorTicking,
+		timeColorTickingLosesAt,
 	};
 }
 
