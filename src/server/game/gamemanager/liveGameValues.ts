@@ -7,8 +7,8 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame, PlayerData } from './gameutility.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { ServerGame, PlayerData, PlayerDisconnect } from './gameutility.js';
 import type {
 	LivePlayerDisconnectData,
 	LivePlayerGamesRecord,
@@ -58,7 +58,7 @@ function getPlayerEloString(basegame: Game, player: Player): string | null {
 /**
  * Returns the disconnect-related live_player_games columns for a player's current disconnect state.
  */
-function getDisconnectColumnData(disconnect: PlayerData['disconnect']): LivePlayerDisconnectData {
+function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDisconnectData {
 	return {
 		disconnect_cushion_end_time: disconnect.startTime ?? null,
 		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,

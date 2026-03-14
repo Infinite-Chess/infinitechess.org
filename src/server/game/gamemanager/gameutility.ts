@@ -113,6 +113,45 @@ type ParticipantState = {
 	millisUntilAutoAFKResign?: number;
 };
 
+/** Contains information about this player's disconnection and auto resign timer. */
+type PlayerDisconnect = {
+	/**
+	 * The timeout id of the timer that will START the auto disconnection timer
+	 * This is triggered if their socket unexpectedly closes,
+	 * and lasts for 5 seconds to give them a chance to reconnect.
+	 */
+	startID?: NodeJS.Timeout;
+	/**
+	 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
+	 * Set alongside startID when the cushion timer is started.
+	 * Used for persistence: on server restart, this allows reviving the cushion timer.
+	 */
+	startTime?: number;
+} & (
+	| {
+			/**
+			 * The timeout id of the timer that will auto-resign the
+			 * player if they are disconnected for too long.
+			 */
+			timeoutID: NodeJS.Timeout;
+			/**
+			 * The estimated timestamp that the player will
+			 * be auto-resigned from being disconnected too long.
+			 */
+			timeToAutoLoss: number;
+			/**
+			 * Whether the player was disconnected by choice or not.
+			 * If not, they are given extra time to reconnect.
+			 */
+			wasByChoice: boolean;
+	  }
+	| {
+			timeoutID: undefined;
+			timeToAutoLoss: undefined;
+			wasByChoice: undefined;
+	  }
+);
+
 /** Information about a single player in an online game. */
 interface PlayerData {
 	/**
@@ -128,43 +167,7 @@ interface PlayerData {
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. */
 	lastOfferPly?: number;
 	/** Contains information about this players disconnection and auto resign timer. */
-	disconnect: {
-		/**
-		 * The timeout id of the timer that will START the auto disconnection timer
-		 * This is triggered if their socket unexpectedly closes,
-		 * and lasts for 5 seconds to give them a chance to reconnect.
-		 */
-		startID?: NodeJS.Timeout;
-		/**
-		 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
-		 * Set alongside startID when the cushion timer is started.
-		 * Used for persistence: on server restart, this allows reviving the cushion timer.
-		 */
-		startTime?: number;
-	} & (
-		| {
-				/**
-				 * The timeout id of the timer that will auto-resign the
-				 * player if they are disconnected for too long.
-				 */
-				timeoutID: NodeJS.Timeout;
-				/**
-				 * The estimated timestamp that the player will
-				 * be auto-resigned from being disconnected too long.
-				 */
-				timeToAutoLoss: number;
-				/**
-				 * Whether the player was disconnected by choice or not.
-				 * If not, they are given extra time to reconnect.
-				 */
-				wasByChoice: boolean;
-		  }
-		| {
-				timeoutID: undefined;
-				timeToAutoLoss: undefined;
-				wasByChoice: undefined;
-		  }
-	);
+	disconnect: PlayerDisconnect;
 }
 
 /** The info for the server hosting the game */
@@ -860,6 +863,7 @@ export type {
 	ServerGame,
 	MatchInfo,
 	PlayerData,
+	PlayerDisconnect,
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,
