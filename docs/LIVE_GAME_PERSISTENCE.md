@@ -42,6 +42,7 @@ ServerGame
 │   │       ├── lastOfferPly?: number
 │   │       └── disconnect:
 │   │           ├── startID?: Timeout              ← RUNTIME ONLY (handle)
+│   │           ├── startTime?: number             ← MUST PERSIST (proposed new property on ServerGame)
 │   │           ├── timeoutID?: Timeout            ← RUNTIME ONLY (handle)
 │   │           ├── timeToAutoLoss?: number        ← MUST PERSIST
 │   │           └── wasByChoice?: boolean          ← MUST PERSIST
@@ -51,7 +52,7 @@ ServerGame
 │   ├── drawOfferState?: Player
 │   ├── deleteTimeoutID?: Timeout                  ← RUNTIME ONLY (handle)
 │   └── positionPasted: boolean
-└── boardsim?: Board                               ← CONDITIONALLY DERIVABLE (track via has_boardsim)
+└── boardsim?: Board                               ← CONDITIONALLY DERIVABLE (track via validate_moves)
 ```
 
 ---
@@ -68,8 +69,8 @@ These are non-serializable JavaScript runtime handles. On restoration, each time
 - **`match.autoTimeLossTimeoutID`** — `setTimeout` handle. Recreated from clock state on restoration.
 - **`match.autoAFKResignTimeoutID`** — `setTimeout` handle. Recreated from persisted `autoAFKResignTime`.
 - **`match.deleteTimeoutID`** — `setTimeout` handle. Recreated from persisted `delete_time`.
-- **`playerData[color].disconnect.startID`** — `setTimeout` handle for the 5-second reconnection cushion. On restart all sockets are severed, so the cushion is not relevant; we go directly to the disconnect timer state.
-- **`playerData[color].disconnect.timeoutID`** — `setTimeout` handle. Recreated from persisted `timeToAutoLoss`.
+- **`playerData[color].disconnect.startID`** — `setTimeout` handle for the 5-second reconnection cushion. Recreated from persisted `disconnect.startTime` (the epoch ms when the cushion expires). If the cushion has already elapsed, immediately start the disconnect auto-resign timer.
+- **`playerData[color].disconnect.timeoutID`** — `setTimeout` handle. Recreated from persisted `disconnect.timeToAutoLoss`.
 
 ### Derivable From Other Persisted Data
 
@@ -77,7 +78,7 @@ These are non-serializable JavaScript runtime handles. On restoration, each time
 - **`basegame.whosTurn`** — Computed: `gameRules.turnOrder[moves.length % turnOrder.length]`.
 - **`basegame.untimed`** — Derived from time control: `clockutil.isClockValueInfinite(clock)`.
 - **`basegame.clocks.startTime`** — Derived from time control: `clockutil.getMinutesAndIncrementFromClock(clock)`.
-- **`boardsim`** — Conditionally reconstructed: if `has_boardsim` is true, call `initBoard()` then replay all persisted moves. If `has_boardsim` is false (e.g., after a position paste, or for unsupported variants), `boardsim` stays `undefined` and the server trusts client-reported moves.
+- **`boardsim`** — Conditionally reconstructed: if `validate_moves` is true, call `initBoard()` then replay all persisted moves. If `validate_moves` is false (e.g., after a position paste, or for unsupported variants), `boardsim` stays `undefined` and the server trusts client-reported moves.
 - **`metadata.Event`** — Constructed from `rated` + `variant`: `"Rated Classical infinite chess game"`.
 - **`metadata.Site`** — Constant: `'https://www.infinitechess.org/'`.
 - **`metadata.Round`** — Constant: `'-'`.
@@ -101,14 +102,14 @@ Following the existing pattern of `games` + `player_games` for ended games, live
 
 #### Group 1: Game Identity (immutable after creation)
 
-| #   | Property      | DB Column      | Type                | Source              | Notes                                    |
-| --- | ------------- | -------------- | ------------------- | ------------------- | ---------------------------------------- |
-| 1   | Game ID       | `game_id`      | INTEGER PRIMARY KEY | `match.id`          | Unique across both live and logged games |
-| 2   | Creation time | `time_created` | INTEGER NOT NULL    | `match.timeCreated` | Epoch milliseconds                       |
-| 3   | Variant       | `variant`      | TEXT NOT NULL       | `metadata.Variant`  | e.g., `"Classical"`, `"Omega^3"`         |
-| 4   | Time control  | `clock`        | TEXT NOT NULL       | `match.clock`       | e.g., `"600+5"` or `"-"` for untimed     |
-| 5   | Rated         | `rated`        | INTEGER NOT NULL    | `match.rated`       | 0 = casual, 1 = rated                    |
-| 6   | Publicity     | `publicity`    | TEXT NOT NULL       | `match.publicity`   | `'public'` or `'private'`                |
+| #   | Property      | DB Column      | Type                                       | Source              | Notes                                                             |
+| --- | ------------- | -------------- | ------------------------------------------ | ------------------- | ----------------------------------------------------------------- |
+| 1   | Game ID       | `game_id`      | INTEGER PRIMARY KEY                        | `match.id`          | Unique across both live and logged games                          |
+| 2   | Creation time | `time_created` | INTEGER NOT NULL                           | `match.timeCreated` | Epoch milliseconds                                                |
+| 3   | Variant       | `variant`      | TEXT NOT NULL                              | `metadata.Variant`  | e.g., `"Classical"`, `"Omega^3"`                                  |
+| 4   | Time control  | `clock`        | TEXT NOT NULL                              | `match.clock`       | e.g., `"600+5"` or `"-"` for untimed                              |
+| 5   | Rated         | `rated`        | INTEGER NOT NULL                           | `match.rated`       | 0 = casual, 1 = rated                                             |
+| 6   | Private       | `private`      | INTEGER NOT NULL CHECK (private IN (0, 1)) | `match.publicity`   | 0 = public, 1 = private. Models after the existing `games` table. |
 
 #### Group 2: Move History (grows with each move)
 
@@ -157,24 +158,24 @@ actual_remaining = stored_remaining - (Date.now() - clock_snapshot_time)
 | --- | ---------------- | ------------------ | ------- | ---------------------- | -------------------------------------------------------------------- |
 | 10  | Draw offer state | `draw_offer_state` | INTEGER | `match.drawOfferState` | Player number who extended the current offer. NULL if no open offer. |
 
-**Note:** Per-player `last_offer_ply` is stored in the `live_player_games` table.
+**Note:** Per-player `last_draw_offer_ply` is stored in the `live_player_games` table.
 
 #### Group 5: Game Conclusion (set when game ends)
 
 | #   | Property             | DB Column              | Type    | Source                     | Notes                                                                                                |
 | --- | -------------------- | ---------------------- | ------- | -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 11  | Conclusion victor    | `conclusion_victor`    | INTEGER | `gameConclusion.victor`    | Winning player number. NULL if draw or ongoing.                                                      |
-| 12  | Conclusion condition | `conclusion_condition` | TEXT    | `gameConclusion.condition` | e.g., `"checkmate"`, `"time"`, `"resignation"`, `"aborted"`, `"agreement"`. NULL if game is ongoing. |
+| 11  | Conclusion condition | `conclusion_condition` | TEXT    | `gameConclusion.condition` | e.g., `"checkmate"`, `"time"`, `"resignation"`, `"aborted"`, `"agreement"`. NULL if game is ongoing. |
+| 12  | Conclusion victor    | `conclusion_victor`    | INTEGER | `gameConclusion.victor`    | Winning player number. NULL if draw or ongoing.                                                      |
 | 13  | Time ended           | `time_ended`           | INTEGER | `match.timeEnded`          | Epoch millis when game concluded. NULL if ongoing.                                                   |
 
 **Representation:** The `GameConclusion` type uses `undefined` for ongoing games (not aborted — only `undefined` means ongoing), `null` victor for draws, and a `Player` number for wins. In the DB: NULL `conclusion_condition` = ongoing; non-NULL `conclusion_condition` + NULL `conclusion_victor` = draw or aborted (distinguished by condition text); non-NULL both = decisive result.
 
 #### Group 6: Timer State (for restoration of active timers)
 
-| #   | Property             | DB Column              | Type    | Source                              | Notes                                                                                                                                                                                                                              |
-| --- | -------------------- | ---------------------- | ------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 14  | AFK auto-resign time | `auto_afk_resign_time` | INTEGER | `match.autoAFKResignTime`           | Epoch millis when the AFK auto-resign fires. NULL if no player is currently AFK. On restoration: `remaining = stored - Date.now()`. If ≤ 0, immediately resign.                                                                    |
-| 15  | Delete time          | `delete_time`          | INTEGER | _(computed when conclusion is set)_ | Epoch millis when the concluded game should be deleted and logged. NULL if game is ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis` (currently 8 seconds). On restoration: if elapsed, immediately run logging pipeline. |
+| #   | Property             | DB Column         | Type    | Source                              | Notes                                                                                                                                                                                                                              |
+| --- | -------------------- | ----------------- | ------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 14  | AFK auto-resign time | `afk_resign_time` | INTEGER | `match.autoAFKResignTime`           | Epoch millis when the AFK auto-resign fires. NULL if no player is currently AFK. On restoration: `remaining = stored - Date.now()`. If ≤ 0, immediately resign.                                                                    |
+| 15  | Delete time          | `delete_time`     | INTEGER | _(computed when conclusion is set)_ | Epoch millis when the concluded game should be deleted and logged. NULL if game is ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis` (currently 8 seconds). On restoration: if elapsed, immediately run logging pipeline. |
 
 **Why AFK state must persist:** A server restart does not mean the player is at their keyboard. The AFK auto-resign timer was started because the client explicitly reported going AFK. Only the client sending an "AFK-Return" message cancels this timer. Since WebSocket connections are severed by a restart, the server has no way to know whether the player is actually back until they reconnect and send that message. We must preserve the timer so that a player who was AFK before the restart and remains AFK afterward will still be auto-resigned.
 
@@ -182,12 +183,12 @@ actual_remaining = stored_remaining - (Date.now() - clock_snapshot_time)
 
 #### Group 7: Flags
 
-| #   | Property        | DB Column         | Type                       | Source                              | Notes                                                                                                                                                                                                                           |
-| --- | --------------- | ----------------- | -------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 16  | Position pasted | `position_pasted` | INTEGER NOT NULL DEFAULT 0 | `match.positionPasted`              | Whether a custom position was pasted in. If true, the game will NOT be logged to the permanent `games` table after conclusion.                                                                                                  |
-| 17  | Has boardsim    | `has_boardsim`    | INTEGER NOT NULL DEFAULT 1 | `servergame.boardsim !== undefined` | Whether server-side move legality validation is active. Set to 1 at creation for supported variants, set to 0 when a position is pasted (which deletes `boardsim`). Updated every move submission to reflect the current state. |
+| #   | Property        | DB Column         | Type                                                         | Source                              | Notes                                                                                                                                                                                                                           |
+| --- | --------------- | ----------------- | ------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 16  | Position pasted | `position_pasted` | INTEGER NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)) | `match.positionPasted`              | Whether a custom position was pasted in. If true, the game will NOT be logged to the permanent `games` table after conclusion.                                                                                                  |
+| 17  | Validate moves  | `validate_moves`  | INTEGER NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))  | `servergame.boardsim !== undefined` | Whether server-side move legality validation is active. Set to 1 at creation for supported variants, set to 0 when a position is pasted (which deletes `boardsim`). Updated every move submission to reflect the current state. |
 
-**Why `has_boardsim`:** The presence of `boardsim` on a `ServerGame` is the sole signal for whether the server performs legal move validation (`movesubmission.ts` checks `servergame.boardsim !== undefined`). Since `boardsim` itself is a large runtime object that can be reconstructed by replaying moves, we only need to know _whether_ to reconstruct it. When a client pastes a custom position, `boardsim` is deleted (`pastereport.ts`), and the server switches to trusting client-reported moves for the remainder of that game. This flag captures that state.
+**Why `validate_moves`:** The presence of `boardsim` on a `ServerGame` is the sole signal for whether the server performs legal move validation (`movesubmission.ts` checks `servergame.boardsim !== undefined`). Since `boardsim` itself is a large runtime object that can be reconstructed by replaying moves, we only need to know _whether_ to reconstruct it. When a client pastes a custom position, `boardsim` is deleted (`pastereport.ts`), and the server switches to trusting client-reported moves for the remainder of that game. This flag captures that state.
 
 ---
 
@@ -195,17 +196,20 @@ actual_remaining = stored_remaining - (Date.now() - clock_snapshot_time)
 
 One row per player per live game. Follows the pattern of the existing `player_games` table.
 
-| #   | Property                      | DB Column                      | Type             | Source                           | Notes                                                                                                                |
-| --- | ----------------------------- | ------------------------------ | ---------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1   | Game ID                       | `game_id`                      | INTEGER NOT NULL | FK → `live_games.game_id`        | ON DELETE CASCADE                                                                                                    |
-| 2   | Player number                 | `player_number`                | INTEGER NOT NULL | Key in `PlayerGroup`             | 1 = White, 2 = Black, etc. Supports future multi-player games.                                                       |
-| 3   | User ID                       | `user_id`                      | INTEGER          | `identifier.user_id`             | NULL if guest                                                                                                        |
-| 4   | Browser ID                    | `browser_id`                   | TEXT NOT NULL    | `identifier.browser_id`          | Always present (required by `AuthMemberInfo`). Sole identifier for guests.                                           |
-| 5   | ELO display                   | `elo`                          | TEXT             | `metadata.{White,Black}Elo`      | e.g., `"1500"` or `"1200?"`. Snapshot at game start; cannot re-derive since ratings change. NULL if guest.           |
-| 6   | Last offer ply                | `last_offer_ply`               | INTEGER          | `playerData[color].lastOfferPly` | Ply (0-based) of last draw offer. NULL if never offered. Used to enforce minimum-ply gap between consecutive offers. |
-| 7   | Time remaining                | `time_remaining_ms`            | INTEGER          | `clocks.currentTime[color]`      | Milliseconds remaining at time of snapshot. NULL if untimed.                                                         |
-| 8   | Disconnect: time to auto-loss | `disconnect_time_to_auto_loss` | INTEGER          | `disconnect.timeToAutoLoss`      | Epoch millis when auto-resign fires. NULL if player was connected (no active disconnect timer).                      |
-| 9   | Disconnect: was by choice     | `disconnect_was_by_choice`     | INTEGER          | `disconnect.wasByChoice`         | 1 = intentional (20s timer), 0 = network interruption (60s timer). NULL if player was connected.                     |
+| #   | Property                     | DB Column                     | Type             | Source                           | Notes                                                                                                                                                                       |
+| --- | ---------------------------- | ----------------------------- | ---------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Game ID                      | `game_id`                     | INTEGER NOT NULL | FK → `live_games.game_id`        | ON DELETE CASCADE                                                                                                                                                           |
+| 2   | Player number                | `player_number`               | INTEGER NOT NULL | Key in `PlayerGroup`             | 1 = White, 2 = Black, etc. Supports future multi-player games.                                                                                                              |
+| 3   | User ID                      | `user_id`                     | INTEGER          | `identifier.user_id`             | NULL if guest                                                                                                                                                               |
+| 4   | Browser ID                   | `browser_id`                  | TEXT NOT NULL    | `identifier.browser_id`          | Always present (required by `AuthMemberInfo`). Sole identifier for guests.                                                                                                  |
+| 5   | ELO display                  | `elo`                         | TEXT             | `metadata.{White,Black}Elo`      | e.g., `"1500"` or `"1200?"`. Snapshot at game start; cannot re-derive since ratings change. NULL if guest.                                                                  |
+| 6   | Last draw offer ply          | `last_draw_offer_ply`         | INTEGER          | `playerData[color].lastOfferPly` | Ply (0-based) of last draw offer. NULL if never offered. Used to enforce minimum-ply gap between consecutive offers.                                                        |
+| 7   | Time remaining               | `time_remaining_ms`           | INTEGER          | `clocks.currentTime[color]`      | Milliseconds remaining at time of snapshot. NULL if untimed.                                                                                                                |
+| 8   | Disconnect: cushion end time | `disconnect_cushion_end_time` | INTEGER          | `disconnect.startTime`           | Epoch millis when the 5-second reconnection cushion expires and the auto-resign timer should start. NULL if no cushion is active. See note on `disconnect.startTime` below. |
+| 9   | Disconnect: resign time      | `disconnect_resign_time`      | INTEGER          | `disconnect.timeToAutoLoss`      | Epoch millis when auto-resign fires. NULL if no active disconnect timer (player is connected, or still in cushion period).                                                  |
+| 10  | Disconnect: by choice        | `disconnect_by_choice`        | INTEGER          | `disconnect.wasByChoice`         | 1 = intentional (20s timer), 0 = network interruption (60s timer). NULL if player was connected. CHECK (disconnect_by_choice IN (0, 1)).                                    |
+
+**Note on `disconnect.startTime`:** The current `PlayerData.disconnect` type only has `startID` (a `setTimeout` handle) for the 5-second cushion period. To persist and restore this timer, a new `startTime?: number` property should be added to the `disconnect` object on `PlayerData`. This epoch-ms timestamp records when the cushion expires, and is set alongside `startID` when the cushion timer is started. On restoration: if `disconnect_cushion_end_time` is non-NULL and in the future, revive the cushion timer for the remaining duration; if it has already elapsed, immediately start the disconnect auto-resign timer.
 
 **Why `browser_id` is essential:** For signed-in players, `user_id` alone suffices for identity matching (`memberInfoEq` compares `user_id`). For guests, `browser_id` is the sole identifier. However, `AuthMemberInfo` always requires `browser_id` to be defined, so we persist it for all players.
 
@@ -213,14 +217,14 @@ One row per player per live game. Follows the pattern of the existing `player_ga
 
 **Why `roles` is NOT stored:** Player roles are only used for authorization, not game logic. They can be re-read from the `members` table on reconstruction.
 
-**Why disconnect state must persist:** A server restart severs all WebSocket connections, but that does not mean disconnected players have reconnected. Disconnect timers are ONLY cancelled when the disconnected player reconnects with a new socket connection. If a player was disconnected before the restart, their auto-resign timer must be restored from `disconnect_time_to_auto_loss`, and the `wasByChoice` flag determines whether the opponent should be notified. For players who were connected before the restart (NULL disconnect columns), new disconnect timers are started with `closureNotByChoice = true` (60-second window) since the server restart was not their fault.
+**Why disconnect state must persist:** A server restart severs all WebSocket connections, but that does not mean disconnected players have reconnected. Disconnect timers are ONLY cancelled when the disconnected player reconnects with a new socket connection. If a player was disconnected before the restart, their auto-resign timer must be restored from `disconnect_resign_time`, and the `disconnect_by_choice` flag determines whether the opponent should be notified. Players who were still in the 5-second cushion period (non-NULL `disconnect_cushion_end_time` but NULL `disconnect_resign_time`) have the cushion timer revived; if it has elapsed, the auto-resign timer is started immediately. For players who were connected before the restart (all disconnect columns NULL), new disconnect timers are started with `closureNotByChoice = true` (60-second window) since the server restart caused the disconnection — not the player.
 
 ---
 
 ## Summary: Complete Column List
 
 **`live_games`: 17 columns**
-**`live_player_games`: 9 columns per player row**
+**`live_player_games`: 10 columns per player row**
 
 ```sql
 CREATE TABLE IF NOT EXISTS live_games (
@@ -230,7 +234,7 @@ CREATE TABLE IF NOT EXISTS live_games (
     variant                 TEXT NOT NULL,
     clock                   TEXT NOT NULL,
     rated                   INTEGER NOT NULL CHECK (rated IN (0, 1)),
-    publicity               TEXT NOT NULL CHECK (publicity IN ('public', 'private')),
+    private                 INTEGER NOT NULL CHECK (private IN (0, 1)),
 
     -- Group 2: Move History (1 column)
     moves                   TEXT NOT NULL DEFAULT '',
@@ -243,17 +247,17 @@ CREATE TABLE IF NOT EXISTS live_games (
     draw_offer_state        INTEGER,
 
     -- Group 5: Game Conclusion (3 columns)
-    conclusion_victor       INTEGER,
     conclusion_condition    TEXT,
+    conclusion_victor       INTEGER,
     time_ended              INTEGER,
 
     -- Group 6: Timer State (2 columns)
-    auto_afk_resign_time    INTEGER,
+    afk_resign_time         INTEGER,
     delete_time             INTEGER,
 
     -- Group 7: Flags (2 columns)
-    position_pasted         INTEGER NOT NULL DEFAULT 0,
-    has_boardsim            INTEGER NOT NULL DEFAULT 1
+    position_pasted         INTEGER NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
+    validate_moves          INTEGER NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
 );
 
 CREATE TABLE IF NOT EXISTS live_player_games (
@@ -262,10 +266,11 @@ CREATE TABLE IF NOT EXISTS live_player_games (
     user_id                         INTEGER,
     browser_id                      TEXT NOT NULL,
     elo                             TEXT,
-    last_offer_ply                  INTEGER,
+    last_draw_offer_ply             INTEGER,
     time_remaining_ms               INTEGER,
-    disconnect_time_to_auto_loss    INTEGER,
-    disconnect_was_by_choice        INTEGER CHECK (disconnect_was_by_choice IN (0, 1)),
+    disconnect_cushion_end_time     INTEGER,
+    disconnect_resign_time          INTEGER,
+    disconnect_by_choice            INTEGER CHECK (disconnect_by_choice IN (0, 1)),
     PRIMARY KEY (game_id, player_number)
 );
 CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);
@@ -282,53 +287,54 @@ On server restart, to restore each live game:
    a. **Reconstruct `AuthMemberInfo`** for each player from `user_id` + `browser_id`. Look up `username` and `roles` from the `members` table for signed-in users.
    b. **Reconstruct `MetaData`** from stored fields (`variant`, `clock`, `rated`, elo values, timestamps). Derive `Event`, `Site`, `Round`, player names/IDs, `TimeControl` from atomic values.
    c. **Call `initGame(metadata)`** to create the `basegame` with correct `gameRules`, clock initialization, etc.
-   d. **Reconstruct `MatchInfo`** from stored fields (`game_id`, `time_created`, `publicity`, `rated`, `clock`, player data, draw offer state, `position_pasted`).
+   d. **Reconstruct `MatchInfo`** from stored fields (`game_id`, `time_created`, `private`, `rated`, `clock`, player data, draw offer state, `position_pasted`).
    e. **Parse and replay moves** using `parseShortFormMoves()` on the `moves` string to recover the move list with `clockStamp` values. Apply each move to the basegame.
-   f. **Conditionally reconstruct `boardsim`:** If `has_boardsim` is true (and the variant supports it), call `initBoard()` and replay all moves through it to rebuild server-side validation state. If `has_boardsim` is false, leave `boardsim` as `undefined` — the server will trust client-reported moves.
+   f. **Conditionally reconstruct `boardsim`:** If `validate_moves` is true (and the variant supports it), call `initBoard()` and replay all moves through it to rebuild server-side validation state. If `validate_moves` is false, leave `boardsim` as `undefined` — the server will trust client-reported moves.
    g. **Restore clock state** for timed games: set `currentTime` for each player from their `time_remaining_ms`. Adjust the ticking player's time for elapsed time since snapshot: `actual = stored - (Date.now() - clock_snapshot_time)`. If `actual <= 0`, immediately flag time loss (see Edge Case #6). Otherwise, set `colorTicking`, `timeAtTurnStart = Date.now()`, `timeRemainAtTurnStart = adjustedTime`, and start the auto-time-loss timer.
-   h. **Restore draw offer state** from `draw_offer_state` and per-player `last_offer_ply`.
+   h. **Restore draw offer state** from `draw_offer_state` and per-player `last_draw_offer_ply`.
    i. **Restore game conclusion** if `conclusion_condition` is non-NULL. Set `gameConclusion` and `timeEnded` accordingly.
    j. **Restore delete timer** for concluded games: If `delete_time` is set, compute `remaining = delete_time - Date.now()`. If ≤ 0, immediately run the logging pipeline and delete the live game row. Otherwise, set a new `deleteTimeoutID` for the remaining duration.
-   k. **Restore AFK timer:** If `auto_afk_resign_time` is set, compute `remaining = auto_afk_resign_time - Date.now()`. If ≤ 0, immediately auto-resign the current player. Otherwise, set a new `autoAFKResignTimeoutID` for the remaining duration.
+   k. **Restore AFK timer:** If `afk_resign_time` is set, compute `remaining = afk_resign_time - Date.now()`. If ≤ 0, immediately auto-resign the current player. Otherwise, set a new `autoAFKResignTimeoutID` for the remaining duration.
    l. **Restore disconnect timers for each player:**
-    - If the player has a stored `disconnect_time_to_auto_loss`: compute `remaining = disconnect_time_to_auto_loss - Date.now()`. If ≤ 0, immediately auto-resign them. Otherwise, start a disconnect timer for the remaining duration with the stored `wasByChoice` value. Notify their opponent.
-    - If the player has NULL disconnect columns (was connected before restart): start a fresh disconnect timer with `closureNotByChoice = true` (60-second `timeBeforeAutoResignByDisconnectMillis_NotByChoice`), since the server restart caused the disconnection — not the player.
+    - If the player has a stored `disconnect_resign_time` (auto-resign timer was active): compute `remaining = disconnect_resign_time - Date.now()`. If ≤ 0, immediately auto-resign them. Otherwise, start a disconnect timer for the remaining duration with the stored `disconnect_by_choice` value. Notify their opponent.
+    - If the player has a stored `disconnect_cushion_end_time` but NULL `disconnect_resign_time` (still in the 5-second cushion period): compute `remaining = disconnect_cushion_end_time - Date.now()`. If ≤ 0, the cushion has elapsed — immediately start the disconnect auto-resign timer using the stored `disconnect_by_choice`. Otherwise, revive the cushion timer for the remaining duration, which will start the auto-resign timer when it expires.
+    - If the player has all disconnect columns NULL (was connected before restart): start a fresh disconnect timer with `closureNotByChoice = true` (60-second `timeBeforeAutoResignByDisconnectMillis_NotByChoice`), since the server restart caused the disconnection — not the player.
 3. **Delete the row** from `live_games` (cascading to `live_player_games`) once the game concludes and is logged to the permanent `games` table.
 
 ---
 
 ## When to Persist (State Change Events)
 
-| Event                       | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                      |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Game created**            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, elo, defaults)                      |
-| **Move submitted**          | `moves`, `color_ticking`, `clock_snapshot_time`, `has_boardsim`                                                  | `time_remaining_ms` (for both players, after clock adjustment)           |
-| **Draw offer extended**     | `draw_offer_state`                                                                                               | `last_offer_ply` (for the offering player)                               |
-| **Draw offer declined**     | `draw_offer_state` (set to NULL)                                                                                 | —                                                                        |
-| **Draw accepted**           | `conclusion_victor`, `conclusion_condition`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                        |
-| **Resignation**             | `conclusion_victor`, `conclusion_condition`, `time_ended`, `delete_time`                                         | —                                                                        |
-| **Abort**                   | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                        |
-| **Time loss**               | `conclusion_victor`, `conclusion_condition`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                      |
-| **Disconnect loss**         | `conclusion_victor`, `conclusion_condition`, `time_ended`, `delete_time`                                         | —                                                                        |
-| **Player disconnects**      | —                                                                                                                | `disconnect_time_to_auto_loss`, `disconnect_was_by_choice`               |
-| **Player reconnects**       | —                                                                                                                | `disconnect_time_to_auto_loss` → NULL, `disconnect_was_by_choice` → NULL |
-| **Player goes AFK**         | `auto_afk_resign_time`                                                                                           | —                                                                        |
-| **Player returns from AFK** | `auto_afk_resign_time` → NULL                                                                                    | —                                                                        |
-| **AFK auto-resign**         | `conclusion_victor`, `conclusion_condition`, `time_ended`, `auto_afk_resign_time` → NULL, `delete_time`          | —                                                                        |
-| **Position pasted**         | `position_pasted`, `has_boardsim` → 0                                                                            | —                                                                        |
-| **Game deleted/logged**     | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                        |
+| Event                       | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Game created**            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, elo, defaults)                                                  |
+| **Move submitted**          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (for both players, after clock adjustment)                                       |
+| **Draw offer extended**     | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (for the offering player)                                                      |
+| **Draw offer declined**     | `draw_offer_state` (set to NULL)                                                                                 | —                                                                                                    |
+| **Draw accepted**           | `conclusion_condition`, `conclusion_victor`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                                                    |
+| **Resignation**             | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
+| **Abort**                   | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                                                    |
+| **Time loss**               | `conclusion_condition`, `conclusion_victor`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                                                  |
+| **Disconnect loss**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
+| **Player disconnects**      | —                                                                                                                | `disconnect_cushion_end_time`, `disconnect_resign_time`, `disconnect_by_choice`                      |
+| **Player reconnects**       | —                                                                                                                | `disconnect_cushion_end_time` → NULL, `disconnect_resign_time` → NULL, `disconnect_by_choice` → NULL |
+| **Player goes AFK**         | `afk_resign_time`                                                                                                | —                                                                                                    |
+| **Player returns from AFK** | `afk_resign_time` → NULL                                                                                         | —                                                                                                    |
+| **AFK auto-resign**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `afk_resign_time` → NULL, `delete_time`               | —                                                                                                    |
+| **Position pasted**         | `position_pasted`, `validate_moves` → 0                                                                          | —                                                                                                    |
+| **Game deleted/logged**     | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                    |
 
 ---
 
 ## Edge Cases & Policy Decisions
 
-1. **Games with pasted positions** (`position_pasted = true`): These games should NOT be aborted on restart. The clients know exactly what position was pasted and can replay the moves on it when the server sends them the move list. On the server side, `has_boardsim` will be 0, so the server won't attempt to reconstruct a `boardsim` — it creates only a `BaseGame` and trusts the moves to be legal. There is no need to store the custom position ICN on the server.
+1. **Games with pasted positions** (`position_pasted = true`): These games should NOT be aborted on restart. The clients know exactly what position was pasted and can replay the moves on it when the server sends them the move list. On the server side, `validate_moves` will be 0, so the server won't attempt to reconstruct a `boardsim` — it creates only a `BaseGame` and trusts the moves to be legal. There is no need to store the custom position ICN on the server.
 
 2. **Nearly-concluded games** (concluded but not yet logged): If a game was concluded but the delete timer hasn't fired yet, it is restored in its concluded state with the delete timer revived. The `delete_time` column stores when the game should be logged and deleted. On restoration, if the time has already passed, the logging pipeline runs immediately. If not, a new timer is set for the remaining duration. This ensures games are never stuck in a concluded-but-unlogged state.
 
-3. **AFK state**: AFK timers MUST be persisted. A server restart does not mean the player has returned to their keyboard. The `auto_afk_resign_time` column captures the epoch timestamp when the AFK auto-resign should fire. On restoration, the remaining time is computed and a new timer is set. If the time has already elapsed, the player is immediately auto-resigned. The AFK timer is only cancelled when the client explicitly sends an "AFK-Return" message, which requires an active WebSocket connection.
+3. **AFK state**: AFK timers MUST be persisted. A server restart does not mean the player has returned to their keyboard. The `afk_resign_time` column captures the epoch timestamp when the AFK auto-resign should fire. On restoration, the remaining time is computed and a new timer is set. If the time has already elapsed, the player is immediately auto-resigned. The AFK timer is only cancelled when the client explicitly sends an "AFK-Return" message, which requires an active WebSocket connection.
 
-4. **Disconnect timers**: Disconnect timers MUST be persisted. WebSocket connections are severed by a server restart, but that does not mean the player has reconnected. Disconnect timers are ONLY cancelled when the disconnected player opens a new WebSocket connection. For players who were already disconnected before the restart, their existing `disconnect_time_to_auto_loss` is restored (they may be closer to expiring, or already expired, in which case they are immediately auto-resigned). For players who were connected before the restart (NULL disconnect columns), fresh disconnect timers are started with `closureNotByChoice = true` (60-second window), since the server restart — not the player — caused the disconnection.
+4. **Disconnect timers**: Disconnect timers MUST be persisted. WebSocket connections are severed by a server restart, but that does not mean the player has reconnected. Disconnect timers are ONLY cancelled when the disconnected player opens a new WebSocket connection. For players who were already disconnected before the restart: if their auto-resign timer was active (`disconnect_resign_time` non-NULL), it is restored from that timestamp; if they were still in the 5-second cushion period (`disconnect_cushion_end_time` non-NULL but `disconnect_resign_time` NULL), the cushion timer is revived — and if it has already elapsed, the auto-resign timer starts immediately. For players who were connected before the restart (all disconnect columns NULL), fresh disconnect timers are started with `closureNotByChoice = true` (60-second window), since the server restart — not the player — caused the disconnection.
 
 5. **Guest players**: Guests are identified solely by `browser_id`. If a guest clears their cookies during a restart, they cannot be re-associated with their game. The game proceeds normally with disconnect timers running for the absent guest. If they fail to reconnect before the timer expires, the game concludes via the standard disconnect loss mechanism.
 
