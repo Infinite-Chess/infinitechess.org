@@ -73,7 +73,7 @@ function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDiscon
  */
 function persistCurrentClockTimes(servergame: ServerGame): void {
 	const { basegame, match } = servergame;
-	if (basegame.untimed || basegame.clocks === undefined) return;
+	if (basegame.untimed) return;
 	for (const playerStr of Object.keys(match.playerData)) {
 		const player = Number(playerStr) as Player;
 		updateLivePlayerGame(match.id, player, {
@@ -100,10 +100,7 @@ function buildPlayerRecord(
 		browser_id: identifier.browser_id,
 		elo: getPlayerEloString(basegame, player),
 		last_draw_offer_ply: playerData.lastOfferPly ?? null,
-		time_remaining_ms:
-			basegame.untimed || !basegame.clocks
-				? null
-				: (basegame.clocks.currentTime[player] ?? null),
+		time_remaining_ms: basegame.untimed ? null : (basegame.clocks.currentTime[player] ?? null),
 		...getDisconnectColumnData(disconnect),
 	};
 }
@@ -115,7 +112,6 @@ function buildPlayerRecord(
  */
 function onGameCreated(servergame: ServerGame): void {
 	const { basegame, match } = servergame;
-	const now = Date.now();
 
 	const record: LiveGamesRecord = {
 		game_id: match.id,
@@ -126,8 +122,8 @@ function onGameCreated(servergame: ServerGame): void {
 		private: match.publicity === 'private' ? 1 : 0,
 		moves: '',
 		color_ticking: null,
-		clock_snapshot_time: !basegame.untimed ? now : null,
-		draw_offer_state: match.drawOfferState ?? null,
+		clock_snapshot_time: null,
+		draw_offer_state: null,
 		conclusion_condition: null,
 		conclusion_victor: null,
 		time_ended: null,
@@ -149,20 +145,18 @@ function onGameCreated(servergame: ServerGame): void {
 
 /**
  * Called after a move is submitted and the game state is updated.
- * Updates the moves string, clock state, validate_moves flag, and per-player time.
+ * Updates the moves string, clock state, and per-player time.
  */
 function onMoveSubmitted(servergame: ServerGame): void {
 	const { basegame, match } = servergame;
-	const now = Date.now();
 
 	const gameUpdates: Partial<LiveGameData> = {
 		moves: getMovesString(servergame),
-		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
 	};
 
-	if (!basegame.untimed && basegame.clocks) {
+	if (!basegame.untimed) {
 		gameUpdates.color_ticking = basegame.clocks.colorTicking ?? null;
-		gameUpdates.clock_snapshot_time = now;
+		gameUpdates.clock_snapshot_time = basegame.clocks.timeAtTurnStart ?? null;
 	}
 
 	updateLiveGame(match.id, gameUpdates);
@@ -176,23 +170,22 @@ function onMoveSubmitted(servergame: ServerGame): void {
  */
 function onGameConcluded(servergame: ServerGame): void {
 	const { basegame, match } = servergame;
-	const conclusion = basegame.gameConclusion;
-	if (conclusion === undefined) return;
+	const conclusion = basegame.gameConclusion!;
 
-	const now = Date.now();
 	const gameUpdates: Partial<LiveGameData> = {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
-		time_ended: match.timeEnded ?? now,
-		delete_time: (match.timeEnded ?? now) + timeBeforeGameDeletionMillis,
+		time_ended: match.timeEnded!,
+		delete_time: match.timeEnded! + timeBeforeGameDeletionMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
 		afk_resign_time: null, // AFK timers are cancelled on conclusion
 	};
 
 	// Stop clock state
 	if (!basegame.untimed) {
+		// Both color ticking and timeAtTurnStart are set to null on game end
 		gameUpdates.color_ticking = null;
-		gameUpdates.clock_snapshot_time = now;
+		gameUpdates.clock_snapshot_time = null;
 	}
 
 	updateLiveGame(match.id, gameUpdates);
@@ -228,10 +221,8 @@ function onDrawOfferDeclined(servergame: ServerGame): void {
  * Persists the disconnect state for that player.
  */
 function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
-	const playerData = servergame.match.playerData[color]!;
-	const { disconnect } = playerData;
-
-	updateLivePlayerGame(servergame.match.id, color, getDisconnectColumnData(disconnect));
+	const playerDisconnectData = servergame.match.playerData[color]!.disconnect;
+	updateLivePlayerGame(servergame.match.id, color, getDisconnectColumnData(playerDisconnectData));
 }
 
 /**
@@ -283,6 +274,7 @@ function onGameDeleted(game_id: number): void {
 // Exports --------------------------------------------------------------------------------------------
 
 export default {
+	// Persistence Events
 	onGameCreated,
 	onMoveSubmitted,
 	onGameConcluded,
