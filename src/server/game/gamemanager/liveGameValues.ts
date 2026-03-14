@@ -10,7 +10,10 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
+import type {
+	LivePlayerData,
+	LivePlayerGamesRecord,
+} from '../../database/livePlayerGamesManager.js';
 import type { ServerGame, PlayerData } from './gameutility.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -140,10 +143,10 @@ function onMoveSubmitted(servergame: ServerGame): void {
 
 	// Update per-player time_remaining_ms
 	if (!basegame.untimed && basegame.clocks) {
-		const playerUpdates: Record<
+		const playerUpdates: Record<Player, Partial<LivePlayerData>> = {} as Record<
 			Player,
-			Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>
-		> = {} as Record<Player, Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>>;
+			Partial<LivePlayerData>
+		>;
 		for (const playerStr of Object.keys(match.playerData)) {
 			const player = Number(playerStr) as Player;
 			playerUpdates[player] = {
@@ -183,10 +186,10 @@ function onGameConcluded(servergame: ServerGame): void {
 
 	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
 	if (!basegame.untimed && basegame.clocks) {
-		const playerUpdates: Record<
+		const playerUpdates: Record<Player, Partial<LivePlayerData>> = {} as Record<
 			Player,
-			Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>
-		> = {} as Record<Player, Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>>;
+			Partial<LivePlayerData>
+		>;
 		for (const playerStr of Object.keys(match.playerData)) {
 			const player = Number(playerStr) as Player;
 			playerUpdates[player] = {

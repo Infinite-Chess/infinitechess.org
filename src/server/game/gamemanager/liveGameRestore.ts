@@ -10,10 +10,10 @@
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';

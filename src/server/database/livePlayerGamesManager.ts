@@ -16,9 +16,13 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 // Types ----------------------------------------------------------------------------------------------
 
 /** Structure of a complete live_player_games record. */
-export interface LivePlayerGamesRecord {
+export interface LivePlayerGamesRecord extends LivePlayerData {
 	game_id: number;
 	player_number: Player;
+}
+
+/** Per-player live game data columns, excluding the composite key fields. */
+export interface LivePlayerData {
 	user_id: number | null;
 	browser_id: string;
 	elo: string | null;
@@ -80,7 +84,7 @@ function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 function updateLivePlayerGame(
 	game_id: number,
 	player_number: Player,
-	updates: Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>,
+	updates: Partial<LivePlayerData>,
 ): void {
 	const entries = Object.entries(updates);
 	if (entries.length === 0) return;
@@ -108,10 +112,7 @@ function updateLivePlayerGame(
  */
 function updateAllPlayersInLiveGame(
 	game_id: number,
-	playerUpdates: Record<
-		Player,
-		Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>
-	>,
+	playerUpdates: Record<Player, Partial<LivePlayerData>>,
 ): void {
 	for (const [playerStr, updates] of Object.entries(playerUpdates)) {
 		updateLivePlayerGame(game_id, Number(playerStr) as Player, updates);
