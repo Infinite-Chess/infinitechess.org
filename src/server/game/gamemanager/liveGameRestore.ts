@@ -4,16 +4,15 @@
  * This script restores live games from the database on server startup.
  *
  * It reads all rows from live_games and live_player_games, reconstructs
- * the ServerGame objects, restores all timers (clocks, AFK, disconnect, delete),
- * and places them into the activeGames record.
+ * the ServerGame objects, and computes which timers need to be started for each game (AFK resign, auto time loss, delete).
  */
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Board, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
@@ -24,6 +23,7 @@ import type {
 } from '../../../shared/chess/util/winconutil.js';
 
 import uuid from '../../../shared/util/uuid.js';
+import jsutil from '../../../shared/util/jsutil.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
@@ -49,17 +49,22 @@ interface RestoredGame {
 	pendingTimers: PendingTimers;
 }
 
+/** Timers that may need to be started for a restored game, based on its state at the time of server shutdown. */
 interface PendingTimers {
-	/** If non-null, the delete timer should fire after this many ms. 0 means immediately. */
+	/** If defined, the delete game timer should fire after this many ms. 0 means immediately. */
 	deleteTimerMs?: number;
-	/** If non-null, the AFK resign timer should fire after this many ms. 0 means immediately. */
+	/** If defined, the AFK resign timer should fire after this many ms. 0 means immediately. */
 	afkResignTimerMs?: number;
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;
-	/** If non-null, the auto time loss timer should fire after this many ms. 0 means immediately. */
+	/**
+	 * If defined, the auto time loss timer for the current player's
+	 * turn should fire after this many ms. 0 means immediately.
+	 */
 	autoTimeLossMs?: number;
 }
 
+/** Represents the state of a player's disconnect timer that needs to be restored. */
 interface DisconnectTimerState {
 	/** 'cushion' = still in 5s cushion, 'timer' = auto-resign timer active, 'fresh' = was connected before restart */
 	type: 'cushion' | 'timer' | 'fresh';
@@ -82,16 +87,16 @@ function restoreAllLiveGames(): RestoredGame[] {
 	const liveGameRows = getAllLiveGames();
 	if (liveGameRows.length === 0) return [];
 
-	console.log(`Restoring ${liveGameRows.length} live game(s) from database...`);
+	console.log(`Restoring ${liveGameRows.length} live game(s) from database.`);
 
 	const restored: RestoredGame[] = [];
 
 	for (const gameRow of liveGameRows) {
 		try {
 			const playerRows = getLivePlayerGamesForGame(gameRow.game_id);
-			if (playerRows.length === 0) {
+			if (playerRows.length !== 2) {
 				logEventsAndPrint(
-					`Live game ${gameRow.game_id} has no player rows, deleting.`,
+					`Live game ${gameRow.game_id} has ${playerRows.length} player rows, expected 2. Skipping restoration of this game.`,
 					'errLog.txt',
 				);
 				deleteLiveGame(gameRow.game_id);
@@ -99,7 +104,7 @@ function restoreAllLiveGames(): RestoredGame[] {
 			}
 
 			const result = restoreSingleGame(gameRow, playerRows);
-			if (result !== undefined) restored.push(result);
+			restored.push(result);
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
 			logEventsAndPrint(
@@ -111,7 +116,6 @@ function restoreAllLiveGames(): RestoredGame[] {
 		}
 	}
 
-	console.log(`Successfully restored ${restored.length} live game(s).`);
 	return restored;
 }
 
@@ -121,7 +125,7 @@ function restoreAllLiveGames(): RestoredGame[] {
 function restoreSingleGame(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
-): RestoredGame | undefined {
+): RestoredGame {
 	const now = Date.now();
 
 	// 1. Reconstruct AuthMemberInfo for each player
@@ -140,16 +144,9 @@ function restoreSingleGame(
 	const basegame = gamefile.initGame(gameMetadata, undefined, gameConclusion, clockValues);
 
 	// 6. Parse and replay moves
-	const moves = parseMoves(gameRow.moves);
+	const moves: BaseMove[] = parseMoves(gameRow.moves);
 	for (const move of moves) {
-		const baseMove: BaseMove = {
-			startCoords: move.startCoords,
-			endCoords: move.endCoords,
-			compact: move.compact,
-		};
-		if (move.promotion !== undefined) baseMove.promotion = move.promotion;
-		if (move.clockStamp !== undefined) baseMove.clockStamp = move.clockStamp;
-		basegame.moves.push(baseMove);
+		basegame.moves.push(jsutil.deepCopyObject(move));
 	}
 
 	// Update whosTurn based on move count
@@ -157,8 +154,8 @@ function restoreSingleGame(
 		basegame.gameRules.turnOrder[basegame.moves.length % basegame.gameRules.turnOrder.length]!;
 
 	// 7. Conditionally reconstruct boardsim
-	let boardsim: ServerGame['boardsim'];
-	if (gameRow.validate_moves === 1 && doesVariantSupportServerValidation(gameMetadata)) {
+	let boardsim: Board | undefined;
+	if (gameRow.validate_moves) {
 		boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
 		// Replay all moves through the boardsim
 		const gameSim = { basegame: gamefile.initGame(gameMetadata), boardsim };
@@ -398,14 +395,8 @@ function reconstructMatchInfo(
 /**
  * Parses the moves string back into move objects.
  */
-function parseMoves(movesString: string): Array<{
-	startCoords: [bigint, bigint];
-	endCoords: [bigint, bigint];
-	promotion?: number;
-	compact: string;
-	clockStamp?: number;
-}> {
-	if (!movesString || movesString === '') return [];
+function parseMoves(movesString: string): BaseMove[] {
+	if (movesString === '') return [];
 	return icnconverter.parseShortFormMoves(movesString);
 }
 
