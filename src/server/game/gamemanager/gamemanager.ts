@@ -175,6 +175,24 @@ function isMemberInSomeActiveGame(username: string): boolean {
 }
 
 /**
+ * Starts the 5-second cushion timer for a player who disconnected not by their own choice
+ * (network interruption or server restart). After the cushion elapses the full disconnect
+ * auto-resign timer is started. Also persists the cushion state to the database.
+ * @param servergame - The game
+ * @param color - The player who disconnected
+ */
+function startDisconnectCushionTimer(servergame: ServerGame, color: Player): void {
+	const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
+	servergame.match.playerData[color]!.disconnect.startID = setTimeout(
+		() => startDisconnectTimer(servergame, color, true, onPlayerLostByDisconnect),
+		forgivenessDurationMillis,
+	);
+	servergame.match.playerData[color]!.disconnect.startTime =
+		Date.now() + forgivenessDurationMillis;
+	liveGameValues.onPlayerDisconnected(servergame, color);
+}
+
+/**
  * Unsubscribes a websocket from the game their connected to after a socket closure.
  * Detaches their socket from the game, updates their metadata.subscriptions.
  * @param ws - Their websocket.
@@ -202,15 +220,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log('Waiting 5 seconds before starting disconnection timer.');
-		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		servergame.match.playerData[color]!.disconnect.startID = setTimeout(
-			() =>
-				startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect),
-			forgivenessDurationMillis,
-		);
-		servergame.match.playerData[color]!.disconnect.startTime =
-			Date.now() + forgivenessDurationMillis;
-		liveGameValues.onPlayerDisconnected(servergame, color);
+		startDisconnectCushionTimer(servergame, color);
 	} else {
 		// Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect);
@@ -642,13 +652,8 @@ function restoreLiveGames(): void {
 				}
 			} else {
 				// Fresh: was connected before restart, now disconnected due to server restart.
-				// Start a fresh disconnect timer with closureNotByChoice = true (60s).
-				startDisconnectTimer(
-					servergame,
-					player,
-					true, // not by choice (server restart)
-					onPlayerLostByDisconnect,
-				);
+				// Give them the same 5-second cushion as a normal internet interruption.
+				startDisconnectCushionTimer(servergame, player);
 			}
 		}
 	}
