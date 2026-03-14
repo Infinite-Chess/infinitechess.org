@@ -33,6 +33,7 @@ import { executeSafely_async } from '../../utility/errorGuard.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,
@@ -61,13 +62,6 @@ import {
  * be unique across the games table, and all other live games.
  */
 const activeGames: Record<number, ServerGame> = {};
-
-/**
- * The cushion time, before the game is deleted, if one player
- * has disconnected and has not yet seen the game conclusion.
- * This gives them a little bit of time to reconnect and see the results.
- */
-const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
 
 //--------------------------------------------------------------------------------------------------------
 

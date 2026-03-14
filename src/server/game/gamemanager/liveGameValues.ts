@@ -15,20 +15,13 @@ import type { ServerGame, PlayerData } from './gameutility.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
+import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
 import {
 	insertLivePlayerGame,
 	updateLivePlayerGame,
 	updateAllPlayersInLiveGame,
 } from '../../database/livePlayerGamesManager.js';
-
-// Constants ------------------------------------------------------------------------------------------
-
-/**
- * Duration (in ms) after game conclusion before the game is deleted/logged.
- * Must stay in sync with `timeBeforeGameDeletionMillis` in gamemanager.ts.
- */
-const timeBeforeGameDeletionMillis = 1000 * 8;
 
 // Value Computation ----------------------------------------------------------------------------------
 

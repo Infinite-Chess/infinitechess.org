@@ -38,6 +38,15 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 
+// Constants ------------------------------------------------------------------------------------
+
+/**
+ * The cushion time, before the game is deleted, if one player
+ * has disconnected and has not yet seen the game conclusion.
+ * This gives them a little bit of time to reconnect and see the results.
+ */
+export const timeBeforeGameDeletionMillis = 1000 * 8;
+
 // Types ----------------------------------------------------------------------------------------
 
 type ServerGameMoveMessage = { compact: string; clockStamp?: number };
