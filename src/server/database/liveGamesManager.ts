@@ -38,7 +38,7 @@ export interface LiveGamesRecord {
 	validate_moves: 0 | 1;
 }
 
-// SQL Queries (prepared once, cached by db module) ---------------------------------------------------
+// SQL Queries ---------------------------------------------------------------------------------------
 
 const INSERT_QUERY = `
 	INSERT INTO live_games (

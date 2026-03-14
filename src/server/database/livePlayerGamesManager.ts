@@ -32,7 +32,7 @@ export interface LivePlayerData {
 	disconnect_by_choice: 0 | 1 | null;
 }
 
-// SQL Queries (prepared once, cached by db module) ---------------------------------------------------
+// SQL Queries ---------------------------------------------------------------------------------------
 
 const INSERT_QUERY = `
 	INSERT INTO live_player_games (
