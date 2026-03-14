@@ -262,7 +262,7 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
 	// Update the rating
 	if (usernamecontainer.properties.rating) {
 		const eloElem = element.querySelector('.elo') as HTMLDivElement;
-		const displayRating = metadata.getWhiteBlackElo(usernamecontainer.properties.rating);
+		const displayRating = metadata.getFormattedElo(usernamecontainer.properties.rating);
 		eloElem.textContent = `(${displayRating})`;
 		eloElem.setAttribute('rating', JSON.stringify(usernamecontainer.properties.rating)); // Allows this container's properties to be reconstructed by other scripts from just the HTML element
 
@@ -296,7 +296,7 @@ function createEloFormatter(confident: boolean): (_value: number) => string {
 	// Create a text content generator
 	return (value: number): string => {
 		const rating: Rating = { value, confident };
-		const displayRating = metadata.getWhiteBlackElo(rating);
+		const displayRating = metadata.getFormattedElo(rating);
 		return `(${displayRating})`;
 	};
 }

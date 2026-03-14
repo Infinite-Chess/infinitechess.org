@@ -326,7 +326,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		gameruleModifications: gameruleModificationsOfOmegaShowcasings,
 	},
 	Omega_Squared: {
-		name: 'Showcase: Omega²',
+		name: 'Showcase: Omega^2',
 		positionString: {
 			// May 15, 2024, 12:00AM - Pawns could no longer double push, that was a bug.
 			1715731200000:
@@ -342,7 +342,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 	},
 	Omega_Cubed: {
-		name: 'Showcase: Omega³',
+		name: 'Showcase: Omega^3',
 		generator: {
 			algorithm: omega3generator.genPositionOfOmegaCubed,
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
@@ -355,7 +355,7 @@ const variantDictionary: { [variantName: string]: Variant } = {
 		},
 	},
 	Omega_Fourth: {
-		name: 'Showcase: Omega⁴',
+		name: 'Showcase: Omega^4',
 		generator: {
 			algorithm: omega4generator.genPositionOfOmegaFourth,
 			// Additional properties that are normally stored in the position string in the form of '+', but isn't present since it's a generated position.
@@ -869,15 +869,20 @@ function getVariantPositionString(metadata: VariantContext): string | undefined 
 	return getApplicableTimestampEntry(variantEntry.positionString, resolveTimestamp(metadata));
 }
 
-// Exports ------------------------------------------------------------------
-
 /**
  * Returns the English display name of the given variant, as stored in the variant dictionary.
- * Falls back to the variant key itself if the variant is not found.
+ * Falls back to the variant code itself if the variant is not found.
  */
 function getVariantName(variantKey: string): string {
-	return variantDictionary[variantKey]?.name ?? variantKey;
+	const variantEntry = variantDictionary[variantKey];
+	if (variantEntry !== undefined) return variantEntry.name;
+	console.warn(
+		`Variant code "${variantKey}" not found in variant dictionary, using the code as the name.`,
+	);
+	return variantKey;
 }
+
+// Exports ------------------------------------------------------------------
 
 export default {
 	isVariantValid,

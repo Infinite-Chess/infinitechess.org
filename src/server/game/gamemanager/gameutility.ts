@@ -17,9 +17,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
-import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
-import variant from '../../../shared/chess/variants/variant.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
@@ -424,27 +422,25 @@ function constructMetadataOfGame(
 	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
-	const variantDisplayName = variant.getVariantName(variantKey);
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
 	return metadata.buildGameMetadata(
 		rated,
 		variantKey,
-		variantDisplayName,
 		clock,
 		Date.now(),
 		{
-			name: white.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
-			id: white.signedIn ? uuid.base10ToBase62(white.user_id) : undefined,
+			name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
+			id: white.signedIn ? white.user_id : undefined,
 			elo: playerdata[p.WHITE]?.rating
-				? metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!)
+				? metadata.getFormattedElo(playerdata[p.WHITE]!.rating!)
 				: undefined,
 		},
 		{
-			name: black.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
-			id: black.signedIn ? uuid.base10ToBase62(black.user_id) : undefined,
+			name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
+			id: black.signedIn ? black.user_id : undefined,
 			elo: playerdata[p.BLACK]?.rating
-				? metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!)
+				? metadata.getFormattedElo(playerdata[p.BLACK]!.rating!)
 				: undefined,
 		},
 	);

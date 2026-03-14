@@ -22,9 +22,7 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import uuid from '../../../shared/util/uuid.js';
 import jsutil from '../../../shared/util/jsutil.js';
-import variant from '../../../shared/chess/variants/variant.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
@@ -242,29 +240,27 @@ function reconstructMetadata(
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
 ): MetaData {
-	const variantDisplayName = variant.getVariantName(gameRow.variant);
-	const white = playerIdentities[p.WHITE];
-	const black = playerIdentities[p.BLACK];
+	const white = playerIdentities[p.WHITE]!;
+	const black = playerIdentities[p.BLACK]!;
 
 	// Find per-player rows for signed-in identity lookup
-	const whiteRow = playerRows.find((r) => r.player_number === p.WHITE);
-	const blackRow = playerRows.find((r) => r.player_number === p.BLACK);
+	const whiteRow = playerRows.find((r) => r.player_number === p.WHITE)!;
+	const blackRow = playerRows.find((r) => r.player_number === p.BLACK)!;
 
 	return metadata.buildGameMetadata(
 		Boolean(gameRow.rated),
 		gameRow.variant,
-		variantDisplayName,
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		{
-			name: white?.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
-			id: white?.signedIn ? uuid.base10ToBase62(white.user_id) : undefined,
-			elo: whiteRow?.elo ?? undefined,
+			name: white.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
+			id: white.signedIn ? white.user_id : undefined,
+			elo: whiteRow.elo ?? undefined,
 		},
 		{
-			name: black?.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
-			id: black?.signedIn ? uuid.base10ToBase62(black.user_id) : undefined,
-			elo: blackRow?.elo ?? undefined,
+			name: black.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
+			id: black.signedIn ? black.user_id : undefined,
+			elo: blackRow.elo ?? undefined,
 		},
 	);
 }

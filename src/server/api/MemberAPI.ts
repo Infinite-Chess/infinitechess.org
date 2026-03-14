@@ -100,7 +100,7 @@ const getMemberData = async (req: Request, res: Response): Promise<Response> => 
 		joined: joinedPhrase,
 		seen: seenPhrase,
 		checkmates_beaten: record.checkmates_beaten,
-		ranked_elo: metadata.getWhiteBlackElo(ranked_elo),
+		ranked_elo: metadata.getFormattedElo(ranked_elo),
 		infinity_leaderboard_position,
 		infinity_leaderboard_rating_deviation,
 	};
