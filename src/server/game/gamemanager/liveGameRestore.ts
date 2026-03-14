@@ -24,13 +24,13 @@ import type {
 
 import uuid from '../../../shared/util/uuid.js';
 import jsutil from '../../../shared/util/jsutil.js';
-import timeutil from '../../../shared/util/timeutil.js';
+import variant from '../../../shared/chess/variants/variant.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import metadata from '../../../shared/chess/util/metadata.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
-import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { getLivePlayerGamesForGame } from '../../database/livePlayerGamesManager.js';
@@ -242,42 +242,31 @@ function reconstructMetadata(
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
 ): MetaData {
-	const guest_indicator = getTranslation('play.javascript.guest_indicator');
-	const RatedOrCasual = gameRow.rated ? 'Rated' : 'Casual';
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gameRow.time_created);
-
-	// Build player-specific metadata
+	const variantDisplayName = variant.getVariantName(gameRow.variant);
 	const white = playerIdentities[p.WHITE];
 	const black = playerIdentities[p.BLACK];
 
-	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${gameRow.variant} infinite chess game`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		Variant: gameRow.variant,
-		White: white?.signedIn ? white.username : guest_indicator, // Protect browser's browser-id cookie
-		Black: black?.signedIn ? black.username : guest_indicator, // Protect browser's browser-id cookie
-		TimeControl: gameRow.clock as TimeControl,
-		UTCDate,
-		UTCTime,
-	};
+	// Find per-player rows for signed-in identity lookup
+	const whiteRow = playerRows.find((r) => r.player_number === p.WHITE);
+	const blackRow = playerRows.find((r) => r.player_number === p.BLACK);
 
-	// Add player IDs and elo for signed-in players
-	for (const row of playerRows) {
-		const identity = playerIdentities[row.player_number as Player];
-		if (!identity?.signedIn) continue;
-
-		const base62 = uuid.base10ToBase62(identity.user_id);
-		if (row.player_number === p.WHITE) {
-			gameMetadata.WhiteID = base62;
-			if (row.elo) gameMetadata.WhiteElo = row.elo;
-		} else if (row.player_number === p.BLACK) {
-			gameMetadata.BlackID = base62;
-			if (row.elo) gameMetadata.BlackElo = row.elo;
-		}
-	}
-
-	return gameMetadata;
+	return metadata.buildGameMetadata(
+		Boolean(gameRow.rated),
+		gameRow.variant,
+		variantDisplayName,
+		gameRow.clock as TimeControl,
+		gameRow.time_created,
+		{
+			name: white?.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
+			id: white?.signedIn ? uuid.base10ToBase62(white.user_id) : undefined,
+			elo: whiteRow?.elo ?? undefined,
+		},
+		{
+			name: black?.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
+			id: black?.signedIn ? uuid.base10ToBase62(black.user_id) : undefined,
+			elo: blackRow?.elo ?? undefined,
+		},
+	);
 }
 
 /**

@@ -13,6 +13,7 @@ import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
+import timeutil from '../../util/timeutil.js';
 import winconutil from './winconutil.js';
 import { players as p } from './typeutil.js';
 
@@ -60,6 +61,60 @@ interface MetaData {
 
 /** All valid metadata names. */
 type MetadataKey = keyof MetaData;
+
+/** Per-player inputs for {@link buildGameMetadata}. */
+interface PlayerMetaInput {
+	/** Display name — the player's username, or `'Guest'` for unauthenticated players. */
+	name: string;
+	/** base62-encoded user ID, present only for signed-in players. */
+	id?: string;
+	/** Already-formatted elo string (e.g. `'1234'` or `'1234?'`), present only for rated signed-in players. */
+	elo?: string;
+}
+
+/**
+ * Builds a {@link MetaData} object from the common game properties.
+ * Metadata is always in English.
+ * @param rated - Whether the game is rated.
+ * @param variant - The variant key (stored as-is in the `Variant` field).
+ * @param variantDisplayName - The English display name of the variant (e.g. `'Chess on an Infinite Plane'`).
+ * @param clock - The time-control string.
+ * @param utcTimestamp - The epoch-ms timestamp used for the `UTCDate`/`UTCTime` fields.
+ * @param white - Identity information for the White player.
+ * @param black - Identity information for the Black player.
+ */
+function buildGameMetadata(
+	rated: boolean,
+	variant: string,
+	variantDisplayName: string,
+	clock: TimeControl,
+	utcTimestamp: number,
+	white: PlayerMetaInput,
+	black: PlayerMetaInput,
+): MetaData {
+	const RatedOrCasual = rated ? 'Rated' : 'Casual';
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
+	const gameMetadata: MetaData = {
+		Event: `${RatedOrCasual} ${variantDisplayName} infinite chess game`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		Variant: variant,
+		White: white.name,
+		Black: black.name,
+		TimeControl: clock,
+		UTCDate,
+		UTCTime,
+	};
+	if (white.id !== undefined) {
+		gameMetadata.WhiteID = white.id;
+		if (white.elo !== undefined) gameMetadata.WhiteElo = white.elo;
+	}
+	if (black.id !== undefined) {
+		gameMetadata.BlackID = black.id;
+		if (black.elo !== undefined) gameMetadata.BlackElo = black.elo;
+	}
+	return gameMetadata;
+}
 
 /**
  * Helper function that uses generics to link the metadata key to its value type.
@@ -141,6 +196,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 }
 
 export default {
+	buildGameMetadata,
 	copyMetadataField,
 	getResultFromVictor,
 	getGameConclusionFromResultAndTermination,
@@ -149,4 +205,4 @@ export default {
 	getWhiteBlackRatingDiff,
 };
 
-export type { TimeControl, MetaData, MetadataKey };
+export type { TimeControl, MetaData, MetadataKey, PlayerMetaInput };

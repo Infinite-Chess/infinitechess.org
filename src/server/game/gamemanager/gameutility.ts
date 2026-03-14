@@ -19,8 +19,8 @@ import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/ga
 
 import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
+import variant from '../../../shared/chess/variants/variant.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
@@ -28,7 +28,6 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
-import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -421,44 +420,34 @@ function getRatingDataForGamePlayers(
  */
 function constructMetadataOfGame(
 	rated: boolean,
-	variant: string,
+	variantKey: string,
 	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
-	const RatedOrCasual = rated ? 'Rated' : 'Casual';
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const variantDisplayName = variant.getVariantName(variantKey);
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
-	const guest_indicator = getTranslation('play.javascript.guest_indicator');
-	// @ts-ignore - variant is dynamic but always maps to a valid translation key
-	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
-	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		Variant: variant,
-		White: white.signedIn ? white.username : guest_indicator, // Protect browser's browser-id cookie
-		Black: black.signedIn ? black.username : guest_indicator, // Protect browser's browser-id cookie
-		TimeControl: clock,
-		UTCDate,
-		UTCTime,
-	};
-	if (white.signedIn) {
-		// White is a member
-		const base62 = uuid.base10ToBase62(white.user_id);
-		gameMetadata.WhiteID = base62;
-		if (playerdata[p.WHITE] !== undefined)
-			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!);
-	}
-	if (black.signedIn) {
-		// Black is a member
-		const base62 = uuid.base10ToBase62(black.user_id);
-		gameMetadata.BlackID = base62;
-		if (playerdata[p.BLACK])
-			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!);
-	}
-
-	return gameMetadata;
+	return metadata.buildGameMetadata(
+		rated,
+		variantKey,
+		variantDisplayName,
+		clock,
+		Date.now(),
+		{
+			name: white.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
+			id: white.signedIn ? uuid.base10ToBase62(white.user_id) : undefined,
+			elo: playerdata[p.WHITE]?.rating
+				? metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!)
+				: undefined,
+		},
+		{
+			name: black.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
+			id: black.signedIn ? uuid.base10ToBase62(black.user_id) : undefined,
+			elo: playerdata[p.BLACK]?.rating
+				? metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!)
+				: undefined,
+		},
+	);
 }
 
 /**
