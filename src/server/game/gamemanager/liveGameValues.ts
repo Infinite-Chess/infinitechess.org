@@ -10,11 +10,11 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { ServerGame, PlayerData } from './gameutility.js';
 import type {
 	LivePlayerData,
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
-import type { ServerGame, PlayerData } from './gameutility.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -23,7 +23,6 @@ import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/l
 import {
 	insertLivePlayerGame,
 	updateLivePlayerGame,
-	updateAllPlayersInLiveGame,
 } from '../../database/livePlayerGamesManager.js';
 
 // Value Computation ----------------------------------------------------------------------------------
@@ -143,17 +142,13 @@ function onMoveSubmitted(servergame: ServerGame): void {
 
 	// Update per-player time_remaining_ms
 	if (!basegame.untimed && basegame.clocks) {
-		const playerUpdates: Record<Player, Partial<LivePlayerData>> = {} as Record<
-			Player,
-			Partial<LivePlayerData>
-		>;
 		for (const playerStr of Object.keys(match.playerData)) {
 			const player = Number(playerStr) as Player;
-			playerUpdates[player] = {
+			const playerUpdate: Partial<LivePlayerData> = {
 				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
 			};
+			updateLivePlayerGame(match.id, player, playerUpdate);
 		}
-		updateAllPlayersInLiveGame(match.id, playerUpdates);
 	}
 }
 
@@ -186,17 +181,13 @@ function onGameConcluded(servergame: ServerGame): void {
 
 	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
 	if (!basegame.untimed && basegame.clocks) {
-		const playerUpdates: Record<Player, Partial<LivePlayerData>> = {} as Record<
-			Player,
-			Partial<LivePlayerData>
-		>;
 		for (const playerStr of Object.keys(match.playerData)) {
 			const player = Number(playerStr) as Player;
-			playerUpdates[player] = {
+			const playerUpdate: Partial<LivePlayerData> = {
 				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
 			};
+			updateLivePlayerGame(match.id, player, playerUpdate);
 		}
-		updateAllPlayersInLiveGame(match.id, playerUpdates);
 	}
 }
 

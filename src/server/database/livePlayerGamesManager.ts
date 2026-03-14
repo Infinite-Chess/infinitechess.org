@@ -103,21 +103,6 @@ function updateLivePlayerGame(
 }
 
 /**
- * Updates specific columns for ALL players in a live game.
- * Useful for clock updates after a move where all players' remaining time changes.
- * @param game_id - The game ID.
- * @param playerUpdates - A record mapping player number to the updates for that player.
- */
-function updateAllPlayersInLiveGame(
-	game_id: number,
-	playerUpdates: Record<number, Partial<LivePlayerData>>,
-): void {
-	for (const [playerStr, updates] of Object.entries(playerUpdates)) {
-		updateLivePlayerGame(game_id, Number(playerStr), updates);
-	}
-}
-
-/**
  * Retrieves all player rows for a given live game. Used on server startup.
  * @param game_id - The game ID.
  * @returns An array of live_player_games records for this game.
@@ -137,9 +122,4 @@ function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
 
 // Exports --------------------------------------------------------------------------------------------
 
-export {
-	insertLivePlayerGame,
-	updateLivePlayerGame,
-	updateAllPlayersInLiveGame,
-	getLivePlayerGamesForGame,
-};
+export { insertLivePlayerGame, updateLivePlayerGame, getLivePlayerGamesForGame };
