@@ -182,14 +182,24 @@ function isMemberInSomeActiveGame(username: string): boolean {
  * @param servergame - The game
  * @param color - The player who disconnected
  */
-function startDisconnectCushionTimer(servergame: ServerGame, color: Player): void {
+function startDisconnectCushionTimerAndPersist(servergame: ServerGame, color: Player): void {
 	const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
 	servergame.match.playerData[color]!.disconnect.startID = setTimeout(
-		() => startDisconnectTimer(servergame, color, true, onPlayerLostByDisconnect),
+		() => startDisconnectTimerAndPersist(servergame, color, true),
 		forgivenessDurationMillis,
 	);
 	servergame.match.playerData[color]!.disconnect.startTime =
 		Date.now() + forgivenessDurationMillis;
+	liveGameValues.onPlayerDisconnected(servergame, color);
+}
+
+/** Starts the auto-resign disconnect timer and immediately persists the new disconnect state to the database. */
+function startDisconnectTimerAndPersist(
+	servergame: ServerGame,
+	color: Player,
+	closureNotByChoice: boolean,
+): void {
+	startDisconnectTimer(servergame, color, closureNotByChoice, onPlayerLostByDisconnect);
 	liveGameValues.onPlayerDisconnected(servergame, color);
 }
 
@@ -221,11 +231,10 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log('Waiting 5 seconds before starting disconnection timer.');
-		startDisconnectCushionTimer(servergame, color);
+		startDisconnectCushionTimerAndPersist(servergame, color);
 	} else {
 		// Closed tab manually. Immediately start auto-resign timer.
-		startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect);
-		liveGameValues.onPlayerDisconnected(servergame, color);
+		startDisconnectTimerAndPersist(servergame, color, unsubNotByChoice);
 	}
 }
 
@@ -629,22 +638,16 @@ function restoreLiveGames(): void {
 			} else if (timerState.type === 'cushion') {
 				// Still in the 5-second cushion period
 				if (timerState.remainingMs <= 0) {
-					// Cushion has elapsed, start the disconnect timer immediately
-					startDisconnectTimer(
-						servergame,
-						player,
-						!timerState.byChoice,
-						onPlayerLostByDisconnect,
-					);
+					// Cushion has elapsed, start the disconnect timer immediately and persist that state.
+					startDisconnectTimerAndPersist(servergame, player, !timerState.byChoice);
 				} else {
 					// Revive the cushion timer for the remaining duration
 					servergame.match.playerData[player]!.disconnect.startID = setTimeout(
 						() =>
-							startDisconnectTimer(
+							startDisconnectTimerAndPersist(
 								servergame,
 								player,
 								!timerState.byChoice,
-								onPlayerLostByDisconnect,
 							),
 						timerState.remainingMs,
 					);
@@ -654,7 +657,7 @@ function restoreLiveGames(): void {
 			} else {
 				// Fresh: was connected before restart, now disconnected due to server restart.
 				// Give them the same 5-second cushion as a normal internet interruption.
-				startDisconnectCushionTimer(servergame, player);
+				startDisconnectCushionTimerAndPersist(servergame, player);
 			}
 		}
 	}
