@@ -373,11 +373,10 @@ function reconstructMatchInfo(
 				startID: undefined,
 				startTime: row.disconnect_cushion_end_time ?? undefined,
 				timeoutID: undefined,
-				timeToAutoLoss: row.disconnect_resign_time ?? undefined,
-				wasByChoice:
-					row.disconnect_by_choice !== null ? row.disconnect_by_choice === 1 : undefined,
+				timeToAutoLoss: undefined,
+				wasByChoice: undefined,
 			},
-		} as PlayerData;
+		};
 	}
 
 	return {
@@ -388,7 +387,7 @@ function reconstructMatchInfo(
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,
-		drawOfferState: gameRow.draw_offer_state as Player | undefined,
+		drawOfferState: gameRow.draw_offer_state === null ? undefined : gameRow.draw_offer_state,
 		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
 		positionPasted: gameRow.position_pasted === 1,
 	};
@@ -440,7 +439,7 @@ function computePendingTimers(
 		gameRow.color_ticking !== null &&
 		gameRow.conclusion_condition === null
 	) {
-		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player];
+		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking];
 		if (tickingTime !== undefined) {
 			timers.autoTimeLossMs = Math.max(tickingTime, 0);
 		}
