@@ -10,10 +10,10 @@
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
@@ -200,7 +200,7 @@ function reconstructPlayerIdentities(
 	const identities: PlayerGroup<AuthMemberInfo> = {};
 
 	for (const row of playerRows) {
-		const player = row.player_number;
+		const player = row.player_number as Player;
 
 		if (row.user_id !== null) {
 			// Signed-in player: look up username and roles from members table
@@ -276,7 +276,7 @@ function reconstructMetadata(
 
 	// Add player IDs and elo for signed-in players
 	for (const row of playerRows) {
-		const identity = playerIdentities[row.player_number];
+		const identity = playerIdentities[row.player_number as Player];
 		if (!identity?.signedIn) continue;
 
 		const base62 = uuid.base10ToBase62(identity.user_id);
@@ -305,11 +305,12 @@ function reconstructClockValues(
 	const clocks: PlayerGroup<number> = {};
 	for (const row of playerRows) {
 		if (row.time_remaining_ms !== null) {
-			clocks[row.player_number] = row.time_remaining_ms;
+			clocks[row.player_number as Player] = row.time_remaining_ms;
 		}
 	}
 
-	const colorTicking = gameRow.color_ticking === null ? undefined : gameRow.color_ticking;
+	const colorTicking =
+		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
 
 	// Set timeColorTickingLosesAt so that clock.edit() (called inside initGame) can
 	// correctly compute the time remaining, accounting for elapsed time since the snapshot.
@@ -338,7 +339,7 @@ function reconstructConclusion(gameRow: LiveGamesRecord): GameConclusion | undef
 		// Decisive result — someone won
 		return {
 			condition: condition as WinCondition,
-			victor: gameRow.conclusion_victor,
+			victor: gameRow.conclusion_victor as Player,
 		};
 	} else if (condition === 'aborted') {
 		// Aborted — victor is undefined
@@ -363,10 +364,10 @@ function reconstructMatchInfo(
 	const playerData: PlayerGroup<PlayerData> = {};
 
 	for (const row of playerRows) {
-		const identity = playerIdentities[row.player_number];
+		const identity = playerIdentities[row.player_number as Player];
 		if (!identity) continue;
 
-		playerData[row.player_number] = {
+		playerData[row.player_number as Player] = {
 			identifier: identity,
 			lastOfferPly: row.last_draw_offer_ply ?? undefined,
 			disconnect: {
@@ -387,7 +388,8 @@ function reconstructMatchInfo(
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,
-		drawOfferState: gameRow.draw_offer_state === null ? undefined : gameRow.draw_offer_state,
+		drawOfferState:
+			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
 		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
 		positionPasted: gameRow.position_pasted === 1,
 	};
@@ -439,7 +441,7 @@ function computePendingTimers(
 		gameRow.color_ticking !== null &&
 		gameRow.conclusion_condition === null
 	) {
-		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking];
+		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player];
 		if (tickingTime !== undefined) {
 			timers.autoTimeLossMs = Math.max(tickingTime, 0);
 		}
@@ -447,7 +449,7 @@ function computePendingTimers(
 
 	// Per-player disconnect timers
 	for (const row of playerRows) {
-		const player = row.player_number;
+		const player = row.player_number as Player;
 
 		if (row.disconnect_resign_time !== null) {
 			// Case 1: Auto-resign timer was already active

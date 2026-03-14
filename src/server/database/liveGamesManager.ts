@@ -8,8 +8,6 @@
  * The logic for computing column values from ServerGame state lives in liveGameValues.ts.
  */
 
-import type { Player } from '../../shared/chess/util/typeutil.js';
-
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
@@ -26,11 +24,11 @@ export interface LiveGamesRecord {
 	/** 0 = public, 1 = private */
 	private: 0 | 1;
 	moves: string;
-	color_ticking: Player | null;
+	color_ticking: number | null;
 	clock_snapshot_time: number | null;
-	draw_offer_state: Player | null;
+	draw_offer_state: number | null;
 	conclusion_condition: string | null;
-	conclusion_victor: Player | null;
+	conclusion_victor: number | null;
 	time_ended: number | null;
 	afk_resign_time: number | null;
 	delete_time: number | null;

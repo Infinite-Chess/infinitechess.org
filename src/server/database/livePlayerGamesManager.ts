@@ -8,8 +8,6 @@
  * The logic for computing column values from ServerGame state lives in liveGameValues.ts.
  */
 
-import type { Player } from '../../shared/chess/util/typeutil.js';
-
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
@@ -18,7 +16,7 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 /** Structure of a complete live_player_games record. */
 export interface LivePlayerGamesRecord extends LivePlayerData {
 	game_id: number;
-	player_number: Player;
+	player_number: number;
 }
 
 /** Per-player live game data columns, excluding the composite key fields. */
@@ -83,7 +81,7 @@ function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
  */
 function updateLivePlayerGame(
 	game_id: number,
-	player_number: Player,
+	player_number: number,
 	updates: Partial<LivePlayerData>,
 ): void {
 	const entries = Object.entries(updates);
@@ -112,10 +110,10 @@ function updateLivePlayerGame(
  */
 function updateAllPlayersInLiveGame(
 	game_id: number,
-	playerUpdates: Record<Player, Partial<LivePlayerData>>,
+	playerUpdates: Record<number, Partial<LivePlayerData>>,
 ): void {
 	for (const [playerStr, updates] of Object.entries(playerUpdates)) {
-		updateLivePlayerGame(game_id, Number(playerStr) as Player, updates);
+		updateLivePlayerGame(game_id, Number(playerStr), updates);
 	}
 }
 
