@@ -303,16 +303,11 @@ function concludeGame(): void {
 			gamesound.playDraw(delayToPlayConcludeSoundSecs);
 		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
-
-	// Set the Result and Condition metadata
-	gamefileutility.setTerminationMetadata(basegame);
 }
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	delete loadedGamefile!.basegame.gameConclusion;
-	// Delete the Result and Condition metadata
-	gamefileutility.eraseTerminationMetadata(loadedGamefile!.basegame);
+	gamefileutility.setConclusion(loadedGamefile!.basegame, undefined);
 	board.resetColor();
 }
 

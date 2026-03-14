@@ -17,6 +17,7 @@ import WebSocket from 'ws';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
@@ -339,7 +340,7 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
  */
 function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
 	const dontDecrementActiveGames = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
-	gameutility.setConclusion(servergame.basegame, conclusion);
+	gamefileutility.setConclusion(servergame.basegame, conclusion);
 	if (conclusion !== undefined) onGameConclusion(servergame, { dontDecrementActiveGames });
 }
 

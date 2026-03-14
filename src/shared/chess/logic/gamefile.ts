@@ -143,7 +143,6 @@ function initGame(
 		moves: [],
 		gameRules,
 		whosTurn: gameRules.turnOrder[0]!,
-		gameConclusion,
 		...clockDependantVars,
 	};
 
@@ -154,6 +153,8 @@ function initGame(
 			);
 		clock.edit(game.clocks, clockValues);
 	}
+
+	gamefileutility.setConclusion(game, gameConclusion);
 
 	return game;
 }
@@ -258,7 +259,6 @@ function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
 	moves: ServerGameMoveMessage[] = [],
-	gameConclusion?: GameConclusion,
 	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
@@ -284,10 +284,8 @@ function loadGameWithBoard(
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
-	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
-	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
-	if (gameConclusion) basegame.gameConclusion = gameConclusion;
-	else gamefileutility.doGameOverChecks(gamefile);
+	// Do not overwrite pre-existing server conclusion, if present.
+	if (basegame.gameConclusion === undefined) gamefileutility.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
@@ -314,13 +312,7 @@ function initFullGame(
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(
-		basegame,
-		boardsim,
-		additional.moves,
-		additional.gameConclusion,
-		validateMoves,
-	);
+	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
 }
 
 export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
@@ -328,6 +320,5 @@ export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameC
 export default {
 	initGame,
 	initBoard,
-	loadGameWithBoard,
 	initFullGame,
 };

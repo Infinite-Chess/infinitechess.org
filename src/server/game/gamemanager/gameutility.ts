@@ -9,7 +9,6 @@
 
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
@@ -857,42 +856,6 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
 	return turnOrder[i % turnOrder.length]!;
 }
 
-/**
- * Returns the termination of the game in english language.
- * @param gameRules
- * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
- */
-function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
-	if (condition === 'moverule') {
-		// One exception - moverule is an array in TOML
-		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		// @ts-ignore - moverule is an array type, so we know these exist!
-		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
-	}
-	// @ts-ignore - condition is dynamic but always maps to a valid translation key
-	return getTranslation(`play.javascript.termination.${condition}`);
-}
-
-/**
- * Sets the conclusion of the game, and adds on the Result and Termination metadata if the game has ended.
- * If the conclusion is undefined, it removes the Result and Termination metadata, essentially unconcluding the game if it was already.
- */
-function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
-	basegame.gameConclusion = conclusion;
-
-	// Add on the Result and Termination metadata
-	if (conclusion) {
-		basegame.metadata.Result = metadata.getResultFromVictor(conclusion.victor);
-		basegame.metadata.Termination = getTerminationInEnglish(
-			basegame.gameRules,
-			conclusion.condition,
-		);
-	} else {
-		delete basegame.metadata.Result;
-		delete basegame.metadata.Termination;
-	}
-}
-
 export type {
 	ServerGame,
 	MatchInfo,
@@ -929,5 +892,4 @@ export default {
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
 	getRatingDataForGamePlayers,
-	setConclusion,
 };
