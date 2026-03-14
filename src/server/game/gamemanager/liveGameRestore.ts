@@ -1,0 +1,474 @@
+// src/server/game/gamemanager/liveGameRestore.ts
+
+/**
+ * This script restores live games from the database on server startup.
+ *
+ * It reads all rows from live_games and live_player_games, reconstructs
+ * the ServerGame objects, restores all timers (clocks, AFK, disconnect, delete),
+ * and places them into the activeGames record.
+ */
+
+import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
+import type { Condition } from '../../../shared/chess/util/winconutil.js';
+import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
+import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
+
+import uuid from '../../../shared/util/uuid.js';
+import timeutil from '../../../shared/util/timeutil.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
+
+import { getTranslation } from '../../utility/translate.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { getMemberDataByCriteria } from '../../database/memberManager.js';
+import { getLivePlayerGamesForGame } from '../../database/livePlayerGamesManager.js';
+import { getAllLiveGames, deleteLiveGame } from '../../database/liveGamesManager.js';
+
+// Types -----------------------------------------------------------------------------------------
+
+/**
+ * Result of restoring games. The caller is responsible for adding them
+ * to activeGames and setting up their event connections.
+ */
+interface RestoredGame {
+	servergame: ServerGame;
+	/** Timers that need to be started after adding to activeGames. */
+	pendingTimers: PendingTimers;
+}
+
+interface PendingTimers {
+	/** If non-null, the delete timer should fire after this many ms. 0 means immediately. */
+	deleteTimerMs?: number;
+	/** If non-null, the AFK resign timer should fire after this many ms. 0 means immediately. */
+	afkResignTimerMs?: number;
+	/** Per-player disconnect state to restore. */
+	disconnectTimers: PlayerGroup<DisconnectTimerState>;
+	/** If non-null, the auto time loss timer should fire after this many ms. 0 means immediately. */
+	autoTimeLossMs?: number;
+}
+
+interface DisconnectTimerState {
+	/** 'cushion' = still in 5s cushion, 'timer' = auto-resign timer active, 'fresh' = was connected before restart */
+	type: 'cushion' | 'timer' | 'fresh';
+	/** Milliseconds remaining until the timer fires. 0 or negative means immediately. */
+	remainingMs: number;
+	/** Whether the disconnect was by choice. */
+	byChoice: boolean;
+}
+
+// Restoration ------------------------------------------------------------------------------------
+
+/**
+ * Restores all live games from the database.
+ * Called once during server startup, after initDatabase() and before accepting connections.
+ *
+ * @returns An array of restored ServerGame objects with their pending timers.
+ * The caller is responsible for integrating these into the active game system.
+ */
+function restoreAllLiveGames(): RestoredGame[] {
+	const liveGameRows = getAllLiveGames();
+	if (liveGameRows.length === 0) return [];
+
+	console.log(`Restoring ${liveGameRows.length} live game(s) from database...`);
+
+	const restored: RestoredGame[] = [];
+
+	for (const gameRow of liveGameRows) {
+		try {
+			const playerRows = getLivePlayerGamesForGame(gameRow.game_id);
+			if (playerRows.length === 0) {
+				logEventsAndPrint(
+					`Live game ${gameRow.game_id} has no player rows, deleting.`,
+					'errLog.txt',
+				);
+				deleteLiveGame(gameRow.game_id);
+				continue;
+			}
+
+			const result = restoreSingleGame(gameRow, playerRows);
+			if (result !== undefined) restored.push(result);
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			logEventsAndPrint(
+				`Failed to restore live game ${gameRow.game_id}: ${message}`,
+				'errLog.txt',
+			);
+			// Delete the corrupt game from the database so it doesn't block future restarts.
+			deleteLiveGame(gameRow.game_id);
+		}
+	}
+
+	console.log(`Successfully restored ${restored.length} live game(s).`);
+	return restored;
+}
+
+/**
+ * Restores a single live game from its database rows.
+ */
+function restoreSingleGame(
+	gameRow: LiveGamesRecord,
+	playerRows: LivePlayerGamesRecord[],
+): RestoredGame | undefined {
+	const now = Date.now();
+
+	// 1. Reconstruct AuthMemberInfo for each player
+	const playerIdentities = reconstructPlayerIdentities(playerRows);
+
+	// 2. Reconstruct MetaData
+	const gameMetadata = reconstructMetadata(gameRow, playerRows, playerIdentities);
+
+	// 3. Reconstruct clock values for timed games
+	const clockValues = reconstructClockValues(gameRow, playerRows, now);
+
+	// 4. Reconstruct game conclusion
+	const gameConclusion = reconstructConclusion(gameRow);
+
+	// 5. Create the basegame
+	const basegame = gamefile.initGame(gameMetadata, undefined, gameConclusion, clockValues);
+
+	// 6. Parse and replay moves
+	const moves = parseMoves(gameRow.moves);
+	for (const move of moves) {
+		const baseMove: BaseMove = {
+			startCoords: move.startCoords,
+			endCoords: move.endCoords,
+			compact: move.compact,
+		};
+		if (move.promotion !== undefined) baseMove.promotion = move.promotion;
+		if (move.clockStamp !== undefined) baseMove.clockStamp = move.clockStamp;
+		basegame.moves.push(baseMove);
+	}
+
+	// Update whosTurn based on move count
+	basegame.whosTurn =
+		basegame.gameRules.turnOrder[basegame.moves.length % basegame.gameRules.turnOrder.length]!;
+
+	// 7. Conditionally reconstruct boardsim
+	let boardsim: ServerGame['boardsim'];
+	if (gameRow.validate_moves === 1 && doesVariantSupportServerValidation(gameMetadata)) {
+		boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
+		// Replay all moves through the boardsim
+		const gameSim = { basegame: gamefile.initGame(gameMetadata), boardsim };
+		for (const move of moves) {
+			const draft = {
+				startCoords: move.startCoords,
+				endCoords: move.endCoords,
+				promotion: move.promotion,
+				compact: move.compact,
+			};
+			movepiece.generateAndMakeMove(gameSim, draft);
+		}
+		boardsim = gameSim.boardsim;
+	}
+
+	// 8. Reconstruct MatchInfo
+	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
+
+	// 9. Restore clock state for timed games
+	if (!basegame.untimed && basegame.clocks && gameRow.color_ticking !== null) {
+		// Adjust ticking player's time for elapsed time since snapshot
+		const elapsed = now - (gameRow.clock_snapshot_time ?? now);
+		const tickingPlayer = gameRow.color_ticking as Player;
+		const currentTime = basegame.clocks.currentTime[tickingPlayer];
+		if (currentTime !== undefined) {
+			basegame.clocks.currentTime[tickingPlayer] = currentTime - elapsed;
+		}
+		// Set clock to ticking state
+		basegame.clocks.colorTicking = tickingPlayer;
+		basegame.clocks.timeAtTurnStart = now;
+		basegame.clocks.timeRemainAtTurnStart = basegame.clocks.currentTime[tickingPlayer]!;
+	}
+
+	const servergame: ServerGame = { basegame, match: matchInfo, boardsim };
+
+	// 10. Compute pending timers
+	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame, now);
+
+	return { servergame, pendingTimers };
+}
+
+// Helper functions ---------------------------------------------------------------------------------
+
+/**
+ * Reconstructs AuthMemberInfo for each player from the database rows.
+ */
+function reconstructPlayerIdentities(
+	playerRows: LivePlayerGamesRecord[],
+): PlayerGroup<AuthMemberInfo> {
+	const identities: PlayerGroup<AuthMemberInfo> = {};
+
+	for (const row of playerRows) {
+		const player = row.player_number;
+
+		if (row.user_id !== null) {
+			// Signed-in player: look up username and roles from members table
+			const memberData = getMemberDataByCriteria(
+				['username', 'roles'],
+				'user_id',
+				row.user_id,
+			);
+
+			if (memberData) {
+				const roles = memberData.roles ? JSON.parse(memberData.roles) : null;
+				identities[player] = {
+					signedIn: true,
+					user_id: row.user_id,
+					username: memberData.username,
+					roles,
+					browser_id: row.browser_id,
+				};
+			} else {
+				// User was deleted since the game started. Treat as guest.
+				identities[player] = {
+					signedIn: false,
+					browser_id: row.browser_id,
+				};
+			}
+		} else {
+			// Guest player
+			identities[player] = {
+				signedIn: false,
+				browser_id: row.browser_id,
+			};
+		}
+	}
+
+	return identities;
+}
+
+/**
+ * Reconstructs MetaData from the stored atomic values.
+ */
+function reconstructMetadata(
+	gameRow: LiveGamesRecord,
+	playerRows: LivePlayerGamesRecord[],
+	playerIdentities: PlayerGroup<AuthMemberInfo>,
+): MetaData {
+	const guest_indicator = getTranslation('play.javascript.guest_indicator');
+	const RatedOrCasual = gameRow.rated ? 'Rated' : 'Casual';
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gameRow.time_created);
+
+	// Build player-specific metadata
+	const white = playerIdentities[p.WHITE];
+	const black = playerIdentities[p.BLACK];
+
+	const gameMetadata: MetaData = {
+		Event: `${RatedOrCasual} ${gameRow.variant} infinite chess game`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		Variant: gameRow.variant,
+		White: white?.signedIn ? white.username : guest_indicator,
+		Black: black?.signedIn ? black.username : guest_indicator,
+		TimeControl: gameRow.clock as TimeControl,
+		UTCDate,
+		UTCTime,
+	};
+
+	// Add player IDs and elo for signed-in players
+	for (const row of playerRows) {
+		const identity = playerIdentities[row.player_number];
+		if (!identity?.signedIn) continue;
+
+		const base62 = uuid.base10ToBase62(identity.user_id);
+		if (row.player_number === p.WHITE) {
+			gameMetadata.WhiteID = base62;
+			if (row.elo) gameMetadata.WhiteElo = row.elo;
+		} else if (row.player_number === p.BLACK) {
+			gameMetadata.BlackID = base62;
+			if (row.elo) gameMetadata.BlackElo = row.elo;
+		}
+	}
+
+	return gameMetadata;
+}
+
+/**
+ * Reconstructs ClockValues from stored per-player times.
+ */
+function reconstructClockValues(
+	gameRow: LiveGamesRecord,
+	playerRows: LivePlayerGamesRecord[],
+	_now: number,
+): ClockValues | undefined {
+	// Untimed games don't have clock values
+	if (gameRow.clock === '-') return undefined;
+
+	const clocks: { [_color in Player]?: number } = {};
+	for (const row of playerRows) {
+		if (row.time_remaining_ms !== null) {
+			clocks[row.player_number] = row.time_remaining_ms;
+		}
+	}
+
+	return {
+		clocks,
+		colorTicking: gameRow.color_ticking as Player | undefined,
+	};
+}
+
+/**
+ * Reconstructs GameConclusion from stored values.
+ */
+function reconstructConclusion(gameRow: LiveGamesRecord): GameConclusion | undefined {
+	if (gameRow.conclusion_condition === null) return undefined;
+
+	const condition = gameRow.conclusion_condition as Condition;
+
+	if (gameRow.conclusion_victor !== null) {
+		// Decisive result — someone won
+		return {
+			condition: condition as GameConclusion['condition'],
+			victor: gameRow.conclusion_victor as Player,
+		} as GameConclusion;
+	} else if (condition === 'aborted') {
+		// Aborted — victor is undefined
+		return { condition: 'aborted' };
+	} else {
+		// Draw — victor is null
+		return { condition, victor: null } as GameConclusion;
+	}
+}
+
+/**
+ * Reconstructs the MatchInfo from stored values.
+ */
+function reconstructMatchInfo(
+	gameRow: LiveGamesRecord,
+	playerRows: LivePlayerGamesRecord[],
+	playerIdentities: PlayerGroup<AuthMemberInfo>,
+): MatchInfo {
+	const playerData: PlayerGroup<PlayerData> = {};
+
+	for (const row of playerRows) {
+		const identity = playerIdentities[row.player_number];
+		if (!identity) continue;
+
+		playerData[row.player_number] = {
+			identifier: identity,
+			lastOfferPly: row.last_draw_offer_ply ?? undefined,
+			disconnect: {
+				startID: undefined,
+				startTime: row.disconnect_cushion_end_time ?? undefined,
+				timeoutID: undefined,
+				timeToAutoLoss: row.disconnect_resign_time ?? undefined,
+				wasByChoice:
+					row.disconnect_by_choice !== null ? row.disconnect_by_choice === 1 : undefined,
+			},
+		} as PlayerData;
+	}
+
+	return {
+		id: gameRow.game_id,
+		timeCreated: gameRow.time_created,
+		timeEnded: gameRow.time_ended ?? undefined,
+		publicity: gameRow.private === 1 ? 'private' : 'public',
+		rated: gameRow.rated === 1,
+		clock: gameRow.clock as TimeControl,
+		playerData,
+		drawOfferState: gameRow.draw_offer_state as Player | undefined,
+		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
+		positionPasted: gameRow.position_pasted === 1,
+	};
+}
+
+/**
+ * Parses the moves string back into move objects.
+ */
+function parseMoves(
+	movesString: string,
+): Array<{
+	startCoords: [bigint, bigint];
+	endCoords: [bigint, bigint];
+	promotion?: number;
+	compact: string;
+	clockStamp?: number;
+}> {
+	if (!movesString || movesString === '') return [];
+	return icnconverter.parseShortFormMoves(movesString);
+}
+
+/**
+ * Computes which timers need to be started after restoration.
+ */
+function computePendingTimers(
+	gameRow: LiveGamesRecord,
+	playerRows: LivePlayerGamesRecord[],
+	servergame: ServerGame,
+	now: number,
+): PendingTimers {
+	const timers: PendingTimers = {
+		disconnectTimers: {},
+	};
+
+	// Delete timer for concluded games
+	if (gameRow.delete_time !== null) {
+		const remaining = gameRow.delete_time - now;
+		timers.deleteTimerMs = Math.max(remaining, 0);
+	}
+
+	// AFK resign timer
+	if (gameRow.afk_resign_time !== null) {
+		const remaining = gameRow.afk_resign_time - now;
+		timers.afkResignTimerMs = Math.max(remaining, 0);
+	}
+
+	// Auto time loss timer for timed, ongoing games
+	if (
+		!servergame.basegame.untimed &&
+		servergame.basegame.clocks &&
+		gameRow.color_ticking !== null &&
+		gameRow.conclusion_condition === null
+	) {
+		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player];
+		if (tickingTime !== undefined) {
+			timers.autoTimeLossMs = Math.max(tickingTime, 0);
+		}
+	}
+
+	// Per-player disconnect timers
+	for (const row of playerRows) {
+		const player = row.player_number;
+
+		if (row.disconnect_resign_time !== null) {
+			// Case 1: Auto-resign timer was already active
+			const remaining = row.disconnect_resign_time - now;
+			timers.disconnectTimers[player] = {
+				type: 'timer',
+				remainingMs: Math.max(remaining, 0),
+				byChoice: row.disconnect_by_choice === 1,
+			};
+		} else if (row.disconnect_cushion_end_time !== null) {
+			// Case 2: Still in the 5-second cushion period
+			const remaining = row.disconnect_cushion_end_time - now;
+			timers.disconnectTimers[player] = {
+				type: 'cushion',
+				remainingMs: Math.max(remaining, 0),
+				byChoice: row.disconnect_by_choice === 1,
+			};
+		} else {
+			// Case 3: Was connected before restart. Give them a fresh disconnect timer
+			// (not by choice, since the server restart caused the disconnection).
+			timers.disconnectTimers[player] = {
+				type: 'fresh',
+				remainingMs: -1, // Signal that a fresh timer should be started
+				byChoice: false,
+			};
+		}
+	}
+
+	return timers;
+}
+
+// Exports --------------------------------------------------------------------------------------------
+
+export { restoreAllLiveGames };
+export type { RestoredGame, PendingTimers, DisconnectTimerState };

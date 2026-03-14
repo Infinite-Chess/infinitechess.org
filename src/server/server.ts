@@ -15,10 +15,13 @@ import https from 'https';
 import app from './app.js';
 import db from './database/database.js';
 import socketServer from './socket/socketServer.js';
-import { logAllGames } from './game/gamemanager/gamemanager.js';
+import { logAllGames, restoreLiveGames } from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
+
+// Restore live games from the database before accepting connections.
+restoreLiveGames();
 
 // Start the server
 const DEV_BUILD = process.env['NODE_ENV'] === 'development';
