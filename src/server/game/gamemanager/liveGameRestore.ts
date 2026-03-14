@@ -123,8 +123,6 @@ function restoreSingleGame(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 ): RestoredGame {
-	const now = Date.now();
-
 	// 1. Reconstruct AuthMemberInfo for each player
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
@@ -170,7 +168,7 @@ function restoreSingleGame(
 	}
 
 	// 9. Compute pending timers
-	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame, now);
+	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
 
 	return { servergame, pendingTimers };
 }
@@ -284,14 +282,10 @@ function reconstructClockValues(
 
 	const colorTicking =
 		gameRow.color_ticking === null ? undefined : (gameRow.color_ticking as Player);
-
-	// Set timeColorTickingLosesAt so that clock.edit() (called inside initGame) can
-	// correctly compute the time remaining, accounting for elapsed time since the snapshot.
-	let timeColorTickingLosesAt: number | undefined;
-	if (colorTicking !== undefined && clocks[colorTicking] !== undefined) {
-		const snapshotTime = gameRow.clock_snapshot_time ?? Date.now();
-		timeColorTickingLosesAt = snapshotTime + clocks[colorTicking]!;
-	}
+	const timeColorTickingLosesAt =
+		colorTicking !== undefined
+			? gameRow.clock_snapshot_time! + clocks[colorTicking]!
+			: undefined;
 
 	return {
 		clocks,
@@ -337,8 +331,7 @@ function reconstructMatchInfo(
 	const playerData: PlayerGroup<PlayerData> = {};
 
 	for (const row of playerRows) {
-		const identity = playerIdentities[row.player_number as Player];
-		if (!identity) continue;
+		const identity = playerIdentities[row.player_number as Player]!;
 
 		playerData[row.player_number as Player] = {
 			identifier: identity,
@@ -383,8 +376,9 @@ function computePendingTimers(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	servergame: ServerGame,
-	now: number,
 ): PendingTimers {
+	const now = Date.now();
+
 	const timers: PendingTimers = {
 		disconnectTimers: {},
 	};
@@ -402,16 +396,10 @@ function computePendingTimers(
 	}
 
 	// Auto time loss timer for timed, ongoing games
-	if (
-		!servergame.basegame.untimed &&
-		servergame.basegame.clocks &&
-		gameRow.color_ticking !== null &&
-		gameRow.conclusion_condition === null
-	) {
-		const tickingTime = servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player];
-		if (tickingTime !== undefined) {
-			timers.autoTimeLossMs = Math.max(tickingTime, 0);
-		}
+	if (!servergame.basegame.untimed && gameRow.color_ticking !== null) {
+		const tickingTime =
+			servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player]!;
+		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 
 	// Per-player disconnect timers
