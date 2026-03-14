@@ -112,6 +112,30 @@ const gameConclusionSchema = z.discriminatedUnion('condition', [
 	}),
 ]);
 
+// Constants --------------------------------------------------------------------------
+
+/**
+ * Maps each game conclusion condition to its English termination string.
+ * Always English by convention, since ICN metadata should only ever be in English.
+ */
+const TERMINATION_IN_ENGLISH = {
+	checkmate: 'Checkmate',
+	stalemate: 'Stalemate',
+	repetition: 'Threefold repetition',
+	/** The move count is inserted before this string. e.g. "50-move rule" */
+	moverule: '-move rule',
+	insuffmat: 'Insufficient material',
+	royalcapture: 'Royal capture',
+	allroyalscaptured: 'All royals captured',
+	allpiecescaptured: 'All pieces captured',
+	koth: 'King of the hill',
+	resignation: 'Resignation',
+	agreement: 'Agreement',
+	time: 'Time forfeit',
+	aborted: 'Aborted',
+	disconnect: 'Abandoned',
+} as const;
+
 // Functions --------------------------------------------------------------------------
 
 /**
@@ -133,11 +157,11 @@ function isConclusionMoveTriggered(condition: string): boolean {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: Condition): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - the move rule termination includes the number of moves until the auto-draw is triggered. For example, "50-move rule".
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
+		return `${numbWholeMovesUntilAutoDraw}${TERMINATION_IN_ENGLISH.moverule}`;
 	}
-	return translations['termination'][condition];
+	return TERMINATION_IN_ENGLISH[condition];
 }
 
 export default {
