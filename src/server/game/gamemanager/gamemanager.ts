@@ -519,11 +519,9 @@ async function logAllGames(): Promise<void> {
 		cancelDisconnectTimers(servergame.match);
 		gameutility.cancelDeleteGameTimer(servergame.match);
 
-		// Unsubscribe all sockets
+		// Unsubscribe all sockets (we will resub them when they reconnect)
 		for (const data of Object.values(servergame.match.playerData)) {
 			if (!data.socket) continue;
-			if (data.socket.readyState === WebSocket.OPEN)
-				sendSocketMessage(data.socket, 'game', 'unsub');
 			gameutility.unsubClientFromGame(servergame.match, data.socket);
 		}
 
