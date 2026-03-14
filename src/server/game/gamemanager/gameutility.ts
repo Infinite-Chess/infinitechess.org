@@ -516,6 +516,11 @@ function sendGameUpdateToColor(
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
+/**
+ * Constructs a gameupdate message UNIQUE to the player!
+ * Unique because only one person receives the millisUntilAutoAFKResign
+ * property - the opposite player of the one who has gone AFK.
+ */
 function getGameUpdateMessageContents(
 	servergame: ServerGame,
 	color: Player,
@@ -524,7 +529,11 @@ function getGameUpdateMessageContents(
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.basegame.gameConclusion,
 		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
-		participantState: getParticipantState(servergame.match, color),
+		participantState: getParticipantState(
+			servergame.match,
+			color,
+			servergame.basegame.whosTurn,
+		),
 		forceSync,
 	};
 
@@ -573,7 +582,7 @@ function getRatingChangeMessageContents(
 	return messageContents;
 }
 
-function getParticipantState(match: MatchInfo, color: Player): ParticipantState {
+function getParticipantState(match: MatchInfo, color: Player, whosTurn: Player): ParticipantState {
 	const opponentColor = typeutil.invertPlayer(color);
 	const now = Date.now();
 	const opponentData = match.playerData[opponentColor]!;
@@ -587,7 +596,8 @@ function getParticipantState(match: MatchInfo, color: Player): ParticipantState 
 
 	// Include other relevant stuff if defined...
 
-	if (match.autoAFKResignTime !== undefined) {
+	// Only send AFK countdown to the opponent, not to the AFK player themselves.
+	if (match.autoAFKResignTime !== undefined && color !== whosTurn) {
 		const millisLeftUntilAutoAFKResign = match.autoAFKResignTime - now;
 		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
