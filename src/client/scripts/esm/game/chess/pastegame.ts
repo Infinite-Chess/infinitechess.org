@@ -13,8 +13,6 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
