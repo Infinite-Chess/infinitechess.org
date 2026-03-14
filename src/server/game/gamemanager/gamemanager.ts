@@ -612,12 +612,17 @@ function restoreLiveGames(): void {
 					onPlayerLostByDisconnect(servergame, winner);
 					break; // Game is over
 				}
-				startDisconnectTimer(
-					servergame,
-					player,
-					!timerState.byChoice,
-					onPlayerLostByDisconnect,
+				// Revive the timer for the remaining duration exactly (not the full standard duration).
+				// No sockets are connected yet at startup, so skip the opponent notification.
+				const opponentColor = typeutil.invertPlayer(player);
+				const playerdata = servergame.match.playerData[player]!;
+				playerdata.disconnect.startTime = undefined;
+				playerdata.disconnect.timeoutID = setTimeout(
+					() => onPlayerLostByDisconnect(servergame, opponentColor),
+					timerState.remainingMs,
 				);
+				playerdata.disconnect.timeToAutoLoss = Date.now() + timerState.remainingMs;
+				playerdata.disconnect.wasByChoice = timerState.byChoice;
 			} else if (timerState.type === 'cushion') {
 				// Still in the 5-second cushion period
 				if (timerState.remainingMs <= 0) {
