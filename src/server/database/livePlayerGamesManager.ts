@@ -3,9 +3,6 @@
 /**
  * This script manages the live_player_games table, which persists per-player
  * state for active games across server restarts. One row per player per game.
- *
- * This script is ONLY responsible for table operations (insert, update, delete, query).
- * The logic for computing column values from ServerGame state lives in liveGameValues.ts.
  */
 
 import db from './database.js';

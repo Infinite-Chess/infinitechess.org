@@ -3,9 +3,6 @@
 /**
  * This script manages the live_games table, which persists active game state
  * across server restarts. One row per active game.
- *
- * This script is ONLY responsible for table operations (insert, update, delete, query).
- * The logic for computing column values from ServerGame state lives in liveGameValues.ts.
  */
 
 import db from './database.js';
@@ -102,7 +99,7 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 	if (entries.length === 0) return;
 
 	const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-	const values = entries.map(([, val]) => val ?? null);
+	const values = entries.map(([, val]) => val);
 	const query = `UPDATE live_games SET ${setClauses} WHERE game_id = ?`;
 
 	try {
