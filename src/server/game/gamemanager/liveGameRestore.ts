@@ -255,8 +255,8 @@ function reconstructMetadata(
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		Variant: gameRow.variant,
-		White: white?.signedIn ? white.username : guest_indicator,
-		Black: black?.signedIn ? black.username : guest_indicator,
+		White: white?.signedIn ? white.username : guest_indicator, // Protect browser's browser-id cookie
+		Black: black?.signedIn ? black.username : guest_indicator, // Protect browser's browser-id cookie
 		TimeControl: gameRow.clock as TimeControl,
 		UTCDate,
 		UTCTime,
