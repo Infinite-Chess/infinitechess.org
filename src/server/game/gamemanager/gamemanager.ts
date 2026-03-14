@@ -515,11 +515,11 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 
 /**
  * Call when server's about to restart.
- * Now that games are persisted to the database, we no longer abort them.
- * Instead, we stop all runtime timers and close sockets gracefully.
+ * Stop all runtime timers and close sockets gracefully.
  * The games will be restored from the database on the next startup.
+ * Their state is already stored inside live_games and live_game_players tables.
  */
-async function logAllGames(): Promise<void> {
+function prepGamesForShutdown(): void {
 	for (const gameID in activeGames) {
 		const servergame = activeGames[gameID]!;
 
@@ -692,7 +692,7 @@ export {
 	unsubClientFromGameBySocket,
 	onPlayerLostByAbandonment,
 	broadCastGameRestarting,
-	logAllGames,
+	prepGamesForShutdown,
 	restoreLiveGames,
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,

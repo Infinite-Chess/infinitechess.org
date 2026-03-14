@@ -4,7 +4,7 @@
 
 This document analyzes the minimum set of atomic properties that must be persisted to the database in order to fully reconstruct every live server game upon a server restart. The goal is to enable game continuity across server restarts instead of aborting all active games.
 
-Currently, all live game state lives exclusively in memory within the `activeGames` record in `gamemanager.ts`. On a graceful shutdown (`logAllGames()`), every active game is aborted and logged. This analysis identifies exactly which properties of the `ServerGame` object are essential to persist, and which can be derived/reconstructed.
+Currently, all live game state lives exclusively in memory within the `activeGames` record in `gamemanager.ts`. On a graceful shutdown (`prepGamesForShutdown()`), every active game is aborted and logged. This analysis identifies exactly which properties of the `ServerGame` object are essential to persist, and which can be derived/reconstructed.
 
 ### Design Constraints
 

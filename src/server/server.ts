@@ -15,7 +15,7 @@ import https from 'https';
 import app from './app.js';
 import db from './database/database.js';
 import socketServer from './socket/socketServer.js';
-import { logAllGames, restoreLiveGames } from './game/gamemanager/gamemanager.js';
+import { prepGamesForShutdown, restoreLiveGames } from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
@@ -36,19 +36,15 @@ socketServer.start(httpsServer);
 // On closing...
 
 let cleanupDone = false;
-process.on('SIGUSR2', async () => {
-	await handleCleanup('SIGUSR2');
-}); // A file was saved (nodemon auto restarts)
-process.on('SIGINT', async () => {
-	await handleCleanup('SIGINT');
-}); // Ctrl>C was pressed (force terminates nodemon)
-async function handleCleanup(_signal: string): Promise<void> {
+process.on('SIGUSR2', () => handleCleanup('SIGUSR2')); // A file was saved (nodemon auto restarts)
+process.on('SIGINT', () => handleCleanup('SIGINT')); // Ctrl>C was pressed (force terminates nodemon)
+function handleCleanup(_signal: string): void {
 	if (cleanupDone) return; // Sometimes this is called twice
 	cleanupDone = true;
 	// console.log(`\nReceived ${signal}. Cleaning up...`);
 	console.log('Closing...');
 
-	await logAllGames();
+	prepGamesForShutdown();
 
 	db.close(); // Close the database when the server is shutting down.
 
