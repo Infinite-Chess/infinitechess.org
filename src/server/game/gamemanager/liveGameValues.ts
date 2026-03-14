@@ -1,22 +1,21 @@
 // src/server/game/gamemanager/liveGameValues.ts
 
 /**
- * This script computes column values from a ServerGame for each state-change event,
- * to be written to the live_games and live_player_games database tables.
- *
- * It is SEPARATE from the table managers (liveGamesManager.ts, livePlayerGamesManager.ts),
- * which handle the actual SQL operations. This script decides WHAT values to persist.
+ * This script keeps the live-state of the active games in the data base up to date.
+ * It listens to game events and computes the column values to be persisted
+ * for each event, then updates the live_games and live_player_games tables.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame, PlayerData } from './gameutility.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type {
-	LivePlayerData,
+	LivePlayerDisconnectData,
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../shared/chess/util/typeutil.js';
 
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
@@ -48,19 +47,17 @@ function getMovesString(servergame: ServerGame): string {
  */
 function getPlayerEloString(basegame: ServerGame['basegame'], player: Player): string | null {
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
-	const eloKey = player === 1 ? 'WhiteElo' : 'BlackElo';
+	// prettier-ignore
+	const eloKey = player === p.WHITE ? 'WhiteElo' :
+				   player === p.BLACK ? 'BlackElo' :
+				   (() => { throw new Error(`Invalid player ${player} when getting elo string`); })();
 	return basegame.metadata[eloKey] ?? null;
 }
 
 /**
  * Returns the disconnect-related live_player_games columns for a player's current disconnect state.
  */
-function getDisconnectColumnData(
-	disconnect: PlayerData['disconnect'],
-): Pick<
-	LivePlayerData,
-	'disconnect_cushion_end_time' | 'disconnect_resign_time' | 'disconnect_by_choice'
-> {
+function getDisconnectColumnData(disconnect: PlayerData['disconnect']): LivePlayerDisconnectData {
 	return {
 		disconnect_cushion_end_time: disconnect.startTime ?? null,
 		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,

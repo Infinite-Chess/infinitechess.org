@@ -17,12 +17,16 @@ export interface LivePlayerGamesRecord extends LivePlayerData {
 }
 
 /** Per-player live game data columns, excluding the composite key fields. */
-export interface LivePlayerData {
+export interface LivePlayerData extends LivePlayerDisconnectData {
 	user_id: number | null;
 	browser_id: string;
 	elo: string | null;
 	last_draw_offer_ply: number | null;
 	time_remaining_ms: number | null;
+}
+
+/** Disconnect-state columns shared by live_player_games rows. */
+export interface LivePlayerDisconnectData {
 	disconnect_cushion_end_time: number | null;
 	disconnect_resign_time: number | null;
 	/** 0 = network interruption (60s), 1 = intentional (20s). NULL if connected. */
