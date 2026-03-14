@@ -29,7 +29,6 @@ import gamefile from '../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -140,45 +139,37 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 5. Create the basegame
-	const basegame = gamefile.initGame(gameMetadata, undefined, gameConclusion, clockValues);
-
-	// 6. Parse and replay moves
-	const moves: BaseMove[] = parseMoves(gameRow.moves);
-	for (const move of moves) {
-		basegame.moves.push(jsutil.deepCopyObject(move));
-	}
-
-	// Update whosTurn based on move count
-	basegame.whosTurn =
-		basegame.gameRules.turnOrder[basegame.moves.length % basegame.gameRules.turnOrder.length]!;
-
-	// 7. Conditionally reconstruct boardsim
-	let boardsim: Board | undefined;
-	if (gameRow.validate_moves) {
-		boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
-		// Replay all moves through the boardsim
-		const gameSim = { basegame: gamefile.initGame(gameMetadata), boardsim };
-		for (const move of moves) {
-			const draft = {
-				startCoords: move.startCoords,
-				endCoords: move.endCoords,
-				promotion: move.promotion,
-				compact: move.compact,
-			};
-			movepiece.generateAndMakeMove(gameSim, draft);
-		}
-		boardsim = gameSim.boardsim;
-	}
-
 	// 8. Reconstruct MatchInfo
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// Note: clock state (ticking color, elapsed-adjusted time remaining, timeAtTurnStart) is
-	// already set correctly by clock.edit() inside initGame() via the clockValues we pass in.
-	// timeColorTickingLosesAt in those clockValues encodes the snapshot-adjusted absolute expiry.
+	// 5. Create the basegame
+	const basegame = gamefile.initGame(gameMetadata, undefined, gameConclusion, clockValues);
 
-	const servergame: ServerGame = { basegame, match: matchInfo, boardsim };
+	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
+	// by clock.edit() inside initGame() via the clockValues we pass in.
+
+	const servergame: ServerGame = { match: matchInfo, basegame };
+
+	// 6. Parse & replay moves, conditionally constructing boardsim
+	const moves: BaseMove[] = parseMoves(gameRow.moves);
+
+	if (gameRow.validate_moves) {
+		const boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
+		servergame.boardsim = boardsim;
+		// Pushes moves to BOTH the basegame and boardsim
+		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
+	} else {
+		// Push all the moves to JUST the basegame
+		for (const move of moves) {
+			basegame.moves.push(jsutil.deepCopyObject(move));
+		}
+
+		// Update whosTurn based on move count
+		basegame.whosTurn =
+			basegame.gameRules.turnOrder[
+				basegame.moves.length % basegame.gameRules.turnOrder.length
+			]!;
+	}
 
 	// 9. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame, now);
