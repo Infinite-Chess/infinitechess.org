@@ -25,6 +25,7 @@ import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import socketUtility from '../../socket/socketUtility.js';
+import liveGameValues from './liveGameValues.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -131,6 +132,9 @@ function createGame(
 
 	addGameToActiveGames(servergame);
 
+	// Persist the new game to the database for restoration after server restart.
+	liveGameValues.onGameCreated(servergame);
+
 	console.log('Starting new game:');
 	gameutility.printGame(servergame);
 	printActiveGameCount();
@@ -209,9 +213,13 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 				startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect),
 			forgivenessDurationMillis,
 		);
+		servergame.match.playerData[color]!.disconnect.startTime =
+			Date.now() + forgivenessDurationMillis;
+		liveGameValues.onPlayerDisconnected(servergame, color);
 	} else {
 		// Closed tab manually. Immediately start auto-resign timer.
 		startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect);
+		liveGameValues.onPlayerDisconnected(servergame, color);
 	}
 }
 
@@ -372,6 +380,9 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 		() => deleteGame(servergame),
 		timeBeforeGameDeletionMillis,
 	);
+
+	// Persist the game conclusion to the database.
+	liveGameValues.onGameConcluded(servergame);
 }
 
 /**
@@ -452,6 +463,9 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
+
+	// Remove the live game from the persistence database.
+	liveGameValues.onGameDeleted(servergame.match.id);
 
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.

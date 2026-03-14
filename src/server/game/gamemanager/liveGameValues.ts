@@ -1,0 +1,305 @@
+// src/server/game/gamemanager/liveGameValues.ts
+
+/**
+ * This script computes column values from a ServerGame for each state-change event,
+ * to be written to the live_games and live_player_games database tables.
+ *
+ * It is SEPARATE from the table managers (liveGamesManager.ts, livePlayerGamesManager.ts),
+ * which handle the actual SQL operations. This script decides WHAT values to persist.
+ */
+
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
+import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
+import type { ServerGame, PlayerData } from './gameutility.js';
+
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+
+import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
+import {
+	insertLivePlayerGame,
+	updateLivePlayerGame,
+	updateAllPlayersInLiveGame,
+} from '../../database/livePlayerGamesManager.js';
+
+// Constants ------------------------------------------------------------------------------------------
+
+/**
+ * Duration (in ms) after game conclusion before the game is deleted/logged.
+ * Must stay in sync with `timeBeforeGameDeletionMillis` in gamemanager.ts.
+ */
+const timeBeforeGameDeletionMillis = 1000 * 8;
+
+// Value Computation ----------------------------------------------------------------------------------
+
+/**
+ * Computes the moves string from a ServerGame's move list, including embedded clock stamps.
+ * Uses the ICN compact format: `1,2>3,4{[%clk 0:09:56.7]}|5,6>7,8=Q{[%clk 0:09:45.2]}`
+ */
+function getMovesString(servergame: ServerGame): string {
+	const { basegame } = servergame;
+	if (basegame.moves.length === 0) return '';
+
+	return icnconverter.getShortFormMovesFromMoves(basegame.moves, {
+		compact: true,
+		spaces: false,
+		comments: !basegame.untimed,
+		move_numbers: false,
+	});
+}
+
+// Persistence Events ---------------------------------------------------------------------------------
+
+/**
+ * Called when a new game is created. Inserts the full initial state into both tables.
+ */
+function onGameCreated(servergame: ServerGame): void {
+	const { basegame, match } = servergame;
+	const now = Date.now();
+
+	const record: LiveGamesRecord = {
+		game_id: match.id,
+		time_created: match.timeCreated,
+		variant: basegame.metadata.Variant!,
+		clock: match.clock,
+		rated: match.rated ? 1 : 0,
+		private: match.publicity === 'private' ? 1 : 0,
+		moves: '',
+		color_ticking: null,
+		clock_snapshot_time: !basegame.untimed ? now : null,
+		draw_offer_state: match.drawOfferState ?? null,
+		conclusion_condition: null,
+		conclusion_victor: null,
+		time_ended: null,
+		afk_resign_time: null,
+		delete_time: null,
+		position_pasted: 0,
+		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
+	};
+
+	insertLiveGame(record);
+
+	// Insert one row per player
+	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
+		const player = Number(playerStr) as Player;
+		const playerRecord = buildPlayerRecord(match.id, player, playerData, basegame);
+		insertLivePlayerGame(playerRecord);
+	}
+}
+
+/**
+ * Builds a LivePlayerGamesRecord from player data.
+ */
+function buildPlayerRecord(
+	game_id: number,
+	player: Player,
+	playerData: PlayerData,
+	basegame: ServerGame['basegame'],
+): LivePlayerGamesRecord {
+	const { identifier, disconnect } = playerData;
+
+	return {
+		game_id,
+		player_number: player,
+		user_id: identifier.signedIn ? identifier.user_id : null,
+		browser_id: identifier.browser_id,
+		elo: getPlayerEloString(basegame, player),
+		last_draw_offer_ply: playerData.lastOfferPly ?? null,
+		time_remaining_ms:
+			basegame.untimed || !basegame.clocks
+				? null
+				: (basegame.clocks.currentTime[player] ?? null),
+		disconnect_cushion_end_time: disconnect.startTime ?? null,
+		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
+		disconnect_by_choice:
+			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
+	};
+}
+
+/**
+ * Extracts the elo display string for a player from game metadata.
+ */
+function getPlayerEloString(basegame: ServerGame['basegame'], player: Player): string | null {
+	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
+	const eloKey = player === 1 ? 'WhiteElo' : 'BlackElo';
+	return basegame.metadata[eloKey] ?? null;
+}
+
+/**
+ * Called after a move is submitted and the game state is updated.
+ * Updates the moves string, clock state, validate_moves flag, and per-player time.
+ */
+function onMoveSubmitted(servergame: ServerGame): void {
+	const { basegame, match } = servergame;
+	const now = Date.now();
+
+	const gameUpdates: Partial<Omit<LiveGamesRecord, 'game_id'>> = {
+		moves: getMovesString(servergame),
+		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
+	};
+
+	if (!basegame.untimed && basegame.clocks) {
+		gameUpdates.color_ticking = basegame.clocks.colorTicking ?? null;
+		gameUpdates.clock_snapshot_time = now;
+	}
+
+	updateLiveGame(match.id, gameUpdates);
+
+	// Update per-player time_remaining_ms
+	if (!basegame.untimed && basegame.clocks) {
+		const playerUpdates: Record<
+			Player,
+			Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>
+		> = {} as Record<Player, Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>>;
+		for (const playerStr of Object.keys(match.playerData)) {
+			const player = Number(playerStr) as Player;
+			playerUpdates[player] = {
+				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
+			};
+		}
+		updateAllPlayersInLiveGame(match.id, playerUpdates);
+	}
+}
+
+/**
+ * Called when a game conclusion is set (checkmate, resignation, time loss, etc.).
+ * Updates conclusion columns and sets the delete timer target.
+ */
+function onGameConcluded(servergame: ServerGame): void {
+	const { basegame, match } = servergame;
+	const conclusion = basegame.gameConclusion;
+	if (conclusion === undefined) return;
+
+	const now = Date.now();
+	const gameUpdates: Partial<Omit<LiveGamesRecord, 'game_id'>> = {
+		conclusion_condition: conclusion.condition,
+		conclusion_victor: conclusion.victor ?? null,
+		time_ended: match.timeEnded ?? now,
+		delete_time: (match.timeEnded ?? now) + timeBeforeGameDeletionMillis,
+		draw_offer_state: null, // Draw offers are closed on conclusion
+		afk_resign_time: null, // AFK timers are cancelled on conclusion
+	};
+
+	// Stop clock state
+	if (!basegame.untimed) {
+		gameUpdates.color_ticking = null;
+		gameUpdates.clock_snapshot_time = now;
+	}
+
+	updateLiveGame(match.id, gameUpdates);
+
+	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
+	if (!basegame.untimed && basegame.clocks) {
+		const playerUpdates: Record<
+			Player,
+			Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>
+		> = {} as Record<Player, Partial<Omit<LivePlayerGamesRecord, 'game_id' | 'player_number'>>>;
+		for (const playerStr of Object.keys(match.playerData)) {
+			const player = Number(playerStr) as Player;
+			playerUpdates[player] = {
+				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
+			};
+		}
+		updateAllPlayersInLiveGame(match.id, playerUpdates);
+	}
+}
+
+/**
+ * Called when a draw offer is extended.
+ */
+function onDrawOfferExtended(servergame: ServerGame, offeringColor: Player): void {
+	updateLiveGame(servergame.match.id, {
+		draw_offer_state: offeringColor,
+	});
+
+	updateLivePlayerGame(servergame.match.id, offeringColor, {
+		last_draw_offer_ply: servergame.match.playerData[offeringColor]!.lastOfferPly ?? null,
+	});
+}
+
+/**
+ * Called when a draw offer is declined (or auto-declined on move).
+ */
+function onDrawOfferDeclined(servergame: ServerGame): void {
+	updateLiveGame(servergame.match.id, {
+		draw_offer_state: null,
+	});
+}
+
+/**
+ * Called when a player disconnects (either by choice or network interruption).
+ * Persists the disconnect state for that player.
+ */
+function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
+	const playerData = servergame.match.playerData[color]!;
+	const { disconnect } = playerData;
+
+	updateLivePlayerGame(servergame.match.id, color, {
+		disconnect_cushion_end_time: disconnect.startTime ?? null,
+		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
+		disconnect_by_choice:
+			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
+	});
+}
+
+/**
+ * Called when a player reconnects. Clears their disconnect state.
+ */
+function onPlayerReconnected(servergame: ServerGame, color: Player): void {
+	updateLivePlayerGame(servergame.match.id, color, {
+		disconnect_cushion_end_time: null,
+		disconnect_resign_time: null,
+		disconnect_by_choice: null,
+	});
+}
+
+/**
+ * Called when a player goes AFK. Persists the AFK resign timestamp.
+ */
+function onPlayerAFK(servergame: ServerGame): void {
+	updateLiveGame(servergame.match.id, {
+		afk_resign_time: servergame.match.autoAFKResignTime ?? null,
+	});
+}
+
+/**
+ * Called when a player returns from AFK. Clears the AFK resign timestamp.
+ */
+function onPlayerAFKReturn(servergame: ServerGame): void {
+	updateLiveGame(servergame.match.id, {
+		afk_resign_time: null,
+	});
+}
+
+/**
+ * Called when a position is pasted. Sets position_pasted and clears validate_moves.
+ */
+function onPositionPasted(servergame: ServerGame): void {
+	updateLiveGame(servergame.match.id, {
+		position_pasted: 1,
+		validate_moves: 0,
+	});
+}
+
+/**
+ * Called when a game is fully deleted/logged. Removes the live game from the database.
+ */
+function onGameDeleted(game_id: number): void {
+	deleteLiveGame(game_id);
+}
+
+// Exports --------------------------------------------------------------------------------------------
+
+export default {
+	onGameCreated,
+	onMoveSubmitted,
+	onGameConcluded,
+	onDrawOfferExtended,
+	onDrawOfferDeclined,
+	onPlayerDisconnected,
+	onPlayerReconnected,
+	onPlayerAFK,
+	onPlayerAFKReturn,
+	onPositionPasted,
+	onGameDeleted,
+};

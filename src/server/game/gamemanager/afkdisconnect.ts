@@ -104,6 +104,9 @@ function startDisconnectTimer(
 	const playerdata = servergame.match.playerData[color]!;
 	const opponentColor = typeutil.invertPlayer(color);
 
+	// Clear the cushion timer state since we're transitioning to the auto-resign timer.
+	playerdata.disconnect.startTime = undefined;
+
 	playerdata.disconnect.timeoutID = setTimeout(
 		() => onAutoResignFunc(servergame, opponentColor),
 		timeBeforeAutoResign,
@@ -160,6 +163,7 @@ function cancelDisconnectTimer(
 	clearTimeout(playerdata.disconnect.startID);
 	clearTimeout(playerdata.disconnect.timeoutID);
 	playerdata.disconnect.startID = undefined;
+	playerdata.disconnect.startTime = undefined;
 	playerdata.disconnect.timeoutID = undefined;
 	playerdata.disconnect.timeToAutoLoss = undefined;
 	playerdata.disconnect.wasByChoice = undefined;

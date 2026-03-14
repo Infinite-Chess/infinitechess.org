@@ -21,6 +21,7 @@ import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 
+import liveGameValues from './liveGameValues.js';
 import { declineDraw } from './onOfferDraw.js';
 import { resyncToGame } from './resync.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -130,6 +131,9 @@ function submitMove(
 	// console.log(game.moves);
 
 	declineDraw(ws, servergame); // Auto-decline any open draw offer on move submissions
+
+	// Persist the move and updated game state to the database.
+	liveGameValues.onMoveSubmitted(servergame);
 
 	if (gameutility.isGameOver(servergame.basegame))
 		gameutility.sendGameUpdateToColor(servergame, color, false);

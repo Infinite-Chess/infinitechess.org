@@ -11,6 +11,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 import { setGameConclusion } from './gamemanager.js';
 import {
 	isDrawOfferOpen,
@@ -46,6 +47,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Extend the draw offer!
 
 	openDrawOffer(servergame, color);
+	liveGameValues.onDrawOfferExtended(servergame, color);
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(color);
@@ -99,6 +101,7 @@ function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// Alert their opponent
 	gameutility.sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'declinedraw');
+	liveGameValues.onDrawOfferDeclined(servergame);
 }
 
 //--------------------------------------------------------------------------------------------------------

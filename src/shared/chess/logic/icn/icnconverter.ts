@@ -1662,6 +1662,9 @@ export default {
 	parsePresetSquares,
 	parsePresetRays,
 
+	getShortFormMovesFromMoves,
+	parseShortFormMoves,
+
 	// Regex sources & objects
 	wholeNumberSource,
 	integerSource,

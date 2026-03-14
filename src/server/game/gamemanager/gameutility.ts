@@ -127,6 +127,12 @@ interface PlayerData {
 		 * and lasts for 5 seconds to give them a chance to reconnect.
 		 */
 		startID?: NodeJS.Timeout;
+		/**
+		 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
+		 * Set alongside startID when the cushion timer is started.
+		 * Used for persistence: on server restart, this allows reviving the cushion timer.
+		 */
+		startTime?: number;
 	} & (
 		| {
 				/**
@@ -881,6 +887,7 @@ function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): 
 export type {
 	ServerGame,
 	MatchInfo,
+	PlayerData,
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,
