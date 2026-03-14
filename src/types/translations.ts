@@ -1130,22 +1130,6 @@ export interface TranslationsObject {
 				please_report_bug: string;
 				malformed_message: string;
 			};
-			termination: {
-				checkmate: string;
-				stalemate: string;
-				repetition: string;
-				moverule: string[];
-				insuffmat: string;
-				royalcapture: string;
-				allroyalscaptured: string;
-				allpiecescaptured: string;
-				koth: string;
-				resignation: string;
-				agreement: string;
-				time: string;
-				aborted: string;
-				disconnect: string;
-			};
 			results: {
 				you_checkmate: string;
 				you_time: string;
