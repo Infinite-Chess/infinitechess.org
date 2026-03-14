@@ -30,8 +30,6 @@ export interface LivePlayerGamesRecord {
 	disconnect_by_choice: 0 | 1 | null;
 }
 
-export type LivePlayerGamesColumn = keyof LivePlayerGamesRecord;
-
 // SQL Queries (prepared once, cached by db module) ---------------------------------------------------
 
 const INSERT_QUERY = `

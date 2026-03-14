@@ -40,8 +40,6 @@ export interface LiveGamesRecord {
 	validate_moves: 0 | 1;
 }
 
-export type LiveGamesColumn = keyof LiveGamesRecord;
-
 // SQL Queries (prepared once, cached by db module) ---------------------------------------------------
 
 const INSERT_QUERY = `

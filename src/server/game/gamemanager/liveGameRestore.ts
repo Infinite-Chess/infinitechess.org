@@ -476,4 +476,3 @@ function computePendingTimers(
 // Exports --------------------------------------------------------------------------------------------
 
 export { restoreAllLiveGames };
-export type { RestoredGame, PendingTimers, DisconnectTimerState };
