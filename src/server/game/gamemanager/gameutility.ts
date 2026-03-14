@@ -401,7 +401,7 @@ function sendGameInfoToPlayer(
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: MetaData['Variant'] & string,
+	variant: string,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
 	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
