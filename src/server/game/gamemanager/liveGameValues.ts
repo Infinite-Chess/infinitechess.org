@@ -14,6 +14,7 @@ import type {
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
+import { Game } from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
@@ -45,7 +46,7 @@ function getMovesString(servergame: ServerGame): string {
 /**
  * Extracts the elo display string for a player from game metadata.
  */
-function getPlayerEloString(basegame: ServerGame['basegame'], player: Player): string | null {
+function getPlayerEloString(basegame: Game, player: Player): string | null {
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
 	// prettier-ignore
 	const eloKey = player === p.WHITE ? 'WhiteElo' :
@@ -88,7 +89,7 @@ function buildPlayerRecord(
 	game_id: number,
 	player: Player,
 	playerData: PlayerData,
-	basegame: ServerGame['basegame'],
+	basegame: Game,
 ): LivePlayerGamesRecord {
 	const { identifier, disconnect } = playerData;
 
