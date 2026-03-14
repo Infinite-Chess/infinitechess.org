@@ -104,10 +104,7 @@ function buildPlayerRecord(
 			basegame.untimed || !basegame.clocks
 				? null
 				: (basegame.clocks.currentTime[player] ?? null),
-		disconnect_cushion_end_time: disconnect.startTime ?? null,
-		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
-		disconnect_by_choice:
-			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
+		...getDisconnectColumnData(disconnect),
 	};
 }
 
@@ -118,6 +115,38 @@ function getPlayerEloString(basegame: ServerGame['basegame'], player: Player): s
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
 	const eloKey = player === 1 ? 'WhiteElo' : 'BlackElo';
 	return basegame.metadata[eloKey] ?? null;
+}
+
+/**
+ * Returns the disconnect-related live_player_games columns for a player's current disconnect state.
+ */
+function getDisconnectColumnData(
+	disconnect: PlayerData['disconnect'],
+): Pick<
+	LivePlayerData,
+	'disconnect_cushion_end_time' | 'disconnect_resign_time' | 'disconnect_by_choice'
+> {
+	return {
+		disconnect_cushion_end_time: disconnect.startTime ?? null,
+		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
+		disconnect_by_choice:
+			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
+	};
+}
+
+/**
+ * Updates time_remaining_ms for all players from the current clock state.
+ * No-op for untimed games.
+ */
+function persistCurrentClockTimes(servergame: ServerGame): void {
+	const { basegame, match } = servergame;
+	if (basegame.untimed || basegame.clocks === undefined) return;
+	for (const playerStr of Object.keys(match.playerData)) {
+		const player = Number(playerStr) as Player;
+		updateLivePlayerGame(match.id, player, {
+			time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
+		});
+	}
 }
 
 /**
@@ -140,16 +169,7 @@ function onMoveSubmitted(servergame: ServerGame): void {
 
 	updateLiveGame(match.id, gameUpdates);
 
-	// Update per-player time_remaining_ms
-	if (!basegame.untimed && basegame.clocks) {
-		for (const playerStr of Object.keys(match.playerData)) {
-			const player = Number(playerStr) as Player;
-			const playerUpdate: Partial<LivePlayerData> = {
-				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
-			};
-			updateLivePlayerGame(match.id, player, playerUpdate);
-		}
-	}
+	persistCurrentClockTimes(servergame);
 }
 
 /**
@@ -180,15 +200,7 @@ function onGameConcluded(servergame: ServerGame): void {
 	updateLiveGame(match.id, gameUpdates);
 
 	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
-	if (!basegame.untimed && basegame.clocks) {
-		for (const playerStr of Object.keys(match.playerData)) {
-			const player = Number(playerStr) as Player;
-			const playerUpdate: Partial<LivePlayerData> = {
-				time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
-			};
-			updateLivePlayerGame(match.id, player, playerUpdate);
-		}
-	}
+	persistCurrentClockTimes(servergame);
 }
 
 /**
@@ -221,12 +233,7 @@ function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
 	const playerData = servergame.match.playerData[color]!;
 	const { disconnect } = playerData;
 
-	updateLivePlayerGame(servergame.match.id, color, {
-		disconnect_cushion_end_time: disconnect.startTime ?? null,
-		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
-		disconnect_by_choice:
-			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
-	});
+	updateLivePlayerGame(servergame.match.id, color, getDisconnectColumnData(disconnect));
 }
 
 /**
