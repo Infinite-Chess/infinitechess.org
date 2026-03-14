@@ -43,71 +43,6 @@ function getMovesString(servergame: ServerGame): string {
 	});
 }
 
-// Persistence Events ---------------------------------------------------------------------------------
-
-/**
- * Called when a new game is created. Inserts the full initial state into both tables.
- */
-function onGameCreated(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-	const now = Date.now();
-
-	const record: LiveGamesRecord = {
-		game_id: match.id,
-		time_created: match.timeCreated,
-		variant: basegame.metadata.Variant!,
-		clock: match.clock,
-		rated: match.rated ? 1 : 0,
-		private: match.publicity === 'private' ? 1 : 0,
-		moves: '',
-		color_ticking: null,
-		clock_snapshot_time: !basegame.untimed ? now : null,
-		draw_offer_state: match.drawOfferState ?? null,
-		conclusion_condition: null,
-		conclusion_victor: null,
-		time_ended: null,
-		afk_resign_time: null,
-		delete_time: null,
-		position_pasted: 0,
-		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
-	};
-
-	insertLiveGame(record);
-
-	// Insert one row per player
-	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
-		const player = Number(playerStr) as Player;
-		const playerRecord = buildPlayerRecord(match.id, player, playerData, basegame);
-		insertLivePlayerGame(playerRecord);
-	}
-}
-
-/**
- * Builds a LivePlayerGamesRecord from player data.
- */
-function buildPlayerRecord(
-	game_id: number,
-	player: Player,
-	playerData: PlayerData,
-	basegame: ServerGame['basegame'],
-): LivePlayerGamesRecord {
-	const { identifier, disconnect } = playerData;
-
-	return {
-		game_id,
-		player_number: player,
-		user_id: identifier.signedIn ? identifier.user_id : null,
-		browser_id: identifier.browser_id,
-		elo: getPlayerEloString(basegame, player),
-		last_draw_offer_ply: playerData.lastOfferPly ?? null,
-		time_remaining_ms:
-			basegame.untimed || !basegame.clocks
-				? null
-				: (basegame.clocks.currentTime[player] ?? null),
-		...getDisconnectColumnData(disconnect),
-	};
-}
-
 /**
  * Extracts the elo display string for a player from game metadata.
  */
@@ -146,6 +81,71 @@ function persistCurrentClockTimes(servergame: ServerGame): void {
 		updateLivePlayerGame(match.id, player, {
 			time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
 		});
+	}
+}
+
+/**
+ * Builds a LivePlayerGamesRecord from player data.
+ */
+function buildPlayerRecord(
+	game_id: number,
+	player: Player,
+	playerData: PlayerData,
+	basegame: ServerGame['basegame'],
+): LivePlayerGamesRecord {
+	const { identifier, disconnect } = playerData;
+
+	return {
+		game_id,
+		player_number: player,
+		user_id: identifier.signedIn ? identifier.user_id : null,
+		browser_id: identifier.browser_id,
+		elo: getPlayerEloString(basegame, player),
+		last_draw_offer_ply: playerData.lastOfferPly ?? null,
+		time_remaining_ms:
+			basegame.untimed || !basegame.clocks
+				? null
+				: (basegame.clocks.currentTime[player] ?? null),
+		...getDisconnectColumnData(disconnect),
+	};
+}
+
+// Persistence Events ---------------------------------------------------------------------------------
+
+/**
+ * Called when a new game is created. Inserts the full initial state into both tables.
+ */
+function onGameCreated(servergame: ServerGame): void {
+	const { basegame, match } = servergame;
+	const now = Date.now();
+
+	const record: LiveGamesRecord = {
+		game_id: match.id,
+		time_created: match.timeCreated,
+		variant: basegame.metadata.Variant!,
+		clock: match.clock,
+		rated: match.rated ? 1 : 0,
+		private: match.publicity === 'private' ? 1 : 0,
+		moves: '',
+		color_ticking: null,
+		clock_snapshot_time: !basegame.untimed ? now : null,
+		draw_offer_state: match.drawOfferState ?? null,
+		conclusion_condition: null,
+		conclusion_victor: null,
+		time_ended: null,
+		afk_resign_time: null,
+		delete_time: null,
+		position_pasted: 0,
+		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
+	};
+
+	insertLiveGame(record);
+
+	// Insert one row per player
+	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
+		const player = Number(playerStr) as Player;
+		const playerRecord = buildPlayerRecord(match.id, player, playerData, basegame);
+		insertLivePlayerGame(playerRecord);
 	}
 }
 
