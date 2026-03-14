@@ -9,7 +9,6 @@
  */
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { Condition } from '../../../shared/chess/util/winconutil.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
@@ -18,6 +17,11 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
+import type {
+	Condition,
+	DrawCondition,
+	WinCondition,
+} from '../../../shared/chess/util/winconutil.js';
 
 import uuid from '../../../shared/util/uuid.js';
 import timeutil from '../../../shared/util/timeutil.js';
@@ -326,22 +330,25 @@ function reconstructClockValues(
  * Reconstructs GameConclusion from stored values.
  */
 function reconstructConclusion(gameRow: LiveGamesRecord): GameConclusion | undefined {
-	if (gameRow.conclusion_condition === null) return undefined;
+	if (gameRow.conclusion_condition === null) return undefined; // Game is ongoing still
 
 	const condition = gameRow.conclusion_condition as Condition;
 
 	if (gameRow.conclusion_victor !== null) {
 		// Decisive result — someone won
 		return {
-			condition: condition as GameConclusion['condition'],
-			victor: gameRow.conclusion_victor as Player,
-		} as GameConclusion;
+			condition: condition as WinCondition,
+			victor: gameRow.conclusion_victor,
+		};
 	} else if (condition === 'aborted') {
 		// Aborted — victor is undefined
 		return { condition: 'aborted' };
 	} else {
 		// Draw — victor is null
-		return { condition, victor: null } as GameConclusion;
+		return {
+			condition: condition as DrawCondition,
+			victor: null,
+		};
 	}
 }
 

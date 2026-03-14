@@ -56,11 +56,11 @@ const MOVE_TRIGGERED_CONCLUSIONS = [
 // Types --------------------------------------------------------------------------
 
 /** Condition where one player wins. victor will be a Player. */
-type WinCondition = (typeof WIN_CONDITIONS)[number];
+export type WinCondition = (typeof WIN_CONDITIONS)[number];
 /** Win condition that is a valid gamerule option for either color. */
 export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
 /** Condition that results in a draw. victor will be null. */
-type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
 /** Condition that aborts the game. victor will be undefined. */
 type AbortCondition = 'aborted';
 type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
