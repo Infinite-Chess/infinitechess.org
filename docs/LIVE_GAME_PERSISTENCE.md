@@ -9,7 +9,7 @@ Currently, all live game state lives exclusively in memory within the `activeGam
 ### Design Constraints
 
 - **Multi-player future-proofing:** Games are not guaranteed to forever be only two-player (e.g., 4-player variants may be introduced). Per-player data must not be stored as `white_`/`black_` columns. Instead, we use a separate `live_player_games` table following the pattern of the existing `player_games` table, which stores player-to-game relationships via `player_number`.
-- **Atomic columns:** All properties are stored as individual atomic DB values, not as serialized JSON, since underlying types may change their structure independently.
+- **Atomic columns:** All properties are stored as individual atomic DB values, not as serialized JSON, since underlying types may change their structure independently (e.g., adding a new field to `GameConclusion` would require parsing and rewriting all JSON blobs, whereas atomic columns allow independent schema evolution).
 - **Timer state persistence:** A server restart does not mean players are at their keyboards or have reconnected. AFK timers, disconnect timers, and post-conclusion delete timers must all have enough persistent information to reinstate them on startup.
 
 ---
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS live_player_games (
     last_offer_ply                  INTEGER,
     time_remaining_ms               INTEGER,
     disconnect_time_to_auto_loss    INTEGER,
-    disconnect_was_by_choice        INTEGER CHECK (disconnect_was_by_choice IN (0, 1) OR disconnect_was_by_choice IS NULL),
+    disconnect_was_by_choice        INTEGER CHECK (disconnect_was_by_choice IN (0, 1)),
     PRIMARY KEY (game_id, player_number)
 );
 CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);
@@ -328,7 +328,7 @@ On server restart, to restore each live game:
 
 3. **AFK state**: AFK timers MUST be persisted. A server restart does not mean the player has returned to their keyboard. The `auto_afk_resign_time` column captures the epoch timestamp when the AFK auto-resign should fire. On restoration, the remaining time is computed and a new timer is set. If the time has already elapsed, the player is immediately auto-resigned. The AFK timer is only cancelled when the client explicitly sends an "AFK-Return" message, which requires an active WebSocket connection.
 
-4. **Disconnect timers**: Disconnect timers MUST be persisted. WebSocket connections are severed by a server restart, but that does not mean the player has reconnected. Disconnect timers are ONLY cancelled when the disconnected player opens a new WebSocket connection. For players who were already disconnected before the restart, their existing `disconnect_time_to_auto_loss` is restored (they may be closer to expiring). For players who were connected before the restart (NULL disconnect columns), fresh disconnect timers are started with `closureNotByChoice = true` (60-second window), since the server restart — not the player — caused the disconnection.
+4. **Disconnect timers**: Disconnect timers MUST be persisted. WebSocket connections are severed by a server restart, but that does not mean the player has reconnected. Disconnect timers are ONLY cancelled when the disconnected player opens a new WebSocket connection. For players who were already disconnected before the restart, their existing `disconnect_time_to_auto_loss` is restored (they may be closer to expiring, or already expired, in which case they are immediately auto-resigned). For players who were connected before the restart (NULL disconnect columns), fresh disconnect timers are started with `closureNotByChoice = true` (60-second window), since the server restart — not the player — caused the disconnection.
 
 5. **Guest players**: Guests are identified solely by `browser_id`. If a guest clears their cookies during a restart, they cannot be re-associated with their game. The game proceeds normally with disconnect timers running for the absent guest. If they fail to reconnect before the timer expires, the game concludes via the standard disconnect loss mechanism.
 
