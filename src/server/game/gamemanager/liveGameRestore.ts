@@ -4,7 +4,10 @@
  * This script restores live games from the database on server startup.
  *
  * It reads all rows from live_games and live_player_games, reconstructs
- * the ServerGame objects, and computes which timers need to be started for each game (AFK resign, auto time loss, delete).
+ * the full ServerGame objects (metadata, clocks, boardsim, player identities),
+ * and reinstates all pending timers (AFK resign, auto time loss, disconnect, delete).
+ *
+ * See dev-utils/live-game-persistence.md for the schema and restoration details.
  */
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';

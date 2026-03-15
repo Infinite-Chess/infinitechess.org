@@ -1,9 +1,11 @@
 // src/server/game/gamemanager/liveGameValues.ts
 
 /**
- * This script keeps the live-state of the active games in the data base up to date.
- * It listens to game events and computes the column values to be persisted
- * for each event, then updates the live_games and live_player_games tables.
+ * This script keeps the live-state of the active games in the database up to date.
+ * It computes the column values to be persisted for each state-change event,
+ * then updates the live_games and live_player_games tables accordingly.
+ *
+ * See dev-utils/live-game-persistence.md for the schema and event matrix.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
