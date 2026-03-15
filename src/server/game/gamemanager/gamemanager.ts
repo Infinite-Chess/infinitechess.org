@@ -356,7 +356,9 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
 /**
  * Fire whenever a game's `gameConclusion` property is set.
  * Stops the game clock, cancels all running timers, closes any draw
- * offer, sets a timer to delete the game and updates players' ELOs.
+ * offer, then either deletes the game immediately (if the server validated
+ * moves) or sets a short timer to give the losing client time to oppose the
+ * conclusion if they want.
  * @param servergame - The game object representing the current game.
  * @param [options] - Optional parameters.
  * @param [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
@@ -388,16 +390,20 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	// The ending time of the game is set, if it is undefined
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
 
-	// Set a 5-second timer to delete it and change elos,
-	// to give the other client time to oppose the conclusion if they want.
-	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just ocurred.
-	servergame.match.deleteTimeoutID = setTimeout(
-		() => deleteGame(servergame),
-		timeBeforeGameDeletionMillis,
-	);
-
-	// Persist the game conclusion to the database.
+	// Persist the game conclusion to the database before deleting.
 	liveGameValues.onGameConcluded(servergame);
+
+	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
+	if (servergame.boardsim !== undefined) {
+		// Server validated every move — cheating is impossible, so we can log and unsubscribe clients immediately.
+		void deleteGame(servergame);
+	} else {
+		// No server-side validation (e.g. pasted position). Give clients time to oppose the conclusion.
+		servergame.match.deleteTimeoutID = setTimeout(
+			() => deleteGame(servergame),
+			timeBeforeGameDeletionMillis,
+		);
+	}
 }
 
 /**
