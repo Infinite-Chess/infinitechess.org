@@ -209,4 +209,4 @@ export default {
 	getWhiteBlackRatingDiff,
 };
 
-export type { TimeControl, MetaData, MetadataKey, PlayerMetaInput };
+export type { TimeControl, MetaData, MetadataKey };

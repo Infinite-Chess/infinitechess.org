@@ -39,8 +39,10 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
 }
 
 /**
- * Sets the conclusion of the game, and sets/clears the `Termination` `Result` and metadata accordingly.
- * If the conclusion is undefined, it removes the metadata, essentially un-concluding the game if it was already concluded.
+ * Sets the conclusion of the game, and sets/clears
+ * the `Termination` `Result` and metadata accordingly.
+ * If the conclusion is undefined, it removes the metadata,
+ * essentially un-concluding the game if it was already concluded.
  */
 function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;

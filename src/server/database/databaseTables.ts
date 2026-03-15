@@ -84,41 +84,6 @@ const allGamesColumns: string[] = [
 	'icn',
 ];
 
-/** All columns of the live_games table. */
-const allLiveGamesColumns: string[] = [
-	'game_id',
-	'time_created',
-	'variant',
-	'clock',
-	'rated',
-	'private',
-	'moves',
-	'color_ticking',
-	'clock_snapshot_time',
-	'draw_offer_state',
-	'conclusion_condition',
-	'conclusion_victor',
-	'time_ended',
-	'afk_resign_time',
-	'delete_time',
-	'position_pasted',
-	'validate_moves',
-];
-
-/** All columns of the live_player_games table. */
-const allLivePlayerGamesColumns: string[] = [
-	'game_id',
-	'player_number',
-	'user_id',
-	'browser_id',
-	'elo',
-	'last_draw_offer_ply',
-	'time_remaining_ms',
-	'disconnect_cushion_end_time',
-	'disconnect_resign_time',
-	'disconnect_by_choice',
-];
-
 /** All columns of the rating_abuse table. Each of these would be valid to retrieve from any member and/or leaderboard. */
 const allRatingAbuseColumns: string[] = [
 	'user_id',
@@ -332,23 +297,23 @@ function generateTables(): void {
 	// Live Games table — persists active games across server restarts
 	db.run(`
 		CREATE TABLE IF NOT EXISTS live_games (
-			game_id                 INTEGER PRIMARY KEY,
-			time_created            INTEGER NOT NULL,
-			variant                 TEXT NOT NULL,
-			clock                   TEXT NOT NULL,
-			rated                   INTEGER NOT NULL CHECK (rated IN (0, 1)),
-			private                 INTEGER NOT NULL CHECK (private IN (0, 1)),
-			moves                   TEXT NOT NULL DEFAULT '',
-			color_ticking           INTEGER,
-			clock_snapshot_time     INTEGER,
-			draw_offer_state        INTEGER,
-			conclusion_condition    TEXT,
-			conclusion_victor       INTEGER,
-			time_ended              INTEGER,
-			afk_resign_time         INTEGER,
-			delete_time             INTEGER,
-			position_pasted         INTEGER NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
-			validate_moves          INTEGER NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
+			game_id               INTEGER PRIMARY KEY,
+			time_created          INTEGER NOT NULL,
+			variant               TEXT NOT NULL,
+			clock                 TEXT NOT NULL,
+			rated                 BOOLEAN NOT NULL CHECK (rated IN (0, 1)),
+			private               BOOLEAN NOT NULL CHECK (private IN (0, 1)),
+			moves                 TEXT NOT NULL DEFAULT '',
+			color_ticking         INTEGER,
+			clock_snapshot_time   INTEGER,
+			draw_offer_state      INTEGER,
+			conclusion_condition  TEXT,
+			conclusion_victor     INTEGER,
+			time_ended            INTEGER,
+			afk_resign_time       INTEGER,
+			delete_time           INTEGER,
+			position_pasted       BOOLEAN NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
+			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
 		);
 	`);
 
@@ -428,8 +393,6 @@ export {
 	allMemberColumns,
 	allPlayerGamesColumns,
 	allGamesColumns,
-	allLiveGamesColumns,
-	allLivePlayerGamesColumns,
 	allRatingAbuseColumns,
 	initDatabase,
 	generateTables,

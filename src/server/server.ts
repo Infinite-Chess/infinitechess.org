@@ -20,7 +20,7 @@ import { getCertOptions } from './config/certOptions.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 
-// Restore live games from the database before accepting connections.
+// Restore live games from the database into memory before accepting new connections.
 restoreLiveGames();
 
 // Start the server

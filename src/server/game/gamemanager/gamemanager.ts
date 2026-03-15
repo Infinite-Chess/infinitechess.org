@@ -50,7 +50,7 @@ import {
 	cancelAutoAFKResignTimer,
 	startDisconnectTimer,
 	cancelDisconnectTimers,
-	getDisconnectionForgivenessDuration,
+	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
 } from './afkdisconnect.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -177,19 +177,19 @@ function isMemberInSomeActiveGame(username: string): boolean {
 
 /**
  * Starts the 5-second cushion timer for a player who disconnected not by their own choice
- * (network interruption or server restart). After the cushion elapses the full disconnect
- * auto-resign timer is started. Also persists the cushion state to the database.
+ * (network interruption). After the cushion elapses, if they have not yet reconnected,
+ * the full disconnect auto-resign timer is started.
+ * Also persists the cushion state to the database.
  * @param servergame - The game
  * @param color - The player who disconnected
  */
 function startDisconnectCushionTimerAndPersist(servergame: ServerGame, color: Player): void {
-	const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
 	servergame.match.playerData[color]!.disconnect.startID = setTimeout(
 		() => startDisconnectTimerAndPersist(servergame, color, true),
-		forgivenessDurationMillis,
+		timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
 	);
 	servergame.match.playerData[color]!.disconnect.startTime =
-		Date.now() + forgivenessDurationMillis;
+		Date.now() + timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis;
 	liveGameValues.onPlayerDisconnected(servergame, color);
 }
 
@@ -523,6 +523,8 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	console.log(`Deleted game ${servergame.match.id}.`);
 }
 
+// Shutdown Preparation & Startup Restoration ------------------------------------------------
+
 /**
  * Call when server's about to restart.
  * Stop all runtime timers and close sockets gracefully.
@@ -598,14 +600,12 @@ function restoreLiveGames(): void {
 
 		// 3. AFK resign timer
 		if (pendingTimers.afkResignTimerMs !== undefined) {
+			const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn!);
 			if (pendingTimers.afkResignTimerMs <= 0) {
 				// AFK timer already expired during downtime
-				const afkLoser = servergame.basegame.whosTurn!;
-				const afkWinner = typeutil.invertPlayer(afkLoser);
-				onPlayerLostByAbandonment(servergame, afkWinner);
+				onPlayerLostByAbandonment(servergame, opponentColor);
 				continue;
 			}
-			const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn!);
 			servergame.match.autoAFKResignTimeoutID = setTimeout(
 				() => onPlayerLostByAbandonment(servergame, opponentColor),
 				pendingTimers.afkResignTimerMs,
@@ -615,18 +615,17 @@ function restoreLiveGames(): void {
 		// 4. Per-player disconnect timers
 		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
 			const player = Number(playerStr) as Player;
+			const opponentColor = typeutil.invertPlayer(player);
 
 			if (timerState.type === 'timer') {
 				// Disconnect auto-resign timer was active
 				if (timerState.remainingMs <= 0) {
 					// Timer already expired, immediately resign
-					const winner = typeutil.invertPlayer(player);
-					onPlayerLostByDisconnect(servergame, winner);
+					onPlayerLostByDisconnect(servergame, opponentColor);
 					break; // Game is over
 				}
-				// Revive the timer for the remaining duration exactly (not the full standard duration).
+				// Revive the timer for the remaining duration exactly.
 				// No sockets are connected yet at startup, so skip the opponent notification.
-				const opponentColor = typeutil.invertPlayer(player);
 				const playerdata = servergame.match.playerData[player]!;
 				playerdata.disconnect.startTime = undefined;
 				playerdata.disconnect.timeoutID = setTimeout(
@@ -695,12 +694,13 @@ export {
 	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
 	onPlayerLostByAbandonment,
-	broadCastGameRestarting,
-	prepGamesForShutdown,
-	restoreLiveGames,
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,
 	setGameConclusion,
 	pushGameClock,
 	getGameByID,
+	// Shutdown Preparation & Startup Restoration
+	prepGamesForShutdown,
+	restoreLiveGames,
+	broadCastGameRestarting,
 };

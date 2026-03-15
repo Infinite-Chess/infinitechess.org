@@ -20,18 +20,18 @@ import gameutility from './gameutility.js';
  * (network interruption) to reconnect to the game before
  * we tell their opponent they've disconnected, and start an auto-resign timer.
  */
-const timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis = 1000 * 5; // 5 seconds
+const timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis = 5_000; // 5 seconds
 
 /**
  * The duration of the auto-resign timer by disconnect, when the player
  * has intentionally left the page.
  */
-const timeBeforeAutoResignByDisconnectMillis = 1000 * 20; // 20 seconds
+const timeBeforeAutoResignByDisconnectMillis = 20_000; // 20 seconds
 /**
  * The duration of the auto-resign timer by disconnect (more forgiving),
  * when the player's internet cuts out.
  */
-const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 1000 * 60; // 60 seconds
+const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 60_000; // 60 seconds
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -185,17 +185,10 @@ function cancelDisconnectTimer(
 
 //--------------------------------------------------------------------------------------------------------
 
-/**
- * Returns the cushion, in millis, that we give disconnected players to reconnect before we start an auto-resign timer.
- */
-function getDisconnectionForgivenessDuration(): number {
-	return timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis;
-}
-
 export {
+	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
 	cancelAutoAFKResignTimer,
 	startDisconnectTimer,
 	cancelDisconnectTimers,
 	cancelDisconnectTimer,
-	getDisconnectionForgivenessDuration,
 };

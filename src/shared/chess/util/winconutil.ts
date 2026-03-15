@@ -146,7 +146,7 @@ const TERMINATION_IN_ENGLISH = {
  * @param condition - The `condition` property of a `GameConclusion` object.
  * @returns *true* if the condition is move-triggered.
  */
-function isConclusionMoveTriggered(condition: string): boolean {
+function isConclusionMoveTriggered(condition: Condition): boolean {
 	return MOVE_TRIGGERED_CONCLUSIONS.includes(condition as MoveTriggeredCondition);
 }
 

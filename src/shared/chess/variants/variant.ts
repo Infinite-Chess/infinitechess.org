@@ -886,7 +886,6 @@ function getVariantName(variantKey: string): string {
 
 export default {
 	isVariantValid,
-	getVariantName,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	// getVariantTurnOrder,
@@ -898,4 +897,5 @@ export default {
 	getRayPresets,
 	getVariantWorldBorder,
 	getVariantPositionString,
+	getVariantName,
 };

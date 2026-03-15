@@ -39,7 +39,8 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 /**
  * The cushion time, before the game is deleted, if one player
  * has disconnected and has not yet seen the game conclusion.
- * This gives them a little bit of time to reconnect and see the results.
+ * This gives them a little bit of time to reconnect and submit a cheat report,
+ * which is only useful in variants where we're not doing server-side move validation.
  */
 export const timeBeforeGameDeletionMillis = 1000 * 8;
 
@@ -424,25 +425,27 @@ function constructMetadataOfGame(
 ): MetaData {
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
+	const whiteIdentity = {
+		name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
+		id: white.signedIn ? white.user_id : undefined,
+		elo: playerdata[p.WHITE]?.rating
+			? metadata.getFormattedElo(playerdata[p.WHITE]!.rating!)
+			: undefined,
+	};
+	const blackIdentity = {
+		name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
+		id: black.signedIn ? black.user_id : undefined,
+		elo: playerdata[p.BLACK]?.rating
+			? metadata.getFormattedElo(playerdata[p.BLACK]!.rating!)
+			: undefined,
+	};
 	return metadata.buildGameMetadata(
 		rated,
 		variantKey,
 		clock,
 		Date.now(),
-		{
-			name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
-			id: white.signedIn ? white.user_id : undefined,
-			elo: playerdata[p.WHITE]?.rating
-				? metadata.getFormattedElo(playerdata[p.WHITE]!.rating!)
-				: undefined,
-		},
-		{
-			name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
-			id: black.signedIn ? black.user_id : undefined,
-			elo: playerdata[p.BLACK]?.rating
-				? metadata.getFormattedElo(playerdata[p.BLACK]!.rating!)
-				: undefined,
-		},
+		whiteIdentity,
+		blackIdentity,
 	);
 }
 

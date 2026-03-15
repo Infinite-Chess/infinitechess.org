@@ -1659,11 +1659,11 @@ export default {
 	generateSpecialRights,
 	generatePositionFromShortForm,
 
-	parsePresetSquares,
-	parsePresetRays,
-
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
+
+	parsePresetSquares,
+	parsePresetRays,
 
 	// Regex sources & objects
 	wholeNumberSource,
