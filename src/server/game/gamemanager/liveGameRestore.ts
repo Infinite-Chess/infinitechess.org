@@ -5,7 +5,8 @@
  *
  * It reads all rows from live_games and live_player_games, reconstructs
  * the full ServerGame objects (metadata, clocks, boardsim, player identities),
- * and reinstates all pending timers (AFK resign, auto time loss, disconnect, delete).
+ * and determines which pending timers (AFK resign, auto time loss, disconnect,
+ * delete) need to be reinstated.
  *
  * See dev-utils/live-game-persistence.md for the schema and restoration details.
  */
