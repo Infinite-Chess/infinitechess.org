@@ -128,8 +128,10 @@ function update(): void {
 /** Starts a local game according to the options provided. */
 async function startLocalGame(options: {
 	/** Must be one of the valid variants in variant.ts */
-	Variant: VariantCode;
-	TimeControl: TimeControl;
+	variant: VariantCode;
+	metadata: {
+		TimeControl: TimeControl;
+	};
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
@@ -137,14 +139,14 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const variantName = variant.getVariantName(options.Variant);
+	const variantName = variant.getVariantName(options.variant);
 
 	const dateTimestamp = Date.now();
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 	const metadata: MetaData = {
+		...options.metadata,
 		// Metadata stores the English display name, not the code.
 		Variant: variantName,
-		TimeControl: options.TimeControl,
 		Event: `Casual local ${variantName} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
@@ -155,7 +157,7 @@ async function startLocalGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata,
-			variant: options.Variant,
+			variant: options.variant,
 			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
@@ -240,15 +242,17 @@ async function startOnlineGame(options: {
 
 /** Starts an engine game according to the options provided. */
 async function startEngineGame(options: {
-	/** The "Event" string of the game's metadata */
-	Event: string;
+	metadata: {
+		/** The "Event" string of the game's metadata */
+		Event: string;
+		/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
+		TimeControl: TimeControl;
+	};
 	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
 	variant?: VariantCode;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
-	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
-	TimeControl?: TimeControl;
 	youAreColor: Player;
 	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
@@ -277,10 +281,9 @@ async function startEngineGame(options: {
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 
 	const metadata: MetaData = {
-		Event: options.Event,
+		...options.metadata,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		TimeControl: options.TimeControl ?? '-',
 		White: options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName,
 		Black: options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName,
 		UTCDate,
@@ -402,7 +405,6 @@ async function startCustomEngineGame(options: {
 		variantOptions: VariantOptions;
 	};
 	presetAnnotes?: PresetAnnotes;
-	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
 	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
