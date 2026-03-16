@@ -84,12 +84,6 @@ interface Variant {
 	worldBorderDist?: bigint;
 }
 
-interface VariantContext {
-	Variant?: string;
-	UTCDate?: string;
-	UTCTime?: string;
-}
-
 const positionStringOfClassical =
 	'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 const positionStringOfCoaIP =
@@ -117,6 +111,17 @@ const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = {
 	turnOrder: [p.BLACK, p.WHITE],
 }; // No promotions, no 50-move rule, and reversed turn order.
 
+/** Union of all valid variant codes. Must be kept in sync with the keys of {@link variantDictionary}. */
+// prettier-ignore
+type VariantCode =
+	| 'Classical' | 'Confined_Classical' | 'Classical_Plus'
+	| 'CoaIP' | 'CoaIP_HO' | 'CoaIP_RO' | 'CoaIP_NO'
+	| 'Palace' | 'Pawndard' | 'Core' | 'Standarch'
+	| 'Space_Classic' | 'Space' | 'Obstocean' | 'Abundance'
+	| 'Chess' | 'Pawn_Horde' | 'Knightline'
+	| 'Omega' | 'Omega_Squared' | 'Omega_Cubed' | 'Omega_Fourth'
+	| '4x4x4x4_Chess' | '5D_Chess' | 'Knighted_Chess';
+
 /**
  * An object that contains each variant's positional and gamerule information:
  *
@@ -132,7 +137,7 @@ const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = {
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary: { [variantName: string]: Variant } = {
+const variantDictionary: Record<VariantCode, Variant> = {
 	Classical: {
 		name: 'Classical',
 		positionString: positionStringOfClassical,
@@ -511,28 +516,60 @@ function repeatPromotionsAllowedForEachColor(
 }
 
 /**
- * Tests if the provided variant is a valid variant
+ * Tests if the provided variant is a valid variant.
+ * Acts as a type guard, narrowing the input to {@link VariantCode}.
  * @param variantName - The name of the variant
  * @returns *true* if the variant is a valid variant
  */
-function isVariantValid(variantName?: string): boolean {
+function isVariantValid(variantName: string | undefined): variantName is VariantCode {
 	if (variantName === undefined) return false;
-	return variantDictionary[variantName] !== undefined;
+	return variantName in variantDictionary;
 }
 
 /**
- * Given the Variant and Date, calculates the position,
- * positionString, and specialRights properties for the game.
- * @param options - An object containing the properties `Variant`, and if desired, `Date`.
+ * Resolves a variant string (code or English name) from metadata into a strongly-typed {@link VariantCode}.
+ * Handles both variant codes (e.g. `"CoaIP"`) and English display names (e.g. `"Chess on an Infinite Plane"`).
+ * Console-warns if the input doesn't match any known variant.
+ * @param input - The variant string from metadata (may be a code, an English name, or undefined).
+ * @returns The corresponding {@link VariantCode}, or `undefined` if the input is not recognized.
+ */
+function resolveVariantCode(input: string | undefined): VariantCode | undefined {
+	if (input === undefined) return undefined;
+	// Direct code match
+	if (input in variantDictionary) return input as VariantCode;
+	// Search by English display name
+	for (const code of Object.keys(variantDictionary) as VariantCode[]) {
+		if (variantDictionary[code].name === input) return code;
+	}
+	console.warn(`Variant "${input}" is not recognized. Treating as no variant.`);
+	return undefined;
+}
+
+/**
+ * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
+ * Falls back to the current time if either is not provided.
+ */
+function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
+	if (UTCDate !== undefined && UTCTime !== undefined) {
+		return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+	}
+	return Date.now();
+}
+
+/**
+ * Given the variant code and timestamp, calculates the starting position and specialRights.
+ * @param variantCode - The strongly-typed variant code.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
-function getStartingPositionOfVariant(metadata: VariantContext): {
+function getStartingPositionOfVariant(
+	variantCode: VariantCode,
+	timestamp: number,
+): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
-	const variantEntry: Variant = variantDictionary[metadata.Variant!]!;
+	const variantEntry = variantDictionary[variantCode];
 
 	let positionString: string;
 	let position: Map<CoordsKey, number>;
@@ -546,10 +583,7 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 			positionString = variantEntry.positionString;
 		} else {
 			// Multiple position string entries for different timestamps
-			positionString = getApplicableTimestampEntry(
-				variantEntry.positionString,
-				resolveTimestamp(metadata),
-			);
+			positionString = getApplicableTimestampEntry(variantEntry.positionString, timestamp);
 		}
 
 		return icnconverter.generatePositionFromShortForm(positionString);
@@ -557,7 +591,7 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 		const generator =
 			'algorithm' in variantEntry.generator
 				? variantEntry.generator
-				: getApplicableTimestampEntry(variantEntry.generator, resolveTimestamp(metadata));
+				: getApplicableTimestampEntry(variantEntry.generator, timestamp);
 
 		// Generate the starting position
 		position = generator.algorithm();
@@ -569,42 +603,37 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
 		return { position, specialRights };
 	} else
 		throw Error(
-			`Variant entry "${metadata.Variant}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`,
+			`Variant entry "${variantCode}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`,
 		);
 }
 
 /**
- * Returns the variant's gamerules at the provided date in time.
- * If `UTCDate` or `UTCTime` are not specified in the metadata, they default to the current date/time.
- * @param options - An object containing the metadata `Variant`, and optionally `UTCDate` & `UTCTime`.
- * @param options.Variant - The name of the variant for which to get the gamerules.
+ * Returns the variant's gamerules at the provided timestamp.
+ * @param variantCode - The strongly-typed variant code.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  * @returns The gamerules object for the variant.
  */
-function getGameRulesOfVariant(metadata: VariantContext): GameRules {
-	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get gamerules of invalid variant "${metadata.Variant}"!`);
-
+function getGameRulesOfVariant(variantCode: VariantCode, timestamp: number): GameRules {
 	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(
-		getVariantGameRuleModifications(metadata),
+		getVariantGameRuleModifications(variantCode, timestamp),
 	);
 
 	return getGameRules(gameruleModifications);
 }
 
-function getVariantGameRuleModifications(metadata: VariantContext): GameRuleModifications {
-	const variantEntry = variantDictionary[metadata.Variant!];
-	if (!variantEntry)
-		throw Error(`Cannot get gameruleModifications of invalid variant "${metadata.Variant}".`);
+/** Returns the gamerule modifications for the given variant at the given timestamp. */
+function getVariantGameRuleModifications(
+	variantCode: VariantCode,
+	timestamp: number,
+): GameRuleModifications {
+	const variantEntry = variantDictionary[variantCode];
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 
 	// We use hasOwnProperty() because it is true even if the property is set as `undefined`, which in this case would mean zero gamerule modifications.
 	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
 		// Multiple UTC timestamps
-		return getApplicableTimestampEntry(
-			variantEntry.gameruleModifications,
-			resolveTimestamp(metadata),
-		);
+		return getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp);
 	} else {
 		// Just one gameruleModifications entry
 		return variantEntry.gameruleModifications;
@@ -669,44 +698,25 @@ function getBareMinimumGameRules(): GameRules {
 // }
 
 /**
- * Resolves UTCDate and UTCTime from metadata, falling back to the current date/time if not specified.
- * Used by variant functions that must select a time-variant property from the variant dictionary.
- */
-function resolveTimestamp(metadata: VariantContext): { UTCDate: string; UTCTime: string } {
-	return {
-		UTCDate: metadata.UTCDate ?? timeutil.getCurrentUTCDate(),
-		UTCTime: metadata.UTCTime ?? timeutil.getCurrentUTCTime(),
-	};
-}
-
-/**
- * Accepts either a `positionString` or `gameruleModifications` property of a variant entry,
- * and a date, returns the value that should be used according to the date.
- * @param object - Either `positionString` or `gameruleModifications`
- * @param options - An object containing `UTCDate`, and `UTCTime`.
+ * Accepts a time-variant property and a timestamp, returns the value that should be used for that point in time.
+ * @param object - A time-variant property (positionString, gameruleModifications, etc.)
+ * @param timestamp - The timestamp in ms since epoch to select the appropriate value.
  */
 function getApplicableTimestampEntry<Inner>(
 	object: TimeVariantProperty<Inner>,
-	{
-		UTCDate,
-		UTCTime,
-	}: {
-		UTCDate: string;
-		UTCTime: string;
-	},
+	timestamp: number,
 ): Inner {
 	if (!(object as Object).hasOwnProperty(0)) {
 		return object as Inner;
 	}
-	const date = timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
 
 	let timeStampKeys = Object.keys(object as Object);
 
 	timeStampKeys = timeStampKeys.sort().reverse(); // [1709017200000, 0]
 	let timestampToUse: number;
-	for (const timestamp of timeStampKeys) {
-		const thisTimestamp = Number.parseInt(timestamp);
-		if (thisTimestamp <= date) {
+	for (const ts of timeStampKeys) {
+		const thisTimestamp = Number.parseInt(ts);
+		if (thisTimestamp <= timestamp) {
 			timestampToUse = thisTimestamp;
 			break;
 		}
@@ -715,39 +725,32 @@ function getApplicableTimestampEntry<Inner>(
 }
 
 /**
- * Gets the piece movesets for the given variant and time, such that each piece contains a function returning a copy of its moveset (to avoid modifying originals)
- * @param options - An object containing the metadata `Variant`, and if desired, `UTCDate` & `UTCTime`.
- * @param options.Variant - The name of the variant for which to get the moveset.
- * @param [options.UTCDate] - Optional. The UTCDate metadata for which to get the moveset, in the format `YYYY.MM.DD`. Defaults to the current date.
- * @param [options.UTCTime] - Optional. The UTCTime metadata for which to get the moveset, in the format `HH:MM:SS`. Defaults to the current time.
- * @param {number} [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
- * @returns {Object} The pieceMovesets property of the gamefile.
+ * Gets the piece movesets for the given variant and timestamp.
+ * @param variantCode - The strongly-typed variant code, or undefined for pasted games with no variant.
+ * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param slideLimit - Overrides the slideLimit gamerule of the variant, if specified.
+ * @returns The pieceMovesets property of the gamefile.
  */
 function getMovesetsOfVariant(
-	metadata: VariantContext,
+	variantCode: VariantCode | undefined,
+	timestamp: number,
 	slideLimit?: bigint,
 ): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
-	// TODO: Transfer the slide limit game rule of pasted games
-	if (metadata.Variant === undefined) return getMovesets(undefined, slideLimit);
-	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get movesets of invalid variant "${metadata.Variant}"!`);
-	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
+	if (variantCode === undefined) return getMovesets(undefined, slideLimit);
+	const variantEntry = variantDictionary[variantCode];
 
 	if (!variantEntry.movesetGenerator) {
-		// console.log(`Variant "${Variant}" does not have a moveset generator. Using default movesets.`);
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
 			// Multiple UTC timestamps
 			return getMovesets(
 				{},
 				slideLimit ??
-					getApplicableTimestampEntry(
-						variantEntry.gameruleModifications,
-						resolveTimestamp(metadata),
-					).slideLimit,
+					getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp)
+						.slideLimit,
 			);
 		} else {
-			// Just one movesetGenerator entry
+			// Just one gameruleModifications entry
 			return getMovesets(
 				{},
 				slideLimit ??
@@ -761,7 +764,7 @@ function getMovesetsOfVariant(
 		// Multiple UTC timestamps
 		movesetModifications = getApplicableTimestampEntry(
 			variantEntry.movesetGenerator,
-			resolveTimestamp(metadata),
+			timestamp,
 		)();
 	} else {
 		// Just one movesetGenerator entry
@@ -797,76 +800,73 @@ function getMovesets(
 	return pieceMovesets;
 }
 
-function getSpecialMovesOfVariant(metadata: VariantContext): RawTypeGroup<SpecialMoveFunction> {
+/** Returns the special moves for the given variant at the specified timestamp. */
+function getSpecialMovesOfVariant(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+): RawTypeGroup<SpecialMoveFunction> {
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
-	if (metadata.Variant === undefined) return defaultSpecialMoves;
-	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get specialMoves of invalid variant "${metadata.Variant}"!`);
-	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
+	if (variantCode === undefined) return defaultSpecialMoves;
+	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
 
-	const overrides = getApplicableTimestampEntry(
-		variantEntry.specialMoves,
-		resolveTimestamp(metadata),
-	);
+	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, timestamp);
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
 }
 
-function getSpecialVicinityOfVariant(metadata: VariantContext): SpecialVicinity {
+/** Returns the special vicinity for the given variant at the specified timestamp. */
+function getSpecialVicinityOfVariant(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+): SpecialVicinity {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
-	if (metadata.Variant === undefined) return defaultSpecialVicinityByPiece;
-	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get specialVicinity of invalid variant "${metadata.Variant}"!`);
-	const variantEntry: Variant = variantDictionary[metadata.Variant]!;
+	if (variantCode === undefined) return defaultSpecialVicinityByPiece;
+	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
-	const overrides = getApplicableTimestampEntry(
-		variantEntry.specialVicinity,
-		resolveTimestamp(metadata),
-	);
+	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, timestamp);
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
 	return defaultSpecialVicinityByPiece;
 }
 
-/** Returns the Ray presets for the given variant, if they have any. */
-function getSquarePresets(Variant: string | undefined): Coords[] {
-	if (Variant === undefined) return [];
-	const square_presets = variantDictionary[Variant]?.annotePresets?.squares;
+/** Returns the preset square annotations for the given variant, if they have any. */
+function getSquarePresets(variantCode: VariantCode | undefined): Coords[] {
+	if (variantCode === undefined) return [];
+	const square_presets = variantDictionary[variantCode].annotePresets?.squares;
 	return square_presets ? icnconverter.parsePresetSquares(square_presets) : [];
 }
 
-/** Returns the Ray presets for the given variant, if they have any. */
-function getRayPresets(Variant: string | undefined): BaseRay[] {
-	if (Variant === undefined) return [];
-	const ray_presets = variantDictionary[Variant]?.annotePresets?.rays;
+/** Returns the preset ray annotations for the given variant, if they have any. */
+function getRayPresets(variantCode: VariantCode | undefined): BaseRay[] {
+	if (variantCode === undefined) return [];
+	const ray_presets = variantDictionary[variantCode].annotePresets?.rays;
 	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
-function getVariantWorldBorder(Variant: string | undefined): bigint | undefined {
-	if (Variant === undefined) return undefined;
-	return variantDictionary[Variant]?.worldBorderDist;
+function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | undefined {
+	if (variantCode === undefined) return undefined;
+	return variantDictionary[variantCode].worldBorderDist;
 }
 
 /**
- * Returns the position string for the given variant at the specified date,
- * or `undefined` if the variant uses a generator (no fixed position string) or is invalid.
- * @param metadata - An object containing the `Variant` name, and optionally `UTCDate` and `UTCTime`.
+ * Returns the position string for the given variant at the specified timestamp,
+ * or `undefined` if the variant uses a generator (no fixed position string).
+ * @param variantCode - The strongly-typed variant code.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getVariantPositionString(metadata: VariantContext): string | undefined {
-	if (!isVariantValid(metadata.Variant)) return undefined;
-	const variantEntry = variantDictionary[metadata.Variant!];
-	if (!variantEntry) return undefined;
+function getVariantPositionString(variantCode: VariantCode, timestamp: number): string | undefined {
+	const variantEntry = variantDictionary[variantCode];
 
 	if (!variantEntry.positionString) return undefined; // Generator-based variant
 
 	// Multiple position strings for different timestamps
-	return getApplicableTimestampEntry(variantEntry.positionString, resolveTimestamp(metadata));
+	return getApplicableTimestampEntry(variantEntry.positionString, timestamp);
 }
 
 /**
@@ -874,38 +874,23 @@ function getVariantPositionString(metadata: VariantContext): string | undefined 
  * Falls back to the variant code itself if the variant is not found.
  */
 function getVariantName(variantKey: string): string {
-	const variantEntry = variantDictionary[variantKey];
-	if (variantEntry !== undefined) return variantEntry.name;
+	if (variantKey in variantDictionary) return variantDictionary[variantKey as VariantCode].name;
 	console.warn(
 		`Variant code "${variantKey}" not found in variant dictionary, using the code as the name.`,
 	);
 	return variantKey;
 }
 
-/**
- * Converts an English variant name (as stored in the variant dictionary) back to its internal code.
- * If no dictionary entry matches by name, but the input is already a valid variant code, that code is returned
- * (for backwards compatibility with ICN files that stored the code directly).
- * @throws If the variant is unrecognized.
- */
-function getVariantCodeFromEnglishName(name: string): string {
-	// Fallback: the string is already a valid variant code
-	if (variantDictionary[name] !== undefined) return name;
-	// Search the dictionary for a matching name
-	for (const [code, entry] of Object.entries(variantDictionary)) {
-		if (entry.name === name) return code;
-	}
-	// Throw on no match found
-	throw new Error(`Cannot get code of unrecognized variant: "${name}"`);
-}
-
 // Exports ------------------------------------------------------------------
+
+export type { VariantCode };
 
 export default {
 	isVariantValid,
+	resolveVariantCode,
+	resolveTimestampFromMetadata,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
-	// getVariantTurnOrder,
 	getMovesetsOfVariant,
 	getSpecialMovesOfVariant,
 	getSpecialVicinityOfVariant,
@@ -915,5 +900,4 @@ export default {
 	getVariantWorldBorder,
 	getVariantPositionString,
 	getVariantName,
-	getVariantCodeFromEnglishName,
 };

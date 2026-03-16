@@ -8,7 +8,7 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { MetaData } from '../util/metadata.js';
+import type { VariantCode } from './variant.js';
 
 import variant from './variant.js';
 
@@ -28,11 +28,16 @@ const POSITION_STRING_THRESHOLD = 2500;
  * Returns `true` if the given variant supports server-side move legality validation.
  * Variants whose position string exceeds {@link POSITION_STRING_THRESHOLD} characters,
  * or that use position generators, are not supported.
- * @param metadata - Metadata of the game (including `Variant`, `UTCDate`, `UTCTime`).
+ * @param variantCode - The strongly-typed variant code, or undefined.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function doesVariantSupportServerValidation(metadata: MetaData): boolean {
-	const positionString = variant.getVariantPositionString(metadata);
-	if (positionString === undefined) return false; // Generator-based or invalid variant
+function doesVariantSupportServerValidation(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+): boolean {
+	if (variantCode === undefined) return false;
+	const positionString = variant.getVariantPositionString(variantCode, timestamp);
+	if (positionString === undefined) return false; // Generator-based variant
 	return positionString.length <= POSITION_STRING_THRESHOLD;
 }
 
@@ -43,11 +48,16 @@ function doesVariantSupportServerValidation(metadata: MetaData): boolean {
  * - The server removes players from the active-games list immediately.
  * - Clients do not need to send `removefromplayersinactivegames`.
  * - Clients should not send cheat reports.
- * @param metadata - Metadata of the game.
+ * @param variantCode - The strongly-typed variant code, or undefined.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  * @param isPrivate - Whether the game is a private match.
  */
-function isGameInstantlyDeleted(metadata: MetaData, isPrivate: boolean): boolean {
-	return doesVariantSupportServerValidation(metadata) || isPrivate;
+function isGameInstantlyDeleted(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+	isPrivate: boolean,
+): boolean {
+	return doesVariantSupportServerValidation(variantCode, timestamp) || isPrivate;
 }
 
 export { doesVariantSupportServerValidation, isGameInstantlyDeleted };

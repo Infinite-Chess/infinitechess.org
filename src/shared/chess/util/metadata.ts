@@ -102,7 +102,7 @@ function buildGameMetadata(
 		Event: `${RatedOrCasual} ${variantEnglishName} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		Variant: variantCode,
+		Variant: variantEnglishName,
 		White: white.name,
 		Black: black.name,
 		TimeControl: clock,
