@@ -13,6 +13,7 @@
 
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { VariantCode } from '../../../shared/chess/variants/variant.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
@@ -154,7 +155,11 @@ function restoreSingleGame(
 	const moves: BaseMove[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
-		const boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
+		const boardsim = gamefile.initBoard(
+			basegame.gameRules,
+			basegame.variant,
+			basegame.dateTimestamp,
+		);
 		servergame.boardsim = boardsim;
 		// Pushes moves to BOTH the basegame and boardsim
 		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
@@ -251,7 +256,7 @@ function reconstructMetadata(
 
 	return metadata.buildGameMetadata(
 		Boolean(gameRow.rated),
-		gameRow.variant,
+		gameRow.variant as VariantCode,
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		{

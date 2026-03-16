@@ -14,7 +14,7 @@ import type { ServerUsernameContainer } from '../../../shared/types.js';
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
-import variant from '../../../shared/chess/variants/variant.js';
+import { variantCodes } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
@@ -39,7 +39,7 @@ import {
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
 	.strictObject({
-		variant: z.string().refine(variant.isVariantValid, { error: 'Invalid variant.' }),
+		variant: z.enum(variantCodes),
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])

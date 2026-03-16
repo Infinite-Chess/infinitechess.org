@@ -5,7 +5,7 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { MetaData } from '../util/metadata.js';
+import type { VariantCode } from '../variants/variant.js';
 import type { PieceMoveset } from './movesets.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
@@ -89,12 +89,17 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param metadata - The metadata of the gamefile
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  * @param existingRawTypes
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
-function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vicinity {
-	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(metadata);
+function genSpecialVicinity(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+	existingRawTypes: RawType[],
+): Vicinity {
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(variantCode, timestamp);
 	const vicinity = {} as Vicinity;
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {

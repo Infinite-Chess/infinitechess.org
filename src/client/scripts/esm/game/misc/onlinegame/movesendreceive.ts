@@ -116,7 +116,11 @@ function handleOpponentsMove(
 	}
 	if (
 		!moveValidationResult.valid &&
-		!isGameInstantlyDeleted(gamefile.basegame.metadata, onlinegame.getIsPrivate())
+		!isGameInstantlyDeleted(
+			gamefile.basegame.variant,
+			gamefile.basegame.dateTimestamp,
+			onlinegame.getIsPrivate(),
+		)
 	) {
 		// Only report cheating when the server won't delete the game instantly.
 		// In instantly-deleted games (server validates moves OR private game), the server

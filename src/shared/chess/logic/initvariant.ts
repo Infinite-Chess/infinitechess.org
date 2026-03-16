@@ -5,9 +5,9 @@
  */
 
 import type { Snapshot } from './gamefile.js';
-import type { MetaData } from '../util/metadata.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
+import type { VariantCode } from '../variants/variant.js';
 import type { PieceMoveset } from './movesets.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
 import type { GlobalGameState } from './state.js';
@@ -37,38 +37,40 @@ interface VariantOptions {
 }
 
 /**
- * Initializes gameRules of the provided gamefile.
- * And inits the piece movesets.
- *
- * To load a custom position, include the options within the `options` parameter!
- * All options are a snapshot of the starting position, before any moves are forwarded.
- * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position.
- * @param [options] - An object that may contain various properties: `turn`, `fullMove`, `enpassant`, `moveRule`, `position`, `specialRights`, `gameRules`. If position is not specified, the metadata must contain the "Variant".
+ * Returns the game rules for the variant.
+ * If variant options are provided, their embedded gameRules are used directly.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param [options] - Variant options that override the default variant gamerules.
  */
-function getVariantGamerules(metadata: MetaData, options?: VariantOptions): GameRules {
-	// Ignores the "Variant" metadata, and just uses the specified gameRules
+function getVariantGamerules(
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+	options?: VariantOptions,
+): GameRules {
+	// Ignores the variant code, and just uses the specified gameRules
 	if (options) return options.gameRules;
 	// Default (built-in variant, not pasted)
-	else return variant.getGameRulesOfVariant(metadata);
+	if (variantCode === undefined) return variant.getBareMinimumGameRules();
+	return variant.getGameRulesOfVariant(variantCode, timestamp);
 }
 
 /**
- * Sets the pieceMovesets and specialMoves functions of the gamefile.
- * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `options` is specified with a position.
- * @param [slideLimit] Overrides the slideLimit gamerule of the variant, if specified.
+ * Returns the piece movesets and special moves for the variant.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param [slideLimit] - Overrides the slideLimit gamerule of the variant, if specified.
  */
 function getPieceMovesets(
-	metadata: MetaData,
+	variantCode: VariantCode | undefined,
+	timestamp: number,
 	slideLimit?: bigint,
 ): {
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 } {
-	// The movesets and methods for detecting and executing special moves
-	// are attached to the gamefile. This is because different variants
-	// can have different movesets for each piece. For example, the slideLimit gamerule.
-	const pieceMovesets = variant.getMovesetsOfVariant(metadata, slideLimit);
-	const specialMoves = variant.getSpecialMovesOfVariant(metadata);
+	const pieceMovesets = variant.getMovesetsOfVariant(variantCode, timestamp, slideLimit);
+	const specialMoves = variant.getSpecialMovesOfVariant(variantCode, timestamp);
 	return {
 		pieceMovesets,
 		specialMoves,
@@ -77,13 +79,14 @@ function getPieceMovesets(
 
 /**
  * Fills in any holes in the provided variant options with the variant defaults.
- * @param metadata - The metadata of the variant. This requires the "Variant" metadata, unless `variantOptions` is specified with a position.
- * @param [variantOptions] - The variant options. If position is not specified, the metadata must contain the "Variant".
- * @returns The completed variant options.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param [variantOptions] - The variant options. If position is not specified, the variant code must be provided.
  */
 function getVariantVariantOptions(
 	gamerules: GameRules,
-	metadata: MetaData,
+	variantCode: VariantCode | undefined,
+	timestamp: number,
 	variantOptions?: VariantOptions,
 ): {
 	position: Snapshot['position'];
@@ -98,7 +101,7 @@ function getVariantVariantOptions(
 	let moveRuleState: Snapshot['state_global']['moveRuleState'];
 
 	// Even IF options are provided. If the pasted game doesn't contain position information
-	// then we still have to grab it from the Variant metadata!
+	// then we still have to grab it from the variant!
 	if (variantOptions) {
 		position = variantOptions.position;
 		fullMove = variantOptions.fullMove;
@@ -110,11 +113,14 @@ function getVariantVariantOptions(
 		)
 			throw Error('If moveRule is specified, moveRuleState must also be specified.');
 		moveRuleState = variantOptions.state_global.moveRuleState;
-	} else {
-		({ position, specialRights } = variant.getStartingPositionOfVariant(metadata));
+	} else if (variantCode !== undefined) {
+		({ position, specialRights } = variant.getStartingPositionOfVariant(
+			variantCode,
+			timestamp,
+		));
 		fullMove = 1; // Every variant has the exact same fullMove value.
 		if (gamerules.moveRule !== undefined) moveRuleState = 0; // Every variant has the exact same initial moveRuleState value.
-	}
+	} else throw Error('Cannot get starting position without a variant code or variant options.');
 
 	// console.log("Variant options:", variantOptions);
 

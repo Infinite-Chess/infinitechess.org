@@ -108,8 +108,8 @@ function createGame(
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
-	const boardsim = doesVariantSupportServerValidation(metadata)
-		? gamefile.initBoard(basegame.gameRules, metadata)
+	const boardsim = doesVariantSupportServerValidation(basegame.variant, basegame.dateTimestamp)
+		? gamefile.initBoard(basegame.gameRules, basegame.variant, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };
@@ -399,7 +399,8 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
 	if (
 		isGameInstantlyDeleted(
-			servergame.basegame.metadata,
+			servergame.basegame.variant,
+			servergame.basegame.dateTimestamp,
 			servergame.match.publicity === 'private',
 		)
 	) {

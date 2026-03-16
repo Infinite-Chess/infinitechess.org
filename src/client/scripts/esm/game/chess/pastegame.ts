@@ -5,6 +5,8 @@
  */
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
@@ -136,28 +138,23 @@ function pasteGame(longformOut: LongFormatOut): void {
 			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
-	// Convert the English variant name from the ICN back to the internal variant code
-	if (longformOut.metadata.Variant) {
-		try {
-			longformOut.metadata.Variant = variant.getVariantCodeFromEnglishName(
-				longformOut.metadata.Variant,
-			);
-		} catch {
-			// Invalid Variant: Treat as if no variant was specified
-			if (longformOut.position === undefined)
-				console.warn(
-					`Variant "${longformOut.metadata.Variant}" not recognized. Pasted position will be empty.`,
-				);
-			delete longformOut.metadata.Variant;
-		}
-	}
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
 	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
 	// the game could have ended by time, in which case we want to further analyse what could have happened.
 	delete longformOut.metadata.Result;
 	delete longformOut.metadata.Termination;
 
-	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(longformOut);
+	const timestamp = metadata.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
+	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(
+		longformOut,
+		resolvedVariantCode,
+		timestamp,
+	);
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -186,10 +183,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 			? ` ${translations.copypaste.pasting_in_private}`
 			: '';
 
-	const additional: {
-		variantOptions: VariantOptions;
-		moves?: ServerGameMoveMessage[];
-	} = { variantOptions };
+	const additional: Additional = { variantOptions, variant: resolvedVariantCode };
 	if (longformOut.moves) {
 		// Trim the excess properties from the _Move_Out type, including the comment.
 		additional.moves = longformOut.moves.map((m: _Move_Out) => {
@@ -203,10 +197,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
-		additional: {
-			variantOptions: VariantOptions;
-			moves?: ServerGameMoveMessage[];
-		};
+		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
 	} = {
 		metadata: longformOut.metadata,
@@ -237,8 +228,15 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 /**
  * Utility for extracting position and specialRights from a LongFormatOut.
+ * @param longFormat - The parsed long format from ICN.
+ * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
+ * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
+function getPositionAndSpecialRightsFromLongFormat(
+	longFormat: LongFormatOut,
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -248,9 +246,9 @@ function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (longFormat.metadata.Variant) {
-		// No position specified in the ICN, extract from the Variant metadata
-		return variant.getStartingPositionOfVariant(longFormat.metadata);
+	} else if (variantCode !== undefined) {
+		// No position specified in the ICN, extract from the variant
+		return variant.getStartingPositionOfVariant(variantCode, timestamp);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };

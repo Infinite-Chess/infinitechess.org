@@ -16,6 +16,7 @@ import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { ValidEngine } from './engines/engine.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
@@ -27,6 +28,7 @@ import type {
 } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -125,7 +127,7 @@ function update(): void {
 /** Starts a local game according to the options provided. */
 async function startLocalGame(options: {
 	/** Must be one of the valid variants in variant.ts */
-	Variant: string;
+	Variant: VariantCode;
 	TimeControl: TimeControl;
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
@@ -134,12 +136,14 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const metadata = {
-		...options,
+	const metadata: MetaData = {
+		// Metadata stores the English display name, not the code.
+		Variant: variant.getVariantName(options.Variant),
+		TimeControl: options.TimeControl,
 		// @ts-ignore
 		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
-		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
-		Round: '-' as '-',
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
@@ -149,14 +153,7 @@ async function startLocalGame(options: {
 			metadata,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
-			/**
-			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
-			 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
-			 */
-			// additional: { editor: true }
-			// Enable to test world border in local games
-			// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
-			// additional: { worldBorder: BigInt(15) }
+			additional: { variant: options.Variant },
 		})
 		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
@@ -232,9 +229,9 @@ async function startOnlineGame(options: {
 async function startEngineGame(options: {
 	/** The "Event" string of the game's metadata */
 	Event: string;
-	/** If it's not a practice checkmate, this is the "Variant" string of the game's metadata.
+	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
-	Variant?: string;
+	variant?: VariantCode;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
@@ -245,11 +242,11 @@ async function startEngineGame(options: {
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
 }): Promise<void> {
-	if (options.Variant && options.variantOptions)
+	if (options.variant && options.variantOptions)
 		throw Error(
 			"Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.",
 		);
-	if (!options.Variant && !options.variantOptions)
+	if (!options.variant && !options.variantOptions)
 		throw Error('Must provide either Variant or variantOptions when starting an engine game.');
 
 	typeOfGameWeAreIn = 'engine';
@@ -273,7 +270,8 @@ async function startEngineGame(options: {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
-	if (options.Variant) metadata.Variant = options.Variant;
+	// Metadata stores the English display name, not the code.
+	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
@@ -281,6 +279,7 @@ async function startEngineGame(options: {
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
+			variant: options.variant,
 			variantOptions: options.variantOptions,
 			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
@@ -468,11 +467,7 @@ async function startBoardEditorFromCustomPosition(
  */
 async function pasteGame(options: {
 	metadata: MetaData;
-	additional: {
-		/** If we're in the board editor, this must be empty. */
-		moves?: ServerGameMoveMessage[];
-		variantOptions: VariantOptions;
-	};
+	additional: Additional;
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online')

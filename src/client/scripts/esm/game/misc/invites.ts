@@ -6,6 +6,7 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { InvitesMessage } from '../websocket/socketschemas.js';
 import type { ServerUsernameContainer } from '../../../../../shared/types.js';
 
@@ -46,7 +47,7 @@ export interface Invite {
 
 /** Create lobby invite options. */
 export interface InviteOptions {
-	variant: string;
+	variant: VariantCode;
 	clock: TimeControl;
 	color: Player | null;
 	private: 'public' | 'private';

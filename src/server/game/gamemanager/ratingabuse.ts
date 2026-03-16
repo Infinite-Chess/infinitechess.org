@@ -148,7 +148,7 @@ async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void
 	if (servergame.basegame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = VariantLeaderboards[servergame.basegame.metadata.Variant!];
+	const leaderboard_id = VariantLeaderboards[servergame.basegame.variant!];
 	if (leaderboard_id === undefined) return;
 
 	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {

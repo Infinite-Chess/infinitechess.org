@@ -4,6 +4,7 @@ import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
+import type { VariantCode } from '../variants/variant.js';
 import type { PieceMoveset } from './movesets.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { Move, BaseMove } from './movepiece.js';
@@ -25,6 +26,7 @@ import movepiece from './movepiece.js';
 import gamerules from '../variants/gamerules.js';
 import legalmoves from './legalmoves.js';
 import initvariant from './initvariant.js';
+import metadatautil from '../util/metadata.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import organizedpieces from './organizedpieces.js';
@@ -48,6 +50,10 @@ interface Snapshot {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData;
+	/** The variant code. Undefined for custom/pasted positions without a known variant. */
+	variant?: VariantCode;
+	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
+	dateTimestamp: number;
 	moves: BaseMove[];
 	gameRules: GameRules;
 	whosTurn: Player;
@@ -124,6 +130,10 @@ interface Additional {
 	worldBorderDist?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
+	/** The variant code. If not provided, derived from metadata.Variant. */
+	variant?: VariantCode;
+	/** Timestamp (ms since epoch). If not provided, derived from metadata.UTCDate/UTCTime. */
+	dateTimestamp?: number;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
@@ -132,14 +142,28 @@ function initGame(
 	variantOptions?: VariantOptions,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
+	variantCode?: VariantCode,
+	dateTimestamp?: number,
 ): Game {
-	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
+	// Resolve variant and timestamp from metadata if not provided explicitly
+	const resolvedVariant = variantCode ?? variant.resolveVariantCode(metadata.Variant);
+	const resolvedTimestamp =
+		dateTimestamp ??
+		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
+
+	const gameRules = initvariant.getVariantGamerules(
+		resolvedVariant,
+		resolvedTimestamp,
+		variantOptions,
+	);
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
 		metadata,
+		variant: resolvedVariant,
+		dateTimestamp: resolvedTimestamp,
 		moves: [],
 		gameRules,
 		whosTurn: gameRules.turnOrder[0]!,
@@ -159,10 +183,11 @@ function initGame(
 	return game;
 }
 
-/** Creates a new {@link Board} object from provided arguements */
+/** Creates a new {@link Board} object from provided arguments */
 function initBoard(
 	gameRules: GameRules,
-	metadata: MetaData,
+	variantCode: VariantCode | undefined,
+	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
@@ -170,7 +195,8 @@ function initBoard(
 ): Board {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
 		gameRules,
-		metadata,
+		variantCode,
+		dateTimestamp,
 		variantOptions,
 	);
 
@@ -184,7 +210,8 @@ function initBoard(
 	};
 
 	const { pieceMovesets, specialMoves } = initvariant.getPieceMovesets(
-		metadata,
+		variantCode,
+		dateTimestamp,
 		gameRules.slideLimit,
 	);
 
@@ -204,7 +231,7 @@ function initBoard(
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(variantCode);
 	if (worldBorderDist !== undefined) {
 		if (worldBorderProperty === undefined)
 			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
@@ -229,7 +256,11 @@ function initBoard(
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
+	const specialVicinity = legalmoves.genSpecialVicinity(
+		variantCode,
+		dateTimestamp,
+		existingRawTypes,
+	);
 
 	const moves: Move[] = [];
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
@@ -299,15 +330,24 @@ function initFullGame(
 	additional: Additional = {},
 	validateMoves?: true,
 ): FullGame {
+	// Resolve variant and timestamp once, reuse for both basegame and boardsim
+	const variantCode = additional.variant ?? variant.resolveVariantCode(metadata.Variant);
+	const dateTimestamp =
+		additional.dateTimestamp ??
+		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
+
 	const basegame = initGame(
 		metadata,
 		additional.variantOptions,
 		additional.gameConclusion,
 		additional.clockValues,
+		variantCode,
+		dateTimestamp,
 	);
 	const boardsim = initBoard(
 		basegame.gameRules,
-		basegame.metadata,
+		variantCode,
+		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
