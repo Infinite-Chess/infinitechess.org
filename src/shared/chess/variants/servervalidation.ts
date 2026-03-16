@@ -12,6 +12,8 @@ import type { MetaData } from '../util/metadata.js';
 
 import variant from './variant.js';
 
+// Constants -----------------------------------------------------------------
+
 /**
  * The maximum position string length (in characters) for a variant to be
  * eligible for server-side move validation.
@@ -19,6 +21,8 @@ import variant from './variant.js';
  * Omega Squared and above (length > 2500) are excluded.
  */
 const POSITION_STRING_THRESHOLD = 2500;
+
+// Functions -----------------------------------------------------------------
 
 /**
  * Returns `true` if the given variant supports server-side move legality validation.
@@ -32,4 +36,18 @@ function doesVariantSupportServerValidation(metadata: MetaData): boolean {
 	return positionString.length <= POSITION_STRING_THRESHOLD;
 }
 
-export { doesVariantSupportServerValidation };
+/**
+ * Returns `true` if the game is deleted instantly on conclusion — meaning the server
+ * either validated every move (cheating is impossible) or it's a private game (cheat
+ * reports are not allowed). In both cases:
+ * - The server removes players from the active-games list immediately.
+ * - Clients do not need to send `removefromplayersinactivegames`.
+ * - Clients should not send cheat reports.
+ * @param metadata - Metadata of the game.
+ * @param isPrivate - Whether the game is a private match.
+ */
+function isGameInstantlyDeleted(metadata: MetaData, isPrivate: boolean): boolean {
+	return doesVariantSupportServerValidation(metadata) || isPrivate;
+}
+
+export { doesVariantSupportServerValidation, isGameInstantlyDeleted };

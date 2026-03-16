@@ -19,7 +19,10 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
+import {
+	doesVariantSupportServerValidation,
+	isGameInstantlyDeleted,
+} from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -394,7 +397,12 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	liveGameValues.onGameConcluded(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (servergame.boardsim !== undefined || servergame.match.publicity === 'private') {
+	if (
+		isGameInstantlyDeleted(
+			servergame.basegame.metadata,
+			servergame.match.publicity === 'private',
+		)
+	) {
 		// Server validated every move — cheating is impossible,
 		// OR we disallow cheat reports (private game).
 		// We can log and unsubscribe clients immediately.
