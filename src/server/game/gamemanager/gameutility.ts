@@ -171,7 +171,7 @@ interface PlayerData {
 
 /** The info for the server hosting the game */
 interface MatchInfo {
-	/** The match's unique ID */
+	/** The match's unique ID. This is also the same ID the game will have when logged to the database. */
 	id: number;
 
 	/** The variant code of the game being played. */
