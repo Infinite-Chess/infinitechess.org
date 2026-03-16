@@ -9,7 +9,7 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
-import type { TimeControl } from '../util/metadatautil.js';
+import type { TimeControl } from '../util/clockutil.js';
 import type { ClockDependant, Game } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';

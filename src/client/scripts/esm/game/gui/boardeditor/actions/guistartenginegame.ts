@@ -5,7 +5,7 @@
  */
 
 import type { Player } from '../../../../../../../shared/chess/util/typeutil';
-import type { TimeControl } from '../../../../../../../shared/chess/util/metadatautil';
+import type { TimeControl } from '../../../../../../../shared/chess/util/clockutil';
 
 import icnconverter from '../../../../../../../shared/chess/logic/icn/icnconverter';
 import { players as p } from '../../../../../../../shared/chess/util/typeutil';

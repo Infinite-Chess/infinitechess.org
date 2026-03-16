@@ -10,7 +10,7 @@
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
 import type { Condition } from './winconutil.js';
-import type { TimeControl } from '../../../server/game/timecontrol.js';
+import type { TimeControl } from './clockutil.js';
 import type { VariantCode } from '../variants/variant.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
@@ -253,4 +253,4 @@ export default {
 	getWhiteBlackRatingDiff,
 };
 
-export type { TimeControl, MetaData, MetadataKey };
+export type { MetaData, MetadataKey };

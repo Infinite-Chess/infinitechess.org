@@ -9,12 +9,13 @@
 
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
+import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
+import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData, TimeControl } from '../../../shared/chess/util/metadatautil.js';
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../shared/chess/logic/clock.js';

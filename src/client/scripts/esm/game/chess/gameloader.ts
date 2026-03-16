@@ -14,7 +14,7 @@
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 import type { ValidEngine } from './engines/engine.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { EngineConfig } from '../misc/enginegame.js';

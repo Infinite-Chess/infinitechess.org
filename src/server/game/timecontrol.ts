@@ -4,12 +4,7 @@
  * Stores valid time controls for lobby invites.
  */
 
-/**
- * The clock value for the game, `s+s`, where the left side is
- * start time in seconds, and the right is increment in seconds.
- * Untimed = `-`
- */
-export type TimeControl = `${number}+${number}` | '-';
+import type { TimeControl } from '../../shared/chess/util/clockutil.js';
 
 /** These are the allowed time controls in production. */
 const validTimeControls = [
