@@ -117,7 +117,8 @@ function updateLeaderboardsInTransaction(
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[basegame.metadata.Variant!];
+	const leaderboard_id =
+		basegame.variant !== undefined ? VariantLeaderboards[basegame.variant] : undefined;
 	if (leaderboard_id === undefined) return undefined; // This should never happen. If it does it means the game should not have been rated.
 
 	// 1. Build initial rating data by reading from the DB.
@@ -209,9 +210,9 @@ function addGameRecordsInTransaction(
 		dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		basegame.metadata.Variant!,
+		basegame.variant ?? 'Unknown',
 		match.rated ? 1 : 0,
-		VariantLeaderboards[basegame.metadata.Variant!] ?? null,
+		basegame.variant !== undefined ? (VariantLeaderboards[basegame.variant] ?? null) : null,
 		match.publicity === 'private' ? 1 : 0,
 		basegame.metadata.Result!,
 		termination,

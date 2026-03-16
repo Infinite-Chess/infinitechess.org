@@ -18,6 +18,7 @@ import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
+import variant from '../../../shared/chess/variants/variant.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
@@ -372,7 +373,7 @@ function sendGameInfoToPlayer(
 ): void {
 	const ratings = getRatingDataForGamePlayers(
 		servergame.match.playerData,
-		servergame.basegame.metadata.Variant!,
+		servergame.basegame.variant ?? 'Unknown',
 	);
 
 	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
@@ -399,10 +400,12 @@ function sendGameInfoToPlayer(
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: string,
+	variantCode: string,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
+	const leaderboardId =
+		(variant.isVariantValid(variantCode) ? VariantLeaderboards[variantCode] : undefined) ??
+		Leaderboards.INFINITY;
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {
@@ -694,7 +697,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 		id: servergame.match.id,
 		timeCreated: `${servergame.basegame.metadata.UTCDate} ${servergame.basegame.metadata.UTCTime}`,
 		timeEnded: servergame.match.timeEnded,
-		variant: servergame.basegame.metadata.Variant,
+		variant: servergame.basegame.variant,
 		clock: servergame.basegame.metadata.TimeControl,
 		rated: servergame.match.rated,
 		players,

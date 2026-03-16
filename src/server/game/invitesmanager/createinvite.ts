@@ -8,6 +8,7 @@
 
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
+import type { VariantCode } from '../../../shared/chess/variants/variant.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
@@ -168,8 +169,9 @@ function getInviteFromWebsocketMessageContents(
 
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
-		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
-		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
+		// Variant has been validated by Zod to be a valid variant code
+		const leaderboardId =
+			VariantLeaderboards[messageContents.variant as VariantCode] ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 

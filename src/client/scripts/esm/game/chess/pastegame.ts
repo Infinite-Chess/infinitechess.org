@@ -5,6 +5,8 @@
  */
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
@@ -136,11 +138,14 @@ function pasteGame(longformOut: LongFormatOut): void {
 			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
-	// Convert the English variant name from the ICN back to the internal variant code
+	// Resolve variant code from the ICN metadata (may be an English name or a code).
+	// metadata.Variant always stores the English display name for human reading.
+	let resolvedVariantCode: VariantCode | undefined;
 	if (longformOut.metadata.Variant) {
-		const resolved = variant.resolveVariantCode(longformOut.metadata.Variant);
-		if (resolved !== undefined) {
-			longformOut.metadata.Variant = resolved;
+		resolvedVariantCode = variant.resolveVariantCode(longformOut.metadata.Variant);
+		if (resolvedVariantCode !== undefined) {
+			// Ensure metadata stores the English name
+			longformOut.metadata.Variant = variant.getVariantName(resolvedVariantCode);
 		} else {
 			// Invalid Variant: Treat as if no variant was specified
 			if (longformOut.position === undefined)
@@ -185,10 +190,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 			? ` ${translations.copypaste.pasting_in_private}`
 			: '';
 
-	const additional: {
-		variantOptions: VariantOptions;
-		moves?: ServerGameMoveMessage[];
-	} = { variantOptions };
+	const additional: Additional = { variantOptions, variant: resolvedVariantCode };
 	if (longformOut.moves) {
 		// Trim the excess properties from the _Move_Out type, including the comment.
 		additional.moves = longformOut.moves.map((m: _Move_Out) => {
@@ -202,10 +204,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
-		additional: {
-			variantOptions: VariantOptions;
-			moves?: ServerGameMoveMessage[];
-		};
+		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
 	} = {
 		metadata: longformOut.metadata,

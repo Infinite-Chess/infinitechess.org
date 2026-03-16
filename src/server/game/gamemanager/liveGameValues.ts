@@ -118,7 +118,7 @@ function onGameCreated(servergame: ServerGame): void {
 	const record: LiveGamesRecord = {
 		game_id: match.id,
 		time_created: match.timeCreated,
-		variant: basegame.metadata.Variant!,
+		variant: basegame.variant ?? 'Unknown',
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
 		private: match.publicity === 'private' ? 1 : 0,

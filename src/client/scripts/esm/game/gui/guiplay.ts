@@ -5,6 +5,7 @@
  */
 
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { InviteOptions } from '../misc/invites.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
@@ -331,7 +332,7 @@ function getInviteOptions(): InviteOptions {
 	const strcolor = element_optionColor.value;
 	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : null;
 	return {
-		variant: element_optionVariant.value,
+		variant: element_optionVariant.value as VariantCode,
 		clock: element_optionClock.value as TimeControl,
 		color,
 		private: element_optionPrivate.value as 'public' | 'private',
