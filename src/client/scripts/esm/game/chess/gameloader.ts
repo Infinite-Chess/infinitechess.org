@@ -137,15 +137,15 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const variantName = variant.getVariantName(options.Variant);
+
 	const dateTimestamp = Date.now();
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-
 	const metadata: MetaData = {
 		// Metadata stores the English display name, not the code.
-		Variant: variant.getVariantName(options.Variant),
+		Variant: variantName,
 		TimeControl: options.TimeControl,
-		// @ts-ignore
-		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
+		Event: `Casual local ${variantName} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		UTCDate,

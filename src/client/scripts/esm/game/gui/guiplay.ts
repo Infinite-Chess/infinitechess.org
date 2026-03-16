@@ -304,13 +304,12 @@ function callback_createInvite(): void {
 		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
-		// prettier-ignore
+		const variantName = variant.getVariantName(inviteOptions.variant);
 		const ourColor = inviteOptions.color ?? (Math.random() > 0.5 ? p.WHITE : p.BLACK);
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
-			// @ts-ignore
-			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
+			Event: `Casual computer ${variantName} infinite chess game`,
 			variant: inviteOptions.variant,
 			TimeControl: inviteOptions.clock,
 			youAreColor: ourColor,
