@@ -609,16 +609,7 @@ function getStartingPositionOfVariant(
 
 	// Does the entry have a `positionString` property, or a `generator` property?
 	if (variantEntry.positionString !== undefined) {
-		// Does the positionString entry have multiple UTC timestamp position strings? Or just one?
-
-		if (typeof variantEntry.positionString === 'string') {
-			// Single position string
-			positionString = variantEntry.positionString;
-		} else {
-			// Multiple position string entries for different timestamps
-			positionString = getApplicableTimestampEntry(variantEntry.positionString, timestamp);
-		}
-
+		positionString = getApplicableTimestampEntry(variantEntry.positionString, timestamp);
 		return icnconverter.generatePositionFromShortForm(positionString);
 	} else {
 		// Generate the starting position
@@ -758,35 +749,18 @@ function getMovesetsOfVariant(
 	if (variantCode === undefined) return getMovesets(undefined, slideLimit);
 	const variantEntry = variantDictionary[variantCode];
 
-	if (!variantEntry.movesetGenerator) {
-		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
-			// Multiple UTC timestamps
-			return getMovesets(
-				{},
-				slideLimit ??
-					getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp)
-						.slideLimit,
-			);
-		} else {
-			// Just one gameruleModifications entry
-			return getMovesets(
-				{},
-				slideLimit ??
-					(variantEntry.gameruleModifications as GameRuleModifications)?.slideLimit,
-			);
-		}
-	}
-
 	let movesetModifications: Movesets;
-	if (variantEntry.movesetGenerator?.hasOwnProperty(0)) {
-		// Multiple UTC timestamps
+
+	if (!variantEntry.movesetGenerator) {
+		movesetModifications = {};
+		slideLimit =
+			slideLimit ??
+			getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp).slideLimit;
+	} else {
 		movesetModifications = getApplicableTimestampEntry(
 			variantEntry.movesetGenerator,
 			timestamp,
 		)();
-	} else {
-		// Just one movesetGenerator entry
-		movesetModifications = (<() => Movesets>variantEntry.movesetGenerator)();
 	}
 
 	return getMovesets(movesetModifications, slideLimit);
