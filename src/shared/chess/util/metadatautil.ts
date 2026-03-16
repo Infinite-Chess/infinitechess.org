@@ -139,6 +139,29 @@ function buildGameMetadata(
 }
 
 /**
+ * Builds a {@link MetaData} object for client-side games (local, engine, board editor).
+ * Automatically populates `Site`, `Round`, `UTCDate`, and `UTCTime`.
+ * @param event - The `Event` string describing the game.
+ * @param timeControl - The time control string (e.g. `"600+5"`), or `"-"` for untimed.
+ * @param utcTimestamp - The epoch-ms timestamp used for the `UTCDate`/`UTCTime` fields.
+ */
+function buildBaseGameMetadata(
+	event: string,
+	timeControl: TimeControl,
+	utcTimestamp: number,
+): MetaData {
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
+	return {
+		Event: event,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		TimeControl: timeControl,
+		UTCDate,
+		UTCTime,
+	};
+}
+
+/**
  * Helper function that uses generics to link the metadata key to its value type.
  * Inside the function typescript doesn't error when we are transferring the property.
  */
@@ -221,6 +244,7 @@ export default {
 	GUEST_NAME_ICN_METADATA,
 	resolveTimestampFromMetadata,
 	buildGameMetadata,
+	buildBaseGameMetadata,
 	copyMetadataField,
 	getResultFromVictor,
 	getGameConclusionFromResultAndTermination,

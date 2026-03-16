@@ -29,7 +29,6 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
-import timeutil from '../../../../../shared/util/timeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -127,11 +126,8 @@ function update(): void {
 
 /** Starts a local game according to the options provided. */
 async function startLocalGame(options: {
-	/** Must be one of the valid variants in variant.ts */
 	variant: VariantCode;
-	metadata: {
-		TimeControl: TimeControl;
-	};
+	timeControl: TimeControl;
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
@@ -140,19 +136,13 @@ async function startLocalGame(options: {
 	await loadingscreen.open();
 
 	const variantName = variant.getVariantName(options.variant);
-
 	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-	const metadata: MetaData = {
-		...options.metadata,
-		// Metadata stores the English display name, not the code.
-		Variant: variantName,
-		Event: `Casual local ${variantName} infinite chess game`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
+	const metadata = metadatautil.buildBaseGameMetadata(
+		`Casual local ${variantName} infinite chess game`,
+		options.timeControl,
+		dateTimestamp,
+	);
+	metadata.Variant = variantName;
 
 	gameslot
 		.loadGamefile({
@@ -242,12 +232,10 @@ async function startOnlineGame(options: {
 
 /** Starts an engine game according to the options provided. */
 async function startEngineGame(options: {
-	metadata: {
-		/** The "Event" string of the game's metadata */
-		Event: string;
-		/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
-		TimeControl: TimeControl;
-	};
+	/** The 'Event' string of the game's metadata. */
+	event: string;
+	/** Time control string for the game (e.g. `'600+5'`), or `'-'` for untimed. */
+	timeControl: TimeControl;
 	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
 	variant?: VariantCode;
@@ -276,21 +264,17 @@ async function startEngineGame(options: {
 		options.currentEngine,
 		options.engineConfig.strengthLevel,
 	);
-
 	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-
-	const metadata: MetaData = {
-		...options.metadata,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		White: options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName,
-		Black: options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName,
-		UTCDate,
-		UTCTime,
-	};
-	// Metadata stores the English display name, not the code.
+	const metadata = metadatautil.buildBaseGameMetadata(
+		options.event,
+		options.timeControl,
+		dateTimestamp,
+	);
 	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
+	metadata.White =
+		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
+	metadata.Black =
+		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
@@ -329,22 +313,18 @@ async function startBoardEditor(): Promise<void> {
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
+	const metadata = metadatautil.buildBaseGameMetadata(
+		'Position created using ingame board editor',
+		'-',
+		dateTimestamp,
+	);
+	const variantCode: VariantCode = 'Classical';
+	metadata.Variant = variant.getVariantName(variantCode);
 
 	gameslot
 		.loadGamefile({
 			metadata,
-			variant: variant.resolveVariantCode(metadata.Variant),
+			variant: variantCode,
 			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
@@ -366,8 +346,6 @@ async function startBoardEditor(): Promise<void> {
 
 /** Initializes a local game from a custom position. */
 async function startCustomLocalGame(options: {
-	metadata: MetaData;
-	dateTimestamp: number;
 	additional: {
 		moves?: ServerGameMoveMessage[];
 		variantOptions: VariantOptions;
@@ -380,9 +358,18 @@ async function startCustomLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const metadata = metadatautil.buildBaseGameMetadata(
+		'Casual local custom infinite chess game',
+		'-',
+		dateTimestamp,
+	);
+
 	gameslot
 		.loadGamefile({
 			...options,
+			metadata,
+			dateTimestamp,
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective: true,
 			allowEditCoords: true,
@@ -393,13 +380,12 @@ async function startCustomLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+	openGameinfoBarAndConcludeGameIfOver(metadata, false);
 }
 
-/** Starts an engine game according to the options provided. */
+/** Starts an engine game from a custom position. */
 async function startCustomEngineGame(options: {
-	metadata: MetaData;
-	dateTimestamp: number;
+	timeControl: TimeControl;
 	additional: {
 		moves?: ServerGameMoveMessage[];
 		variantOptions: VariantOptions;
@@ -417,11 +403,26 @@ async function startCustomEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const formattedEngineName = getFormattedEngineName(
+		options.currentEngine,
+		options.engineConfig.strengthLevel,
+	);
+	const dateTimestamp = Date.now();
+	const metadata = metadatautil.buildBaseGameMetadata(
+		'Casual computer custom infinite chess game',
+		options.timeControl,
+		dateTimestamp,
+	);
+	metadata.White =
+		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
+	metadata.Black =
+		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
+
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata: options.metadata,
+		metadata,
 		variant: undefined, // Not specified for custom position
-		dateTimestamp: options.dateTimestamp,
+		dateTimestamp,
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
@@ -443,14 +444,12 @@ async function startCustomEngineGame(options: {
 		.then((_results: any[]) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
+	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
 /** Initializes the board editor from a custom position. */
 async function startBoardEditorFromCustomPosition(
 	options: {
-		metadata: MetaData;
-		dateTimestamp: number;
 		additional: {
 			moves?: ServerGameMoveMessage[];
 			variantOptions: VariantOptions;
@@ -470,14 +469,21 @@ async function startBoardEditorFromCustomPosition(
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const metadata = metadatautil.buildBaseGameMetadata(
+		'Position created using ingame board editor',
+		'-',
+		dateTimestamp,
+	);
+
 	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
 	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
 
 	gameslot
 		.loadGamefile({
-			metadata: options.metadata,
+			metadata,
 			variant: undefined, // Not specified for custom position
-			dateTimestamp: options.dateTimestamp,
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed

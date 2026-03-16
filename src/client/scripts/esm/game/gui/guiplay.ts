@@ -292,15 +292,12 @@ function callback_createInvite(): void {
 	const inviteOptions = getInviteOptions();
 
 	if (modeSelected === 'local') {
-		// Load options the game loader needs to load a local loaded game
-		const options = {
-			variant: inviteOptions.variant,
-			metadata: {
-				TimeControl: inviteOptions.clock,
-			},
-		};
 		close(); // Close the invite creation screen
-		gameloader.startLocalGame(options); // Actually load the game
+		// Actually load the game
+		gameloader.startLocalGame({
+			variant: inviteOptions.variant,
+			timeControl: inviteOptions.clock,
+		});
 	} else if (modeSelected === 'online') {
 		if (invites.doWeHave()) invites.cancel();
 		else invites.create(inviteOptions);
@@ -311,10 +308,8 @@ function callback_createInvite(): void {
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
-			metadata: {
-				Event: `Casual computer ${variantName} infinite chess game`,
-				TimeControl: inviteOptions.clock,
-			},
+			event: `Casual computer ${variantName} infinite chess game`,
+			timeControl: inviteOptions.clock,
 			variant: inviteOptions.variant,
 			youAreColor: ourColor,
 			currentEngine,

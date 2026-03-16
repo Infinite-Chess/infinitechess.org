@@ -20,7 +20,7 @@ import { listener_document } from '../../../chess/game';
 
 interface EngineUIConfig {
 	youAreColor: Player;
-	TimeControl: TimeControl;
+	timeControl: TimeControl;
 	strengthLevel: 1 | 2 | 3;
 	setDefaultWorldBorder: boolean;
 }
@@ -147,14 +147,14 @@ function readEngineUIConfig(): EngineUIConfig {
 	const youAreColor = element_white.checked ? p.WHITE : p.BLACK;
 
 	// Time control
-	let TimeControl: TimeControl = '-';
+	let timeControl: TimeControl = '-';
 	const timeControlRaw = element_timecontrol.value;
 	if (timeControlRaw === '-' || timeControlRaw === '') {
 		element_timecontrol.classList.remove('invalid-input');
 	} else if (timeControlRegex.test(timeControlRaw)) {
 		const [a, b] = timeControlRaw.split('+').map(Number);
 		if (a !== undefined && b !== undefined && Number.isFinite(a) && Number.isFinite(b)) {
-			TimeControl = `${a}+${b}`;
+			timeControl = `${a}+${b}`;
 			element_timecontrol.classList.remove('invalid-input');
 		} else {
 			element_timecontrol.classList.add('invalid-input');
@@ -169,7 +169,7 @@ function readEngineUIConfig(): EngineUIConfig {
 	// Set default world border
 	const setDefaultWorldBorder = element_yesborder.checked ? true : false;
 
-	return { youAreColor, TimeControl, strengthLevel, setDefaultWorldBorder };
+	return { youAreColor, timeControl, strengthLevel, setDefaultWorldBorder };
 }
 
 // Exports -----------------------------------------------------------------

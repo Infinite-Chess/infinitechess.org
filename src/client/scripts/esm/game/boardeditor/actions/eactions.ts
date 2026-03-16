@@ -25,12 +25,11 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
-import timeutil from '../../../../../../shared/util/timeutil';
+import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -59,8 +58,8 @@ import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 
 // Constants ----------------------------------------------------------------------
 
@@ -93,16 +92,6 @@ async function clearAll(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
-	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-	const metadata: MetaData = {
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
 	const gameRules = variant.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
@@ -117,8 +106,6 @@ async function clearAll(): Promise<void> {
 	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
-			metadata,
-			dateTimestamp,
 			additional: {
 				variantOptions,
 			},
@@ -135,19 +122,6 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 	// Unload logical and rendering parts of current position
 	gameloader.unloadLogicalAndRendering();
 
-	// Load given savestate
-	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
-
 	// prettier-ignore
 	const new_active_position: ActivePosition =
 		storage_type === 'cloud'
@@ -157,8 +131,6 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
-			metadata,
-			dateTimestamp,
 			additional: {
 				variantOptions: editorSaveState.variantOptions,
 			},
@@ -240,21 +212,8 @@ function startLocalGame(): void {
 		return;
 	}
 
-	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata: MetaData = {
-		Event: 'Casual local custom infinite chess game',
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
-
 	gameloader.unloadGame();
 	gameloader.startCustomLocalGame({
-		metadata,
-		dateTimestamp,
 		additional: {
 			variantOptions,
 		},
@@ -325,31 +284,9 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
-	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
-
-	const dateTimestamp = Date.now();
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
-	const metadata: MetaData = {
-		Event: 'Casual computer custom infinite chess game',
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		TimeControl: engineUIConfig.TimeControl,
-		White:
-			engineUIConfig.youAreColor === p.WHITE
-				? translations.you_indicator
-				: formattedEngineName,
-		Black:
-			engineUIConfig.youAreColor === p.BLACK
-				? translations.you_indicator
-				: formattedEngineName,
-		UTCDate,
-		UTCTime,
-	};
-
 	gameloader.unloadGame();
 	gameloader.startCustomEngineGame({
-		metadata,
-		dateTimestamp,
+		timeControl: engineUIConfig.timeControl,
 		additional: {
 			variantOptions,
 		},

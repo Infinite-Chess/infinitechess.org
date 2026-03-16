@@ -107,10 +107,8 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 	const currentEngine = 'engineCheckmatePractice' as const;
 
 	const options = {
-		metadata: {
-			Event: 'Infinite chess checkmate practice',
-			TimeControl: '-' as const,
-		},
+		event: 'Infinite chess checkmate practice',
+		timeControl: '-' as const,
 		youAreColor: p.WHITE,
 		currentEngine,
 		engineConfig: {
