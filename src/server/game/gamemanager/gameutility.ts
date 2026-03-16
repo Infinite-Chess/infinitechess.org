@@ -20,8 +20,8 @@ import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/ga
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
+import { VariantCode } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import variant, { VariantCode } from '../../../shared/chess/variants/variant.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -420,7 +420,7 @@ function getRatingDataForGamePlayers(
  */
 function constructMetadataOfGame(
 	rated: boolean,
-	variantKey: string,
+	variantKey: VariantCode,
 	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {

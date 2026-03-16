@@ -14,7 +14,6 @@ import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.
 import type { RawType, Player, PlayerGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import jsutil from '../../util/jsutil.js';
-import timeutil from '../../util/timeutil.js';
 import movesets from '../logic/movesets.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
@@ -111,34 +110,6 @@ const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = {
 	turnOrder: [p.BLACK, p.WHITE],
 }; // No promotions, no 50-move rule, and reversed turn order.
 
-/** Union of all valid variant codes. Must be kept in sync with the keys of {@link variantDictionary}. */
-export type VariantCode =
-	| 'Classical'
-	| 'Confined_Classical'
-	| 'Classical_Plus'
-	| 'CoaIP'
-	| 'CoaIP_HO'
-	| 'CoaIP_RO'
-	| 'CoaIP_NO'
-	| 'Palace'
-	| 'Pawndard'
-	| 'Core'
-	| 'Standarch'
-	| 'Space_Classic'
-	| 'Space'
-	| 'Obstocean'
-	| 'Abundance'
-	| 'Chess'
-	| 'Pawn_Horde'
-	| 'Knightline'
-	| 'Omega'
-	| 'Omega_Squared'
-	| 'Omega_Cubed'
-	| 'Omega_Fourth'
-	| '4x4x4x4_Chess'
-	| '5D_Chess'
-	| 'Knighted_Chess';
-
 /**
  * An object that contains each variant's positional and gamerule information:
  *
@@ -154,7 +125,7 @@ export type VariantCode =
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary: Record<VariantCode, Variant> = {
+const variantDictionary = {
 	Classical: {
 		name: 'Classical',
 		positionString: positionStringOfClassical,
@@ -514,7 +485,21 @@ const variantDictionary: Record<VariantCode, Variant> = {
 			]),
 		},
 	},
-};
+} satisfies Record<string, Variant>;
+
+/** Union of all valid variant codes, derived from the keys of {@link variantDictionary}. */
+export type VariantCode = keyof typeof variantDictionary;
+
+/** Tuple of all valid variant code strings, for use in runtime validation (e.g. Zod schemas). */
+export const variantCodes = Object.keys(variantDictionary) as [VariantCode, ...VariantCode[]];
+
+/**
+ * Typed view of the variant dictionary for internal getter use.
+ * The `satisfies` declaration above preserves literal key types for VariantCode derivation,
+ * but narrows each value to its specific inferred type. This cast restores the Variant interface
+ * so optional properties (positionString, generator, etc.) are accessible on any entry.
+ */
+const variants = variantDictionary as Record<VariantCode, Variant>;
 
 /**
  * Takes a single list of possible promotions: `[r.ROOK,r.QUEEN...]`,
@@ -565,14 +550,27 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
 }
 
 /**
- * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
- * Falls back to the current time if either is not provided.
+ * Resolves the variant from the metadata, normalizes the metadata's `Variant` property to the
+ * English display name (if recognized), or deletes it (if not recognized), then returns the
+ * resolved {@link VariantCode}.
+ *
+ * This is the single canonical place to call when processing ICN/longformat metadata.
+ * @param metadata - Any object with an optional `Variant` string property (e.g. {@link MetaData}).
+ * @returns The resolved {@link VariantCode}, or `undefined` if no valid variant was found.
  */
-function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
-	if (UTCDate !== undefined && UTCTime !== undefined) {
-		return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+function resolveAndNormalizeVariantInMetadata(metadata: {
+	Variant?: string;
+}): VariantCode | undefined {
+	if (!metadata.Variant) return undefined;
+	const resolved = resolveVariantCode(metadata.Variant);
+	if (resolved !== undefined) {
+		// Normalize to English display name
+		metadata.Variant = variants[resolved].name;
+	} else {
+		// Unrecognized variant: treat as if no variant was specified
+		delete metadata.Variant;
 	}
-	return Date.now();
+	return resolved;
 }
 
 /**
@@ -588,7 +586,7 @@ function getStartingPositionOfVariant(
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	let positionString: string;
 	let position: Map<CoordsKey, number>;
@@ -645,7 +643,7 @@ function getVariantGameRuleModifications(
 	variantCode: VariantCode,
 	timestamp: number,
 ): GameRuleModifications {
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 
@@ -757,7 +755,7 @@ function getMovesetsOfVariant(
 ): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
 	if (variantCode === undefined) return getMovesets(undefined, slideLimit);
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	if (!variantEntry.movesetGenerator) {
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
@@ -827,7 +825,7 @@ function getSpecialMovesOfVariant(
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
 	if (variantCode === undefined) return defaultSpecialMoves;
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
 
@@ -844,7 +842,7 @@ function getSpecialVicinityOfVariant(
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
 	if (variantCode === undefined) return defaultSpecialVicinityByPiece;
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
@@ -856,21 +854,21 @@ function getSpecialVicinityOfVariant(
 /** Returns the preset square annotations for the given variant, if they have any. */
 function getSquarePresets(variantCode: VariantCode | undefined): Coords[] {
 	if (variantCode === undefined) return [];
-	const square_presets = variantDictionary[variantCode].annotePresets?.squares;
+	const square_presets = variants[variantCode].annotePresets?.squares;
 	return square_presets ? icnconverter.parsePresetSquares(square_presets) : [];
 }
 
 /** Returns the preset ray annotations for the given variant, if they have any. */
 function getRayPresets(variantCode: VariantCode | undefined): BaseRay[] {
 	if (variantCode === undefined) return [];
-	const ray_presets = variantDictionary[variantCode].annotePresets?.rays;
+	const ray_presets = variants[variantCode].annotePresets?.rays;
 	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
 function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | undefined {
 	if (variantCode === undefined) return undefined;
-	return variantDictionary[variantCode].worldBorderDist;
+	return variants[variantCode].worldBorderDist;
 }
 
 /**
@@ -880,7 +878,7 @@ function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | u
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function getVariantPositionString(variantCode: VariantCode, timestamp: number): string | undefined {
-	const variantEntry = variantDictionary[variantCode];
+	const variantEntry = variants[variantCode];
 
 	if (!variantEntry.positionString) return undefined; // Generator-based variant
 
@@ -888,16 +886,9 @@ function getVariantPositionString(variantCode: VariantCode, timestamp: number): 
 	return getApplicableTimestampEntry(variantEntry.positionString, timestamp);
 }
 
-/**
- * Returns the English display name of the given variant, as stored in the variant dictionary.
- * Falls back to the variant code itself if the variant is not found.
- */
-function getVariantName(variantKey: string): string {
-	if (variantKey in variantDictionary) return variantDictionary[variantKey as VariantCode].name;
-	console.warn(
-		`Variant code "${variantKey}" not found in variant dictionary, using the code as the name.`,
-	);
-	return variantKey;
+/** Returns the English display name of the given variant, as stored in the variant dictionary. */
+function getVariantName(variantCode: VariantCode): string {
+	return variants[variantCode].name;
 }
 
 // Exports ------------------------------------------------------------------
@@ -905,7 +896,7 @@ function getVariantName(variantKey: string): string {
 export default {
 	isVariantValid,
 	resolveVariantCode,
-	resolveTimestampFromMetadata,
+	resolveAndNormalizeVariantInMetadata,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getMovesetsOfVariant,

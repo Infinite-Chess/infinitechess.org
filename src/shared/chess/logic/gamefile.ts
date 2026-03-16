@@ -26,6 +26,7 @@ import movepiece from './movepiece.js';
 import gamerules from '../variants/gamerules.js';
 import legalmoves from './legalmoves.js';
 import initvariant from './initvariant.js';
+import metadatautil from '../util/metadata.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import organizedpieces from './organizedpieces.js';
@@ -147,7 +148,8 @@ function initGame(
 	// Resolve variant and timestamp from metadata if not provided explicitly
 	const resolvedVariant = variantCode ?? variant.resolveVariantCode(metadata.Variant);
 	const resolvedTimestamp =
-		dateTimestamp ?? variant.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
+		dateTimestamp ??
+		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
 
 	const gameRules = initvariant.getVariantGamerules(
 		resolvedVariant,
@@ -332,7 +334,7 @@ function initFullGame(
 	const variantCode = additional.variant ?? variant.resolveVariantCode(metadata.Variant);
 	const dateTimestamp =
 		additional.dateTimestamp ??
-		variant.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
+		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
 
 	const basegame = initGame(
 		metadata,

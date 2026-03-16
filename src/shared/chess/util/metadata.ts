@@ -11,6 +11,7 @@ import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
 import type { Condition } from './winconutil.js';
 import type { TimeControl } from '../../../server/game/timecontrol.js';
+import type { VariantCode } from '../variants/variant.js';
 import type { GameConclusion } from '../logic/gamefile.js';
 
 import uuid from '../../util/uuid.js';
@@ -77,6 +78,17 @@ interface PlayerMetaInput {
 // Functions -----------------------------------------------------------------------
 
 /**
+ * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
+ * Falls back to the current time if either is not provided.
+ */
+function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
+	if (UTCDate !== undefined && UTCTime !== undefined) {
+		return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+	}
+	return Date.now();
+}
+
+/**
  * Builds a {@link MetaData} object from the common game properties.
  * Metadata is always in English.
  * @param rated - Whether the game is rated.
@@ -88,7 +100,7 @@ interface PlayerMetaInput {
  */
 function buildGameMetadata(
 	rated: boolean,
-	variantCode: string,
+	variantCode: VariantCode,
 	clock: TimeControl,
 	utcTimestamp: number,
 	white: PlayerMetaInput,
@@ -200,6 +212,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 }
 
 export default {
+	resolveTimestampFromMetadata,
 	buildGameMetadata,
 	copyMetadataField,
 	getResultFromVictor,

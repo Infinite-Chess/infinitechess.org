@@ -8,14 +8,13 @@
 
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
-import type { VariantCode } from '../../../shared/chess/variants/variant.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
-import variant from '../../../shared/chess/variants/variant.js';
+import { variantCodes } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
@@ -40,9 +39,7 @@ import {
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
 	.strictObject({
-		variant: z
-			.string()
-			.refine((v) => variant.isVariantValid(v), { error: 'Invalid variant code.' }),
+		variant: z.enum(variantCodes),
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])

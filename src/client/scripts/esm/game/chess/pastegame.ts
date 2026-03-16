@@ -138,26 +138,23 @@ function pasteGame(longformOut: LongFormatOut): void {
 			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
-	// Resolve variant code from the ICN metadata, which always
-	// stores the English display name for human reading.
-	let resolvedVariantCode: VariantCode | undefined;
-	if (longformOut.metadata.Variant) {
-		resolvedVariantCode = variant.resolveVariantCode(longformOut.metadata.Variant);
-		if (resolvedVariantCode !== undefined) {
-			// Ensure metadata stores the English name, in case it used the variant code before
-			longformOut.metadata.Variant = variant.getVariantName(resolvedVariantCode);
-		} else {
-			// Invalid Variant: Treat as if no variant was specified
-			delete longformOut.metadata.Variant;
-		}
-	}
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
 	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
 	// the game could have ended by time, in which case we want to further analyse what could have happened.
 	delete longformOut.metadata.Result;
 	delete longformOut.metadata.Termination;
 
-	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(longformOut);
+	const timestamp = metadata.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
+	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(
+		longformOut,
+		resolvedVariantCode,
+		timestamp,
+	);
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -231,8 +228,15 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 /**
  * Utility for extracting position and specialRights from a LongFormatOut.
+ * @param longFormat - The parsed long format from ICN.
+ * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
+ * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
+function getPositionAndSpecialRightsFromLongFormat(
+	longFormat: LongFormatOut,
+	variantCode: VariantCode | undefined,
+	timestamp: number,
+): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -242,14 +246,8 @@ function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (longFormat.metadata.Variant) {
-		// No position specified in the ICN, extract from the Variant metadata
-		const variantCode = variant.resolveVariantCode(longFormat.metadata.Variant);
-		if (variantCode === undefined) return { position: new Map(), specialRights: new Set() };
-		const timestamp = variant.resolveTimestampFromMetadata(
-			longFormat.metadata.UTCDate,
-			longFormat.metadata.UTCTime,
-		);
+	} else if (variantCode !== undefined) {
+		// No position specified in the ICN, extract from the variant
 		return variant.getStartingPositionOfVariant(variantCode, timestamp);
 	} else {
 		// Empty position

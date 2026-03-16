@@ -25,6 +25,7 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
+import metadata from '../../../../../../shared/chess/util/metadata';
 import timeutil from '../../../../../../shared/util/timeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
@@ -449,21 +450,18 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
-	// Resolve variant code from the ICN metadata, which always
-	// stores the English display name for human reading.
-	if (longformOut.metadata.Variant) {
-		const resolved = variant.resolveVariantCode(longformOut.metadata.Variant);
-		if (resolved !== undefined) {
-			// Ensure metadata stores the English name, in case it used the variant code before
-			longformOut.metadata.Variant = variant.getVariantName(resolved);
-		} else {
-			// Invalid Variant: Treat as if no variant was specified
-			delete longformOut.metadata.Variant;
-		}
-	}
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
+	const timestamp = metadata.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
 
-	let { position, specialRights } =
-		pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
+	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(
+		longformOut,
+		resolvedVariantCode,
+		timestamp,
+	);
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
