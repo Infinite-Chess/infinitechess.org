@@ -27,6 +27,7 @@ describe('gamecompressor', () => {
 			const mockGame: FullGame = {
 				basegame: {
 					metadata: mockMetaData,
+					dateTimestamp: Date.now(),
 					// The game rules are essential for the compressor to know the turn order
 					gameRules: {
 						turnOrder: [p.WHITE, p.BLACK],

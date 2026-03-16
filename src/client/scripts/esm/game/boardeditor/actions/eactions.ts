@@ -451,11 +451,10 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Convert the English variant name from the ICN back to the internal variant code
 	if (longformOut.metadata.Variant) {
-		try {
-			longformOut.metadata.Variant = variant.getVariantCodeFromEnglishName(
-				longformOut.metadata.Variant,
-			);
-		} catch {
+		const resolved = variant.resolveVariantCode(longformOut.metadata.Variant);
+		if (resolved !== undefined) {
+			longformOut.metadata.Variant = resolved;
+		} else {
 			// Invalid Variant: Treat as if no variant was specified
 			if (longformOut.position === undefined)
 				console.warn(

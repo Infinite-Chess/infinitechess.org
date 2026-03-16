@@ -154,7 +154,11 @@ function restoreSingleGame(
 	const moves: BaseMove[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
-		const boardsim = gamefile.initBoard(basegame.gameRules, gameMetadata);
+		const boardsim = gamefile.initBoard(
+			basegame.gameRules,
+			basegame.variant,
+			basegame.dateTimestamp,
+		);
 		servergame.boardsim = boardsim;
 		// Pushes moves to BOTH the basegame and boardsim
 		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);

@@ -138,11 +138,10 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	// Convert the English variant name from the ICN back to the internal variant code
 	if (longformOut.metadata.Variant) {
-		try {
-			longformOut.metadata.Variant = variant.getVariantCodeFromEnglishName(
-				longformOut.metadata.Variant,
-			);
-		} catch {
+		const resolved = variant.resolveVariantCode(longformOut.metadata.Variant);
+		if (resolved !== undefined) {
+			longformOut.metadata.Variant = resolved;
+		} else {
 			// Invalid Variant: Treat as if no variant was specified
 			if (longformOut.position === undefined)
 				console.warn(
@@ -250,7 +249,13 @@ function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
 		};
 	} else if (longFormat.metadata.Variant) {
 		// No position specified in the ICN, extract from the Variant metadata
-		return variant.getStartingPositionOfVariant(longFormat.metadata);
+		const variantCode = variant.resolveVariantCode(longFormat.metadata.Variant);
+		if (variantCode === undefined) return { position: new Map(), specialRights: new Set() };
+		const timestamp = variant.resolveTimestampFromMetadata(
+			longFormat.metadata.UTCDate,
+			longFormat.metadata.UTCTime,
+		);
+		return variant.getStartingPositionOfVariant(variantCode, timestamp);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };
