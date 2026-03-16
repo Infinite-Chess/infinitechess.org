@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "93"
+version = "94"
 maintainer = "Naviary"
 
 [header]
@@ -546,7 +546,7 @@ auto_aborting_in = "Auto-aborting in"
 not_logged_in = "You are not logged in. Please login to reconnect to this game."
 game_no_longer_exists = "Game no longer exists."
 another_window_connected = "Another window has connected."
-server_restarting = "Server restarting shortly..."
+server_restarting = "Server restarting shortly. Game will be resumed."
 server_restarting_in = "Server restarting in"
 minute = "minute"
 minutes = "minutes"

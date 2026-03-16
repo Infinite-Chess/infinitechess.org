@@ -1,4 +1,7 @@
 {
+  "94": {
+    "note": "Update server_restarting line 549 to reflect games are resumed now after server restarts."
+  },
   "93": {
     "note": "Deleted the whole [play.javascript.termination] section, lines 567-581"
   },
