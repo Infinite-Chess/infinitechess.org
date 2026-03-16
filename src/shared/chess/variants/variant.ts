@@ -737,7 +737,7 @@ function getApplicableTimestampEntry<Inner>(
  * Gets the piece movesets for the given variant and timestamp.
  * @param variantCode - The variant code, or undefined for pasted games with no variant specified.
  * @param timestamp - The game's start timestamp in ms since epoch.
- * @param slideLimit - Overrides the slideLimit gamerule of the variant, if specified.
+ * @param slideLimit - If provided, overrides the slideLimit gamerule of the variant. Only meaningful for variants without a movesetGenerator (i.e. those that use default movesets), because custom movesets define their own slide ranges explicitly and don't inherit a global slide limit.
  * @returns The pieceMovesets property of the gamefile.
  */
 function getMovesetsOfVariant(
