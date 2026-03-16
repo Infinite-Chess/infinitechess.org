@@ -93,13 +93,15 @@ async function clearAll(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 	const metadata: MetaData = {
 		TimeControl: '-',
 		Event: `Position created using ingame board editor`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
+		UTCDate,
+		UTCTime,
 	};
 	const gameRules = variant.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
@@ -116,6 +118,7 @@ async function clearAll(): Promise<void> {
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
+			dateTimestamp,
 			additional: {
 				variantOptions,
 			},
@@ -133,14 +136,16 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 	gameloader.unloadLogicalAndRendering();
 
 	// Load given savestate
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 	const metadata: MetaData = {
 		Variant: 'Classical',
 		TimeControl: '-',
 		Event: `Position created using ingame board editor`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
+		UTCDate,
+		UTCTime,
 	};
 
 	// prettier-ignore
@@ -153,6 +158,7 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
 			metadata,
+			dateTimestamp,
 			additional: {
 				variantOptions: editorSaveState.variantOptions,
 			},
@@ -234,6 +240,7 @@ function startLocalGame(): void {
 		return;
 	}
 
+	const dateTimestamp = Date.now();
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
@@ -247,6 +254,7 @@ function startLocalGame(): void {
 	gameloader.unloadGame();
 	gameloader.startCustomLocalGame({
 		metadata,
+		dateTimestamp,
 		additional: {
 			variantOptions,
 		},
@@ -319,7 +327,8 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 
 	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 	const metadata: MetaData = {
 		Event: 'Position created using ingame board editor',
 		Site: 'https://www.infinitechess.org/',
@@ -340,6 +349,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	gameloader.unloadGame();
 	gameloader.startCustomEngineGame({
 		metadata,
+		dateTimestamp,
 		additional: {
 			variantOptions,
 		},
@@ -481,7 +491,12 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = gamefile.initFullGame(longformOut.metadata, additional);
+		const loadedGamefile = gamefile.initFullGame(
+			longformOut.metadata,
+			timestamp,
+			resolvedVariantCode,
+			additional,
+		);
 		const gamestate: SimplifiedGameState = {
 			position,
 			state_global,

@@ -144,7 +144,13 @@ function restoreSingleGame(
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
 	// 5. Create the basegame
-	const basegame = gamefile.initGame(gameMetadata, undefined, gameConclusion, clockValues);
+	const basegame = gamefile.initGame(
+		gameMetadata,
+		gameRow.time_created,
+		matchInfo.variant,
+		gameConclusion,
+		clockValues,
+	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.

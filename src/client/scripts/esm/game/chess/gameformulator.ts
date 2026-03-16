@@ -8,7 +8,9 @@ import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { _Move_In, LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
+import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import metadatautil from '../../../../../shared/chess/util/metadata.js';
 
 import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
@@ -43,7 +45,19 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 		},
 	};
 
-	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves }, validateMoves);
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
+		longformIn.metadata.UTCDate,
+		longformIn.metadata.UTCTime,
+	);
+	const resolvedVariant = variant.resolveVariantCode(longformIn.metadata.Variant);
+
+	return gamefile.initFullGame(
+		longformIn.metadata,
+		resolvedTimestamp,
+		resolvedVariant,
+		{ variantOptions, moves },
+		validateMoves,
+	);
 }
 
 export default {

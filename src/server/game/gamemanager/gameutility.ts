@@ -426,6 +426,7 @@ function constructMetadataOfGame(
 	rated: boolean,
 	variantKey: VariantCode,
 	clock: TimeControl,
+	dateTimestamp: number,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
 	const white = playerdata[p.WHITE]!.identifier;
@@ -448,7 +449,7 @@ function constructMetadataOfGame(
 		rated,
 		variantKey,
 		clock,
-		Date.now(),
+		dateTimestamp,
 		whiteIdentity,
 		blackIdentity,
 	);

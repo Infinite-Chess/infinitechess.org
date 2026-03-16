@@ -26,7 +26,6 @@ import movepiece from './movepiece.js';
 import gamerules from '../variants/gamerules.js';
 import legalmoves from './legalmoves.js';
 import initvariant from './initvariant.js';
-import metadatautil from '../util/metadata.js';
 import wincondition from './wincondition.js';
 import checkdetection from './checkdetection.js';
 import organizedpieces from './organizedpieces.js';
@@ -134,39 +133,25 @@ interface Additional {
 	worldBorderDist?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
-	/** The variant code. If not provided, derived from metadata.Variant. */
-	variant?: VariantCode;
-	/** Timestamp (ms since epoch). If not provided, derived from metadata.UTCDate/UTCTime. */
-	dateTimestamp?: number;
 }
 
 /** Creates a new {@link Game} object from provided arguments */
 function initGame(
 	metadata: MetaData,
-	variantOptions?: VariantOptions,
+	dateTimestamp: number,
+	variantCode?: VariantCode,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
-	variantCode?: VariantCode,
-	dateTimestamp?: number,
+	variantOptions?: VariantOptions,
 ): Game {
-	// Resolve variant and timestamp from metadata if not provided explicitly
-	const resolvedVariant = variantCode ?? variant.resolveVariantCode(metadata.Variant);
-	const resolvedTimestamp =
-		dateTimestamp ??
-		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
-
-	const gameRules = initvariant.getVariantGamerules(
-		resolvedVariant,
-		resolvedTimestamp,
-		variantOptions,
-	);
+	const gameRules = initvariant.getVariantGamerules(variantCode, dateTimestamp, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
 		metadata,
-		dateTimestamp: resolvedTimestamp,
+		dateTimestamp,
 		moves: [],
 		gameRules,
 		whosTurn: gameRules.turnOrder[0]!,
@@ -331,22 +316,18 @@ function loadGameWithBoard(
  */
 function initFullGame(
 	metadata: MetaData,
+	dateTimestamp: number,
+	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
 ): FullGame {
-	// Resolve variant and timestamp once, reuse for both basegame and boardsim
-	const variantCode = additional.variant ?? variant.resolveVariantCode(metadata.Variant);
-	const dateTimestamp =
-		additional.dateTimestamp ??
-		metadatautil.resolveTimestampFromMetadata(metadata.UTCDate, metadata.UTCTime);
-
 	const basegame = initGame(
 		metadata,
-		additional.variantOptions,
+		dateTimestamp,
+		variantCode,
 		additional.gameConclusion,
 		additional.clockValues,
-		variantCode,
-		dateTimestamp,
+		additional.variantOptions,
 	);
 	const boardsim = initBoard(
 		basegame.gameRules,

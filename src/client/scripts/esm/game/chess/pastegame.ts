@@ -183,7 +183,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 			? ` ${translations.copypaste.pasting_in_private}`
 			: '';
 
-	const additional: Additional = { variantOptions, variant: resolvedVariantCode };
+	const additional: Additional = { variantOptions };
 	if (longformOut.moves) {
 		// Trim the excess properties from the _Move_Out type, including the comment.
 		additional.moves = longformOut.moves.map((m: _Move_Out) => {
@@ -197,10 +197,14 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
+		variant: VariantCode | undefined;
+		dateTimestamp: number;
 		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
 	} = {
 		metadata: longformOut.metadata,
+		variant: resolvedVariantCode,
+		dateTimestamp: timestamp,
 		additional,
 	};
 	if (longformOut.presetAnnotes) options.presetAnnotes = longformOut.presetAnnotes;

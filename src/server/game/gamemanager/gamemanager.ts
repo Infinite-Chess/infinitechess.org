@@ -98,13 +98,15 @@ function createGame(
 	}
 
 	const gameID = issueUniqueGameId();
+	const now = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
 		invite.rated === 'rated',
 		invite.variant,
 		invite.clock,
+		now,
 		ratinginfo,
 	);
-	const basegame = gamefile.initGame(metadata);
+	const basegame = gamefile.initGame(metadata, now, invite.variant);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.

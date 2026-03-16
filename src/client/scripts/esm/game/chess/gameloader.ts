@@ -30,6 +30,7 @@ import type {
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
+import metadatautil from '../../../../../shared/chess/util/metadata.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -136,6 +137,9 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
+
 	const metadata: MetaData = {
 		// Metadata stores the English display name, not the code.
 		Variant: variant.getVariantName(options.Variant),
@@ -144,16 +148,17 @@ async function startLocalGame(options: {
 		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
+		UTCDate,
+		UTCTime,
 	};
 
 	gameslot
 		.loadGamefile({
 			metadata,
+			variant: options.Variant,
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
-			additional: { variant: options.Variant },
 		})
 		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
@@ -196,9 +201,17 @@ async function startOnlineGame(options: {
 		clockValues: options.clockValues,
 	};
 
+	const resolvedVariant = variant.resolveVariantCode(options.metadata.Variant);
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
+		options.metadata.UTCDate,
+		options.metadata.UTCTime,
+	);
+
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
+			variant: resolvedVariant,
+			dateTimestamp: resolvedTimestamp,
 			viewWhitePerspective: options.youAreColor === p.WHITE,
 			allowEditCoords: false,
 			additional,
@@ -260,6 +273,9 @@ async function startEngineGame(options: {
 		options.engineConfig.strengthLevel,
 	);
 
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
+
 	const metadata: MetaData = {
 		Event: options.Event,
 		Site: 'https://www.infinitechess.org/',
@@ -267,8 +283,8 @@ async function startEngineGame(options: {
 		TimeControl: options.TimeControl ?? '-',
 		White: options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName,
 		Black: options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName,
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
+		UTCDate,
+		UTCTime,
 	};
 	// Metadata stores the English display name, not the code.
 	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
@@ -276,10 +292,11 @@ async function startEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
+		variant: options.variant,
+		dateTimestamp,
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
-			variant: options.variant,
 			variantOptions: options.variantOptions,
 			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},
@@ -308,19 +325,24 @@ async function startBoardEditor(): Promise<void> {
 
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
+
 	const metadata: MetaData = {
 		Variant: 'Classical',
 		TimeControl: '-',
 		Event: `Position created using ingame board editor`,
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
+		UTCDate,
+		UTCTime,
 	};
 
 	gameslot
 		.loadGamefile({
 			metadata,
+			variant: variant.resolveVariantCode(metadata.Variant),
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 			/**
@@ -342,6 +364,7 @@ async function startBoardEditor(): Promise<void> {
 /** Initializes a local game from a custom position. */
 async function startCustomLocalGame(options: {
 	metadata: MetaData;
+	dateTimestamp: number;
 	additional: {
 		moves?: ServerGameMoveMessage[];
 		variantOptions: VariantOptions;
@@ -357,6 +380,7 @@ async function startCustomLocalGame(options: {
 	gameslot
 		.loadGamefile({
 			...options,
+			variant: undefined, // Not specified for custom position
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 		})
@@ -372,6 +396,7 @@ async function startCustomLocalGame(options: {
 /** Starts an engine game according to the options provided. */
 async function startCustomEngineGame(options: {
 	metadata: MetaData;
+	dateTimestamp: number;
 	additional: {
 		moves?: ServerGameMoveMessage[];
 		variantOptions: VariantOptions;
@@ -393,6 +418,8 @@ async function startCustomEngineGame(options: {
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata: options.metadata,
+		variant: undefined, // Not specified for custom position
+		dateTimestamp: options.dateTimestamp,
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
@@ -421,6 +448,7 @@ async function startCustomEngineGame(options: {
 async function startBoardEditorFromCustomPosition(
 	options: {
 		metadata: MetaData;
+		dateTimestamp: number;
 		additional: {
 			moves?: ServerGameMoveMessage[];
 			variantOptions: VariantOptions;
@@ -446,6 +474,8 @@ async function startBoardEditorFromCustomPosition(
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
+			variant: undefined, // Not specified for custom position
+			dateTimestamp: options.dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed
@@ -467,6 +497,8 @@ async function startBoardEditorFromCustomPosition(
  */
 async function pasteGame(options: {
 	metadata: MetaData;
+	variant: VariantCode | undefined;
+	dateTimestamp: number;
 	additional: Additional;
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
@@ -485,6 +517,8 @@ async function pasteGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
+			variant: options.variant,
+			dateTimestamp: options.dateTimestamp,
 			viewWhitePerspective,
 			allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 			presetAnnotes: options.presetAnnotes,

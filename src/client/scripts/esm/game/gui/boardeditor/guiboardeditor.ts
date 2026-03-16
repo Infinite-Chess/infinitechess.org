@@ -82,14 +82,16 @@ async function open(): Promise<void> {
 		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {
+		const dateTimestamp = Date.now();
+		const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 		const metadata: MetaData = {
 			Variant: 'Classical',
 			TimeControl: '-',
 			Event: `Position created using ingame board editor`,
 			Site: 'https://www.infinitechess.org/',
 			Round: '-',
-			UTCDate: timeutil.getCurrentUTCDate(),
-			UTCTime: timeutil.getCurrentUTCTime(),
+			UTCDate,
+			UTCTime,
 		};
 
 		if (autoSaveState.active_position !== undefined)
@@ -99,6 +101,7 @@ async function open(): Promise<void> {
 		await gameloader.startBoardEditorFromCustomPosition(
 			{
 				metadata,
+				dateTimestamp,
 				additional: {
 					variantOptions: autoSaveState.variantOptions,
 				},
