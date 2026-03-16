@@ -243,7 +243,7 @@ function startLocalGame(): void {
 	const dateTimestamp = Date.now();
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const metadata: MetaData = {
-		Event: 'Position created using ingame board editor',
+		Event: 'Casual local custom infinite chess game',
 		Site: 'https://www.infinitechess.org/',
 		TimeControl: '-',
 		Round: '-',
@@ -330,7 +330,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 	const dateTimestamp = Date.now();
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(dateTimestamp);
 	const metadata: MetaData = {
-		Event: 'Position created using ingame board editor',
+		Event: 'Casual computer custom infinite chess game',
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
 		TimeControl: engineUIConfig.TimeControl,
