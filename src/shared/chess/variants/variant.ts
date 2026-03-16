@@ -43,17 +43,9 @@ type TimeVariantProperty<T> =
 	  };
 
 /** A single variant entry object in the variant dictionary */
-interface Variant {
+type Variant = {
 	/** The English display name of the variant, used in game metadata (e.g. "Chess on an Infinite Plane"). */
 	name: string;
-	positionString?: TimeVariantProperty<string>;
-	generator?: TimeVariantProperty<{
-		algorithm: () => Map<CoordsKey, number>;
-		rules: {
-			pawnDoublePush: boolean;
-			castleWith?: RawType;
-		};
-	}>;
 	/**
 	 * A function that returns the movesetModifications for the variant.
 	 * The movesetModifications do NOT need to contain the movesets of every piece,
@@ -83,7 +75,24 @@ interface Variant {
 	};
 	/** If present, its how many squares of padding exist between the furthest piece on each side to the world border. */
 	worldBorderDist?: bigint;
-}
+} & (
+	| {
+			/** The position string of the variant, in the same format as ICN. */
+			positionString: TimeVariantProperty<string>;
+			generator?: never;
+	  }
+	| {
+			/** A function that generates the starting position of the variant, in key format `{ 'x,y':'type' }`. */
+			generator: TimeVariantProperty<{
+				algorithm: () => Map<CoordsKey, number>;
+				rules: {
+					pawnDoublePush: boolean;
+					castleWith?: RawType;
+				};
+			}>;
+			positionString?: never;
+	  }
+);
 
 /** Union of all valid variant codes, derived from the keys of {@link variantDictionary}. */
 export type VariantCode = keyof typeof variantDictionary;
@@ -611,11 +620,8 @@ function getStartingPositionOfVariant(
 		}
 
 		return icnconverter.generatePositionFromShortForm(positionString);
-	} else if (variantEntry.generator) {
-		const generator =
-			'algorithm' in variantEntry.generator
-				? variantEntry.generator
-				: getApplicableTimestampEntry(variantEntry.generator, timestamp);
+	} else {
+		const generator = getApplicableTimestampEntry(variantEntry.generator!, timestamp);
 
 		// Generate the starting position
 		position = generator.algorithm();
@@ -625,10 +631,7 @@ function getStartingPositionOfVariant(
 			generator.rules.castleWith,
 		);
 		return { position, specialRights };
-	} else
-		throw Error(
-			`Variant entry "${variantCode}" NEEDS either a "positionString" or a "generator" property, cannot get the starting position!`,
-		);
+	}
 }
 
 /**
