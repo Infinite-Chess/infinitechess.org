@@ -23,6 +23,8 @@ import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
 import fourdimensionalgenerator from './fourdimensionalgenerator.js';
 import { rawTypes as r, players as p } from '../util/typeutil.js';
 
+// Types -------------------------------------------------------------------------------
+
 /** An object that describes what modifications to make to default gamerules in a variant. */
 interface GameRuleModifications {
 	promotionRanks?: { [color: string]: bigint[] } | null;
@@ -83,6 +85,11 @@ interface Variant {
 	worldBorderDist?: bigint;
 }
 
+/** Union of all valid variant codes, derived from the keys of {@link variantDictionary}. */
+export type VariantCode = keyof typeof variantDictionary;
+
+// Constants -------------------------------------------------------------------------------
+
 const positionStringOfClassical =
 	'P1,2+|P2,2+|P3,2+|P4,2+|P5,2+|P6,2+|P7,2+|P8,2+|p1,7+|p2,7+|p3,7+|p4,7+|p5,7+|p6,7+|p7,7+|p8,7+|R1,1+|R8,1+|r1,8+|r8,8+|N2,1|N7,1|n2,8|n7,8|B3,1|B6,1|b3,8|b6,8|Q4,1|q4,8|K5,1+|k5,8+';
 const positionStringOfCoaIP =
@@ -125,7 +132,7 @@ const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = {
  * in time (variant has received an update), then it may contain nested UTC timestamps representing
  * the new values after that point in time.
  */
-const variantDictionary = {
+const variantDictionary = buildVariantDictionary({
 	Classical: {
 		name: 'Classical',
 		positionString: positionStringOfClassical,
@@ -485,21 +492,23 @@ const variantDictionary = {
 			]),
 		},
 	},
-} satisfies Record<string, Variant>;
-
-/** Union of all valid variant codes, derived from the keys of {@link variantDictionary}. */
-export type VariantCode = keyof typeof variantDictionary;
+});
 
 /** Tuple of all valid variant code strings, for use in runtime validation (e.g. Zod schemas). */
-export const variantCodes = Object.keys(variantDictionary) as [VariantCode, ...VariantCode[]];
+export const variantCodes = Object.keys(variantDictionary) as VariantCode[];
+
+// Functions ---------------------------------------------------------------------------------
 
 /**
- * Typed view of the variant dictionary for internal getter use.
- * The `satisfies` declaration above preserves literal key types for VariantCode derivation,
- * but narrows each value to its specific inferred type. This cast restores the Variant interface
- * so optional properties (positionString, generator, etc.) are accessible on any entry.
+ * Type helper: validates each variant entry against the Variant interface while preserving
+ * the literal key names, so that `keyof typeof variantDictionary` remains a union of
+ * specific string literals and every lookup returns `Variant` instead of a narrow union.
  */
-const variants = variantDictionary as Record<VariantCode, Variant>;
+function buildVariantDictionary<K extends string>(dict: { [key in K]: Variant }): {
+	[key in K]: Variant;
+} {
+	return dict;
+}
 
 /**
  * Takes a single list of possible promotions: `[r.ROOK,r.QUEEN...]`,
@@ -553,9 +562,7 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
  * Resolves the variant from the metadata, normalizes the metadata's `Variant` property to the
  * English display name (if recognized), or deletes it (if not recognized), then returns the
  * resolved {@link VariantCode}.
- *
- * This is the single canonical place to call when processing ICN/longformat metadata.
- * @param metadata - Any object with an optional `Variant` string property (e.g. {@link MetaData}).
+ * @param metadata - The metadata of the game with the optional `Variant` property. MUST BE A DIRECT REFERENCE (not a copy)
  * @returns The resolved {@link VariantCode}, or `undefined` if no valid variant was found.
  */
 function resolveAndNormalizeVariantInMetadata(metadata: {
@@ -565,9 +572,9 @@ function resolveAndNormalizeVariantInMetadata(metadata: {
 	const resolved = resolveVariantCode(metadata.Variant);
 	if (resolved !== undefined) {
 		// Normalize to English display name
-		metadata.Variant = variants[resolved].name;
+		metadata.Variant = variantDictionary[resolved].name;
 	} else {
-		// Unrecognized variant: treat as if no variant was specified
+		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
 	}
 	return resolved;
@@ -586,7 +593,7 @@ function getStartingPositionOfVariant(
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	let positionString: string;
 	let position: Map<CoordsKey, number>;
@@ -643,18 +650,11 @@ function getVariantGameRuleModifications(
 	variantCode: VariantCode,
 	timestamp: number,
 ): GameRuleModifications {
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
 
-	// We use hasOwnProperty() because it is true even if the property is set as `undefined`, which in this case would mean zero gamerule modifications.
-	if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
-		// Multiple UTC timestamps
-		return getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp);
-	} else {
-		// Just one gameruleModifications entry
-		return variantEntry.gameruleModifications;
-	}
+	return getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp);
 }
 
 /**
@@ -755,7 +755,7 @@ function getMovesetsOfVariant(
 ): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
 	if (variantCode === undefined) return getMovesets(undefined, slideLimit);
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	if (!variantEntry.movesetGenerator) {
 		if (variantEntry.gameruleModifications?.hasOwnProperty(0)) {
@@ -825,7 +825,7 @@ function getSpecialMovesOfVariant(
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
 	if (variantCode === undefined) return defaultSpecialMoves;
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
 
@@ -842,7 +842,7 @@ function getSpecialVicinityOfVariant(
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
 	if (variantCode === undefined) return defaultSpecialVicinityByPiece;
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
 
@@ -854,21 +854,21 @@ function getSpecialVicinityOfVariant(
 /** Returns the preset square annotations for the given variant, if they have any. */
 function getSquarePresets(variantCode: VariantCode | undefined): Coords[] {
 	if (variantCode === undefined) return [];
-	const square_presets = variants[variantCode].annotePresets?.squares;
+	const square_presets = variantDictionary[variantCode].annotePresets?.squares;
 	return square_presets ? icnconverter.parsePresetSquares(square_presets) : [];
 }
 
 /** Returns the preset ray annotations for the given variant, if they have any. */
 function getRayPresets(variantCode: VariantCode | undefined): BaseRay[] {
 	if (variantCode === undefined) return [];
-	const ray_presets = variants[variantCode].annotePresets?.rays;
+	const ray_presets = variantDictionary[variantCode].annotePresets?.rays;
 	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
 function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | undefined {
 	if (variantCode === undefined) return undefined;
-	return variants[variantCode].worldBorderDist;
+	return variantDictionary[variantCode].worldBorderDist;
 }
 
 /**
@@ -878,7 +878,7 @@ function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | u
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function getVariantPositionString(variantCode: VariantCode, timestamp: number): string | undefined {
-	const variantEntry = variants[variantCode];
+	const variantEntry = variantDictionary[variantCode];
 
 	if (!variantEntry.positionString) return undefined; // Generator-based variant
 
@@ -888,7 +888,7 @@ function getVariantPositionString(variantCode: VariantCode, timestamp: number): 
 
 /** Returns the English display name of the given variant, as stored in the variant dictionary. */
 function getVariantName(variantCode: VariantCode): string {
-	return variants[variantCode].name;
+	return variantDictionary[variantCode].name;
 }
 
 // Exports ------------------------------------------------------------------
