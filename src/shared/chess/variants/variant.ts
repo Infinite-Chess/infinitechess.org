@@ -555,7 +555,7 @@ function getStartingPositionOfVariant(metadata: VariantContext): {
  */
 function getGameRulesOfVariant(metadata: VariantContext): GameRules {
 	if (!isVariantValid(metadata.Variant))
-		throw new Error(`Cannot get starting position of invalid variant "${metadata.Variant}"!`);
+		throw new Error(`Cannot get gamerules of invalid variant "${metadata.Variant}"!`);
 
 	const gameruleModifications: GameRuleModifications = jsutil.deepCopyObject(
 		getVariantGameRuleModifications(metadata),
