@@ -18,10 +18,10 @@ import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
-import variant from '../../../shared/chess/variants/variant.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import variant, { VariantCode } from '../../../shared/chess/variants/variant.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -373,7 +373,7 @@ function sendGameInfoToPlayer(
 ): void {
 	const ratings = getRatingDataForGamePlayers(
 		servergame.match.playerData,
-		servergame.basegame.variant ?? 'Unknown',
+		servergame.basegame.variant!,
 	);
 
 	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
@@ -400,12 +400,10 @@ function sendGameInfoToPlayer(
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variantString: string,
+	variant: VariantCode,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
-	const leaderboardId =
-		(variant.isVariantValid(variantString) ? VariantLeaderboards[variantString] : undefined) ??
-		Leaderboards.INFINITY;
+	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
 
 	const ratingData: PlayerGroup<Rating> = {};
 	for (const [color, { identifier }] of Object.entries(players)) {

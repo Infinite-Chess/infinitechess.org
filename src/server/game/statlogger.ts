@@ -81,7 +81,7 @@ async function logGame(basegame: Game): Promise<void> {
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = basegame.variant ?? 'Unknown';
+	const variant = basegame.variant!;
 
 	// Now record the number of moves played
 

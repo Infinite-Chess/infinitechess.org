@@ -137,7 +137,7 @@ async function startLocalGame(options: {
 	await loadingscreen.open();
 
 	const metadata: MetaData = {
-		// Metadata.Variant stores the English display name, not the code.
+		// Metadata stores the English display name, not the code.
 		Variant: variant.getVariantName(options.Variant),
 		TimeControl: options.TimeControl,
 		// @ts-ignore
@@ -231,7 +231,7 @@ async function startEngineGame(options: {
 	Event: string;
 	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
-	Variant?: VariantCode;
+	variant?: VariantCode;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
@@ -242,11 +242,11 @@ async function startEngineGame(options: {
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
 }): Promise<void> {
-	if (options.Variant && options.variantOptions)
+	if (options.variant && options.variantOptions)
 		throw Error(
 			"Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.",
 		);
-	if (!options.Variant && !options.variantOptions)
+	if (!options.variant && !options.variantOptions)
 		throw Error('Must provide either Variant or variantOptions when starting an engine game.');
 
 	typeOfGameWeAreIn = 'engine';
@@ -270,8 +270,8 @@ async function startEngineGame(options: {
 		UTCDate: timeutil.getCurrentUTCDate(),
 		UTCTime: timeutil.getCurrentUTCTime(),
 	};
-	// metadata.Variant stores the English display name, not the code.
-	if (options.Variant) metadata.Variant = variant.getVariantName(options.Variant);
+	// Metadata stores the English display name, not the code.
+	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
@@ -279,7 +279,7 @@ async function startEngineGame(options: {
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
-			variant: options.Variant,
+			variant: options.variant,
 			variantOptions: options.variantOptions,
 			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
 		},

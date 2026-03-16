@@ -39,7 +39,7 @@ interface VariantOptions {
 /**
  * Returns the game rules for the variant.
  * If variant options are provided, their embedded gameRules are used directly.
- * @param variantCode - The strongly-typed variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [options] - Variant options that override the default variant gamerules.
  */
@@ -57,7 +57,7 @@ function getVariantGamerules(
 
 /**
  * Returns the piece movesets and special moves for the variant.
- * @param variantCode - The strongly-typed variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [slideLimit] - Overrides the slideLimit gamerule of the variant, if specified.
  */
@@ -79,7 +79,7 @@ function getPieceMovesets(
 
 /**
  * Fills in any holes in the provided variant options with the variant defaults.
- * @param variantCode - The strongly-typed variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [variantOptions] - The variant options. If position is not specified, the variant code must be provided.
  */
@@ -113,16 +113,16 @@ function getVariantVariantOptions(
 		)
 			throw Error('If moveRule is specified, moveRuleState must also be specified.');
 		moveRuleState = variantOptions.state_global.moveRuleState;
-	} else {
-		if (variantCode === undefined)
-			throw Error('Cannot get starting position without a variant code or variant options.');
+	} else if (variantCode !== undefined) {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(
 			variantCode,
 			timestamp,
 		));
 		fullMove = 1; // Every variant has the exact same fullMove value.
 		if (gamerules.moveRule !== undefined) moveRuleState = 0; // Every variant has the exact same initial moveRuleState value.
-	}
+	} else throw Error('Cannot get starting position without a variant code or variant options.');
+
+	// console.log("Variant options:", variantOptions);
 
 	const state_global: Snapshot['state_global'] = { specialRights };
 	if (enpassant) state_global.enpassant = enpassant;

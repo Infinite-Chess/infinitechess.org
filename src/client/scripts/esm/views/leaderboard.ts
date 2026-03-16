@@ -71,12 +71,10 @@ let initialized = false;
  * Set the text below the leaderboard table, explaining which variants belong to it
  */
 function setSupportedVariantsDisplay(): void {
-	const valid_variants = Object.keys(VariantLeaderboards) as VariantCode[];
 	const variantslist: string[] = [];
-	valid_variants.forEach((v) => {
-		if (VariantLeaderboards[v] !== leaderboard_id) return;
-		// @ts-ignore
-		variantslist.push(v in translations ? translations[v] : v);
+	Object.entries(VariantLeaderboards).forEach(([variant, leaderboard]) => {
+		if (leaderboard !== leaderboard_id) return;
+		variantslist.push(variant in translations ? translations[variant as VariantCode] : variant);
 	});
 	element_supportedVariants.textContent = `${translations.supported_variants} ${variantslist.join(', ')}.`;
 }

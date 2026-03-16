@@ -84,9 +84,15 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
 
 /**
  * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
- * @param variantCode - The strongly-typed variant code, or undefined for custom/pasted positions.
+ * This is used for efficient calculating if a move would put you in check by a special piece.
+ * If a special piece is found at any of these distances, their legal moves are calculated
+ * to see if they would check you or not.
+ * This saves us from having to iterate through every single
+ * special piece in the game to see if they would check you.
+ * @param variantCode - The variant code, or undefined for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param existingRawTypes
+ * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(
 	variantCode: VariantCode | undefined,

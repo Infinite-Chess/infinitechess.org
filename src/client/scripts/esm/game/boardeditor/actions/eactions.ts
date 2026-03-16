@@ -449,18 +449,15 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
-	// Resolve variant code from the ICN metadata (may be an English name or a code).
-	// metadata.Variant always stores the English display name for human reading.
+	// Resolve variant code from the ICN metadata, which always
+	// stores the English display name for human reading.
 	if (longformOut.metadata.Variant) {
 		const resolved = variant.resolveVariantCode(longformOut.metadata.Variant);
 		if (resolved !== undefined) {
+			// Ensure metadata stores the English name, in case it used the variant code before
 			longformOut.metadata.Variant = variant.getVariantName(resolved);
 		} else {
 			// Invalid Variant: Treat as if no variant was specified
-			if (longformOut.position === undefined)
-				console.warn(
-					`Variant "${longformOut.metadata.Variant}" not recognized. Pasted position will be empty.`,
-				);
 			delete longformOut.metadata.Variant;
 		}
 	}

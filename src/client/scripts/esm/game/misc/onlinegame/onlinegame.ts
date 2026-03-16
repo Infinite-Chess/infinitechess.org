@@ -400,14 +400,8 @@ function requestRemovalFromPlayersInActiveGames(): void {
 	}
 
 	// Don't send this request if the server will have deleted this game instantly.
-	if (
-		isGameInstantlyDeleted(
-			gameslot.getGamefile()!.basegame.variant,
-			gameslot.getGamefile()!.basegame.dateTimestamp,
-			isPrivate!,
-		)
-	)
-		return;
+	const { basegame } = gameslot.getGamefile()!;
+	if (isGameInstantlyDeleted(basegame.variant, basegame.dateTimestamp, isPrivate!)) return;
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 

@@ -112,15 +112,32 @@ const gameruleModificationsOfOmegaShowcasings: GameRuleModifications = {
 }; // No promotions, no 50-move rule, and reversed turn order.
 
 /** Union of all valid variant codes. Must be kept in sync with the keys of {@link variantDictionary}. */
-// prettier-ignore
-type VariantCode =
-	| 'Classical' | 'Confined_Classical' | 'Classical_Plus'
-	| 'CoaIP' | 'CoaIP_HO' | 'CoaIP_RO' | 'CoaIP_NO'
-	| 'Palace' | 'Pawndard' | 'Core' | 'Standarch'
-	| 'Space_Classic' | 'Space' | 'Obstocean' | 'Abundance'
-	| 'Chess' | 'Pawn_Horde' | 'Knightline'
-	| 'Omega' | 'Omega_Squared' | 'Omega_Cubed' | 'Omega_Fourth'
-	| '4x4x4x4_Chess' | '5D_Chess' | 'Knighted_Chess';
+export type VariantCode =
+	| 'Classical'
+	| 'Confined_Classical'
+	| 'Classical_Plus'
+	| 'CoaIP'
+	| 'CoaIP_HO'
+	| 'CoaIP_RO'
+	| 'CoaIP_NO'
+	| 'Palace'
+	| 'Pawndard'
+	| 'Core'
+	| 'Standarch'
+	| 'Space_Classic'
+	| 'Space'
+	| 'Obstocean'
+	| 'Abundance'
+	| 'Chess'
+	| 'Pawn_Horde'
+	| 'Knightline'
+	| 'Omega'
+	| 'Omega_Squared'
+	| 'Omega_Cubed'
+	| 'Omega_Fourth'
+	| '4x4x4x4_Chess'
+	| '5D_Chess'
+	| 'Knighted_Chess';
 
 /**
  * An object that contains each variant's positional and gamerule information:
@@ -519,7 +536,7 @@ function repeatPromotionsAllowedForEachColor(
  * Tests if the provided variant is a valid variant.
  * Acts as a type guard, narrowing the input to {@link VariantCode}.
  * @param variantName - The name of the variant
- * @returns *true* if the variant is a valid variant
+ * @returns Whether the variant is a valid variant
  */
 function isVariantValid(variantName: string | undefined): variantName is VariantCode {
 	if (variantName === undefined) return false;
@@ -527,22 +544,24 @@ function isVariantValid(variantName: string | undefined): variantName is Variant
 }
 
 /**
- * Resolves a variant string (code or English name) from metadata into a strongly-typed {@link VariantCode}.
- * Handles both variant codes (e.g. `"CoaIP"`) and English display names (e.g. `"Chess on an Infinite Plane"`).
- * Console-warns if the input doesn't match any known variant.
- * @param input - The variant string from metadata (may be a code, an English name, or undefined).
+ * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
+ * Warns if the variant is not recognized.
+ * @param variantName - The variant string from metadata (may be an English name, code, or undefined).
  * @returns The corresponding {@link VariantCode}, or `undefined` if the input is not recognized.
  */
-function resolveVariantCode(input: string | undefined): VariantCode | undefined {
-	if (input === undefined) return undefined;
+function resolveVariantCode(variantName: string | undefined): VariantCode | undefined {
+	if (variantName === undefined) return;
 	// Direct code match
-	if (input in variantDictionary) return input as VariantCode;
+	if (variantName in variantDictionary) return variantName as VariantCode;
 	// Search by English display name
-	for (const code of Object.keys(variantDictionary) as VariantCode[]) {
-		if (variantDictionary[code].name === input) return code;
+	for (const [code, variantEntry] of Object.entries(variantDictionary) as [
+		VariantCode,
+		Variant,
+	][]) {
+		if (variantEntry.name === variantName) return code;
 	}
-	console.warn(`Variant "${input}" is not recognized. Treating as no variant.`);
-	return undefined;
+	console.warn(`Variant "${variantName}" is not recognized. Treating as no variant.`);
+	return;
 }
 
 /**
@@ -558,7 +577,7 @@ function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): numbe
 
 /**
  * Given the variant code and timestamp, calculates the starting position and specialRights.
- * @param variantCode - The strongly-typed variant code.
+ * @param variantCode - The variant code.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @returns An object containing 2 properties: `position`, and `specialRights`.
  */
@@ -609,7 +628,7 @@ function getStartingPositionOfVariant(
 
 /**
  * Returns the variant's gamerules at the provided timestamp.
- * @param variantCode - The strongly-typed variant code.
+ * @param variantCode - The variant code.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @returns The gamerules object for the variant.
  */
@@ -726,7 +745,7 @@ function getApplicableTimestampEntry<Inner>(
 
 /**
  * Gets the piece movesets for the given variant and timestamp.
- * @param variantCode - The strongly-typed variant code, or undefined for pasted games with no variant.
+ * @param variantCode - The variant code, or undefined for pasted games with no variant specified.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param slideLimit - Overrides the slideLimit gamerule of the variant, if specified.
  * @returns The pieceMovesets property of the gamefile.
@@ -857,7 +876,7 @@ function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | u
 /**
  * Returns the position string for the given variant at the specified timestamp,
  * or `undefined` if the variant uses a generator (no fixed position string).
- * @param variantCode - The strongly-typed variant code.
+ * @param variantCode - The variant code.
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function getVariantPositionString(variantCode: VariantCode, timestamp: number): string | undefined {
@@ -882,8 +901,6 @@ function getVariantName(variantKey: string): string {
 }
 
 // Exports ------------------------------------------------------------------
-
-export type { VariantCode };
 
 export default {
 	isVariantValid,

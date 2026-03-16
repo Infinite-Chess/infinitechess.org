@@ -4,6 +4,7 @@ import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
+import type { VariantCode } from '../variants/variant.js';
 import type { PieceMoveset } from './movesets.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { Move, BaseMove } from './movepiece.js';
@@ -14,7 +15,6 @@ import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gam
 import type { ClockData, ClockValues } from './clock.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { VariantCode } from '../variants/variant.js';
 
 import clock from './clock.js';
 import jsutil from '../../util/jsutil.js';
@@ -49,7 +49,7 @@ interface Snapshot {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData;
-	/** Strongly-typed variant code. Undefined for custom/pasted positions without a known variant. */
+	/** The variant code. Undefined for custom/pasted positions without a known variant. */
 	variant?: VariantCode;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
@@ -129,9 +129,9 @@ interface Additional {
 	worldBorderDist?: bigint;
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
-	/** Pre-resolved variant code. If not provided, derived from metadata.Variant. */
+	/** The variant code. If not provided, derived from metadata.Variant. */
 	variant?: VariantCode;
-	/** Pre-resolved timestamp (ms since epoch). If not provided, derived from metadata.UTCDate/UTCTime. */
+	/** Timestamp (ms since epoch). If not provided, derived from metadata.UTCDate/UTCTime. */
 	dateTimestamp?: number;
 }
 

@@ -40,7 +40,9 @@ import {
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
 	.strictObject({
-		variant: z.string().refine(variant.isVariantValid, { error: 'Invalid variant.' }),
+		variant: z
+			.string()
+			.refine((v) => variant.isVariantValid(v), { error: 'Invalid variant code.' }),
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
@@ -169,9 +171,8 @@ function getInviteFromWebsocketMessageContents(
 
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
-		// Variant has been validated by Zod to be a valid variant code
-		const leaderboardId =
-			VariantLeaderboards[messageContents.variant as VariantCode] ?? Leaderboards.INFINITY;
+		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
+		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 

@@ -4,6 +4,8 @@
  * This script handles copying games
  */
 
+import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
+
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
@@ -14,7 +16,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
-const variantsTooBigToCopyPositionToICN: string[] = [
+const variantsTooBigToCopyPositionToICN: VariantCode[] = [
 	'Omega_Squared',
 	'Omega_Cubed',
 	'Omega_Fourth',
@@ -47,8 +49,6 @@ function copyGame(copySinglePosition: boolean): void {
 		copySinglePosition,
 		presetAnnotes,
 	);
-	// metadata.Variant is already the English name (set during game init),
-	// so no conversion is needed for ICN output.
 
 	const largeGame: boolean =
 		variantCode !== undefined && variantsTooBigToCopyPositionToICN.includes(variantCode);

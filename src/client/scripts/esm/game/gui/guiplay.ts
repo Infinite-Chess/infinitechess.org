@@ -311,7 +311,7 @@ function callback_createInvite(): void {
 		gameloader.startEngineGame({
 			// @ts-ignore
 			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
-			Variant: inviteOptions.variant,
+			variant: inviteOptions.variant,
 			TimeControl: inviteOptions.clock,
 			youAreColor: ourColor,
 			currentEngine,

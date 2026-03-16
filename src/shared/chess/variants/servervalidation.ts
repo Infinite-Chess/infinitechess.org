@@ -28,7 +28,7 @@ const POSITION_STRING_THRESHOLD = 2500;
  * Returns `true` if the given variant supports server-side move legality validation.
  * Variants whose position string exceeds {@link POSITION_STRING_THRESHOLD} characters,
  * or that use position generators, are not supported.
- * @param variantCode - The strongly-typed variant code, or undefined.
+ * @param variantCode - The variant code, if available.
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function doesVariantSupportServerValidation(
@@ -48,7 +48,7 @@ function doesVariantSupportServerValidation(
  * - The server removes players from the active-games list immediately.
  * - Clients do not need to send `removefromplayersinactivegames`.
  * - Clients should not send cheat reports.
- * @param variantCode - The strongly-typed variant code, or undefined.
+ * @param variantCode - The variant code, if available.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param isPrivate - Whether the game is a private match.
  */
@@ -57,7 +57,7 @@ function isGameInstantlyDeleted(
 	timestamp: number,
 	isPrivate: boolean,
 ): boolean {
-	return doesVariantSupportServerValidation(variantCode, timestamp) || isPrivate;
+	return isPrivate || doesVariantSupportServerValidation(variantCode, timestamp);
 }
 
 export { doesVariantSupportServerValidation, isGameInstantlyDeleted };

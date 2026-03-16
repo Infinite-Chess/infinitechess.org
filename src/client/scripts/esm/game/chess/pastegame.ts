@@ -138,20 +138,16 @@ function pasteGame(longformOut: LongFormatOut): void {
 			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
-	// Resolve variant code from the ICN metadata (may be an English name or a code).
-	// metadata.Variant always stores the English display name for human reading.
+	// Resolve variant code from the ICN metadata, which always
+	// stores the English display name for human reading.
 	let resolvedVariantCode: VariantCode | undefined;
 	if (longformOut.metadata.Variant) {
 		resolvedVariantCode = variant.resolveVariantCode(longformOut.metadata.Variant);
 		if (resolvedVariantCode !== undefined) {
-			// Ensure metadata stores the English name
+			// Ensure metadata stores the English name, in case it used the variant code before
 			longformOut.metadata.Variant = variant.getVariantName(resolvedVariantCode);
 		} else {
 			// Invalid Variant: Treat as if no variant was specified
-			if (longformOut.position === undefined)
-				console.warn(
-					`Variant "${longformOut.metadata.Variant}" not recognized. Pasted position will be empty.`,
-				);
 			delete longformOut.metadata.Variant;
 		}
 	}
