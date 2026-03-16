@@ -174,6 +174,9 @@ interface MatchInfo {
 	/** The match's unique ID */
 	id: number;
 
+	/** The variant code of the game being played. */
+	variant: VariantCode;
+
 	/** The time this match was created. The number of milliseconds that have elapsed since the Unix epoch. */
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
@@ -252,6 +255,7 @@ function initMatch(
 
 	return {
 		id,
+		variant: invite.variant,
 		playerData,
 		timeCreated: Date.now(),
 		publicity: invite.publicity,
@@ -373,7 +377,7 @@ function sendGameInfoToPlayer(
 ): void {
 	const ratings = getRatingDataForGamePlayers(
 		servergame.match.playerData,
-		servergame.basegame.variant!,
+		servergame.match.variant,
 	);
 
 	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
@@ -695,7 +699,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 		id: servergame.match.id,
 		timeCreated: `${servergame.basegame.metadata.UTCDate} ${servergame.basegame.metadata.UTCTime}`,
 		timeEnded: servergame.match.timeEnded,
-		variant: servergame.basegame.variant,
+		variant: servergame.match.variant,
 		clock: servergame.basegame.metadata.TimeControl,
 		rated: servergame.match.rated,
 		players,

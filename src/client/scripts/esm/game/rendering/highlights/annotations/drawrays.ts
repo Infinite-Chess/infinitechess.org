@@ -58,7 +58,7 @@ function areDrawing(): boolean {
 
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
-	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.basegame.variant);
+	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.boardsim.variant);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map((r) => {
 		return {

@@ -7,8 +7,8 @@
  */
 
 import type { Game } from '../../../shared/chess/logic/gamefile.js';
-import type { ServerGame } from './gameutility.js';
 import type { RatingData } from './ratingcalculation.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
@@ -83,7 +83,7 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 	const { victor, condition: termination } = servergame.basegame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
-	const ratingData = updateLeaderboardsInTransaction(servergame, victor);
+	const ratingData = updateLeaderboardsInTransaction(servergame.match, victor);
 	// Immediately stamp the rating diffs onto the game's metadata so that
 	// they're present for ICN generation and any other downstream use.
 	if (ratingData !== undefined) {
@@ -112,12 +112,12 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  * @throws An error if any database write fails.
  */
 function updateLeaderboardsInTransaction(
-	{ match, basegame }: ServerGame,
+	match: MatchInfo,
 	victor: Player | null | undefined,
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[basegame.variant!]!; // Will always be defined if the game is rated.
+	const leaderboard_id = VariantLeaderboards[match.variant]!; // Will always be defined if the game is rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
@@ -208,9 +208,9 @@ function addGameRecordsInTransaction(
 		dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		basegame.variant!, // Only games sourced from a variant are playable on the server (no custom positions)
+		match.variant,
 		match.rated ? 1 : 0,
-		VariantLeaderboards[basegame.variant!] ?? null,
+		VariantLeaderboards[match.variant] ?? null,
 		match.publicity === 'private' ? 1 : 0,
 		basegame.metadata.Result!,
 		termination,

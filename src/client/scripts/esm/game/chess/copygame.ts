@@ -32,7 +32,7 @@ function copyGame(copySinglePosition: boolean): void {
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
-	const variantCode = gamefile.basegame.variant;
+	const variantCode = gamefile.boardsim.variant;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();

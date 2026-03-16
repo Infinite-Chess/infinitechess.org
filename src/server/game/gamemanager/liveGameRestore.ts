@@ -157,7 +157,7 @@ function restoreSingleGame(
 	if (gameRow.validate_moves) {
 		const boardsim = gamefile.initBoard(
 			basegame.gameRules,
-			basegame.variant,
+			matchInfo.variant,
 			basegame.dateTimestamp,
 		);
 		servergame.boardsim = boardsim;
@@ -357,6 +357,7 @@ function reconstructMatchInfo(
 
 	return {
 		id: gameRow.game_id,
+		variant: gameRow.variant as VariantCode,
 		timeCreated: gameRow.time_created,
 		timeEnded: gameRow.time_ended ?? undefined,
 		publicity: gameRow.private === 1 ? 'private' : 'public',

@@ -50,8 +50,6 @@ interface Snapshot {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData;
-	/** The variant code. Undefined for custom/pasted positions without a known variant. */
-	variant?: VariantCode;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
 	moves: BaseMove[];
@@ -96,6 +94,12 @@ type Board = {
 
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor: boolean;
+
+	/**
+	 * The variant code. Undefined for custom/pasted positions without a known variant.
+	 * Can be used to infer variant-specific game rules, such as piece movesets.
+	 */
+	variant?: VariantCode;
 
 	/**
 	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
@@ -162,7 +166,6 @@ function initGame(
 	);
 	const game: Game = {
 		metadata,
-		variant: resolvedVariant,
 		dateTimestamp: resolvedTimestamp,
 		moves: [],
 		gameRules,
@@ -278,6 +281,7 @@ function initBoard(
 		pieceMovesets,
 		specialMoves,
 		editor,
+		variant: variantCode,
 		startSnapshot,
 	};
 }

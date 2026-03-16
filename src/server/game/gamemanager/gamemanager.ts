@@ -108,8 +108,8 @@ function createGame(
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
-	const boardsim = doesVariantSupportServerValidation(basegame.variant, basegame.dateTimestamp)
-		? gamefile.initBoard(basegame.gameRules, basegame.variant, basegame.dateTimestamp)
+	const boardsim = doesVariantSupportServerValidation(match.variant, basegame.dateTimestamp)
+		? gamefile.initBoard(basegame.gameRules, match.variant, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };
@@ -399,7 +399,7 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
 	if (
 		isGameInstantlyDeleted(
-			servergame.basegame.variant,
+			servergame.match.variant,
 			servergame.basegame.dateTimestamp,
 			servergame.match.publicity === 'private',
 		)
@@ -511,7 +511,7 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 		// Mostly deprecated:
 		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
 		await executeSafely_async(
-			() => statlogger.logGame(servergame.basegame),
+			() => statlogger.logGame(servergame),
 			`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
 		);
 

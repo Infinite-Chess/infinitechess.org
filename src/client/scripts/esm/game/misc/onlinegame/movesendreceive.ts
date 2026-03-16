@@ -117,7 +117,7 @@ function handleOpponentsMove(
 	if (
 		!moveValidationResult.valid &&
 		!isGameInstantlyDeleted(
-			gamefile.basegame.variant,
+			gamefile.boardsim.variant,
 			gamefile.basegame.dateTimestamp,
 			onlinegame.getIsPrivate(),
 		)
