@@ -700,6 +700,7 @@ function getApplicableTimestampEntry<Inner>(
 	object: TimeVariantProperty<Inner>,
 	timestamp: number,
 ): Inner {
+	// Each of these checks are needed to determine whether ANY TimeVariantProperty has timestamp entries
 	if (typeof object !== 'object' || object === null || !object.hasOwnProperty(0)) {
 		return object as Inner;
 	}
