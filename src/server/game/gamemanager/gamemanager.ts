@@ -692,7 +692,7 @@ function broadCastGameRestarting(): void {
 			gameutility.sendMessageToSocketOfColor(
 				servergame.match,
 				Number(color) as Player,
-				'servergame',
+				'game',
 				'serverrestart',
 				timeToRestart,
 			);
