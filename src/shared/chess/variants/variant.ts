@@ -715,7 +715,7 @@ function getApplicableTimestampEntry<Inner>(
 	object: TimeVariantProperty<Inner>,
 	timestamp: number,
 ): Inner {
-	if (typeof object !== 'object' || object === null) {
+	if (typeof object !== 'object' || object === null || !object.hasOwnProperty(0)) {
 		return object as Inner;
 	}
 
