@@ -141,11 +141,6 @@ function pasteGame(longformOut: LongFormatOut): void {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
-	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
-	// the game could have ended by time, in which case we want to further analyse what could have happened.
-	delete longformOut.metadata.Result;
-	delete longformOut.metadata.Termination;
-
 	const timestamp = metadata.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
