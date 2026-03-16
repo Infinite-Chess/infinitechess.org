@@ -1,4 +1,7 @@
 {
+  "93": {
+    "note": "Deleted the whole [play.javascript.termination] section, lines 567-581"
+  },
   "92": {
     "note": "Deleted invalid_wincon line 505"
   },

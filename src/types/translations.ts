@@ -450,20 +450,6 @@ export type TranslationKeys =
 	| 'play.javascript.websocket.connection_closed'
 	| 'play.javascript.websocket.please_report_bug'
 	| 'play.javascript.websocket.malformed_message'
-	| 'play.javascript.termination.checkmate'
-	| 'play.javascript.termination.stalemate'
-	| 'play.javascript.termination.repetition'
-	| 'play.javascript.termination.moverule'
-	| 'play.javascript.termination.insuffmat'
-	| 'play.javascript.termination.royalcapture'
-	| 'play.javascript.termination.allroyalscaptured'
-	| 'play.javascript.termination.allpiecescaptured'
-	| 'play.javascript.termination.koth'
-	| 'play.javascript.termination.resignation'
-	| 'play.javascript.termination.agreement'
-	| 'play.javascript.termination.time'
-	| 'play.javascript.termination.aborted'
-	| 'play.javascript.termination.disconnect'
 	| 'play.javascript.results.you_checkmate'
 	| 'play.javascript.results.you_time'
 	| 'play.javascript.results.you_resignation'
@@ -1143,22 +1129,6 @@ export interface TranslationsObject {
 				connection_closed: string;
 				please_report_bug: string;
 				malformed_message: string;
-			};
-			termination: {
-				checkmate: string;
-				stalemate: string;
-				repetition: string;
-				moverule: string[];
-				insuffmat: string;
-				royalcapture: string;
-				allroyalscaptured: string;
-				allpiecescaptured: string;
-				koth: string;
-				resignation: string;
-				agreement: string;
-				time: string;
-				aborted: string;
-				disconnect: string;
 			};
 			results: {
 				you_checkmate: string;

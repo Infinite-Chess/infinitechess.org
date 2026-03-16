@@ -10,6 +10,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 import { cancelAutoAFKResignTimer } from './afkdisconnect.js';
 import { onPlayerLostByAbandonment } from './gamemanager.js';
 
@@ -68,6 +69,9 @@ function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
 	); // The auto resign function should have 2 arguments: The game, and the color that won.
 	match.autoAFKResignTime = Date.now() + durationOfAutoResignTimerMillis;
 
+	// Persist the AFK state to the database.
+	liveGameValues.onPlayerAFK(servergame);
+
 	// Alert their opponent
 	const value = { millisUntilAutoAFKResign: durationOfAutoResignTimerMillis };
 	gameutility.sendMessageToSocketOfColor(match, opponentColor, 'game', 'opponentafk', value);
@@ -100,6 +104,7 @@ function onAFK_Return(ws: CustomWebSocket, servergame: ServerGame): void {
 		);
 
 	cancelAutoAFKResignTimer(servergame, true);
+	liveGameValues.onPlayerAFKReturn(servergame);
 }
 
 export { onAFK, onAFK_Return };

@@ -11,10 +11,11 @@ import type { ServerGame } from './gameutility.js';
 import type { RatingData } from './ratingcalculation.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
+import metadata from '../../../shared/chess/util/metadata.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player, players } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -83,6 +84,16 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame, victor);
+	// Immediately stamp the rating diffs onto the game's metadata so that
+	// they're present for ICN generation and any other downstream use.
+	if (ratingData !== undefined) {
+		servergame.basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
+			ratingData[players.WHITE]!.elo_change_from_game!,
+		);
+		servergame.basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
+			ratingData[players.BLACK]!.elo_change_from_game!,
+		);
+	}
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
 	addGameRecordsInTransaction(servergame, victor, termination, ratingData);

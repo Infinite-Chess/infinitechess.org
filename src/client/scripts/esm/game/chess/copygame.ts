@@ -4,6 +4,7 @@
  * This script handles copying games
  */
 
+import variant from '../../../../../shared/chess/variants/variant.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
@@ -47,10 +48,9 @@ function copyGame(copySinglePosition: boolean): void {
 		copySinglePosition,
 		presetAnnotes,
 	);
-	// Convert the variant metadata code to spoken language if translation is available
+	// Convert the variant code to its canonical English name for the ICN output
 	if (longformatIn.metadata.Variant)
-		// @ts-ignore
-		longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
+		longformatIn.metadata.Variant = variant.getVariantName(longformatIn.metadata.Variant);
 
 	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);
 	// Also specify the position if we're copying a single position, so the starting position will be different.

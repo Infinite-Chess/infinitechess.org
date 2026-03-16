@@ -17,6 +17,7 @@ import type { ServerGame } from './gameutility.js';
 import jsutil from '../../../shared/util/jsutil.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 import { getGameByID } from './gamemanager.js';
 import { getGameData } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -71,6 +72,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 	gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
 
 	cancelDisconnectTimer(game.match, colorPlayingAs);
+	liveGameValues.onPlayerReconnected(game, colorPlayingAs);
 }
 
 /** Sends a client a game from the database. */

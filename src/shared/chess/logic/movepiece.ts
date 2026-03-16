@@ -379,6 +379,9 @@ function makeMove(gamefile: FullGame, move: Move): void {
 		endCoords: move.endCoords,
 		promotion: move.promotion,
 		compact: move.compact,
+		// Propogate the clockStamp if already set. REQUIRED for server-side move
+		// validated games to persist their clock information over server restarts!
+		clockStamp: move.clockStamp,
 	});
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical boardsim changes.

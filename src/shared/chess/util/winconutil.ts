@@ -56,11 +56,11 @@ const MOVE_TRIGGERED_CONCLUSIONS = [
 // Types --------------------------------------------------------------------------
 
 /** Condition where one player wins. victor will be a Player. */
-type WinCondition = (typeof WIN_CONDITIONS)[number];
+export type WinCondition = (typeof WIN_CONDITIONS)[number];
 /** Win condition that is a valid gamerule option for either color. */
 export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
 /** Condition that results in a draw. victor will be null. */
-type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
 /** Condition that aborts the game. victor will be undefined. */
 type AbortCondition = 'aborted';
 type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
@@ -112,6 +112,30 @@ const gameConclusionSchema = z.discriminatedUnion('condition', [
 	}),
 ]);
 
+// Constants --------------------------------------------------------------------------
+
+/**
+ * Maps each game conclusion condition to its English termination string.
+ * Always English by convention, since ICN metadata should only ever be in English.
+ */
+const TERMINATION_IN_ENGLISH = {
+	checkmate: 'Checkmate',
+	stalemate: 'Stalemate',
+	repetition: 'Threefold repetition',
+	/** The move count is inserted before this string. e.g. "50-move rule" */
+	moverule: '-move rule',
+	insuffmat: 'Insufficient material',
+	royalcapture: 'Royal capture',
+	allroyalscaptured: 'All royals captured',
+	allpiecescaptured: 'All pieces captured',
+	koth: 'King of the hill',
+	resignation: 'Resignation',
+	agreement: 'Agreement',
+	time: 'Time forfeit',
+	aborted: 'Aborted',
+	disconnect: 'Abandoned',
+} as const;
+
 // Functions --------------------------------------------------------------------------
 
 /**
@@ -122,7 +146,7 @@ const gameConclusionSchema = z.discriminatedUnion('condition', [
  * @param condition - The `condition` property of a `GameConclusion` object.
  * @returns *true* if the condition is move-triggered.
  */
-function isConclusionMoveTriggered(condition: string): boolean {
+function isConclusionMoveTriggered(condition: Condition): boolean {
 	return MOVE_TRIGGERED_CONCLUSIONS.includes(condition as MoveTriggeredCondition);
 }
 
@@ -133,11 +157,11 @@ function isConclusionMoveTriggered(condition: string): boolean {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: Condition): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - the move rule termination includes the number of moves until the auto-draw is triggered. For example, "50-move rule".
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
+		return `${numbWholeMovesUntilAutoDraw}${TERMINATION_IN_ENGLISH.moverule}`;
 	}
-	return translations['termination'][condition];
+	return TERMINATION_IN_ENGLISH[condition];
 }
 
 export default {

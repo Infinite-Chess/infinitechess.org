@@ -1659,6 +1659,9 @@ export default {
 	generateSpecialRights,
 	generatePositionFromShortForm,
 
+	getShortFormMovesFromMoves,
+	parseShortFormMoves,
+
 	parsePresetSquares,
 	parsePresetRays,
 

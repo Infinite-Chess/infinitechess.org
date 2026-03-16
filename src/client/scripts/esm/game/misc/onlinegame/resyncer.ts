@@ -71,7 +71,7 @@ function handleServerGameUpdate(
 	);
 
 	// Must be set before editing the clocks.
-	gamefile.basegame.gameConclusion = claimedGameConclusion;
+	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);
 
 	// Adjust the timer whos turn it is depending on ping.
 	if (message.clockValues) {

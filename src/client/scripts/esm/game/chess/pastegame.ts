@@ -13,8 +13,6 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import metadata from '../../../../../shared/chess/util/metadata.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
@@ -28,7 +26,6 @@ import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import socketmessages from '../websocket/socketmessages.js';
-import gameformulator from './gameformulator.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
 /**
@@ -139,11 +136,21 @@ function pasteGame(longformOut: LongFormatOut): void {
 			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
-	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	if (longformOut.metadata.Variant)
-		longformOut.metadata.Variant =
-			gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) ||
-			longformOut.metadata.Variant;
+	// Convert the English variant name from the ICN back to the internal variant code
+	if (longformOut.metadata.Variant) {
+		try {
+			longformOut.metadata.Variant = variant.getVariantCodeFromEnglishName(
+				longformOut.metadata.Variant,
+			);
+		} catch {
+			// Invalid Variant: Treat as if no variant was specified
+			if (longformOut.position === undefined)
+				console.warn(
+					`Variant "${longformOut.metadata.Variant}" not recognized. Pasted position will be empty.`,
+				);
+			delete longformOut.metadata.Variant;
+		}
+	}
 
 	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
 	// the game could have ended by time, in which case we want to further analyse what could have happened.

@@ -9,7 +9,6 @@
 
 import type { Rating } from '../../database/leaderboardsManager.js';
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { GameRules } from '../../../shared/chess/variants/gamerules.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
@@ -18,10 +17,8 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
-import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import timeutil from '../../../shared/util/timeutil.js';
 import metadata from '../../../shared/chess/util/metadata.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
@@ -29,7 +26,6 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
-import { getTranslation } from '../../utility/translate.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -37,6 +33,16 @@ import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+
+// Constants ------------------------------------------------------------------------------------
+
+/**
+ * The cushion time, before the game is deleted, if one player
+ * has disconnected and has not yet seen the game conclusion.
+ * This gives them a little bit of time to reconnect and submit a cheat report,
+ * which is only useful in variants where we're not doing server-side move validation.
+ */
+export const timeBeforeGameDeletionMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
 
@@ -105,6 +111,45 @@ type ParticipantState = {
 	millisUntilAutoAFKResign?: number;
 };
 
+/** Contains information about this player's disconnection and auto resign timer. */
+type PlayerDisconnect = {
+	/**
+	 * The timeout id of the timer that will START the auto disconnection timer
+	 * This is triggered if their socket unexpectedly closes,
+	 * and lasts for 5 seconds to give them a chance to reconnect.
+	 */
+	startID?: NodeJS.Timeout;
+	/**
+	 * The epoch-ms timestamp when the 5-second reconnection cushion expires.
+	 * Set alongside startID when the cushion timer is started.
+	 * Used for persistence: on server restart, this allows reviving the cushion timer.
+	 */
+	startTime?: number;
+} & (
+	| {
+			/**
+			 * The timeout id of the timer that will auto-resign the
+			 * player if they are disconnected for too long.
+			 */
+			timeoutID: NodeJS.Timeout;
+			/**
+			 * The estimated timestamp that the player will
+			 * be auto-resigned from being disconnected too long.
+			 */
+			timeToAutoLoss: number;
+			/**
+			 * Whether the player was disconnected by choice or not.
+			 * If not, they are given extra time to reconnect.
+			 */
+			wasByChoice: boolean;
+	  }
+	| {
+			timeoutID: undefined;
+			timeToAutoLoss: undefined;
+			wasByChoice: undefined;
+	  }
+);
+
 /** Information about a single player in an online game. */
 interface PlayerData {
 	/**
@@ -120,37 +165,7 @@ interface PlayerData {
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. */
 	lastOfferPly?: number;
 	/** Contains information about this players disconnection and auto resign timer. */
-	disconnect: {
-		/**
-		 * The timeout id of the timer that will START the auto disconnection timer
-		 * This is triggered if their socket unexpectedly closes,
-		 * and lasts for 5 seconds to give them a chance to reconnect.
-		 */
-		startID?: NodeJS.Timeout;
-	} & (
-		| {
-				/**
-				 * The timeout id of the timer that will auto-resign the
-				 * player if they are disconnected for too long.
-				 */
-				timeoutID: NodeJS.Timeout;
-				/**
-				 * The estimated timestamp that the player will
-				 * be auto-resigned from being disconnected too long.
-				 */
-				timeToAutoLoss: number;
-				/**
-				 * Whether the player was disconnected by choice or not.
-				 * If not, they are given extra time to reconnect.
-				 */
-				wasByChoice: boolean;
-		  }
-		| {
-				timeoutID: undefined;
-				timeToAutoLoss: undefined;
-				wasByChoice: undefined;
-		  }
-	);
+	disconnect: PlayerDisconnect;
 }
 
 /** The info for the server hosting the game */
@@ -384,7 +399,7 @@ function sendGameInfoToPlayer(
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: MetaData['Variant'] & string,
+	variant: string,
 ): PlayerGroup<Rating> {
 	// Fallback to INFINITY leaderboard if the variant does not have a leaderboard.
 	const leaderboardId = VariantLeaderboards[variant] ?? Leaderboards.INFINITY;
@@ -404,44 +419,34 @@ function getRatingDataForGamePlayers(
  */
 function constructMetadataOfGame(
 	rated: boolean,
-	variant: string,
+	variantKey: string,
 	clock: TimeControl,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
 ): MetaData {
-	const RatedOrCasual = rated ? 'Rated' : 'Casual';
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
-	const guest_indicator = getTranslation('play.javascript.guest_indicator');
-	// @ts-ignore - variant is dynamic but always maps to a valid translation key
-	const variantTranslation = getTranslation(`play.play-menu.${variant}`);
-	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${variantTranslation} infinite chess game`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		Variant: variant,
-		White: white.signedIn ? white.username : guest_indicator, // Protect browser's browser-id cookie
-		Black: black.signedIn ? black.username : guest_indicator, // Protect browser's browser-id cookie
-		TimeControl: clock,
-		UTCDate,
-		UTCTime,
+	const whiteIdentity = {
+		name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
+		id: white.signedIn ? white.user_id : undefined,
+		elo: playerdata[p.WHITE]?.rating
+			? metadata.getFormattedElo(playerdata[p.WHITE]!.rating!)
+			: undefined,
 	};
-	if (white.signedIn) {
-		// White is a member
-		const base62 = uuid.base10ToBase62(white.user_id);
-		gameMetadata.WhiteID = base62;
-		if (playerdata[p.WHITE] !== undefined)
-			gameMetadata.WhiteElo = metadata.getWhiteBlackElo(playerdata[p.WHITE]!.rating!);
-	}
-	if (black.signedIn) {
-		// Black is a member
-		const base62 = uuid.base10ToBase62(black.user_id);
-		gameMetadata.BlackID = base62;
-		if (playerdata[p.BLACK])
-			gameMetadata.BlackElo = metadata.getWhiteBlackElo(playerdata[p.BLACK]!.rating!);
-	}
-
-	return gameMetadata;
+	const blackIdentity = {
+		name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
+		id: black.signedIn ? black.user_id : undefined,
+		elo: playerdata[p.BLACK]?.rating
+			? metadata.getFormattedElo(playerdata[p.BLACK]!.rating!)
+			: undefined,
+	};
+	return metadata.buildGameMetadata(
+		rated,
+		variantKey,
+		clock,
+		Date.now(),
+		whiteIdentity,
+		blackIdentity,
+	);
 }
 
 /**
@@ -499,6 +504,11 @@ function sendGameUpdateToColor(
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
+/**
+ * Constructs a gameupdate message UNIQUE to the player!
+ * Unique because only one person receives the millisUntilAutoAFKResign
+ * property - the opposite player of the one who has gone AFK.
+ */
 function getGameUpdateMessageContents(
 	servergame: ServerGame,
 	color: Player,
@@ -507,7 +517,11 @@ function getGameUpdateMessageContents(
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.basegame.gameConclusion,
 		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
-		participantState: getParticipantState(servergame.match, color),
+		participantState: getParticipantState(
+			servergame.match,
+			color,
+			servergame.basegame.whosTurn,
+		),
 		forceSync,
 	};
 
@@ -556,7 +570,7 @@ function getRatingChangeMessageContents(
 	return messageContents;
 }
 
-function getParticipantState(match: MatchInfo, color: Player): ParticipantState {
+function getParticipantState(match: MatchInfo, color: Player, whosTurn: Player): ParticipantState {
 	const opponentColor = typeutil.invertPlayer(color);
 	const now = Date.now();
 	const opponentData = match.playerData[opponentColor]!;
@@ -570,7 +584,8 @@ function getParticipantState(match: MatchInfo, color: Player): ParticipantState 
 
 	// Include other relevant stuff if defined...
 
-	if (match.autoAFKResignTime !== undefined) {
+	// Only send AFK countdown to the opponent, not to the AFK player themselves.
+	if (match.autoAFKResignTime !== undefined && color !== whosTurn) {
 		const millisLeftUntilAutoAFKResign = match.autoAFKResignTime - now;
 		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
@@ -842,45 +857,11 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
 	return turnOrder[i % turnOrder.length]!;
 }
 
-/**
- * Returns the termination of the game in english language.
- * @param gameRules
- * @param condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
- */
-function getTerminationInEnglish(gameRules: GameRules, condition: string): string {
-	if (condition === 'moverule') {
-		// One exception - moverule is an array in TOML
-		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		// @ts-ignore - moverule is an array type, so we know these exist!
-		return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
-	}
-	// @ts-ignore - condition is dynamic but always maps to a valid translation key
-	return getTranslation(`play.javascript.termination.${condition}`);
-}
-
-/**
- * Sets the conclusion of the game, and adds on the Result and Termination metadata if the game has ended.
- * If the conclusion is undefined, it removes the Result and Termination metadata, essentially unconcluding the game if it was already.
- */
-function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
-	basegame.gameConclusion = conclusion;
-
-	// Add on the Result and Termination metadata
-	if (conclusion) {
-		basegame.metadata.Result = metadata.getResultFromVictor(conclusion.victor);
-		basegame.metadata.Termination = getTerminationInEnglish(
-			basegame.gameRules,
-			conclusion.condition,
-		);
-	} else {
-		delete basegame.metadata.Result;
-		delete basegame.metadata.Termination;
-	}
-}
-
 export type {
 	ServerGame,
 	MatchInfo,
+	PlayerData,
+	PlayerDisconnect,
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,
@@ -913,5 +894,4 @@ export default {
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
 	getRatingDataForGamePlayers,
-	setConclusion,
 };

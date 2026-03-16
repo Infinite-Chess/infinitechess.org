@@ -17,20 +17,27 @@ import WebSocket from 'ws';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
+import {
+	doesVariantSupportServerValidation,
+	isGameInstantlyDeleted,
+} from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import socketUtility from '../../socket/socketUtility.js';
+import liveGameValues from './liveGameValues.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { executeSafely_async } from '../../utility/errorGuard.js';
+import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	incrementActiveGameCount,
 	decrementActiveGameCount,
@@ -46,7 +53,7 @@ import {
 	cancelAutoAFKResignTimer,
 	startDisconnectTimer,
 	cancelDisconnectTimers,
-	getDisconnectionForgivenessDuration,
+	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
 } from './afkdisconnect.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -59,13 +66,6 @@ import {
  * be unique across the games table, and all other live games.
  */
 const activeGames: Record<number, ServerGame> = {};
-
-/**
- * The cushion time, before the game is deleted, if one player
- * has disconnected and has not yet seen the game conclusion.
- * This gives them a little bit of time to reconnect and see the results.
- */
-const timeBeforeGameDeletionMillis = 1000 * 8; // Default: 15
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -131,6 +131,9 @@ function createGame(
 
 	addGameToActiveGames(servergame);
 
+	// Persist the new game to the database for restoration after server restart.
+	liveGameValues.onGameCreated(servergame);
+
 	console.log('Starting new game:');
 	gameutility.printGame(servergame);
 	printActiveGameCount();
@@ -176,6 +179,34 @@ function isMemberInSomeActiveGame(username: string): boolean {
 }
 
 /**
+ * Starts the 5-second cushion timer for a player who disconnected not by their own choice
+ * (network interruption). After the cushion elapses, if they have not yet reconnected,
+ * the full disconnect auto-resign timer is started.
+ * Also persists the cushion state to the database.
+ * @param servergame - The game
+ * @param color - The player who disconnected
+ */
+function startDisconnectCushionTimerAndPersist(servergame: ServerGame, color: Player): void {
+	servergame.match.playerData[color]!.disconnect.startID = setTimeout(
+		() => startDisconnectTimerAndPersist(servergame, color, true),
+		timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
+	);
+	servergame.match.playerData[color]!.disconnect.startTime =
+		Date.now() + timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis;
+	liveGameValues.onPlayerDisconnected(servergame, color);
+}
+
+/** Starts the auto-resign disconnect timer and immediately persists the new disconnect state to the database. */
+function startDisconnectTimerAndPersist(
+	servergame: ServerGame,
+	color: Player,
+	closureNotByChoice: boolean,
+): void {
+	startDisconnectTimer(servergame, color, closureNotByChoice, onPlayerLostByDisconnect);
+	liveGameValues.onPlayerDisconnected(servergame, color);
+}
+
+/**
  * Unsubscribes a websocket from the game their connected to after a socket closure.
  * Detaches their socket from the game, updates their metadata.subscriptions.
  * @param ws - Their websocket.
@@ -203,15 +234,10 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
 		console.log('Waiting 5 seconds before starting disconnection timer.');
-		const forgivenessDurationMillis = getDisconnectionForgivenessDuration();
-		servergame.match.playerData[color]!.disconnect.startID = setTimeout(
-			() =>
-				startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect),
-			forgivenessDurationMillis,
-		);
+		startDisconnectCushionTimerAndPersist(servergame, color);
 	} else {
 		// Closed tab manually. Immediately start auto-resign timer.
-		startDisconnectTimer(servergame, color, unsubNotByChoice, onPlayerLostByDisconnect);
+		startDisconnectTimerAndPersist(servergame, color, unsubNotByChoice);
 	}
 }
 
@@ -326,14 +352,16 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
  */
 function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
 	const dontDecrementActiveGames = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
-	gameutility.setConclusion(servergame.basegame, conclusion);
+	gamefileutility.setConclusion(servergame.basegame, conclusion);
 	if (conclusion !== undefined) onGameConclusion(servergame, { dontDecrementActiveGames });
 }
 
 /**
  * Fire whenever a game's `gameConclusion` property is set.
  * Stops the game clock, cancels all running timers, closes any draw
- * offer, sets a timer to delete the game and updates players' ELOs.
+ * offer, then either deletes the game immediately (if the server validated
+ * moves) or sets a short timer to give the losing client time to oppose the
+ * conclusion if they want.
  * @param servergame - The game object representing the current game.
  * @param [options] - Optional parameters.
  * @param [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
@@ -365,13 +393,28 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	// The ending time of the game is set, if it is undefined
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
 
-	// Set a 5-second timer to delete it and change elos,
-	// to give the other client time to oppose the conclusion if they want.
-	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just ocurred.
-	servergame.match.deleteTimeoutID = setTimeout(
-		() => deleteGame(servergame),
-		timeBeforeGameDeletionMillis,
-	);
+	// Persist the game conclusion to the database before potentially deleting.
+	liveGameValues.onGameConcluded(servergame);
+
+	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
+	if (
+		isGameInstantlyDeleted(
+			servergame.basegame.metadata,
+			servergame.match.publicity === 'private',
+		)
+	) {
+		// Server validated every move — cheating is impossible,
+		// OR we disallow cheat reports (private game).
+		// We can log and unsubscribe clients immediately.
+		deleteGame(servergame);
+	} else {
+		// No server-side validation (e.g. large variant, or pasted position).
+		// Give the opponent time to oppose the conclusion.
+		servergame.match.deleteTimeoutID = setTimeout(
+			() => deleteGame(servergame),
+			timeBeforeGameDeletionMillis,
+		);
+	}
 }
 
 /**
@@ -453,6 +496,9 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
 
+	// Remove the live game from the persistence database.
+	liveGameValues.onGameDeleted(servergame.match.id);
+
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.
 	if (servergame.match.positionPasted) console.log('Skipping logging custom game.');
@@ -494,24 +540,145 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	console.log(`Deleted game ${servergame.match.id}.`);
 }
 
+// Shutdown Preparation & Startup Restoration ------------------------------------------------
+
 /**
  * Call when server's about to restart.
- * Aborts all active games, sends the conclusions to the players.
- * Immediately logs all games and updates statistics.
+ * Stop all runtime timers and close sockets gracefully.
+ * The games will be restored from the database on the next startup.
+ * Their state is already stored inside live_games and live_game_players tables.
  */
-async function logAllGames(): Promise<void> {
+function prepGamesForShutdown(): void {
 	for (const gameID in activeGames) {
 		const servergame = activeGames[gameID]!;
-		if (!gameutility.isGameOver(servergame.basegame)) {
-			// Abort the game
-			setGameConclusion(servergame, { condition: 'aborted' });
-			// Report conclusion to players
-			gameutility.broadcastGameUpdate(servergame);
+
+		// Cancel all runtime timers
+		clearTimeout(servergame.match.autoTimeLossTimeoutID);
+		cancelAutoAFKResignTimer(servergame);
+		cancelDisconnectTimers(servergame.match);
+		gameutility.cancelDeleteGameTimer(servergame.match);
+
+		// Unsubscribe all sockets (we will resub them when they reconnect)
+		for (const data of Object.values(servergame.match.playerData)) {
+			if (!data.socket) continue;
+			gameutility.unsubClientFromGame(servergame.match, data.socket);
 		}
-		// Immediately log the game and update statistics.
-		gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case it's already scheduled to be deleted.
-		await deleteGame(servergame);
+
+		delete activeGames[gameID];
 	}
+}
+
+/**
+ * Restores all live games from the database on server startup.
+ * Should be called after initDatabase() and before accepting client connections.
+ */
+function restoreLiveGames(): void {
+	const restoredGames = restoreAllLiveGames();
+
+	for (const { servergame, pendingTimers } of restoredGames) {
+		// Add the game to the active games list
+		addGameToActiveGames(servergame);
+
+		// Register players in the active players list
+		for (const data of Object.values(servergame.match.playerData)) {
+			addUserToActiveGames(data.identifier, servergame.match.id);
+		}
+
+		// Start timers
+
+		// 1. Delete timer (for concluded games)
+		if (pendingTimers.deleteTimerMs !== undefined) {
+			if (pendingTimers.deleteTimerMs <= 0) {
+				// Timer already expired, delete immediately
+				deleteGame(servergame);
+				continue; // Skip to next game since this one is being deleted
+			}
+			servergame.match.deleteTimeoutID = setTimeout(
+				() => deleteGame(servergame),
+				pendingTimers.deleteTimerMs,
+			);
+		}
+
+		// Skip remaining timers for concluded games
+		if (gameutility.isGameOver(servergame.basegame)) continue;
+
+		// 2. Auto time loss timer (for timed games)
+		if (pendingTimers.autoTimeLossMs !== undefined) {
+			if (pendingTimers.autoTimeLossMs <= 0) {
+				// Clock already expired during downtime
+				onPlayerLostOnTime(servergame);
+				continue;
+			}
+			servergame.match.autoTimeLossTimeoutID = setTimeout(
+				() => onPlayerLostOnTime(servergame),
+				pendingTimers.autoTimeLossMs,
+			);
+		}
+
+		// 3. AFK resign timer
+		if (pendingTimers.afkResignTimerMs !== undefined) {
+			const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn!);
+			if (pendingTimers.afkResignTimerMs <= 0) {
+				// AFK timer already expired during downtime
+				onPlayerLostByAbandonment(servergame, opponentColor);
+				continue;
+			}
+			servergame.match.autoAFKResignTimeoutID = setTimeout(
+				() => onPlayerLostByAbandonment(servergame, opponentColor),
+				pendingTimers.afkResignTimerMs,
+			);
+		}
+
+		// 4. Per-player disconnect timers
+		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
+			const player = Number(playerStr) as Player;
+			const opponentColor = typeutil.invertPlayer(player);
+
+			if (timerState.type === 'timer') {
+				// Disconnect auto-resign timer was active
+				if (timerState.remainingMs <= 0) {
+					// Timer already expired, immediately resign
+					onPlayerLostByDisconnect(servergame, opponentColor);
+					break; // Game is over
+				}
+				// Revive the timer for the remaining duration exactly.
+				// No sockets are connected yet at startup, so skip the opponent notification.
+				const playerdata = servergame.match.playerData[player]!;
+				playerdata.disconnect.startTime = undefined;
+				playerdata.disconnect.timeoutID = setTimeout(
+					() => onPlayerLostByDisconnect(servergame, opponentColor),
+					timerState.remainingMs,
+				);
+				playerdata.disconnect.timeToAutoLoss = Date.now() + timerState.remainingMs;
+				playerdata.disconnect.wasByChoice = timerState.byChoice;
+			} else if (timerState.type === 'cushion') {
+				// Still in the 5-second cushion period
+				if (timerState.remainingMs <= 0) {
+					// Cushion has elapsed, start the disconnect timer immediately and persist that state.
+					startDisconnectTimerAndPersist(servergame, player, !timerState.byChoice);
+				} else {
+					// Revive the cushion timer for the remaining duration
+					servergame.match.playerData[player]!.disconnect.startID = setTimeout(
+						() =>
+							startDisconnectTimerAndPersist(
+								servergame,
+								player,
+								!timerState.byChoice,
+							),
+						timerState.remainingMs,
+					);
+					servergame.match.playerData[player]!.disconnect.startTime =
+						Date.now() + timerState.remainingMs;
+				}
+			} else {
+				// Fresh: was connected before restart, now disconnected due to server restart.
+				// Give them the same 5-second cushion as a normal internet interruption.
+				startDisconnectCushionTimerAndPersist(servergame, player);
+			}
+		}
+	}
+
+	if (restoredGames.length > 0) printActiveGameCount();
 }
 
 /**
@@ -544,11 +711,13 @@ export {
 	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
 	onPlayerLostByAbandonment,
-	broadCastGameRestarting,
-	logAllGames,
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,
 	setGameConclusion,
 	pushGameClock,
 	getGameByID,
+	// Shutdown Preparation & Startup Restoration
+	prepGamesForShutdown,
+	restoreLiveGames,
+	broadCastGameRestarting,
 };
