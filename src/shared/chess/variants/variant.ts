@@ -691,21 +691,6 @@ function getBareMinimumGameRules(): GameRules {
 	return getGameRules({ promotionRanks: null, moveRule: null }); // Erase the defaults to end up with only the required's
 }
 
-// /**
-//  * Returns the turnOrder of the provided variant at the date (if specified).
-//  */
-// function getVariantTurnOrder({ Variant, UTCDate = timeutil.getCurrentUTCDate(), UTCTime = timeutil.getCurrentUTCTime() }: {
-// 	Variant: string,
-// 	UTCDate: string,
-// 	UTCTime: string
-// }): GameRules['turnOrder'] {
-
-// 	const gameruleModifications = getVariantGameRuleModifications({ Variant, UTCDate, UTCTime });
-// 	// If the gamerule modifications have a turnOrder modification, return that,
-// 	// otherwise return the default instead.
-// 	return gameruleModifications.turnOrder || defaultTurnOrder;
-// }
-
 /**
  * Accepts a time-variant property and a timestamp, returns the value that should be used for that point in time.
  * @param object - A time-variant property (positionString, gameruleModifications, etc.)
