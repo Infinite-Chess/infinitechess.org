@@ -46,16 +46,6 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves }, validateMoves);
 }
 
-function convertVariantFromSpokenLanguageToCode(Variant?: string): string | undefined {
-	// Iterate through all translations until we find one that matches this name
-	for (const [code, value] of Object.entries(translations)) {
-		if (value === Variant) return code;
-	}
-	// Else the variant is probably already the code!
-	return Variant;
-}
-
 export default {
 	formulateGame,
-	convertVariantFromSpokenLanguageToCode,
 };

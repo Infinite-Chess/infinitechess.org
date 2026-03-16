@@ -882,6 +882,23 @@ function getVariantName(variantKey: string): string {
 	return variantKey;
 }
 
+/**
+ * Converts an English variant name (as stored in the variant dictionary) back to its internal code.
+ * If no dictionary entry matches by name, but the input is already a valid variant code, that code is returned
+ * (for backwards compatibility with ICN files that stored the code directly).
+ * @throws If the variant is unrecognized.
+ */
+function getVariantCodeFromEnglishName(name: string): string {
+	// Fallback: the string is already a valid variant code
+	if (variantDictionary[name] !== undefined) return name;
+	// Search the dictionary for a matching name
+	for (const [code, entry] of Object.entries(variantDictionary)) {
+		if (entry.name === name) return code;
+	}
+	// Throw on no match found
+	throw new Error(`Cannot get code of unrecognized variant: "${name}"`);
+}
+
 // Exports ------------------------------------------------------------------
 
 export default {
@@ -898,4 +915,5 @@ export default {
 	getVariantWorldBorder,
 	getVariantPositionString,
 	getVariantName,
+	getVariantCodeFromEnglishName,
 };

@@ -57,7 +57,6 @@ import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
-import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
@@ -450,11 +449,21 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
-	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	if (longformOut.metadata.Variant)
-		longformOut.metadata.Variant =
-			gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) ||
-			longformOut.metadata.Variant;
+	// Convert the English variant name from the ICN back to the internal variant code
+	if (longformOut.metadata.Variant) {
+		try {
+			longformOut.metadata.Variant = variant.getVariantCodeFromEnglishName(
+				longformOut.metadata.Variant,
+			);
+		} catch {
+			// Invalid Variant: Treat as if no variant was specified
+			if (longformOut.position === undefined)
+				console.warn(
+					`Variant "${longformOut.metadata.Variant}" not recognized. Pasted position will be empty.`,
+				);
+			delete longformOut.metadata.Variant;
+		}
+	}
 
 	let { position, specialRights } =
 		pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
