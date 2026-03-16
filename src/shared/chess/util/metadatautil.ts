@@ -67,13 +67,18 @@ type MetadataKey = keyof MetaData;
 
 /** Per-player inputs for {@link buildGameMetadata}. */
 interface PlayerMetaInput {
-	/** Display name — the player's username, or `'(Guest)'` for unauthenticated players. */
+	/** Display name — the player's username, or {@link GUEST_NAME_ICN_METADATA} for unauthenticated players. */
 	name: string;
 	/** User ID, present only for signed-in players. */
 	id?: number;
 	/** Already-formatted elo string (e.g. `'1434'` or `'1500?'`), present only for signed-in players. */
 	elo?: string;
 }
+
+// Constants -----------------------------------------------------------------------
+
+/** Canonical display name used for guest players in ICN metadata. */
+const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
 
 // Functions -----------------------------------------------------------------------
 
@@ -213,6 +218,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 }
 
 export default {
+	GUEST_NAME_ICN_METADATA,
 	resolveTimestampFromMetadata,
 	buildGameMetadata,
 	copyMetadataField,

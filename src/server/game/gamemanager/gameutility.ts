@@ -432,14 +432,14 @@ function constructMetadataOfGame(
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
 	const whiteIdentity = {
-		name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
+		name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 		id: white.signedIn ? white.user_id : undefined,
 		elo: playerdata[p.WHITE]?.rating
 			? metadatautil.getFormattedElo(playerdata[p.WHITE]!.rating!)
 			: undefined,
 	};
 	const blackIdentity = {
-		name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
+		name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 		id: black.signedIn ? black.user_id : undefined,
 		elo: playerdata[p.BLACK]?.rating
 			? metadatautil.getFormattedElo(playerdata[p.BLACK]!.rating!)

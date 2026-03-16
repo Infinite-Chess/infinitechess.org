@@ -14,6 +14,7 @@ import type { ServerUsernameContainer } from '../../../shared/types.js';
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { variantCodes } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
@@ -175,7 +176,7 @@ function getInviteFromWebsocketMessageContents(
 
 	const usernamecontainer: ServerUsernameContainer = {
 		type: owner.signedIn ? 'player' : 'guest',
-		username: owner.signedIn ? owner.username : '(Guest)',
+		username: owner.signedIn ? owner.username : metadatautil.GUEST_NAME_ICN_METADATA,
 		rating,
 	};
 

@@ -266,12 +266,12 @@ function reconstructMetadata(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		{
-			name: white.signedIn ? white.username : 'Guest', // Protect browser's browser-id cookie
+			name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 			id: white.signedIn ? white.user_id : undefined,
 			elo: whiteRow.elo ?? undefined,
 		},
 		{
-			name: black.signedIn ? black.username : 'Guest', // Protect browser's browser-id cookie
+			name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 			id: black.signedIn ? black.user_id : undefined,
 			elo: blackRow.elo ?? undefined,
 		},
