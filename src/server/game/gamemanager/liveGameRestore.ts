@@ -18,7 +18,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadatautil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
 import type {
@@ -29,8 +29,8 @@ import type {
 
 import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
-import metadata from '../../../shared/chess/util/metadata.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
@@ -260,7 +260,7 @@ function reconstructMetadata(
 	const whiteRow = playerRows.find((r) => r.player_number === p.WHITE)!;
 	const blackRow = playerRows.find((r) => r.player_number === p.BLACK)!;
 
-	return metadata.buildGameMetadata(
+	return metadatautil.buildGameMetadata(
 		Boolean(gameRow.rated),
 		gameRow.variant as VariantCode,
 		gameRow.clock as TimeControl,

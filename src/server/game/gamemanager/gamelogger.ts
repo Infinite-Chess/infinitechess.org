@@ -11,8 +11,8 @@ import type { RatingData } from './ratingcalculation.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
-import metadata from '../../../shared/chess/util/metadata.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import { PlayerGroup, Player, players } from '../../../shared/chess/util/typeutil.js';
@@ -87,10 +87,10 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 	// Immediately stamp the rating diffs onto the game's metadata so that
 	// they're present for ICN generation and any other downstream use.
 	if (ratingData !== undefined) {
-		servergame.basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
+		servergame.basegame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 			ratingData[players.WHITE]!.elo_change_from_game!,
 		);
-		servergame.basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
+		servergame.basegame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 			ratingData[players.BLACK]!.elo_change_from_game!,
 		);
 	}

@@ -6,13 +6,13 @@
  */
 
 import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
-import metadata from '../../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -443,10 +443,10 @@ function addRatingChangeToExistingUsernameContainers(
 ): void {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
-	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
+	basegame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.WHITE]!.change,
 	);
-	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
+	basegame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.BLACK]!.change,
 	);
 

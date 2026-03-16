@@ -5,7 +5,7 @@
  * the sidebar menu toggle, and dispatching action button events.
  */
 
-import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
 
 import timeutil from '../../../../../../shared/util/timeutil.js';
 

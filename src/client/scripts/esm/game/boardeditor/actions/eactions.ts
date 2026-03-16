@@ -15,7 +15,7 @@
  */
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { MetaData } from '../../../../../../shared/chess/util/metadata';
+import type { MetaData } from '../../../../../../shared/chess/util/metadatautil';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
@@ -25,9 +25,9 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
-import metadata from '../../../../../../shared/chess/util/metadata';
 import timeutil from '../../../../../../shared/util/timeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import metadatautil from '../../../../../../shared/chess/util/metadatautil';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
@@ -462,7 +462,7 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
-	const timestamp = metadata.resolveTimestampFromMetadata(
+	const timestamp = metadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);

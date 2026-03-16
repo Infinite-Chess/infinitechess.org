@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { format, formatDistance } from 'date-fns';
 
 import timeutil from '../../shared/util/timeutil.js';
-import metadata from '../../shared/chess/util/metadata.js';
+import metadatautil from '../../shared/chess/util/metadatautil.js';
 import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
 
 import { localeMap } from '../config/dateLocales.js';
@@ -100,7 +100,7 @@ const getMemberData = async (req: Request, res: Response): Promise<Response> => 
 		joined: joinedPhrase,
 		seen: seenPhrase,
 		checkmates_beaten: record.checkmates_beaten,
-		ranked_elo: metadata.getFormattedElo(ranked_elo),
+		ranked_elo: metadatautil.getFormattedElo(ranked_elo),
 		infinity_leaderboard_position,
 		infinity_leaderboard_rating_deviation,
 	};

@@ -1,6 +1,6 @@
 // src/shared/chess/util/clockutil.ts
 
-import type { TimeControl } from './metadata';
+import type { TimeControl } from './metadatautil';
 
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);

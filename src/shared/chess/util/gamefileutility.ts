@@ -11,9 +11,9 @@ import type { Game, Board, FullGame, GameConclusion } from '../logic/gamefile.js
 
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
-import metadata from './metadata.js';
 import gamerules from '../variants/gamerules.js';
 import winconutil from './winconutil.js';
+import metadatautil from './metadatautil.js';
 import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 
 // Methods -------------------------------------------------------------
@@ -52,7 +52,7 @@ function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): 
 			basegame.gameRules,
 			conclusion.condition,
 		);
-		basegame.metadata.Result = metadata.getResultFromVictor(conclusion.victor);
+		basegame.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
 	} else {
 		delete basegame.metadata.Result;
 		delete basegame.metadata.Termination;

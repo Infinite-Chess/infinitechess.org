@@ -12,7 +12,7 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
 import type { ValidEngine } from './engines/engine.js';
@@ -30,7 +30,7 @@ import type {
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import metadatautil from '../../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 

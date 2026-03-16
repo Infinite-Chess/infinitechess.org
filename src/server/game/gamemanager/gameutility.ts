@@ -14,12 +14,12 @@ import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData, TimeControl } from '../../../shared/chess/util/metadata.js';
+import type { MetaData, TimeControl } from '../../../shared/chess/util/metadatautil.js';
 import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import metadata from '../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { VariantCode } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
@@ -435,17 +435,17 @@ function constructMetadataOfGame(
 		name: white.signedIn ? white.username : '(Guest)', // Protect browser's browser-id cookie
 		id: white.signedIn ? white.user_id : undefined,
 		elo: playerdata[p.WHITE]?.rating
-			? metadata.getFormattedElo(playerdata[p.WHITE]!.rating!)
+			? metadatautil.getFormattedElo(playerdata[p.WHITE]!.rating!)
 			: undefined,
 	};
 	const blackIdentity = {
 		name: black.signedIn ? black.username : '(Guest)', // Protect browser's browser-id cookie
 		id: black.signedIn ? black.user_id : undefined,
 		elo: playerdata[p.BLACK]?.rating
-			? metadata.getFormattedElo(playerdata[p.BLACK]!.rating!)
+			? metadatautil.getFormattedElo(playerdata[p.BLACK]!.rating!)
 			: undefined,
 	};
-	return metadata.buildGameMetadata(
+	return metadatautil.buildGameMetadata(
 		rated,
 		variantKey,
 		clock,

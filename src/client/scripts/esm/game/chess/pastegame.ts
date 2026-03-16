@@ -8,13 +8,13 @@ import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
+import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
-import metadata from '../../../../../shared/chess/util/metadata.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
@@ -130,18 +130,18 @@ function pasteGame(longformOut: LongFormatOut): void {
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined)
-			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			metadatautil.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	});
 
 	for (const metadataName of retainIfNotOverridden) {
 		if (currentGameMetadata[metadataName] && !longformOut.metadata[metadataName])
-			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			metadatautil.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
 	}
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
-	const timestamp = metadata.resolveTimestampFromMetadata(
+	const timestamp = metadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);

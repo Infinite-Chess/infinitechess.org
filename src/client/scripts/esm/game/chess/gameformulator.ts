@@ -10,7 +10,7 @@ import type { _Move_In, LongFormatIn } from '../../../../../shared/chess/logic/i
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import metadatautil from '../../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 
 import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 

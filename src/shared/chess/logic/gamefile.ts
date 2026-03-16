@@ -1,6 +1,6 @@
 // src/shared/chess/logic/gamefile.ts
 
-import type { MetaData } from '../util/metadata.js';
+import type { MetaData } from '../util/metadatautil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../variants/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';

@@ -2,7 +2,7 @@
 
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
@@ -16,7 +16,7 @@ import type {
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import metadata from '../../../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
@@ -225,9 +225,13 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 	// Display elo ratings, if any.
 	const playerRatings: PlayerGroup<Rating> = {};
 	if (parsedGame.metadata.WhiteElo)
-		playerRatings[p.WHITE] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.WhiteElo);
+		playerRatings[p.WHITE] = metadatautil.getRatingFromWhiteBlackElo(
+			parsedGame.metadata.WhiteElo,
+		);
 	if (parsedGame.metadata.BlackElo)
-		playerRatings[p.BLACK] = metadata.getRatingFromWhiteBlackElo(parsedGame.metadata.BlackElo);
+		playerRatings[p.BLACK] = metadatautil.getRatingFromWhiteBlackElo(
+			parsedGame.metadata.BlackElo,
+		);
 
 	// Load the game.
 	gameloader.startOnlineGame({
@@ -238,7 +242,7 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 			playerRatings,
 		},
 		metadata: parsedGame.metadata,
-		gameConclusion: metadata.getGameConclusionFromResultAndTermination(
+		gameConclusion: metadatautil.getGameConclusionFromResultAndTermination(
 			parsedGame.metadata.Result!,
 			message.termination as Condition,
 		),
