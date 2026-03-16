@@ -83,13 +83,13 @@ type Variant = {
 	  }
 	| {
 			/** A function that generates the starting position of the variant, in key format `{ 'x,y':'type' }`. */
-			generator: TimeVariantProperty<{
+			generator: {
 				algorithm: () => Map<CoordsKey, number>;
 				rules: {
 					pawnDoublePush: boolean;
 					castleWith?: RawType;
 				};
-			}>;
+			};
 			positionString?: never;
 	  }
 );
@@ -608,7 +608,7 @@ function getStartingPositionOfVariant(
 	let position: Map<CoordsKey, number>;
 
 	// Does the entry have a `positionString` property, or a `generator` property?
-	if (variantEntry.positionString) {
+	if (variantEntry.positionString !== undefined) {
 		// Does the positionString entry have multiple UTC timestamp position strings? Or just one?
 
 		if (typeof variantEntry.positionString === 'string') {
@@ -621,14 +621,12 @@ function getStartingPositionOfVariant(
 
 		return icnconverter.generatePositionFromShortForm(positionString);
 	} else {
-		const generator = getApplicableTimestampEntry(variantEntry.generator!, timestamp);
-
 		// Generate the starting position
-		position = generator.algorithm();
+		position = variantEntry.generator.algorithm();
 		const specialRights = icnconverter.generateSpecialRights(
 			position,
-			generator.rules.pawnDoublePush,
-			generator.rules.castleWith,
+			variantEntry.generator.rules.pawnDoublePush,
+			variantEntry.generator.rules.castleWith,
 		);
 		return { position, specialRights };
 	}
