@@ -44,6 +44,18 @@ function onReport(
 		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
+	/**
+	 * Cheat reports (move/conclusion oppose) are only accepted in these types of games:
+	 *
+	 * A. Games without server-side move validation (no boardsim)
+	 * AND
+	 * B. Public games
+	 *
+	 * Thus, no time needs to be given to allow both players to oppose the conclusion in private games,
+	 * OR variants that support server-side move validation, thus those games may be deleted instantly.
+	 * Whether a position was pasted or not doesn't matter, as it's a private match anyway.
+	 */
+
 	// If the game performs server-side move validation, cheat reports are not needed.
 	// The server already rejects any illegal moves automatically.
 	if (servergame.boardsim !== undefined) {
@@ -59,6 +71,7 @@ function onReport(
 		return;
 	}
 
+	// Only allow cheat reports in public games
 	if (servergame.match.publicity === 'private') {
 		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');

@@ -12,6 +12,7 @@ import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/ty
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { doesVariantSupportServerValidation } from '../../../../../../shared/chess/variants/servervalidation.js';
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
@@ -397,6 +398,20 @@ function requestRemovalFromPlayersInActiveGames(): void {
 		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
 		return;
 	}
+
+	/**
+	 * Don't send this request if the server deletes the game instantaneously on conclusion.
+	 * This happens in two scenarios:
+	 *
+	 * A. The variant supports server-side move validation.
+	 * OR
+	 * B. It's a private game, where cheat reports are disallowed.
+	 *
+	 * Whether a position was pasted or not doesn't matter,
+	 * as you can only do that in private matches anyway.
+	 */
+	if (doesVariantSupportServerValidation(gameslot.getGamefile()!.basegame.metadata) || isPrivate)
+		return;
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 

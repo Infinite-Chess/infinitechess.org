@@ -394,8 +394,10 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	liveGameValues.onGameConcluded(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (servergame.boardsim !== undefined) {
-		// Server validated every move — cheating is impossible, so we can log and unsubscribe clients immediately.
+	if (servergame.boardsim !== undefined || servergame.match.publicity === 'private') {
+		// Server validated every move — cheating is impossible,
+		// OR we disallow cheat reports (private game).
+		// We can log and unsubscribe clients immediately.
 		deleteGame(servergame);
 	} else {
 		// No server-side validation (e.g. large variant, or pasted position).
