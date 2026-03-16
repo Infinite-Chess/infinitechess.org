@@ -5,9 +5,9 @@
  */
 
 import type { TimeControl } from '../../../../../server/game/timecontrol.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
 import type { InviteOptions } from '../misc/invites.js';
 
+import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
@@ -331,8 +331,11 @@ function callback_createInvite(): void {
 function getInviteOptions(): InviteOptions {
 	const strcolor = element_optionColor.value;
 	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : null;
+	const selectedVariant = element_optionVariant.value;
+	if (!variant.isVariantValid(selectedVariant))
+		throw Error(`Invite option variant "${selectedVariant}" is not a valid variant.`);
 	return {
-		variant: element_optionVariant.value as VariantCode,
+		variant: selectedVariant,
 		clock: element_optionClock.value as TimeControl,
 		color,
 		private: element_optionPrivate.value as 'public' | 'private',
