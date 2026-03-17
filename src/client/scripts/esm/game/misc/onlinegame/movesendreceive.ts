@@ -99,7 +99,7 @@ function handleOpponentsMove(
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
-	performWithUnappliedPremoves(gamefile, mesh, () => {
+	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
@@ -173,32 +173,6 @@ function handleOpponentsMove(
 	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
 	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-}
-
-/**
- * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
- * @param gamefile
- * @param mesh
- * @param callback - A function that returns true if we should attempt to submit our next premove when re-applying them.
- */
-function performWithUnappliedPremoves(
-	gamefile: FullGame,
-	mesh: Mesh | undefined,
-	callback: () => boolean,
-): void {
-	// Rewind all premoves to get the real game state for legality check
-	premoves.rewindPremoves(gamefile, mesh);
-
-	// Returns true if the opponent's move was applied to the game.
-	const result = callback();
-
-	if (result) {
-		// Attempt to submit our next premove, and re-apply the remaining.
-		premoves.onYourMove(gamefile, mesh);
-	} else {
-		// Just re-apply premoves
-		premoves.applyPremoves(gamefile, mesh);
-	}
 }
 
 // Exports -------------------------------------------------------------------
