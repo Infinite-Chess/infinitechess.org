@@ -142,37 +142,22 @@ function synchronizeMovesList(
 	movesequence.viewFront(gamefile, mesh);
 	let aChangeWasMade = false;
 
-	// Rewind moves until we match the number of moves the server has.
+	// Rewind moves until we reach the first move we agree with the server on.
 	// Catches our move if we moved RIGHT after the game ended but we haven't seen the conclusion.
-	while (boardsim.moves.length > moves.length) {
-		// While we have more moves than what the server does.. (usually only happens if we move RIGHT before they resign)
+	let i = boardsim.moves.length - 1;
+	while (true) {
+		// Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
+		if (i === -1) break; // Beginning of game
+		const thisGamefileMove = boardsim.moves[i]!;
+		if (thisGamefileMove.compact === moves[i]?.compact) break; // The moves MATCH
+		// The moves don't match, or this is a move we have that the server doesn't... remove this one off our list.
 		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 		// Terminate all current animations to avoid a crash when undoing moves.
 		// Technically this only needs to be done once if rewinding at all.
 		animation.clearAnimations();
 		movesequence.rewindMove(gamefile, mesh);
-		console.log('Rewound one move while resyncing to online game.');
+		console.log('Rewound one move while resyncing to online basegame.');
 		aChangeWasMade = true;
-	}
-
-	// Rewind moves until we reach the first move we agree with the server on.
-	let i = moves.length - 1;
-	while (true) {
-		// Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
-		if (i === -1) break; // Beginning of game
-		const thisGamefileMove = boardsim.moves[i];
-		if (thisGamefileMove) {
-			// The move is defined
-			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
-			// The moves don't match... remove this one off our list.
-			premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
-			// Terminate all current animations to avoid a crash when undoing moves.
-			// Technically this only needs to be done once if rewinding at all.
-			animation.clearAnimations();
-			movesequence.rewindMove(gamefile, mesh);
-			console.log('Rewound one INCORRECT move while resyncing to online basegame.');
-			aChangeWasMade = true;
-		}
 		i--;
 	}
 
