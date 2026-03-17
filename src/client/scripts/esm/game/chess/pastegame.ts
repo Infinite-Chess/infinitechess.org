@@ -200,7 +200,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
-		variant: VariantCode | undefined;
+		variant: VariantCode | null;
 		dateTimestamp: number;
 		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
@@ -241,7 +241,7 @@ function pasteGame(longformOut: LongFormatOut): void {
  */
 function getPositionAndSpecialRightsFromLongFormat(
 	longFormat: LongFormatOut,
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 ): {
 	position: Map<CoordsKey, number>;
@@ -253,7 +253,7 @@ function getPositionAndSpecialRightsFromLongFormat(
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (variantCode !== undefined) {
+	} else if (variantCode !== null) {
 		// No position specified in the ICN, extract from the variant
 		return variant.getStartingPositionOfVariant(variantCode, timestamp);
 	} else {

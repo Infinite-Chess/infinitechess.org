@@ -51,7 +51,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 
 	const largeGame: boolean =
-		variantCode !== undefined && variantsTooBigToCopyPositionToICN.includes(variantCode);
+		variantCode !== null && variantsTooBigToCopyPositionToICN.includes(variantCode);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {

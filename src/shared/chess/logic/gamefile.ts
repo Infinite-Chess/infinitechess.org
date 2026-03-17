@@ -95,10 +95,10 @@ type Board = {
 	editor: boolean;
 
 	/**
-	 * The variant code. Undefined for custom/pasted positions without a known variant.
-	 * Can be used to infer variant-specific game rules, such as piece movesets.
+	 * The variant code. Null for custom/pasted positions without a known variant.
+	 * Is used to infer variant-specific game rules, such as piece movesets.
 	 */
-	variant?: VariantCode;
+	variant: VariantCode | null;
 
 	/**
 	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
@@ -139,7 +139,7 @@ interface Additional {
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode?: VariantCode,
+	variantCode: VariantCode | null,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
@@ -174,7 +174,7 @@ function initGame(
 /** Creates a new {@link Board} object from provided arguments */
 function initBoard(
 	gameRules: GameRules,
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
@@ -317,7 +317,7 @@ function loadGameWithBoard(
 function initFullGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	additional: Additional = {},
 	validateMoves?: true,
 ): FullGame {

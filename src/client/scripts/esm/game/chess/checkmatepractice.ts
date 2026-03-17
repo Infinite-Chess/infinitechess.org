@@ -109,6 +109,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 	const options = {
 		event: 'Infinite chess checkmate practice',
 		timeControl: '-' as const,
+		variant: null,
 		youAreColor: p.WHITE,
 		currentEngine,
 		engineConfig: {

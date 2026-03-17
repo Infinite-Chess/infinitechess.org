@@ -89,13 +89,13 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or null for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param existingRawTypes
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
 function genSpecialVicinity(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	existingRawTypes: RawType[],
 ): Vicinity {

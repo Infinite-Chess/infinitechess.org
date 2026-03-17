@@ -58,8 +58,8 @@ import { animateMove } from './graphicalchanges.js';
 interface LoadOptions {
 	/** The metadata of the game */
 	metadata: MetaData;
-	/** The variant code. Pass undefined for custom/unknown positions. */
-	variant: VariantCode | undefined;
+	/** The variant code. Pass null for custom/unknown positions. */
+	variant: VariantCode | null;
 	/** The game's start timestamp in milliseconds since epoch. */
 	dateTimestamp: number;
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */

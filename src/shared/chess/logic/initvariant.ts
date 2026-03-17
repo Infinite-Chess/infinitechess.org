@@ -39,30 +39,30 @@ interface VariantOptions {
 /**
  * Returns the game rules for the variant.
  * If variant options are provided, their embedded gameRules are used directly.
- * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or null for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [options] - Variant options that override the default variant gamerules.
  */
 function getVariantGamerules(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	options?: VariantOptions,
 ): GameRules {
 	// Ignores the variant code, and just uses the specified gameRules
 	if (options) return options.gameRules;
 	// Default (built-in variant, not pasted)
-	if (variantCode === undefined) return variant.getBareMinimumGameRules();
+	if (variantCode === null) return variant.getBareMinimumGameRules();
 	return variant.getGameRulesOfVariant(variantCode, timestamp);
 }
 
 /**
  * Returns the piece movesets and special moves for the variant.
- * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or null for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [slideLimit] - Overrides the slideLimit gamerule of the variant, if specified.
  */
 function getPieceMovesets(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	slideLimit?: bigint,
 ): {
@@ -79,13 +79,13 @@ function getPieceMovesets(
 
 /**
  * Fills in any holes in the provided variant options with the variant defaults.
- * @param variantCode - The variant code, or undefined for custom/pasted positions.
+ * @param variantCode - The variant code, or null for custom/pasted positions.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param [variantOptions] - The variant options. If position is not specified, the variant code must be provided.
  */
 function getVariantVariantOptions(
 	gamerules: GameRules,
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	variantOptions?: VariantOptions,
 ): {
@@ -113,7 +113,7 @@ function getVariantVariantOptions(
 		)
 			throw Error('If moveRule is specified, moveRuleState must also be specified.');
 		moveRuleState = variantOptions.state_global.moveRuleState;
-	} else if (variantCode !== undefined) {
+	} else if (variantCode !== null) {
 		({ position, specialRights } = variant.getStartingPositionOfVariant(
 			variantCode,
 			timestamp,
@@ -134,54 +134,6 @@ function getVariantVariantOptions(
 		fullMove,
 	};
 }
-
-// function setupCOAIP(gamefile) {
-
-//     // const piecesByKey = getPositionOfCoaip()
-
-//     // Performance statistics (ON NAVIARY'S MACHINE) when drastically increasing the piece count in the game:
-//     // 1. Recalculating the piece models every frame:       *Phone lags after rendering 6,000 pieces. *Computer lags after 20,000
-//     // 2. Recalculating the piece models only when needed:  *Phone lags after 400,000 pieces.         *Computer after 3.2 million
-//     // This is great! This means the rendering method is very efficient. This will help make games with infinite pieces possible.
-
-//     // A perspective view range of 1000 in each direction (4000x4000 maximum render range box)
-//     // means at most, when a queen is selected, 8,000 squares are rendered (orthogonals are both 1 quad),
-//     // which is only 3% of our PHONE CPU limit!!!!!! BUT the highlighted squares buffer models are now 3D..
-
-//     // Uncomment the following to drastically lengthen the pawn frontlines (for testing purposes)
-//     // Dev release
-//     // const count = 25_000; // 81 Seconds
-//     // const count = 20_000; // 39 Seconds
-//     // const count = 15_000; // 20 Seconds
-//     // const count = 10_000; // 8.4 Seconds   ~50,000 piece game
-//     // const count = 5_000; // 2 Seconds
-//     // const count = 2_000; // 2 Seconds
-
-//     // Last release
-//     // const count = 500; // 17- Seconds
-//     // // const count = 300; // 5 Seconds   ~1500 piece game
-
-//     // const count = 250000; // 5 Seconds   ~1500 piece game
-//     // for (let i = 12; i <= count; i++) {
-//     //     let key = coordutil.getKeyFromCoords([i, 2])
-//     //     piecesByKey[key] = 'pawnsW';
-//     //     key = coordutil.getKeyFromCoords([i, 7])
-//     //     piecesByKey[key] = 'pawnsB';
-//     // }
-//     // for (let i = -3; i >= -count; i--) {
-//     //     let key = coordutil.getKeyFromCoords([i, 2])
-//     //     piecesByKey[key] = 'pawnsW';
-//     //     key = coordutil.getKeyFromCoords([i, 7])
-//     //     piecesByKey[key] = 'pawnsB';
-//     // }
-
-//     // const piecesByType = organizedlines.buildStateFromKeyList(piecesByKey)
-
-//     // gamefile.position = piecesByType;
-
-//     gamefile.gameRules = getGameRulesOfVariant(gamefile.variant)
-//     initPieceMovesets(gamefile.gameRules)
-// }
 
 export type { VariantOptions };
 

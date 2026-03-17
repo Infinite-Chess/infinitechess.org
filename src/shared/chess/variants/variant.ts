@@ -550,10 +550,10 @@ function isVariantValid(variantName: string | undefined): variantName is Variant
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
  * Warns if the variant is not recognized.
  * @param variantName - The variant string from metadata (may be an English name, code, or undefined).
- * @returns The corresponding {@link VariantCode}, or `undefined` if the input is not recognized.
+ * @returns The corresponding {@link VariantCode}, or `null` if the input is not recognized.
  */
-function resolveVariantCode(variantName: string | undefined): VariantCode | undefined {
-	if (variantName === undefined) return;
+function resolveVariantCode(variantName: string | undefined): VariantCode | null {
+	if (variantName === undefined) return null;
 	// Direct code match
 	if (variantName in variantDictionary) return variantName as VariantCode;
 	// Search by English display name
@@ -564,7 +564,7 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
 		if (variantEntry.name === variantName) return code;
 	}
 	console.warn(`Variant "${variantName}" is not recognized. Treating as no variant.`);
-	return;
+	return null;
 }
 
 /**
@@ -572,14 +572,12 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
  * English display name (if recognized), or deletes it (if not recognized), then returns the
  * resolved {@link VariantCode}.
  * @param metadata - The metadata of the game with the optional `Variant` property. MUST BE A DIRECT REFERENCE (not a copy)
- * @returns The resolved {@link VariantCode}, or `undefined` if no valid variant was found.
+ * @returns The resolved {@link VariantCode}, or `null` if no valid variant was found.
  */
-function resolveAndNormalizeVariantInMetadata(metadata: {
-	Variant?: string;
-}): VariantCode | undefined {
-	if (!metadata.Variant) return undefined;
+function resolveAndNormalizeVariantInMetadata(metadata: { Variant?: string }): VariantCode | null {
+	if (!metadata.Variant) return null;
 	const resolved = resolveVariantCode(metadata.Variant);
-	if (resolved !== undefined) {
+	if (resolved !== null) {
 		// Normalize to English display name
 		metadata.Variant = variantDictionary[resolved].name;
 	} else {
@@ -721,18 +719,18 @@ function getApplicableTimestampEntry<Inner>(
 
 /**
  * Gets the piece movesets for the given variant and timestamp.
- * @param variantCode - The variant code, or undefined for pasted games with no variant specified.
+ * @param variantCode - The variant code, or null for pasted games with no variant specified.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param slideLimit - If provided, overrides the slideLimit gamerule of the variant. Only meaningful for variants without a movesetGenerator (i.e. those that use default movesets), because custom movesets define their own slide ranges explicitly and don't inherit a global slide limit.
  * @returns The pieceMovesets property of the gamefile.
  */
 function getMovesetsOfVariant(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	slideLimit?: bigint,
 ): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
-	if (variantCode === undefined) return getMovesets(undefined, slideLimit);
+	if (variantCode === null) return getMovesets(undefined, slideLimit);
 	const variantEntry = variantDictionary[variantCode];
 
 	let movesetModifications: Movesets;
@@ -780,12 +778,12 @@ function getMovesets(
 
 /** Returns the special moves for the given variant at the specified timestamp. */
 function getSpecialMovesOfVariant(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 ): RawTypeGroup<SpecialMoveFunction> {
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
-	if (variantCode === undefined) return defaultSpecialMoves;
+	if (variantCode === null) return defaultSpecialMoves;
 	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
@@ -797,12 +795,12 @@ function getSpecialMovesOfVariant(
 
 /** Returns the special vicinity for the given variant at the specified timestamp. */
 function getSpecialVicinityOfVariant(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 ): SpecialVicinity {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
-	if (variantCode === undefined) return defaultSpecialVicinityByPiece;
+	if (variantCode === null) return defaultSpecialVicinityByPiece;
 	const variantEntry = variantDictionary[variantCode];
 
 	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
@@ -813,22 +811,22 @@ function getSpecialVicinityOfVariant(
 }
 
 /** Returns the preset square annotations for the given variant, if they have any. */
-function getSquarePresets(variantCode: VariantCode | undefined): Coords[] {
-	if (variantCode === undefined) return [];
+function getSquarePresets(variantCode: VariantCode | null): Coords[] {
+	if (variantCode === null) return [];
 	const square_presets = variantDictionary[variantCode].annotePresets?.squares;
 	return square_presets ? icnconverter.parsePresetSquares(square_presets) : [];
 }
 
 /** Returns the preset ray annotations for the given variant, if they have any. */
-function getRayPresets(variantCode: VariantCode | undefined): BaseRay[] {
-	if (variantCode === undefined) return [];
+function getRayPresets(variantCode: VariantCode | null): BaseRay[] {
+	if (variantCode === null) return [];
 	const ray_presets = variantDictionary[variantCode].annotePresets?.rays;
 	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
-function getVariantWorldBorder(variantCode: VariantCode | undefined): bigint | undefined {
-	if (variantCode === undefined) return undefined;
+function getVariantWorldBorder(variantCode: VariantCode | null): bigint | undefined {
+	if (variantCode === null) return undefined;
 	return variantDictionary[variantCode].worldBorderDist;
 }
 

@@ -32,10 +32,10 @@ const POSITION_STRING_THRESHOLD = 2500;
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function doesVariantSupportServerValidation(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 ): boolean {
-	if (variantCode === undefined) return false;
+	if (variantCode === null) return false;
 	const positionString = variant.getVariantPositionString(variantCode, timestamp);
 	if (positionString === undefined) return false; // Generator-based variant
 	return positionString.length <= POSITION_STRING_THRESHOLD;
@@ -53,7 +53,7 @@ function doesVariantSupportServerValidation(
  * @param isPrivate - Whether the game is a private match.
  */
 function isGameInstantlyDeleted(
-	variantCode: VariantCode | undefined,
+	variantCode: VariantCode | null,
 	timestamp: number,
 	isPrivate: boolean,
 ): boolean {
