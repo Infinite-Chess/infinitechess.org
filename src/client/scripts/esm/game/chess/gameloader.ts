@@ -29,7 +29,6 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -48,6 +47,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import clientmetadatautil from './clientmetadatautil.js';
 import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
 // Variables --------------------------------------------------------------------
@@ -137,7 +137,7 @@ async function startLocalGame(options: {
 
 	const variantName = variant.getVariantName(options.variant);
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		`Casual local ${variantName} infinite chess game`,
 		options.timeControl,
 		dateTimestamp,
@@ -194,7 +194,7 @@ async function startOnlineGame(options: {
 	};
 
 	const resolvedVariant = variant.resolveVariantCode(options.metadata.Variant);
-	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
+	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		options.metadata.UTCDate,
 		options.metadata.UTCTime,
 	);
@@ -265,7 +265,7 @@ async function startEngineGame(options: {
 		options.engineConfig.strengthLevel,
 	);
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		options.event,
 		options.timeControl,
 		dateTimestamp,
@@ -313,7 +313,7 @@ async function startBoardEditor(): Promise<void> {
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		'Position created using ingame board editor',
 		'-',
 		dateTimestamp,
@@ -359,7 +359,7 @@ async function startCustomLocalGame(options: {
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		'Casual local custom infinite chess game',
 		'-',
 		dateTimestamp,
@@ -408,7 +408,7 @@ async function startCustomEngineGame(options: {
 		options.engineConfig.strengthLevel,
 	);
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		'Casual computer custom infinite chess game',
 		options.timeControl,
 		dateTimestamp,
@@ -470,7 +470,7 @@ async function startBoardEditorFromCustomPosition(
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = metadatautil.buildBaseGameMetadata(
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		'Position created using ingame board editor',
 		'-',
 		dateTimestamp,

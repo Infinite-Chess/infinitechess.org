@@ -16,7 +16,6 @@ import type {
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
@@ -39,6 +38,7 @@ import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
+import clientmetadatautil from '../../chess/clientmetadatautil.js';
 
 // Types -------------------------------------------------------------------------------------------------
 
@@ -225,11 +225,11 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 	// Display elo ratings, if any.
 	const playerRatings: PlayerGroup<Rating> = {};
 	if (parsedGame.metadata.WhiteElo)
-		playerRatings[p.WHITE] = metadatautil.getRatingFromWhiteBlackElo(
+		playerRatings[p.WHITE] = clientmetadatautil.getRatingFromWhiteBlackElo(
 			parsedGame.metadata.WhiteElo,
 		);
 	if (parsedGame.metadata.BlackElo)
-		playerRatings[p.BLACK] = metadatautil.getRatingFromWhiteBlackElo(
+		playerRatings[p.BLACK] = clientmetadatautil.getRatingFromWhiteBlackElo(
 			parsedGame.metadata.BlackElo,
 		);
 
@@ -242,7 +242,7 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 			playerRatings,
 		},
 		metadata: parsedGame.metadata,
-		gameConclusion: metadatautil.getGameConclusionFromResultAndTermination(
+		gameConclusion: clientmetadatautil.getGameConclusionFromResultAndTermination(
 			parsedGame.metadata.Result!,
 			message.termination as Condition,
 		),

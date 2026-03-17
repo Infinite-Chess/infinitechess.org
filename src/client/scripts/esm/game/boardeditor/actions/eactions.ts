@@ -27,7 +27,6 @@ import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
-import metadatautil from '../../../../../../shared/chess/util/metadatautil';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
@@ -58,6 +57,7 @@ import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import clientmetadatautil from '../../chess/clientmetadatautil';
 import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -399,7 +399,7 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
-	const timestamp = metadatautil.resolveTimestampFromMetadata(
+	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);

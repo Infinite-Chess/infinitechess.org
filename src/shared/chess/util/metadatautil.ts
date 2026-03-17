@@ -9,15 +9,8 @@
 
 import type { Rating } from '../../../server/database/leaderboardsManager.js';
 import type { Player } from './typeutil.js';
-import type { Condition } from './winconutil.js';
 import type { TimeControl } from './clockutil.js';
-import type { VariantCode } from '../variants/variant.js';
-import type { GameConclusion } from '../logic/gamefile.js';
 
-import uuid from '../../util/uuid.js';
-import variant from '../variants/variant.js';
-import timeutil from '../../util/timeutil.js';
-import winconutil from './winconutil.js';
 import { players as p } from './typeutil.js';
 
 // Types --------------------------------------------------------------------------
@@ -65,114 +58,7 @@ interface MetaData {
 /** All valid metadata names. */
 type MetadataKey = keyof MetaData;
 
-/** Per-player inputs for {@link buildGameMetadata}. */
-interface PlayerMetaInput {
-	/** Display name — the player's username, or {@link GUEST_NAME_ICN_METADATA} for unauthenticated players. */
-	name: string;
-	/** User ID, present only for signed-in players. */
-	id?: number;
-	/** Already-formatted elo string (e.g. `'1434'` or `'1500?'`), present only for signed-in players. */
-	elo?: string;
-}
-
-// Constants -----------------------------------------------------------------------
-
-/** Canonical display name used for guest players in ICN metadata. */
-const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
-
 // Functions -----------------------------------------------------------------------
-
-/**
- * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
- * Falls back to the current time if UTCDate is not provided.
- * If UTCDate is provided but UTCTime is not, midnight (00:00:00) is assumed.
- */
-function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
-	if (UTCDate !== undefined) {
-		return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
-	}
-	return Date.now();
-}
-
-/**
- * Builds a {@link MetaData} object from the common game properties.
- * Metadata is always in English.
- * @param rated - Whether the game is rated.
- * @param variantCode - The variant code (NOT the English translation).
- * @param clock - The time-control string.
- * @param utcTimestamp - The epoch-ms timestamp used for the `UTCDate`/`UTCTime` fields.
- * @param white - Identity information for the White player.
- * @param black - Identity information for the Black player.
- */
-function buildGameMetadata(
-	rated: boolean,
-	variantCode: VariantCode,
-	clock: TimeControl,
-	utcTimestamp: number,
-	white: PlayerMetaInput,
-	black: PlayerMetaInput,
-): MetaData {
-	const variantEnglishName = variant.getVariantName(variantCode);
-	const RatedOrCasual = rated ? 'Rated' : 'Casual';
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
-
-	const gameMetadata: MetaData = {
-		Event: `${RatedOrCasual} ${variantEnglishName} infinite chess game`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		Variant: variantEnglishName,
-		White: white.name,
-		Black: black.name,
-		TimeControl: clock,
-		UTCDate,
-		UTCTime,
-	};
-	if (white.id !== undefined) {
-		gameMetadata.WhiteID = uuid.base10ToBase62(white.id);
-		if (white.elo !== undefined) gameMetadata.WhiteElo = white.elo;
-	}
-	if (black.id !== undefined) {
-		gameMetadata.BlackID = uuid.base10ToBase62(black.id);
-		if (black.elo !== undefined) gameMetadata.BlackElo = black.elo;
-	}
-	return gameMetadata;
-}
-
-/**
- * Builds a {@link MetaData} object for client-side games (local, engine, board editor).
- * Automatically populates `Site`, `Round`, `UTCDate`, and `UTCTime`.
- * @param event - The `Event` string describing the game.
- * @param timeControl - The time control string (e.g. `"600+5"`), or `"-"` for untimed.
- * @param utcTimestamp - The epoch-ms timestamp used for the `UTCDate`/`UTCTime` fields.
- */
-function buildBaseGameMetadata(
-	event: string,
-	timeControl: TimeControl,
-	utcTimestamp: number,
-): MetaData {
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
-	return {
-		Event: event,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		TimeControl: timeControl,
-		UTCDate,
-		UTCTime,
-	};
-}
-
-/**
- * Helper function that uses generics to link the metadata key to its value type.
- * Inside the function typescript doesn't error when we are transferring the property.
- */
-function copyMetadataField<K extends MetadataKey>(
-	target: MetaData,
-	source: MetaData,
-	key: K,
-): void {
-	// TS knows that target[key] and source[key] have the same type: MetaData[K]
-	target[key] = source[key];
-}
 
 /**
  * Returns the value of the game's Result metadata, depending on the victor.
@@ -187,47 +73,10 @@ function getResultFromVictor(victor?: Player | null): string {
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
 }
 
-/** Calculates the game conclusion from the Result metadata and termination CODE. */
-function getGameConclusionFromResultAndTermination(
-	result: string,
-	termination: Condition,
-): GameConclusion {
-	// prettier-ignore
-	const victor =
-		result === '1-0' ? p.WHITE :
-		result === '0-1' ? p.BLACK :
-		result === '1/2-1/2' ? null :
-		result === '*' ? undefined :
-		((): never => { throw Error(`Unsupported result (${result})!`); })();
-
-	const parseResult = winconutil.gameConclusionSchema.safeParse({
-		condition: termination,
-		victor,
-	});
-	if (!parseResult.success)
-		throw new Error(
-			`Invalid GameConclusion for result "${result}" and termination "${termination}": ${parseResult.error.message}`,
-		);
-	return parseResult.data;
-}
-
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
 function getFormattedElo(rating: Rating): string {
 	const roundedElo = Math.round(rating.value);
 	return rating.confident ? `${roundedElo}` : `${roundedElo}?`;
-}
-
-/**
- * Parses the elo and confidence from WhiteElo/BlackElo metadata.
- * ONLY HAS AS MUCH PRECISION as what's in the metadata.
- * DOES NOT KNOW whether their current rating is now confident, if thir WhiteElo/BlackElo was not confident.
- */
-function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
-	const [elo, emptyStr] = whiteBlackElo.split('?'); // emptyStr will be '' if the '?' is present, otherwise it will be undefined.
-	return {
-		value: Number(elo),
-		confident: emptyStr === undefined,
-	};
 }
 
 /**
@@ -241,15 +90,8 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 }
 
 export default {
-	GUEST_NAME_ICN_METADATA,
-	resolveTimestampFromMetadata,
-	buildGameMetadata,
-	buildBaseGameMetadata,
-	copyMetadataField,
 	getResultFromVictor,
-	getGameConclusionFromResultAndTermination,
 	getFormattedElo,
-	getRatingFromWhiteBlackElo,
 	getWhiteBlackRatingDiff,
 };
 

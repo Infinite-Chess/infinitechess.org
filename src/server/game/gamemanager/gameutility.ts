@@ -28,6 +28,7 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
+import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
@@ -433,20 +434,20 @@ function constructMetadataOfGame(
 	const white = playerdata[p.WHITE]!.identifier;
 	const black = playerdata[p.BLACK]!.identifier;
 	const whiteIdentity = {
-		name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
+		name: white.signedIn ? white.username : servermetadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 		id: white.signedIn ? white.user_id : undefined,
 		elo: playerdata[p.WHITE]?.rating
 			? metadatautil.getFormattedElo(playerdata[p.WHITE]!.rating!)
 			: undefined,
 	};
 	const blackIdentity = {
-		name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
+		name: black.signedIn ? black.username : servermetadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 		id: black.signedIn ? black.user_id : undefined,
 		elo: playerdata[p.BLACK]?.rating
 			? metadatautil.getFormattedElo(playerdata[p.BLACK]!.rating!)
 			: undefined,
 	};
-	return metadatautil.buildGameMetadata(
+	return servermetadatautil.buildGameMetadata(
 		rated,
 		variantKey,
 		clock,

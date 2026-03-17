@@ -10,7 +10,8 @@ import type { _Move_In, LongFormatIn } from '../../../../../shared/chess/logic/i
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+
+import clientmetadatautil from './clientmetadatautil.js';
 
 import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
@@ -45,7 +46,7 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 		},
 	};
 
-	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
+	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformIn.metadata.UTCDate,
 		longformIn.metadata.UTCTime,
 	);

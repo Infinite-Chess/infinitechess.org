@@ -14,7 +14,6 @@ import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanag
 import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	_Move_Out,
@@ -28,6 +27,7 @@ import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import socketmessages from '../websocket/socketmessages.js';
+import clientmetadatautil from './clientmetadatautil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
 /**
@@ -130,18 +130,26 @@ function pasteGame(longformOut: LongFormatOut): void {
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined)
-			metadatautil.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			clientmetadatautil.copyMetadataField(
+				longformOut.metadata,
+				currentGameMetadata,
+				metadataName,
+			);
 	});
 
 	for (const metadataName of retainIfNotOverridden) {
 		if (currentGameMetadata[metadataName] && !longformOut.metadata[metadataName])
-			metadatautil.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			clientmetadatautil.copyMetadataField(
+				longformOut.metadata,
+				currentGameMetadata,
+				metadataName,
+			);
 	}
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
-	const timestamp = metadatautil.resolveTimestampFromMetadata(
+	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);
