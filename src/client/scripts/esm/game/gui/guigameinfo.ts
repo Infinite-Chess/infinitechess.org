@@ -257,27 +257,33 @@ function getPlayerNamesForGame(metadata: MetaData): {
 				'White or Black metadata not defined when getting player names for online game.',
 			);
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
+		const whiteIsGuest =
+			metadata['White'] === metadatautil.GUEST_NAME_ICN_METADATA ||
+			metadata['White'] === clientmetadatautil.YOU_NAME_ICN_METADATA;
+		const blackIsGuest =
+			metadata['Black'] === metadatautil.GUEST_NAME_ICN_METADATA ||
+			metadata['Black'] === clientmetadatautil.YOU_NAME_ICN_METADATA;
+
 		const white =
 			onlinegame.areWeColorInOnlineGame(p.WHITE) &&
-			metadata['White'] === translations.guest_indicator
+			metadata['White'] === metadatautil.GUEST_NAME_ICN_METADATA
 				? translations.you_indicator
-				: metadata['White'];
+				: whiteIsGuest
+					? translations.guest_indicator
+					: metadata['White'];
 		const black =
 			onlinegame.areWeColorInOnlineGame(p.BLACK) &&
-			metadata['Black'] === translations.guest_indicator
+			metadata['Black'] === metadatautil.GUEST_NAME_ICN_METADATA
 				? translations.you_indicator
-				: metadata['Black'];
+				: blackIsGuest
+					? translations.guest_indicator
+					: metadata['Black'];
+
 		return {
 			white: white,
 			black: black,
-			white_type:
-				white === translations.guest_indicator || white === translations.you_indicator
-					? 'guest'
-					: 'player',
-			black_type:
-				black === translations.guest_indicator || black === translations.you_indicator
-					? 'guest'
-					: 'player',
+			white_type: whiteIsGuest ? 'guest' : 'player',
+			black_type: blackIsGuest ? 'guest' : 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {

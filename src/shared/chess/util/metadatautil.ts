@@ -58,6 +58,11 @@ interface MetaData {
 /** All valid metadata names. */
 type MetadataKey = keyof MetaData;
 
+// Constants -----------------------------------------------------------------------
+
+/** Canonical display name used for guest players in ICN metadata. Metadata is always in English. */
+const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
+
 // Functions -----------------------------------------------------------------------
 
 /**
@@ -90,6 +95,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 }
 
 export default {
+	GUEST_NAME_ICN_METADATA,
 	getResultFromVictor,
 	getFormattedElo,
 	getWhiteBlackRatingDiff,

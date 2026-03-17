@@ -32,6 +32,7 @@ import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
 import servermetadatautil from '../servermetadatautil.js';
@@ -267,12 +268,12 @@ function reconstructMetadata(
 		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		{
-			name: white.signedIn ? white.username : servermetadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
+			name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 			id: white.signedIn ? white.user_id : undefined,
 			elo: whiteRow.elo ?? undefined,
 		},
 		{
-			name: black.signedIn ? black.username : servermetadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
+			name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
 			id: black.signedIn ? black.user_id : undefined,
 			elo: blackRow.elo ?? undefined,
 		},

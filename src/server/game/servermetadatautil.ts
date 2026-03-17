@@ -24,11 +24,6 @@ export interface PlayerMetaInput {
 	elo?: string;
 }
 
-// Constants -----------------------------------------------------------------------
-
-/** Canonical display name used for guest players in ICN metadata. */
-const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
-
 // Functions -----------------------------------------------------------------------
 
 /**
@@ -78,6 +73,5 @@ function buildGameMetadata(
 // Exports -----------------------------------------------------------------------
 
 export default {
-	GUEST_NAME_ICN_METADATA,
 	buildGameMetadata,
 };
