@@ -14,7 +14,7 @@
 import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { VariantCode } from '../../../shared/chess/variants/variant.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';

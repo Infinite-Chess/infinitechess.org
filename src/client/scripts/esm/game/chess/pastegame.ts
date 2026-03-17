@@ -6,7 +6,7 @@
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variant.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';

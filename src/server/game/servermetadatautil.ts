@@ -6,7 +6,7 @@
 
 import type { MetaData } from '../../shared/chess/util/metadatautil.js';
 import type { TimeControl } from '../../shared/chess/util/clockutil.js';
-import type { VariantCode } from '../../shared/chess/variants/variant.js';
+import type { VariantCode } from '../../shared/chess/variants/variantdictionary.js';
 
 import uuid from '../../shared/util/uuid.js';
 import variant from '../../shared/chess/variants/variant.js';

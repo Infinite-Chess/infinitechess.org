@@ -7,7 +7,7 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
-import type { VariantCode } from '../../../shared/chess/variants/variant.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { ServerUsernameContainer } from '../../../shared/types.js';
 

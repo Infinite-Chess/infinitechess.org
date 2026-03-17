@@ -4,7 +4,7 @@ import type { MetaData } from '../util/metadatautil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
-import type { VariantCode } from '../variants/variant.js';
+import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { Move, BaseMove } from './movepiece.js';

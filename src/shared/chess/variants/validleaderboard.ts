@@ -4,7 +4,7 @@
  * This script stores all global variables related to our leaderboards.
  */
 
-import type { VariantCode } from './variant.js';
+import type { VariantCode } from './variantdictionary.js';
 
 const Leaderboards = {
 	/**

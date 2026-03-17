@@ -7,7 +7,7 @@
 import type { Snapshot } from './gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { VariantCode } from '../variants/variant.js';
+import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
 import type { GlobalGameState } from './state.js';

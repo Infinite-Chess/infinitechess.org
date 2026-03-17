@@ -13,6 +13,7 @@ import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
@@ -21,7 +22,6 @@ import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/ga
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { VariantCode } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
