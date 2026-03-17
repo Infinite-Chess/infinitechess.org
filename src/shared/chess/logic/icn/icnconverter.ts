@@ -12,7 +12,7 @@
 
 import type { BaseRay } from '../../../util/math/geometry.js';
 import type { MetaData } from '../../util/metadatautil.js';
-import type { GameRules } from '../../variants/gamerules.js';
+import type { GameRules } from '../../util/gamerules.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { EnPassant, GlobalGameState } from '../state.js';

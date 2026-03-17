@@ -9,7 +9,7 @@
 import type { Edit } from '../../../../../shared/chess/logic/movepiece';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 import type { Coords } from '../../../../../shared/chess/util/coordutil';
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
+import type { GameRules } from '../../../../../shared/chess/util/gamerules';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';

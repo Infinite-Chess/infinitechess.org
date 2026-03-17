@@ -1,4 +1,4 @@
-// src/shared/chess/variants/gamerules.ts
+// src/shared/chess/util/gamerules.ts
 
 /**
  * This script contains the GameRules interface definition,
@@ -6,8 +6,8 @@
  */
 
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
-import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { Player, RawType, PlayerGroup } from '../util/typeutil.js';
+import type { GameruleWinCondition } from './winconutil.js';
+import type { Player, RawType, PlayerGroup } from './typeutil.js';
 
 interface GameRules {
 	/** An object containing lists of what win conditions each color can win by. */

@@ -2,7 +2,7 @@
 
 import type { MetaData } from '../util/metadatautil.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { GameRules } from '../variants/gamerules.js';
+import type { GameRules } from '../util/gamerules.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variant.js';
 import type { PieceMoveset } from './movesets.js';
@@ -23,7 +23,7 @@ import typeutil from '../util/typeutil.js';
 import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from '../util/gamerules.js';
 import legalmoves from './legalmoves.js';
 import initvariant from './initvariant.js';
 import wincondition from './wincondition.js';

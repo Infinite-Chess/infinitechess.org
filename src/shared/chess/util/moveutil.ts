@@ -6,7 +6,7 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { GameRules } from '../variants/gamerules.js';
+import type { GameRules } from './gamerules.js';
 import type { Game, Board } from '../logic/gamefile.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
 import type { _Move_Compact } from '../logic/icn/icnconverter.js';

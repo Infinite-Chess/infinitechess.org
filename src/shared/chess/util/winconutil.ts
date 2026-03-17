@@ -7,7 +7,7 @@
  */
 
 import type { Player } from './typeutil.js';
-import type { GameRules } from '../variants/gamerules.js';
+import type { GameRules } from './gamerules.js';
 
 import * as z from 'zod';
 

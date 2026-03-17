@@ -11,7 +11,7 @@ import type { Game, Board, FullGame, GameConclusion } from '../logic/gamefile.js
 
 import typeutil from './typeutil.js';
 import moveutil from './moveutil.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from './gamerules.js';
 import winconutil from './winconutil.js';
 import metadatautil from './metadatautil.js';
 import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!

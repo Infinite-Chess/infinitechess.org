@@ -6,14 +6,14 @@
  * @maintainer tsevasa
  */
 
-import type { GameRules } from '../variants/gamerules.js';
+import type { GameRules } from '../util/gamerules.js';
 import type { Board, GameConclusion } from './gamefile.js';
 
 import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from '../util/gamerules.js';
 import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */

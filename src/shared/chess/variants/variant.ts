@@ -6,7 +6,7 @@
  */
 
 import type { BaseRay } from '../../util/math/geometry.js';
-import type { GameRules } from './gamerules.js';
+import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';

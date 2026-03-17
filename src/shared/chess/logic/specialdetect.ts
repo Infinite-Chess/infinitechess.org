@@ -18,7 +18,7 @@ import typeutil from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from '../util/gamerules.js';
 import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
