@@ -78,11 +78,11 @@ function handleOpponentsMove(
 	message: OpponentsMoveMessage,
 ): void {
 	// Make sure the move number matches the expected.
-	// Otherwise, we need to re-sync
 	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
+		// A desync happened
 		console.error(
-			`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
+			`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
 		);
 		return onlinegame.resyncToGame();
 	}
@@ -99,87 +99,109 @@ function handleOpponentsMove(
 		return onlinegame.reportOpponentsMove(reason);
 	}
 
-	// Rewind all premoves to get the real game state for legality check
-	premoves.rewindPremoves(gamefile, mesh);
-
-	// If not legal, this will be a string for why it is illegal.
-	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-		gamefile,
-		move_compact,
-		message.gameConclusion,
-	);
-	if (!moveValidationResult.valid) {
-		console.log(
-			`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
+	performWithUnappliedPremoves(gamefile, mesh, () => {
+		// If not legal, this will be a string for why it is illegal.
+		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
+		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
+			gamefile,
+			move_compact,
+			message.gameConclusion,
 		);
-	}
-	if (
-		!moveValidationResult.valid &&
-		!isGameInstantlyDeleted(
-			gamefile.boardsim.variant,
-			gamefile.basegame.dateTimestamp,
-			onlinegame.getIsPrivate(),
-		)
-	) {
-		// Only report cheating when the server won't delete the game instantly.
-		// In instantly-deleted games (server validates moves OR private game), the server
-		// already rejected or ignores illegal moves, so reporting is unnecessary.
-		onlinegame.reportOpponentsMove(moveValidationResult.reason);
-		// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
-		premoves.applyPremoves(gamefile, mesh);
-		premoves.cancelPremoves(gamefile, mesh);
-		return;
-	}
+		if (!moveValidationResult.valid) {
+			console.log(
+				`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
+			);
+		}
+		if (
+			!moveValidationResult.valid &&
+			!isGameInstantlyDeleted(
+				gamefile.boardsim.variant,
+				gamefile.basegame.dateTimestamp,
+				onlinegame.getIsPrivate(),
+			)
+		) {
+			// Only report cheating when the server won't delete the game instantly.
+			// In instantly-deleted games (server validates moves OR private game), the server
+			// already rejected or ignores illegal moves, so reporting is unnecessary.
+			onlinegame.reportOpponentsMove(moveValidationResult.reason);
+			return false; // Opponent's move was not applied to the game.
+		}
 
-	// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
+		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
-	/**
-	 * The move draft WITH SPECIAL FLAGS attached!
-	 *
-	 * Fallback to no special flags if it's an illegal move in a private game (allowed).
-	 */
-	const moveDraft: MoveDraft = moveValidationResult.valid
-		? moveValidationResult.draft
-		: move_compact;
+		/**
+		 * The move draft WITH SPECIAL FLAGS attached!
+		 *
+		 * Fallback to no special flags if it's an illegal move in a private game (allowed).
+		 */
+		const moveDraft: MoveDraft = moveValidationResult.valid
+			? moveValidationResult.draft
+			: move_compact;
 
-	movesequence.viewFront(gamefile, mesh);
+		movesequence.viewFront(gamefile, mesh);
 
-	// Forward the move...
+		// Forward the move...
 
-	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+		const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 
-	GameBus.dispatch('physical-move');
+		GameBus.dispatch('physical-move');
 
-	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
+		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
 
-	// Edit the clocks
+		// Edit the clocks
 
-	const { basegame } = gamefile;
+		const { basegame } = gamefile;
 
-	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) {
-		if (basegame.untimed) throw Error('Received clock values for untimed game??');
-		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(basegame.clocks, message.clockValues);
-		guiclock.edit(basegame);
-	}
+		// Adjust the timer whos turn it is depending on ping.
+		if (message.clockValues) {
+			if (basegame.untimed) throw Error('Received clock values for untimed game??');
+			message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
+			clock.edit(basegame.clocks, message.clockValues);
+			guiclock.edit(basegame);
+		}
 
-	// For online games, the server is boss, so if they say the game is over, conclude it here.
-	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
+		// For online games, the server is boss, so if they say the game is over, conclude it here.
+		if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 
-	onlinegame.onMovePlayed({ isOpponents: true });
-	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
+		onlinegame.onMovePlayed({ isOpponents: true });
+		guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-	// We should probably have this last, since this will make another move AFTER handling our opponent's move here.
-	// And it'd be weird to process that move before this opponent's move is fully processed.
-	premoves.onYourMove(gamefile, mesh);
+		return true; // Opponent's move was applied to the game.
+	});
 
 	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
 	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
 	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
+
+/**
+ * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
+ * @param gamefile
+ * @param mesh
+ * @param callback - A function that returns true if we should attempt to submit our next premove when re-applying them.
+ */
+function performWithUnappliedPremoves(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	callback: () => boolean,
+): void {
+	// Rewind all premoves to get the real game state for legality check
+	premoves.rewindPremoves(gamefile, mesh);
+
+	// Returns true if the opponent's move was applied to the game.
+	const result = callback();
+
+	if (result) {
+		// Attempt to submit our next premove, and re-apply the remaining.
+		premoves.onYourMove(gamefile, mesh);
+	} else {
+		// Just re-apply premoves
+		premoves.applyPremoves(gamefile, mesh);
+	}
+}
+
+// Exports -------------------------------------------------------------------
 
 export default {
 	sendMove,
