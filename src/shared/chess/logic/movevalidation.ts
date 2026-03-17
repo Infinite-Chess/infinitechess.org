@@ -13,7 +13,17 @@ import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
-type MoveValidationResult = { valid: true; draft: MoveDraft } | { valid: false; reason: string };
+type MoveValidationResult =
+	| {
+			valid: true;
+			/** The move draft with any special flags attached, derived from its end coords. */
+			draft: MoveDraft;
+	  }
+	| {
+			valid: false;
+			/** The reason the move is illegal. */
+			reason: string;
+	  };
 type ConclusionValidityResult = { valid: true } | { valid: false; reason: string };
 
 // Functions -------------------------------------------------------------------

@@ -124,7 +124,7 @@ function handleOpponentsMove(
 			// In instantly-deleted games (server validates moves OR private game), the server
 			// already rejected or ignores illegal moves, so reporting is unnecessary.
 			onlinegame.reportOpponentsMove(moveValidationResult.reason);
-			return false; // Opponent's move was not applied to the game.
+			return false; // Don't submit next premove
 		}
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
@@ -146,7 +146,7 @@ function handleOpponentsMove(
 
 		GameBus.dispatch('physical-move');
 
-		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
+		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the opponent moved extremely fast on turn 1.
 
 		// Edit the clocks
 
@@ -166,7 +166,7 @@ function handleOpponentsMove(
 		onlinegame.onMovePlayed({ isOpponents: true });
 		guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-		return true; // Opponent's move was applied to the game.
+		return true; // Good to submit next premove
 	});
 
 	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
