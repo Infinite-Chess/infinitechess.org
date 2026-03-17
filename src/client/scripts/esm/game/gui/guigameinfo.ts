@@ -23,6 +23,7 @@ import enginegame from '../misc/enginegame.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import frametracker from '../rendering/frametracker.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import clientmetadatautil from '../chess/clientmetadatautil.js';
 
 // Elements ---------------------------------------------------
 
@@ -280,10 +281,18 @@ function getPlayerNamesForGame(metadata: MetaData): {
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
-			white: metadata.White!,
-			black: metadata.Black!,
-			white_type: metadata.White === translations.you_indicator ? 'guest' : 'engine',
-			black_type: metadata.Black === translations.you_indicator ? 'guest' : 'engine',
+			white:
+				metadata.White === clientmetadatautil.YOU_NAME_ICN_METADATA
+					? translations.you_indicator
+					: metadata.White!,
+			black:
+				metadata.Black === clientmetadatautil.YOU_NAME_ICN_METADATA
+					? translations.you_indicator
+					: metadata.Black!,
+			white_type:
+				metadata.White === clientmetadatautil.YOU_NAME_ICN_METADATA ? 'guest' : 'engine',
+			black_type:
+				metadata.Black === clientmetadatautil.YOU_NAME_ICN_METADATA ? 'guest' : 'engine',
 		};
 	} else
 		throw Error(

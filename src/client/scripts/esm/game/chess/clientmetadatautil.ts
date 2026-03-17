@@ -14,6 +14,14 @@ import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
+// Constants -----------------------------------------------------------------------
+
+/**
+ * The hardcoded English string used in ICN metadata to represent the human player
+ * in engine and board-editor games. Metadata must always be in English.
+ */
+const YOU_NAME_ICN_METADATA = '(You)' as const;
+
 // Functions -----------------------------------------------------------------------
 
 /**
@@ -104,6 +112,7 @@ function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
 // Exports -----------------------------------------------------------------------
 
 export default {
+	YOU_NAME_ICN_METADATA,
 	resolveTimestampFromMetadata,
 	buildBaseGameMetadata,
 	copyMetadataField,

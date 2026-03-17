@@ -272,9 +272,13 @@ async function startEngineGame(options: {
 	);
 	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
 	metadata.White =
-		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
+		options.youAreColor === p.WHITE
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
 	metadata.Black =
-		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
+		options.youAreColor === p.BLACK
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
@@ -414,9 +418,13 @@ async function startCustomEngineGame(options: {
 		dateTimestamp,
 	);
 	metadata.White =
-		options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName;
+		options.youAreColor === p.WHITE
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
 	metadata.Black =
-		options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName;
+		options.youAreColor === p.BLACK
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
