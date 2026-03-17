@@ -280,7 +280,7 @@ function makeEngineMove(compactMove: unknown): void {
 				`Engine submitted an illegal move. Please report this bug! Move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
-			return false; // Don't submit next premove
+			return false; // Don't physically play next premove
 		}
 
 		// Go to latest move before making a new move
@@ -297,7 +297,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// If the debug mode is on, request the generated moves for the new position after playing the engine's move
 		requestMovesForCurrentPosition();
 
-		return true; // Good to submit next premove
+		return true; // Good to physically play next premove
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.

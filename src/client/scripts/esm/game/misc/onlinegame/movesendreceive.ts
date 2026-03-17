@@ -124,7 +124,7 @@ function handleOpponentsMove(
 			// In instantly-deleted games (server validates moves OR private game), the server
 			// already rejected or ignores illegal moves, so reporting is unnecessary.
 			onlinegame.reportOpponentsMove(moveValidationResult.reason);
-			return false; // Don't submit next premove
+			return false; // Don't physically play next premove
 		}
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
@@ -166,7 +166,7 @@ function handleOpponentsMove(
 		onlinegame.onMovePlayed({ isOpponents: true });
 		guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-		return true; // Good to submit next premove
+		return true; // Good to physically play next premove
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.

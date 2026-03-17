@@ -386,7 +386,7 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
  * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
  * @param gamefile
  * @param mesh
- * @param callback - A function that returns true if we should attempt to submit our next premove when re-applying them.
+ * @param callback - A function that returns true if we should attempt to physically play our next premove when re-applying them.
  */
 function performWithUnapplied(
 	gamefile: FullGame,
