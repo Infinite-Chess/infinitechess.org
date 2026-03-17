@@ -28,6 +28,9 @@ export interface Engine {
 	maxStrengthLevel: number;
 }
 
+/** Union of all valid engine names, derived from the keys of engineDictionary. */
+export type ValidEngine = keyof typeof engineDictionary;
+
 // Constants --------------------------------------------------------------------
 
 /**
@@ -49,9 +52,6 @@ export const engineDictionary = {
 		maxStrengthLevel: 3,
 	},
 } satisfies { [key: string]: Engine };
-
-/** Union of all valid engine names, derived from the keys of engineDictionary. */
-export type ValidEngine = keyof typeof engineDictionary;
 
 // Functions --------------------------------------------------------------------
 
