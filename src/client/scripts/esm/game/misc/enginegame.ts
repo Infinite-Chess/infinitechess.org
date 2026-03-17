@@ -292,15 +292,15 @@ function makeEngineMove(compactMove: unknown): void {
 
 		if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
+		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
+
+		// If the debug mode is on, request the generated moves for the new position after playing the engine's move
+		requestMovesForCurrentPosition();
+
 		return true; // Good to submit next premove
 	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-
-	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
-
-	// If the debug mode is on, request the generated moves for the new position after playing the engine's move
-	requestMovesForCurrentPosition();
 }
 
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */

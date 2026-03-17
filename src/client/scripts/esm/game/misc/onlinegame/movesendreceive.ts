@@ -169,9 +169,6 @@ function handleOpponentsMove(
 		return true; // Good to submit next premove
 	});
 
-	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
-	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
-	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
