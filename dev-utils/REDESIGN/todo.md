@@ -2,14 +2,6 @@
 
 ## Infrastructure Prerequisites
 
-- Determine the minimum live game properties required to reconstruct the in-memory game state, and timer states, on a server restart.
-
-- Create the `live_games` SQLite table and write full game state to it on every move / game update.
-
-- On server startup, read all rows from `live_games` and rehydrate the in-memory game objects so interrupted games survive restarts. Also reinstate all active game timers.
-
-- Remove `allowinvites.json` and its polling mechanism — live game persistence makes pre-restart blocking unnecessary.
-
 - Log all server startups and shutdowns, with timestamps and PIDs, to `logs/startupLog.txt` (e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`).
 
 - Implement in-project automated DB backups: One triggered immediately before every deploy (before any server code performs any db operations, make sure there's no race conditions), and one daily backup. Store in `backups/` with timestamped filenames and auto-purge files older than 30 days.
@@ -22,7 +14,7 @@
 
 - Write the GitHub Actions deploy workflow file with the three triggers. Verify each of them work as intended. Verify that restarts have near zero downtime.
 
-- Assess whether the current WebSocket reconnection logic reconnects quickly enough after a `pm2 reload` to be invisible to players. If not, implement exponential backoff.
+- Assess whether the current WebSocket reconnection logic reconnects quickly enough after a `pm2 reload` to be invisible to players. If not, implement exponential backoff and implement clock compensation. If so, remove `allowinvites.json` and its polling mechanism — live game persistence makes pre-restart blocking unnecessary.
 
 ---
 
