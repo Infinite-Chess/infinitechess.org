@@ -1,12 +1,13 @@
 // src/shared/chess/logic/movevalidation.ts
 
+import type { FullGame, GameConclusion } from './gamefile.js';
+
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../util/winconutil.js';
 import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
-import { FullGame, GameConclusion } from './gamefile.js';
 import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
 import icnconverter, { _Move_Compact, _Move_Out } from './icn/icnconverter.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
