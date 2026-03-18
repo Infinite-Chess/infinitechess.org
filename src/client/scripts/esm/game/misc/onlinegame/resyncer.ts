@@ -151,7 +151,6 @@ function synchronizeMovesList(
 		console.log(`Rewinding move index ${i} while resyncing to online game.`);
 		movesequence.rewindMove(gamefile, mesh);
 		aChangeWasMade = true;
-		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 	}
 
 	let opponentPlayedIllegalMove: boolean = false;
