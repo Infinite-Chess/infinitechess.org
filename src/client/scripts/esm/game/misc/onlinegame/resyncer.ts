@@ -204,10 +204,8 @@ function synchronizeMovesList(
 			const move = movesequence.makeMove(gamefile, mesh, moveDraft, {
 				doGameOverChecks: isLastMove,
 			});
-
 			GameBus.dispatch('physical-move');
-
-			if (isLastMove) animateMove(move.changes, true); // Only animate on the last forwarded move.
+			if (mesh) animateMove(move.changes, true); // Automatically cancels animations of forwarded moves in previous loops
 
 			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
 

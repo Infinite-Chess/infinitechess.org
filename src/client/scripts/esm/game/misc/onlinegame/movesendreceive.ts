@@ -124,9 +124,7 @@ function handleOpponentsMove(
 		movesequence.viewFront(gamefile, mesh);
 
 		const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-
 		GameBus.dispatch('physical-move');
-
 		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the opponent moved extremely fast on turn 1.
 
 		// Edit the clocks
