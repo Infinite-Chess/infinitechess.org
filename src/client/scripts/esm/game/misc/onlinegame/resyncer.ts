@@ -33,7 +33,6 @@ import premoves from '../../chess/premoves.js';
 import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
-import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 import { animateMove } from '../../chess/graphicalchanges.js';
