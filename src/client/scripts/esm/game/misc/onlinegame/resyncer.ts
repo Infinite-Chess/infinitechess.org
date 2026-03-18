@@ -19,16 +19,13 @@ import type {
 	ServerGameMoveMessage,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
-import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { BaseMove, MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
-import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
 
 import gameslot from '../../chess/gameslot.js';
-import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
@@ -76,13 +73,7 @@ function handleServerGameUpdate(
 	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) {
-		if (gamefile.basegame.untimed)
-			throw Error('Received clock values in a game update for an untimed game??');
-		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(gamefile.basegame.clocks, message.clockValues);
-		guiclock.edit(gamefile.basegame);
-	}
+	movesendreceive.applyClockValues(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.concludeGame();
@@ -179,21 +170,15 @@ function synchronizeMovesList(
 					moveDraft,
 					claimedGameConclusion,
 				);
-				if (!moveValidationResult.valid) {
-					console.log(
-						`Buddy made an illegal play: "${thisShortmove.compact}". Reason: ${moveValidationResult.reason} Move number: ${i + 1}`,
-					);
-				}
+				// Only report cheating in games where the server won't delete the game instantly when it ends
 				if (
-					!moveValidationResult.valid &&
-					!isGameInstantlyDeleted(
-						gamefile.boardsim.variant,
-						gamefile.basegame.dateTimestamp,
-						onlinegame.getIsPrivate(),
+					movesendreceive.checkAndReportIllegalOpponentMove(
+						gamefile,
+						moveValidationResult,
+						thisShortmove.compact,
+						i + 1,
 					)
 				) {
-					// Only report cheating in games where the server won't delete the game instantly when it ends
-					onlinegame.reportOpponentsMove(moveValidationResult.reason);
 					opponentPlayedIllegalMove = true;
 					return false; // Don't physically play next premove
 				}

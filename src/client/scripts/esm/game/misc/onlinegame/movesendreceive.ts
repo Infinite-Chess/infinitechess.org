@@ -8,7 +8,9 @@
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
+import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
@@ -100,21 +102,15 @@ function handleOpponentsMove(
 			message.gameConclusion,
 		);
 
-		if (!moveValidationResult.valid) {
-			console.log(
-				`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
-			);
-		}
+		// Only report cheating when the server won't delete the game instantly.
 		if (
-			!moveValidationResult.valid &&
-			!isGameInstantlyDeleted(
-				gamefile.boardsim.variant,
-				gamefile.basegame.dateTimestamp,
-				onlinegame.getIsPrivate(),
+			checkAndReportIllegalOpponentMove(
+				gamefile,
+				moveValidationResult,
+				message.move.compact,
+				message.moveNumber,
 			)
 		) {
-			// Only report cheating when the server won't delete the game instantly.
-			onlinegame.reportOpponentsMove(moveValidationResult.reason);
 			return false; // Don't physically play next premove
 		}
 
@@ -131,12 +127,7 @@ function handleOpponentsMove(
 		const { basegame } = gamefile;
 
 		// Adjust the timer whos turn it is depending on ping.
-		if (message.clockValues) {
-			if (basegame.untimed) throw Error('Received clock values for untimed game??');
-			message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-			clock.edit(basegame.clocks, message.clockValues);
-			guiclock.edit(basegame);
-		}
+		applyClockValues(gamefile, message.clockValues);
 
 		// For online games, the server is boss, so if they say the game is over, conclude it here.
 		if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
@@ -150,9 +141,56 @@ function handleOpponentsMove(
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
 
+/**
+ * Logs an illegal opponent move and reports it to the server if the game warrants it.
+ * @param moveValidationResult - The result of move validation (may be valid or invalid).
+ * @param compactMove - The move in compact string format, used for logging.
+ * @param moveNumber - The move number, used for logging.
+ * @returns Whether the move was illegal and was reported.
+ */
+function checkAndReportIllegalOpponentMove(
+	gamefile: FullGame,
+	moveValidationResult: MoveValidationResult,
+	compactMove: string,
+	moveNumber: number,
+): boolean {
+	if (moveValidationResult.valid) return false;
+
+	console.log(
+		`Buddy made an illegal play: "${compactMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
+	);
+
+	if (
+		!isGameInstantlyDeleted(
+			gamefile.boardsim.variant,
+			gamefile.basegame.dateTimestamp,
+			onlinegame.getIsPrivate(),
+		)
+	) {
+		onlinegame.reportOpponentsMove(moveValidationResult.reason);
+		return true;
+	}
+
+	return false; // Private or server-validated game — allow through without reporting
+}
+
+/** Adjusts received clock values for ping and applies them to the game, if provided. */
+function applyClockValues(gamefile: FullGame, clockValues: ClockValues | undefined): void {
+	if (!clockValues) return;
+	if (gamefile.basegame.untimed) {
+		console.warn('Received clock values for untimed game??');
+		return;
+	}
+	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	clock.edit(gamefile.basegame.clocks, clockValues);
+	guiclock.edit(gamefile.basegame);
+}
+
 // Exports -------------------------------------------------------------------
 
 export default {
 	sendMove,
 	handleOpponentsMove,
+	checkAndReportIllegalOpponentMove,
+	applyClockValues,
 };

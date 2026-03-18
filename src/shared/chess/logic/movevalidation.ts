@@ -14,7 +14,7 @@ import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
-type MoveValidationResult =
+export type MoveValidationResult =
 	| {
 			valid: true;
 			/** The move draft with any special flags attached, derived from its end coords. */
