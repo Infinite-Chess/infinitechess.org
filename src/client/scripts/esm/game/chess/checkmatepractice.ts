@@ -411,9 +411,6 @@ function undoMove(): void {
 		// > 0 catches scenarios where stalemate occurs on the first move
 		setUndoingIsLegal(false);
 
-		// Terminate all current animations to avoid a crash when undoing moves
-		animation.clearAnimations();
-
 		// go to latest move before undoing moves
 		movesequence.viewFront(gamefile, mesh);
 
