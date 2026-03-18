@@ -218,9 +218,9 @@ function synchronizeMovesList(
 		// Whether we're good to physically play the next premove depends on whether it is our turn or not,
 		// AND whether we forwarded at least one of our own moves that the server had that we didn't.
 		if (!atleastOneOfOurMovesWasForwarded && ourColor === gamefile.basegame.whosTurn) {
-			return true;
+			return true; // Good to physically play next premove
 		} else {
-			return false;
+			return false; // Don't physically play next premove
 		}
 	});
 
