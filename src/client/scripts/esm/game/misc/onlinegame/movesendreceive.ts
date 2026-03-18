@@ -29,7 +29,6 @@ import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import socketmessages from '../../websocket/socketmessages.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Events ---------------------------------------------------------------------
 
@@ -117,8 +116,7 @@ function handleOpponentsMove(
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
 
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft);
-		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the opponent moved extremely fast on turn 1.
+		movesequence.makeMoveAndAnimate(gamefile, mesh, moveDraft);
 
 		// Edit the clocks
 

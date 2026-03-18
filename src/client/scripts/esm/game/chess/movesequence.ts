@@ -73,6 +73,18 @@ function makeMove(
 	return move;
 }
 
+/** Convenience wrapper: Makes a global forward move then animates it if the mesh exists. */
+function makeMoveAndAnimate(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	moveDraft: MoveDraft,
+	{ doGameOverChecks = true } = {},
+): Move {
+	const move = makeMove(gamefile, mesh, moveDraft, { doGameOverChecks });
+	if (mesh) animateMove(move.changes, true);
+	return move;
+}
+
 /**
  * Wrapper for performing the graphical mesh changes of an edit.
  *
@@ -196,6 +208,7 @@ function updateGui(showMoveCounter: boolean): void {
 export default {
 	navigateMove,
 	makeMove,
+	makeMoveAndAnimate,
 	rewindMove,
 	viewMove,
 	viewFront,

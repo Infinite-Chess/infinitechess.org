@@ -23,7 +23,6 @@ import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
 import squarerendering from '../rendering/highlights/squarerendering.js';
-import { animateMove } from '../chess/graphicalchanges.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
 
 // Types ------------------------------------------------------------------------
@@ -286,8 +285,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
 
-		const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
-		if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
+		movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.draft);
 
 		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 

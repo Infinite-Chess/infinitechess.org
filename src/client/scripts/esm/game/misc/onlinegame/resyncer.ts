@@ -32,7 +32,6 @@ import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Functions -----------------------------------------------------------------------------
 
@@ -186,10 +185,9 @@ function synchronizeMovesList(
 				atleastOneOfOurMovesWasForwarded = true;
 			}
 
-			const move = movesequence.makeMove(gamefile, mesh, moveDraft, {
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveDraft, {
 				doGameOverChecks: isLastMove,
-			});
-			if (mesh) animateMove(move.changes, true); // Automatically cancels animations of forwarded moves in previous loops
+			}); // Automatically cancels animations of forwarded moves in previous loops
 
 			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
 			if (isOpponentMove) guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
