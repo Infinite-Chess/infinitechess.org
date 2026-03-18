@@ -400,7 +400,7 @@ function performWithUnapplied(
 	const result = callback();
 
 	if (result) {
-		// Attempt to submit our next premove, and re-apply the remaining.
+		// Attempt to physically make our next premove, and re-apply the remaining.
 		onYourMove(gamefile, mesh);
 	} else {
 		// Just re-apply
