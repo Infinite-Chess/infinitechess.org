@@ -1321,13 +1321,13 @@ function parseCompactMove(compactMove: string): _Move_Out {
 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
 }
 
-/** Parses a shortform move in any dynamic format to a readable json. */
-function parseMoveFromShortFormMove(shortFormMove: string): _Move_Out {
-	const moveRegex = new RegExp(`^${getMoveRegexSource(true)}$`);
-	const match = moveRegex.exec(shortFormMove);
-	if (match === null) throw Error('Invalid shortform move: ' + shortFormMove);
-	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
-}
+// /** Parses a shortform move in any dynamic format to a readable json. */
+// function parseMoveFromShortFormMove(shortFormMove: string): _Move_Out {
+// 	const moveRegex = new RegExp(`^${getMoveRegexSource(true)}$`);
+// 	const match = moveRegex.exec(shortFormMove);
+// 	if (match === null) throw Error('Invalid shortform move: ' + shortFormMove);
+// 	return getParsedMoveFromNamedCapturedMoveGroups(match.groups as NamedCaptureMoveGroups);
+// }
 
 /**
  * Takes the result.groups of a regex match and parses them into a move.
@@ -1653,7 +1653,6 @@ export default {
 	getCompactMoveFromDraft,
 
 	parseCompactMove,
-	parseMoveFromShortFormMove,
 
 	getShortFormPosition,
 	generateSpecialRights,

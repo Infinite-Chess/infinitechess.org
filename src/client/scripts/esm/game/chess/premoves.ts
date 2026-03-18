@@ -382,6 +382,32 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
 	processPremoves(gamefile, mesh);
 }
 
+/**
+ * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
+ * Then depending on the return value, may attempt to physically play the next premove when re-applying them.
+ * @param gamefile
+ * @param mesh
+ * @param callback - A function that returns true if we should attempt to physically play our next premove when re-applying them.
+ */
+function performWithUnapplied(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	callback: () => boolean,
+): void {
+	// Rewind all to get the real game state
+	rewindPremoves(gamefile, mesh);
+
+	const result = callback();
+
+	if (result) {
+		// Attempt to physically make our next premove, and re-apply the remaining.
+		onYourMove(gamefile, mesh);
+	} else {
+		// Just re-apply
+		applyPremoves(gamefile, mesh);
+	}
+}
+
 // Updating Premoves ------------------------------------------------
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
@@ -428,6 +454,7 @@ export default {
 	rewindPremoves,
 	applyPremoves,
 	onYourMove,
+	performWithUnapplied,
 	update,
 	render,
 };

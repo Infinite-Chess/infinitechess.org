@@ -20,6 +20,8 @@ import stats from '../gui/stats.js';
 import gameslot from './gameslot.js';
 import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
+import premoves from './premoves.js';
+import animation from '../rendering/animation.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
@@ -97,6 +99,8 @@ function runMeshChanges(
  * Makes a global backward move in the game.
  */
 function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
+	// Terminate all current animations to avoid a crash when undoing moves
+	animation.clearAnimations();
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
@@ -105,6 +109,8 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.unConcludeGame();
 	updateGui(false); // GUI changes
+
+	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }
 
 // Local Moving ----------------------------------------------------------------------------------------------------------

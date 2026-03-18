@@ -159,14 +159,15 @@ function applyServerValidatedMove(
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
+		// Send the sender a gameupdate to correct their board if a bug somehow caused this
+		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
+		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,
 			'general',
 			'notifyerror',
 			'Oops! That was an illegal move. If this is a bug, please report it!',
 		);
-		// Send the sender a gameupdate to correct their board if a bug somehow caused this
-		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
 		return;
 	}
 

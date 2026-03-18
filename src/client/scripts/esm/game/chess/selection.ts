@@ -521,14 +521,15 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 		// your premoved pawn will be able to double push again past their 8th rank.
 		legalMoves = legalmoves.calculateAllPremoves(gamefile, piece);
 	} else {
-		premoves.rewindPremoves(gamefile, mesh); // Rewind premoves first so that the legal moves are accurate.
-		legalMoves = legalmoves.calculateAll(gamefile, piece);
-		premoves.applyPremoves(gamefile, mesh); // Now re-apply them
+		premoves.performWithUnapplied(gamefile, mesh, () => {
+			legalMoves = legalmoves.calculateAll(gamefile, piece);
+			return false; // Do NOT attempt to physically play the next premove when they're re-applied
+		});
 	}
 
 	// console.log('Selected Legal Moves:', legalMoves);
 
-	GameBus.dispatch('piece-selected', { piece: pieceSelected, legalMoves });
+	GameBus.dispatch('piece-selected', { piece: pieceSelected, legalMoves: legalMoves! });
 }
 
 /**

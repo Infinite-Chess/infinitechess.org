@@ -78,108 +78,80 @@ function handleOpponentsMove(
 	message: OpponentsMoveMessage,
 ): void {
 	// Make sure the move number matches the expected.
-	// Otherwise, we need to re-sync
 	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
+		// A desync happened
 		console.error(
-			`We have desynced from the game. Resyncing... Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
+			`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
 		);
 		return onlinegame.resyncToGame();
 	}
 
-	// Convert the move from compact short format "x,y>x,y=N" to JSON
-	let move_compact: _Move_Compact;
-	try {
-		move_compact = icnconverter.parseMoveFromShortFormMove(message.move.compact); // { startCoords, endCoords, promotion }
-	} catch {
-		console.error(
-			`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move.compact)}`,
+	// Convert the move from compact short format "x,y>x,y=N" to JSON.
+	// Gauranteed by the server to be parsable.
+	const moveDraft: MoveDraft = icnconverter.parseCompactMove(message.move.compact);
+
+	premoves.performWithUnapplied(gamefile, mesh, () => {
+		// If not legal, this will be a string for why it is illegal.
+		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
+		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
+			gamefile,
+			moveDraft,
+			message.gameConclusion,
 		);
-		const reason = 'Incorrectly formatted.';
-		return onlinegame.reportOpponentsMove(reason);
-	}
 
-	// Rewind all premoves to get the real game state for legality check
-	premoves.rewindPremoves(gamefile, mesh);
+		if (!moveValidationResult.valid) {
+			console.log(
+				`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
+			);
+		}
+		if (
+			!moveValidationResult.valid &&
+			!isGameInstantlyDeleted(
+				gamefile.boardsim.variant,
+				gamefile.basegame.dateTimestamp,
+				onlinegame.getIsPrivate(),
+			)
+		) {
+			// Only report cheating when the server won't delete the game instantly.
+			onlinegame.reportOpponentsMove(moveValidationResult.reason);
+			return false; // Don't physically play next premove
+		}
 
-	// If not legal, this will be a string for why it is illegal.
-	// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-	const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-		gamefile,
-		move_compact,
-		message.gameConclusion,
-	);
-	if (!moveValidationResult.valid) {
-		console.log(
-			`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
-		);
-	}
-	if (
-		!moveValidationResult.valid &&
-		!isGameInstantlyDeleted(
-			gamefile.boardsim.variant,
-			gamefile.basegame.dateTimestamp,
-			onlinegame.getIsPrivate(),
-		)
-	) {
-		// Only report cheating when the server won't delete the game instantly.
-		// In instantly-deleted games (server validates moves OR private game), the server
-		// already rejected or ignores illegal moves, so reporting is unnecessary.
-		onlinegame.reportOpponentsMove(moveValidationResult.reason);
-		// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
-		premoves.applyPremoves(gamefile, mesh);
-		premoves.cancelPremoves(gamefile, mesh);
-		return;
-	}
+		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
-	// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
+		// Go to latest move before making a new move
+		movesequence.viewFront(gamefile, mesh);
 
-	/**
-	 * The move draft WITH SPECIAL FLAGS attached!
-	 *
-	 * Fallback to no special flags if it's an illegal move in a private game (allowed).
-	 */
-	const moveDraft: MoveDraft = moveValidationResult.valid
-		? moveValidationResult.draft
-		: move_compact;
+		const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+		GameBus.dispatch('physical-move');
+		if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the opponent moved extremely fast on turn 1.
 
-	movesequence.viewFront(gamefile, mesh);
+		// Edit the clocks
 
-	// Forward the move...
+		const { basegame } = gamefile;
 
-	const move = movesequence.makeMove(gamefile, mesh, moveDraft);
+		// Adjust the timer whos turn it is depending on ping.
+		if (message.clockValues) {
+			if (basegame.untimed) throw Error('Received clock values for untimed game??');
+			message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
+			clock.edit(basegame.clocks, message.clockValues);
+			guiclock.edit(basegame);
+		}
 
-	GameBus.dispatch('physical-move');
+		// For online games, the server is boss, so if they say the game is over, conclude it here.
+		if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 
-	if (mesh) animateMove(move.changes, true); // ONLY ANIMATE if the mesh has been generated. It might not be yet if the engine moves extremely fast on turn 1.
+		onlinegame.onMovePlayed({ isOpponents: true });
+		guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
-	// Edit the clocks
+		return true; // Good to physically play next premove
+	});
 
-	const { basegame } = gamefile;
-
-	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) {
-		if (basegame.untimed) throw Error('Received clock values for untimed game??');
-		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(basegame.clocks, message.clockValues);
-		guiclock.edit(basegame);
-	}
-
-	// For online games, the server is boss, so if they say the game is over, conclude it here.
-	if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
-
-	onlinegame.onMovePlayed({ isOpponents: true });
-	guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
-
-	// We should probably have this last, since this will make another move AFTER handling our opponent's move here.
-	// And it'd be weird to process that move before this opponent's move is fully processed.
-	premoves.onYourMove(gamefile, mesh);
-
-	// Must be AFTER premoves.onYourMove(), since that will make a move which may change the selected piece's legal moves AGAIN.
-	// NOT TO MENTION reselectPiece() should only be called when the premove's are all applied.
-	// Above we premoves.rewindPremoves(), and premoves.onYourMove() applies them again, so this must be after them!
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
 }
+
+// Exports -------------------------------------------------------------------
 
 export default {
 	sendMove,

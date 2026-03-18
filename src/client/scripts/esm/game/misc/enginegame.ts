@@ -272,51 +272,33 @@ function makeEngineMove(compactMove: unknown): void {
 		return;
 	}
 
-	// Rewind all premoves to get the real game state before making any other board changes
-	premoves.rewindPremoves(gamefile, mesh);
+	premoves.performWithUnapplied(gamefile, mesh, () => {
+		const moveValidationResults = movevalidation.isCompactMoveLegal(gamefile, compactMove);
 
-	const moveValidationResults = movevalidation.isCompactMoveLegal(gamefile, compactMove);
+		if (!moveValidationResults.valid) {
+			toast.show(
+				`Engine submitted an illegal move. Please report this bug! Move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
+				{ error: true, durationMultiplier: 100 },
+			);
+			return false; // Don't physically play next premove
+		}
 
-	if (!moveValidationResults.valid) {
-		toast.show(
-			`Engine submitted an illegal move. Please report this bug! Move ${compactMove} is illegal for reason: ${moveValidationResults.reason}`,
-			{ error: true, durationMultiplier: 100 },
-		);
-		console.error(
-			`Engine move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
-		);
-		// Don't forget to reapply premoves before exiting
-		premoves.applyPremoves(gamefile, mesh);
-		return;
-	}
+		// Go to latest move before making a new move
+		movesequence.viewFront(gamefile, mesh);
 
-	// Go to latest move before making a new move
-	movesequence.viewFront(gamefile, mesh);
-	/**
-	 * PERHAPS we don't need this stuff? It's just to find and apply any special move flag
-	 * that should go with the move. But shouldn't the engine provide that info with its move?
-	 */
-	// const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords)!;
-	// const legalMoves = legalmoves.calculateAll(gamefile, piecemoved)
-	// const endCoordsToAppendSpecial: CoordsSpecial = jsutil.deepCopyObject(move.endCoords);
-	// legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
+		const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
+		GameBus.dispatch('physical-move');
+		if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
 
-	const move = movesequence.makeMove(gamefile, mesh, moveValidationResults.draft);
+		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 
-	GameBus.dispatch('physical-move');
+		// If the debug mode is on, request the generated moves for the new position after playing the engine's move
+		requestMovesForCurrentPosition();
 
-	if (mesh) animateMove(move.changes, true, true); // ONLY ANIMATE if the mesh has been generated. This may happen if the engine moves extremely fast on turn 1.
-
-	// We should probably have this last, since this will make another move AFTER handling our engine's move here.
-	// And it'd be weird to process that move before this engine's move is fully processed.
-	premoves.onYourMove(gamefile, mesh);
+		return true; // Good to physically play next premove
+	});
 
 	selection.reselectPiece(); // Reselect the currently selected piece. Recalc its moves and recolor it if needed.
-
-	checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
-
-	// If the debug mode is on, request the generated moves for the new position after playing the engine's move
-	requestMovesForCurrentPosition();
 }
 
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */
