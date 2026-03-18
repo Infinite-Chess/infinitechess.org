@@ -89,14 +89,14 @@ function handleOpponentsMove(
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON.
 	// Gauranteed by the server to be parsable.
-	const move_compact: _Move_Compact = icnconverter.parseCompactMove(message.move.compact);
+	const moveDraft: MoveDraft = icnconverter.parseCompactMove(message.move.compact);
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 			gamefile,
-			move_compact,
+			moveDraft,
 			message.gameConclusion,
 		);
 
@@ -119,15 +119,6 @@ function handleOpponentsMove(
 		}
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
-
-		/**
-		 * The move draft WITH SPECIAL FLAGS attached!
-		 *
-		 * Fallback to no special flags if it's an illegal move in a private game (allowed).
-		 */
-		const moveDraft: MoveDraft = moveValidationResult.valid
-			? moveValidationResult.draft
-			: move_compact;
 
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);

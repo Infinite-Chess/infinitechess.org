@@ -22,9 +22,9 @@ import type {
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { BaseMove } from '../../../../../../shared/chess/logic/movepiece.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { BaseMove, MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
 
 import gameslot from '../../chess/gameslot.js';
@@ -169,10 +169,11 @@ function synchronizeMovesList(
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 			// Convert the move from compact short format "x,y>x,y=N" to JSON.
 			// Gauranteed by the server to be parsable.
-			const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
+			const moveDraft: MoveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
 			if (isOpponentMove) {
 				// Perform legality checks
+				// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 					gamefile,
 					moveDraft,
