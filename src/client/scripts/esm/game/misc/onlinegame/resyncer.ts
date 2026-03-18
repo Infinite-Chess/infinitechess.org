@@ -30,6 +30,7 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
+import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
@@ -208,6 +209,7 @@ function synchronizeMovesList(
 			if (mesh) animateMove(move.changes, true); // Automatically cancels animations of forwarded moves in previous loops
 
 			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
+			if (isOpponentMove) guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
 			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;
