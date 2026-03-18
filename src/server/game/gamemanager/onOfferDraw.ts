@@ -74,7 +74,6 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	closeDrawOffer(servergame.match);
 	setGameConclusion(servergame, { victor: null, condition: 'agreement' });
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**

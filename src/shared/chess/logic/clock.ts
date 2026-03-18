@@ -172,7 +172,7 @@ function stop(basegame: Game): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
-	if (clocks.colorTicking === undefined) return;
+	if (clocks.colorTicking === undefined) return; // Clocks already stopped
 
 	const timeSpent = Date.now() - clocks.timeAtTurnStart!;
 	let newTime = clocks.timeRemainAtTurnStart! - timeSpent;

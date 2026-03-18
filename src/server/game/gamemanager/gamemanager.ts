@@ -17,6 +17,7 @@ import WebSocket from 'ws';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import {
@@ -360,9 +361,10 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
 
 /**
  * Fire whenever a game's `gameConclusion` property is set.
- * Stops the game clock, cancels all running timers, closes any draw
- * offer, then either deletes the game immediately (if the server validated
- * moves) or sets a short timer to give the losing client time to oppose the
+ * Stops the game clock, cancels all running timers, closes any draw offer,
+ * broadcasts the gameupdate to all player if it's not a move-triggered conclusion,
+ * then either deletes the game immediately (if the server validated moves)
+ * or sets a short timer to give the losing client time to oppose the
  * conclusion if they want.
  * @param servergame - The game object representing the current game.
  * @param [options] - Optional parameters.
@@ -397,6 +399,13 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 
 	// Persist the game conclusion to the database before potentially deleting.
 	liveGameValues.onGameConcluded(servergame);
+
+	// If this conclusion happened mid-move (not one triggerred by a move),
+	// then auto-broadcast a final gameupdate to all players.
+	// Move-triggered conclusions already send the gameConclusion in the move response.
+	const conclusion = servergame.basegame.gameConclusion!;
+	if (!winconutil.isConclusionMoveTriggered(conclusion.condition))
+		gameutility.broadcastGameUpdate(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
 	if (
@@ -434,14 +443,11 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
 	const loser = servergame.basegame.whosTurn!;
 	const winner = typeutil.invertPlayer(loser);
 
+	clock.stop(servergame.basegame);
+	// Sometimes their clock can have 1ms left. Just make that zero.
+	if (servergame.basegame.clocks) servergame.basegame.clocks.currentTime[loser] = 0;
+
 	setGameConclusion(servergame, { victor: winner, condition: 'time' });
-
-	// Sometimes they're clock can have 1ms left. Just make that zero.
-	// This needs to be done AFTER setting game conclusion, because that
-	// stops the clocks and changes their values.
-	servergame.basegame.clocks!.currentTime[loser]! = 0;
-
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**
@@ -463,8 +469,6 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 		console.log('Game aborted from disconnection.');
 		setGameConclusion(servergame, { condition: 'aborted' });
 	}
-
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**
@@ -483,8 +487,6 @@ function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): vo
 		console.log('Game aborted from abandonment.');
 		setGameConclusion(servergame, { condition: 'aborted' });
 	}
-
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**

@@ -117,7 +117,6 @@ function onReport(
 	// Cheating report was valid, terminate the game..
 
 	setGameConclusion(servergame, { condition: 'aborted' });
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 export { onReport, reportschem };
