@@ -138,9 +138,8 @@ function handleOpponentsMove(
 			? moveValidationResult.draft
 			: move_compact;
 
+		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
-
-		// Forward the move...
 
 		const move = movesequence.makeMove(gamefile, mesh, moveDraft);
 
