@@ -167,6 +167,8 @@ function synchronizeMovesList(
 			const isOpponentMove = playerOfMove !== ourColor;
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
+			// Convert the move from compact short format "x,y>x,y=N" to JSON.
+			// Gauranteed by the server to be parsable.
 			const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
 
 			if (isOpponentMove) {
@@ -198,8 +200,6 @@ function synchronizeMovesList(
 				atleastOneOfOurMovesWasForwarded = true;
 			}
 
-			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
-
 			const move = movesequence.makeMove(gamefile, mesh, moveDraft, {
 				doGameOverChecks: isLastMove,
 			});
@@ -207,6 +207,8 @@ function synchronizeMovesList(
 			GameBus.dispatch('physical-move');
 
 			if (isLastMove) animateMove(move.changes, true); // Only animate on the last forwarded move.
+
+			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
 
 			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;

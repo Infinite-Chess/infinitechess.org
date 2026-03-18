@@ -86,7 +86,7 @@ function isOpponentsMoveLegal(
 		if (!conclusionResult.valid) return conclusionResult;
 
 		// At this stage, both move and conclusion are valid!
-		return { valid: true, draft: moveResult.draft };
+		return moveResult;
 	});
 }
 
@@ -102,7 +102,7 @@ function isCompactMoveLegal(gamefile: FullGame, compact: unknown): MoveValidatio
 	if (typeof compact !== 'string') return { valid: false, reason: 'Not a string.' };
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
-	let move_compact: _Move_Out;
+	let move_compact: _Move_Compact;
 	try {
 		move_compact = icnconverter.parseCompactMove(compact);
 	} catch (error: unknown) {
@@ -276,7 +276,7 @@ function validateConclusion(
 		simulatedConclusion?.victor !== claimedGameConclusion?.victor
 	) {
 		console.error(
-			`Conclusion mismatch! Simulated: ${simulatedConclusion}, Claimed: ${claimedGameConclusion}`,
+			`Conclusion mismatch! Simulated: ${JSON.stringify(simulatedConclusion)}, Claimed: ${JSON.stringify(claimedGameConclusion)}`,
 		);
 		return { valid: false, reason: 'Wrong conclusion.' };
 	}

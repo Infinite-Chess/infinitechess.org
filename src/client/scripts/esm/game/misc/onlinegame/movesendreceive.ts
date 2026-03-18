@@ -87,17 +87,9 @@ function handleOpponentsMove(
 		return onlinegame.resyncToGame();
 	}
 
-	// Convert the move from compact short format "x,y>x,y=N" to JSON
-	let move_compact: _Move_Compact;
-	try {
-		move_compact = icnconverter.parseMoveFromShortFormMove(message.move.compact); // { startCoords, endCoords, promotion }
-	} catch {
-		console.error(
-			`Opponent's move is illegal because it isn't in the correct format. Reporting... Move: ${JSON.stringify(message.move.compact)}`,
-		);
-		const reason = 'Incorrectly formatted.';
-		return onlinegame.reportOpponentsMove(reason);
-	}
+	// Convert the move from compact short format "x,y>x,y=N" to JSON.
+	// Gauranteed by the server to be parsable.
+	const move_compact: _Move_Compact = icnconverter.parseCompactMove(message.move.compact);
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
@@ -107,6 +99,7 @@ function handleOpponentsMove(
 			move_compact,
 			message.gameConclusion,
 		);
+
 		if (!moveValidationResult.valid) {
 			console.log(
 				`Buddy made an illegal play: "${message.move.compact}". Reason: ${moveValidationResult.reason} Move number: ${message.moveNumber}`,
@@ -121,8 +114,6 @@ function handleOpponentsMove(
 			)
 		) {
 			// Only report cheating when the server won't delete the game instantly.
-			// In instantly-deleted games (server validates moves OR private game), the server
-			// already rejected or ignores illegal moves, so reporting is unnecessary.
 			onlinegame.reportOpponentsMove(moveValidationResult.reason);
 			return false; // Don't physically play next premove
 		}
