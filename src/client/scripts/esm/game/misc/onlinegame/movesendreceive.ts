@@ -14,12 +14,10 @@ import type { MoveValidationResult } from '../../../../../../shared/chess/logic/
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
-import icnconverter, {
-	_Move_Compact,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
