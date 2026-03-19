@@ -59,8 +59,9 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 /**
  * Tests if the provided move is legal to play in this game,
  * including whether the claimed game conclusion is correct.
+ * Also attaches and special move tags to the move coords.
  * @param gamefile - The gamefile
- * @param moveCoords - The move in compact JSON format
+ * @param moveCoords - The move. Special move tags will be attached to them if it is legal.
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
@@ -121,8 +122,9 @@ function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidatio
 /**
  * CORE LOGIC: Checks validity of a move.
  * REQUIRES you to be viewing the head of the game.
+ * Also attaches and special move tags to the move coords.
  * @param gamefile - The gamefile
- * @param moveCoords - The move to validate in compact JSON format, without special flags attached.
+ * @param moveCoords - The move to validate. Special move tags will be attached to them if it is legal.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
