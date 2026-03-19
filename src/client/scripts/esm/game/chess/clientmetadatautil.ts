@@ -85,13 +85,15 @@ function getGameConclusionFromResultAndTermination(
 		result === '*' ? undefined :
 		((): never => { throw Error(`Unsupported result (${result})!`); })();
 
-	const parseResult = winconutil.gameConclusionSchema.safeParse({
-		condition: termination,
-		victor,
-	});
+	const gameConclusion: any = { condition: termination };
+	// Only attach victor if it is defined
+	if (victor !== undefined) gameConclusion.victor = victor;
+
+	// Make sure it's type safe
+	const parseResult = winconutil.gameConclusionSchema.safeParse(gameConclusion);
 	if (!parseResult.success)
 		throw new Error(
-			`Invalid GameConclusion for result "${result}" and termination "${termination}": ${parseResult.error.message}`,
+			`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${parseResult.error}`,
 		);
 	return parseResult.data;
 }

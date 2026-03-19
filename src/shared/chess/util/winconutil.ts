@@ -109,6 +109,7 @@ const gameConclusionSchema = z.discriminatedUnion('condition', [
 	}),
 	z.strictObject({
 		condition: z.literal('aborted'),
+		victor: z.undefined().optional(), // Allows accidental inclusion of undefined victor
 	}),
 ]);
 
