@@ -349,29 +349,20 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
 
 /**
  * Sets the new conclusion for the game.
- * If truthy, it will fire {@link onGameConclusion()}.
+ * Stops the game clock, cancels all running timers, closes any draw offer,
+ * broadcasts the gameupdate to all players if it's not a move-triggered conclusion,
+ * then either deletes the game immediately (if the server validated moves)
+ * or sets a short timer to give the losing client time to oppose the conclusion.
  * @param servergame - The game
  * @param conclusion - The new game conclusion
  */
 function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	const dontDecrementActiveGames = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
+	const alreadyOver = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	gamefileutility.setConclusion(servergame.basegame, conclusion);
-	if (conclusion !== undefined) onGameConclusion(servergame, { dontDecrementActiveGames });
-}
 
-/**
- * Fire whenever a game's `gameConclusion` property is set.
- * Stops the game clock, cancels all running timers, closes any draw offer,
- * broadcasts the gameupdate to all player if it's not a move-triggered conclusion,
- * then either deletes the game immediately (if the server validated moves)
- * or sets a short timer to give the losing client time to oppose the
- * conclusion if they want.
- * @param servergame - The game object representing the current game.
- * @param [options] - Optional parameters.
- * @param [options.dontDecrementActiveGames=false] - If true, prevents decrementing the active game count.
- */
-function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = false } = {}): void {
-	if (!dontDecrementActiveGames) decrementActiveGameCount();
+	if (conclusion === undefined) return;
+
+	if (!alreadyOver) decrementActiveGameCount();
 
 	const players: Record<string, any> = {};
 	for (const [c, data] of Object.entries(servergame.match.playerData)) {
@@ -400,10 +391,9 @@ function onGameConclusion(servergame: ServerGame, { dontDecrementActiveGames = f
 	// Persist the game conclusion to the database before potentially deleting.
 	liveGameValues.onGameConcluded(servergame);
 
-	// If this conclusion happened mid-move (not one triggerred by a move),
+	// If this conclusion happened mid-move (not one triggered by a move),
 	// then auto-broadcast a final gameupdate to all players.
 	// Move-triggered conclusions already send the gameConclusion in the move response.
-	const conclusion = servergame.basegame.gameConclusion!;
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition))
 		gameutility.broadcastGameUpdate(servergame);
 
