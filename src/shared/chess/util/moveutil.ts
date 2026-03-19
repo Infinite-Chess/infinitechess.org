@@ -6,47 +6,14 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { GameRules } from './gamerules.js';
+import type { MoveFull } from '../logic/movepiece.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
 import type { Game, Board } from '../logic/gamefile.js';
 import type { CoordsTagged } from '../logic/movepiece.js';
-import type { MoveFull, MoveTagged, castle, enpassant, promotion } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
-import { players as p } from './typeutil.js';
-
-// Types -----------------------------------------------------------------------------------------
-
-/**
- * The format of outdated 2D moves list in game ICN notation.
- *
- * Where if the first move in the first array is null, that means it's black to move first.
- * No other move will be null.
- */
-type DepricatedMoves = [null | DepricatedMove, null | DepricatedMove][];
-
-/** The format of an outdated Move */
-interface DepricatedMove {
-	startCoords: Coords;
-	endCoords: Coords;
-	type: string;
-	captured?: string;
-	enpassant?: enpassant;
-	promotion?: promotion;
-	castle?: castle;
-}
 
 // Functions ------------------------------------------------------------------------------
-
-/**
- * Returns the move one forward from the current position we're viewing, if it exists.
- * This is also the move we would execute if we forward the game 1 step.
- */
-function getMoveOneForward(boardsim: Board): MoveFull | undefined {
-	const moveIndex = boardsim.state.local.moveIndex;
-	const incrementedIndex = moveIndex + 1;
-	return getMoveFromIndex(boardsim.moves, incrementedIndex);
-}
 
 /**
  * Returns *true* if it is legal to forward the provided gamefile by 1 move, *false* if we're at the front of the game.
@@ -102,39 +69,8 @@ function getMoveFromIndex(moves: MoveFull[], index: number): MoveFull {
  */
 function areWeViewingLatestMove(boardsim: Board): boolean {
 	const moveIndex = boardsim.state.local.moveIndex;
-	return isIndexTheLastMove(boardsim.moves, moveIndex);
-}
-
-/**
- * Tests if the provided index is the index of the last move in the provided list
- */
-function isIndexTheLastMove(moves: MoveFull[], index: number): boolean {
-	const finalIndex = moves.length - 1;
-	return index === finalIndex;
-}
-
-/**
- * Gets the color of whos turn it is currently, or at the front of the game.
- * Depends on the turn order. WILL NOT ACCOUNT FOR NULL MOVES.
- */
-function getWhosTurnAtFront(basegame: Game): Player {
-	return getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1);
-}
-
-/**
- * Returns whos turn it is at the front of the game,
- * provided the only information you have is the existing moves list
- * and the turnOrder gamerule.
- *
- * You may need this if the gamefile hasn't actually been contructed yet.
- * @param numberOfMoves - The number of moves played in the game so far (length of the current moves list).
- * @param turnOrder - The order of players turns in the game.
- */
-function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(
-	numberOfMoves: number,
-	turnOrder: GameRules['turnOrder'],
-): Player {
-	return turnOrder[numberOfMoves % turnOrder.length]!;
+	const finalIndex = boardsim.moves.length - 1;
+	return moveIndex === finalIndex;
 }
 
 /**
@@ -145,64 +81,12 @@ function getPlyCount(moves: MoveFull[]): number {
 }
 
 /**
- * Tests if the piece on the provided coordinates at moved at least once in the gamefile.
- * @param boardsim
- * @param coords - The current coordinates of the piece.
- */
-function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
-	return boardsim.moves.some((move: MoveFull) =>
-		coordutil.areCoordsEqual(move.endCoords, coords),
-	);
-}
-
-// COMMENTED-OUT because it's not used anywhere in the code
-// /**
-//  * Flags the gamefile's very last move as a "check".
-//  * @param {gamefile} gamefile - The gamefile
-//  */
-// function flagLastMoveAsCheck(gamefile) {
-// 	if (gamefile.moves.length === 0) throw new Error("Cannot flag the game's last move as a 'check' when there are no moves.");
-// 	const lastMove = getLastMove(gamefile.moves);
-// 	lastMove.check = true;
-// }
-
-/**
  * Flags the gamefile's very last move as a "mate".
  */
 function flagLastMoveAsMate(boardsim: Board): void {
 	const lastMove = getLastMove(boardsim.moves);
 	if (lastMove === undefined) return; // No moves, can't flag last move as mate (this can happen when pasting a game that's over)
 	lastMove.flags.mate = true;
-}
-
-/**
- * Returns true if the moves are in the old 2D array format.
- */
-function areMovesIn2DFormat(longmoves: MoveFull[] | DepricatedMoves): boolean {
-	if (longmoves.length === 0) return false; // Empty, assume they are in the new 1D format
-	return Array.isArray(longmoves[0]);
-}
-
-/**
- * Converts a gamefile's move list from the old 2D array format to the new 1D format.
- * If it's a black-moves-first game, it sets the 'turn' property of the provided results
- * object to player black, otherwise player white.
- * @param moves - The gamefile's moves in the old 2D array format
- * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
- * @returns Moves converted to the new 1D array format
- */
-function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveTagged[]; turn: Player } {
-	let turn: Player = p.WHITE;
-	const moves1D: MoveTagged[] = [];
-	for (let a = 0; a < moves.length; a++) {
-		const thisPair = moves[a]!;
-		for (let b = 0; b < thisPair.length; b++) {
-			const thisMove = thisPair[b]!;
-			if (thisMove === null) turn = p.BLACK;
-			else moves1D.push(thisMove as MoveTagged);
-		}
-	}
-	return { moves: moves1D, turn };
 }
 
 /**
@@ -255,23 +139,14 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsTagged): Coords {
 // ------------------------------------------------------------------------------
 
 export default {
-	getMoveOneForward,
 	isIncrementingLegal,
 	isDecrementingLegal,
-	isIndexOutOfRange,
 	getLastMove,
 	getCurrentMove,
 	getMoveFromIndex,
 	areWeViewingLatestMove,
-	isIndexTheLastMove,
-	getWhosTurnAtFront,
-	getWhosTurnAtFrom_ByMoveCountAndTurnOrder,
 	getPlyCount,
-	hasPieceMoved,
-	// flagLastMoveAsCheck,
 	flagLastMoveAsMate,
-	areMovesIn2DFormat,
-	convertMovesTo1DFormat,
 	isGameResignable,
 	getColorThatPlayedMoveIndex,
 	getWhosTurnAtMoveIndex,
