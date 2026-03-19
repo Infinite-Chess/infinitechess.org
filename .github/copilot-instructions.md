@@ -38,3 +38,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 - **Database:** Uses SQLite via the `better-sqlite3` package (`database.db` located in the root, and JSON files in `database/` for stats, bans, etc.)
 - **Socket Communication:** Real-time features via `src/server/socket/`.
 - **External:** No major external APIs detected; relies on local assets and custom logic.
+
+## VS Code Tool Notes
+
+- **Rename Symbol:** To rename a symbol across all files that import it, point the rename symbol tool at the symbol's name inside a named `export { }` or `export type { }` block — this works for named exports only; `export default { }` object-style exports require manual renaming of all external call sites regardless of where the rename is applied.
