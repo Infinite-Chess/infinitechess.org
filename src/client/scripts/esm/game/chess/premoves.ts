@@ -353,7 +353,7 @@ function premoveIsLegal(
 	const color = typeutil.getColorFromType(piece.type);
 
 	// A copy of the end coords for applying the special tags too.
-	// We have to do this because enpassant capture flags aren't
+	// We have to do this because enpassant capture tags aren't
 	// generated for normal premoves
 	const endCoordsTagged: CoordsTagged = coordutil.copyCoords(premove.endCoords);
 

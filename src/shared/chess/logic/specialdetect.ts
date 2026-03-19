@@ -210,7 +210,7 @@ function pawns(
 
 	if (moveValidity === 0) {
 		// Pawns forward-motion validity check must be 0, as they can't capture forward.
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
+		appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
 
 		// Further... Is the double push legal?
 		const doublePushCoord: CoordsTagged = [
@@ -228,13 +228,13 @@ function pawns(
 
 		if (doesPieceHaveSpecialRight(boardsim, coords) && moveValidity === 0) {
 			// Add the double push!
-			// Only create the enpassantCreate flag if it's not a premove.
+			// Only create the enpassantCreate tag if it's not a premove.
 			if (!premove)
 				doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(
 					coords,
 					doublePushCoord,
 				);
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color);
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, doublePushCoord, color);
 		}
 	}
 
@@ -254,7 +254,7 @@ function pawns(
 			true,
 		); // true for capture is required
 		if (moveValidity <= 1)
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -293,7 +293,7 @@ function addPossibleEnPassant(
 	coords: Coords,
 	color: Player,
 ): void {
-	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
+	if (boardsim.state.global.enpassant === undefined) return; // No enpassant tag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(
 		boardsim.pieces,
@@ -317,14 +317,14 @@ function addPossibleEnPassant(
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
  * Appends the provided move to the running individual moves list,
- * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
+ * and adds the `promoteTrigger` special tag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(
+function appendPawnMoveAndAttachPromoteTag(
 	basegame: Game,
 	individualMoves: CoordsTagged[],
 	landCoords: CoordsTagged,

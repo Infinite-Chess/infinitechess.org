@@ -86,7 +86,7 @@ function pawnLegalMoves(
 		singlePushCoord[1] > dim.MIN_Y &&
 		singlePushCoord[1] < dim.MAX_Y // Pawn within boundaries
 	) {
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
+		appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
 
 		// Is the double push legal?
 		const doublePushCoord: CoordsTagged = [
@@ -115,7 +115,7 @@ function pawnLegalMoves(
 				coords,
 				doublePushCoord,
 			);
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); // Add the double push!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, doublePushCoord, color); // Add the double push!
 		}
 	}
 
@@ -142,7 +142,7 @@ function pawnLegalMoves(
 			true,
 		); // true for capture is required
 		if (moveValidity <= 1)
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -205,14 +205,14 @@ function addPossibleEnPassant(
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(
+function appendPawnMoveAndAttachPromoteTag(
 	basegame: Game,
 	individualMoves: CoordsTagged[],
 	landCoords: CoordsTagged,

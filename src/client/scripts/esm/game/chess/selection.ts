@@ -122,7 +122,7 @@ function getSquarePawnIsCurrentlyPromotingOn(): CoordsTagged | undefined {
 }
 
 /**
- * Flags the currently selected pawn to be promoted next frame.
+ * Marks the currently selected pawn to be promoted next frame.
  * Call when a choice is made on the promotion UI.
  */
 function promoteToType(type: number): void {
@@ -227,7 +227,7 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 		return;
 	}
 	const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
-	// Required to pass on the special flag
+	// Required to pass on the special tag
 	const legal = legalmoves.checkIfMoveLegal(
 		gamefile,
 		legalMoves!,
@@ -534,8 +534,8 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 
 /**
  * Moves the currently selected piece to the specified coordinates, then unselects the piece.
- * The destination coordinates MUST contain any special move flags.
- * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
+ * The destination coordinates MUST contain any special move tags.
+ * @param coords - The destination coordinates`[x,y]`. MUST contain any special move tags.
  */
 function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: CoordsTagged): void {
 	// Check if the move is a pawn promotion
@@ -580,10 +580,10 @@ function onPromoteTrigger(coords: CoordsTagged): void {
 	delete coords.promoteTrigger;
 }
 
-/** Adds the promotion flag to the destination coordinates before making the move. */
+/** Adds the promotion tag to the destination coordinates before making the move. */
 function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	const coords: CoordsTagged = pawnIsPromotingOn!;
-	// Add the promoteTo flag
+	// Add the promoteTo tag
 	coords.promotion = promoteTo!;
 	moveGamefilePiece(gamefile, mesh, coords);
 	perspective.relockMouse();

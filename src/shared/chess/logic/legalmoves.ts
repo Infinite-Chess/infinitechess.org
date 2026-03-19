@@ -561,7 +561,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * Checks if the provided move start and end coords is one of the
  * legal moves in the provided legalMoves object.
  *
- * **This will modify** the provided endCoords to attach any special move flags.
+ * **This will modify** the provided endCoords to attach any special move tags.
  * @param gamefile
  * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
  * @param startCoords - The coordinates of the piece owning the legal moves
