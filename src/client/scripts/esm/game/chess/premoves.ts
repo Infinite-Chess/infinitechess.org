@@ -17,7 +17,7 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import movepiece, {
-	CoordsSpecial,
+	CoordsTagged,
 	Edit,
 	MoveTagged,
 } from '../../../../../shared/chess/logic/movepiece.js';
@@ -245,7 +245,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 				promotion: oldPremove.promotion,
 			};
 			specialdetect.transferSpecialFlags_FromCoordsToMove(
-				results.endCoordsSpecial,
+				results.endCoordsTagged,
 				premoveTagged,
 			);
 
@@ -303,7 +303,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 			endCoords: premove.endCoords,
 			promotion: premove.promotion,
 		};
-		specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, moveTagged);
+		specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsTagged, moveTagged);
 
 		const move = movesequence.makeMove(gamefile, mesh, moveTagged); // Make move
 
@@ -337,7 +337,7 @@ function premoveIsLegal(
 	gamefile: FullGame,
 	premove: Premove | undefined,
 	mode: 'physical' | 'premove',
-): { legal: true; endCoordsSpecial: CoordsSpecial } | { legal: false } {
+): { legal: true; endCoordsTagged: CoordsTagged } | { legal: false } {
 	if (!premove) return { legal: false };
 
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
@@ -355,17 +355,17 @@ function premoveIsLegal(
 	// A copy of the end coords for applying the special flags too.
 	// We have to do this because enpassant capture flags aren't
 	// generated for normal premoves
-	const endCoordsSpecial: CoordsSpecial = coordutil.copyCoords(premove.endCoords);
+	const endCoordsTagged: CoordsTagged = coordutil.copyCoords(premove.endCoords);
 
 	const isLegal = legalmoves.checkIfMoveLegal(
 		gamefile,
 		premovedPieceLegalMoves,
 		premove.startCoords,
-		endCoordsSpecial,
+		endCoordsTagged,
 		color,
 	);
 
-	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsSpecial };
+	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsTagged };
 	else return { legal: false };
 }
 

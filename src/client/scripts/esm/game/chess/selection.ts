@@ -9,7 +9,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { CoordsSpecial, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type { CoordsTagged, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -63,13 +63,13 @@ let isOpponentPiece = false;
 let isPremove = false;
 
 /** The tile the mouse is hovering over, OR the tile we just performed a simulated click over: `[x,y]` */
-let hoverSquare: CoordsSpecial | undefined; // Current square mouse is hovering over
+let hoverSquare: CoordsTagged | undefined; // Current square mouse is hovering over
 /** Whether the {@link hoverSquare} is legal to move the selected piece to. */
 let hoverSquareLegal: boolean = false;
 
 /** If a pawn is currently promoting (waiting on the promotion UI selection),
  * this will be set to the square it's moving to: `[x,y]`. */
-let pawnIsPromotingOn: CoordsSpecial | undefined;
+let pawnIsPromotingOn: CoordsTagged | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
 let promoteTo: number | undefined;
 
@@ -117,7 +117,7 @@ function getLegalMovesOfSelectedPiece(): LegalMoves | undefined {
 }
 
 /** Returns *true* if a pawn is currently promoting (promotion UI open). */
-function getSquarePawnIsCurrentlyPromotingOn(): CoordsSpecial | undefined {
+function getSquarePawnIsCurrentlyPromotingOn(): CoordsTagged | undefined {
 	return pawnIsPromotingOn;
 }
 
@@ -537,11 +537,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
  * The destination coordinates MUST contain any special move flags.
  * @param coords - The destination coordinates`[x,y]`. MUST contain any special move flags.
  */
-function moveGamefilePiece(
-	gamefile: FullGame,
-	mesh: Mesh | undefined,
-	coords: CoordsSpecial,
-): void {
+function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: CoordsTagged): void {
 	// Check if the move is a pawn promotion
 	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) return onPromoteTrigger(coords);
 
@@ -575,7 +571,7 @@ function moveGamefilePiece(
 }
 
 /** Opens the promotion UI */
-function onPromoteTrigger(coords: CoordsSpecial): void {
+function onPromoteTrigger(coords: CoordsTagged): void {
 	const color = typeutil.getColorFromType(pieceSelected!.type);
 	guipromotion.open(color);
 	perspective.unlockMouse();
@@ -586,7 +582,7 @@ function onPromoteTrigger(coords: CoordsSpecial): void {
 
 /** Adds the promotion flag to the destination coordinates before making the move. */
 function makePromotionMove(gamefile: FullGame, mesh: Mesh | undefined): void {
-	const coords: CoordsSpecial = pawnIsPromotingOn!;
+	const coords: CoordsTagged = pawnIsPromotingOn!;
 	// Add the promoteTo flag
 	coords.promotion = promoteTo!;
 	moveGamefilePiece(gamefile, mesh, coords);

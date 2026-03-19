@@ -8,7 +8,7 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { Attacker } from './state.js';
-import type { CoordsSpecial } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 
@@ -143,7 +143,7 @@ function doesVicinityAttackSquare(
  */
 function doesSpecialAttackSquare(
 	gamefile: FullGame,
-	square: CoordsSpecial,
+	square: CoordsTagged,
 	friendlyColor: Player,
 	attackers?: Attacker[],
 ): boolean {

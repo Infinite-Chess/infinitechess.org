@@ -9,7 +9,7 @@ import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
 import icnconverter, { MoveCoords } from './icn/icnconverter.js';
-import movepiece, { CoordsSpecial, MoveTagged } from './movepiece.js';
+import movepiece, { CoordsTagged, MoveTagged } from './movepiece.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -191,7 +191,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 
 	// Test if that piece's legal moves contain the destination coords...
 
-	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveCoords.endCoords);
+	const endCoordsToAppendTagsTo: CoordsTagged = jsutil.deepCopyObject(moveCoords.endCoords);
 
 	// This logic is pulled out of legalmoves.calculateAll(), so we can observe
 	// it at each step to find the earliest illegality point of the move submission.
@@ -216,7 +216,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 			gamefile,
 			legalMoves,
 			piecemoved.coords,
-			endCoordsToAppendSpecialsTo,
+			endCoordsToAppendTagsTo,
 			colorOfPieceMoved,
 		)
 	) {
@@ -231,7 +231,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 			gamefile,
 			legalMoves,
 			piecemoved.coords,
-			endCoordsToAppendSpecialsTo,
+			endCoordsToAppendTagsTo,
 			colorOfPieceMoved,
 		)
 	) {
@@ -239,7 +239,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 	}
 
 	// Now transfer the special move flags from the coords to the move draft
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveCoords);
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendTagsTo, moveCoords);
 
 	// If we reach here, the move is valid!
 	return { valid: true, tagged: moveCoords };

@@ -9,7 +9,7 @@ import type { Player } from './typeutil.js';
 import type { GameRules } from './gamerules.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
 import type { Game, Board } from '../logic/gamefile.js';
-import type { CoordsSpecial } from '../logic/movepiece.js';
+import type { CoordsTagged } from '../logic/movepiece.js';
 import type { MoveFull, MoveTagged, castle, enpassant, promotion } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
@@ -248,7 +248,7 @@ function doesAnyPlayerGet2TurnsInARow(basegame: Game): boolean {
 /**
  * Strips the coordinates of any special move properties. NON-MUTATING, returns new coords.
  */
-function stripSpecialMoveTagsFromCoords(coords: CoordsSpecial): Coords {
+function stripSpecialMoveTagsFromCoords(coords: CoordsTagged): Coords {
 	return coordutil.copyCoords(coords); // Does not copy non-enumerable properties
 }
 

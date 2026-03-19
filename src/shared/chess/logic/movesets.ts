@@ -7,7 +7,7 @@
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { FullGame } from './gamefile.js';
-import type { CoordsSpecial } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
 
@@ -123,7 +123,7 @@ type SpecialFunction = (
 	_coords: Coords,
 	_color: Player,
 	_premove: boolean,
-) => CoordsSpecial[];
+) => CoordsTagged[];
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
 function defaultBlockingFunction(

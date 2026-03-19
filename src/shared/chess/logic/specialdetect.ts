@@ -3,7 +3,7 @@
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { MoveTagged } from './movepiece.js';
-import type { CoordsSpecial } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { FullGame, Game, Board } from './gamefile.js';
 
@@ -55,8 +55,8 @@ function kings(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
-	const individualMoves: CoordsSpecial[] = [];
+): CoordsTagged[] {
+	const individualMoves: CoordsTagged[] = [];
 
 	const { boardsim, basegame } = gamefile;
 
@@ -166,7 +166,7 @@ function kings(
 
 		// All checks passed, this side is legal to castle with. Add the move!
 
-		const specialMove: CoordsSpecial = [coords[0] + 2n * dir, coords[1]];
+		const specialMove: CoordsTagged = [coords[0] + 2n * dir, coords[1]];
 		specialMove.castle = { dir, coord: pieceCoord }; // The special move flag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
 		individualMoves.push(specialMove);
 	}
@@ -188,11 +188,11 @@ function pawns(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
+): CoordsTagged[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === p.WHITE ? 1n : -1n;
-	const individualMoves: CoordsSpecial[] = [];
+	const individualMoves: CoordsTagged[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
 	// 1. It can move forward if there is no piece there
@@ -213,7 +213,7 @@ function pawns(
 		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
 
 		// Further... Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [
+		const doublePushCoord: CoordsTagged = [
 			singlePushCoord[0],
 			singlePushCoord[1] + yOneorNegOne,
 		];
@@ -310,7 +310,7 @@ function addPossibleEnPassant(
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(
+	const enPassantSquare: CoordsTagged = coordutil.copyCoords(
 		boardsim.state.global.enpassant.square,
 	);
 
@@ -326,8 +326,8 @@ function addPossibleEnPassant(
  */
 function appendPawnMoveAndAttachPromoteFlag(
 	basegame: Game,
-	individualMoves: CoordsSpecial[],
-	landCoords: CoordsSpecial,
+	individualMoves: CoordsTagged[],
+	landCoords: CoordsTagged,
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
@@ -351,16 +351,15 @@ function roses(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
+): CoordsTagged[] {
 	// prettier-ignore
 	const movements: Coords[] = [[-2n, -1n], [-1n, -2n], [1n, -2n], [2n, -1n], [2n, 1n], [1n, 2n], [-1n, 2n], [-2n, 1n]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
-	const individualMoves: CoordsSpecial[] = [];
+	const individualMoves: CoordsTagged[] = [];
 
 	for (let i = 0; i < movements.length; i++) {
 		for (const direction of directions) {
-			/** @type {CoordsSpecial} */
-			let currentCoord: CoordsSpecial = coordutil.copyCoords(coords);
+			let currentCoord: CoordsTagged = coordutil.copyCoords(coords);
 			let b = i;
 			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
 			for (let c = 0; c < movements.length - 1; c++) {
@@ -395,7 +394,7 @@ function roses(
 	 * 3. Randomly pick one
 	 * @param {Coords} newCoord - The coordinate to append [x, y].
 	 */
-	function appendCoordToIndividuals(newCoord: CoordsSpecial, path: Coords[]): void {
+	function appendCoordToIndividuals(newCoord: CoordsTagged, path: Coords[]): void {
 		newCoord.path = jsutil.deepCopyObject(path);
 		for (let i = 0; i < individualMoves.length; i++) {
 			const coord = individualMoves[i]!;
@@ -488,7 +487,7 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 /**
  * Transfers any special move flags from the provided coordinates to the move.
  */
-function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveTagged): void {
+function transferSpecialFlags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (coords[special] !== undefined) {
@@ -514,8 +513,8 @@ function transferSpecialFlags_FromMoveToCoords(move: MoveTagged, coords: Coords)
  * @param destCoords - The destination coordinates
  */
 function transferSpecialFlags_FromCoordsToCoords(
-	srcCoords: CoordsSpecial,
-	destCoords: CoordsSpecial,
+	srcCoords: CoordsTagged,
+	destCoords: CoordsTagged,
 ): void {
 	for (const special of allSpecials) {
 		// @ts-ignore

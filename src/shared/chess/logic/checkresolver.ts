@@ -13,7 +13,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
 import type { LegalMoves } from './legalmoves.js';
-import type { CoordsSpecial, MoveTagged, path } from './movepiece.js';
+import type { CoordsTagged, MoveTagged, path } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
@@ -85,7 +85,7 @@ function removeCheckInvalidMoves(
  */
 function removeCheckInvalidMoves_Individual(
 	gamefile: FullGame,
-	individualMoves: CoordsSpecial[],
+	individualMoves: CoordsTagged[],
 	piece: Piece,
 	color: Player,
 ): void {
@@ -93,7 +93,7 @@ function removeCheckInvalidMoves_Individual(
 	// Simulate the move, then check the game state for check
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		// Iterate backwards so we don't run into issues as we delete indices while iterating
-		const thisMove: CoordsSpecial = individualMoves[i]!; // [x,y]
+		const thisMove: CoordsTagged = individualMoves[i]!; // [x,y]
 		if (isMoveCheckInvalid(gamefile, piece, thisMove, color)) individualMoves.splice(i, 1); // Remove the move
 	}
 }
@@ -448,7 +448,7 @@ function appendBlockingMoves(
 		if (
 			gamefile.boardsim.colinearsPresent &&
 			moves.individual.some(
-				(move: CoordsSpecial) =>
+				(move: CoordsTagged) =>
 					move[0] === blockPointInt[0] && move[1] === blockPointInt[1],
 			)
 		)
@@ -518,7 +518,7 @@ function appendPathBlockingMoves(
 function isMoveCheckInvalid(
 	gamefile: FullGame,
 	piece: Piece,
-	destCoords: CoordsSpecial,
+	destCoords: CoordsTagged,
 	color: Player,
 ): boolean {
 	// pieceSelected: { type, index, coords }

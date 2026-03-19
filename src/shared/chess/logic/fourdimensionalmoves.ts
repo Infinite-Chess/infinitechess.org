@@ -12,7 +12,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { MoveRunning } from './specialmove.js';
-import type { CoordsSpecial } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { Game, Board, FullGame } from './gamefile.js';
 
@@ -89,7 +89,7 @@ function pawnLegalMoves(
 		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
 
 		// Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [
+		const doublePushCoord: CoordsTagged = [
 			singlePushCoord[0],
 			singlePushCoord[1] + yDistanceParity,
 		];
@@ -198,7 +198,7 @@ function addPossibleEnPassant(
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(
+	const enPassantSquare: CoordsTagged = coordutil.copyCoords(
 		boardsim.state.global.enpassant.square,
 	);
 
@@ -214,8 +214,8 @@ function addPossibleEnPassant(
  */
 function appendPawnMoveAndAttachPromoteFlag(
 	basegame: Game,
-	individualMoves: CoordsSpecial[],
-	landCoords: CoordsSpecial,
+	individualMoves: CoordsTagged[],
+	landCoords: CoordsTagged,
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {

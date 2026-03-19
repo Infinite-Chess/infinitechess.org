@@ -37,7 +37,7 @@ import { rawTypes as r } from '../util/typeutil.js';
  * This usually denotes a legal square you can move to that will
  * activate said special move.
  */
-type CoordsSpecial = Coords & {
+type CoordsTagged = Coords & {
 	enpassantCreate?: enpassantCreate;
 	enpassant?: enpassant;
 	promoteTrigger?: promoteTrigger;
@@ -660,7 +660,7 @@ export type {
 	Edit,
 	MoveRecord,
 	MoveTagged,
-	CoordsSpecial,
+	CoordsTagged,
 	enpassantCreate,
 	enpassant,
 	promotion,
