@@ -39,11 +39,7 @@ import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
-import {
-	incrementActiveGameCount,
-	decrementActiveGameCount,
-	printActiveGameCount,
-} from './gamecount.js';
+import { printActiveGameCount, broadcastGameCountToInviteSubs } from './gamecount.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
@@ -132,7 +128,7 @@ function createGame(
 		addUserToActiveGames(data.identifier, servergame.match.id);
 	}
 
-	addGameToActiveGames(servergame);
+	activeGames[servergame.match.id] = servergame;
 
 	// Persist the new game to the database for restoration after server restart.
 	liveGameValues.onGameCreated(servergame);
@@ -155,15 +151,6 @@ function issueUniqueGameId(): number {
 	} while (activeGames[id] !== undefined); // Repeat until we have an id unique against all active games.
 	// console.log(`Issued game_id (${id})!`);
 	return id;
-}
-
-/**
- * Adds a game to the active games list and increments the active game count.
- * @param servergame - The game
- */
-function addGameToActiveGames(servergame: ServerGame): void {
-	activeGames[servergame.match.id] = servergame;
-	incrementActiveGameCount();
 }
 
 /**
@@ -357,12 +344,9 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
  * @param conclusion - The new game conclusion
  */
 function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	const alreadyOver = servergame.basegame.gameConclusion !== undefined; // Game already over, active game count already decremented.
 	gamefileutility.setConclusion(servergame.basegame, conclusion);
 
 	if (conclusion === undefined) return;
-
-	if (!alreadyOver) decrementActiveGameCount();
 
 	const players: Record<string, any> = {};
 	for (const [c, data] of Object.entries(servergame.match.playerData)) {
@@ -490,6 +474,7 @@ function deleteGame(servergame: ServerGame): void {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
+	broadcastGameCountToInviteSubs();
 
 	// Remove the live game from the persistence database.
 	liveGameValues.onGameDeleted(servergame.match.id);
@@ -572,7 +557,7 @@ function restoreLiveGames(): void {
 
 	for (const { servergame, pendingTimers } of restoredGames) {
 		// Add the game to the active games list
-		addGameToActiveGames(servergame);
+		activeGames[servergame.match.id] = servergame;
 
 		// Register players in the active players list
 		for (const data of Object.values(servergame.match.playerData)) {
@@ -702,6 +687,7 @@ function broadCastGameRestarting(): void {
 //--------------------------------------------------------------------------------------------------------
 
 export {
+	activeGames,
 	createGame,
 	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
