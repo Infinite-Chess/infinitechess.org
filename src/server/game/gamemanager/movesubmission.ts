@@ -139,6 +139,10 @@ function submitMove(
 		gameutility.sendGameUpdateToColor(servergame, color, false);
 	else gameutility.sendUpdatedClockToColor(servergame, color);
 	gameutility.sendMoveToColor(servergame, opponentColor, moveRecord); // Send their move to their opponent.
+
+	// NOW Trigger conclusion machinery (clock stop, game deletion, etc.) after message sends.
+	if (gameutility.isGameOver(servergame.basegame))
+		setGameConclusion(servergame, servergame.basegame.gameConclusion);
 }
 
 /**
@@ -184,8 +188,8 @@ function applyServerValidatedMove(
 	}
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
-	gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
-	setGameConclusion(servergame, gamefile.basegame.gameConclusion);
+	// Auto-sets basegame.gameConclusion if the move triggers a conclusion.
+	gamefileutility.doGameOverChecks(gamefile);
 
 	return moveRecord;
 }
@@ -220,7 +224,9 @@ function applyClientReportedMove(
 	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
 	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
-	setGameConclusion(servergame, messageContents.gameConclusion);
+
+	// Manually set basegame.gameConclusion to client-reported conclusion
+	gamefileutility.setConclusion(servergame.basegame, messageContents.gameConclusion);
 
 	return moveRecord;
 }
