@@ -42,8 +42,8 @@ import {
  * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
-async function logGame(servergame: ServerGame): Promise<RatingData | undefined> {
-	if (servergame.basegame.moves.length === 0) return undefined; // Don't log games with zero moves
+function logGame(servergame: ServerGame): RatingData | undefined {
+	if (servergame.basegame.moves.length === 0) return; // Don't log games with zero moves
 
 	try {
 		// Create the transaction by wrapping our orchestrator function.
@@ -61,15 +61,15 @@ async function logGame(servergame: ServerGame): Promise<RatingData | undefined> 
 		// This block will only execute if the orchestrator throws an error, causing a rollback.
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog.txt',
 		);
-		await logEvents(
+		void logEvents(
 			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 			'unloggedGames.txt',
 		);
-		return undefined;
+		return;
 	}
 }
 
