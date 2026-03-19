@@ -17,7 +17,7 @@ import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 export type MoveValidationResult =
 	| {
 			valid: true;
-			/** The move draft with any special flags attached, derived from its end coords. */
+			/** The move draft with any special tags attached, derived from its end coords. */
 			tagged: MoveTagged;
 	  }
 	| {
@@ -64,7 +64,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
  * @param moveCoords - The move. Special move tags will be attached to them if it is legal.
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
- * - `valid: true` and the `draft` of the move with any special flags attached.
+ * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function isOpponentsMoveLegal(
@@ -78,7 +78,7 @@ function isOpponentsMoveLegal(
 		const moveResult = validateMove(gamefile, moveCoords);
 		if (!moveResult.valid) return moveResult;
 
-		// 2. Check Conclusion Validity (using the draft with special flags attached)
+		// 2. Check Conclusion Validity (using the draft with special tags attached)
 		const conclusionResult = validateConclusion(
 			gamefile,
 			moveResult.tagged,
@@ -97,7 +97,7 @@ function isOpponentsMoveLegal(
  * @param gamefile - The gamefile
  * @param tokenMove - The move that SHOULD be in compact string format (e.g. "x,y>x,y=Q"), but we can't trust all enginess response contents.
  * @returns An object containing either:
- * - `valid: true` and the `draft` of the move with any special flags attached.
+ * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidationResult {
@@ -126,7 +126,7 @@ function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidatio
  * @param gamefile - The gamefile
  * @param moveCoords - The move to validate. Special move tags will be attached to them if it is legal.
  * @returns An object containing either:
- * - `valid: true` and the `draft` of the move with any special flags attached.
+ * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidationResult {
@@ -250,7 +250,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 /**
  * Determines whether the opponent's claimed conclusion matches what we calculate from the position.
  * @param gamefile - The gamefile
- * @param moveTagged - The move draft, WITH special flags attached!
+ * @param moveTagged - The move draft, WITH special tags attached!
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
  * - `valid: true`

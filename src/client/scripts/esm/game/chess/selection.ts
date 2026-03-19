@@ -75,7 +75,7 @@ let promoteTo: number | undefined;
 
 /**
  * When enabled, allows moving pieces anywhere else on the board, disregarding whether it's legal.
- * Special flags however will still only be transferred if the destination is legal.
+ * Special tags however will still only be transferred if the destination is legal.
  */
 let editMode = false; // editMode, allows moving pieces anywhere else on the board!
 
@@ -470,7 +470,7 @@ function reselectPiece(): void {
 	// Close the promotion UI if it's open, ONLY if the square being promoted to is now illegal.
 	if (pawnIsPromotingOn) {
 		const colorOfSelectedPiece = typeutil.getColorFromType(pieceSelected.type);
-		// Use a copy so special flags aren't attached to the original pawnIsPromotingOn
+		// Use a copy so special tags aren't attached to the original pawnIsPromotingOn
 		const endCoordsCopy: Coords = coordutil.copyCoords(pawnIsPromotingOn);
 		const legal = legalmoves.checkIfMoveLegal(
 			gamefile,

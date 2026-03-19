@@ -467,7 +467,7 @@ function createCheckState(gamefile: FullGame, move: MoveFull): void {
 
 /**
  * Accepts a move list in the most comapact form: `['1,2>3,4','10,7>10,8Q']`,
- * reconstructs each move's properties, INCLUDING special flags, and makes that move
+ * reconstructs each move's properties, INCLUDING special tags, and makes that move
  * in the game. At each step it has to calculate what legal special
  * moves are possible, so it can pass on those flags.
  *

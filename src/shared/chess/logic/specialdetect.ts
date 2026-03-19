@@ -276,7 +276,7 @@ function getEnPassantGamefileProperty(
 ): enpassantCreate {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2n;
 	const enpassantSquare: Coords = [moveStartCoords[0], y];
-	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special flags
+	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special tags
 }
 
 /**

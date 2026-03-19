@@ -92,7 +92,7 @@ function handleOpponentsMove(
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
-		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
+		// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
 		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 			gamefile,
 			moveTagged,

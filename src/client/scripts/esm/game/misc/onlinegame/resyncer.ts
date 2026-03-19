@@ -163,7 +163,7 @@ function synchronizeMovesList(
 
 			if (isOpponentMove) {
 				// Perform legality checks
-				// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
+				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
 				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 					gamefile,
 					moveTagged,

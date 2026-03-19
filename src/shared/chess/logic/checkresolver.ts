@@ -511,7 +511,7 @@ function appendPathBlockingMoves(
  * then tests if it results in the player who owns the piece being in check.
  * @param gamefile
  * @param piece - The piece moving to the destination coords
- * @param destCoords - The coords to move the piece to, with any attached special flags to execute with the move.
+ * @param destCoords - The coords to move the piece to, with any attached special tags to execute with the move.
  * @param color - The color of the player the piece belongs to.
  * @returns Whether the move would result in the player owning the piece being in check.
  */
