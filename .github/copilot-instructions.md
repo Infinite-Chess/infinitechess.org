@@ -29,15 +29,13 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 
 ## Conventions & Patterns
 
-- **API Design:** REST endpoints and socket handlers are in `src/server/api/` and `src/server/socket/`.
 - **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`.
 - **Rendering:** When asked to add new graphics and visuals, refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
 
 ## Integration Points
 
-- **Database:** Uses SQLite via the `better-sqlite3` package (`database.db` located in the root, and JSON files in `database/` for stats, bans, etc.)
+- **Database:** Uses SQLite via the `better-sqlite3` package.
 - **Socket Communication:** Real-time features via `src/server/socket/`.
-- **External:** No major external APIs detected; relies on local assets and custom logic.
 
 ## VS Code Tool Notes
 
