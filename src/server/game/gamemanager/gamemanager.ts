@@ -335,15 +335,27 @@ function pushGameClock({ basegame, match }: ServerGame): number | undefined {
 }
 
 /**
- * Sets the new conclusion for the game.
- * Stops the game clock, cancels all running timers, closes any draw offer,
- * broadcasts the gameupdate to all players if it's not a move-triggered conclusion,
- * then either deletes the game immediately (if the server validated moves)
- * or sets a short timer to give the losing client time to oppose the conclusion.
+ * Finalizes the game conclusion and immediately deletes and logs the game.
+ * Use this for all conclusions not triggered by a move (time, disconnect, abort, resign, draw).
+ * For move-triggered conclusions use {@link finalizeConclusion} and {@link teardownGame}
+ * directly so messages can be sent between finalization and teardown.
  * @param servergame - The game
  * @param conclusion - The new game conclusion
  */
 function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
+	finalizeConclusion(servergame, conclusion);
+	if (conclusion !== undefined) teardownGame(servergame);
+}
+
+/**
+ * Finalizes the game conclusion: sets basegame state and metadata, stops the clock,
+ * cancels all timers, closes the draw offer, stamps the end time, and persists to the DB.
+ * After this returns, the game state is final and consistent with what will be logged.
+ * Does NOT broadcast to clients or touch socket/game-object teardown.
+ * @param servergame - The game
+ * @param conclusion - The new game conclusion
+ */
+function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
 	gamefileutility.setConclusion(servergame.basegame, conclusion);
 
 	if (conclusion === undefined) return;
@@ -372,11 +384,20 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
 	// The ending time of the game is set, if it is undefined
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
 
-	// Persist the game conclusion to the database before potentially deleting.
+	// Persist the final game state to the database.
 	liveGameValues.onGameConcluded(servergame);
+}
 
-	// If this conclusion happened mid-move (not one triggered by a move),
-	// then auto-broadcast a final gameupdate to all players.
+/**
+ * Executes game teardown: broadcasts the final game state to
+ * clients if the conclusion was not move-triggered, then either
+ * deletes the game immediately or schedules deletion after a short cushion.
+ * Must be called after {@link finalizeConclusion}.
+ * @param servergame - The game (basegame.gameConclusion must already be set)
+ */
+function teardownGame(servergame: ServerGame): void {
+	const conclusion = servergame.basegame.gameConclusion!;
+
 	// Move-triggered conclusions already send the gameConclusion in the move response.
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition))
 		gameutility.broadcastGameUpdate(servergame);
@@ -695,6 +716,8 @@ export {
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,
 	setGameConclusion,
+	finalizeConclusion,
+	teardownGame,
 	pushGameClock,
 	getGameByID,
 	// Shutdown Preparation & Startup Restoration

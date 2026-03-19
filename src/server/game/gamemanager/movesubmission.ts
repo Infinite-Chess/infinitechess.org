@@ -27,7 +27,7 @@ import { resyncToGame } from './resync.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import gameutility, { ServerGame } from './gameutility.js';
-import { pushGameClock, setGameConclusion } from './gamemanager.js';
+import { pushGameClock, finalizeConclusion, teardownGame } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the submitmove message. */
 const submitmoveschem = z.strictObject({
@@ -135,14 +135,24 @@ function submitMove(
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
 
-	if (gameutility.isGameOver(servergame.basegame))
-		gameutility.sendGameUpdateToColor(servergame, color, false);
-	else gameutility.sendUpdatedClockToColor(servergame, color);
-	gameutility.sendMoveToColor(servergame, opponentColor, moveRecord); // Send their move to their opponent.
+	const gameIsOver = gameutility.isGameOver(servergame.basegame);
 
-	// NOW Trigger conclusion machinery (clock stop, game deletion, etc.) after message sends.
-	if (gameutility.isGameOver(servergame.basegame))
-		setGameConclusion(servergame, servergame.basegame.gameConclusion);
+	if (gameIsOver) {
+		// If the game ended, finalize state before sending: stops the clock and persists to DB.
+		// This ensures both clients receive the same frozen clock values that are in the DB.
+		finalizeConclusion(servergame, servergame.basegame.gameConclusion);
+		// Send a whole gameupdate to the move-submitter
+		gameutility.sendGameUpdateToColor(servergame, color, false);
+	} else {
+		// Just send updated clocks to the move-submitter
+		gameutility.sendUpdatedClockToColor(servergame, color);
+	}
+	// Send their move to their opponent.
+	gameutility.sendMoveToColor(servergame, opponentColor, moveRecord);
+
+	// Tear down the game after sends. teardownGame skips broadcastGameUpdate for
+	// move-triggered conclusions since clients were already notified individually above.
+	if (gameIsOver) teardownGame(servergame);
 }
 
 /**
