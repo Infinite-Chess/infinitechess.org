@@ -31,10 +31,10 @@ import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import socketUtility from '../../socket/socketUtility.js';
 import liveGameValues from './liveGameValues.js';
+import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { executeSafely_async } from '../../utility/errorGuard.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
@@ -486,7 +486,7 @@ function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): vo
  * to give players time to cheat report.
  * @param servergame
  */
-async function deleteGame(servergame: ServerGame): Promise<void> {
+function deleteGame(servergame: ServerGame): void {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
@@ -500,11 +500,11 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	else {
 		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
 		// The ratings are calculated during the logging of the game into the database
-		const ratingdata = await gamelogger.logGame(servergame);
+		const ratingdata = gamelogger.logGame(servergame);
 
 		// Mostly deprecated:
 		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-		await executeSafely_async(
+		executeSafely(
 			() => statlogger.logGame(servergame),
 			`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
 		);
@@ -530,7 +530,7 @@ async function deleteGame(servergame: ServerGame): Promise<void> {
 	// Monitor suspicion levels for all players who participated in the game
 	// Doesn't have to be in the same transaction as the game logging,
 	// as the rating abuse table's data does not reference other tables.
-	await ratingabuse.measureRatingAbuseAfterGame(servergame);
+	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
 	console.log(`Deleted game ${servergame.match.id}.`);
 }

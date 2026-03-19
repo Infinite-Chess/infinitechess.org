@@ -217,7 +217,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		else console.log("Didn't send rating abuse email.");
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`,
 			'errLog.txt',
 		);

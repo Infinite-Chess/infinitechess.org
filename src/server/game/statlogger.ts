@@ -69,7 +69,7 @@ try {
  * @param servergame - The game to log
  * @returns
  */
-async function logGame({ basegame, match }: ServerGame): Promise<void> {
+function logGame({ basegame, match }: ServerGame): void {
 	// Only log the game if at least 2 moves were played! (resignable)
 	// Black-moves-first games are logged if at least 1 move is played!
 	if (basegame.moves.length < 2) return;
@@ -101,7 +101,7 @@ async function logGame({ basegame, match }: ServerGame): Promise<void> {
 
 	//----------------------------------------------------------
 
-	await saveStats(); // Saves stats in the database.
+	void saveStats(); // Saves stats in the database.
 }
 
 function incrementMonthsGamesPlayed(
@@ -131,7 +131,7 @@ async function saveStats(): Promise<void> {
 		const errMsg =
 			`Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` +
 			(e instanceof Error ? e.message : String(e));
-		logEventsAndPrint(errMsg, 'errLog.txt');
+		void logEventsAndPrint(errMsg, 'errLog.txt');
 	}
 }
 
