@@ -129,33 +129,6 @@ function findIndexOfPointInOrganizedArray(sortedArray: number[], point: number):
 }
 
 /**
- * Deletes an element from an organized array. MUST CONTAIN THE ELEMENT.
- * @param sortedArray - An array of numbers organized in ascending order.
- * @param value - The value to search for and delete
- * @returns The new array with the element deleted
- */
-function deleteElementFromOrganizedArray(sortedArray: number[], value: number): number[] {
-	const { found, index } = binarySearch(sortedArray, value);
-	if (!found)
-		throw Error(
-			`Cannot delete value "${value}" from organized array (not found). Array: ${JSON.stringify(sortedArray)}`,
-		);
-	sortedArray.splice(index, 1);
-	return sortedArray;
-}
-
-// Removes specified object from given array. Throws error if it fails. The object cannot be an object or array, only a single value.
-function removeObjectFromArray(array: any[], object: any): void {
-	// object can't be an array
-	const index = array.indexOf(object);
-	if (index !== -1) array.splice(index, 1);
-	else
-		throw Error(
-			`Could not delete object from array, not found! Array: ${JSON.stringify(array)}. Object: ${object}`,
-		);
-}
-
-/**
  * Copies the properties from one object to another,
  * without overwriting the existing properties on the destination object,
  * UNLESS the destination object has a matching property name.
@@ -182,18 +155,6 @@ function isEmpty(obj: object): boolean {
 }
 
 /**
- * Tests if a string is in valid JSON format, and can thus be parsed into an object.
- */
-function isJson(str: string): boolean {
-	try {
-		JSON.parse(str);
-	} catch {
-		return false;
-	}
-	return true;
-}
-
-/**
  * Returns a new object with the keys being the values of the provided object, and the values being the keys.
  * THE VALUES WILL ALWAYS BE STRINGS. This is because the keys of an object are always strings.
  */
@@ -203,25 +164,6 @@ function invertObj(obj: Record<string, string>): Record<string, string> {
 		inv[obj[key]!] = key;
 	}
 	return inv;
-}
-
-/**
- * Checks if array1 contains all the strings that array2 has and returns a list of missing strings.
- * @param array1 - The first array to check against.
- * @param array2 - The second array whose elements need to be present in array1.
- * @returns - An array of missing strings from array1. If none are missing, returns an empty array.
- */
-function getMissingStringsFromArray(array1: string[], array2: string[]): string[] {
-	// Convert array1 to a Set for efficient lookup
-	const set1 = new Set(array1);
-	const missing: string[] = [];
-
-	// Check if each element in array2 is present in set1
-	for (const item of array2) {
-		if (!set1.has(item)) missing.push(item); // If element from array2 is missing in array1, add it to the missing list
-	}
-
-	return missing; // Return the list of missing strings
 }
 
 /**
@@ -435,36 +377,17 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 	}
 }
 
-function areSetsEqual(set1: Set<any>, set2: Set<any>): boolean {
-	if (set1.size !== set2.size) return false;
-	for (const item of set1) {
-		if (!set2.has(item)) return false;
-	}
-	return true;
-}
-
-/** Helper that returns the keys of T as (keyof T)[] */
-function typedKeys<T extends object>(obj: T): Array<keyof T> {
-	return Object.keys(obj) as Array<keyof T>;
-}
-
 export default {
 	binarySearch,
 	deepCopyObject,
 	copyFloat32Array,
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
-	deleteElementFromOrganizedArray,
 	copyPropertiesToObject,
 	isEmpty,
-	isJson,
 	invertObj,
-	removeObjectFromArray,
-	getMissingStringsFromArray,
 	estimateMemorySizeOf,
 	stringifyReplacer,
 	parseReviver,
 	ensureJSONString,
-	areSetsEqual,
-	typedKeys,
 };
