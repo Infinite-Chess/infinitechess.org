@@ -590,7 +590,7 @@ function checkIfMoveLegal(
 			const thisIndividual = individual[i]!;
 			if (!coordutil.areCoordsEqual(endCoords, thisIndividual)) continue;
 			// Subtle way of passing on the TAG of all special moves!
-			specialdetect.transferSpecialFlags_FromCoordsToCoords(thisIndividual, endCoords);
+			specialdetect.transferSpecialTags_FromCoordsToCoords(thisIndividual, endCoords);
 			return true;
 		}
 	}

@@ -239,7 +239,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 	}
 
 	// Now transfer the special move flags from the coords to the move draft
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendTagsTo, moveCoords);
+	specialdetect.transferSpecialTags_FromCoordsToMove(endCoordsToAppendTagsTo, moveCoords);
 
 	// If we reach here, the move is valid!
 	return { valid: true, tagged: moveCoords };

@@ -167,7 +167,7 @@ function kings(
 		// All checks passed, this side is legal to castle with. Add the move!
 
 		const specialMove: CoordsTagged = [coords[0] + 2n * dir, coords[1]];
-		specialMove.castle = { dir, coord: pieceCoord }; // The special move flag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
+		specialMove.castle = { dir, coord: pieceCoord }; // The special move tag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
 		individualMoves.push(specialMove);
 	}
 
@@ -177,7 +177,7 @@ function kings(
 /**
  * Appends legal pawn moves to the provided legal individual moves list.
  * This also is in charge of adding single-push, double-push, and capturing
- * pawn moves, even though those don't need a special move flag.
+ * pawn moves, even though those don't need a special move tag.
  * @param gamefile - The gamefile
  * @param coords - Coordinates of the pawn selected
  * @param color - The color of the pawn selected
@@ -485,9 +485,9 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 }
 
 /**
- * Transfers any special move flags from the provided coordinates to the move.
+ * Transfers any special move tags from the provided coordinates to the move.
  */
-function transferSpecialFlags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
+function transferSpecialTags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (coords[special] !== undefined) {
@@ -498,9 +498,9 @@ function transferSpecialFlags_FromCoordsToMove(coords: CoordsTagged, move: MoveT
 }
 
 /**
- * Transfers any special move flags from the provided move to the coordinates.
+ * Transfers any special move tags from the provided move to the coordinates.
  */
-function transferSpecialFlags_FromMoveToCoords(move: MoveTagged, coords: Coords): void {
+function transferSpecialTags_FromMoveToCoords(move: MoveTagged, coords: Coords): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);
@@ -508,11 +508,11 @@ function transferSpecialFlags_FromMoveToCoords(move: MoveTagged, coords: Coords)
 }
 
 /**
- * Transfers any special move flags from the one pair of coordinates to another.
+ * Transfers any special move tags from the one pair of coordinates to another.
  * @param srcCoords - The source coordinates
  * @param destCoords - The destination coordinates
  */
-function transferSpecialFlags_FromCoordsToCoords(
+function transferSpecialTags_FromCoordsToCoords(
 	srcCoords: CoordsTagged,
 	destCoords: CoordsTagged,
 ): void {
@@ -530,7 +530,7 @@ export default {
 	roses,
 	getEnPassantGamefileProperty,
 	isPawnPromotion,
-	transferSpecialFlags_FromCoordsToMove,
-	transferSpecialFlags_FromMoveToCoords,
-	transferSpecialFlags_FromCoordsToCoords,
+	transferSpecialTags_FromCoordsToMove,
+	transferSpecialTags_FromMoveToCoords,
+	transferSpecialTags_FromCoordsToCoords,
 };

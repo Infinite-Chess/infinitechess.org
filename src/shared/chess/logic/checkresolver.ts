@@ -526,7 +526,7 @@ function isMoveCheckInvalid(
 		startCoords: jsutil.deepCopyObject(piece.coords),
 		endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords),
 	};
-	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveTagged);
+	specialdetect.transferSpecialTags_FromCoordsToMove(destCoords, moveTagged);
 	return getSimulatedCheck(gamefile, moveTagged, color).check;
 }
 

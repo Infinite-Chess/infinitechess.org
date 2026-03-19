@@ -558,7 +558,7 @@ function calculateMoveFromPacket(gamefile: FullGame, movePacket: MovePacket): Mo
 	for (const thisCoord of legalSpecialMoves.individual) {
 		if (!coordutil.areCoordsEqual(thisCoord, moveTagged.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
-		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, moveTagged);
+		specialdetect.transferSpecialTags_FromCoordsToMove(thisCoord, moveTagged);
 		break;
 	}
 

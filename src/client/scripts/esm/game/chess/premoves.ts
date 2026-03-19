@@ -244,7 +244,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 				endCoords: oldPremove.endCoords,
 				promotion: oldPremove.promotion,
 			};
-			specialdetect.transferSpecialFlags_FromCoordsToMove(
+			specialdetect.transferSpecialTags_FromCoordsToMove(
 				results.endCoordsTagged,
 				premoveTagged,
 			);
@@ -303,7 +303,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 			endCoords: premove.endCoords,
 			promotion: premove.promotion,
 		};
-		specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsTagged, moveTagged);
+		specialdetect.transferSpecialTags_FromCoordsToMove(results.endCoordsTagged, moveTagged);
 
 		const move = movesequence.makeMove(gamefile, mesh, moveTagged); // Make move
 

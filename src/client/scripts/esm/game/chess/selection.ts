@@ -546,7 +546,7 @@ function moveGamefilePiece(gamefile: FullGame, mesh: Mesh | undefined, coords: C
 		startCoords: pieceSelected!.coords,
 		endCoords: strippedCoords,
 	};
-	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveTagged);
+	specialdetect.transferSpecialTags_FromCoordsToMove(coords, moveTagged);
 
 	// Since making a move immediately cancels the current drag, we
 	// have to note whether it was being dragged BEFORE we move it!
