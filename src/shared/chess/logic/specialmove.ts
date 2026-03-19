@@ -6,7 +6,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Board } from './gamefile.js';
 import type { Coords } from '../util/coordutil.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
-import type { Edit, MoveDraft } from './movepiece.js';
+import type { Edit, MoveTagged } from './movepiece.js';
 
 import state from './state.js';
 import boardutil from '../util/boardutil.js';
@@ -16,10 +16,10 @@ import { rawTypes as r } from '../util/typeutil.js';
 /**
  * Function that queues all of the changes a special move makes when executed.
  */
-type SpecialMoveFunction = (_boardsim: Board, _piece: Piece, _move: MoveDraftEdit) => boolean;
+type SpecialMoveFunction = (_boardsim: Board, _piece: Piece, _move: MoveRunning) => boolean;
 
 /** All properties of the Move that special move functions need to access */
-interface MoveDraftEdit extends MoveDraft, Edit {}
+interface MoveRunning extends MoveTagged, Edit {}
 
 /**
  * An object storing the squares in the immediate vicinity
@@ -52,7 +52,7 @@ const defaultSpecialMoves: RawTypeGroup<SpecialMoveFunction> = {
 // Called when the piece moved is a king.
 // Tests if the move contains "castle" special move, if so it executes it!
 // RETURNS FALSE if special move was not executed!
-function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
+function kings(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const specialTag = move.castle; // { dir: -1/1, coord }
 	if (!specialTag) return false; // No special move to execute, return false to signify we didn't move the piece.
 
@@ -76,7 +76,7 @@ function kings(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 	return true;
 }
 
-function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
+function pawns(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!
@@ -116,7 +116,7 @@ function pawns(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
 }
 
 // The Roses need a custom special move function so that it can pass the `path` special flag to the move changes.
-function roses(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
+function roses(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, move.endCoords);
 
 	// Delete the piece captured
@@ -145,4 +145,4 @@ export default {
 	getDefaultSpecialVicinitiesByPiece,
 };
 
-export type { MoveDraftEdit, SpecialMoveFunction, SpecialVicinity };
+export type { MoveRunning, SpecialMoveFunction, SpecialVicinity };

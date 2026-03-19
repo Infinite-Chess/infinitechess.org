@@ -2,7 +2,7 @@
 
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { MoveDraft } from './movepiece.js';
+import type { MoveTagged } from './movepiece.js';
 import type { CoordsSpecial } from './movepiece.js';
 import type { enpassantCreate } from './movepiece.js';
 import type { FullGame, Game, Board } from './gamefile.js';
@@ -487,10 +487,8 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 
 /**
  * Transfers any special move flags from the provided coordinates to the move.
- * @param coords - The coordinates
- * @param {MoveDraft} move - The move
  */
-function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveDraft): void {
+function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveTagged): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (coords[special] !== undefined) {
@@ -502,10 +500,8 @@ function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: Move
 
 /**
  * Transfers any special move flags from the provided move to the coordinates.
- * @param coords - The coordinates
- * @param {MoveDraft} move - The move
  */
-function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords): void {
+function transferSpecialFlags_FromMoveToCoords(move: MoveTagged, coords: Coords): void {
 	for (const special of allSpecials) {
 		// @ts-ignore
 		if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);

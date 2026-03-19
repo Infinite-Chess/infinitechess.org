@@ -7,7 +7,7 @@
 
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { OpponentsMoveMessage } from '../../../../../../server/game/gamemanager/gameutility.js';
 import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
@@ -53,10 +53,10 @@ function sendMove(): void {
 
 	const gamefile = gameslot.getGamefile()!;
 	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
-	const shortmove = lastMove.compact; // "x,y>x,yN"
+	const moveToken = lastMove.token; // "x,y>x,yN"
 
 	const data = {
-		move: shortmove,
+		move: moveToken,
 		moveNumber: gamefile.basegame.moves.length,
 		gameConclusion: gamefile.basegame.gameConclusion,
 	};
@@ -88,14 +88,14 @@ function handleOpponentsMove(
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON.
 	// Gauranteed by the server to be parsable.
-	const moveDraft: MoveDraft = icnconverter.parseCompactMove(message.move.compact);
+	const moveTagged: MoveTagged = icnconverter.parseTokenMove(message.move.token);
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 			gamefile,
-			moveDraft,
+			moveTagged,
 			message.gameConclusion,
 		);
 
@@ -104,7 +104,7 @@ function handleOpponentsMove(
 			checkAndReportIllegalOpponentMove(
 				gamefile,
 				moveValidationResult,
-				message.move.compact,
+				message.move.token,
 				message.moveNumber,
 			)
 		) {
@@ -116,7 +116,7 @@ function handleOpponentsMove(
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
 
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveDraft);
+		movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged);
 
 		// Edit the clocks
 
@@ -140,20 +140,20 @@ function handleOpponentsMove(
 /**
  * Logs an illegal opponent move and reports it to the server if the game warrants it.
  * @param moveValidationResult - The result of move validation (may be valid or invalid).
- * @param compactMove - The move in compact string format, used for logging.
+ * @param tokenMove - The move in compact string format, used for logging.
  * @param moveNumber - The move number, used for logging.
  * @returns Whether the move was illegal and was reported.
  */
 function checkAndReportIllegalOpponentMove(
 	gamefile: FullGame,
 	moveValidationResult: MoveValidationResult,
-	compactMove: string,
+	tokenMove: string,
 	moveNumber: number,
 ): boolean {
 	if (moveValidationResult.valid) return false;
 
 	console.log(
-		`Buddy made an illegal play: "${compactMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
+		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
 	);
 
 	if (

@@ -6,17 +6,17 @@
 
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../../../../../server/game/gamemanager/gameutility.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
-	_Move_Out,
+	MoveParsed,
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -188,9 +188,9 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const additional: Additional = { variantOptions };
 	if (longformOut.moves) {
-		// Trim the excess properties from the _Move_Out type, including the comment.
-		additional.moves = longformOut.moves.map((m: _Move_Out) => {
-			const move: ServerGameMoveMessage = { compact: m.compact };
+		// Trim the excess properties from the MoveParsed type, including the comment.
+		additional.moves = longformOut.moves.map((m: MoveParsed) => {
+			const move: MovePacket = { token: m.token };
 			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 			// Potentially also transfer the pasted comments into the gamefile here in the future!
 			// ...

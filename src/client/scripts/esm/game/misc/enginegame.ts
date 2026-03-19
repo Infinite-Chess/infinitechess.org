@@ -250,7 +250,7 @@ function handleEngineMessage(data: any): void {
  * It gets called after the engine finishes its calculation
  * @param move - The move that SHOULD be a string in compact format "x,y>x,y=P"
  */
-function makeEngineMove(compactMove: unknown): void {
+function makeEngineMove(tokenMove: unknown): void {
 	if (!inEngineGame) return;
 	if (!currentEngine)
 		return console.error('Attempting to make engine move, but no engine loaded!');
@@ -258,7 +258,7 @@ function makeEngineMove(compactMove: unknown): void {
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
-	if (compactMove === null) {
+	if (tokenMove === null) {
 		// Null can mean the engine didn't return a best move (perhaps it didn't
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
@@ -272,11 +272,11 @@ function makeEngineMove(compactMove: unknown): void {
 	}
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
-		const moveValidationResults = movevalidation.isCompactMoveLegal(gamefile, compactMove);
+		const moveValidationResults = movevalidation.isTokenMoveLegal(gamefile, tokenMove);
 
 		if (!moveValidationResults.valid) {
 			toast.show(
-				`Engine submitted an illegal move. Please report this bug! Move "${compactMove}" is illegal for reason: ${moveValidationResults.reason}`,
+				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
 				{ error: true, durationMultiplier: 100 },
 			);
 			return false; // Don't physically play next premove
@@ -285,7 +285,7 @@ function makeEngineMove(compactMove: unknown): void {
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
 
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.draft);
+		movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged);
 
 		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 

@@ -19,9 +19,7 @@ import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
 import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
-import icnconverter, {
-	_Move_Compact,
-} from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -1759,7 +1757,7 @@ function mulberry32(a: number): () => number {
 }
 
 /**
- * Converts a target square for the black king to move to into a Move Object, taking into account gamefile_royal_coords
+ * Converts a target square for the black king to move to into a MoveCoords Object, taking into account gamefile_royal_coords
  */
 function move_to_gamefile_move(target_square: DoubleCoords): string {
 	const endCoords: DoubleCoords = [
@@ -1767,12 +1765,12 @@ function move_to_gamefile_move(target_square: DoubleCoords): string {
 		gamefile_royal_coords[1] + target_square[1],
 	];
 	// Convert the floating point numbers to BigInt coordinates before passing the move to the game
-	const moveDraft: _Move_Compact = {
+	const moveCoords: MoveCoords = {
 		startCoords: [BigInt(gamefile_royal_coords[0]), BigInt(gamefile_royal_coords[1])],
 		endCoords: [BigInt(endCoords[0]!), BigInt(endCoords[1]!)],
 	};
 	// Now convert to most compact string notation: "x,y>x,y=Q" that the engine API accepts.
-	return icnconverter.getCompactMoveFromDraft(moveDraft);
+	return icnconverter.getCompactMoveFromDraft(moveCoords);
 }
 
 function doesTypeExist(boardsim: Board, type: number): boolean {

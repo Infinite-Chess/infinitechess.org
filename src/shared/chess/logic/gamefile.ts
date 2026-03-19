@@ -3,15 +3,15 @@
 import type { MetaData } from '../util/metadatautil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
+import type { MovePacket } from '../../../server/game/gamemanager/gameutility.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Move, BaseMove } from './movepiece.js';
 import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
+import type { MoveFull, MoveRecord } from './movepiece.js';
 import type { ClockData, ClockValues } from './clock.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
@@ -51,7 +51,7 @@ type Game = {
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
-	moves: BaseMove[];
+	moves: MoveRecord[];
 	gameRules: GameRules;
 	whosTurn: Player;
 	gameConclusion?: GameConclusion;
@@ -80,7 +80,7 @@ type Board = {
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[];
 
-	moves: Move[];
+	moves: MoveFull[];
 	pieces: OrganizedPieces;
 	state: GameState;
 
@@ -119,8 +119,8 @@ type FullGame = {
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: ServerGameMoveMessage[];
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. */
+	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
 	/** The conclusion of the game, if loading an online game that has already ended. */
@@ -250,7 +250,7 @@ function initBoard(
 		existingRawTypes,
 	);
 
-	const moves: Move[] = [];
+	const moves: MoveFull[] = [];
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = movesets.areColinearsPresent(pieceMovesets);
 
@@ -278,7 +278,7 @@ function initBoard(
 function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
-	moves: ServerGameMoveMessage[] = [],
+	moves: MovePacket[] = [],
 	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };

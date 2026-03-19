@@ -11,7 +11,7 @@ import type { GameMessage } from '../../websocket/socketschemas.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	GameUpdateMessage,
-	ServerGameMoveMessage,
+	MovePacket,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
@@ -216,8 +216,8 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 
 	// The clock values are already ingrained into the moves!
 	// prettier-ignore
-	const moves: ServerGameMoveMessage[] = parsedGame.moves ? parsedGame.moves.map(m => {
-		const move: { compact: string, clockStamp?: number } = { compact: m.compact };
+	const moves: MovePacket[] = parsedGame.moves ? parsedGame.moves.map(m => {
+		const move: { token: string, clockStamp?: number } = { token: m.token };
 				if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 				return move;
 	}) : [];

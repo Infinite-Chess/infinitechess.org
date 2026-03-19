@@ -13,7 +13,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
 import type { LegalMoves } from './legalmoves.js';
-import type { CoordsSpecial, MoveDraft, path } from './movepiece.js';
+import type { CoordsSpecial, MoveTagged, path } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
@@ -522,12 +522,12 @@ function isMoveCheckInvalid(
 	color: Player,
 ): boolean {
 	// pieceSelected: { type, index, coords }
-	const moveDraft: MoveDraft = {
+	const moveTagged: MoveTagged = {
 		startCoords: jsutil.deepCopyObject(piece.coords),
 		endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords),
 	};
-	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
-	return getSimulatedCheck(gamefile, moveDraft, color).check;
+	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveTagged);
+	return getSimulatedCheck(gamefile, moveTagged, color).check;
 }
 
 /**
@@ -536,10 +536,10 @@ function isMoveCheckInvalid(
  */
 function getSimulatedCheck(
 	gamefile: FullGame,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 	colorToTestInCheck: Player,
 ): ReturnType<typeof checkdetection.detectCheck> {
-	return movepiece.simulateMoveWrapper(gamefile, moveDraft, () =>
+	return movepiece.simulateMoveWrapper(gamefile, moveTagged, () =>
 		checkdetection.detectCheck(gamefile, colorToTestInCheck),
 	);
 }

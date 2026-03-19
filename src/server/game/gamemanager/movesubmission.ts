@@ -6,8 +6,8 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
-import type { _Move_Out } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
+import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { FullGame, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
@@ -97,8 +97,8 @@ function submitMove(
 	}
 
 	// Verify the move is in the correct format
-	const moveDraft = doesMoveCheckOut(messageContents.move);
-	if (moveDraft === false) {
+	const moveParsed = doesMoveCheckOut(messageContents.move);
+	if (moveParsed === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
@@ -106,7 +106,7 @@ function submitMove(
 	}
 
 	// Check if the move exceeds the soft distance cap based on game duration
-	if (!isMoveWithinDistanceCap(moveDraft, servergame.match.timeCreated)) {
+	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		sendSocketMessage(
@@ -119,11 +119,11 @@ function submitMove(
 	}
 
 	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
-	const baseMove =
+	const moveRecord =
 		servergame.boardsim !== undefined
-			? applyServerValidatedMove(ws, servergame, messageContents, moveDraft, color)
-			: applyClientReportedMove(ws, servergame, messageContents, moveDraft, color);
-	if (baseMove === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
+			? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
+			: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
+	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
 	// console.log(messageContents)
@@ -138,24 +138,24 @@ function submitMove(
 	if (gameutility.isGameOver(servergame.basegame))
 		gameutility.sendGameUpdateToColor(servergame, color, false);
 	else gameutility.sendUpdatedClockToColor(servergame, color);
-	gameutility.sendMoveToColor(servergame, opponentColor, baseMove); // Send their move to their opponent.
+	gameutility.sendMoveToColor(servergame, opponentColor, moveRecord); // Send their move to their opponent.
 }
 
 /**
  * Validates the move against the server-side board simulation, makes it, and updates the game state.
- * Returns the resulting BaseMove, or undefined if the move was illegal (error messages are sent to the client).
+ * Returns the resulting MoveRecord, or undefined if the move was illegal (error messages are sent to the client).
  */
 function applyServerValidatedMove(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 	messageContents: SubmitMoveMessage,
-	moveDraft: _Move_Out,
+	moveParsed: MoveParsed,
 	color: Player,
-): BaseMove | undefined {
+): MoveRecord | undefined {
 	// Makes ts happy knowing boardsim is already defined
 	const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim! };
 
-	const validationResult = movevalidation.validateMove(gamefile, moveDraft);
+	const validationResult = movevalidation.validateMove(gamefile, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -172,35 +172,35 @@ function applyServerValidatedMove(
 	}
 
 	// Generate and make the move in the logical game
-	const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.draft);
+	const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.tagged);
 
-	// Set the clock stamp on both the boardsim's Move and the basegame's BaseMove.
-	// (makeMove creates a separate BaseMove object for basegame, so we must set both.)
-	const baseMove = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
+	// Set the clock stamp on both the boardsim's MoveFull and the basegame's MoveRecord.
+	// (makeMove creates a separate MoveRecord object for basegame, so we must set both.)
+	const moveRecord = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
 	const clockStamp = pushGameClock(servergame);
 	if (clockStamp !== undefined) {
 		fullMove.clockStamp = clockStamp;
-		baseMove.clockStamp = clockStamp;
+		moveRecord.clockStamp = clockStamp;
 	}
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
 	gamefileutility.doGameOverChecks(gamefile); // This sets gameConclusion if the game is over, which it might be after the move.
 	setGameConclusion(servergame, gamefile.basegame.gameConclusion);
 
-	return baseMove;
+	return moveRecord;
 }
 
 /**
  * Accepts a move for large variants without server-side validation, and updates the game state.
- * Returns the resulting BaseMove, or undefined if the claimed game conclusion was invalid.
+ * Returns the resulting MoveRecord, or undefined if the claimed game conclusion was invalid.
  */
 function applyClientReportedMove(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 	messageContents: SubmitMoveMessage,
-	moveDraft: _Move_Out,
+	moveParsed: MoveParsed,
 	color: Player,
-): BaseMove | undefined {
+): MoveRecord | undefined {
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -208,21 +208,21 @@ function applyClientReportedMove(
 		return;
 	}
 
-	const baseMove: BaseMove = {
-		startCoords: moveDraft.startCoords,
-		endCoords: moveDraft.endCoords,
-		compact: moveDraft.compact,
+	const moveRecord: MoveRecord = {
+		startCoords: moveParsed.startCoords,
+		endCoords: moveParsed.endCoords,
+		token: moveParsed.token,
 		// clockStamp added below
 	};
-	if (moveDraft.promotion !== undefined) baseMove.promotion = moveDraft.promotion;
+	if (moveParsed.promotion !== undefined) moveRecord.promotion = moveParsed.promotion;
 	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-	servergame.basegame.moves.push(baseMove); // Add the move to the list!
+	servergame.basegame.moves.push(moveRecord); // Add the move to the list!
 	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
 	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
-	if (clockStamp !== undefined) baseMove.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
+	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 	setGameConclusion(servergame, messageContents.gameConclusion);
 
-	return baseMove;
+	return moveRecord;
 }
 
 /**
@@ -244,16 +244,16 @@ function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
 /**
  * Checks if a move's coordinates exceed the soft distance cap based on game duration.
  * Only checks end coordinates since start coordinates are known to be safe.
- * @param moveDraft - The parsed move to check
+ * @param moveParsed - The parsed move to check
  * @param gameStartTime - When the game was created (in milliseconds)
  * @returns true if the move is within allowed distance, false otherwise
  */
-function isMoveWithinDistanceCap(moveDraft: _Move_Out, gameStartTime: number): boolean {
+function isMoveWithinDistanceCap(moveParsed: MoveParsed, gameStartTime: number): boolean {
 	const maxAllowedDigits = getMaxAllowedCoordinateDigits(gameStartTime);
 
 	// Only check end coordinates since start coordinates are safe
-	const endXDigits = bimath.countDigits(moveDraft.endCoords[0]);
-	const endYDigits = bimath.countDigits(moveDraft.endCoords[1]);
+	const endXDigits = bimath.countDigits(moveParsed.endCoords[0]);
+	const endYDigits = bimath.countDigits(moveParsed.endCoords[1]);
 
 	const maxDigitsInMove = Math.max(endXDigits, endYDigits);
 
@@ -265,17 +265,17 @@ function isMoveWithinDistanceCap(moveDraft: _Move_Out, gameStartTime: number): b
  * @param move - Their move submission.
  * @returns The move, if correctly formatted, otherwise false.
  */
-function doesMoveCheckOut(move: string): _Move_Out | false {
+function doesMoveCheckOut(move: string): MoveParsed | false {
 	// Is the move in the correct format? "x,y>x,y=N"
-	let moveDraft: _Move_Out;
+	let moveParsed: MoveParsed;
 	try {
-		moveDraft = icnconverter.parseCompactMove(move);
+		moveParsed = icnconverter.parseTokenMove(move);
 	} catch {
 		// It either didn't pass the regex, or the promoted piece abbreviation was invalid.
 		return false;
 	}
 
-	return moveDraft;
+	return moveParsed;
 }
 
 /**

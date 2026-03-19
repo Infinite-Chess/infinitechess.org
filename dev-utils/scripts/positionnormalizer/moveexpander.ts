@@ -7,17 +7,14 @@
  * and expands the move out so it can be applied to the original UNCOMPRESSED position.
  */
 
-
-import type { _Move_Compact } from "../icn/icnconverter.js";
 import type { Coords } from "../movesets.js";
+import type { MoveCoords } from "../icn/icnconverter.js";
 
 import bd from "../../../util/bigdecimal/bigdecimal.js";
 import geometry from "../../../util/math/geometry.js";
-import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors.js";
 import coordutil, { BDCoords } from "../../util/coordutil.js";
+import vectors, { LineCoefficients, Vec2, Vec2Key } from "../../../util/math/vectors.js";
 import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompressor.js";
-
-
 
 // ================================== MOVE EXPANDER ==================================
 
@@ -31,7 +28,7 @@ import positioncompressor, { AxisOrders, PieceTransform } from "./positioncompre
  * @param compressedPosition - The original uncompressed position
  * @param move - The decided upon move based on the compressed position
  */
-function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransform[], move: _Move_Compact): _Move_Compact {
+function expandMove(AllAxisOrders: AxisOrders, pieceTransformations: PieceTransform[], move: MoveCoords): MoveCoords {
 	const startCoordsBigInt: Coords = [BigInt(move.startCoords[0]), BigInt(move.startCoords[1])];
 	const endCoordsBigInt: Coords = [BigInt(move.endCoords[0]), BigInt(move.endCoords[1])];
 

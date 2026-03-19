@@ -24,7 +24,7 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/initvaria
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ParticipantState,
-	ServerGameMoveMessage,
+	MovePacket,
 } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -168,7 +168,7 @@ async function startOnlineGame(options: {
 	metadata: MetaData;
 	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMoveMessage[];
+	moves: MovePacket[];
 	clockValues?: ClockValues;
 	youAreColor?: Player;
 	participantState?: ParticipantState;
@@ -351,7 +351,7 @@ async function startBoardEditor(): Promise<void> {
 /** Initializes a local game from a custom position. */
 async function startCustomLocalGame(options: {
 	additional: {
-		moves?: ServerGameMoveMessage[];
+		moves?: MovePacket[];
 		variantOptions: VariantOptions;
 	};
 	presetAnnotes?: PresetAnnotes;
@@ -391,7 +391,7 @@ async function startCustomLocalGame(options: {
 async function startCustomEngineGame(options: {
 	timeControl: TimeControl;
 	additional: {
-		moves?: ServerGameMoveMessage[];
+		moves?: MovePacket[];
 		variantOptions: VariantOptions;
 	};
 	presetAnnotes?: PresetAnnotes;
@@ -459,7 +459,7 @@ async function startCustomEngineGame(options: {
 async function startBoardEditorFromCustomPosition(
 	options: {
 		additional: {
-			moves?: ServerGameMoveMessage[];
+			moves?: MovePacket[];
 			variantOptions: VariantOptions;
 		};
 		presetAnnotes?: PresetAnnotes;

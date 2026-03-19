@@ -1,3 +1,5 @@
+// dev-utils/scripts/icn-regex-matching.ts
+
 
 /**
  * This stores a monster regex I made for matching ICN.
@@ -154,7 +156,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		// ({ position, specialRights } = variant.getStartingPositionOfVariant({ Variant: metadata['Variant'], UTCDate: metadata['UTCDate'], UTCTime: metadata['UTCTime'] }));
 	}
 
-	let moves: _Move_Out[] | undefined;
+	let moves: MoveParsed[] | undefined;
 	if (groups['moves']) moves = parseShortFormMoves(groups['moves']);
 
 	// =================================== Return the game object ===================================

@@ -614,8 +614,8 @@ function checkIfMoveLegal(
 			continue; // Sliding this direction
 		if (legalMoves.brute) {
 			// Don't allow the slide if it results in check
-			const moveDraft = { startCoords, endCoords };
-			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check)
+			const moveTagged = { startCoords, endCoords };
+			if (checkresolver.getSimulatedCheck(gamefile, moveTagged, colorOfFriendly).check)
 				return false; // The move results in check => not legal
 		}
 		return true; // Move is legal

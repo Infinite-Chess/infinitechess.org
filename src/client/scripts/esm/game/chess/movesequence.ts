@@ -8,7 +8,7 @@
  */
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { Edit, Move, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -36,16 +36,16 @@ import { animateMove, meshChanges } from './graphicalchanges.js';
 /**
  * Makes a global forward move in the game.
  *
- * This returns the constructed Move object so that we have the option to animate it if we so choose.
+ * This returns the constructed MoveFull object so that we have the option to animate it if we so choose.
  */
 function makeMove(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 	{ doGameOverChecks = true } = {},
-): Move {
+): MoveFull {
 	const { basegame, boardsim } = gamefile;
-	const move = movepiece.generateMove(gamefile, moveDraft);
+	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
@@ -77,10 +77,10 @@ function makeMove(
 function makeMoveAndAnimate(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 	{ doGameOverChecks = true } = {},
-): Move {
-	const move = makeMove(gamefile, mesh, moveDraft, { doGameOverChecks });
+): MoveFull {
+	const move = makeMove(gamefile, mesh, moveTagged, { doGameOverChecks });
 	if (mesh) animateMove(move.changes, true);
 	return move;
 }
@@ -136,7 +136,12 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
  *
  * But it does change the check state.
  */
-function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move, forward = true): void {
+function viewMove(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	move: MoveFull,
+	forward = true,
+): void {
 	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
@@ -150,7 +155,7 @@ function viewMove(gamefile: FullGame, mesh: Mesh | undefined, move: Move, forwar
  * @param index the move index to goto
  */
 function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): void {
-	movepiece.goToMove(gamefile.boardsim, index, (move: Move) =>
+	movepiece.goToMove(gamefile.boardsim, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex),
 	);
 	updateGui(false);

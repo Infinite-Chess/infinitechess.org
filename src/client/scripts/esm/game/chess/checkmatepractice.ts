@@ -24,7 +24,6 @@ import {
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
-import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';

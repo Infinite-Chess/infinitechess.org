@@ -16,10 +16,10 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { MetaData } from '../../../../../../shared/chess/util/metadatautil';
+import type { MovePacket } from '../../../../../../server/game/gamemanager/gameutility';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
-import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { ActivePosition, StorageType } from '../boardeditor';
 
@@ -39,7 +39,7 @@ import gamefile, {
 	FullGame,
 } from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
-	_Move_Out,
+	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
@@ -423,8 +423,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		};
 		const additional: Additional = {
 			variantOptions,
-			moves: longformOut.moves.map((m: _Move_Out) => {
-				const move: ServerGameMoveMessage = { compact: m.compact };
+			moves: longformOut.moves.map((m: MoveParsed) => {
+				const move: MovePacket = { token: m.token };
 				return move;
 			}),
 		};

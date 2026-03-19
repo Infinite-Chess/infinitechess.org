@@ -6,14 +6,17 @@
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { _Move_In, LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type {
+	MovePreprint,
+	LongFormatIn,
+} from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
 
-import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
+import { MovePacket } from '../../../../../server/game/gamemanager/gameutility.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.
@@ -28,10 +31,10 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 	}
 
 	/** String array of the moves in their most compact notation (e.g. "4,7>4,8Q") */
-	const moves: ServerGameMoveMessage[] =
-		longformIn.moves?.map((m: _Move_In) => {
-			const move = { compact: m.compact };
-			if (m.compact) move.compact = m.compact;
+	const moves: MovePacket[] =
+		longformIn.moves?.map((m: MovePreprint) => {
+			const move: MovePacket = { token: m.token };
+			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 			return move;
 		}) ?? [];
 

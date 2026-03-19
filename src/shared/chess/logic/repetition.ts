@@ -9,7 +9,7 @@
  * It also takes into account special rights.
  */
 
-import type { Move } from './movepiece.js';
+import type { MoveFull } from './movepiece.js';
 import type { StateChange } from './state.js';
 import type { FullGame, GameConclusion } from './gamefile.js';
 
@@ -45,7 +45,7 @@ function detectRepetitionDraw({ basegame, boardsim }: FullGame): GameConclusion 
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
 	outer: for (let index = startIndex; index >= 0; index--) {
 		// WILL BE -1 if we've reached the beginning of the game!
-		const move = moveList[index]! as Move;
+		const move: MoveFull = moveList[index]!;
 
 		// Did this move include a one-way action? Pawn push, special right loss..
 		// If so, no further equal positions, terminate the loop.

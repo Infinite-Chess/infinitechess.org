@@ -9,7 +9,7 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
 import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { CoordsSpecial, MoveDraft } from '../../../../../shared/chess/logic/movepiece.js';
+import type { CoordsSpecial, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -546,18 +546,21 @@ function moveGamefilePiece(
 	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) return onPromoteTrigger(coords);
 
 	const strippedCoords: Coords = moveutil.stripSpecialMoveTagsFromCoords(coords);
-	const moveDraft: MoveDraft = { startCoords: pieceSelected!.coords, endCoords: strippedCoords };
-	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveDraft);
+	const moveTagged: MoveTagged = {
+		startCoords: pieceSelected!.coords,
+		endCoords: strippedCoords,
+	};
+	specialdetect.transferSpecialFlags_FromCoordsToMove(coords, moveTagged);
 
 	// Since making a move immediately cancels the current drag, we
 	// have to note whether it was being dragged BEFORE we move it!
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const changes = boardeditor.areInBoardEditor()
-		? normaltool.makeMoveEdit(gamefile, mesh, moveDraft).changes
+		? normaltool.makeMoveEdit(gamefile, mesh, moveTagged).changes
 		: isPremove
-			? premoves.addPremove(gamefile, mesh, moveDraft).changes
-			: movesequence.makeMove(gamefile, mesh, moveDraft).changes;
+			? premoves.addPremove(gamefile, mesh, moveTagged).changes
+			: movesequence.makeMove(gamefile, mesh, moveTagged).changes;
 
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)

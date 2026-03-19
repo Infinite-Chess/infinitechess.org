@@ -7,10 +7,10 @@
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { GameRules } from './gamerules.js';
+import type { MoveCoords } from '../logic/icn/icnconverter.js';
 import type { Game, Board } from '../logic/gamefile.js';
 import type { CoordsSpecial } from '../logic/movepiece.js';
-import type { _Move_Compact } from '../logic/icn/icnconverter.js';
-import type { Move, MoveDraft, castle, enpassant, promotion } from '../logic/movepiece.js';
+import type { MoveFull, MoveTagged, castle, enpassant, promotion } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
 import { players as p } from './typeutil.js';
@@ -42,7 +42,7 @@ interface DepricatedMove {
  * Returns the move one forward from the current position we're viewing, if it exists.
  * This is also the move we would execute if we forward the game 1 step.
  */
-function getMoveOneForward(boardsim: Board): Move | undefined {
+function getMoveOneForward(boardsim: Board): MoveFull | undefined {
 	const moveIndex = boardsim.state.local.moveIndex;
 	const incrementedIndex = moveIndex + 1;
 	return getMoveFromIndex(boardsim.moves, incrementedIndex);
@@ -67,14 +67,14 @@ function isDecrementingLegal(boardsim: Board): boolean {
 /**
  * Tests if the provided index is out of range of the moves list length
  */
-function isIndexOutOfRange(moves: _Move_Compact[], index: number): boolean {
+function isIndexOutOfRange(moves: MoveCoords[], index: number): boolean {
 	return index < -1 || index >= moves.length;
 }
 
 /**
  * Returns the very last move played in the moves list, if there is one. Otherwise, returns undefined.
  */
-function getLastMove(moves: Move[]): Move | undefined {
+function getLastMove(moves: MoveFull[]): MoveFull | undefined {
 	const finalIndex = moves.length - 1;
 	if (finalIndex < 0) return;
 	return moves[finalIndex];
@@ -83,7 +83,7 @@ function getLastMove(moves: Move[]): Move | undefined {
 /**
  * Returns the move we're currently viewing in the provided gamefile.
  */
-function getCurrentMove(boardsim: Board): Move | undefined {
+function getCurrentMove(boardsim: Board): MoveFull | undefined {
 	const index = boardsim.state.local.moveIndex;
 	if (index < 0) return;
 	return boardsim.moves[index];
@@ -92,7 +92,7 @@ function getCurrentMove(boardsim: Board): Move | undefined {
 /**
  * Gets the move from the moves list at the specified index
  */
-function getMoveFromIndex(moves: Move[], index: number): Move {
+function getMoveFromIndex(moves: MoveFull[], index: number): MoveFull {
 	if (isIndexOutOfRange(moves, index)) throw Error('Cannot get next move when index overflow');
 	return moves[index]!;
 }
@@ -108,7 +108,7 @@ function areWeViewingLatestMove(boardsim: Board): boolean {
 /**
  * Tests if the provided index is the index of the last move in the provided list
  */
-function isIndexTheLastMove(moves: Move[], index: number): boolean {
+function isIndexTheLastMove(moves: MoveFull[], index: number): boolean {
 	const finalIndex = moves.length - 1;
 	return index === finalIndex;
 }
@@ -140,7 +140,7 @@ function getWhosTurnAtFrom_ByMoveCountAndTurnOrder(
 /**
  * Returns total ply count (or half-moves) of the game so far.
  */
-function getPlyCount(moves: Move[]): number {
+function getPlyCount(moves: MoveFull[]): number {
 	return moves.length;
 }
 
@@ -150,7 +150,9 @@ function getPlyCount(moves: Move[]): number {
  * @param coords - The current coordinates of the piece.
  */
 function hasPieceMoved(boardsim: Board, coords: Coords): boolean {
-	return boardsim.moves.some((move: Move) => coordutil.areCoordsEqual(move.endCoords, coords));
+	return boardsim.moves.some((move: MoveFull) =>
+		coordutil.areCoordsEqual(move.endCoords, coords),
+	);
 }
 
 // COMMENTED-OUT because it's not used anywhere in the code
@@ -176,7 +178,7 @@ function flagLastMoveAsMate(boardsim: Board): void {
 /**
  * Returns true if the moves are in the old 2D array format.
  */
-function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
+function areMovesIn2DFormat(longmoves: MoveFull[] | DepricatedMoves): boolean {
 	if (longmoves.length === 0) return false; // Empty, assume they are in the new 1D format
 	return Array.isArray(longmoves[0]);
 }
@@ -189,15 +191,15 @@ function areMovesIn2DFormat(longmoves: Move[] | DepricatedMoves): boolean {
  * @param results - PROVIDE AS AN EMPTY OBJECT! The 'turn' property will be set, destructively.
  * @returns Moves converted to the new 1D array format
  */
-function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveDraft[]; turn: Player } {
+function convertMovesTo1DFormat(moves: DepricatedMoves): { moves: MoveTagged[]; turn: Player } {
 	let turn: Player = p.WHITE;
-	const moves1D: MoveDraft[] = [];
+	const moves1D: MoveTagged[] = [];
 	for (let a = 0; a < moves.length; a++) {
 		const thisPair = moves[a]!;
 		for (let b = 0; b < thisPair.length; b++) {
 			const thisMove = thisPair[b]!;
 			if (thisMove === null) turn = p.BLACK;
-			else moves1D.push(thisMove as MoveDraft);
+			else moves1D.push(thisMove as MoveTagged);
 		}
 	}
 	return { moves: moves1D, turn };

@@ -11,8 +11,8 @@
  * See dev-utils/live-game-persistence.md for the schema and restoration details.
  */
 
-import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
+import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
@@ -160,7 +160,7 @@ function restoreSingleGame(
 	const servergame: ServerGame = { match: matchInfo, basegame };
 
 	// 6. Parse & replay moves, conditionally constructing boardsim
-	const moves: BaseMove[] = parseMoves(gameRow.moves);
+	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
 		const boardsim = gamefile.initBoard(
@@ -382,7 +382,7 @@ function reconstructMatchInfo(
 /**
  * Parses the moves string back into move objects.
  */
-function parseMoves(movesString: string): BaseMove[] {
+function parseMoves(movesString: string): MoveRecord[] {
 	if (movesString === '') return [];
 	return icnconverter.parseShortFormMoves(movesString);
 }

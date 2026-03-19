@@ -13,17 +13,17 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
+import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameUpdateMessage,
-	ServerGameMoveMessage,
+	MovePacket,
 } from '../../../../../../server/game/gamemanager/gameutility.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import { BaseMove, MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
 
 import gameslot from '../../chess/gameslot.js';
 import premoves from '../../chess/premoves.js';
@@ -92,7 +92,7 @@ function handleServerGameUpdate(
 function synchronizeMovesList(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
-	moves: ServerGameMoveMessage[],
+	moves: MovePacket[],
 	claimedGameConclusion: GameConclusion | undefined,
 	forceSync: boolean,
 ): { opponentPlayedIllegalMove: boolean } {
@@ -115,7 +115,7 @@ function synchronizeMovesList(
 		(moves.length === 0 && boardsim.moves.length === 1) ||
 		(boardsim.moves.length > 1 &&
 			moves.length > 0 &&
-			previousMove!.compact === moves[moves.length - 1]!.compact);
+			previousMove!.token === moves[moves.length - 1]!.token);
 	if (
 		!forceSync &&
 		!claimedGameConclusion &&
@@ -159,14 +159,14 @@ function synchronizeMovesList(
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
 			// Convert the move from compact short format "x,y>x,y=N" to JSON.
 			// Gauranteed by the server to be parsable.
-			const moveDraft: MoveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
+			const moveTagged: MoveTagged = icnconverter.parseTokenMove(thisShortmove.token);
 
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
 				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
 					gamefile,
-					moveDraft,
+					moveTagged,
 					claimedGameConclusion,
 				);
 				// Only report cheating in games where the server won't delete the game instantly when it ends
@@ -174,7 +174,7 @@ function synchronizeMovesList(
 					movesendreceive.checkAndReportIllegalOpponentMove(
 						gamefile,
 						moveValidationResult,
-						thisShortmove.compact,
+						thisShortmove.token,
 						i + 1,
 					)
 				) {
@@ -185,7 +185,7 @@ function synchronizeMovesList(
 				atleastOneOfOurMovesWasForwarded = true;
 			}
 
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveDraft, {
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
 				doGameOverChecks: isLastMove,
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
@@ -220,15 +220,12 @@ function synchronizeMovesList(
 /**
  * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
  * @param ourMoves - Our moves list in compact form: `['1,2>3,4','5,6>7,8Q']`
- * @param serverMoves - The server's moves list in compact form: `[{ compact: '1,2>3,4' }, { compact: '5,6>7,8Q' }]`
+ * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
  */
-function findLastestMatchingMoveIndex(
-	ourMoves: BaseMove[],
-	serverMoves: ServerGameMoveMessage[],
-): number {
+function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
 	if (ourMoves.length === 0) return -1; // We only agree with the starting position
 	for (let i = 0; i < ourMoves.length; i++) {
-		if (ourMoves[i]!.compact !== serverMoves[i]?.compact) return i - 1; // We agree up to the previous move, but not this one
+		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
 	}
 	return ourMoves.length - 1; // We agree with all
 }

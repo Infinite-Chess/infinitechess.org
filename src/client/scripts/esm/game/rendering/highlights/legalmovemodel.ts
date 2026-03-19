@@ -9,7 +9,7 @@
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { MoveDraft } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
@@ -479,8 +479,8 @@ function pushRay(
 
 			// If we're brute force checking each move for check, do that here. (royal queen, or colinear pins)
 			if (brute) {
-				const moveDraft: MoveDraft = { startCoords: coords, endCoords: targetCoords };
-				if (checkresolver.getSimulatedCheck(gamefile, moveDraft, friendlyColor).check)
+				const moveTagged: MoveTagged = { startCoords: coords, endCoords: targetCoords };
+				if (checkresolver.getSimulatedCheck(gamefile, moveTagged, friendlyColor).check)
 					break legal;
 			}
 

@@ -8,8 +8,8 @@ import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import specialdetect from './specialdetect.js';
 import boardutil, { Piece } from '../util/boardutil.js';
-import movepiece, { CoordsSpecial, MoveDraft } from './movepiece.js';
-import icnconverter, { _Move_Compact, _Move_Out } from './icn/icnconverter.js';
+import icnconverter, { MoveCoords } from './icn/icnconverter.js';
+import movepiece, { CoordsSpecial, MoveTagged } from './movepiece.js';
 import typeutil, { Player, RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -18,7 +18,7 @@ export type MoveValidationResult =
 	| {
 			valid: true;
 			/** The move draft with any special flags attached, derived from its end coords. */
-			draft: MoveDraft;
+			tagged: MoveTagged;
 	  }
 	| {
 			valid: false;
@@ -60,7 +60,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
  * Tests if the provided move is legal to play in this game,
  * including whether the claimed game conclusion is correct.
  * @param gamefile - The gamefile
- * @param move_compact - The move in compact JSON format
+ * @param moveCoords - The move in compact JSON format
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
@@ -68,19 +68,19 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
  */
 function isOpponentsMoveLegal(
 	gamefile: FullGame,
-	move_compact: _Move_Compact,
+	moveCoords: MoveCoords,
 	claimedGameConclusion: GameConclusion | undefined,
 ): MoveValidationResult {
 	// We run both move and conclusion checks when at the front of the game
 	return runActionAtGameFront(gamefile, () => {
 		// 1. Check Move Legality
-		const moveResult = validateMove(gamefile, move_compact);
+		const moveResult = validateMove(gamefile, moveCoords);
 		if (!moveResult.valid) return moveResult;
 
 		// 2. Check Conclusion Validity (using the draft with special flags attached)
 		const conclusionResult = validateConclusion(
 			gamefile,
-			moveResult.draft,
+			moveResult.tagged,
 			claimedGameConclusion,
 		);
 
@@ -94,27 +94,27 @@ function isOpponentsMoveLegal(
 /**
  * Tests if the provided compact move string is legal to play.
  * @param gamefile - The gamefile
- * @param compact - The move that SHOULD be in compact string format (e.g. "x,y>x,y=Q"), but we can't trust all enginess response contents.
+ * @param tokenMove - The move that SHOULD be in compact string format (e.g. "x,y>x,y=Q"), but we can't trust all enginess response contents.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function isCompactMoveLegal(gamefile: FullGame, compact: unknown): MoveValidationResult {
-	if (typeof compact !== 'string') return { valid: false, reason: 'Not a string.' };
+function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidationResult {
+	if (typeof tokenMove !== 'string') return { valid: false, reason: 'Not a string.' };
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
-	let move_compact: _Move_Compact;
+	let moveCoords: MoveCoords;
 	try {
-		move_compact = icnconverter.parseCompactMove(compact);
+		moveCoords = icnconverter.parseTokenMove(tokenMove);
 	} catch (error: unknown) {
 		const msg = error instanceof Error ? error.message : String(error);
-		console.error(`Invalid format error when parsing compact move "${compact}": ${msg}`);
+		console.error(`Invalid format error when parsing compact move "${tokenMove}": ${msg}`);
 		// Return generic invalid reason
 		return { valid: false, reason: 'Incorrect format.' };
 	}
 
 	return runActionAtGameFront(gamefile, () => {
-		return validateMove(gamefile, move_compact);
+		return validateMove(gamefile, moveCoords);
 	});
 }
 
@@ -122,17 +122,17 @@ function isCompactMoveLegal(gamefile: FullGame, compact: unknown): MoveValidatio
  * CORE LOGIC: Checks validity of a move.
  * REQUIRES you to be viewing the head of the game.
  * @param gamefile - The gamefile
- * @param move_compact - The move to validate in compact JSON format, without special flags attached.
+ * @param moveCoords - The move to validate in compact JSON format, without special flags attached.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special flags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveValidationResult {
+function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidationResult {
 	const { boardsim, basegame } = gamefile;
 
 	const piecemoved: Piece | undefined = boardutil.getPieceFromCoords(
 		boardsim.pieces,
-		move_compact.startCoords,
+		moveCoords.startCoords,
 	);
 
 	// Make sure a piece exists on the start coords
@@ -145,7 +145,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 
 	const rawTypeMoved = typeutil.getRawType(piecemoved.type);
 
-	promotion: if (move_compact.promotion !== undefined) {
+	promotion: if (moveCoords.promotion !== undefined) {
 		// User IS promoting
 		if (!basegame.gameRules.promotionRanks)
 			return { valid: false, reason: 'Game has no promotion ranks.' };
@@ -155,10 +155,10 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 			basegame.gameRules.promotionRanks[colorOfPieceMoved];
 		if (!promotionRanks) return { valid: false, reason: 'Color has no promotion ranks.' };
 
-		if (!promotionRanks.includes(move_compact.endCoords[1]))
+		if (!promotionRanks.includes(moveCoords.endCoords[1]))
 			return { valid: false, reason: 'No promotion rank at end coords.' };
 
-		const colorPromotedTo: Player = typeutil.getColorFromType(move_compact.promotion);
+		const colorPromotedTo: Player = typeutil.getColorFromType(moveCoords.promotion);
 		if (basegame.whosTurn !== colorPromotedTo)
 			return { valid: false, reason: 'Incorrect promotion color.' };
 
@@ -169,7 +169,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 			basegame.gameRules.promotionsAllowed[colorOfPieceMoved];
 		if (!promotionsAllowed) return { valid: false, reason: 'Color has no promotions allowed.' };
 
-		const rawPromotion: RawType = typeutil.getRawType(move_compact.promotion);
+		const rawPromotion: RawType = typeutil.getRawType(moveCoords.promotion);
 		if (!promotionsAllowed.includes(rawPromotion))
 			return { valid: false, reason: 'Illegal promotion type.' };
 	} else {
@@ -183,7 +183,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 			basegame.gameRules.promotionRanks[colorOfPieceMoved];
 		if (!promotionRanks) break promotion; // This color doesn't have promotion ranks, not forced to promote.
 
-		if (!promotionRanks.includes(move_compact.endCoords[1])) break promotion; // Not on a promotion rank, not forced to promote.
+		if (!promotionRanks.includes(moveCoords.endCoords[1])) break promotion; // Not on a promotion rank, not forced to promote.
 
 		// If we are here: They moved a pawn to a promotion rank but didn't promote.
 		return { valid: false, reason: 'Did not promote.' };
@@ -191,9 +191,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 
 	// Test if that piece's legal moves contain the destination coords...
 
-	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(
-		move_compact.endCoords,
-	);
+	const endCoordsToAppendSpecialsTo: CoordsSpecial = jsutil.deepCopyObject(moveCoords.endCoords);
 
 	// This logic is pulled out of legalmoves.calculateAll(), so we can observe
 	// it at each step to find the earliest illegality point of the move submission.
@@ -241,16 +239,16 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
 	}
 
 	// Now transfer the special move flags from the coords to the move draft
-	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, move_compact);
+	specialdetect.transferSpecialFlags_FromCoordsToMove(endCoordsToAppendSpecialsTo, moveCoords);
 
 	// If we reach here, the move is valid!
-	return { valid: true, draft: move_compact };
+	return { valid: true, tagged: moveCoords };
 }
 
 /**
  * Determines whether the opponent's claimed conclusion matches what we calculate from the position.
  * @param gamefile - The gamefile
- * @param moveDraft - The move draft, WITH special flags attached!
+ * @param moveTagged - The move draft, WITH special flags attached!
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
  * - `valid: true`
@@ -258,7 +256,7 @@ function validateMove(gamefile: FullGame, move_compact: _Move_Compact): MoveVali
  */
 function validateConclusion(
 	gamefile: FullGame,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 	claimedGameConclusion: GameConclusion | undefined,
 ): ConclusionValidityResult {
 	if (
@@ -269,8 +267,8 @@ function validateConclusion(
 		return { valid: true };
 	}
 
-	const moveDraftCopy = jsutil.deepCopyObject(moveDraft);
-	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveDraftCopy);
+	const moveTaggedCopy = jsutil.deepCopyObject(moveTagged);
+	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveTaggedCopy);
 
 	if (
 		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||
@@ -287,7 +285,7 @@ function validateConclusion(
 }
 
 export default {
-	isCompactMoveLegal,
+	isTokenMoveLegal,
 	isOpponentsMoveLegal,
 	validateMove,
 };

@@ -8,8 +8,8 @@
  */
 
 import type { Rating } from '../../database/leaderboardsManager.js';
-import type { BaseMove } from '../../../shared/chess/logic/movepiece.js';
 import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
+import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { ClockValues } from '../../../shared/chess/logic/clock.js';
 import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
@@ -49,12 +49,16 @@ export const timeBeforeGameDeletionMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
 
-type ServerGameMoveMessage = { compact: string; clockStamp?: number };
+/**
+ * A move as transmitted over the wire: the serialized move
+ * token (e.g. "1,2>3,4=N") and an optional clock stamp.
+ */
+type MovePacket = { token: string; clockStamp?: number };
 
 /** The message contents expected when we send a websocket 'move' message.  */
 interface OpponentsMoveMessage {
 	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
-	move: ServerGameMoveMessage;
+	move: MovePacket;
 	gameConclusion?: GameConclusion;
 	/** Our opponent's move number, 1-based. */
 	moveNumber: number;
@@ -65,8 +69,8 @@ interface OpponentsMoveMessage {
 /** The message contents expected when we receive a server websocket 'gameupdate' message.  */
 interface GameUpdateMessage {
 	gameConclusion?: GameConclusion;
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMoveMessage[];
+	/** Existing moves, if any, to forward to the front of the game. */
+	moves: MovePacket[];
 	participantState: ParticipantState;
 	clockValues?: ClockValues;
 	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
@@ -524,7 +528,7 @@ function getGameUpdateMessageContents(
 ): GameUpdateMessage {
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.basegame.gameConclusion,
-		moves: servergame.basegame.moves.map((m) => simplyMove(m)),
+		moves: servergame.basegame.moves.map((m) => simplifyMove(m)),
 		participantState: getParticipantState(
 			servergame.match,
 			color,
@@ -696,8 +700,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 		players[Number(c) as Player] = data.identifier;
 	}
 	let moves: undefined | string[];
-	if (servergame.basegame.moves.length > 0)
-		moves = servergame.basegame.moves.map((m) => m.compact);
+	if (servergame.basegame.moves.length > 0) moves = servergame.basegame.moves.map((m) => m.token);
 	const simplifiedGame = {
 		id: servergame.match.id,
 		timeCreated: `${servergame.basegame.metadata.UTCDate} ${servergame.basegame.metadata.UTCTime}`,
@@ -798,7 +801,7 @@ function updateClockValues(basegame: Game): undefined {
  * @param servergame - The game
  * @param color - The color of the player to send the latest move to
  */
-function sendMoveToColor({ basegame, match }: ServerGame, color: Player, move: BaseMove): void {
+function sendMoveToColor({ basegame, match }: ServerGame, color: Player, move: MoveRecord): void {
 	if (!(color in match.playerData)) {
 		logEventsAndPrint(
 			`Color to send move to must be one that is in the game (white or black)! ${color}`,
@@ -808,7 +811,7 @@ function sendMoveToColor({ basegame, match }: ServerGame, color: Player, move: B
 	}
 
 	const message: OpponentsMoveMessage = {
-		move: simplyMove(move),
+		move: simplifyMove(move),
 		gameConclusion: basegame.gameConclusion,
 		moveNumber: basegame.moves.length,
 	};
@@ -821,8 +824,8 @@ function sendMoveToColor({ basegame, match }: ServerGame, color: Player, move: B
 /**
  * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
  */
-function simplyMove(move: BaseMove): { compact: string } {
-	return { compact: move.compact };
+function simplifyMove(move: MoveRecord): { token: string } {
+	return { token: move.token };
 }
 
 /**
@@ -873,7 +876,7 @@ export type {
 	PlayerRatingChangeInfo,
 	OpponentsMoveMessage,
 	ParticipantState,
-	ServerGameMoveMessage,
+	MovePacket,
 	DrawOfferInfo,
 	GameUpdateMessage,
 };
