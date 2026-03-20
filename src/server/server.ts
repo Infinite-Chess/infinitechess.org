@@ -32,9 +32,6 @@ app.listen(HTTPPORT, () => console.log(`HTTP listening on port ${HTTPPORT}`));
 httpsServer.listen(HTTPSPORT, () => {
 	console.log(`HTTPS listening on port ${HTTPSPORT}`);
 	logServerStarted();
-	// REQUIRED to tell PM2 (process manager) that the server is ready and listening,
-	// only then will PM2 terminate the previous server process.
-	process.send?.('ready');
 });
 
 // WebSocket server
