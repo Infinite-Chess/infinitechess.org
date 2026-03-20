@@ -35,8 +35,6 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 		return;
 	}
 
-	// TODO: If warning_seconds > 0, broadcast a countdown warning to all connected clients here.
-
 	try {
 		await performBackup();
 	} catch (error: unknown) {
