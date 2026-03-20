@@ -238,11 +238,9 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS password_reset_tokens (
 			hashed_token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
-			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000), -- Unix timestamp (milliseconds)
-
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000) -- Unix timestamp (milliseconds)
 		);
 	`);
 	// Indexes for password_reset_tokens table
@@ -253,13 +251,11 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS refresh_tokens (
 			token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
-			ip_address TEXT,
-
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			ip_address TEXT
 		);
 	`);
 	// Indexes for refresh_tokens table
@@ -271,7 +267,7 @@ function generateTables(): void {
 	// Editor Saves table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS editor_saves (
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			name TEXT NOT NULL,
 			piece_count INTEGER NOT NULL,
 			timestamp INTEGER NOT NULL,
@@ -280,8 +276,7 @@ function generateTables(): void {
 			pawn_double_push INTEGER NOT NULL CHECK (pawn_double_push IN (-1, 0, 1)),
 			castling INTEGER NOT NULL CHECK (castling IN (-1, 0, 1)),
 
-			PRIMARY KEY (user_id, name),
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			PRIMARY KEY (user_id, name)
 		);
 	`);
 
