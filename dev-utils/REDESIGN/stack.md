@@ -16,7 +16,7 @@ These things must be in place before the redesign begins.
 
 - Be aware we might have to change the websocket reconnection logic to use exponential backoff. Decide whether this is necessary depending on how well/quickly clients reconnect after a restart with current logic.
 
-- **Automated DB backups.** Currently, the OS is performing automatic backups, and I am doing manual ones on server updates. Let's have the server itself create a backup once per day and immediately before every deploy. Backups go in a `backups/` directory with timestamped filenames. Backups older than 30 days are purged automatically.
+- **Automated DB backups.** Currently, the OS is performing automatic backups, and I am doing manual ones on server updates. Let's have the server itself create a backup once per day and immediately before every deploy. Backups go in a `backups/` directory with timestamped filenames. Backups older than 30 days are purged automatically. The pre-deploy backup is triggered by the GitHub Actions runner calling `POST /API/backup` (authenticated via `RESTART_SECRET`) before running `pm2 reload`; the runner must wait for HTTP 200 before proceeding, ensuring the backup is fully complete before the process is reloaded. Use SQLite's built-in Online Backup API (`db.backup(destPath)` in `better-sqlite3`) — it produces a single clean `.db` file without needing the WAL sidecar files, and is safe to run while the database is actively open and being written to.
 
 ## Technical Stack & Decisions
 
