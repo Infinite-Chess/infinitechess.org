@@ -1,11 +1,15 @@
 // src/shared/chess/logic/specialdetect.ts
 
+/**
+ * This detects if special moves are legal.
+ * Does NOT execute the moves!
+ */
+
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { enpassantCreate } from './movepiece.js';
 import type { FullGame, Game, Board } from './gamefile.js';
+import type { MoveTagged, MoveSpecialTags, SpecialTags } from './movepiece.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -19,26 +23,14 @@ import bdcoords from '../util/bdcoords.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../util/gamerules.js';
+import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p, rawTypes as r } from '../util/typeutil.js';
 
-/**
- * This detects if special moves are legal.
- * Does NOT execute the moves!
- */
-
-/** All types of special moves that exist, for iterating through. */
-const allSpecials = [
-	'enpassantCreate',
-	'enpassant',
-	'promoteTrigger',
-	'promotion',
-	'castle',
-	'path',
-];
+// Functions -----------------------------------------------------------------------
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -273,7 +265,7 @@ function pawns(
 function getEnPassantGamefileProperty(
 	moveStartCoords: Coords,
 	moveEndCoords: Coords,
-): enpassantCreate {
+): MoveSpecialTags['enpassantCreate'] {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2n;
 	const enpassantSquare: Coords = [moveStartCoords[0], y];
 	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special tags
@@ -485,30 +477,18 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 }
 
 /**
- * Transfers any special move tags from the provided coordinates to the move.
+ * Transfers the move-retained special tags from the provided coordinates to the move.
+ * UI-only tags (e.g. `promoteTrigger`) are intentionally excluded — they are
+ * consumed and deleted before any call to this function.
  */
 function transferSpecialTags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (coords[special] !== undefined) {
-			// @ts-ignore
-			move[special] = jsutil.deepCopyObject(coords[special]);
-		}
+	for (const special of movepiece.MOVE_SPECIAL_TAGS) {
+		transferSpecialTag(coords, move, special);
 	}
 }
 
 /**
- * Transfers any special move tags from the provided move to the coordinates.
- */
-function transferSpecialTags_FromMoveToCoords(move: MoveTagged, coords: Coords): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);
-	}
-}
-
-/**
- * Transfers any special move tags from the one pair of coordinates to another.
+ * Transfers all special move tags (move and UI) from one set of coordinates to another.
  * @param srcCoords - The source coordinates
  * @param destCoords - The destination coordinates
  */
@@ -516,13 +496,27 @@ function transferSpecialTags_FromCoordsToCoords(
 	srcCoords: CoordsTagged,
 	destCoords: CoordsTagged,
 ): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (srcCoords[special] !== undefined)
-			// @ts-ignore
-			destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
+	for (const special of movepiece.SPECIAL_TAGS) {
+		transferSpecialTag(srcCoords, destCoords, special);
 	}
 }
+
+/**
+ * Copies a single {@link SpecialTags} key from `src` to `dest`.
+ *
+ * Keeping `Tags = MoveSpecialTags` fixed and `K` as a free parameter gives
+ * TypeScript full correlation between the key and value types on both sides,
+ * so the assignment is verified with full type safety.
+ */
+function transferSpecialTag<K extends keyof SpecialTags>(
+	src: Partial<SpecialTags>,
+	dest: Partial<SpecialTags>,
+	key: K,
+): void {
+	if (src[key] !== undefined) dest[key] = jsutil.deepCopyObject(src[key]); // SpecialTag[K] → SpecialTag[K] | undefined ✓
+}
+
+// Exports -----------------------------------------------------------------------
 
 export default {
 	kings,
@@ -531,6 +525,5 @@ export default {
 	getEnPassantGamefileProperty,
 	isPawnPromotion,
 	transferSpecialTags_FromCoordsToMove,
-	transferSpecialTags_FromMoveToCoords,
 	transferSpecialTags_FromCoordsToCoords,
 };
