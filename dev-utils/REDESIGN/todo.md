@@ -2,8 +2,6 @@
 
 ## Infrastructure Prerequisites
 
-- Install PM2 on the production machine. Switch to PM2 for running the server. Verify we can view live logs. Verify we can view all logs. Verify that it auto restarts on crashes. Verify the server auto starts after rebooting the machine.
-
 - Install the self-hosted GitHub Actions runner on the production machine.
 
 - Write the GitHub Actions deploy workflow file with the three triggers. Verify each of them work as intended. Verify that restarts have near zero downtime.
