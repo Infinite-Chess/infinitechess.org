@@ -72,7 +72,7 @@ function startDisconnectTimer(
 	closureNotByChoice: boolean,
 	onAutoResignFunc: (_game: ServerGame, _winner: Player) => void,
 ): void {
-	console.log(`Starting disconnect timer to auto resign player ${color}.`);
+	// console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
 	const resignable = gameutility.isGameResignable(servergame.basegame);
