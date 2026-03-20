@@ -438,7 +438,7 @@ function teardownGame(servergame: ServerGame): void {
  * @param servergame - The game
  */
 function onPlayerLostOnTime(servergame: ServerGame): void {
-	console.log('Someone has lost on time!');
+	// console.log('Someone has lost on time!');
 
 	// Who lost on time?
 	const loser = servergame.basegame.whosTurn!;
@@ -464,10 +464,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 		);
 
 	if (gameutility.isGameResignable(servergame.basegame)) {
-		console.log('Someone has lost by disconnection!');
+		// console.log('Someone has lost by disconnection!');
 		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
-		console.log('Game aborted from disconnection.');
+		// console.log('Game aborted from disconnection.');
 		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 }
@@ -482,10 +482,10 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
  */
 function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): void {
 	if (gameutility.isGameResignable(servergame.basegame)) {
-		console.log('Someone has lost by abandonment!');
+		// console.log('Someone has lost by abandonment!');
 		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
-		console.log('Game aborted from abandonment.');
+		// console.log('Game aborted from abandonment.');
 		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 }
@@ -508,8 +508,9 @@ function deleteGame(servergame: ServerGame): void {
 
 	// If the pastedGame flag is present, skip logging to the database.
 	// We don't know the starting position.
-	if (servergame.match.positionPasted) console.log('Skipping logging custom game.');
-	else {
+	if (servergame.match.positionPasted) {
+		// console.log('Skipping logging custom game.');
+	} else {
 		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
 		// The ratings are calculated during the logging of the game into the database
 		const ratingdata = gamelogger.logGame(servergame);
