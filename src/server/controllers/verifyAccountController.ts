@@ -40,7 +40,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 	if (record === undefined) {
 		// User not found
 		logEventsAndPrint(
-			`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST. Verification code "${claimedCode}"`,
+			`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST.`,
 			'hackLog.txt',
 		);
 		res.status(400).redirect(`/400`); // Bad request
@@ -84,7 +84,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 	// Check if the verification code matches!
 	if (claimedCode !== record.verification_code) {
 		logEventsAndPrint(
-			`Invalid account verification link! User "${record.username}", code "${claimedCode}" INCORRECT`,
+			`Invalid account verification link! User "${record.username}" had an incorrect code`,
 			'loginAttempts.txt',
 		);
 		res.status(400).redirect(`/400`);

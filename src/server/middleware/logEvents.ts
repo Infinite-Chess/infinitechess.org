@@ -56,7 +56,12 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 
 	const origin = req.headers.origin || 'Unknown origin';
 
-	let logThis = `${origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	// Redact sensitive tokens that appear in URL paths so they are never written to log files.
+	const sanitizedUrl = req.url
+		.replace(/(\/reset-password\/)([^?#/]+)/, '$1[REDACTED]')
+		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]');
+
+	let logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
 	// Delete passwords from incoming form data
 	let sensoredBody;
 	if (JSON.stringify(req.body) !== '{}') {
