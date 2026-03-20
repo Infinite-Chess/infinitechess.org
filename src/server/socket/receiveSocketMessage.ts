@@ -114,7 +114,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 			// This occasionally happens when the echo arrives after timeToWaitForEchoMillis has elapsed,
-			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted. No big deal.
+			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
 		}
 		return;
 	}
