@@ -2,8 +2,6 @@
 
 ## Infrastructure Prerequisites
 
-- Log all server startups and shutdowns, with timestamps and PIDs, to `logs/startupLog.txt` (e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`).
-
 - Implement in-project automated DB backups: One triggered immediately before every deploy (before any server code performs any db operations, make sure there's no race conditions), and one daily backup. Store in `backups/` with timestamped filenames and auto-purge files older than 30 days.
 
 - Create the `prod` branch in the GitHub repo, and switch the production server to pull from `prod` instead of `update-1.10`.

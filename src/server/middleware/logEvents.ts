@@ -1,19 +1,17 @@
 // src/server/middleware/logEvents.ts
 
+import type { IncomingMessage } from 'node:http';
+import type { Request, Response } from 'express';
+
 import fs from 'fs';
 import path from 'path';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
-import { fileURLToPath } from 'node:url';
 import { promises as fsPromises } from 'fs';
 
+import paths from '../config/paths.js';
 import { getClientIP } from '../utility/IP.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-import type { Request, Response } from 'express';
-import type { IncomingMessage } from 'node:http';
 
 const giveLoggedItemsUUID = false;
 
@@ -33,9 +31,8 @@ async function logEvents(message: string, logName: string): Promise<void> {
 		: `${dateTime}   ${message}\n`;
 
 	try {
-		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
-		fs.mkdirSync(logsPath, { recursive: true });
-		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
+		fs.mkdirSync(paths.LOGS_DIR, { recursive: true });
+		await fsPromises.appendFile(path.join(paths.LOGS_DIR, logName), logItem);
 	} catch (err: unknown) {
 		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
 		else console.error('Error logging event:', err);
