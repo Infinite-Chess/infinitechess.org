@@ -39,7 +39,7 @@ import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
-import { printActiveGameCount, broadcastGameCountToInviteSubs } from './gamecount.js';
+import { broadcastGameCountToInviteSubs } from './gamecount.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
@@ -53,7 +53,12 @@ import {
 	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
 } from './afkdisconnect.js';
 
-//--------------------------------------------------------------------------------------------------------
+// Constants ----------------------------------------------------------------------------------
+
+/** Whether to log all new and ending games to the console. */
+const PRINT_GAMES = false;
+
+// State --------------------------------------------------------------------------------------
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }`
@@ -64,7 +69,7 @@ import {
  */
 const activeGames: Record<number, ServerGame> = {};
 
-//--------------------------------------------------------------------------------------------------------
+// Functions -----------------------------------------------------------------------------------
 
 /**
  * Creates the `ServerGame` object and subscibes each player to the game
@@ -133,9 +138,10 @@ function createGame(
 	// Persist the new game to the database for restoration after server restart.
 	liveGameValues.onGameCreated(servergame);
 
-	console.log('Starting new game:');
-	gameutility.printGame(servergame);
-	printActiveGameCount();
+	if (PRINT_GAMES) {
+		console.log('Starting new game:');
+		gameutility.printGame(servergame);
+	}
 }
 
 /**
@@ -223,7 +229,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)! as Player;
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
-		console.log('Waiting 5 seconds before starting disconnection timer.');
+		// console.log('Waiting 5 seconds before starting disconnection timer.');
 		startDisconnectCushionTimerAndPersist(servergame, color);
 	} else {
 		// Closed tab manually. Immediately start auto-resign timer.
@@ -367,10 +373,10 @@ function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion |
 			s: data.identifier.signedIn,
 		};
 	}
-	console.log(
-		`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.basegame.gameConclusion)}. Moves: ${servergame.basegame.moves.length}.`,
-	);
-	printActiveGameCount();
+	if (PRINT_GAMES)
+		console.log(
+			`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.basegame.gameConclusion)}. Moves: ${servergame.basegame.moves.length}.`,
+		);
 
 	clock.stop(servergame.basegame);
 	// Cancel the timer that will auto terminate
@@ -538,7 +544,7 @@ function deleteGame(servergame: ServerGame): void {
 	// as the rating abuse table's data does not reference other tables.
 	ratingabuse.measureRatingAbuseAfterGame(servergame);
 
-	console.log(`Deleted game ${servergame.match.id}.`);
+	if (PRINT_GAMES) console.log(`Deleted game ${servergame.match.id}.`);
 }
 
 // Shutdown Preparation & Startup Restoration ------------------------------------------------
@@ -678,8 +684,6 @@ function restoreLiveGames(): void {
 			}
 		}
 	}
-
-	if (restoredGames.length > 0) printActiveGameCount();
 }
 
 /**

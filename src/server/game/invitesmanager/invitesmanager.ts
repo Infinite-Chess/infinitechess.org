@@ -32,7 +32,7 @@ import {
 //-------------------------------------------------------------------------------------------
 
 /** Whether to log new invite creations/deletions to the console */
-const printNewInviteCreationsAndDeletions = true;
+const printNewInviteCreationsAndDeletions = false;
 
 /** The number of digits generated invite IDs are. */
 const IDLengthOfInvites = 5;
@@ -351,9 +351,10 @@ function deleteUsersExistingInvite(
 		// Match! Delete
 		invites.splice(i, 1); // Delete the invite
 		if (isInvitePublic(invite)) deletedPublicInvite = true;
-		console.log(
-			`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
-		);
+		if (printNewInviteCreationsAndDeletions)
+			console.log(
+				`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
+			);
 	}
 
 	if (deletedPublicInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted

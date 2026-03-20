@@ -10,7 +10,7 @@ import type { ParsedCookies } from '../types.js';
 import jsutil from '../../shared/util/jsutil.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 // Functions -------------------------------------------------------------
@@ -172,7 +172,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 
 		// Send appropriate response
 		if (result.changeMade) {
-			logEventsAndPrint(
+			logEvents(
 				`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,
 				'checkmates_beaten.txt',
 			);

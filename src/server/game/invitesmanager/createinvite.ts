@@ -25,7 +25,6 @@ import {
 import timecontrol from '../timecontrol.js';
 import { getTranslation } from '../../utility/translate.js';
 import { isServerRestarting } from '../updateServerRestart.js';
-import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
@@ -210,7 +209,6 @@ async function isAllowedToCreateInvite(ws: CustomWebSocket, replyto?: number): P
 
 	// Making an invite is NOT allowed...
 
-	printActiveGameCount();
 	const timeUntilRestart = getMinutesUntilServerRestart();
 	const message = timeUntilRestart
 		? 'server.javascript.ws-server_restarting'
