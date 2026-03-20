@@ -2,12 +2,10 @@
 
 import { initDatabase } from './database/databaseTables.js';
 import { initDevEnvironment } from './config/setupDev.js';
-import { migrateSequentialGameIDs } from './database/migrateSequentialGameIDs.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 initDatabase();
-migrateSequentialGameIDs(); // TEMPORARY ONE-TIME MIGRATION — remove after running on production.
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
 
