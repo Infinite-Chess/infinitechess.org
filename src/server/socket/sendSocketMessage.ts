@@ -26,11 +26,13 @@ import {
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
-	route: string | undefined;
+	/** The route to forward the message to (e.g., "general", "invites", "game", "echo").
+	 * Undefined if it's a reply-only message. */
+	route?: string;
 	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value. */
-	contents: any;
+	 * For other messages, this is an object with action and value.
+	 * Absent for reply-only acknowledgement messages (route and action are both undefined). */
+	contents?: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -89,21 +91,28 @@ function sendSocketMessage(
 	}
 
 	const isEcho = action === 'echo';
+	// Reply-only messages should have no empty "contents" field
+	const isReplyOnly = route === undefined;
 	const payload: WebsocketOutMessage = isEcho
 		? {
 				route: 'echo',
 				contents: value, // For echo, value contains the message ID
 				replyto,
 			}
-		: {
-				route,
-				contents: {
-					action,
-					value,
-				},
-				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-				replyto,
-			};
+		: isReplyOnly
+			? {
+					id: uuid.generateNumbID(10),
+					replyto,
+				}
+			: {
+					route,
+					contents: {
+						action,
+						value,
+					},
+					id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+					replyto,
+				};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);

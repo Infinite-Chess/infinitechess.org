@@ -11,7 +11,7 @@ import type { Request, Response } from 'express';
 
 import bcrypt from 'bcrypt';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import {
@@ -56,7 +56,7 @@ async function testPasswordForRequest(req: Request, res: Response): Promise<bool
 	// Test the password
 	const match = await bcrypt.compare(claimedPassword, record.hashed_password);
 	if (!match) {
-		logEventsAndPrint(`Incorrect password for user ${record.username}!`, 'loginAttempts.txt');
+		logEvents(`Incorrect password for user ${record.username}!`, 'loginAttempts.txt');
 		res.status(401).json({
 			message: getTranslationForReq('server.javascript.ws-incorrect_password', req),
 		}); // Unauthorized, password not found

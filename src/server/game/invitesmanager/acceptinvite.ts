@@ -147,10 +147,6 @@ function informThemGameAborted(
 	const errString = isPrivate
 		? 'server.javascript.ws-invalid_code'
 		: 'server.javascript.ws-game_aborted';
-	if (isPrivate)
-		console.log(
-			`User entered incorrect invite code! Code: ${inviteID}   Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
 	return sendNotify(ws, errString, { replyto });
 }
 

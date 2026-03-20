@@ -8,7 +8,6 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import wsutil from '../../shared/util/wsutil.js';
 
-import socketUtility from './socketUtility.js';
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
 
 // Functions ---------------------------------------------------------------------------
@@ -35,11 +34,6 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	unsubSocketFromAllSubs(ws, closureNotByChoice);
 
 	cancelRenewConnectionTimer(ws);
-
-	if (reasonString === 'No echo heard')
-		console.log(
-			`Socket closed from no echo heard. ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
 }
 
 function cancelRenewConnectionTimer(ws: CustomWebSocket): void {

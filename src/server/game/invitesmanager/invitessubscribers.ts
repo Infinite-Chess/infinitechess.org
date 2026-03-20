@@ -10,7 +10,6 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import socketUtility from '../../socket/socketUtility.js';
 import { memberInfoEq } from './inviteutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
@@ -20,8 +19,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  */
 const subscribedClients: Record<string, CustomWebSocket> = {}; // { id: ws }
 
-const printNewAndClosedSubscriptions = false;
-const printSubscriberCount = true;
+const printSubscriberCount = false;
 
 /**
  * Returns the object containing all sockets currently subscribed to the invites list,
@@ -52,10 +50,7 @@ function addSocketToInvitesSubs(ws: CustomWebSocket): void {
 
 	subscribedClients[socketID] = ws;
 	ws.metadata.subscriptions.invites = true;
-	if (printNewAndClosedSubscriptions)
-		console.log(
-			`Subscribed client to invites list! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
+
 	if (printSubscriberCount)
 		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
@@ -73,10 +68,7 @@ function removeSocketFromInvitesSubs(ws: CustomWebSocket): void {
 
 	delete subscribedClients[socketID];
 	delete ws.metadata.subscriptions.invites;
-	if (printNewAndClosedSubscriptions)
-		console.log(
-			`Unsubscribed client from invites list. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
+
 	if (printSubscriberCount)
 		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }

@@ -17,11 +17,4 @@ function getActiveGameCount(): number {
 	return Object.keys(activeGames).length;
 }
 
-/** Prints the active game count to the console. */
-function printActiveGameCount(): void {
-	console.log(
-		`Active games: ${getActiveGameCount()} ===========================================`,
-	);
-}
-
-export { getActiveGameCount, printActiveGameCount, broadcastGameCountToInviteSubs };
+export { getActiveGameCount, broadcastGameCountToInviteSubs };

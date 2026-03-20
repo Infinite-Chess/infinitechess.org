@@ -13,8 +13,8 @@
 import type { Request, Response } from 'express';
 
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { testPasswordForRequest } from './authController.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
 
 /**
@@ -59,7 +59,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 		// These operations are "fire and forget" in terms of the client response
 		updateLoginCountAndLastSeen(record.user_id);
-		logEventsAndPrint(`Logged in member "${record.username}".`, 'loginAttempts.txt');
+		logEvents(`Logged in member "${record.username}".`, 'loginAttempts.txt');
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the detailed error for server-side debugging.

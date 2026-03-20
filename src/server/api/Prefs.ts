@@ -166,9 +166,9 @@ function postPrefs(req: Request, res: Response): void {
 
 		// Send appropriate response
 		if (result.changeMade) {
-			console.log(
-				`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
-			);
+			// console.log(
+			// 	`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
+			// );
 			res.status(200).json({ message: 'Preferences updated successfully' });
 		} else {
 			logEventsAndPrint(

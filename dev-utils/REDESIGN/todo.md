@@ -2,8 +2,6 @@
 
 ## Infrastructure Prerequisites
 
-- Create the `prod` branch in the GitHub repo, and switch the production server to pull from `prod` instead of `update-1.10`.
-
 - Install PM2 on the production machine. Switch to PM2 for running the server. Verify we can view live logs. Verify we can view all logs. Verify that it auto restarts on crashes. Verify the server auto starts after rebooting the machine.
 
 - Install the self-hosted GitHub Actions runner on the production machine.
