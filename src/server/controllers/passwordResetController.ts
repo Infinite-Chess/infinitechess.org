@@ -9,7 +9,7 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import { sendPasswordResetEmail } from './sendMail.js';
+import { sendPasswordResetEmail } from './emailController.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 

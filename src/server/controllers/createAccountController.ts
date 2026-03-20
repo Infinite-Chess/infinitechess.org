@@ -22,7 +22,7 @@ import { handleLogin } from './loginController.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import { sendEmailConfirmation } from './sendMail.js';
+import { sendEmailConfirmation } from './emailController.js';
 import {
 	addUser,
 	isEmailTaken,

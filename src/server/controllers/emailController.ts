@@ -1,49 +1,19 @@
-// src/server/controllers/sendMail.ts
+// src/server/controllers/emailController.ts
 
-import type { Request } from 'express';
+/*
+ * This module constructs and dispatches application emails:
+ * password resets, account verification, and rating abuse alerts.
+ *
+ * It also handles the API endpoint for resending verification emails.
+ */
 
-import nodemailer from 'nodemailer';
-import { fromEnv } from '@aws-sdk/credential-providers';
-import { Response } from 'express';
-import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
+import type { Request, Response } from 'express';
 
+import mailer from '../utility/mailer.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-
-/** Options for sending an email. */
-type SendMailOptions = {
-	to: string;
-	subject: string;
-} & ({ html: string } | { text: string });
-
-// --- Module Setup ---
-const AWS_REGION = process.env['AWS_REGION'];
-const EMAIL_FROM_ADDRESS = process.env['EMAIL_FROM_ADDRESS'];
-const AWS_ACCESS_KEY_ID = process.env['AWS_ACCESS_KEY_ID'];
-const AWS_SECRET_ACCESS_KEY = process.env['AWS_SECRET_ACCESS_KEY'];
-
-/**
- * Who our sent emails will appear as if they're from.
- */
-const FROM = EMAIL_FROM_ADDRESS;
-
-// Create SES client
-const sesClient =
-	AWS_REGION && EMAIL_FROM_ADDRESS && AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY
-		? new SESv2Client({
-				region: AWS_REGION,
-				credentials: fromEnv(),
-			})
-		: null;
-
-// Create nodemailer transporter using SES
-const transporter = sesClient
-	? nodemailer.createTransport({
-			SES: { sesClient, SendEmailCommand },
-		} as nodemailer.TransportOptions)
-	: null;
 
 // --- Helper Functions ---
 
@@ -54,26 +24,6 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 			${contentHtml}
 		</div>
 	`;
-}
-
-/**
- * Helper function to send an email via the transporter.
- * Checks if transporter is defined and logs a generic message if not.
- * @param options - Email options including recipient, subject, and content (html or text)
- * @returns Whether the email was sent, which won't be the case if env variables aren't present.
- */
-async function sendMail(options: SendMailOptions): Promise<boolean> {
-	if (!transporter) {
-		console.log('Email environment variables not specified. Not sending email.');
-		return false;
-	}
-
-	await transporter.sendMail({
-		from: `"Infinite Chess" <${FROM}>`,
-		...options,
-	});
-
-	return true;
 }
 
 // --- Email Sending Functions ---
@@ -87,7 +37,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	try {
-		const sent = await sendMail({
+		const sent = await mailer.send({
 			to: recipientEmail,
 			subject: 'Your Password Reset Request',
 			html: createEmailHtmlWrapper('Password Reset Request', content),
@@ -160,7 +110,7 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		const sent = await sendMail({
+		const sent = await mailer.send({
 			to: record.email,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
@@ -208,12 +158,12 @@ function requestConfirmEmail(req: Request, res: Response): void {
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		const sent = await sendMail({
-			to: FROM ?? '',
+		const sent = await mailer.send({
+			to: mailer.FROM ?? '',
 			subject: messageSubject,
 			text: messageText,
 		});
-		if (sent) console.log(`Rating abuse warning email sent successfully to ${FROM}.`);
+		if (sent) console.log(`Rating abuse warning email sent successfully to ${mailer.FROM}.`);
 		else console.log("Didn't send rating abuse email.");
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);

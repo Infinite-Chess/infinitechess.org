@@ -33,7 +33,7 @@ import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
-import { requestConfirmEmail } from '../controllers/sendMail.js';
+import { requestConfirmEmail } from '../controllers/emailController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';

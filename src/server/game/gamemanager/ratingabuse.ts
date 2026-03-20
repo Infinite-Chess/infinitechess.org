@@ -20,7 +20,7 @@ import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderb
 
 import gameutility from './gameutility.js';
 import { getMultipleGameData } from '../../database/gamesManager.js';
-import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
+import { sendRatingAbuseEmail } from '../../controllers/emailController.js';
 import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
