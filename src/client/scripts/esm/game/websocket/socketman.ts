@@ -20,8 +20,12 @@ import socketrouter from './socketrouter.js';
 
 /** Time to wait for HTTP connection before assuming lost connection. */
 const timeToWaitForHTTPMillis = 5000;
-/** Time before attempting resub after network loss. */
-const timeToResubAfterNetworkLossMillis = 5000;
+/**
+ * Delays in milliseconds between reconnection attempts after network loss.
+ * The first element is used before the first attempt (0 = instant),
+ * and the last element repeats indefinitely.
+ */
+const reconnectDelaysMillis = [0, 2500, 5000];
 
 // Variables -------------------------------------------------------------------
 
@@ -109,16 +113,22 @@ async function establishSocket(): Promise<boolean> {
 	// Await validatorama because it may be refreshing our session cookies
 	await validatorama.waitUntilInitialRequestBack();
 
-	let success = await openSocket();
+	let success = false;
+	let attemptIndex = 0;
 
 	while (!success && !socketsubs.zeroSubs()) {
-		noConnection = true;
-		toast.show(translations.websocket.no_connection, {
-			durationMillis: timeToResubAfterNetworkLossMillis,
-		});
-		invites.clearIfOnPlayPage();
-		await thread.sleep(timeToResubAfterNetworkLossMillis);
+		const delay =
+			reconnectDelaysMillis[Math.min(attemptIndex, reconnectDelaysMillis.length - 1)]!;
+		if (delay > 0) {
+			noConnection = true;
+			toast.show(translations.websocket.no_connection, {
+				durationMillis: delay,
+			});
+			invites.clearIfOnPlayPage();
+			await thread.sleep(delay);
+		}
 		success = await openSocket();
+		attemptIndex++;
 	}
 
 	if (success && noConnection)
