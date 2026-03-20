@@ -575,7 +575,7 @@ function checkIfMoveLegal(
 	gamefile: FullGame,
 	legalMoves: LegalMoves,
 	startCoords: Coords,
-	endCoords: Coords,
+	endCoords: CoordsTagged,
 	colorOfFriendly: Player,
 	{ ignoreIndividualMoves = false } = {},
 ): boolean {

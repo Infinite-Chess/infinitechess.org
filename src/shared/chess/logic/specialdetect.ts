@@ -190,7 +190,7 @@ function pawns(
 	// 1. It can move forward if there is no piece there
 
 	// Is there a piece in front of it?
-	const singlePushCoord: Coords = [coords[0], coords[1] + yOneorNegOne];
+	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yOneorNegOne];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
 		gamefile.basegame.gameRules.worldBorder,
@@ -232,7 +232,7 @@ function pawns(
 
 	// 2. It can capture diagonally if there are opponent pieces there
 
-	const coordsToCapture: Coords[] = [
+	const coordsToCapture: CoordsTagged[] = [
 		[coords[0] - 1n, coords[1] + yOneorNegOne],
 		[coords[0] + 1n, coords[1] + yOneorNegOne],
 	];
@@ -281,7 +281,7 @@ function getEnPassantGamefileProperty(
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(
 	{ boardsim, basegame }: FullGame,
-	individualMoves: Coords[],
+	individualMoves: CoordsTagged[],
 	coords: Coords,
 	color: Player,
 ): void {
