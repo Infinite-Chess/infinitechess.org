@@ -13,7 +13,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
 import type { LegalMoves } from './legalmoves.js';
-import type { CoordsTagged, MoveTagged, path } from './movepiece.js';
+import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
@@ -475,7 +475,7 @@ function appendBlockingMoves(
  */
 function appendPathBlockingMoves(
 	gamefile: FullGame,
-	path: path,
+	path: MoveSpecialTags['path'],
 	legalMoves: LegalMoves,
 	selectedPieceCoords: Coords,
 	color: Player,

@@ -32,52 +32,63 @@ import { rawTypes as r } from '../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------------------------------------------------------
 
+/** A special move tag name on {@link CoordsTagged}, both move tags and UI tags. */
+interface SpecialTags extends MoveSpecialTags, UISpecialTags {}
+
+/**
+ * A special move tag that is retained when transferring from {@link CoordsTagged} to a move.
+ * This describes what actually happened during the move execution.
+ */
+interface MoveSpecialTags {
+	/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
+	enpassantCreate: EnPassant;
+	/**
+	 * A special move tag for enpassant capture.
+	 *
+	 * If true, the specialMove function for pawns will read the gamefile's
+	 * enpassant property to figure out where the pawn to capture is.
+	 * After that, the captured piece is appended to the move's changes list,
+	 * so we don't actually need to store more information in here.
+	 */
+	enpassant: true;
+	/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
+	promotion: number;
+	/** A special move tag for castling. */
+	castle: {
+		/** 1 => King castled right   -1 => King castled left */
+		dir: 1n | -1n;
+		/** The coordinate of the piece the king castled with, usually a rook. */
+		coord: Coords;
+	};
+	/**
+	 * A special move tag that stores a list of all the waypoints along
+	 * the travel path of a piece. Inclusive to start and end.
+	 *
+	 * Used for Rose piece.
+	 */
+	path: Coords[];
+}
+
+/**
+ * A special move tag that is UI-only. It is present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and is
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+interface UISpecialTags {
+	/**
+	 * A special move tag that, when the move is attempted to be made should
+	 * trigger the promotion UI to open. The special detect functions are in
+	 * charge of adding this. selection.ts will delete it and open the promotion UI.
+	 */
+	promoteTrigger: boolean;
+}
+
 /**
  * A pair of coordinates, WITH attached special move information.
  * This usually denotes a legal square you can move to that will
  * activate said special move.
  */
-type CoordsTagged = Coords & {
-	enpassantCreate?: enpassantCreate;
-	enpassant?: enpassant;
-	promoteTrigger?: promoteTrigger;
-	promotion?: promotion;
-	castle?: castle;
-	path?: path;
-};
-
-/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
-type enpassantCreate = EnPassant;
-/**
- * A special move tag for enpassant capture.
- *
- * If true, the specialMove function for pawns will read the gamefile's
- * enpassant property to figure out where the pawn to capture is.
- * After that, the captured piece is appended to the move's changes list,
- * So we don't actually need to store more information in here.
- */
-type enpassant = true;
-/**
- * A special move tag that, when the move is attempted to be made, should trigger the promotion UI to open.
- * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
- */
-type promoteTrigger = boolean;
-/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
-type promotion = number;
-/** A special move tag for castling. */
-type castle = {
-	/** 1 => King castled right   -1 => King castled left */
-	dir: 1n | -1n;
-	/** The coordinate of the piece the king castled with, usually a rook. */
-	coord: Coords;
-};
-/**
- * A special move tag that stores a list of all the waypoints along
- * the travel path of a piece. Inclusive to start and end.
- *
- * Used for Rose piece.
- */
-type path = Coords[];
+type CoordsTagged = Coords & Partial<SpecialTags>;
 
 /** A move as stored in the base game. Does not need a lot of details. */
 interface MoveRecord extends MoveCoords {
@@ -93,18 +104,7 @@ interface MoveRecord extends MoveCoords {
 }
 
 /** A {@link MoveCoords} move with all special tags attached. */
-interface MoveTagged extends MoveCoords {
-	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
-	enpassantCreate?: enpassantCreate;
-	/** Present if the move was special-move enpassant capture. This will be `true` */
-	enpassant?: enpassant;
-	/** Present if the move was a special-move casle. This may look like an
-	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
-	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	castle?: castle;
-	/** Present if the move is for a Rose. */
-	path?: path;
-}
+type MoveTagged = MoveCoords & Partial<MoveSpecialTags>;
 
 /** Information about some change on the chessboard, either by a move or some other property change (e.g. as used in the board editor) */
 interface Edit {
@@ -139,6 +139,32 @@ interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	 */
 	comment?: string;
 }
+
+// Constants -------------------------------------------------------------------------------------------------------
+
+/**
+ * All special move tag names that are retained when transferring from {@link CoordsTagged}
+ * to a move. These describe what actually happened during the move execution.
+ */
+const MOVE_SPECIAL_TAGS = [
+	'enpassantCreate',
+	'enpassant',
+	'promotion',
+	'castle',
+	'path',
+] satisfies ReadonlyArray<keyof MoveSpecialTags>;
+
+/**
+ * All special move tag names that are UI-only. They are present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and are
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+const UI_SPECIAL_TAGS = ['promoteTrigger'] satisfies ReadonlyArray<keyof UISpecialTags>;
+
+/** All special move tags names on {@link CoordsTagged}, both move tags and UI tags. */
+const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies ReadonlyArray<
+	keyof SpecialTags
+>;
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
@@ -655,20 +681,13 @@ function getSimulatedConclusion(
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-export type {
-	MoveFull,
-	Edit,
-	MoveRecord,
-	MoveTagged,
-	CoordsTagged,
-	enpassantCreate,
-	enpassant,
-	promotion,
-	castle,
-	path,
-};
+export type { MoveFull, Edit, MoveRecord, MoveTagged, SpecialTags, MoveSpecialTags, CoordsTagged };
 
 export default {
+	// Constants
+	MOVE_SPECIAL_TAGS,
+	SPECIAL_TAGS,
+	// Functions
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,

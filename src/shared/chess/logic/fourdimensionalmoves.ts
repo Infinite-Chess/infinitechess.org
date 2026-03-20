@@ -35,8 +35,8 @@ function fourDimensionalPawnMove(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): Coords[] {
-	const legalMoves: Coords[] = [];
+): CoordsTagged[] {
+	const legalMoves: CoordsTagged[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'spacelike', premove)); // Spacelike
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'timelike', premove)); // Timelike
 	return legalMoves;
@@ -55,7 +55,7 @@ function pawnLegalMoves(
 	color: Player,
 	movetype: 'spacelike' | 'timelike',
 	premove: boolean,
-): Coords[] {
+): CoordsTagged[] {
 	const { basegame, boardsim } = gamefile;
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = movetype === 'spacelike' ? 1n : dim.BOARD_SPACING;
@@ -63,13 +63,13 @@ function pawnLegalMoves(
 
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === p.WHITE ? distance : -distance;
-	const individualMoves: Coords[] = [];
+	const individualMoves: CoordsTagged[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
 	// 1. It can move forward if there is no piece there
 
 	// Is there a piece in front of it? And do not allow pawn to leave the 4D board
-	const singlePushCoord: Coords = [coords[0], coords[1] + yDistanceParity];
+	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yDistanceParity];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
 		basegame.gameRules.worldBorder,
@@ -122,7 +122,7 @@ function pawnLegalMoves(
 	// 2. It can capture diagonally if there are opponent pieces there
 	const strong_pawns = fourdimensionalgenerator.getMovementType().STRONG_PAWNS;
 
-	const coordsToCapture: Coords[] = [
+	const coordsToCapture: CoordsTagged[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
 	];
@@ -174,7 +174,7 @@ function pawnLegalMoves(
  */
 function addPossibleEnPassant(
 	{ basegame, boardsim }: FullGame,
-	individualMoves: Coords[],
+	individualMoves: CoordsTagged[],
 	coords: Coords,
 	color: Player,
 	xdistance: bigint,
