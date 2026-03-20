@@ -19,13 +19,13 @@ import socketrouter from './socketrouter.js';
 // Constants -------------------------------------------------------------------
 
 /** Time to wait for HTTP connection before assuming lost connection. */
-const timeToWaitForHTTPMillis = 5000;
+const TIME_TO_WAIT_FOR_HTTP_MILLIS = 5000;
 /**
  * Delays in milliseconds between reconnection attempts after network loss.
  * The first element is used before the first attempt (0 = instant),
  * and the last element repeats indefinitely.
  */
-const reconnectDelaysMillis = [0, 2500, 5000];
+const RECONNECT_DELAY_MILLIS = [0, 2500, 5000] as const;
 
 // Variables -------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ document.addEventListener('connection-lost', () => {
 	// Displays a toast, notifying the user they lost connection.
 	noConnection = true;
 	toast.show(translations.websocket.no_connection, {
-		durationMillis: timeToWaitForHTTPMillis,
+		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 	});
 });
 
@@ -117,9 +117,9 @@ async function establishSocket(): Promise<boolean> {
 	let attemptIndex = 0;
 
 	while (!success && !socketsubs.zeroSubs()) {
-		const delay =
-			reconnectDelaysMillis[Math.min(attemptIndex, reconnectDelaysMillis.length - 1)]!;
-		if (delay > 0) {
+		const cappedAttemptIndex = Math.min(attemptIndex, RECONNECT_DELAY_MILLIS.length - 1);
+		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
+		if (attemptIndex > 0) {
 			noConnection = true;
 			toast.show(translations.websocket.no_connection, {
 				durationMillis: delay,
@@ -174,7 +174,7 @@ async function openSocket(): Promise<boolean> {
 function onSocketUpgradeReqLeave(): void {
 	// Dispatches a custom event indicating that a socket connection is being opened.
 	document.dispatchEvent(new CustomEvent('socket-opening'));
-	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Cancels the timer that assumes lost connection. */
@@ -187,9 +187,9 @@ function onReqBack(): void {
 function httpLostConnection(): void {
 	noConnection = true;
 	toast.show(translations.websocket.no_connection, {
-		durationMillis: timeToWaitForHTTPMillis,
+		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 	});
-	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
