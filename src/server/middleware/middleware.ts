@@ -34,6 +34,7 @@ import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { requestConfirmEmail } from '../controllers/emailController.js';
+import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
@@ -205,6 +206,9 @@ export function configureMiddleware(app: Express): void {
 		const contributors = getContributors();
 		res.send(JSON.stringify(contributors));
 	});
+
+	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
+	app.post('/api/prepare-restart', handlePrepareRestart);
 
 	// Token Authenticator -------------------------------------------------------
 

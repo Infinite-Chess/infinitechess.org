@@ -5,6 +5,7 @@
  */
 
 import db from './database.js';
+import { startDailyBackups } from './backupManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
@@ -353,6 +354,7 @@ function initDatabase(): void {
 	generateTables();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
+	startDailyBackups();
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

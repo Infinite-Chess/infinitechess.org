@@ -88,6 +88,15 @@ function close(): void {
 	// console.log('Closed database.');
 }
 
+/**
+ * Creates a consistent point-in-time backup of the database to the given file path
+ * using SQLite's Online Backup API. Safe to call while the database is open and being written to.
+ * @param destPath - Absolute path for the destination backup file.
+ */
+async function backup(destPath: string): Promise<void> {
+	await db.backup(destPath);
+}
+
 /** Checks if a column exists in a table. */
 function columnExists(tableName: string, columnName: string): boolean {
 	try {
@@ -134,6 +143,7 @@ export default {
 	get,
 	all,
 	close,
+	backup,
 	columnExists,
 	transaction,
 };

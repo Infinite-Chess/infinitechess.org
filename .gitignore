@@ -24,6 +24,9 @@ dist
 *.sqlite3-wal
 *.sqlite3-shm
 
+# DB backups directory
+backups/
+
 # Visual Studio automatically generated directories
 node_modules
 .vs
