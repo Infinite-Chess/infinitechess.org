@@ -23,7 +23,6 @@ import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
-import serverrestart from './serverrestart.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
@@ -85,7 +84,6 @@ GameBus.addEventListener('game-concluded', () => {
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
 	afk.onGameClose();
 	tabnameflash.onGameClose();
-	serverrestart.onGameClose();
 	deleteCustomVariantOptions();
 	drawoffers.onGameClose();
 	requestRemovalFromPlayersInActiveGames();
@@ -190,8 +188,6 @@ function initOnlineGame(options: {
 	youAreColor?: Player;
 	/** Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over! */
 	participantState?: ParticipantState;
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number;
 }): void {
 	inOnlineGame = true;
 	inSync = true;
@@ -204,11 +200,8 @@ function initOnlineGame(options: {
 
 	ourColor = options.youAreColor;
 
-	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer, and server restarting timer.
-	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
-		options.participantState,
-		options.serverRestartingAt,
-	);
+	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer.
+	set_DrawOffers_DisconnectInfo_AutoAFKResign(options.participantState);
 
 	afk.onGameStart();
 	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
@@ -219,10 +212,7 @@ function initOnlineGame(options: {
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
-	participantState?: ParticipantState,
-	serverRestartingAt?: number,
-): void {
+function set_DrawOffers_DisconnectInfo_AutoAFKResign(participantState?: ParticipantState): void {
 	if (participantState) {
 		drawoffers.set(participantState.drawOffer);
 
@@ -236,10 +226,6 @@ function set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
 			afk.startOpponentAFKCountdown(participantState.millisUntilAutoAFKResign);
 		else afk.stopOpponentAFKCountdown();
 	}
-
-	// If the server is restarting, start displaying that info.
-	if (serverRestartingAt !== undefined) serverrestart.initServerRestart(serverRestartingAt);
-	else serverrestart.resetServerRestarting();
 }
 
 // Call when we leave an online game
@@ -255,7 +241,6 @@ function closeOnlineGame(): void {
 	afk.onGameClose();
 	disconnect.stopOpponentDisconnectCountdown();
 	tabnameflash.onGameClose();
-	serverrestart.onGameClose();
 	drawoffers.onGameClose();
 	closeEventListeners();
 }
@@ -456,7 +441,7 @@ export default {
 	getPlayerRatings,
 	setInSyncTrue,
 	initOnlineGame,
-	set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting,
+	set_DrawOffers_DisconnectInfo_AutoAFKResign,
 	closeOnlineGame,
 	isItOurTurn,
 	hasPlayerPressedAbortOrResignButton,

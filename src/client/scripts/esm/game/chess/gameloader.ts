@@ -172,8 +172,6 @@ async function startOnlineGame(options: {
 	clockValues?: ClockValues;
 	youAreColor?: Player;
 	participantState?: ParticipantState;
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number;
 }): Promise<void> {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
@@ -215,7 +213,6 @@ async function startOnlineGame(options: {
 		gameInfo: options.gameInfo,
 		youAreColor: options.youAreColor,
 		participantState: options.participantState,
-		serverRestartingAt: options.serverRestartingAt,
 	});
 
 	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.

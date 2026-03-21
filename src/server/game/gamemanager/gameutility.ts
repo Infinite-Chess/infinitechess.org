@@ -31,7 +31,6 @@ import {
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -73,8 +72,6 @@ interface GameUpdateMessage {
 	moves: MovePacket[];
 	participantState: ParticipantState;
 	clockValues?: ClockValues;
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number;
 	/**
 	 * When true, the client's resync logic should force its move list to exactly match
 	 * the server's, even if the client has one extra move at the end that is "ours".
@@ -540,10 +537,6 @@ function getGameUpdateMessageContents(
 	// Include timer info if it's timed
 	if (!servergame.basegame.untimed)
 		messageContents.clockValues = getGameClockValues(servergame.basegame);
-
-	// Also send the time the server is restarting, if it is
-	const timeServerRestarting = getTimeServerRestarting();
-	if (timeServerRestarting !== false) messageContents.serverRestartingAt = timeServerRestarting;
 
 	return messageContents;
 }

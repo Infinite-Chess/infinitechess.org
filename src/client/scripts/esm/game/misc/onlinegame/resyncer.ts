@@ -63,10 +63,7 @@ function handleServerGameUpdate(
 	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
-		message.participantState,
-		message.serverRestartingAt,
-	);
+	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
 
 	// Must be set before editing the clocks.
 	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);
