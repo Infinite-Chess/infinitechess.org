@@ -116,7 +116,8 @@ async function establishSocket(): Promise<boolean> {
 	let success = false;
 	let attemptIndex = 0;
 
-	while (!success && !socketsubs.zeroSubs()) {
+	// Always attempt at least once (even with zero subs), then retry while subs exist.
+	do {
 		const cappedAttemptIndex = Math.min(attemptIndex, RECONNECT_DELAY_MILLIS.length - 1);
 		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
 		if (attemptIndex > 0) {
@@ -129,7 +130,7 @@ async function establishSocket(): Promise<boolean> {
 		}
 		success = await openSocket();
 		attemptIndex++;
-	}
+	} while (!success && !socketsubs.zeroSubs());
 
 	if (success && noConnection)
 		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
