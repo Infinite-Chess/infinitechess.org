@@ -21,8 +21,8 @@ function extractPathFromComment(line: string): string | null {
 	if (!match || !match[1]) return null;
 
 	const content = match[1].trim();
-	// Check if it looks like a file path (ends with .ts or .js)
-	if (content.match(/\.(ts|js)$/)) {
+	// Check if it looks like a file path (ends with .ts, .js, or .cjs)
+	if (content.match(/\.(ts|js|cjs)$/)) {
 		return content;
 	}
 	return null;
@@ -111,8 +111,8 @@ function main(): void {
 		process.exit(1);
 	}
 
-	// Filter for only .js and .ts files
-	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts)$/));
+	// Filter for only .js, .ts, and .cjs files
+	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts|cjs)$/));
 
 	for (const file of jsAndTsFiles) {
 		try {
