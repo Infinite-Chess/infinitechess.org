@@ -1,7 +1,9 @@
 // ecosystem.config.cjs
 
+// ecosystem.config.cjs
+
 /*
- * PM2 process configuration for the Infinite Chess production server
+ * PM2 process configuration for the Infinite Chess production server.
  */
 
 module.exports = {
