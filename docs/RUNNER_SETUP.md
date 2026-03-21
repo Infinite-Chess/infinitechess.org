@@ -116,21 +116,21 @@ openssl rand -hex 32
 
 Add the output as a **Secret** named `RESTART_SECRET`. You will also need to add the same value to the production `.env` file — see [Part 3](#part-3-add-restart_secret-to-the-production-env).
 
-### 2.2 `DEPLOY_DIR` (Variable — not a secret)
+### 2.2 `DEPLOY_DIR` (Secret)
 
 The absolute path to the production code directory on the server — the directory where PM2 currently runs the app from and where `git pull` / `npm ci` / `npm run build` should execute.
 
 Example value: `/Users/naviary/infinitechess.org`
 
-Add this as an Actions **Variable** (under the "Variables" tab, not "Secrets") named `DEPLOY_DIR`.
+Add this as a **Secret** (under the "Secrets" tab) named `DEPLOY_DIR`. Storing it as a secret keeps the server's filesystem layout out of public workflow logs.
 
 ### 2.3 `HTTPPORT` (Variable — not a secret)
 
-The HTTP port the production server listens on. The deploy workflow uses this to call `POST /api/prepare-restart` over loopback before building.
+The HTTP port the production server listens on. The deploy workflow uses this to call `POST /api/prepare-restart` and to run the post-deploy health check, both over loopback.
 
 This must match the `HTTPPORT` value in the production `.env` file.
 
-Add this as an Actions **Variable** named `HTTPPORT`.
+Add this as an Actions **Variable** (under the "Variables" tab, not "Secrets") named `HTTPPORT`.
 
 ---
 

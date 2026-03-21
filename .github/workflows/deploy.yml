@@ -50,14 +50,14 @@ jobs:
       # commits or change npm dependencies on this repo.
       - name: Pull latest code and install dependencies
         if: github.event_name != 'repository_dispatch'
-        working-directory: ${{ vars.DEPLOY_DIR }}
+        working-directory: ${{ secrets.DEPLOY_DIR }}
         run: git pull --quiet && npm ci --silent
 
       # Step 3 — Build.
       # Always runs. For hydrochess-release this re-runs esbuild so the new
       # WASM binaries (fetched at build time) are bundled into the output.
       - name: Build
-        working-directory: ${{ vars.DEPLOY_DIR }}
+        working-directory: ${{ secrets.DEPLOY_DIR }}
         run: npm run build
 
       # Step 4 — Reload.
@@ -65,5 +65,29 @@ jobs:
       # gracefully, then starts a new process from the freshly built files.
       # Clients whose WebSockets drop reconnect automatically within ~2.5s.
       - name: Reload server
-        working-directory: ${{ vars.DEPLOY_DIR }}
+        working-directory: ${{ secrets.DEPLOY_DIR }}
         run: pm2 reload infinitechess
+
+      # Step 5 — Health check.
+      # Polls the homepage every 3 seconds for up to 30 seconds to confirm
+      # the new process is accepting requests. Any actual HTTP response
+      # (including a redirect to HTTPS) indicates the server is alive.
+      # curl returns status "000" when it cannot connect at all.
+      - name: Health check
+        run: |
+          echo "Waiting for server to become healthy..."
+          max_attempts=10
+          attempt=0
+          until [ $attempt -ge $max_attempts ]; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
+              "http://localhost:${{ vars.HTTPPORT }}/")
+            if [ "$response" != "000" ]; then
+              echo "Server is healthy (HTTP $response)."
+              exit 0
+            fi
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt/$max_attempts: server not yet responding, retrying in 3s..."
+            sleep 3
+          done
+          echo "Server did not become healthy within 30 seconds."
+          exit 1
