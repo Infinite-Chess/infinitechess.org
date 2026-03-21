@@ -190,7 +190,7 @@ Open `.github/workflows/build-wasm.yml` in the HydroChess repository. Append the
         -H "Authorization: Bearer ${{ secrets.INFINITECHESS_DISPATCH_TOKEN }}" \
         -H "Accept: application/vnd.github.v3+json" \
         https://api.github.com/repos/Infinite-Chess/infinitechess.org/actions/workflows/deploy.yml/dispatches \
-        -d '{"ref":"main"}'
+        -d '{"ref":"prod"}'
 ```
 
 **What this does**: Sends an authenticated `POST` to GitHub's API directly triggering the `deploy.yml` workflow on `infinitechess.org`. This uses the `workflow_dispatch` endpoint, which only requires `Actions: Read and write` — unlike the `repository_dispatch` endpoint which requires `Contents: Read and write` (a far broader permission that allows pushing code). The self-hosted runner skips `git pull`/`npm ci` (since no new commits or dependencies changed on this repo), re-runs the build (which fetches the freshly published WASM files), and reloads PM2.
