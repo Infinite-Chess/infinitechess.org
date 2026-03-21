@@ -1,10 +1,8 @@
-// ecosystem.config.js
-
 /*
  * PM2 process configuration for the Infinite Chess production server.
  */
 
-export default {
+module.exports = {
 	apps: [
 		{
 			name: 'infinitechess',
