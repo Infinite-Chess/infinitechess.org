@@ -122,7 +122,7 @@ async function establishSocket(): Promise<boolean> {
 		if (attemptIndex > 0) {
 			noConnection = true;
 			toast.show(translations.websocket.no_connection, {
-				durationMillis: delay,
+				durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 			});
 			invites.clearIfOnPlayPage();
 			await thread.sleep(delay);
