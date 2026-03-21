@@ -108,6 +108,6 @@
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "**/*.ts": "tsx scripts/organize-imports.ts",
-    "**/*.{js,ts}": "tsx scripts/add-file-paths.ts"
+    "**/*.{js,ts,cjs}": "tsx scripts/add-file-paths.ts"
   }
 }

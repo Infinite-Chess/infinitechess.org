@@ -1,4 +1,4 @@
-// ecosystem.config.js
+// ecosystem.config.cjs
 
 /*
  * PM2 process configuration for the Infinite Chess production server.
