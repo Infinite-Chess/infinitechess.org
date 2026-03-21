@@ -36,7 +36,6 @@ import onlinegame from './onlinegame.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
-import serverrestart from './serverrestart.js';
 import movesendreceive from './movesendreceive.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 
@@ -138,9 +137,6 @@ function routeMessage(contents: GameMessage): void {
 			break;
 		case 'opponentdisconnectreturn':
 			disconnect.stopOpponentDisconnectCountdown();
-			break;
-		case 'serverrestart':
-			serverrestart.initServerRestart(contents.value);
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();

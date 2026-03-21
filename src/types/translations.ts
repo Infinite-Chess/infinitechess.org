@@ -435,10 +435,6 @@ export type TranslationKeys =
 	| 'play.javascript.onlinegame.not_logged_in'
 	| 'play.javascript.onlinegame.game_no_longer_exists'
 	| 'play.javascript.onlinegame.another_window_connected'
-	| 'play.javascript.onlinegame.server_restarting'
-	| 'play.javascript.onlinegame.server_restarting_in'
-	| 'play.javascript.onlinegame.minute'
-	| 'play.javascript.onlinegame.minutes'
 	| 'play.javascript.websocket.no_connection'
 	| 'play.javascript.websocket.reconnected'
 	| 'play.javascript.websocket.unable_to_identify_ip'
@@ -588,10 +584,6 @@ export type TranslationKeys =
 	| 'server.javascript.ws-not_found'
 	| 'server.javascript.ws-forbidden'
 	| 'server.javascript.ws-already_in_game'
-	| 'server.javascript.ws-server_restarting'
-	| 'server.javascript.ws-server_under_maintenance'
-	| 'server.javascript.ws-minutes'
-	| 'server.javascript.ws-minute'
 	| 'server.javascript.ws-you_cheated'
 	| 'server.javascript.ws-opponent_cheated'
 	| 'server.javascript.ws-cannot_resign_finished_game'
@@ -1112,10 +1104,6 @@ export interface TranslationsObject {
 				not_logged_in: string;
 				game_no_longer_exists: string;
 				another_window_connected: string;
-				server_restarting: string;
-				server_restarting_in: string;
-				minute: string;
-				minutes: string;
 			};
 			websocket: {
 				no_connection: string;
@@ -1288,10 +1276,6 @@ export interface TranslationsObject {
 			'ws-not_found': string;
 			'ws-forbidden': string;
 			'ws-already_in_game': string;
-			'ws-server_restarting': string;
-			'ws-server_under_maintenance': string;
-			'ws-minutes': string;
-			'ws-minute': string;
 			'ws-you_cheated': string;
 			'ws-opponent_cheated': string;
 			'ws-cannot_resign_finished_game': string;

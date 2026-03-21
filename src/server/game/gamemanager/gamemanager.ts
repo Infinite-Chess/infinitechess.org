@@ -36,7 +36,6 @@ import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
-import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import { broadcastGameCountToInviteSubs } from './gamecount.js';
@@ -687,29 +686,6 @@ function restoreLiveGames(): void {
 	}
 }
 
-/**
- * Send a message to all sockets in a servergame saying the server will restart soon.
- * Every reconnection from now on should re-send the time the server will restart.
- */
-function broadCastGameRestarting(): void {
-	const timeToRestart = getTimeServerRestarting() as number;
-	for (const servergame of Object.values(activeGames)) {
-		for (const color in servergame.match.playerData) {
-			gameutility.sendMessageToSocketOfColor(
-				servergame.match,
-				Number(color) as Player,
-				'game',
-				'serverrestart',
-				timeToRestart,
-			);
-		}
-	}
-	const minutesTillRestart = Math.ceil((timeToRestart - Date.now()) / (1000 * 60));
-	console.log(
-		`Alerted all clients in a game that the server is restarting in ${minutesTillRestart} minutes!`,
-	);
-}
-
 //--------------------------------------------------------------------------------------------------------
 
 export {
@@ -728,5 +704,4 @@ export {
 	// Shutdown Preparation & Startup Restoration
 	prepGamesForShutdown,
 	restoreLiveGames,
-	broadCastGameRestarting,
 };

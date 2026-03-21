@@ -1,4 +1,7 @@
 {
+  "95": {
+    "note": "Removed server_restarting, server_restarting_in, minute, minutes from [play.javascript.onlinegame] (server_restarting was updated in version 94; it is now removed entirely). Removed ws-server_restarting, ws-server_under_maintenance, ws-minutes, ws-minute from [server.javascript]."
+  },
   "94": {
     "note": "Update server_restarting line 549 to reflect games are resumed now after server restarts."
   },

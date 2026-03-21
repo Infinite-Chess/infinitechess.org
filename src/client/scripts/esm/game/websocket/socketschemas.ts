@@ -98,7 +98,6 @@ const GameSchema = z.discriminatedUnion('action', [
 		}),
 	}),
 	z.strictObject({ action: z.literal('opponentdisconnectreturn') }),
-	z.strictObject({ action: z.literal('serverrestart'), value: z.number() }),
 	z.strictObject({ action: z.literal('drawoffer') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
 ]);
