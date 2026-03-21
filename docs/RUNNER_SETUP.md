@@ -124,17 +124,9 @@ Example value: `/Users/naviary/infinitechess.org`
 
 Add this as a **Secret** (under the "Secrets" tab) named `DEPLOY_DIR`. Storing it as a secret keeps the server's filesystem layout out of public workflow logs.
 
-### 2.3 `HTTPPORT` (Variable — not a secret)
+### 2.3 `HTTPSPORT` (Variable — not a secret)
 
-The HTTP port the production server listens on. The deploy workflow uses this to call `POST /api/prepare-restart` over loopback before building.
-
-This must match the `HTTPPORT` value in the production `.env` file.
-
-Add this as an Actions **Variable** named `HTTPPORT`.
-
-### 2.4 `HTTPSPORT` (Variable — not a secret)
-
-The HTTPS port the production server listens on. The deploy workflow uses this for the post-reload health check — it hits `https://localhost:$HTTPSPORT/` and expects an HTTP 200 response to confirm the new process is accepting requests.
+The HTTPS port the production server listens on. The deploy workflow uses when connecting to the server — it hits `https://localhost:$HTTPSPORT/[endpoint]`.
 
 This must match the `HTTPSPORT` value in the production `.env` file.
 
@@ -150,13 +142,15 @@ Open the production `.env` file (in the root of the `DEPLOY_DIR` directory) and 
 RESTART_SECRET=<the same value you added to GitHub Actions secrets>
 ```
 
-Then reload the server once so it picks up the new environment variable:
+Then reload the server and force PM2 to flush its environment cache, ensuring your app's `dotenv` package picks up the changes:
 
 ```bash
-pm2 reload infinitechess
+pm2 reload infinitechess --update-env
+pm2 save
 ```
 
-- **`pm2 reload infinitechess`**: Performs a graceful reload — starts a new process with the updated env, then shuts down the old one. Zero new code is deployed; this is purely to pick up the updated `.env`.
+- `pm2 reload infinitechess --update-env`: Performs a graceful reload — starts a new process with the freshly updated system environment, then shuts down the old one.
+- `pm2 save`: Freezes the current PM2 state so that if the Mac server ever reboots, the app starts back up with the correct environment variables.
 
 ---
 
@@ -175,7 +169,7 @@ The dispatch API call needs a token with permission to trigger Actions workflows
     - **Expiration**: Set to **1 year** and add a calendar reminder to rotate it before it expires. If the token expires, the dispatch step in HydroChess will silently fail with no other visible error.
     - **Resource owner**: `Infinite-Chess`
     - **Repository access**: Only selected repositories → `infinitechess.org`
-    - **Repository permissions**: Set **Actions** to **Read and write**.
+    - **Repository permissions**: Set **Contents** to **Read and write** (this automatically selects Metadata: Read).
 4. Click **Generate token** and **copy the value immediately** — it is shown only once.
 
 ### 4.2 Add the PAT as a secret in the HydroChess repository
@@ -193,7 +187,7 @@ Open `.github/workflows/build-wasm.yml` in the HydroChess repository. Append the
 - name: Trigger infinitechess.org deploy
   run: |
       curl -s -X POST \
-        -H "Authorization: token ${{ secrets.INFINITECHESS_DISPATCH_TOKEN }}" \
+        -H "Authorization: Bearer ${{ secrets.INFINITECHESS_DISPATCH_TOKEN }}" \
         -H "Accept: application/vnd.github.v3+json" \
         https://api.github.com/repos/Infinite-Chess/infinitechess.org/dispatches \
         -d '{"event_type":"hydrochess-release"}'

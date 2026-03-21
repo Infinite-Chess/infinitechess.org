@@ -36,9 +36,8 @@ AWS_REGION=
 EMAIL_FROM_ADDRESS=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-# Must match the HTTPPORT Actions variable in the GitHub Actions deploy workflow.
 HTTPPORT=80
-# Must match the HTTPSPORT Actions variable in the GitHub Actions deploy workflow.
+# Must match the HTTPSPORT repository variable for the Deploy workflow to work correctly.
 HTTPSPORT=443
 HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443
