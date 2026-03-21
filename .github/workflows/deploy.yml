@@ -52,7 +52,7 @@ jobs:
       - name: Pull latest code and install dependencies
         if: github.event_name == 'push'
         working-directory: ${{ secrets.DEPLOY_DIR }}
-        run: git pull --quiet && npm ci --silent
+        run: git pull && npm ci --silent
 
       # Step 3 — Build.
       # Always runs. For HydroChess-triggered deploys this re-runs esbuild so
