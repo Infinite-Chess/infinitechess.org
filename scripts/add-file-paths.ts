@@ -111,8 +111,8 @@ function main(): void {
 		process.exit(1);
 	}
 
-	// Filter for only .js and .ts files
-	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts)$/));
+	// Filter for only .js, .ts, and .cjs files
+	const jsAndTsFiles = args.filter((file) => file.match(/\.(js|ts|cjs)$/));
 
 	for (const file of jsAndTsFiles) {
 		try {
