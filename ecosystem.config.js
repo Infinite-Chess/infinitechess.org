@@ -4,7 +4,7 @@
  * PM2 process configuration for the Infinite Chess production server.
  */
 
-module.exports = {
+export default {
 	apps: [
 		{
 			name: 'infinitechess',
