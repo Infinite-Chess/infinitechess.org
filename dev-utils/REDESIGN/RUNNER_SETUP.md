@@ -81,7 +81,7 @@ Installing as a service means the runner starts automatically on login and survi
 - **`./svc.sh install`**: Creates a `launchd` plist under `~/Library/LaunchAgents/` so the runner starts every time you log in.
 - **`./svc.sh start`**: Starts the service right now.
 
-To check the runner's status at any time:
+To check the runner's status at any time (make sure you're cd'd into `~/actions-runner/`):
 
 ```bash
 ./svc.sh status
