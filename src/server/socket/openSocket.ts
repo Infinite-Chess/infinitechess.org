@@ -14,11 +14,15 @@ import { onclose } from './closeSocket.js';
 import socketUtility from './socketUtility.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { executeSafely } from '../utility/errorGuard.js';
-import { sendSocketMessage } from './sendSocketMessage.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
+import {
+	sendSocketMessage,
+	rescheduleRenewConnection,
+	cancelRenewConnectionTimer,
+} from './sendSocketMessage.js';
 import {
 	addConnectionToConnectionLists,
 	doesClientHaveMaxSocketCount,
@@ -149,7 +153,7 @@ function closeIfInvalidAndAddMetadata(
 }
 
 /**
- * Adds the 'message', 'close', and 'error' event listeners to the socket
+ * Adds the 'message', 'close', 'error', and 'pong' event listeners to the socket
  */
 function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
@@ -167,11 +171,28 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 	ws.on('error', (error) => {
 		executeSafely(() => onerror(ws, error), 'Error caught within websocket on-error event:');
 	});
+	ws.on('pong', () => {
+		executeSafely(() => onpong(ws), 'Error caught within websocket on-pong event:');
+	});
 }
 
 function onerror(ws: CustomWebSocket, error: Error): void {
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
 	logEventsAndPrint(errText, 'errLog.txt');
+}
+
+/**
+ * Called when the client sends a pong frame in response to our native WebSocket ping.
+ * Calculates the round-trip time, cancels the no-pong timeout, schedules the next ping,
+ * and sends the RTT to the client so the ping meter can be updated.
+ */
+function onpong(ws: CustomWebSocket): void {
+	if (ws.metadata.pingTimestamp === undefined) return;
+	const rtt = Date.now() - ws.metadata.pingTimestamp;
+	ws.metadata.pingTimestamp = undefined;
+	cancelRenewConnectionTimer(ws);
+	rescheduleRenewConnection(ws);
+	sendSocketMessage(ws, 'general', 'ping', rtt);
 }
 
 export { onConnectionRequest };

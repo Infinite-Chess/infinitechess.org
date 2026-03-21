@@ -31,7 +31,7 @@ type HardRefreshInfo = {
 
 /**
  * Called when we receive an incoming server websocket message.
- * Validates it with Zod, sends an echo to the server, then routes the message.
+ * Validates it with Zod, then routes the message.
  * @param serverMessage - The incoming server message event.
  */
 function onmessage(serverMessage: MessageEvent): void {
@@ -41,10 +41,6 @@ function onmessage(serverMessage: MessageEvent): void {
 	} catch (error) {
 		return console.error('Error parsing incoming message as JSON:', error);
 	}
-
-	// Any incoming message proves the connection is alive.
-	// Reschedule the inactivity timer that detects silent disconnections.
-	socketmessages.rescheduleInactivityTimer();
 
 	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
@@ -60,43 +56,14 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const message = zod_result.data;
 
-	if (socketman.isDebugEnabled()) {
-		if (message.route === 'echo') {
-			if (socketmessages.alsoPrintIncomingEchos)
-				console.log(`Incoming message: ${JSON.stringify(message)}`);
-		} else console.log(`Incoming message: ${JSON.stringify(message)}`);
-	}
-
-	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
+	if (socketman.isDebugEnabled()) console.log(`Incoming message: ${JSON.stringify(message)}`);
 
 	// Handle reply-only messages (no route property).
 	// These exist only to execute on-reply functions.
 	if (message.route === undefined) {
-		// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
-		if (message.id === undefined) {
-			console.error(
-				'Received reply-only message without id field. This should not happen after Zod validation. Message:',
-				JSON.stringify(message),
-			);
-		}
-		socketmessages.send('general', 'echo', message.id);
 		socketmessages.executeOnreplyFunc(message.replyto);
 		return;
 	}
-
-	// Not an echo or reply-only...
-
-	// Send our echo — we always echo every message EXCEPT echos themselves
-	// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
-	if (message.id === undefined) {
-		console.error(
-			'Received routed message without id field. This should not happen after Zod validation. Route:',
-			message.route,
-			'Message:',
-			JSON.stringify(message),
-		);
-	}
-	socketmessages.send('general', 'echo', message.id);
 
 	// Execute any on-reply function
 	socketmessages.executeOnreplyFunc(message.replyto);
@@ -138,8 +105,9 @@ function ongeneralmessage(message: GeneralMessage): void {
 		case 'printerror':
 			console.error(message.value);
 			break;
-		case 'renewconnection':
-			// Server sends this expecting an echo, to verify we're still connected.
+		case 'ping':
+			// Server measured the round-trip time of the native ping/pong and sent it here.
+			document.dispatchEvent(new CustomEvent('ping', { detail: message.value }));
 			break;
 		case 'gameversion':
 			if (message.value !== GAME_VERSION) handleHardRefresh(message.value);

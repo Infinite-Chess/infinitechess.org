@@ -2,40 +2,30 @@
 
 /**
  * This script sends socket messages,
- * and regularly sends messages by itself to confirm the socket is still connected and responding (we will hear an echo).
+ * and regularly sends native WebSocket pings to confirm the socket is still connected and responding.
  */
 
 import type { TranslationKeys } from '../../types/translations.js';
 
 import { WebSocket } from 'ws';
 
-import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
 import wsutil from '../../shared/util/wsutil.js';
 
 import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
-import {
-	addTimeoutToEchoTimers,
-	deleteEchoTimerForMessageID,
-	timeToWaitForEchoMillis,
-} from './echoTracker.js';
 
 // Types --------------------------------------------------------------------------------------
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "invites", "game", "echo").
+	/** The route to forward the message to (e.g., "general", "invites", "game").
 	 * Undefined if it's a reply-only message. */
 	route?: string;
-	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value.
+	/** The message contents. For other messages, this is an object with action and value.
 	 * Absent for reply-only acknowledgement messages (route and action are both undefined). */
 	contents?: any;
-	/** The ID of the message to echo, indicating the connection is still active.
-	 * Or undefined if this message itself is an echo. */
-	id?: number;
 	/** Optionally, we can include the id of the incoming message that this outgoing message is the reply to. */
 	replyto?: number;
 }
@@ -54,6 +44,9 @@ const simulatedWebsocketLatencyMillis = 0;
 if (process.env['NODE_ENV'] !== 'development' && simulatedWebsocketLatencyMillis !== 0) {
 	throw new Error('simulatedWebsocketLatencyMillis must be 0 in production!!');
 }
+
+/** How long after sending a ping to wait for a pong before assuming disconnection, in milliseconds. */
+const timeToWaitForPongMillis = 5000;
 
 // Sending Messages ---------------------------------------------------------------------------
 
@@ -90,48 +83,28 @@ function sendSocketMessage(
 		return;
 	}
 
-	const isEcho = action === 'echo';
 	// Reply-only messages should have no empty "contents" field
 	const isReplyOnly = route === undefined;
-	const payload: WebsocketOutMessage = isEcho
+	const payload: WebsocketOutMessage = isReplyOnly
 		? {
-				route: 'echo',
-				contents: value, // For echo, value contains the message ID
 				replyto,
 			}
-		: isReplyOnly
-			? {
-					id: uuid.generateNumbID(10),
-					replyto,
-				}
-			: {
-					route,
-					contents: {
-						action,
-						value,
-					},
-					id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-					replyto,
-				};
+		: {
+				route,
+				contents: {
+					action,
+					value,
+				},
+				replyto,
+			};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
 
 	ws.send(stringifiedPayload); // Send the message
-	if (!isEcho) {
-		// Not an echo
-		logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
+	logReqWebsocketOut(ws, stringifiedPayload); // Log the sent message
 
-		// Set a timer. At the end, if we have heard no echo, just assume they've disconnected, terminate the socket.
-		const timeout = setTimeout(() => {
-			ws.close(1014, 'No echo heard');
-			deleteEchoTimerForMessageID(payload.id!);
-		}, timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
-		//console.log(`Set timer of message id "${id}"`)
-		addTimeoutToEchoTimers(payload.id!, timeout);
-
-		rescheduleRenewConnection(ws);
-	}
+	rescheduleRenewConnection(ws);
 }
 
 /**
@@ -181,7 +154,7 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys):
 // Renewing Connection if we haven't sent a message in a while ----------------------------------------------------------
 
 /**
- * Reschedule the timer to send an empty message to the client
+ * Reschedule the timer to send a native WebSocket ping to the client
  * to verify they are still connected and responding.
  */
 function rescheduleRenewConnection(ws: CustomWebSocket): void {
@@ -201,11 +174,24 @@ function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
 }
 
 /**
- * Send an empty message to the client, expecting an echo
- * within five seconds to make sure they are still connected.
+ * Sends a native WebSocket ping to the client to verify they are still connected.
+ * If no pong is received within the timeout, the socket is closed.
  */
 function renewConnection(ws: CustomWebSocket): void {
-	sendSocketMessage(ws, 'general', 'renewconnection');
+	ws.metadata.pingTimestamp = Date.now();
+	ws.ping();
+	// If no pong arrives within the timeout, assume disconnected and close the socket.
+	ws.metadata.renewConnectionTimeoutID = setTimeout(() => {
+		ws.metadata.renewConnectionTimeoutID = undefined;
+		ws.close(1014, 'No pong heard');
+	}, timeToWaitForPongMillis);
 }
 
-export { sendSocketMessage, sendNotify, sendNotifyError, rescheduleRenewConnection };
+export {
+	sendSocketMessage,
+	sendNotify,
+	sendNotifyError,
+	rescheduleRenewConnection,
+	cancelRenewConnectionTimer,
+	renewConnection,
+};

@@ -1,11 +1,10 @@
 // src/client/scripts/esm/game/websocket/socketmessages.ts
 
 /**
- * Handles outgoing websocket messages, echo tracking, and on-reply functions.
+ * Handles outgoing websocket messages and on-reply functions.
  */
 
 import uuid from '../../../../../shared/util/uuid.js';
-import wsutil from '../../../../../shared/util/wsutil.js';
 
 import toast from '../gui/toast.js';
 import socketman from './socketman.js';
@@ -29,81 +28,18 @@ type OutgoingPayload = {
 
 // Constants -------------------------------------------------------------------
 
-/** Time to wait for echo before assuming disconnection. */
-const timeToWaitForEchoMillis = 5000;
 /** Time the websocket remains open without subscriptions. */
 const cushionBeforeAutoCloseMillis = 10000;
 /** Simulated websocket latency in debug mode. */
 const simulatedWebsocketLatencyMillis_Debug = 1000;
-/** Whether to also print incoming echos in debug mode. */
-const alsoPrintIncomingEchos = false;
 
 // Variables -------------------------------------------------------------------
-
-/** Echo timers for sent messages awaiting acknowledgement. */
-let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
 
 /** Functions to execute when we get a specific reply back. */
 let onreplyFuncs: { [key: MessageID]: Function } = {};
 
 /** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
 let timeoutIDToAutoClose: number;
-
-/**
- * The timeout ID for detecting server inactivity.
- * If no message is received within the expected window, the client
- * assumes the connection is dead and closes the socket.
- */
-let inactivityTimerID: number | undefined;
-
-// Echo Tracking ---------------------------------------------------------------
-
-/**
- * Called when we hear a server echo. Cancels the timer that assumes
- * disconnection, and updates the ping display.
- */
-function cancelTimerOfMessageID(ID: number): void {
-	const echoTimer = echoTimers[ID];
-	if (!echoTimer) {
-		console.error('Could not find echo timer for message.');
-		return;
-	}
-
-	// Update the Ping meter with the round-trip time
-	const timeTaken = Date.now() - echoTimer.timeSent;
-	document.dispatchEvent(new CustomEvent('ping', { detail: timeTaken }));
-
-	clearTimeout(echoTimer.timeoutID);
-	delete echoTimers[ID];
-}
-
-/**
- * Closes the current websocket when an echo hasn't been heard.
- * Called a few seconds after not hearing a server echo.
- */
-function renewConnection(messageID: MessageID): void {
-	if (messageID) {
-		delete echoTimers[messageID];
-	}
-	const socket = socketman.getSocket();
-	if (!socket) return;
-	console.log(
-		`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`,
-	);
-	socketman.dispatchLostConnectionCustomEvent();
-	socket.close(1000, 'Connection closed by client. Renew.');
-}
-
-/**
- * Cancels all timers that assume disconnection.
- * Called when the socket connection is terminated.
- */
-function cancelAllEchoTimers(): void {
-	for (const echoTimerEntry of Object.values(echoTimers)) {
-		clearTimeout(echoTimerEntry.timeoutID);
-	}
-	echoTimers = {};
-}
 
 // On-Reply Functions ----------------------------------------------------------
 
@@ -146,45 +82,6 @@ function resetTimerToCloseSocket(): void {
 	}
 }
 
-// Inactivity Detection --------------------------------------------------------
-
-/**
- * Reschedules the inactivity timer. Called on every incoming message.
- * If no message is received within a certain time frame, the client
- * assumes the connection is dead and closes the socket.
- */
-function rescheduleInactivityTimer(): void {
-	cancelInactivityTimer();
-	if (socketsubs.zeroSubs()) return;
-	inactivityTimerID = window.setTimeout(
-		onInactivityTimeout,
-		wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
-	);
-}
-
-/** Cancels the inactivity timer. Called when the socket closes. */
-function cancelInactivityTimer(): void {
-	if (inactivityTimerID !== undefined) {
-		clearTimeout(inactivityTimerID);
-		inactivityTimerID = undefined;
-	}
-}
-
-/**
- * Called when no message has been received within the expected time frame.
- * Closes the socket and dispatches a lost connection event.
- */
-function onInactivityTimeout(): void {
-	inactivityTimerID = undefined;
-	const socket = socketman.getSocket();
-	if (!socket) return;
-	console.log(
-		`No message received for ${wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis}ms. Assuming connection lost.`,
-	);
-	socketman.dispatchLostConnectionCustomEvent();
-	socket.close(1000, 'Connection closed by client. Renew.');
-}
-
 // Sending Messages ------------------------------------------------------------
 
 /**
@@ -211,36 +108,19 @@ async function send(
 
 	resetTimerToCloseSocket();
 
-	let payload: OutgoingPayload;
-	if (action === 'echo') {
-		payload = {
-			route: 'echo',
-			contents: value,
-		};
-	} else {
-		// Not an echo, attach an ID and expect an echo back.
-		payload = {
-			route,
-			contents: {
-				action,
-				value,
-			},
-			id: uuid.generateNumbID(10),
-		};
+	// Attach an ID to every message so the server can include it in the replyto field of responses.
+	const payload: OutgoingPayload = {
+		route,
+		contents: {
+			action,
+			value,
+		},
+		id: uuid.generateNumbID(10),
+	};
 
-		if (socketman.isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
+	if (socketman.isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
 
-		// Set a timer to assume disconnection if echo not received
-		echoTimers[payload.id!] = {
-			timeSent: Date.now(),
-			timeoutID: window.setTimeout(
-				() => renewConnection(payload.id!),
-				timeToWaitForEchoMillis,
-			),
-		};
-
-		scheduleOnreplyFunc(payload.id!, onreplyFunc);
-	}
+	scheduleOnreplyFunc(payload.id!, onreplyFunc);
 
 	const socket = socketman.getSocket();
 	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
@@ -261,11 +141,6 @@ async function send(
 
 export default {
 	send,
-	cancelTimerOfMessageID,
-	cancelAllEchoTimers,
 	executeOnreplyFunc,
 	resetOnreplyFuncs,
-	rescheduleInactivityTimer,
-	cancelInactivityTimer,
-	alsoPrintIncomingEchos,
 };

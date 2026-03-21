@@ -43,7 +43,7 @@ function isInTimeout(): boolean {
 
 /**
  * Called when our open socket fires the 'close' event.
- * Cancels echo timers and on-reply functions, then handles reconnection
+ * Cancels on-reply functions, then handles reconnection
  * based on the closure reason.
  * @param event - The 'close' event fired.
  * @param socketWasDefined - Whether the socket was fully open before closing.
@@ -51,8 +51,6 @@ function isInTimeout(): boolean {
 function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 
-	socketmessages.cancelAllEchoTimers();
-	socketmessages.cancelInactivityTimer();
 	socketmessages.resetOnreplyFuncs();
 
 	const trimmedReason = event.reason.trim();
@@ -78,10 +76,6 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			socketman.resubAll();
 			break;
 		case 'Connection closed by client':
-			break;
-		case 'Connection closed by client. Renew.':
-			console.log('Closed web socket successfully. Renewing now..');
-			socketman.resubAll();
 			break;
 		case 'Unable to identify client IP address':
 			toast.show(
@@ -125,7 +119,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			invites.clearIfOnPlayPage();
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
-		case 'No echo heard':
+		case 'No pong heard':
 			socketman.dispatchLostConnectionCustomEvent();
 			socketman.resubAll();
 			break;

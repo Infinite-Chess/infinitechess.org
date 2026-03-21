@@ -9,7 +9,7 @@
 
 /**
  * After this much time of no messages sent, the server sends a
- * 'renewconnection' keepalive expecting an echo back.
+ * native WebSocket ping to verify the client is still connected.
  */
 const timeOfInactivityToRenewConnection = 10000;
 
@@ -26,11 +26,10 @@ const timeOfInactivityToRenewConnection = 10000;
 // 1009 "Message Too Big"
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
-// 1014 "No echo heard"  (Client took too long to respond)
+// 1014 "No pong heard"  (Client took too long to respond to a ping)
 
 // Client closure reasons:
 // 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
 
 // Other:
 // 1006 "" Network error
@@ -58,7 +57,6 @@ const timeOfInactivityToRenewConnection = 10000;
 
 // 1000 "Connection expired"  (This can say this even if in dev tools we disable our network)
 // 1000 "Connection closed by client"
-// 1000 "Connection closed by client. Renew."
 // 1008 "Unable to identify client IP address"
 // 1008 "Authentication needed"
 // 1008 "Logged out" (Happens when we click log out button)
@@ -66,7 +64,7 @@ const timeOfInactivityToRenewConnection = 10000;
 // 1009 "Message Too Big"
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
-// 1014 "No echo heard"  (Client took too long to respond)
+// 1014 "No pong heard"  (Client took too long to respond to a ping)
 
 // These are the closure reasons where we will RETAIN their invite for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
@@ -77,8 +75,7 @@ const closureReasonsNotByChoice: string[] = [
 	'Connection expired',
 	'Message Too Big',
 	'Too Many Sockets',
-	'No echo heard',
-	'Connection closed by client. Renew.',
+	'No pong heard',
 ];
 
 // Functions ---------------------------------------------------------------------------------

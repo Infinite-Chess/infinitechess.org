@@ -29,7 +29,7 @@ const GeneralSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('notifyerror'), value: z.string() }),
 	z.strictObject({ action: z.literal('print'), value: z.string() }),
 	z.strictObject({ action: z.literal('printerror'), value: z.string() }),
-	z.strictObject({ action: z.literal('renewconnection') }),
+	z.strictObject({ action: z.literal('ping'), value: z.number() }),
 	z.strictObject({ action: z.literal('gameversion'), value: z.string() }),
 ]);
 
@@ -110,32 +110,23 @@ export type GameMessage = z.infer<typeof GameSchema>;
 
 /** The schema for validating all incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
-	// Echo messages
-	z.strictObject({
-		route: z.literal('echo'),
-		contents: z.number(),
-	}),
 	// Reply-only messages (no route property, only exist to execute on-reply functions)
 	z.strictObject({
-		id: z.number(),
 		route: z.undefined(),
 		replyto: z.number(),
 	}),
 	// Routed messages
 	z.strictObject({
-		id: z.number(),
 		route: z.literal('general'),
 		contents: GeneralSchema,
 		replyto: z.number().optional(),
 	}),
 	z.strictObject({
-		id: z.number(),
 		route: z.literal('invites'),
 		contents: InvitesSchema,
 		replyto: z.number().optional(),
 	}),
 	z.strictObject({
-		id: z.number(),
 		route: z.literal('game'),
 		contents: GameSchema,
 		replyto: z.number().optional(),

@@ -2,7 +2,7 @@
 
 /**
  * This script receives incoming socket messages, rate limits them, logs them,
- * cancels their echo timer, sends an echo, then sends the message to our router.
+ * then sends the message to our router.
  */
 
 import type { IncomingMessage } from 'http';
@@ -17,31 +17,19 @@ import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
 import { GeneralSchema } from './generalrouter.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
-import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------
 
-/** The schema for validating all non-echo incoming websocket messages. */
+/** The schema for validating all incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
 	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: InvitesSchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
-/** Represents all possible types a non-echo incoming websocket message could be! */
+/** Represents all possible types an incoming websocket message could be! */
 export type WebsocketInMessage = z.infer<typeof MasterSchema>;
-
-/** This is the id of the message being replied to. */
-const EchoSchema = z.strictObject({
-	/** The route to forward the message to (e.g., "general", "invites", "game"). */
-	route: z.literal('echo'),
-	/** The contents of the message, for the router to read. */
-	contents: z.int(),
-});
-
-/** The schema for validating all incoming websocket messages, including echos. */
-const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
 
 // Constants ---------------------------------------------------------------------------
 
@@ -61,8 +49,7 @@ const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
 
 /**
  * Callback function that is executed whenever we receive an incoming websocket message.
- * Sends an echo (unless this message itself **is** an echo), rate limits,
- * logs the message, then routes the message where it needs to go.
+ * Rate limits, logs the message, then routes the message where it needs to go.
  */
 function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
 	// Test if the message is too big. People could DDOS this way
@@ -88,7 +75,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		return;
 	}
 
-	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
+	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
 		sendSocketMessage(
 			ws,
@@ -106,31 +93,13 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// Validation was a success! Message contains valid parameters.
 
-	const message = zod_result.data;
-
-	if (message.route === 'echo') {
-		const incomingEcho: number = message.contents;
-		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
-		if (!validEcho) {
-			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-			// This occasionally happens when the echo arrives after timeToWaitForEchoMillis has elapsed,
-			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
-		}
-		return;
-	}
-
-	// Not an echo...
-
 	if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-
-	// Send our echo here! We always send an echo to every message except echos themselves.
-	sendSocketMessage(ws, 'general', 'echo', message.id);
 
 	// console.log('Received message: ' + rawMessage);
 
 	rescheduleRenewConnection(ws); // We know they are connected, so reset this
 
-	routeIncomingSocketMessage(ws, message);
+	routeIncomingSocketMessage(ws, zod_result.data);
 }
 
 /**

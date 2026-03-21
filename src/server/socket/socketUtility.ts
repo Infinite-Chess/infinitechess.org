@@ -42,9 +42,11 @@ interface CustomWebSocket extends WebSocket {
 		/** The timeout ID that can be used to cancel the timer that will
 		 * expire the socket connection. This is useful if it closes early. */
 		clearafter?: NodeJS.Timeout;
-		/** The timeout ID to cancel the timer that will send an empty
-		 * message to this socket just to verify they are alive and thinking. */
+		/** The timeout ID to cancel the timer that will send a
+		 * native WebSocket ping to verify they are still connected. */
 		renewConnectionTimeoutID?: NodeJS.Timeout;
+		/** The timestamp (ms) when the last native ping was sent, used to calculate round-trip time. */
+		pingTimestamp?: number;
 	};
 }
 
