@@ -152,10 +152,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			logEventsAndPrint(
-				`Invalid or expired password reset token used: ${token}`,
-				'loginAttempts.txt',
-			);
+			logEventsAndPrint(`Invalid or expired password reset token used.`, 'loginAttempts.txt');
 			res.status(400).json({
 				message: getTranslationForReq(
 					'server.javascript.ws-password-reset-token-invalid',

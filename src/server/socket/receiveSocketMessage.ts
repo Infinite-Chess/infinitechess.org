@@ -113,7 +113,8 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
 			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-			// This occasionally happens. No big deal.
+			// This occasionally happens when the echo arrives after timeToWaitForEchoMillis has elapsed,
+			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
 		}
 		return;
 	}
