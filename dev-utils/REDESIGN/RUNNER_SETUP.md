@@ -169,7 +169,7 @@ The dispatch API call needs a token with permission to trigger Actions workflows
     - **Expiration**: Set to **1 year** and add a calendar reminder to rotate it before it expires. If the token expires, the dispatch step in HydroChess will silently fail with no other visible error.
     - **Resource owner**: `Infinite-Chess`
     - **Repository access**: Only selected repositories → `infinitechess.org`
-    - **Repository permissions**: Set **Contents** to **Read and write** (this automatically selects Metadata: Read).
+    - **Repository permissions**: Set **Actions** to **Read and write** (this automatically selects Metadata: Read). If this doesn't work, we might need to set **Contents** to **Read and write**.
 4. Click **Generate token** and **copy the value immediately** — it is shown only once.
 
 ### 4.2 Add the PAT as a secret in the HydroChess repository
