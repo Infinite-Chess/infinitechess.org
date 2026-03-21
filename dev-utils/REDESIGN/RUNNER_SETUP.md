@@ -169,7 +169,7 @@ The dispatch API call needs a token with permission to trigger Actions workflows
     - **Expiration**: Set to **1 year** and add a calendar reminder to rotate it before it expires. If the token expires, the dispatch step in HydroChess will silently fail with no other visible error.
     - **Resource owner**: `Infinite-Chess`
     - **Repository access**: Only selected repositories → `infinitechess.org`
-    - **Repository permissions**: Set **Contents** to **Read and write** (this automatically selects Metadata: Read).
+    - **Repository permissions**: Set **Actions** to **Read and write**, and make sure **Contents** is **No access**.
 4. Click **Generate token** and **copy the value immediately** — it is shown only once.
 
 ### 4.2 Add the PAT as a secret in the HydroChess repository
@@ -189,8 +189,8 @@ Open `.github/workflows/build-wasm.yml` in the HydroChess repository. Append the
       curl -s -X POST \
         -H "Authorization: Bearer ${{ secrets.INFINITECHESS_DISPATCH_TOKEN }}" \
         -H "Accept: application/vnd.github.v3+json" \
-        https://api.github.com/repos/Infinite-Chess/infinitechess.org/dispatches \
-        -d '{"event_type":"hydrochess-release"}'
+        https://api.github.com/repos/Infinite-Chess/infinitechess.org/actions/workflows/deploy.yml/dispatches \
+        -d '{"ref":"prod"}'
 ```
 
 **What this does**: Sends an authenticated `POST` to GitHub's API dispatching a custom `hydrochess-release` event on the `infinitechess.org` repository. The self-hosted runner picks it up, skips `git pull`/`npm ci` (since no new commits or dependencies changed on this repo), re-runs the build (which fetches the freshly published WASM files), and reloads PM2.

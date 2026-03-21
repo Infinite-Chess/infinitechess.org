@@ -47,10 +47,9 @@ jobs:
           echo "Pre-deploy backup succeeded."
 
       # Step 2 — Pull and install.
-      # Skipped for hydrochess-release: an engine release doesn't add new
-      # commits or change npm dependencies on this repo.
+      # Skipped for manual and API-triggered workflow_dispatch events.
       - name: Pull latest code and install dependencies
-        if: github.event_name != 'repository_dispatch'
+        if: github.event_name == 'push'
         working-directory: ${{ secrets.DEPLOY_DIR }}
         run: git pull --quiet && npm ci --silent
 
