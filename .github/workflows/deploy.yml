@@ -69,25 +69,16 @@ jobs:
         run: pm2 reload infinitechess
 
       # Step 5 — Health check.
-      # Polls the homepage every 3 seconds for up to 30 seconds to confirm
-      # the new process is accepting requests. Any actual HTTP response
-      # (including a redirect to HTTPS) indicates the server is alive.
-      # curl returns status "000" when it cannot connect at all.
+      # Waits 5 seconds for the new process to start, then hits the homepage
+      # over HTTPS. -k skips hostname verification (cert is issued for the
+      # domain, not localhost). Only HTTP 200 is treated as healthy.
       - name: Health check
         run: |
-          echo "Waiting for server to become healthy..."
-          max_attempts=10
-          attempt=0
-          until [ $attempt -ge $max_attempts ]; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \
-              "http://localhost:${{ vars.HTTPPORT }}/")
-            if [ "$response" != "000" ]; then
-              echo "Server is healthy (HTTP $response)."
-              exit 0
-            fi
-            attempt=$((attempt + 1))
-            echo "Attempt $attempt/$max_attempts: server not yet responding, retrying in 3s..."
-            sleep 3
-          done
-          echo "Server did not become healthy within 30 seconds."
-          exit 1
+          sleep 5
+          response=$(curl -sk -o /dev/null -w "%{http_code}" \
+            "https://localhost:${{ vars.HTTPSPORT }}/")
+          if [ "$response" != "200" ]; then
+            echo "Health check failed (HTTP $response)."
+            exit 1
+          fi
+          echo "Server is healthy."

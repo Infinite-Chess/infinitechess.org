@@ -126,11 +126,19 @@ Add this as a **Secret** (under the "Secrets" tab) named `DEPLOY_DIR`. Storing i
 
 ### 2.3 `HTTPPORT` (Variable — not a secret)
 
-The HTTP port the production server listens on. The deploy workflow uses this to call `POST /api/prepare-restart` and to run the post-deploy health check, both over loopback.
+The HTTP port the production server listens on. The deploy workflow uses this to call `POST /api/prepare-restart` over loopback before building.
 
 This must match the `HTTPPORT` value in the production `.env` file.
 
-Add this as an Actions **Variable** (under the "Variables" tab, not "Secrets") named `HTTPPORT`.
+Add this as an Actions **Variable** named `HTTPPORT`.
+
+### 2.4 `HTTPSPORT` (Variable — not a secret)
+
+The HTTPS port the production server listens on. The deploy workflow uses this for the post-reload health check — it hits `https://localhost:$HTTPSPORT/` and expects an HTTP 200 response to confirm the new process is accepting requests.
+
+This must match the `HTTPSPORT` value in the production `.env` file.
+
+Add this as an Actions **Variable** named `HTTPSPORT`.
 
 ---
 
