@@ -37,6 +37,7 @@ EMAIL_FROM_ADDRESS=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 HTTPPORT=80
+# Must match the HTTPSPORT repository variable for the Deploy workflow to work correctly.
 HTTPSPORT=443
 HTTPPORT_LOCAL=3000
 HTTPSPORT_LOCAL=3443

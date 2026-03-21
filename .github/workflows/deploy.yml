@@ -1,0 +1,85 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - prod
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'LICENSE'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [hydrochess-release]
+
+# Only one deploy may run at a time. If a second is triggered while one is in
+# progress, it waits in the queue (cancel-in-progress: false) rather than
+# being dropped — so no deploy is ever silently skipped.
+# Deploys are rare anyway, only ever happening when code is merged into `prod`.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+# The deploy job only runs shell commands on the self-hosted machine and makes
+# no calls to the GitHub API, so no token permissions are needed.
+permissions: {}
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    steps:
+      # Step 1 — Pre-deploy DB backup.
+      # Calls the live server over loopback. The server validates the secret,
+      # performs a SQLite backup, and returns 200 on success.
+      # The runner aborts the deploy if the backup fails.
+      - name: Pre-deploy DB backup
+        run: |
+          response=$(curl -sk -o /dev/null -w "%{http_code}" \
+            -X POST "https://localhost:${{ vars.HTTPSPORT }}/api/prepare-restart" \
+            -H "X-Restart-Secret: ${{ secrets.RESTART_SECRET }}")
+          if [ "$response" != "200" ]; then
+            echo "Pre-deploy backup failed (HTTP $response). Aborting deploy."
+            exit 1
+          fi
+          echo "Pre-deploy backup succeeded."
+
+      # Step 2 — Pull and install.
+      # Skipped for hydrochess-release: an engine release doesn't add new
+      # commits or change npm dependencies on this repo.
+      - name: Pull latest code and install dependencies
+        if: github.event_name != 'repository_dispatch'
+        working-directory: ${{ secrets.DEPLOY_DIR }}
+        run: git pull --quiet && npm ci --silent
+
+      # Step 3 — Build.
+      # Always runs. For hydrochess-release this re-runs esbuild so the new
+      # WASM binaries (fetched at build time) are bundled into the output.
+      - name: Build
+        working-directory: ${{ secrets.DEPLOY_DIR }}
+        run: npm run build
+
+      # Step 4 — Reload.
+      # pm2 reload sends SIGINT to the current process, waits for it to exit
+      # gracefully, then starts a new process from the freshly built files.
+      # Clients whose WebSockets drop reconnect automatically within ~2.5s.
+      - name: Reload server
+        working-directory: ${{ secrets.DEPLOY_DIR }}
+        run: pm2 reload infinitechess
+
+      # Step 5 — Health check.
+      # Waits 5 seconds for the new process to start, then hits the homepage
+      # over HTTPS. -k skips hostname verification (cert is issued for the
+      # domain, not localhost). Only HTTP 200 is treated as healthy.
+      - name: Health check
+        run: |
+          sleep 5
+          response=$(curl -sk -o /dev/null -w "%{http_code}" \
+            "https://localhost:${{ vars.HTTPSPORT }}/")
+          if [ "$response" != "200" ]; then
+            echo "Health check failed (HTTP $response)."
+            exit 1
+          fi
+          echo "Server is healthy."
