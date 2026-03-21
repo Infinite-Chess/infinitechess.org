@@ -34,7 +34,9 @@ jobs:
       # Calls the live server over loopback. The server validates the secret,
       # performs a SQLite backup, and returns 200 on success.
       # The runner aborts the deploy if the backup fails.
+      # Skipped for manual and API-triggered deploys (same condition as npm ci).
       - name: Pre-deploy DB backup
+        if: github.event_name == 'push'
         run: |
           response=$(curl -sk -o /dev/null -w "%{http_code}" \
             -X POST "https://localhost:${{ vars.HTTPSPORT }}/api/prepare-restart" \
