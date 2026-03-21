@@ -7,7 +7,7 @@ This guide covers everything needed to bring up automated deployment for `infini
 1. [Install the self-hosted runner on the production Mac](#part-1-install-the-self-hosted-runner)
 2. [Configure repository secrets and variables](#part-2-configure-repository-secrets-and-variables)
 3. [Add `RESTART_SECRET` to the production `.env`](#part-3-add-restart_secret-to-the-production-env)
-4. [Add the `repository_dispatch` trigger to the HydroChess workflow](#part-4-add-the-repository_dispatch-trigger-to-the-hydrochess-workflow)
+4. [Add the `workflow_dispatch` trigger to the HydroChess workflow](#part-4-add-the-workflow_dispatch-trigger-to-the-hydrochess-workflow)
 5. [Verify all three triggers work](#part-5-verify-each-trigger)
 
 > **Note:** PM2 is assumed to be fully configured and running `infinitechess` before starting these steps.
@@ -154,9 +154,9 @@ pm2 save
 
 ---
 
-## Part 4: Add the `repository_dispatch` Trigger to the HydroChess Workflow
+## Part 4: Add the `workflow_dispatch` Trigger to the HydroChess Workflow
 
-The HydroChess `build-wasm.yml` workflow must fire a `repository_dispatch` event on `infinitechess.org` **after** the engine release is fully published. Placing this as the very last step guarantees the new WASM binaries are available before the infinitechess.org build runs.
+The HydroChess `build-wasm.yml` workflow must trigger the `deploy.yml` workflow on `infinitechess.org` **after** the engine release is fully published. Placing this as the very last step guarantees the new WASM binaries are available before the infinitechess.org build runs.
 
 ### 4.1 Create a fine-grained Personal Access Token (PAT)
 
@@ -169,7 +169,7 @@ The dispatch API call needs a token with permission to trigger Actions workflows
     - **Expiration**: Set to **1 year** and add a calendar reminder to rotate it before it expires. If the token expires, the dispatch step in HydroChess will silently fail with no other visible error.
     - **Resource owner**: `Infinite-Chess`
     - **Repository access**: Only selected repositories → `infinitechess.org`
-    - **Repository permissions**: Set **Actions** to **Read and write** (this automatically selects Metadata: Read). If this doesn't work, we might need to set **Contents** to **Read and write**.
+    - **Repository permissions**: Set **Actions** to **Read and write** (this automatically selects Metadata: Read). Do **not** grant Contents access — it is not needed and would allow pushing code to the repository.
 4. Click **Generate token** and **copy the value immediately** — it is shown only once.
 
 ### 4.2 Add the PAT as a secret in the HydroChess repository
@@ -189,11 +189,11 @@ Open `.github/workflows/build-wasm.yml` in the HydroChess repository. Append the
       curl -s -X POST \
         -H "Authorization: Bearer ${{ secrets.INFINITECHESS_DISPATCH_TOKEN }}" \
         -H "Accept: application/vnd.github.v3+json" \
-        https://api.github.com/repos/Infinite-Chess/infinitechess.org/dispatches \
-        -d '{"event_type":"hydrochess-release"}'
+        https://api.github.com/repos/Infinite-Chess/infinitechess.org/actions/workflows/deploy.yml/dispatches \
+        -d '{"ref":"main"}'
 ```
 
-**What this does**: Sends an authenticated `POST` to GitHub's API dispatching a custom `hydrochess-release` event on the `infinitechess.org` repository. The self-hosted runner picks it up, skips `git pull`/`npm ci` (since no new commits or dependencies changed on this repo), re-runs the build (which fetches the freshly published WASM files), and reloads PM2.
+**What this does**: Sends an authenticated `POST` to GitHub's API directly triggering the `deploy.yml` workflow on `infinitechess.org`. This uses the `workflow_dispatch` endpoint, which only requires `Actions: Read and write` — unlike the `repository_dispatch` endpoint which requires `Contents: Read and write` (a far broader permission that allows pushing code). The self-hosted runner skips `git pull`/`npm ci` (since no new commits or dependencies changed on this repo), re-runs the build (which fetches the freshly published WASM files), and reloads PM2.
 
 ---
 
@@ -209,7 +209,7 @@ Merge any real (non-markdown) change from `main` into `prod`. Watch the **Action
 2. Click **Run workflow → Run workflow**.
 3. Confirm the workflow runs on `self-hosted` and succeeds.
 
-### 5.3 Trigger 3 — `repository_dispatch`
+### 5.3 Trigger 3 — HydroChess `workflow_dispatch`
 
 Push a commit to the `main` branch of HydroChess (or manually trigger the `build-wasm.yml` workflow via `workflow_dispatch`). After the HydroChess workflow finishes and the release is published, the "Deploy" workflow on `infinitechess.org` should appear in the Actions tab and run.
 
