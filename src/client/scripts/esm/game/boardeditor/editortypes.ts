@@ -55,8 +55,7 @@ export interface EditorAutosaveState extends EditorPositionData {
 
 /** Shared Zod fields for EditorSaveState and EditorAutosaveState */
 const positionDataFields = {
-	// z.coerce.number() handles legacy saves where timestamp was stored as a string
-	timestamp: z.coerce.number(),
+	timestamp: z.number(),
 	piece_count: z.number().int('Piece count must be an integer'),
 	variantOptions: z
 		.object()
