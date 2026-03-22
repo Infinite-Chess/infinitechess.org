@@ -67,6 +67,14 @@ const TIME_CONTROL_IDXS = {
 /** Whether the play screen is open */
 let pageIsOpen: boolean = false;
 
+/**
+ * Snapshot of all variant <option> elements in their original order.
+ * Used to restore the full list when leaving computer mode, since Safari
+ * does not support the `hidden` attribute on <option> elements and we must
+ * physically remove/reinsert them instead.
+ */
+const allVariantOptions: HTMLOptionElement[] = Array.from(element_optionVariant.options);
+
 /** Whether we've selected "online", "local", or a "computer" game. */
 let modeSelected: 'online' | 'local' | 'computer';
 
@@ -206,9 +214,8 @@ function changePlayMode(mode: typeof modeSelected): void {
 		callback_updateOptions(); // update displayed dropdown options, e.g. disable ranked if necessary
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
-		for (const option of element_optionVariant.options) {
-			option.hidden = false;
-		}
+		// We physically reinsert options instead of using option.hidden, because Safari doesn't support it.
+		element_optionVariant.replaceChildren(...allVariantOptions);
 	} else if (mode === 'local') {
 		// Enabling the button doesn't necessarily unlock it. It's enabled for "local" so that we
 		// can click "Start Game" at any point. But it will be re-disabled if we click "online" rapidly,
@@ -234,9 +241,8 @@ function changePlayMode(mode: typeof modeSelected): void {
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.add('hidden');
 		// In non-engine modes, all variants remain available.
-		for (const option of element_optionVariant.options) {
-			option.hidden = false;
-		}
+		// We physically reinsert options instead of using option.hidden, because Safari doesn't support it.
+		element_optionVariant.replaceChildren(...allVariantOptions);
 	} else if (mode === 'computer') {
 		// For now, until engines become stronger, time is not customizable.
 		enableCreateInviteButton();
@@ -258,13 +264,12 @@ function changePlayMode(mode: typeof modeSelected): void {
 		element_joinPrivate.classList.add('hidden');
 		element_inviteCode.classList.add('hidden');
 		if (element_optionCardStrength) element_optionCardStrength.classList.remove('hidden');
-		// Restrict the variant dropdown to the variants that HydroChess officially supports.
-		for (const option of element_optionVariant.options) {
-			// Keep options whose value is in the supported set; hide the rest.
-			option.hidden = !hydrochess_card.SUPPORTED_VARIANTS.has(option.value);
-		}
-		const selectedVariant = element_optionVariant.value;
-		if (!hydrochess_card.SUPPORTED_VARIANTS.has(selectedVariant)) {
+		// Restrict the variant dropdown to variants HydroChess officially supports.
+		// We physically remove unsupported options instead of using option.hidden, because Safari doesn't support it.
+		element_optionVariant.replaceChildren(
+			...allVariantOptions.filter((o) => hydrochess_card.SUPPORTED_VARIANTS.has(o.value)),
+		);
+		if (!hydrochess_card.SUPPORTED_VARIANTS.has(element_optionVariant.value)) {
 			element_optionVariant.value = 'Classical';
 		}
 	}
