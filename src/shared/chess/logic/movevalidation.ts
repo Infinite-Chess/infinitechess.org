@@ -1,6 +1,7 @@
 // src/shared/chess/logic/movevalidation.ts
 
-import type { FullGame, GameConclusion } from './gamefile.js';
+import type { FullGame } from './gamefile.js';
+import type { GameConclusion } from '../util/winconutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import winconutil from '../util/winconutil.js';

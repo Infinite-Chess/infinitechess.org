@@ -6,10 +6,11 @@
  *
  */
 
-import type { Player } from './typeutil.js';
 import type { GameRules } from './gamerules.js';
 
 import * as z from 'zod';
+
+import typeutil from './typeutil.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -65,30 +66,6 @@ export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
 type AbortCondition = 'aborted';
 type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
 
-/** Game ended with a decisive result — one player won. */
-type WinConclusion = {
-	condition: WinCondition;
-	/** The player who won. */
-	victor: Player;
-};
-
-/** Game ended in a draw. */
-type DrawConclusion = {
-	condition: DrawCondition;
-	/** null indicates a draw. */
-	victor: null;
-};
-
-/** Game was aborted before completion — no result. */
-type AbortConclusion = {
-	condition: AbortCondition;
-	/** undefined indicates no result. */
-	victor?: undefined;
-};
-
-/** Stores the results of a game, including how it was terminated, and who won. */
-export type GameConclusion = WinConclusion | DrawConclusion | AbortConclusion;
-
 /**
  * Union type of all possible game conclusion conditions.
  * Represents how a game can be terminated.
@@ -97,11 +74,12 @@ export type Condition = WinCondition | DrawCondition | AbortCondition;
 
 // Schemas --------------------------------------------------------------------------
 
-/** The zod schema for validating a GameConclusion object. */
+/** Stores the results of a game, including how it was terminated, and who won. */
+export type GameConclusion = z.infer<typeof gameConclusionSchema>;
 const gameConclusionSchema = z.discriminatedUnion('condition', [
 	z.strictObject({
 		condition: z.enum(WIN_CONDITIONS),
-		victor: z.number().int().nonnegative() as z.ZodType<Player>,
+		victor: typeutil.PlayerSchema,
 	}),
 	z.strictObject({
 		condition: z.enum(DRAW_CONDITIONS),

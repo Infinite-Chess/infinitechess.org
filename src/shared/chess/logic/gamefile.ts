@@ -12,9 +12,9 @@ import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { MoveFull, MoveRecord } from './movepiece.js';
+import type { ClockValues, MetaData } from '../../types.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { ClockValues, MetaData } from '../../types.js';
 
 import clock from './clock.js';
 import jsutil from '../../util/jsutil.js';
@@ -340,7 +340,7 @@ function initFullGame(
 	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,

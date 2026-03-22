@@ -8,7 +8,7 @@ import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { Rating } from '../../../shared/types.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 

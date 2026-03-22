@@ -6,7 +6,7 @@
  */
 
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { MetaData, PlayerRatingChangeInfo, Rating } from '../../../../../shared/types.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 

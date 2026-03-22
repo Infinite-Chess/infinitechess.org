@@ -4,9 +4,8 @@
  * Client-side helpers for building and parsing ICN game metadata.
  */
 
-import type { Condition } from '../../../../../shared/chess/util/winconutil.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
-import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Condition, GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { MetaData, Rating, TimeControl } from '../../../../../shared/types.js';
 
 import * as z from 'zod';

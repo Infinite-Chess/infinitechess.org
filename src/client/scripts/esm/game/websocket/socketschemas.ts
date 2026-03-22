@@ -54,6 +54,9 @@ const InviteSchema = z.strictObject({
 
 // Game Helper Schemas ---------------------------------------------------------------
 
+/** Zod schema for the id of an online game. */
+const GameIDSchema = z.number().int().nonnegative();
+
 /**
  * Static information about an online game that is unchanging.
  * Only needed once, when we originally load the game, not on subsequent updates/resyncs.
@@ -61,7 +64,7 @@ const InviteSchema = z.strictObject({
 export type ServerGameInfo = z.infer<typeof ServerGameInfoSchema>;
 const ServerGameInfoSchema = z.strictObject({
 	/** The id of the online game. */
-	id: z.number().int().nonnegative(),
+	id: GameIDSchema,
 	rated: z.boolean(),
 	publicity: PublicitySchema,
 	playerRatings: typeutil.GenPlayerGroupSchema(RatingSchema),
@@ -116,7 +119,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('logged-game-info'),
 		value: z.strictObject({
-			game_id: z.number().int().nonnegative(),
+			game_id: GameIDSchema,
 			rated: z.literal([0, 1]),
 			private: z.literal([0, 1]),
 			termination: z.string(),
