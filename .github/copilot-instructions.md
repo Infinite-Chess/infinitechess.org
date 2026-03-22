@@ -13,6 +13,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 3. Perform testing for new complex functions to ensure their output is as expected.
 4. Actual unit/integration tests are not required, unless explicitly asked for.
 5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/GUIDELINES.md`.
+6. No types should ever be re-exported inside scripts. All imports of a type should reference the source.
 
 ## Project Architecture
 
