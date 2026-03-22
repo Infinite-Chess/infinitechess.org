@@ -7,17 +7,23 @@
  * At most this ever handles a single game, not multiple.
  */
 
-import type { Rating } from '../../database/leaderboardsManager.js';
-import type { MetaData } from '../../../shared/chess/util/metadatautil.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
-import type { ClockValues } from '../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../shared/chess/util/clockutil.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
+import type { Board, Game } from '../../../shared/chess/logic/gamefile.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { Board, Game, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
+import type {
+	ClockValues,
+	GameUpdateMessage,
+	MetaData,
+	OpponentsMoveMessage,
+	ParticipantState,
+	PlayerRatingChangeInfo,
+	Rating,
+	TimeControl,
+} from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -47,73 +53,6 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 export const timeBeforeGameDeletionMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
-
-/**
- * A move as transmitted over the wire: the serialized move
- * token (e.g. "1,2>3,4=N") and an optional clock stamp.
- */
-type MovePacket = { token: string; clockStamp?: number };
-
-/** The message contents expected when we send a websocket 'move' message.  */
-interface OpponentsMoveMessage {
-	/** The move our opponent played. In the most compact notation: `"5,2>5,4"` */
-	move: MovePacket;
-	gameConclusion?: GameConclusion;
-	/** Our opponent's move number, 1-based. */
-	moveNumber: number;
-	/** If the game is timed, this will be the current clock values. */
-	clockValues?: ClockValues;
-}
-
-/** The message contents expected when we receive a server websocket 'gameupdate' message.  */
-interface GameUpdateMessage {
-	gameConclusion?: GameConclusion;
-	/** Existing moves, if any, to forward to the front of the game. */
-	moves: MovePacket[];
-	participantState: ParticipantState;
-	clockValues?: ClockValues;
-	/**
-	 * When true, the client's resync logic should force its move list to exactly match
-	 * the server's, even if the client has one extra move at the end that is "ours".
-	 * The client must revert it rather than re-submitting it.
-	 */
-	forceSync: boolean;
-}
-
-type PlayerRatingChangeInfo = {
-	newRating: Rating;
-	change: number;
-};
-
-interface DisconnectInfo {
-	/**
-	 * How many milliseconds left until our opponent will be auto-resigned from disconnection,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoDisconnectResign: number;
-	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
-	wasByChoice: boolean;
-}
-
-/** Info storing draw offers of the game. */
-interface DrawOfferInfo {
-	/** True if our opponent has extended a draw offer we haven't yet confirmed/denied */
-	unconfirmed: boolean;
-	/** The move ply WE HAVE last offered a draw, if we have, otherwise undefined. */
-	lastOfferPly?: number;
-}
-
-/** The state of the game unique to participants, while the game is ongoing, NOT for spectators, and not when the game is over. */
-type ParticipantState = {
-	drawOffer: DrawOfferInfo;
-	/** If our opponent has disconnected, this will be present. */
-	disconnect?: DisconnectInfo;
-	/**
-	 * If our opponent is afk, this is how many millseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign?: number;
-};
 
 /** Contains information about this player's disconnection and auto resign timer. */
 type PlayerDisconnect = {
@@ -861,18 +800,7 @@ function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
 	return turnOrder[i % turnOrder.length]!;
 }
 
-export type {
-	ServerGame,
-	MatchInfo,
-	PlayerData,
-	PlayerDisconnect,
-	PlayerRatingChangeInfo,
-	OpponentsMoveMessage,
-	ParticipantState,
-	MovePacket,
-	DrawOfferInfo,
-	GameUpdateMessage,
-};
+export type { ServerGame, MatchInfo, PlayerData, PlayerDisconnect };
 
 export default {
 	initMatch,

@@ -10,7 +10,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Change } from './boardchanges.js';
 import type { MoveCoords } from './icn/icnconverter.js';
-import type { MovePacket } from '../../../server/game/gamemanager/gameutility.js';
+import type { MovePacket } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 import type { EnPassant, MoveState } from './state.js';
 import type { Board, FullGame, GameConclusion } from './gamefile.js';
 

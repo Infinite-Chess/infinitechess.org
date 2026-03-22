@@ -1,18 +1,17 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { Rating } from '../../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { ClockValues } from '../../../../../../shared/chess/logic/clock.js';
 import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
-import type { GameMessage } from '../../websocket/socketschemas.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
-	GameUpdateMessage,
+	ClockValues,
+	GameMessage,
+	JoinGameMessage,
 	MovePacket,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
+	Rating,
+} from '../../websocket/socketschemas.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
@@ -40,33 +39,6 @@ import movesendreceive from './movesendreceive.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 
 // Types -------------------------------------------------------------------------------------------------
-
-/**
- * Static information about an online game that is unchanging.
- * Only need this once, when we originally load the game,
- * not on subsequent updates/resyncs.
- */
-export interface ServerGameInfo {
-	/** The id of the online game */
-	id: number;
-	rated: boolean;
-	publicity: 'public' | 'private';
-	playerRatings: PlayerGroup<Rating>;
-}
-
-/**
- * The message contents expected when we receive a server websocket 'joingame' message.
- * This contains everything a {@link GameUpdateMessage} message would have, and more!!
- *
- * The stuff included here does not need to be specified when we're resyncing to
- * a game, or receiving a game update, as we already know this stuff.
- */
-export interface JoinGameMessage extends GameUpdateMessage {
-	gameInfo: ServerGameInfo;
-	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
-	metadata: MetaData;
-	youAreColor: Player;
-}
 
 /** The game info of an ended game from the database, as sent by the server. */
 type LoggedGameInfo = Required<

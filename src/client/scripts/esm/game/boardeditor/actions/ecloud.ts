@@ -5,7 +5,7 @@
  * Mirrors esave.ts for cloud storage.
  */
 
-import type { MetaData } from '../../../../../../shared/chess/util/metadatautil';
+import type { MetaData } from '../../websocket/socketschemas';
 import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EditorSaveState } from '../editortypes';

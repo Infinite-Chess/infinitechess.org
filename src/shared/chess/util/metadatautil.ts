@@ -7,56 +7,16 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Rating } from '../../../server/database/leaderboardsManager.js';
+import type { Rating } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 import type { Player } from './typeutil.js';
-import type { TimeControl } from './clockutil.js';
+import type { MetaData } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 
 import { players as p } from './typeutil.js';
 
 // Types --------------------------------------------------------------------------
 
-interface MetaData {
-	/** What kind of game (rated/casual), and variant, in spoken language. For example, "Casual local Classical infinite chess game". This phrase goes: "Casual/Rated variantName infinite chess game." */
-	Event?: string;
-	/** What website the game was played on. Right now this has no application because infinitechess.org is the ONLY site you can play this game on. */
-	Site?: 'https://www.infinitechess.org/';
-	/**
-	 * The clock value for the game, in the form `"s+s"`, where the left
-	 * is start time in seconds, and the right is increment in seconds.
-	 *
-	 * If the game is untimed, this should be `"-"`
-	 */
-	TimeControl?: TimeControl;
-	/** The round number (between players? idk. This is a pgn-required metadata, but it has no application to infinitechess.org right now) */
-	Round?: '-';
-	/** The UTC date of the game, in the format `"YYYY.MM.DD"` */
-	UTCDate?: string;
-	/** The UTC time the game started, in the format `"HH:MM:SS"` */
-	UTCTime?: string;
-	/** If it's not a custom position, this must be one of the valid variants in variant.ts*/
-	Variant?: string;
-	White?: string;
-	Black?: string;
-	/** The ID of the white player, if they are signed in, converted to base 62. */
-	WhiteID?: string;
-	/** The ID of the black player, if they are signed in, converted to base 62. */
-	BlackID?: string;
-	/** The display elo of the white player, whihc may includ a "?" if we're uncertain about their rating. */
-	WhiteElo?: string;
-	/** The display elo of the black player, whihc may includ a "?" if we're uncertain about their rating. */
-	BlackElo?: string;
-	/** How much elo white gained/lost from the match. */
-	WhiteRatingDiff?: string;
-	/** How much elo black gained/lost from the match. */
-	BlackRatingDiff?: string;
-	/** How many points each side received from the game (e.g. `"1-0"` means white won, `"1/2-1/2"` means a draw) */
-	Result?: string;
-	/** What caused the game to end, in spoken language. For example, "Time forfeit". This will always be the win condition that concluded the game. */
-	Termination?: string;
-}
-
 /** All valid metadata names. */
-type MetadataKey = keyof MetaData;
+export type MetadataKey = keyof MetaData;
 
 // Constants -----------------------------------------------------------------------
 
@@ -100,5 +60,3 @@ export default {
 	getFormattedElo,
 	getWhiteBlackRatingDiff,
 };
-
-export type { MetaData, MetadataKey };

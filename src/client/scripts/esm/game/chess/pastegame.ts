@@ -4,12 +4,13 @@
  * This script handles pasting games
  */
 
+import type { MetaData } from '../websocket/socketschemas.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { MovePacket } from '../websocket/socketschemas.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';

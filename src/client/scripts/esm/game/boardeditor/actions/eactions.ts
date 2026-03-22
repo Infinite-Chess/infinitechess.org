@@ -15,11 +15,10 @@
  */
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { MetaData } from '../../../../../../shared/chess/util/metadatautil';
-import type { MovePacket } from '../../../../../../server/game/gamemanager/gameutility';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
+import type { MetaData, MovePacket } from '../../websocket/socketschemas.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { ActivePosition, StorageType } from '../boardeditor';
 

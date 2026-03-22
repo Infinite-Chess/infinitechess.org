@@ -4,11 +4,10 @@
  * Client-side helpers for building and parsing ICN game metadata.
  */
 
-import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
 import type { Condition } from '../../../../../shared/chess/util/winconutil.js';
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
+import type { MetaData, Rating, TimeControl } from '../websocket/socketschemas.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';

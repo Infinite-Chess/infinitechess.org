@@ -4,10 +4,12 @@
  * This script handles invite creation, making sure that the invites have valid properties.
  */
 
-import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerUsernameContainer } from '../../../shared/types.js';
+import type {
+	Rating,
+	ServerUsernameContainer,
+} from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 
 import * as z from 'zod';
 

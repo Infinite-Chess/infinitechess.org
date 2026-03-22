@@ -5,7 +5,7 @@
  */
 
 import type { Invite } from '../invitesmanager/inviteutility.js';
-import type { Rating } from '../../database/leaderboardsManager.js';
+import type { Rating } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/logic/gamefile.js';

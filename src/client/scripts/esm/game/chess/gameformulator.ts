@@ -5,6 +5,7 @@
  */
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../websocket/socketschemas.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type {
 	MovePreprint,
@@ -15,8 +16,6 @@ import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
-
-import { MovePacket } from '../../../../../server/game/gamemanager/gameutility.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.

@@ -8,7 +8,7 @@
  * if we have done so, in the current online game.
  */
 
-import type { DrawOfferInfo } from '../../../../../../server/game/gamemanager/gameutility.js';
+import type { DrawOfferInfo } from '../../websocket/socketschemas.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 

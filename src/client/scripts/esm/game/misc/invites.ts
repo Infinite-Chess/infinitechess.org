@@ -5,10 +5,8 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
-import type { InvitesMessage } from '../websocket/socketschemas.js';
-import type { ServerUsernameContainer } from '../../../../../shared/types.js';
+import type { Invite, InvitesMessage, TimeControl } from '../websocket/socketschemas.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
@@ -26,24 +24,6 @@ import socketmessages from '../websocket/socketmessages.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 
 // Types -------------------------------------------------------------------------
-
-/** The invite object. NOT an HTML object. */
-export interface Invite {
-	/** Who owns the invite. An object of the type UsernameContainer from usernamecontainer.ts. If it's a guest, then "(Guest)". */
-	usernamecontainer: ServerUsernameContainer;
-	/** A unique identifier */
-	id: string;
-	/** Used to verify if an invite is your own. */
-	tag?: string;
-	/** The name of the variant */
-	variant: string;
-	/** The clock value */
-	clock: TimeControl;
-	/** The player color (null = Random) */
-	color: Player | null;
-	publicity: 'public' | 'private';
-	rated: 'casual' | 'rated';
-}
 
 /** Create lobby invite options. */
 export interface InviteOptions {

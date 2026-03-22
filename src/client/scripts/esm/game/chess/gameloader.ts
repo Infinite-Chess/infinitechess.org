@@ -12,20 +12,20 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
-import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
 import type { ValidEngine } from './engines/engine.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
-	ParticipantState,
+	ClockValues,
+	MetaData,
 	MovePacket,
-} from '../../../../../server/game/gamemanager/gameutility.js';
+	ParticipantState,
+	ServerGameInfo,
+	TimeControl,
+} from '../websocket/socketschemas.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
