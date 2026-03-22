@@ -4,8 +4,6 @@
  * This script defines all Zod schemas for validating incoming server websocket messages.
  *
  * All schemas are centralized here to avoid circular dependency issues.
- * Runtime imports are only added when they themselves have no transitive import of
- * this file, so they cannot be part of a circular dependency chain.
  *
  * Schemas are organized by route: general, invites, game, and a master schema
  * that combines them all together with echo and reply-only message handling.
@@ -13,6 +11,7 @@
 
 import * as z from 'zod';
 
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 
 // Shared Helper Schemas ---------------------------------------------------------------
@@ -23,14 +22,11 @@ const RatingSchema = z.strictObject({
 	confident: z.boolean(),
 });
 
-/** Zod schema for a player color. Player = 1 (white) | 2 (black). */
-const PlayerSchema = z.union([z.literal(1), z.literal(2)]);
-
-/** Zod schema for the clock values of an active game. */
+/** Zod schema for a game's clock values. */
 const ClockValuesSchema = z.strictObject({
 	/** Each color's remaining time in milliseconds, keyed by player number. */
-	clocks: z.record(z.enum(['1', '2']), z.number()),
-	colorTicking: PlayerSchema.optional(),
+	clocks: typeutil.GenPlayerGroupSchema(z.number()),
+	colorTicking: typeutil.PlayerSchema.optional(),
 	timeColorTickingLosesAt: z.number().optional(),
 });
 
@@ -40,26 +36,26 @@ const MovePacketSchema = z.strictObject({
 	clockStamp: z.number().optional(),
 });
 
-/** Zod schema for draw-offer state shared with a participant. */
+/** Zod schema for a participant's draw-offer state. */
 const DrawOfferInfoSchema = z.strictObject({
 	unconfirmed: z.boolean(),
 	lastOfferPly: z.number().int().optional(),
 });
 
-/** Zod schema for an opponent's disconnect state. */
+/** Zod schema for a participant's disconnect state. */
 const DisconnectInfoSchema = z.strictObject({
 	millisUntilAutoDisconnectResign: z.number(),
 	wasByChoice: z.boolean(),
 });
 
-/** Zod schema for the participant-only game state sent with game updates. */
+/** Zod schema for a game's participant. */
 const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
 	disconnect: DisconnectInfoSchema.optional(),
 	millisUntilAutoAFKResign: z.number().optional(),
 });
 
-/** Zod schema for a 'gameupdate' message value (also the base of JoinGameMessage). */
+/** Zod schema for a 'gameupdate' message. */
 const GameUpdateMessageSchema = z.strictObject({
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	moves: z.array(MovePacketSchema),
@@ -76,21 +72,27 @@ const OpponentsMoveMessageSchema = z.strictObject({
 	clockValues: ClockValuesSchema.optional(),
 });
 
+/** Zod schema for the publicity of a game/invite. */
+const PublicitySchema = z.enum(['public', 'private']);
+
 /** Zod schema for static info about a server-side online game. */
 const ServerGameInfoSchema = z.strictObject({
 	id: z.number().int().nonnegative(),
 	rated: z.boolean(),
-	publicity: z.enum(['public', 'private']),
-	playerRatings: z.record(z.string(), RatingSchema),
+	publicity: PublicitySchema,
+	playerRatings: typeutil.GenPlayerGroupSchema(RatingSchema),
 });
 
-/** Zod schema for ICN game metadata. */
+const TimeControlSchema = z.union([
+	z.templateLiteral([z.number(), '+', z.number()]),
+	z.literal('-'),
+]);
+
+/** Zod schema for ICN metadata. */
 const MetaDataSchema = z.strictObject({
 	Event: z.string().optional(),
 	Site: z.literal('https://www.infinitechess.org/').optional(),
-	TimeControl: z
-		.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
-		.optional(),
+	TimeControl: TimeControlSchema.optional(),
 	Round: z.literal('-').optional(),
 	UTCDate: z.string().optional(),
 	UTCTime: z.string().optional(),
@@ -114,7 +116,7 @@ const MetaDataSchema = z.strictObject({
 const JoinGameMessageSchema = GameUpdateMessageSchema.extend({
 	gameInfo: ServerGameInfoSchema,
 	metadata: MetaDataSchema,
-	youAreColor: PlayerSchema,
+	youAreColor: typeutil.PlayerSchema,
 });
 
 /** Zod schema for a server-side username container included in invite objects. */
@@ -131,8 +133,8 @@ const InviteSchema = z.strictObject({
 	tag: z.string().optional(),
 	variant: z.string(),
 	clock: z.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')]),
-	color: z.union([PlayerSchema, z.literal(null)]),
-	publicity: z.enum(['public', 'private']),
+	color: z.union([typeutil.PlayerSchema, z.literal(null)]),
+	publicity: PublicitySchema,
 	rated: z.enum(['casual', 'rated']),
 });
 
