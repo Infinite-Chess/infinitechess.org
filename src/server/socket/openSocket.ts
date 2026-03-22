@@ -64,13 +64,6 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 		return ws.close(1009, 'Too Many Sockets');
 	}
 
-	if (!ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.browser_id === undefined) {
-		// Terminate web socket connection request, they NEED authentication!
-		console.log(`Authentication needed for WebSocket connection request!! Socket:`);
-		socketUtility.printSocket(ws);
-		return ws.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
-	}
-
 	addConnectionToConnectionLists(ws);
 
 	logWebsocketStart(req, ws); // Log the request
@@ -126,7 +119,7 @@ function closeIfInvalidAndAddMetadata(
 
 	const cookies = socketUtility.getCookiesFromWebsocket(req);
 	if (cookies['browser-id'] === undefined) {
-		console.log(`Authentication needed for WebSocket connection request!!`);
+		// console.log(`Authentication needed for WebSocket connection request!!`);
 		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
 		return;
 	}
