@@ -5,6 +5,10 @@
  * and utility methods for working with them.
  */
 
+import * as z from 'zod';
+
+// Constants --------------------------------------------------------------------------------
+
 /**
  * Every raw type of piece supported in the game.
  *
@@ -122,6 +126,23 @@ const strcolors = ['neutral', 'white', 'black', 'red', 'blue', 'yellow', 'green'
 /** Raw piece types that don't have an SVG */
 const SVGLESS_TYPES: Set<RawType> = new Set([rawTypes.VOID]);
 
+// Zod Schemas --------------------------------------------------------------------------------
+
+/** Zod schema for a player color. */
+const PlayerSchema = z.literal(Object.values(players));
+
+/** Returns the Zod schema corresponding to {@link PlayerGroup}, accepting the schema of the values as an argument. */
+function GenPlayerGroupSchema<T extends z.ZodTypeAny>(
+	valueSchema: T,
+): z.ZodObject<{ [K in Player]: z.ZodOptional<T> }> {
+	const shape = Object.fromEntries(
+		Object.values(players).map((p) => [p, valueSchema.optional()]),
+	);
+	return z.strictObject(shape as { [K in Player]: z.ZodOptional<T> });
+}
+
+// Types --------------------------------------------------------------------------------------
+
 type StrPlayer = (typeof strcolors)[number];
 type RawType = (typeof rawTypes)[keyof typeof rawTypes];
 type Player = (typeof players)[keyof typeof players];
@@ -138,6 +159,8 @@ type TypeGroup<T> = { [t: number]: T };
 type PlayerGroup<T> = {
 	[_p in Player]?: T;
 };
+
+// Functions --------------------------------------------------------------------------------
 
 function getRawType(type: number): RawType {
 	return (type % numTypes) as RawType;
@@ -228,12 +251,16 @@ export type { RawType, Player, RawTypeGroup, TypeGroup, PlayerGroup };
 export { rawTypes, neutralRawTypes, ext, numTypes, players };
 
 export default {
+	// Constants
 	jumpingRoyals,
 	slidingRoyals,
 	royals,
 	SVGLESS_TYPES,
 	strcolors,
-
+	// Schemas
+	PlayerSchema,
+	GenPlayerGroupSchema,
+	// Functions
 	getRawType,
 	getColorFromType,
 	buildType,
