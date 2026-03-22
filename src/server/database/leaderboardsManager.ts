@@ -5,7 +5,7 @@
  */
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
-import type { Rating } from '../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { Rating } from '../../shared/types.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import db from './database.js';

@@ -17,15 +17,15 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantdi
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { ServerGameInfo } from '../websocket/socketschemas.js';
 import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ClockValues,
 	MetaData,
 	MovePacket,
 	ParticipantState,
-	ServerGameInfo,
 	TimeControl,
-} from '../websocket/socketschemas.js';
+} from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';

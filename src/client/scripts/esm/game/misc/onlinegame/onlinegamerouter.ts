@@ -5,13 +5,8 @@ import type { Condition } from '../../../../../../shared/chess/util/winconutil.j
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type {
-	ClockValues,
-	GameMessage,
-	JoinGameMessage,
-	MovePacket,
-	Rating,
-} from '../../websocket/socketschemas.js';
+import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
+import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';

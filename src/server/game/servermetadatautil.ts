@@ -5,10 +5,7 @@
  */
 
 import type { VariantCode } from '../../shared/chess/variants/variantdictionary.js';
-import type {
-	MetaData,
-	TimeControl,
-} from '../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { MetaData, TimeControl } from '../../shared/types.js';
 
 import uuid from '../../shared/util/uuid.js';
 import variant from '../../shared/chess/variants/variant.js';

@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../websocket/socketschemas.js';
+import type { MetaData } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';

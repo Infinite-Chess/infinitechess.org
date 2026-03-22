@@ -4,7 +4,7 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
-import type { Rating, ServerUsernameContainer } from '../game/websocket/socketschemas.js';
+import type { Rating, ServerUsernameContainer } from '../../../../shared/types.js';
 
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 

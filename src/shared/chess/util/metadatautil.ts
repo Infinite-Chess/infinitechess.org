@@ -7,9 +7,8 @@
  * https://github.com/tsevasa/infinite-chess-notation
  */
 
-import type { Rating } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
 import type { Player } from './typeutil.js';
-import type { MetaData } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { MetaData, Rating } from '../../types.js';
 
 import { players as p } from './typeutil.js';
 

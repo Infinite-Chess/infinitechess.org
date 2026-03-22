@@ -15,7 +15,7 @@
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { GameUpdateMessage, MovePacket } from '../../websocket/socketschemas.js';
+import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';

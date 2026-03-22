@@ -10,10 +10,7 @@
 import type { Player } from '../util/typeutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { ClockDependant, Game } from './gamefile.js';
-import type {
-	ClockValues,
-	TimeControl,
-} from '../../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { ClockValues, TimeControl } from '../../types.js';
 
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';

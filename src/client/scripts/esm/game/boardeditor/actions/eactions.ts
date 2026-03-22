@@ -18,7 +18,7 @@ import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
-import type { MetaData, MovePacket } from '../../websocket/socketschemas.js';
+import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
 import type { ActivePosition, StorageType } from '../boardeditor';
 

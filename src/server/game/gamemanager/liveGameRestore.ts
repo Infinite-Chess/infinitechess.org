@@ -19,11 +19,7 @@ import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
-import type {
-	ClockValues,
-	MetaData,
-	TimeControl,
-} from '../../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { ClockValues, MetaData, TimeControl } from '../../../shared/types.js';
 import type {
 	Condition,
 	DrawCondition,

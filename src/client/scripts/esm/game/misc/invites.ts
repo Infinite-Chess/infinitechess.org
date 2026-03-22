@@ -6,7 +6,8 @@
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
-import type { Invite, InvitesMessage, TimeControl } from '../websocket/socketschemas.js';
+import type { TimeControl } from '../../../../../shared/types.js';
+import type { Invite, InvitesMessage } from '../websocket/socketschemas.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';

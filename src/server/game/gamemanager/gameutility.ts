@@ -23,7 +23,7 @@ import type {
 	PlayerRatingChangeInfo,
 	Rating,
 	TimeControl,
-} from '../../../client/scripts/esm/game/websocket/socketschemas.js';
+} from '../../../shared/types.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';

@@ -5,7 +5,7 @@
  */
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MovePacket } from '../websocket/socketschemas.js';
+import type { MovePacket } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type {
 	MovePreprint,

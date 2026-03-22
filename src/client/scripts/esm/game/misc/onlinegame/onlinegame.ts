@@ -4,13 +4,9 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
+import type { ServerGameInfo } from '../../websocket/socketschemas.js';
 import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type {
-	ParticipantState,
-	Rating,
-	ClockValues,
-	ServerGameInfo,
-} from '../../websocket/socketschemas.js';
+import type { ClockValues, ParticipantState, Rating } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';

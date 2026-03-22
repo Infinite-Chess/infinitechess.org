@@ -6,7 +6,7 @@
  * Untimed = `-`
  */
 
-import type { TimeControl } from '../../../client/scripts/esm/game/websocket/socketschemas.js';
+import type { TimeControl } from '../../types.js';
 
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);

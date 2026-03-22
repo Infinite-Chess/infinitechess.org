@@ -9,7 +9,7 @@ import type { Mesh } from '../../rendering/piecemodels.js';
 import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
-import type { ClockValues, OpponentsMoveMessage } from '../../websocket/socketschemas.js';
+import type { ClockValues, OpponentsMoveMessage } from '../../../../../../shared/types.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
