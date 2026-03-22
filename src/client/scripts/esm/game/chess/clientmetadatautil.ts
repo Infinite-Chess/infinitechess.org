@@ -9,6 +9,8 @@ import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.
 import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetaData, Rating, TimeControl } from '../../../../../shared/types.js';
 
+import * as z from 'zod';
+
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -92,7 +94,7 @@ function getGameConclusionFromResultAndTermination(
 	const parseResult = winconutil.gameConclusionSchema.safeParse(gameConclusion);
 	if (!parseResult.success)
 		throw new Error(
-			`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${parseResult.error}`,
+			`When parsing GameConclusion from metadata, condition "${termination}" and victor "${victor}" is an invalid combination. ZodError: ${z.prettifyError(parseResult.error)}`,
 		);
 	return parseResult.data;
 }
