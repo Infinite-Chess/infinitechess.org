@@ -264,7 +264,9 @@ function changePlayMode(mode: typeof modeSelected): void {
 		if (element_optionCardStrength) element_optionCardStrength.classList.remove('hidden');
 		// Restrict the variant dropdown to variants HydroChess officially supports.
 		element_optionVariant.replaceChildren(
-			...elements_variantOptions.filter((o) => hydrochess_card.SUPPORTED_VARIANTS.has(o.value)),
+			...elements_variantOptions.filter((o) =>
+				hydrochess_card.SUPPORTED_VARIANTS.has(o.value),
+			),
 		);
 		if (!hydrochess_card.SUPPORTED_VARIANTS.has(element_optionVariant.value)) {
 			element_optionVariant.value = 'Classical';
