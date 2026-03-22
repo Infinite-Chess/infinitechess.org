@@ -14,13 +14,44 @@ import * as z from 'zod';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 
-// Shared Helper Schemas ---------------------------------------------------------------
+// Common Helper Schemas ---------------------------------------------------------------
 
 /** Zod schema for a player rating. */
 const RatingSchema = z.strictObject({
 	value: z.number(),
 	confident: z.boolean(),
 });
+
+/** Zod schema for the publicity of a game/invite. */
+const PublicitySchema = z.enum(['public', 'private']);
+
+const TimeControlSchema = z.union([
+	z.templateLiteral([z.number(), '+', z.number()]),
+	z.literal('-'),
+]);
+
+// Invite Helper Schemas ---------------------------------------------------------------
+
+/** Zod schema for a server-side username container included in invite objects. */
+const ServerUsernameContainerSchema = z.strictObject({
+	type: z.enum(['player', 'guest']),
+	username: z.string(),
+	rating: RatingSchema.optional(),
+});
+
+/** Zod schema for a single invite object. */
+const InviteSchema = z.strictObject({
+	usernamecontainer: ServerUsernameContainerSchema,
+	id: z.string(),
+	tag: z.string().optional(),
+	variant: z.string(),
+	clock: z.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')]),
+	color: z.union([typeutil.PlayerSchema, z.literal(null)]),
+	publicity: PublicitySchema,
+	rated: z.enum(['casual', 'rated']),
+});
+
+// Game Helper Schemas ---------------------------------------------------------------
 
 /** Zod schema for a game's clock values. */
 const ClockValuesSchema = z.strictObject({
@@ -72,9 +103,6 @@ const OpponentsMoveMessageSchema = z.strictObject({
 	clockValues: ClockValuesSchema.optional(),
 });
 
-/** Zod schema for the publicity of a game/invite. */
-const PublicitySchema = z.enum(['public', 'private']);
-
 /** Zod schema for static info about a server-side online game. */
 const ServerGameInfoSchema = z.strictObject({
 	id: z.number().int().nonnegative(),
@@ -82,11 +110,6 @@ const ServerGameInfoSchema = z.strictObject({
 	publicity: PublicitySchema,
 	playerRatings: typeutil.GenPlayerGroupSchema(RatingSchema),
 });
-
-const TimeControlSchema = z.union([
-	z.templateLiteral([z.number(), '+', z.number()]),
-	z.literal('-'),
-]);
 
 /** Zod schema for ICN metadata. */
 const MetaDataSchema = z.strictObject({
@@ -117,25 +140,6 @@ const JoinGameMessageSchema = GameUpdateMessageSchema.extend({
 	gameInfo: ServerGameInfoSchema,
 	metadata: MetaDataSchema,
 	youAreColor: typeutil.PlayerSchema,
-});
-
-/** Zod schema for a server-side username container included in invite objects. */
-const ServerUsernameContainerSchema = z.strictObject({
-	type: z.enum(['player', 'guest']),
-	username: z.string(),
-	rating: RatingSchema.optional(),
-});
-
-/** Zod schema for a single invite object. */
-const InviteSchema = z.strictObject({
-	usernamecontainer: ServerUsernameContainerSchema,
-	id: z.string(),
-	tag: z.string().optional(),
-	variant: z.string(),
-	clock: z.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')]),
-	color: z.union([typeutil.PlayerSchema, z.literal(null)]),
-	publicity: PublicitySchema,
-	rated: z.enum(['casual', 'rated']),
 });
 
 // General Schema ---------------------------------------------------------------
