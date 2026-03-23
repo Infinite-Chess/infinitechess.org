@@ -38,7 +38,7 @@ function onReport(
 	messageContents: ReportMessage,
 ): void {
 	// { reason, opponentsMoveNumber }
-	console.log('Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
@@ -55,7 +55,7 @@ function onReport(
 		)
 	) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Publicity: ${servergame.match.publicity}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,
@@ -73,7 +73,7 @@ function onReport(
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,

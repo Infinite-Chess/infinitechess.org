@@ -35,9 +35,9 @@ export function freshenSession(
 	const timeSinceCreated = Date.now() - tokenRecord.created_at;
 	if (timeSinceCreated < minTimeToWaitToRenewRefreshTokensMillis) return;
 
-	console.log(
-		`Renewing member "${username}"s session by issuing them new login cookies! -------`,
-	);
+	// console.log(
+	// 	`Renewing member "${username}"s session by issuing them new login cookies! -------`,
+	// );
 
 	// Create the new token.
 	const newToken = signRefreshToken(user_id, username, roles);

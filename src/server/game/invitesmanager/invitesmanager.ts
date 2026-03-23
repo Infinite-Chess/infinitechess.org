@@ -268,12 +268,7 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
  * their socket was previously closed by a network interruption.
  */
 function subToInvitesList(ws: CustomWebSocket): void {
-	// data: { route, action, value, id }
-	if (ws.metadata.subscriptions.invites)
-		return console.log(
-			`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
-	// if (ws.metadata.subscriptions.invites) return; // Already subscribed
+	if (ws.metadata.subscriptions.invites) return; // Already subscribed. Happens occasionally
 
 	addSocketToInvitesSubs(ws);
 	sendClientInvitesList(ws);

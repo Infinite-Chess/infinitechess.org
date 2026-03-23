@@ -20,9 +20,9 @@ import validators from '../../shared/util/validators.js';
 
 import { handleLogin } from './loginController.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
 	isEmailTaken,
@@ -154,7 +154,7 @@ async function generateAccount({
 		is_verification_notified,
 	);
 
-	logEventsAndPrint(`Created new member: ${username}`, 'newMemberLog.txt');
+	logEvents(`Created new member: ${username}`, 'newMemberLog.txt');
 
 	// SEND EMAIL CONFIRMATION
 	if (!autoVerify) sendEmailConfirmation(user_id);

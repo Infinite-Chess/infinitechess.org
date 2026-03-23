@@ -341,7 +341,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 			);
 		}
 		logEventsAndPrint(
-			`Finished updating all rating deviations in leaderboard table.`,
+			`Updated all rating deviations in leaderboard table.`,
 			'leaderboardLog.txt',
 		);
 	} catch (error: unknown) {

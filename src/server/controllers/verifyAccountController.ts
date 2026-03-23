@@ -6,8 +6,8 @@
 
 import type { Request, Response } from 'express';
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { AddVerificationToAllSocketsOfMember } from '../socket/socketManager.js';
 import {
 	getMemberDataByCriteria,
@@ -38,10 +38,10 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 	);
 
 	if (record === undefined) {
-		// User not found
-		logEventsAndPrint(
-			`Invalid account verification link! User "${claimedUsername}" DOESN'T EXIST.`,
-			'hackLog.txt',
+		// User not found. Can happen if they click the link after their account was auto-deleted for never verifying.
+		logEvents(
+			`Invalid account verification link! User "${claimedUsername}" doesn't exist.`,
+			'loginAttempts.txt',
 		);
 		res.status(400).redirect(`/400`); // Bad request
 		return;
@@ -49,7 +49,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 
 	if (!req.memberInfo.signedIn) {
 		// Not logged in
-		logEventsAndPrint(
+		logEvents(
 			`Forwarding user '${record.username}' to login before they can verify!`,
 			'loginAttempts.txt',
 		);
@@ -73,7 +73,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 
 	// Ignore if already verified.
 	if (record.is_verified === 1) {
-		logEventsAndPrint(
+		logEvents(
 			`Member "${record.username}" of ID ${record.user_id} is already verified!`,
 			'loginAttempts.txt',
 		);
@@ -95,7 +95,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<void> 
 	const result = _executeVerificationUpdate(record.user_id, record.username);
 
 	if (result.success) {
-		logEventsAndPrint(
+		logEvents(
 			`Verified member ${record.username}'s account! ID ${record.user_id}`,
 			'loginAttempts.txt',
 		);
