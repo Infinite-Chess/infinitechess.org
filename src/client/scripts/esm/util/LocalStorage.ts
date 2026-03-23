@@ -52,8 +52,13 @@ function loadItem(key: string): any {
 	try {
 		save = JSON.parse(stringifiedSave, jsutil.parseReviver); // { value, expires }
 	} catch (_e) {
-		// Value wasn't in json format, just delete it. They have to be in json because we always store the 'expiry' property.
-		deleteItem(key);
+		// Not JSON — not an entry we wrote, so leave it alone.
+		// This protects the 'color-scheme' entry which the browser needs available before the
+		// first paint, so it can't wait until LocalStorage.ts has finished loading to read it.
+		return;
+	}
+	if (save === null || typeof save !== 'object' || save.expires === undefined) {
+		// Valid JSON but not our { value, expires } shape — not ours, leave it alone.
 		return;
 	}
 	if (hasItemExpired(save)) {
@@ -77,11 +82,7 @@ function deleteItem(key: string): void {
 	localStorage.removeItem(key);
 }
 
-function hasItemExpired(save: Entry | any): boolean {
-	if (save.expires === undefined) {
-		console.log(`Local storage item was in an old format. Deleting it...`);
-		return true;
-	}
+function hasItemExpired(save: Entry): boolean {
 	return Date.now() >= save.expires;
 }
 
