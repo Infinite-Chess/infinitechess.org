@@ -46,8 +46,6 @@
 
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
 
-- Update `loadTranslations()` to remove versioning support entirely; delete `removeOutdated()`. Keep `deepMerge()` (fallback to English for missing keys).
-
 ---
 
 ## Shared Components
