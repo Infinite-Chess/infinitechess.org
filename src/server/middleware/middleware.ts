@@ -158,8 +158,21 @@ export function configureMiddleware(app: Express): void {
 	// Sets the req.cookies property
 	app.use(cookieParser());
 
-	// Serve public assets. (e.g. css, scripts, images, audio)
-	app.use(express.static(path.join(__dirname, '../../client'))); // Serve public assets
+	// Serve public assets. (e.g. scripts, css, images, audio)
+	app.use(
+		express.static(path.join(__dirname, '../../client'), {
+			setHeaders(res, filePath) {
+				if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+					// Content-hashed files are cached immutably forever — the hash changes when content changes.
+					res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+				} else {
+					// Other static assets (images, svgs, audio, fonts) are cached for 1 year
+					// but not immutable — bump ?v=N in templates to bust the cache when they change.
+					res.setHeader('Cache-Control', 'public, max-age=31536000');
+				}
+			},
+		}),
+	);
 
 	// Every request beyond this point will not be for a resource like a script or image,
 	// but it will be a request for an HTML or API
