@@ -7,11 +7,11 @@
 import type { Request, Response } from 'express';
 
 import { revokeSession } from './authenticationTokens/sessionManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteUser, getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Constants -------------------------------------------------------------------------
@@ -49,7 +49,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	req.body.username = claimedUsername;
 	if (!(await testPasswordForRequest(req, res))) {
 		// It will have already sent a response
-		logEventsAndPrint(
+		logEvents(
 			`Incorrect password for user "${claimedUsername}" attempting to remove account!`,
 			'loginAttempts.txt',
 		);
@@ -90,7 +90,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 
 	try {
 		deleteAccount(record.user_id, reason_deleted);
-		logEventsAndPrint(
+		logEvents(
 			`Deleted account of user_id (${record.user_id}) for reason (${reason_deleted}).`,
 			'deletedAccounts.txt',
 		);

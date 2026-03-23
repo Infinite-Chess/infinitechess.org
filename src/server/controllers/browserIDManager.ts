@@ -72,7 +72,7 @@ function makeBrowserIDPermanent(req: Request, res: Response, browserID: string):
 		maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */,
 	});
 
-	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!!!!!!!!!!!!!!!!!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 	logEventsAndPrint(logThis, 'bannedIPLog.txt');
 }
 

@@ -131,7 +131,7 @@ export function manuallyVerifyUser(
 	const result = _executeVerificationUpdate(record.user_id, record.username);
 
 	if (result.success) {
-		logEventsAndPrint(
+		logEvents(
 			`Manually verified account of user with email "${email}"! ID ${record.user_id}`,
 			'loginAttempts.txt',
 		);
