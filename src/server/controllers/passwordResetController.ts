@@ -7,9 +7,9 @@ import { Request, Response } from 'express';
 import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import { sendPasswordResetEmail } from './sendMail.js';
+import { sendPasswordResetEmail } from './emailController.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
 
@@ -70,7 +70,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 			// 9. Log the email send attempt
-			logEventsAndPrint(
+			logEvents(
 				`Sending password reset email to user_id (${userId})...`,
 				'loginAttempts.txt',
 			);
@@ -152,10 +152,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			logEventsAndPrint(
-				`Invalid or expired password reset token used: ${token}`,
-				'loginAttempts.txt',
-			);
+			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts.txt');
 			res.status(400).json({
 				message: getTranslationForReq(
 					'server.javascript.ws-password-reset-token-invalid',
@@ -183,7 +180,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 				// If the user doesn't exist, we must throw an error
 				// to force the transaction to roll back.
 				throw new Error(
-					`Failed to update password for user_id ${userId}, user may not exist.`,
+					`Failed to update password for user_id (${userId}), user may not exist.`,
 				);
 			}
 
@@ -207,7 +204,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		});
 
 		// 8. Log the successful password reset
-		logEventsAndPrint(`Password reset successful for user_id ${userId}`, 'loginAttempts.txt');
+		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts.txt');
 	} catch (error) {
 		const errorMessage: string =
 			'Reset password error: ' + (error instanceof Error ? error.message : String(error));

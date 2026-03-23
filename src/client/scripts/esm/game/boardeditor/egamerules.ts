@@ -9,12 +9,12 @@
 import type { Edit } from '../../../../../shared/chess/logic/movepiece';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 import type { Coords } from '../../../../../shared/chess/util/coordutil';
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules';
+import type { GameRules } from '../../../../../shared/chess/util/gamerules';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
 import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
+import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
 
 import boardutil from '../../../../../shared/chess/util/boardutil';
-import winconutil from '../../../../../shared/chess/util/winconutil';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state';
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
@@ -44,7 +44,7 @@ interface GameRulesGUIinfo {
 	promotionsAllowed?: RawType[];
 	pawnDoublePush?: boolean;
 	castling?: boolean;
-	winConditions: string[];
+	winConditions: GameruleWinCondition[];
 	worldBorder?: UnboundedRectangle;
 }
 
@@ -190,7 +190,7 @@ function setGamerulesGUIinfo(
 			...(gameRules.winConditions[p.WHITE] || [icnconverter.default_win_condition]),
 			...(gameRules.winConditions[p.BLACK] || [icnconverter.default_win_condition]),
 		]),
-	].filter((wincon) => winconutil.isWinConditionValid(wincon));
+	];
 
 	// Update pawn double push specialrights of position, if necessary
 	gamerulesGUIinfo.pawnDoublePush = pawnDoublePush;

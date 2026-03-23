@@ -17,9 +17,9 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 import specialdetect from '../../../../../shared/chess/logic/specialdetect.js';
 import movepiece, {
-	CoordsSpecial,
+	CoordsTagged,
 	Edit,
-	MoveDraft,
+	MoveTagged,
 } from '../../../../../shared/chess/logic/movepiece.js';
 
 import mouse from '../../util/mouse.js';
@@ -36,7 +36,7 @@ import { animateMove } from './graphicalchanges.js';
 
 // Types --------------------------------------------------------
 
-interface Premove extends Edit, MoveDraft {
+interface Premove extends Edit, MoveTagged {
 	/** The type of piece moved */
 	type: number;
 }
@@ -110,12 +110,12 @@ function arePremovesApplied(): boolean {
 }
 
 /** Similar to {@link movesequence.makeMove} Adds an premove and applies its changes to the board. */
-function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: MoveDraft): Premove {
+function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveTagged: MoveTagged): Premove {
 	// console.log("Adding premove");
 
 	if (!applied) throw Error("Don't addPremove when other premoves are not applied!");
 
-	const premove = generatePremove(gamefile, moveDraft);
+	const premove = generatePremove(gamefile, moveTagged);
 
 	applyPremove(gamefile, mesh, premove, true); // Apply the premove to the game state
 
@@ -140,16 +140,16 @@ function applyPremove(
 }
 
 /** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */
-function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
-	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.startCoords);
+function generatePremove(gamefile: FullGame, moveTagged: MoveTagged): Premove {
+	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
-			`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`,
+			`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
 		);
 
 	// Initialize the state, and change list, as empty for now.
 	const premove: Premove = {
-		...moveDraft,
+		...moveTagged,
 		type: piece.type,
 		changes: [],
 		state: { local: [], global: [] },
@@ -167,7 +167,7 @@ function generatePremove(gamefile: FullGame, moveDraft: MoveDraft): Premove {
 			piece,
 			premove,
 		);
-	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile.boardsim, piece, moveDraft, premove); // Move piece regularly (no special tag)
+	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile.boardsim, piece, moveTagged, premove); // Move piece regularly (no special tag)
 
 	// Delete all special rights that should be revoked from the move.
 	movepiece.queueSpecialRightDeletionStateChanges(gamefile.boardsim, premove);
@@ -238,19 +238,19 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
 		const results = premoveIsLegal(gamefile, oldPremove, 'premove');
 
 		if (results.legal === true) {
-			// Extract the original MoveDraft from the premove
-			const premoveDraft: MoveDraft = {
+			// Extract the original MoveTagged from the premove
+			const premoveTagged: MoveTagged = {
 				startCoords: oldPremove.startCoords,
 				endCoords: oldPremove.endCoords,
 				promotion: oldPremove.promotion,
 			};
-			specialdetect.transferSpecialFlags_FromCoordsToMove(
-				results.endCoordsSpecial,
-				premoveDraft,
+			specialdetect.transferSpecialTags_FromCoordsToMove(
+				results.endCoordsTagged,
+				premoveTagged,
 			);
 
 			// MUST RECALCULATE CHANGES
-			const premove = generatePremove(gamefile, premoveDraft);
+			const premove = generatePremove(gamefile, premoveTagged);
 
 			premoves[i] = premove; // Update the premove with the new changes
 			applyPremove(gamefile, mesh, premove, true); // Apply the premove to the game state
@@ -298,14 +298,14 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
 
 		// Legal, apply the premove to the real game state
 
-		const moveDraft: MoveDraft = {
+		const moveTagged: MoveTagged = {
 			startCoords: premove.startCoords,
 			endCoords: premove.endCoords,
 			promotion: premove.promotion,
 		};
-		specialdetect.transferSpecialFlags_FromCoordsToMove(results.endCoordsSpecial, moveDraft);
+		specialdetect.transferSpecialTags_FromCoordsToMove(results.endCoordsTagged, moveTagged);
 
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft); // Make move
+		const move = movesequence.makeMove(gamefile, mesh, moveTagged); // Make move
 
 		GameBus.dispatch('user-move-played');
 
@@ -337,7 +337,7 @@ function premoveIsLegal(
 	gamefile: FullGame,
 	premove: Premove | undefined,
 	mode: 'physical' | 'premove',
-): { legal: true; endCoordsSpecial: CoordsSpecial } | { legal: false } {
+): { legal: true; endCoordsTagged: CoordsTagged } | { legal: false } {
 	if (!premove) return { legal: false };
 
 	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
@@ -352,20 +352,20 @@ function premoveIsLegal(
 			: legalmoves.calculateAllPremoves(gamefile, piece);
 	const color = typeutil.getColorFromType(piece.type);
 
-	// A copy of the end coords for applying the special flags too.
-	// We have to do this because enpassant capture flags aren't
+	// A copy of the end coords for applying the special tags too.
+	// We have to do this because enpassant capture tags aren't
 	// generated for normal premoves
-	const endCoordsSpecial: CoordsSpecial = coordutil.copyCoords(premove.endCoords);
+	const endCoordsTagged: CoordsTagged = coordutil.copyCoords(premove.endCoords);
 
 	const isLegal = legalmoves.checkIfMoveLegal(
 		gamefile,
 		premovedPieceLegalMoves,
 		premove.startCoords,
-		endCoordsSpecial,
+		endCoordsTagged,
 		color,
 	);
 
-	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsSpecial };
+	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsTagged };
 	else return { legal: false };
 }
 
@@ -380,6 +380,32 @@ function premoveIsLegal(
 function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
 	// Process the next premove, will reapply the premoves
 	processPremoves(gamefile, mesh);
+}
+
+/**
+ * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
+ * Then depending on the return value, may attempt to physically play the next premove when re-applying them.
+ * @param gamefile
+ * @param mesh
+ * @param callback - A function that returns true if we should attempt to physically play our next premove when re-applying them.
+ */
+function performWithUnapplied(
+	gamefile: FullGame,
+	mesh: Mesh | undefined,
+	callback: () => boolean,
+): void {
+	// Rewind all to get the real game state
+	rewindPremoves(gamefile, mesh);
+
+	const result = callback();
+
+	if (result) {
+		// Attempt to physically make our next premove, and re-apply the remaining.
+		onYourMove(gamefile, mesh);
+	} else {
+		// Just re-apply
+		applyPremoves(gamefile, mesh);
+	}
 }
 
 // Updating Premoves ------------------------------------------------
@@ -428,6 +454,7 @@ export default {
 	rewindPremoves,
 	applyPremoves,
 	onYourMove,
+	performWithUnapplied,
 	update,
 	render,
 };

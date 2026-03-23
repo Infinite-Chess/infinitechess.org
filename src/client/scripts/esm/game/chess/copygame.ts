@@ -4,6 +4,8 @@
  * This script handles copying games
  */
 
+import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
@@ -14,7 +16,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
-const variantsTooBigToCopyPositionToICN: string[] = [
+const variantsTooBigToCopyPositionToICN: VariantCode[] = [
 	'Omega_Squared',
 	'Omega_Cubed',
 	'Omega_Fourth',
@@ -30,7 +32,7 @@ function copyGame(copySinglePosition: boolean): void {
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
-	const Variant = gamefile.basegame.metadata.Variant!;
+	const variantCode = gamefile.boardsim.variant;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
@@ -47,12 +49,9 @@ function copyGame(copySinglePosition: boolean): void {
 		copySinglePosition,
 		presetAnnotes,
 	);
-	// Convert the variant metadata code to spoken language if translation is available
-	if (longformatIn.metadata.Variant)
-		// @ts-ignore
-		longformatIn.metadata.Variant = translations[longformatIn.metadata.Variant];
 
-	const largeGame: boolean = variantsTooBigToCopyPositionToICN.includes(Variant);
+	const largeGame: boolean =
+		variantCode !== null && variantsTooBigToCopyPositionToICN.includes(variantCode);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {

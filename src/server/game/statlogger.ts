@@ -13,7 +13,7 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-import type { Game } from '../../shared/chess/logic/gamefile.js';
+import type { ServerGame } from './gamemanager/gameutility.js';
 
 const statsPath = path.resolve('database/stats.json');
 (function ensureStatsFileExists(): void {
@@ -66,12 +66,10 @@ try {
 
 /**
  * Saves and increments the stats for the played variant
- * @param basegame - The game to log
+ * @param servergame - The game to log
  * @returns
  */
-async function logGame(basegame: Game): Promise<void> {
-	if (!basegame) return console.error('Cannot log a null game!');
-
+function logGame({ basegame, match }: ServerGame): void {
 	// Only log the game if at least 2 moves were played! (resignable)
 	// Black-moves-first games are logged if at least 1 move is played!
 	if (basegame.moves.length < 2) return;
@@ -81,7 +79,7 @@ async function logGame(basegame: Game): Promise<void> {
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = basegame.metadata.Variant!;
+	const variant = match.variant;
 
 	// Now record the number of moves played
 
@@ -103,7 +101,7 @@ async function logGame(basegame: Game): Promise<void> {
 
 	//----------------------------------------------------------
 
-	await saveStats(); // Saves stats in the database.
+	void saveStats(); // Saves stats in the database.
 }
 
 function incrementMonthsGamesPlayed(
@@ -133,7 +131,7 @@ async function saveStats(): Promise<void> {
 		const errMsg =
 			`Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` +
 			(e instanceof Error ? e.message : String(e));
-		logEventsAndPrint(errMsg, 'errLog.txt');
+		void logEventsAndPrint(errMsg, 'errLog.txt');
 	}
 }
 

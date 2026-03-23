@@ -274,13 +274,13 @@ setInterval(() => {
 function logAttackBegin(): void {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
 	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
-	logEventsAndPrint(logText, 'hackLog.txt');
+	logEvents(logText, 'hackLog.txt');
 }
 
 function logAttackEnd(): void {
 	const logText = `DDOS attack has ended.`;
 	logEventsAndPrint(logText, 'reqLogRateLimited.txt');
-	logEventsAndPrint(logText, 'hackLog.txt');
+	logEvents(logText, 'hackLog.txt');
 }
 
 export { rateLimit, rateLimitWebSocket };

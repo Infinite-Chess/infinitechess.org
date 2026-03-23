@@ -5,6 +5,7 @@
  */
 
 import db from './database.js';
+import { startDailyBackups } from './backupManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
@@ -238,11 +239,9 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS password_reset_tokens (
 			hashed_token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			expires_at INTEGER NOT NULL, -- Unix timestamp (milliseconds)
-			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000), -- Unix timestamp (milliseconds)
-
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', 'now') AS INTEGER) * 1000) -- Unix timestamp (milliseconds)
 		);
 	`);
 	// Indexes for password_reset_tokens table
@@ -253,13 +252,11 @@ function generateTables(): void {
 	db.run(`
 		CREATE TABLE IF NOT EXISTS refresh_tokens (
 			token TEXT PRIMARY KEY NOT NULL,
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
-			ip_address TEXT,
-
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			ip_address TEXT
 		);
 	`);
 	// Indexes for refresh_tokens table
@@ -271,7 +268,7 @@ function generateTables(): void {
 	// Editor Saves table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS editor_saves (
-			user_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			name TEXT NOT NULL,
 			piece_count INTEGER NOT NULL,
 			timestamp INTEGER NOT NULL,
@@ -280,8 +277,7 @@ function generateTables(): void {
 			pawn_double_push INTEGER NOT NULL CHECK (pawn_double_push IN (-1, 0, 1)),
 			castling INTEGER NOT NULL CHECK (castling IN (-1, 0, 1)),
 
-			PRIMARY KEY (user_id, name),
-			FOREIGN KEY (user_id) REFERENCES members(user_id) ON DELETE CASCADE
+			PRIMARY KEY (user_id, name)
 		);
 	`);
 
@@ -293,6 +289,47 @@ function generateTables(): void {
 			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
+
+	// Live Games table — persists active games across server restarts
+	db.run(`
+		CREATE TABLE IF NOT EXISTS live_games (
+			game_id               INTEGER PRIMARY KEY,
+			time_created          INTEGER NOT NULL,
+			variant               TEXT NOT NULL,
+			clock                 TEXT NOT NULL,
+			rated                 BOOLEAN NOT NULL CHECK (rated IN (0, 1)),
+			private               BOOLEAN NOT NULL CHECK (private IN (0, 1)),
+			moves                 TEXT NOT NULL DEFAULT '',
+			color_ticking         INTEGER,
+			clock_snapshot_time   INTEGER,
+			draw_offer_state      INTEGER,
+			conclusion_condition  TEXT,
+			conclusion_victor     INTEGER,
+			time_ended            INTEGER,
+			afk_resign_time       INTEGER,
+			delete_time           INTEGER,
+			position_pasted       BOOLEAN NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
+			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
+		);
+	`);
+
+	// Live Player Games table — per-player state for active games
+	db.run(`
+		CREATE TABLE IF NOT EXISTS live_player_games (
+			game_id                         INTEGER NOT NULL REFERENCES live_games(game_id) ON DELETE CASCADE,
+			player_number                   INTEGER NOT NULL,
+			user_id                         INTEGER,
+			browser_id                      TEXT NOT NULL,
+			elo                             TEXT,
+			last_draw_offer_ply             INTEGER,
+			time_remaining_ms               INTEGER,
+			disconnect_cushion_end_time     INTEGER,
+			disconnect_resign_time          INTEGER,
+			disconnect_by_choice            INTEGER CHECK (disconnect_by_choice IN (0, 1)),
+			PRIMARY KEY (game_id, player_number)
+		);
+	`);
+	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
 }
 
 // /**
@@ -317,6 +354,7 @@ function initDatabase(): void {
 	generateTables();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
+	startDailyBackups();
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

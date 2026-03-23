@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { format, formatDistance } from 'date-fns';
 
 import timeutil from '../../shared/util/timeutil.js';
-import metadata from '../../shared/chess/util/metadata.js';
+import metadatautil from '../../shared/chess/util/metadatautil.js';
 import { Leaderboards } from '../../shared/chess/variants/validleaderboard.js';
 
 import { localeMap } from '../config/dateLocales.js';
@@ -100,7 +100,7 @@ const getMemberData = async (req: Request, res: Response): Promise<Response> => 
 		joined: joinedPhrase,
 		seen: seenPhrase,
 		checkmates_beaten: record.checkmates_beaten,
-		ranked_elo: metadata.getWhiteBlackElo(ranked_elo),
+		ranked_elo: metadatautil.getFormattedElo(ranked_elo),
 		infinity_leaderboard_position,
 		infinity_leaderboard_rating_deviation,
 	};
@@ -126,7 +126,7 @@ const getMemberData = async (req: Request, res: Response): Promise<Response> => 
 
 		// If they are verified but haven't been notified yet, this is the moment to do so.
 		if (record.is_verified === 1 && record.is_verification_notified === 0) {
-			console.log(`Thanking member ${record.username} for verifying their account!`);
+			// console.log(`Thanking member ${record.username} for verifying their account!`);
 			try {
 				// Mark them as notified in the database.
 				updateMemberColumns(record.user_id, { is_verification_notified: 1 });
@@ -138,7 +138,7 @@ const getMemberData = async (req: Request, res: Response): Promise<Response> => 
 				);
 			}
 		} else if (record.is_verified === 0) {
-			console.log(`Requesting member ${record.username} to verify their account!`);
+			// console.log(`Requesting member ${record.username} to verify their account!`);
 		}
 	}
 

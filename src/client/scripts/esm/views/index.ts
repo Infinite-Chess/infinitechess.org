@@ -60,6 +60,7 @@ interface Contributor {
 
 		githubContributors.appendChild(fragment);
 	} catch (error) {
-		console.error(`Error during loading of contributor list: ${error}`);
+		const errMsg = error instanceof Error ? error.message : String(error);
+		console.error(`Error during loading of contributor list: ${errMsg}`);
 	}
 })();

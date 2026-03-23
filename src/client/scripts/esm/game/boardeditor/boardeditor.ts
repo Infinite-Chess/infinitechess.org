@@ -11,6 +11,7 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/initvaria
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
@@ -28,7 +29,9 @@ import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 // Types ------------------------------------------------------------------------
 
 /** The active position loaded in the board editor, if any. */
-export type ActivePosition = { name: string; storage_type: StorageType };
+export type ActivePosition =
+	| { name: string; storage_type: 'local' }
+	| { name: string; storage_type: 'cloud'; owner: string };
 
 /** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
 export type StorageType = (typeof editortypes)['STORAGE_TYPES'][number];
@@ -104,7 +107,7 @@ async function initBoardEditor(
 	gamefile.boardsim.state.local.attackers = [];
 	// Also set gameConclusion to undefined. Otherwise, starting from a position that
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
-	gamefile.basegame.gameConclusion = undefined;
+	gamefileutility.setConclusion(gamefile.basegame, undefined);
 
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();
@@ -196,9 +199,9 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 }
 
 /** Sets the currently active position and flushes the autosave. */
-function setActivePosition(name: string, storage_type: StorageType): void {
-	active_position = { name, storage_type };
-	guipositionheader.updateActivePositionElement(name);
+function setActivePosition(new_position: ActivePosition): void {
+	active_position = new_position;
+	guipositionheader.updateActivePositionElement(new_position.name);
 	flushActivePositionToAutosave();
 }
 

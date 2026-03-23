@@ -19,9 +19,13 @@ import socketrouter from './socketrouter.js';
 // Constants -------------------------------------------------------------------
 
 /** Time to wait for HTTP connection before assuming lost connection. */
-const timeToWaitForHTTPMillis = 5000;
-/** Time before attempting resub after network loss. */
-const timeToResubAfterNetworkLossMillis = 5000;
+const TIME_TO_WAIT_FOR_HTTP_MILLIS = 5000;
+/**
+ * Delays in milliseconds between reconnection attempts after network loss.
+ * The first element is used before the first attempt (0 = instant),
+ * and the last element repeats indefinitely.
+ */
+const RECONNECT_DELAY_MILLIS = [0, 2500, 5000] as const;
 
 // Variables -------------------------------------------------------------------
 
@@ -49,7 +53,7 @@ document.addEventListener('connection-lost', () => {
 	// Displays a toast, notifying the user they lost connection.
 	noConnection = true;
 	toast.show(translations.websocket.no_connection, {
-		durationMillis: timeToWaitForHTTPMillis,
+		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 	});
 });
 
@@ -109,17 +113,24 @@ async function establishSocket(): Promise<boolean> {
 	// Await validatorama because it may be refreshing our session cookies
 	await validatorama.waitUntilInitialRequestBack();
 
-	let success = await openSocket();
+	let success = false;
+	let attemptIndex = 0;
 
-	while (!success && !socketsubs.zeroSubs()) {
-		noConnection = true;
-		toast.show(translations.websocket.no_connection, {
-			durationMillis: timeToResubAfterNetworkLossMillis,
-		});
-		invites.clearIfOnPlayPage();
-		await thread.sleep(timeToResubAfterNetworkLossMillis);
+	// Always attempt at least once (even with zero subs), then retry while subs exist.
+	do {
+		const cappedAttemptIndex = Math.min(attemptIndex, RECONNECT_DELAY_MILLIS.length - 1);
+		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
+		if (attemptIndex > 0) {
+			noConnection = true;
+			toast.show(translations.websocket.no_connection, {
+				durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
+			});
+			invites.clearIfOnPlayPage();
+			await thread.sleep(delay);
+		}
 		success = await openSocket();
-	}
+		attemptIndex++;
+	} while (!success && !socketsubs.zeroSubs());
 
 	if (success && noConnection)
 		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
@@ -164,7 +175,7 @@ async function openSocket(): Promise<boolean> {
 function onSocketUpgradeReqLeave(): void {
 	// Dispatches a custom event indicating that a socket connection is being opened.
 	document.dispatchEvent(new CustomEvent('socket-opening'));
-	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Cancels the timer that assumes lost connection. */
@@ -177,9 +188,9 @@ function onReqBack(): void {
 function httpLostConnection(): void {
 	noConnection = true;
 	toast.show(translations.websocket.no_connection, {
-		durationMillis: timeToWaitForHTTPMillis,
+		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 	});
-	reqOut = window.setTimeout(() => httpLostConnection(), timeToWaitForHTTPMillis);
+	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */

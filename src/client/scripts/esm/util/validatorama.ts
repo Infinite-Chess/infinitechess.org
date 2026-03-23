@@ -10,15 +10,14 @@
  * cookie to validate our identity in future requests.
  */
 
+import tokenConfig from '../../../../shared/util/tokenConfig.js';
+
 import docutil from './docutil.js';
 
 // Variables ----------------------------------------------------------------------------
 
-/** Expiration time for the access tokens. */
-const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 60 * 15; // 15 minutes
-// const TOKEN_EXPIRE_TIME_MILLIS: number = 1000 * 20; // 20 seconds - CUSHION_MILLIS
-/** Cushion time in milliseconds before considering the token expired. */
-const CUSHION_MILLIS: number = 10_000;
+/** Cushion time in milliseconds before the access token expires, when we'll fetch a new one. */
+const ACCESS_TOKEN_CUSHION_MILLIS: number = 10_000;
 
 let reqIsOut: boolean = false;
 const resolvers: (() => void)[] = [];
@@ -83,7 +82,7 @@ async function getAccessToken(): Promise<string | undefined> {
 	// Check if token is expired or near expiring
 	if (
 		!tokenInfo.accessToken ||
-		timeSinceLastRefresh > TOKEN_EXPIRE_TIME_MILLIS - CUSHION_MILLIS
+		timeSinceLastRefresh > tokenConfig.ACCESS_TOKEN_EXPIRY_MILLIS - ACCESS_TOKEN_CUSHION_MILLIS
 	) {
 		await refreshToken();
 	}

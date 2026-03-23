@@ -5,14 +5,12 @@
  * displaying the clocks, and whos turn it currently is.
  */
 
-import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
-import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { MetaData, PlayerRatingChangeInfo, Rating } from '../../../../../shared/types.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
-import metadata from '../../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -23,6 +21,7 @@ import enginegame from '../misc/enginegame.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import frametracker from '../rendering/frametracker.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
+import clientmetadatautil from '../chess/clientmetadatautil.js';
 
 // Elements ---------------------------------------------------
 
@@ -256,34 +255,48 @@ function getPlayerNamesForGame(metadata: MetaData): {
 				'White or Black metadata not defined when getting player names for online game.',
 			);
 		// If you are a guest, then we want your name to be "(You)" instead of "(Guest)"
+		const whiteIsGuest =
+			metadata['White'] === metadatautil.GUEST_NAME_ICN_METADATA ||
+			metadata['White'] === clientmetadatautil.YOU_NAME_ICN_METADATA;
+		const blackIsGuest =
+			metadata['Black'] === metadatautil.GUEST_NAME_ICN_METADATA ||
+			metadata['Black'] === clientmetadatautil.YOU_NAME_ICN_METADATA;
+
 		const white =
 			onlinegame.areWeColorInOnlineGame(p.WHITE) &&
-			metadata['White'] === translations.guest_indicator
+			metadata['White'] === metadatautil.GUEST_NAME_ICN_METADATA
 				? translations.you_indicator
-				: metadata['White'];
+				: whiteIsGuest
+					? translations.guest_indicator
+					: metadata['White'];
 		const black =
 			onlinegame.areWeColorInOnlineGame(p.BLACK) &&
-			metadata['Black'] === translations.guest_indicator
+			metadata['Black'] === metadatautil.GUEST_NAME_ICN_METADATA
 				? translations.you_indicator
-				: metadata['Black'];
+				: blackIsGuest
+					? translations.guest_indicator
+					: metadata['Black'];
+
 		return {
 			white: white,
 			black: black,
-			white_type:
-				white === translations.guest_indicator || white === translations.you_indicator
-					? 'guest'
-					: 'player',
-			black_type:
-				black === translations.guest_indicator || black === translations.you_indicator
-					? 'guest'
-					: 'player',
+			white_type: whiteIsGuest ? 'guest' : 'player',
+			black_type: blackIsGuest ? 'guest' : 'player',
 		};
 	} else if (enginegame.areInEngineGame()) {
 		return {
-			white: metadata.White!,
-			black: metadata.Black!,
-			white_type: metadata.White === translations.you_indicator ? 'guest' : 'engine',
-			black_type: metadata.Black === translations.you_indicator ? 'guest' : 'engine',
+			white:
+				metadata.White === clientmetadatautil.YOU_NAME_ICN_METADATA
+					? translations.you_indicator
+					: metadata.White!,
+			black:
+				metadata.Black === clientmetadatautil.YOU_NAME_ICN_METADATA
+					? translations.you_indicator
+					: metadata.Black!,
+			white_type:
+				metadata.White === clientmetadatautil.YOU_NAME_ICN_METADATA ? 'guest' : 'engine',
+			black_type:
+				metadata.Black === clientmetadatautil.YOU_NAME_ICN_METADATA ? 'guest' : 'engine',
 		};
 	} else
 		throw Error(
@@ -443,10 +456,10 @@ function addRatingChangeToExistingUsernameContainers(
 ): void {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
 	const { basegame } = gameslot.getGamefile()!;
-	basegame.metadata.WhiteRatingDiff = metadata.getWhiteBlackRatingDiff(
+	basegame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.WHITE]!.change,
 	);
-	basegame.metadata.BlackRatingDiff = metadata.getWhiteBlackRatingDiff(
+	basegame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.BLACK]!.change,
 	);
 

@@ -13,7 +13,7 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
 import type { LegalMoves } from './legalmoves.js';
-import type { CoordsSpecial, MoveDraft, path } from './movepiece.js';
+import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
@@ -85,7 +85,7 @@ function removeCheckInvalidMoves(
  */
 function removeCheckInvalidMoves_Individual(
 	gamefile: FullGame,
-	individualMoves: CoordsSpecial[],
+	individualMoves: CoordsTagged[],
 	piece: Piece,
 	color: Player,
 ): void {
@@ -93,7 +93,7 @@ function removeCheckInvalidMoves_Individual(
 	// Simulate the move, then check the game state for check
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		// Iterate backwards so we don't run into issues as we delete indices while iterating
-		const thisMove: CoordsSpecial = individualMoves[i]!; // [x,y]
+		const thisMove: CoordsTagged = individualMoves[i]!; // [x,y]
 		if (isMoveCheckInvalid(gamefile, piece, thisMove, color)) individualMoves.splice(i, 1); // Remove the move
 	}
 }
@@ -448,7 +448,7 @@ function appendBlockingMoves(
 		if (
 			gamefile.boardsim.colinearsPresent &&
 			moves.individual.some(
-				(move: CoordsSpecial) =>
+				(move: CoordsTagged) =>
 					move[0] === blockPointInt[0] && move[1] === blockPointInt[1],
 			)
 		)
@@ -475,7 +475,7 @@ function appendBlockingMoves(
  */
 function appendPathBlockingMoves(
 	gamefile: FullGame,
-	path: path,
+	path: MoveSpecialTags['path'],
 	legalMoves: LegalMoves,
 	selectedPieceCoords: Coords,
 	color: Player,
@@ -511,23 +511,23 @@ function appendPathBlockingMoves(
  * then tests if it results in the player who owns the piece being in check.
  * @param gamefile
  * @param piece - The piece moving to the destination coords
- * @param destCoords - The coords to move the piece to, with any attached special flags to execute with the move.
+ * @param destCoords - The coords to move the piece to, with any attached special tags to execute with the move.
  * @param color - The color of the player the piece belongs to.
  * @returns Whether the move would result in the player owning the piece being in check.
  */
 function isMoveCheckInvalid(
 	gamefile: FullGame,
 	piece: Piece,
-	destCoords: CoordsSpecial,
+	destCoords: CoordsTagged,
 	color: Player,
 ): boolean {
 	// pieceSelected: { type, index, coords }
-	const moveDraft: MoveDraft = {
+	const moveTagged: MoveTagged = {
 		startCoords: jsutil.deepCopyObject(piece.coords),
 		endCoords: moveutil.stripSpecialMoveTagsFromCoords(destCoords),
 	};
-	specialdetect.transferSpecialFlags_FromCoordsToMove(destCoords, moveDraft);
-	return getSimulatedCheck(gamefile, moveDraft, color).check;
+	specialdetect.transferSpecialTags_FromCoordsToMove(destCoords, moveTagged);
+	return getSimulatedCheck(gamefile, moveTagged, color).check;
 }
 
 /**
@@ -536,10 +536,10 @@ function isMoveCheckInvalid(
  */
 function getSimulatedCheck(
 	gamefile: FullGame,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 	colorToTestInCheck: Player,
 ): ReturnType<typeof checkdetection.detectCheck> {
-	return movepiece.simulateMoveWrapper(gamefile, moveDraft, () =>
+	return movepiece.simulateMoveWrapper(gamefile, moveTagged, () =>
 		checkdetection.detectCheck(gamefile, colorToTestInCheck),
 	);
 }

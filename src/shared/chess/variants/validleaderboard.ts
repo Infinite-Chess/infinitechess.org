@@ -4,6 +4,8 @@
  * This script stores all global variables related to our leaderboards.
  */
 
+import type { VariantCode } from './variantdictionary.js';
+
 const Leaderboards = {
 	/**
 	 * The main leaderboard for all same-ish, infinity, variants.
@@ -16,7 +18,7 @@ const Leaderboards = {
 type Leaderboard = (typeof Leaderboards)[keyof typeof Leaderboards];
 
 /** Maps variants to the leaderboard they belong to, if they have one. */
-const VariantLeaderboards: Record<string, Leaderboard> = {
+const VariantLeaderboards: Partial<Record<VariantCode, Leaderboard>> = {
 	Classical: Leaderboards.INFINITY,
 	Confined_Classical: Leaderboards.INFINITY,
 	Classical_Plus: Leaderboards.INFINITY,

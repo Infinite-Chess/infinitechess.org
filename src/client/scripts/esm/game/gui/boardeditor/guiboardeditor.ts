@@ -5,10 +5,6 @@
  * the sidebar menu toggle, and dispatching action button events.
  */
 
-import type { MetaData } from '../../../../../../shared/chess/util/metadata.js';
-
-import timeutil from '../../../../../../shared/util/timeutil.js';
-
 import esave from '../../boardeditor/actions/esave.js';
 import ecloud from '../../boardeditor/actions/ecloud.js';
 import gameslot from '../../chess/gameslot.js';
@@ -82,26 +78,12 @@ async function open(): Promise<void> {
 		boardeditor.clearActivePosition();
 		await gameloader.startBoardEditor();
 	} else {
-		const metadata: MetaData = {
-			Variant: 'Classical',
-			TimeControl: '-',
-			Event: `Position created using ingame board editor`,
-			Site: 'https://www.infinitechess.org/',
-			Round: '-',
-			UTCDate: timeutil.getCurrentUTCDate(),
-			UTCTime: timeutil.getCurrentUTCTime(),
-		};
-
 		if (autoSaveState.active_position !== undefined)
-			boardeditor.setActivePosition(
-				autoSaveState.active_position.name,
-				autoSaveState.active_position.storage_type,
-			);
+			boardeditor.setActivePosition(autoSaveState.active_position);
 		else boardeditor.clearActivePosition();
 
 		await gameloader.startBoardEditorFromCustomPosition(
 			{
-				metadata,
 				additional: {
 					variantOptions: autoSaveState.variantOptions,
 				},

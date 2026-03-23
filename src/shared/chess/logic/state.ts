@@ -7,7 +7,7 @@
 
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { Edit, path } from './movepiece.js';
+import type { Edit, MoveSpecialTags } from './movepiece.js';
 
 // Types -----------------------------------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ type Attacker = {
 	| {
 			slidingCheck: false;
 			/** Optionally, if it's an individual (non-slidingCheck), the path this piece takes to check the royal (e.g. Rose piece) */
-			path?: path;
+			path?: MoveSpecialTags['path'];
 	  }
 );
 

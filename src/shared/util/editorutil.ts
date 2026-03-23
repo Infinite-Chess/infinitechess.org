@@ -1,4 +1,4 @@
-// src/shared/editor/editorutil.ts
+// src/shared/util/editorutil.ts
 
 /**
  * Board Editor shared constants between client and server.

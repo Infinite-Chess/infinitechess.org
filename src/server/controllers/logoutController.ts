@@ -3,9 +3,9 @@
 import type { Request, Response } from 'express';
 
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /** Handles member logout by revoking the session and deleting the refresh token. */
 async function handleLogout(req: Request, res: Response): Promise<void> {
@@ -43,7 +43,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	res.redirect('/');
 
-	logEventsAndPrint(`Logged out member "${req.memberInfo.username}".`, 'loginAttempts.txt');
+	logEvents(`Logged out member "${req.memberInfo.username}".`, 'loginAttempts.txt');
 }
 
 export { handleLogout };

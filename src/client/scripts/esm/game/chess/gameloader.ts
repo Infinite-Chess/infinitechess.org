@@ -12,22 +12,24 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
-import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from './engines/engine.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ServerGameInfo } from '../websocket/socketschemas.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type {
+	ClockValues,
+	MetaData,
+	MovePacket,
 	ParticipantState,
-	ServerGameMoveMessage,
-} from '../../../../../server/game/gamemanager/gameutility.js';
+	TimeControl,
+} from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import timeutil from '../../../../../shared/util/timeutil.js';
+import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -46,6 +48,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import clientmetadatautil from './clientmetadatautil.js';
 import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
 // Variables --------------------------------------------------------------------
@@ -124,9 +127,8 @@ function update(): void {
 
 /** Starts a local game according to the options provided. */
 async function startLocalGame(options: {
-	/** Must be one of the valid variants in variant.ts */
-	Variant: string;
-	TimeControl: TimeControl;
+	variant: VariantCode;
+	timeControl: TimeControl;
 }): Promise<void> {
 	typeOfGameWeAreIn = 'local';
 	gameLoading = true;
@@ -134,29 +136,22 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const metadata = {
-		...options,
-		// @ts-ignore
-		Event: `Casual local ${translations[options.Variant]} infinite chess game`,
-		Site: 'https://www.infinitechess.org/' as 'https://www.infinitechess.org/',
-		Round: '-' as '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
-	};
+	const variantName = variant.getVariantName(options.variant);
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		`Casual local ${variantName} infinite chess game`,
+		options.timeControl,
+		dateTimestamp,
+	);
+	metadata.Variant = variantName;
 
 	gameslot
 		.loadGamefile({
 			metadata,
+			variant: options.variant,
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
-			/**
-			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
-			 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
-			 */
-			// additional: { editor: true }
-			// Enable to test world border in local games
-			// additional: { worldBorder: BigInt(Number.MAX_SAFE_INTEGER) }
-			// additional: { worldBorder: BigInt(15) }
 		})
 		.then((_result: any) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
@@ -174,12 +169,10 @@ async function startOnlineGame(options: {
 	metadata: MetaData;
 	gameConclusion?: GameConclusion;
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: ServerGameMoveMessage[];
+	moves: MovePacket[];
 	clockValues?: ClockValues;
 	youAreColor?: Player;
 	participantState?: ParticipantState;
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number;
 }): Promise<void> {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
@@ -199,9 +192,17 @@ async function startOnlineGame(options: {
 		clockValues: options.clockValues,
 	};
 
+	const resolvedVariant = variant.resolveVariantCode(options.metadata.Variant);
+	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+		options.metadata.UTCDate,
+		options.metadata.UTCTime,
+	);
+
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
+			variant: resolvedVariant,
+			dateTimestamp: resolvedTimestamp,
 			viewWhitePerspective: options.youAreColor === p.WHITE,
 			allowEditCoords: false,
 			additional,
@@ -213,7 +214,6 @@ async function startOnlineGame(options: {
 		gameInfo: options.gameInfo,
 		youAreColor: options.youAreColor,
 		participantState: options.participantState,
-		serverRestartingAt: options.serverRestartingAt,
 	});
 
 	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
@@ -230,26 +230,26 @@ async function startOnlineGame(options: {
 
 /** Starts an engine game according to the options provided. */
 async function startEngineGame(options: {
-	/** The "Event" string of the game's metadata */
-	Event: string;
-	/** If it's not a practice checkmate, this is the "Variant" string of the game's metadata.
+	/** The 'Event' string of the game's metadata. */
+	event: string;
+	/** Time control string for the game (e.g. `'600+5'`), or `'-'` for untimed. */
+	timeControl: TimeControl;
+	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
-	Variant?: string;
+	variant: VariantCode | null;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
-	/** Time control string for the game (e.g. "600+5"), or '-' for untimed. */
-	TimeControl?: TimeControl;
 	youAreColor: Player;
 	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
 }): Promise<void> {
-	if (options.Variant && options.variantOptions)
+	if (options.variant && options.variantOptions)
 		throw Error(
 			"Can't provide both Variant and variantOptions at the same time when starting an engine game. They are mutually exclusive.",
 		);
-	if (!options.Variant && !options.variantOptions)
+	if (!options.variant && !options.variantOptions)
 		throw Error('Must provide either Variant or variantOptions when starting an engine game.');
 
 	typeOfGameWeAreIn = 'engine';
@@ -262,22 +262,27 @@ async function startEngineGame(options: {
 		options.currentEngine,
 		options.engineConfig.strengthLevel,
 	);
-
-	const metadata: MetaData = {
-		Event: options.Event,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		TimeControl: options.TimeControl ?? '-',
-		White: options.youAreColor === p.WHITE ? translations.you_indicator : formattedEngineName,
-		Black: options.youAreColor === p.BLACK ? translations.you_indicator : formattedEngineName,
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
-	};
-	if (options.Variant) metadata.Variant = options.Variant;
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		options.event,
+		options.timeControl,
+		dateTimestamp,
+	);
+	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
+	metadata.White =
+		options.youAreColor === p.WHITE
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
+	metadata.Black =
+		options.youAreColor === p.BLACK
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
 
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
+		variant: options.variant,
+		dateTimestamp,
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
@@ -309,19 +314,20 @@ async function startBoardEditor(): Promise<void> {
 
 	await loadingscreen.open();
 
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
-	};
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		'Position created using ingame board editor',
+		'-',
+		dateTimestamp,
+	);
+	const variantCode: VariantCode = 'Classical';
+	metadata.Variant = variant.getVariantName(variantCode);
 
 	gameslot
 		.loadGamefile({
 			metadata,
+			variant: variantCode,
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 			/**
@@ -342,9 +348,8 @@ async function startBoardEditor(): Promise<void> {
 
 /** Initializes a local game from a custom position. */
 async function startCustomLocalGame(options: {
-	metadata: MetaData;
 	additional: {
-		moves?: ServerGameMoveMessage[];
+		moves?: MovePacket[];
 		variantOptions: VariantOptions;
 	};
 	presetAnnotes?: PresetAnnotes;
@@ -355,9 +360,19 @@ async function startCustomLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		'Casual local custom infinite chess game',
+		'-',
+		dateTimestamp,
+	);
+
 	gameslot
 		.loadGamefile({
 			...options,
+			metadata,
+			dateTimestamp,
+			variant: null, // Not specified for custom position
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 		})
@@ -367,18 +382,17 @@ async function startCustomLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+	openGameinfoBarAndConcludeGameIfOver(metadata, false);
 }
 
-/** Starts an engine game according to the options provided. */
+/** Starts an engine game from a custom position. */
 async function startCustomEngineGame(options: {
-	metadata: MetaData;
+	timeControl: TimeControl;
 	additional: {
-		moves?: ServerGameMoveMessage[];
+		moves?: MovePacket[];
 		variantOptions: VariantOptions;
 	};
 	presetAnnotes?: PresetAnnotes;
-	TimeControl?: MetaData['TimeControl'];
 	youAreColor: Player;
 	currentEngine: ValidEngine;
 	engineConfig: EngineConfig;
@@ -391,9 +405,30 @@ async function startCustomEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const formattedEngineName = getFormattedEngineName(
+		options.currentEngine,
+		options.engineConfig.strengthLevel,
+	);
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		'Casual computer custom infinite chess game',
+		options.timeControl,
+		dateTimestamp,
+	);
+	metadata.White =
+		options.youAreColor === p.WHITE
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
+	metadata.Black =
+		options.youAreColor === p.BLACK
+			? clientmetadatautil.YOU_NAME_ICN_METADATA
+			: formattedEngineName;
+
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata: options.metadata,
+		metadata,
+		variant: null, // Not specified for custom position
+		dateTimestamp,
 		viewWhitePerspective: options.youAreColor === p.WHITE,
 		allowEditCoords: false,
 		additional: {
@@ -415,15 +450,14 @@ async function startCustomEngineGame(options: {
 		.then((_results: any[]) => onFinishedLoading())
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, options.showGameControlButtons);
+	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
 }
 
 /** Initializes the board editor from a custom position. */
 async function startBoardEditorFromCustomPosition(
 	options: {
-		metadata: MetaData;
 		additional: {
-			moves?: ServerGameMoveMessage[];
+			moves?: MovePacket[];
 			variantOptions: VariantOptions;
 		};
 		presetAnnotes?: PresetAnnotes;
@@ -441,12 +475,21 @@ async function startBoardEditorFromCustomPosition(
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
+	const dateTimestamp = Date.now();
+	const metadata = clientmetadatautil.buildBaseGameMetadata(
+		'Position created using ingame board editor',
+		'-',
+		dateTimestamp,
+	);
+
 	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
 	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
 
 	gameslot
 		.loadGamefile({
-			metadata: options.metadata,
+			metadata,
+			variant: null, // Not specified for custom position
+			dateTimestamp,
 			viewWhitePerspective: true,
 			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed
@@ -468,11 +511,9 @@ async function startBoardEditorFromCustomPosition(
  */
 async function pasteGame(options: {
 	metadata: MetaData;
-	additional: {
-		/** If we're in the board editor, this must be empty. */
-		moves?: ServerGameMoveMessage[];
-		variantOptions: VariantOptions;
-	};
+	variant: VariantCode | null;
+	dateTimestamp: number;
+	additional: Additional;
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
 	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online')
@@ -490,6 +531,8 @@ async function pasteGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
+			variant: options.variant,
+			dateTimestamp: options.dateTimestamp,
 			viewWhitePerspective,
 			allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 			presetAnnotes: options.presetAnnotes,

@@ -4,9 +4,10 @@
  * This script handles our Play page, containing our invite creation menu.
  */
 
-import type { TimeControl } from '../../../../../server/game/timecontrol.js';
+import type { TimeControl } from '../../../../../shared/types.js';
 import type { InviteOptions } from '../misc/invites.js';
 
+import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
@@ -291,27 +292,25 @@ function callback_createInvite(): void {
 	const inviteOptions = getInviteOptions();
 
 	if (modeSelected === 'local') {
-		// Load options the game loader needs to load a local loaded game
-		const options = {
-			Variant: inviteOptions.variant,
-			TimeControl: inviteOptions.clock,
-		};
 		close(); // Close the invite creation screen
-		gameloader.startLocalGame(options); // Actually load the game
+		// Actually load the game
+		gameloader.startLocalGame({
+			variant: inviteOptions.variant,
+			timeControl: inviteOptions.clock,
+		});
 	} else if (modeSelected === 'online') {
 		if (invites.doWeHave()) invites.cancel();
 		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
-		// prettier-ignore
+		const variantName = variant.getVariantName(inviteOptions.variant);
 		const ourColor = inviteOptions.color ?? (Math.random() > 0.5 ? p.WHITE : p.BLACK);
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
 		gameloader.startEngineGame({
-			// @ts-ignore
-			Event: `Casual computer ${translations[inviteOptions.variant]} infinite chess game`,
-			Variant: inviteOptions.variant,
-			TimeControl: inviteOptions.clock,
+			event: `Casual computer ${variantName} infinite chess game`,
+			timeControl: inviteOptions.clock,
+			variant: inviteOptions.variant,
 			youAreColor: ourColor,
 			currentEngine,
 			engineConfig: {
@@ -330,8 +329,11 @@ function callback_createInvite(): void {
 function getInviteOptions(): InviteOptions {
 	const strcolor = element_optionColor.value;
 	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : null;
+	const selectedVariant = element_optionVariant.value;
+	if (!variant.isVariantValid(selectedVariant))
+		throw Error(`Invite option variant "${selectedVariant}" is not a valid variant.`);
 	return {
-		variant: element_optionVariant.value,
+		variant: selectedVariant,
 		clock: element_optionClock.value as TimeControl,
 		color,
 		private: element_optionPrivate.value as 'public' | 'private',

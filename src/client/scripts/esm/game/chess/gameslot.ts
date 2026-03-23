@@ -9,7 +9,8 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadata.js';
+import type { MetaData } from '../../../../../shared/types.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -57,6 +58,10 @@ import { animateMove } from './graphicalchanges.js';
 interface LoadOptions {
 	/** The metadata of the game */
 	metadata: MetaData;
+	/** The variant code. Pass null for custom/unknown positions. */
+	variant: VariantCode | null;
+	/** The game's start timestamp in milliseconds since epoch. */
+	dateTimestamp: number;
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
 	/** Whether the coordinate field box should be editable. */
@@ -148,7 +153,12 @@ function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 
 /** Loads all of the logical components of a game */
 function loadLogical(loadOptions: LoadOptions): void {
-	loadedGamefile = gamefile.initFullGame(loadOptions.metadata, loadOptions.additional);
+	loadedGamefile = gamefile.initFullGame(
+		loadOptions.metadata,
+		loadOptions.dateTimestamp,
+		loadOptions.variant,
+		loadOptions.additional,
+	);
 
 	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
@@ -303,16 +313,11 @@ function concludeGame(): void {
 			gamesound.playDraw(delayToPlayConcludeSoundSecs);
 		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
 	}
-
-	// Set the Result and Condition metadata
-	gamefileutility.setTerminationMetadata(basegame);
 }
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	delete loadedGamefile!.basegame.gameConclusion;
-	// Delete the Result and Condition metadata
-	gamefileutility.eraseTerminationMetadata(loadedGamefile!.basegame);
+	gamefileutility.setConclusion(loadedGamefile!.basegame, undefined);
 	board.resetColor();
 }
 

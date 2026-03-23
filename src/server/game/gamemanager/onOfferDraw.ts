@@ -11,6 +11,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 import { setGameConclusion } from './gamemanager.js';
 import {
 	isDrawOfferOpen,
@@ -28,7 +29,7 @@ import {
  * @param servergame - The game they are in.
  */
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	console.log('Client offers a draw.');
+	// console.log('Client offers a draw.');
 	const { match, basegame } = servergame;
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
 
@@ -46,6 +47,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Extend the draw offer!
 
 	openDrawOffer(servergame, color);
+	liveGameValues.onDrawOfferExtended(servergame, color);
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(color);
@@ -58,7 +60,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
  * @param servergame - The game they are in.
  */
 function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	console.log('Client accepts a draw.');
+	// console.log('Client accepts a draw.');
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 
 	if (gameutility.isGameOver(servergame.basegame))
@@ -72,7 +74,6 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	closeDrawOffer(servergame.match);
 	setGameConclusion(servergame, { victor: null, condition: 'agreement' });
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 /**
@@ -88,7 +89,7 @@ function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// if their opponent doesn't have an open draw offer.
 	if (!doesColorHaveExtendedDrawOffer(servergame.match, opponentColor)) return;
 
-	console.log('Client declines a draw.');
+	// console.log('Client declines a draw.');
 
 	if (gameutility.isGameOver(servergame.basegame))
 		return console.error('Client declined a draw when the game is already over. Ignoring.');
@@ -99,6 +100,7 @@ function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// Alert their opponent
 	gameutility.sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'declinedraw');
+	liveGameValues.onDrawOfferDeclined(servergame);
 }
 
 //--------------------------------------------------------------------------------------------------------

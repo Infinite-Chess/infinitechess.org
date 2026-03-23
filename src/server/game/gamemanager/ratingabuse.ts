@@ -20,7 +20,7 @@ import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderb
 
 import gameutility from './gameutility.js';
 import { getMultipleGameData } from '../../database/gamesManager.js';
-import { sendRatingAbuseEmail } from '../../controllers/sendMail.js';
+import { sendRatingAbuseEmail } from '../../controllers/emailController.js';
 import { findRefreshTokensForUsers } from '../../database/refreshTokenManager.js';
 import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMultipleMemberDataByCriteria } from '../../database/memberManager.js';
@@ -140,7 +140,7 @@ type SuspicionLevelRecord = {
 /**
  * Monitor suspicion levels for all players who played a particular game in a particular leaderboard
  */
-async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void> {
+function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 	// Do not monitor suspicion levels, if game was unrated
 	if (!servergame.match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
@@ -148,12 +148,12 @@ async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void
 	if (servergame.basegame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = VariantLeaderboards[servergame.basegame.metadata.Variant!];
+	const leaderboard_id = VariantLeaderboards[servergame.match.variant];
 	if (leaderboard_id === undefined) return;
 
 	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {
 		if (!player.identifier.signedIn) {
-			await logEventsAndPrint(
+			void logEventsAndPrint(
 				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 				'errLog.txt',
 			);
@@ -161,19 +161,12 @@ async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void
 		}
 		const user_id = player.identifier.user_id;
 		const username = player.identifier.username;
-		if (user_id === undefined || username === undefined) {
-			await logEventsAndPrint(
-				`Unexpected: trying to access user_id and username of player ${playerStr} in ranked game suspicion monitoring but failed. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
-				'errLog.txt',
-			);
-			continue;
-		}
 
 		try {
-			await measurePlayerRatingAbuse(user_id, username, leaderboard_id);
+			measurePlayerRatingAbuse(user_id, username, leaderboard_id);
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
-			await logEventsAndPrint(
+			void logEventsAndPrint(
 				`Error running rating_abuse checks for user ID "${user_id}" on leaderboard ${leaderboard_id}: ${message}`,
 				'errLog.txt',
 			);
@@ -185,16 +178,12 @@ async function measureRatingAbuseAfterGame(servergame: ServerGame): Promise<void
  * Weights a specific user's probability of rating abuse on a specified leaderboard.
  * If it flags a user, it sends Naviary an email with data on them.
  */
-async function measurePlayerRatingAbuse(
-	user_id: number,
-	username: string,
-	leaderboard_id: number,
-): Promise<void> {
+function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number): void {
 	// If player is not in rating_abuse table, add him to it
 	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) {
 		const result = addEntryToRatingAbuseTable(user_id, leaderboard_id);
 		if (!result.success) {
-			await logEventsAndPrint(
+			void logEventsAndPrint(
 				`Failed to add user ${user_id} to rating_abuse table for leaderboard ${leaderboard_id} for reason: ${result.reason}`,
 				'errLog.txt',
 			);
@@ -208,7 +197,7 @@ async function measurePlayerRatingAbuse(
 		'last_alerted_at',
 	]);
 	if (rating_abuse_data === undefined) {
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`Unable to read rating_abuse_data of user ${user_id} on leaderboard ${leaderboard_id} while making RatingAbuse check!`,
 			'errLog.txt',
 		);
@@ -244,7 +233,7 @@ async function measurePlayerRatingAbuse(
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) {
 		const messageText = `Innocent: Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id}, but user net rating change ${netRatingChange} is not positive in the last ${GAME_INTERVAL_TO_MEASURE} games. Game IDs: ${JSON.stringify(game_id_list)}.`;
-		await logEvents(messageText, 'ratingAbuseLog.txt');
+		void logEvents(messageText, 'ratingAbuseLog.txt');
 		return;
 	}
 
@@ -269,7 +258,7 @@ async function measurePlayerRatingAbuse(
 		if (j > -1) {
 			gameInfoList.push({ ...recentPlayerGamesEntries[i]!, ...recentGamesEntries[j]! });
 		} else {
-			await logEventsAndPrint(
+			void logEventsAndPrint(
 				`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`,
 				'errLog.txt',
 			);
@@ -296,7 +285,7 @@ async function measurePlayerRatingAbuse(
 		refreshTokenEntries = findRefreshTokensForUsers([user_id, ...unique_user_id_list]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`,
 			'errLog.txt',
 		);
@@ -329,7 +318,7 @@ async function measurePlayerRatingAbuse(
 		);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`Error fetching records for opponents during rating abuse calculation for user ${username} with user_id ${user_id}: ${message}`,
 			'errLog.txt',
 		);
@@ -376,7 +365,10 @@ OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
 Game_id_list: ${JSON.stringify(game_id_list)}.
 \nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		await logEventsAndPrint('\n' + messageText, 'ratingAbuseLog.txt');
+		console.log(
+			`User ${username} is under suspicion of rating abuse (weight: ${suspicion_total_weight})! - Check ratingAbuseLog.txt for more details.`,
+		);
+		void logEvents('\n' + messageText, 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (
@@ -386,7 +378,7 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 				SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS
 		) {
 			const messageSubject = `Rating Abuse Warning: user ${username}, user_id ${user_id}`;
-			await sendRatingAbuseEmail(messageSubject, messageText);
+			void sendRatingAbuseEmail(messageSubject, messageText);
 			// Update RatingAbuse table with last_alerted_at value
 			const last_alerted_at = timeutil.timestampToSqlite(Date.now());
 			updateRatingAbuseColumns(user_id, leaderboard_id, { last_alerted_at });
@@ -402,7 +394,7 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 			`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
 			`Game_id_list: ${JSON.stringify(game_id_list)}. ` +
 			`GameInfo list: ${JSON.stringify(gameInfoList)}.`;
-		await logEvents(messageText, 'ratingAbuseLog.txt');
+		void logEvents(messageText, 'ratingAbuseLog.txt');
 	}
 }
 

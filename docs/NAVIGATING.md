@@ -40,7 +40,7 @@ There are 4 automatically generated accounts for you to test with. The password 
 - `Member`: Regular permissions.
 - `Patron`: At the moment this holds no difference to member accounts.
 - `Admin`: Is able to send commands on the admin panel page found at url `https://localhost:3443/admin`. Sending `help` will list the available commands.
-- `Owner`: Includes all Admin permissions. In addition, when invite creation is disabled inside `database/allowinvites.json`, they are still able to create invites.
+- `Owner`: The only current difference to admin accounts being that they are able to delete other admin accounts via the admin panel.
 
 ## Debugging Keyboard Shortcuts
 

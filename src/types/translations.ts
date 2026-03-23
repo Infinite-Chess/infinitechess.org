@@ -397,7 +397,6 @@ export type TranslationKeys =
 	| 'play.javascript.copypaste.clipboard_denied'
 	| 'play.javascript.copypaste.clipboard_invalid'
 	| 'play.javascript.copypaste.game_needs_to_specify'
-	| 'play.javascript.copypaste.invalid_wincon'
 	| 'play.javascript.copypaste.pasting_game'
 	| 'play.javascript.copypaste.pasting_in_private'
 	| 'play.javascript.copypaste.piece_count'
@@ -436,10 +435,6 @@ export type TranslationKeys =
 	| 'play.javascript.onlinegame.not_logged_in'
 	| 'play.javascript.onlinegame.game_no_longer_exists'
 	| 'play.javascript.onlinegame.another_window_connected'
-	| 'play.javascript.onlinegame.server_restarting'
-	| 'play.javascript.onlinegame.server_restarting_in'
-	| 'play.javascript.onlinegame.minute'
-	| 'play.javascript.onlinegame.minutes'
 	| 'play.javascript.websocket.no_connection'
 	| 'play.javascript.websocket.reconnected'
 	| 'play.javascript.websocket.unable_to_identify_ip'
@@ -451,20 +446,6 @@ export type TranslationKeys =
 	| 'play.javascript.websocket.connection_closed'
 	| 'play.javascript.websocket.please_report_bug'
 	| 'play.javascript.websocket.malformed_message'
-	| 'play.javascript.termination.checkmate'
-	| 'play.javascript.termination.stalemate'
-	| 'play.javascript.termination.repetition'
-	| 'play.javascript.termination.moverule'
-	| 'play.javascript.termination.insuffmat'
-	| 'play.javascript.termination.royalcapture'
-	| 'play.javascript.termination.allroyalscaptured'
-	| 'play.javascript.termination.allpiecescaptured'
-	| 'play.javascript.termination.koth'
-	| 'play.javascript.termination.resignation'
-	| 'play.javascript.termination.agreement'
-	| 'play.javascript.termination.time'
-	| 'play.javascript.termination.aborted'
-	| 'play.javascript.termination.disconnect'
 	| 'play.javascript.results.you_checkmate'
 	| 'play.javascript.results.you_time'
 	| 'play.javascript.results.you_resignation'
@@ -526,6 +507,7 @@ export type TranslationKeys =
 	| 'play.javascript.editor.cannot_start_local_empty'
 	| 'play.javascript.editor.cannot_start_engine_empty'
 	| 'play.javascript.editor.position_not_supported'
+	| 'play.javascript.editor.illegal_position_king_capture'
 	| 'play.javascript.editor.saved_in_browser'
 	| 'play.javascript.editor.position_corrupted'
 	| 'play.javascript.editor.failed_to_load'
@@ -602,10 +584,6 @@ export type TranslationKeys =
 	| 'server.javascript.ws-not_found'
 	| 'server.javascript.ws-forbidden'
 	| 'server.javascript.ws-already_in_game'
-	| 'server.javascript.ws-server_restarting'
-	| 'server.javascript.ws-server_under_maintenance'
-	| 'server.javascript.ws-minutes'
-	| 'server.javascript.ws-minute'
 	| 'server.javascript.ws-you_cheated'
 	| 'server.javascript.ws-opponent_cheated'
 	| 'server.javascript.ws-cannot_resign_finished_game'
@@ -1082,7 +1060,6 @@ export interface TranslationsObject {
 				clipboard_denied: string;
 				clipboard_invalid: string;
 				game_needs_to_specify: string;
-				invalid_wincon: string;
 				pasting_game: string;
 				pasting_in_private: string;
 				piece_count: string;
@@ -1127,10 +1104,6 @@ export interface TranslationsObject {
 				not_logged_in: string;
 				game_no_longer_exists: string;
 				another_window_connected: string;
-				server_restarting: string;
-				server_restarting_in: string;
-				minute: string;
-				minutes: string;
 			};
 			websocket: {
 				no_connection: string;
@@ -1144,22 +1117,6 @@ export interface TranslationsObject {
 				connection_closed: string;
 				please_report_bug: string;
 				malformed_message: string;
-			};
-			termination: {
-				checkmate: string;
-				stalemate: string;
-				repetition: string;
-				moverule: string[];
-				insuffmat: string;
-				royalcapture: string;
-				allroyalscaptured: string;
-				allpiecescaptured: string;
-				koth: string;
-				resignation: string;
-				agreement: string;
-				time: string;
-				aborted: string;
-				disconnect: string;
 			};
 			results: {
 				you_checkmate: string;
@@ -1225,6 +1182,7 @@ export interface TranslationsObject {
 				cannot_start_local_empty: string;
 				cannot_start_engine_empty: string;
 				position_not_supported: string;
+				illegal_position_king_capture: string;
 				saved_in_browser: string;
 				position_corrupted: string;
 				failed_to_load: string;
@@ -1318,10 +1276,6 @@ export interface TranslationsObject {
 			'ws-not_found': string;
 			'ws-forbidden': string;
 			'ws-already_in_game': string;
-			'ws-server_restarting': string;
-			'ws-server_under_maintenance': string;
-			'ws-minutes': string;
-			'ws-minute': string;
 			'ws-you_cheated': string;
 			'ws-opponent_cheated': string;
 			'ws-cannot_resign_finished_game': string;

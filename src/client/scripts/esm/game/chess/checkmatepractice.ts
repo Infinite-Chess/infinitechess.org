@@ -5,7 +5,7 @@
  */
 
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -24,7 +24,6 @@ import {
 import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
-import animation from '../rendering/animation.js';
 import gameloader from './gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
@@ -107,7 +106,9 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 	const currentEngine = 'engineCheckmatePractice' as const;
 
 	const options = {
-		Event: 'Infinite chess checkmate practice',
+		event: 'Infinite chess checkmate practice',
+		timeControl: '-' as const,
+		variant: null,
 		youAreColor: p.WHITE,
 		currentEngine,
 		engineConfig: {
@@ -408,9 +409,6 @@ function undoMove(): void {
 	) {
 		// > 0 catches scenarios where stalemate occurs on the first move
 		setUndoingIsLegal(false);
-
-		// Terminate all current animations to avoid a crash when undoing moves
-		animation.clearAnimations();
 
 		// go to latest move before undoing moves
 		movesequence.viewFront(gamefile, mesh);

@@ -11,8 +11,8 @@
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { CoordsSpecial } from './movepiece.js';
-import type { MoveDraftEdit } from './specialmove.js';
+import type { MoveRunning } from './specialmove.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { Game, Board, FullGame } from './gamefile.js';
 
@@ -35,8 +35,8 @@ function fourDimensionalPawnMove(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): Coords[] {
-	const legalMoves: Coords[] = [];
+): CoordsTagged[] {
+	const legalMoves: CoordsTagged[] = [];
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'spacelike', premove)); // Spacelike
 	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'timelike', premove)); // Timelike
 	return legalMoves;
@@ -55,7 +55,7 @@ function pawnLegalMoves(
 	color: Player,
 	movetype: 'spacelike' | 'timelike',
 	premove: boolean,
-): Coords[] {
+): CoordsTagged[] {
 	const { basegame, boardsim } = gamefile;
 	const dim = fourdimensionalgenerator.get4DBoardDimensions();
 	const distance = movetype === 'spacelike' ? 1n : dim.BOARD_SPACING;
@@ -63,13 +63,13 @@ function pawnLegalMoves(
 
 	// White and black pawns move and capture in opposite directions.
 	const yDistanceParity = color === p.WHITE ? distance : -distance;
-	const individualMoves: Coords[] = [];
+	const individualMoves: CoordsTagged[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
 	// 1. It can move forward if there is no piece there
 
 	// Is there a piece in front of it? And do not allow pawn to leave the 4D board
-	const singlePushCoord: Coords = [coords[0], coords[1] + yDistanceParity];
+	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yDistanceParity];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
 		basegame.gameRules.worldBorder,
@@ -86,10 +86,10 @@ function pawnLegalMoves(
 		singlePushCoord[1] > dim.MIN_Y &&
 		singlePushCoord[1] < dim.MAX_Y // Pawn within boundaries
 	) {
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
+		appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
 
 		// Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [
+		const doublePushCoord: CoordsTagged = [
 			singlePushCoord[0],
 			singlePushCoord[1] + yDistanceParity,
 		];
@@ -115,14 +115,14 @@ function pawnLegalMoves(
 				coords,
 				doublePushCoord,
 			);
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color); // Add the double push!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, doublePushCoord, color); // Add the double push!
 		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
 	const strong_pawns = fourdimensionalgenerator.getMovementType().STRONG_PAWNS;
 
-	const coordsToCapture: Coords[] = [
+	const coordsToCapture: CoordsTagged[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
 	];
@@ -142,7 +142,7 @@ function pawnLegalMoves(
 			true,
 		); // true for capture is required
 		if (moveValidity <= 1)
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -174,7 +174,7 @@ function pawnLegalMoves(
  */
 function addPossibleEnPassant(
 	{ basegame, boardsim }: FullGame,
-	individualMoves: Coords[],
+	individualMoves: CoordsTagged[],
 	coords: Coords,
 	color: Player,
 	xdistance: bigint,
@@ -198,24 +198,24 @@ function addPossibleEnPassant(
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(
+	const enPassantSquare: CoordsTagged = coordutil.copyCoords(
 		boardsim.state.global.enpassant.square,
 	);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
  * Appends the provided move to the running individual moves list,
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(
+function appendPawnMoveAndAttachPromoteTag(
 	basegame: Game,
-	individualMoves: CoordsSpecial[],
-	landCoords: CoordsSpecial,
+	individualMoves: CoordsTagged[],
+	landCoords: CoordsTagged,
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
@@ -232,7 +232,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 }
 
 /** Executes a four dimensional pawn move.  */
-function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: MoveDraftEdit): boolean {
+function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: MoveRunning): boolean {
 	const moveChanges = move.changes;
 
 	// If it was a double push, then queue adding the new enpassant square to the gamefile!

@@ -12,6 +12,7 @@ import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
 import editortypes from '../editortypes';
+import validatorama from '../../../util/validatorama';
 
 // Constants -------------------------------------------------------------
 
@@ -122,8 +123,10 @@ function clearAutosave(): void {
 
 /**
  * Reads and validates the autosave from IndexedDB.
- * Clears and returns undefined if the data is corrupted.
  * Returns undefined if no autosave exists.
+ * Clears and returns undefined if the data is corrupted or if the active
+ * position is a cloud save owned by a different user (e.g. after logout or
+ * account switch).
  */
 async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
 	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
@@ -131,6 +134,15 @@ async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
 	const parsed = editortypes.AutosaveStateSchema.safeParse(raw);
 	if (!parsed.success) {
 		console.error('Corrupted board editor autosave data found, clearing autosave.');
+		clearAutosave();
+		return undefined;
+	}
+
+	// If the autosave belongs to a cloud save owned by a different user, discard it.
+	// Prevents accidentally trying to save the posiiton to a user that isn't logged in.
+	const ap = parsed.data.active_position;
+	if (ap?.storage_type === 'cloud' && ap.owner !== validatorama.getOurUsername()) {
+		console.log('Clearing editor auto save from a different user.');
 		clearAutosave();
 		return undefined;
 	}

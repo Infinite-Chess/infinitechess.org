@@ -1,6 +1,12 @@
 // src/shared/chess/util/clockutil.ts
 
-import type { TimeControl } from './metadata';
+/**
+ * The clock value for the game, `s+s`, where the left side is
+ * start time in seconds, and the right is increment in seconds.
+ * Untimed = `-`
+ */
+
+import type { TimeControl } from '../../types.js';
 
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);

@@ -5,12 +5,17 @@
  */
 
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { _Move_In, LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type {
+	MovePreprint,
+	LongFormatIn,
+} from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
+import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 
-import { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
+import clientmetadatautil from './clientmetadatautil.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.
@@ -25,10 +30,10 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 	}
 
 	/** String array of the moves in their most compact notation (e.g. "4,7>4,8Q") */
-	const moves: ServerGameMoveMessage[] =
-		longformIn.moves?.map((m: _Move_In) => {
-			const move = { compact: m.compact };
-			if (m.compact) move.compact = m.compact;
+	const moves: MovePacket[] =
+		longformIn.moves?.map((m: MovePreprint) => {
+			const move: MovePacket = { token: m.token };
+			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 			return move;
 		}) ?? [];
 
@@ -43,19 +48,21 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 		},
 	};
 
-	return gamefile.initFullGame(longformIn.metadata, { variantOptions, moves }, validateMoves);
-}
+	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+		longformIn.metadata.UTCDate,
+		longformIn.metadata.UTCTime,
+	);
+	const resolvedVariant = variant.resolveVariantCode(longformIn.metadata.Variant);
 
-function convertVariantFromSpokenLanguageToCode(Variant?: string): string | undefined {
-	// Iterate through all translations until we find one that matches this name
-	for (const [code, value] of Object.entries(translations)) {
-		if (value === Variant) return code;
-	}
-	// Else the variant is probably already the code!
-	return Variant;
+	return gamefile.initFullGame(
+		longformIn.metadata,
+		resolvedTimestamp,
+		resolvedVariant,
+		{ variantOptions, moves },
+		validateMoves,
+	);
 }
 
 export default {
 	formulateGame,
-	convertVariantFromSpokenLanguageToCode,
 };

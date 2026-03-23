@@ -8,6 +8,7 @@ import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /**
@@ -42,6 +43,12 @@ function onPaste(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// Flag the game to not be logged
 	servergame.match.positionPasted = true;
+
+	// Also delete boardsim, disabling server-side move validation.
+	delete servergame.boardsim;
+
+	// Persist the paste state to the database.
+	liveGameValues.onPositionPasted(servergame);
 }
 
 export { onPaste };

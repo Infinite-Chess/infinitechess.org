@@ -1,3 +1,5 @@
+// dev-utils/scripts/positionnormalizer/normalizertester.ts
+
 
 /**
  * ONLY FOR TESTING COMPRESSING POSITIONS
@@ -6,10 +8,9 @@
 
 // ================================ Testing Usage ================================
 
-import icnconverter, { _Move_Compact } from "../icn/icnconverter";
 import moveexpander from "./moveexpander";
 import positioncompressor from "./positioncompressor";
-
+import icnconverter, { MoveCoords } from "../icn/icnconverter";
 
 const example_position = '[Event "Casual local Classical infinite chess game"] [Site "https://www.infinitechess.org/"] [Variant "Classical"] [Round "-"] [UTCDate "2023.11.01"] [UTCTime "12:02:58"] [TimeControl "-"] [Result "0-1"] [Termination "Checkmate"] b 1/100 21 (8|1) P1,2+|P8,2+|p1,7+|p2,7+|p7,7+|p8,7+|R8,1+|r1,8+|N7,1|P5,4|p6,6|k6,7|K6,2|r6,8|n7,8|p5,6|P7,4|b5,10|n5,5|q-35694371,-35694371|B-114930749,114930754 ';
 // const example_position = 'K0,0|q-800,1200|N300,-1800|B-1800,100|r600,200|R-520,-340|P900,-50|b-1100,700|n220,330|Q-1500,-1200|k-7000,5000|R9400,300|r-2700,-8800|B-500,9800|b1500,-9600|Q-9300,1500|q8200,-3600|N-9800,-600|n9900,-400|P-9200,3800';
@@ -58,7 +59,7 @@ console.log("\nAfter:");
 console.log(newICN);
 console.log("\n");
 
-// const chosenMove: _Move_Compact = {
+// const chosenMove: MoveCoords = {
 // 	startCoords: [20n, 5n],
 // 	endCoords: [0n, 1n],
 // };

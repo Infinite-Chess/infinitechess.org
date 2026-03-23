@@ -4,20 +4,20 @@
  * This script handles pasting games
  */
 
+import type { MetaData } from '../../../../../shared/types.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MovePacket } from '../../../../../shared/types.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { MetaData, MetadataKey } from '../../../../../shared/chess/util/metadata.js';
-import type { ServerGameMoveMessage } from '../../../../../server/game/gamemanager/gameutility.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
-import metadata from '../../../../../shared/chess/util/metadata.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import winconutil from '../../../../../shared/chess/util/winconutil.js';
-import { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
-	_Move_Out,
+	MoveParsed,
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -28,7 +28,7 @@ import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import socketmessages from '../websocket/socketmessages.js';
-import gameformulator from './gameformulator.js';
+import clientmetadatautil from './clientmetadatautil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
 /**
@@ -102,8 +102,6 @@ async function callbackPaste(_event: Event): Promise<void> {
 		return;
 	}
 
-	if (!verifyWinConditions(longformOut.gameRules.winConditions)) return;
-
 	// console.log(jsutil.deepCopyObject(longformOut));
 
 	pasteGame(longformOut);
@@ -111,24 +109,6 @@ async function callbackPaste(_event: Event): Promise<void> {
 	// Let the server know if we pasted a custom position in a private match
 	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
 		socketmessages.send('game', 'paste');
-}
-
-/** For now doesn't verify if the required royalty is present. */
-function verifyWinConditions(winConditions: PlayerGroup<string[]>): boolean {
-	let oneInvalid = false;
-	Object.values(winConditions)
-		.flat()
-		.forEach((winCondition) => {
-			if (!winconutil.isWinConditionValid(winCondition)) {
-				// Not valid ❌
-				toast.show(`${translations.copypaste.invalid_wincon} "${winCondition}".`, {
-					error: true,
-				});
-				oneInvalid = true;
-			} // else valid ✅
-		});
-
-	return !oneInvalid;
 }
 
 /**
@@ -151,26 +131,34 @@ function pasteGame(longformOut: LongFormatOut): void {
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined)
-			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			clientmetadatautil.copyMetadataField(
+				longformOut.metadata,
+				currentGameMetadata,
+				metadataName,
+			);
 	});
 
 	for (const metadataName of retainIfNotOverridden) {
 		if (currentGameMetadata[metadataName] && !longformOut.metadata[metadataName])
-			metadata.copyMetadataField(longformOut.metadata, currentGameMetadata, metadataName);
+			clientmetadatautil.copyMetadataField(
+				longformOut.metadata,
+				currentGameMetadata,
+				metadataName,
+			);
 	}
 
-	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	if (longformOut.metadata.Variant)
-		longformOut.metadata.Variant =
-			gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) ||
-			longformOut.metadata.Variant;
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
 
-	// Don't transfer the pasted game's Result and Termination metadata. For all we know,
-	// the game could have ended by time, in which case we want to further analyse what could have happened.
-	delete longformOut.metadata.Result;
-	delete longformOut.metadata.Termination;
-
-	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(longformOut);
+	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
+	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(
+		longformOut,
+		resolvedVariantCode,
+		timestamp,
+	);
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -199,14 +187,11 @@ function pasteGame(longformOut: LongFormatOut): void {
 			? ` ${translations.copypaste.pasting_in_private}`
 			: '';
 
-	const additional: {
-		variantOptions: VariantOptions;
-		moves?: ServerGameMoveMessage[];
-	} = { variantOptions };
+	const additional: Additional = { variantOptions };
 	if (longformOut.moves) {
-		// Trim the excess properties from the _Move_Out type, including the comment.
-		additional.moves = longformOut.moves.map((m: _Move_Out) => {
-			const move: ServerGameMoveMessage = { compact: m.compact };
+		// Trim the excess properties from the MoveParsed type, including the comment.
+		additional.moves = longformOut.moves.map((m: MoveParsed) => {
+			const move: MovePacket = { token: m.token };
 			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
 			// Potentially also transfer the pasted comments into the gamefile here in the future!
 			// ...
@@ -216,13 +201,14 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
-		additional: {
-			variantOptions: VariantOptions;
-			moves?: ServerGameMoveMessage[];
-		};
+		variant: VariantCode | null;
+		dateTimestamp: number;
+		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
 	} = {
 		metadata: longformOut.metadata,
+		variant: resolvedVariantCode,
+		dateTimestamp: timestamp,
 		additional,
 	};
 	if (longformOut.presetAnnotes) options.presetAnnotes = longformOut.presetAnnotes;
@@ -250,8 +236,15 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 /**
  * Utility for extracting position and specialRights from a LongFormatOut.
+ * @param longFormat - The parsed long format from ICN.
+ * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
+ * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
+function getPositionAndSpecialRightsFromLongFormat(
+	longFormat: LongFormatOut,
+	variantCode: VariantCode | null,
+	timestamp: number,
+): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -261,9 +254,9 @@ function getPositionAndSpecialRightsFromLongFormat(longFormat: LongFormatOut): {
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (longFormat.metadata.Variant) {
-		// No position specified in the ICN, extract from the Variant metadata
-		return variant.getStartingPositionOfVariant(longFormat.metadata);
+	} else if (variantCode !== null) {
+		// No position specified in the ICN, extract from the variant
+		return variant.getStartingPositionOfVariant(variantCode, timestamp);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };

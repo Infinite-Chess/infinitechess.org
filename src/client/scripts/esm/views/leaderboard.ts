@@ -7,6 +7,7 @@
  * so we can display that info.
  */
 
+import type { VariantCode } from '../../../../shared/chess/variants/variantdictionary.js';
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
 import {
@@ -70,12 +71,10 @@ let initialized = false;
  * Set the text below the leaderboard table, explaining which variants belong to it
  */
 function setSupportedVariantsDisplay(): void {
-	const valid_variants = Object.keys(VariantLeaderboards);
 	const variantslist: string[] = [];
-	valid_variants.forEach((variant: string | null) => {
-		if (variant === null || VariantLeaderboards[variant] !== leaderboard_id) return;
-		// @ts-ignore
-		variantslist.push(variant in translations ? translations[variant] : variant);
+	Object.entries(VariantLeaderboards).forEach(([variant, leaderboard]) => {
+		if (leaderboard !== leaderboard_id) return;
+		variantslist.push(variant in translations ? translations[variant as VariantCode] : variant);
 	});
 	element_supportedVariants.textContent = `${translations.supported_variants} ${variantslist.join(', ')}.`;
 }

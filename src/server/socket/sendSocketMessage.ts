@@ -26,11 +26,13 @@ import {
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "invites", "game", "echo"). */
-	route: string | undefined;
+	/** The route to forward the message to (e.g., "general", "invites", "game", "echo").
+	 * Undefined if it's a reply-only message. */
+	route?: string;
 	/** The message contents. For echo messages, this is the message ID being echoed.
-	 * For other messages, this is an object with action and value. */
-	contents: any;
+	 * For other messages, this is an object with action and value.
+	 * Absent for reply-only acknowledgement messages (route and action are both undefined). */
+	contents?: any;
 	/** The ID of the message to echo, indicating the connection is still active.
 	 * Or undefined if this message itself is an echo. */
 	id?: number;
@@ -89,21 +91,28 @@ function sendSocketMessage(
 	}
 
 	const isEcho = action === 'echo';
+	// Reply-only messages should have no empty "contents" field
+	const isReplyOnly = route === undefined;
 	const payload: WebsocketOutMessage = isEcho
 		? {
 				route: 'echo',
 				contents: value, // For echo, value contains the message ID
 				replyto,
 			}
-		: {
-				route,
-				contents: {
-					action,
-					value,
-				},
-				id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
-				replyto,
-			};
+		: isReplyOnly
+			? {
+					id: uuid.generateNumbID(10),
+					replyto,
+				}
+			: {
+					route,
+					contents: {
+						action,
+						value,
+					},
+					id: uuid.generateNumbID(10), // Only include an id (and accept an echo back) if this is NOT an echo itself!
+					replyto,
+				};
 	const stringifiedPayload = JSON.stringify(payload);
 
 	// if (!isEcho) console.log(`Sending: ${stringifiedPayload}`);
@@ -131,27 +140,14 @@ function sendSocketMessage(
  * @param translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
  * @param [options] - An object containing additional options.
  * @param [options.replyto] - The ID of the incoming WebSocket message to which this message is replying.
- * @param [options.customNumber] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
 function sendNotify(
 	ws: CustomWebSocket,
 	translationCode: TranslationKeys,
-	{ replyto, customNumber }: { replyto?: number; customNumber?: number } = {},
+	{ replyto }: { replyto?: number } = {},
 ): void {
 	const i18next = ws.metadata.cookies.i18next;
-	let text = getTranslation(translationCode, i18next);
-	// Special case: number of minutes to be displayed upon server restart
-	if (
-		translationCode === 'server.javascript.ws-server_restarting' &&
-		customNumber !== undefined
-	) {
-		const minutes = Number(customNumber); // Cast to number in case it's a string
-		const minutes_plurality =
-			minutes === 1
-				? getTranslation('server.javascript.ws-minute', i18next)
-				: getTranslation('server.javascript.ws-minutes', i18next);
-		text += ` ${minutes} ${minutes_plurality}.`;
-	}
+	const text = getTranslation(translationCode, i18next);
 	sendSocketMessage(ws, 'general', 'notify', text, replyto);
 }
 

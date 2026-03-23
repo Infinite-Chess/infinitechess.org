@@ -4,10 +4,9 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
-import type { Rating } from '../../../../server/database/leaderboardsManager.js';
-import type { ServerUsernameContainer } from '../../../../shared/types.js';
+import type { Rating, ServerUsernameContainer } from '../../../../shared/types.js';
 
-import metadata from '../../../../shared/chess/util/metadata.js';
+import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 
 import docutil from './docutil.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
@@ -262,14 +261,14 @@ function updateUsernameContainerRatingTextContent(usernamecontainer: UsernameCon
 	// Update the rating
 	if (usernamecontainer.properties.rating) {
 		const eloElem = element.querySelector('.elo') as HTMLDivElement;
-		const displayRating = metadata.getWhiteBlackElo(usernamecontainer.properties.rating);
+		const displayRating = metadatautil.getFormattedElo(usernamecontainer.properties.rating);
 		eloElem.textContent = `(${displayRating})`;
 		eloElem.setAttribute('rating', JSON.stringify(usernamecontainer.properties.rating)); // Allows this container's properties to be reconstructed by other scripts from just the HTML element
 
 		// Update the rating change, if available
 		if (usernamecontainer.properties.rating.change !== undefined) {
 			const eloChangeDiv = element.querySelector('.eloChange')!;
-			eloChangeDiv.textContent = metadata.getWhiteBlackRatingDiff(
+			eloChangeDiv.textContent = metadatautil.getWhiteBlackRatingDiff(
 				usernamecontainer.properties.rating.change,
 			);
 			// Color the ratingchange green or red, depending on its positivity
@@ -296,7 +295,7 @@ function createEloFormatter(confident: boolean): (_value: number) => string {
 	// Create a text content generator
 	return (value: number): string => {
 		const rating: Rating = { value, confident };
-		const displayRating = metadata.getWhiteBlackElo(rating);
+		const displayRating = metadatautil.getFormattedElo(rating);
 		return `(${displayRating})`;
 	};
 }
@@ -340,7 +339,7 @@ function animateRatingChange(
 		change,
 		DURATION,
 		undefined,
-		metadata.getWhiteBlackRatingDiff,
+		metadatautil.getWhiteBlackRatingDiff,
 	);
 	container.animationCancels.push(changeAnim.cancel);
 }

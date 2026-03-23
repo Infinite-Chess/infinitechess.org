@@ -23,7 +23,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 
 // Type Definitions-------------------------------------------------------------------------
 
-import type { Move } from './movepiece.js';
+import type { MoveFull } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Piece } from '../util/boardutil.js';
 import type { FullGame } from './gamefile.js';
@@ -372,7 +372,7 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 /**
  * Gets every captured piece in changes
  */
-function getCapturedPieceTypes(move: Move): Set<number> {
+function getCapturedPieceTypes(move: MoveFull): Set<number> {
 	const pieceTypes: Set<number> = new Set();
 	move.changes.forEach((change) => {
 		if (change.action === 'capture') pieceTypes.add(change.piece.type);
@@ -383,7 +383,7 @@ function getCapturedPieceTypes(move: Move): Set<number> {
 /**
  * Returns true if any piece was captured by the move, whether directly or by special actions.
  */
-function wasACapture(move: Move): boolean {
+function wasACapture(move: MoveFull): boolean {
 	// Safety net if we ever accidentally call this method too soon.
 	// There will never be a valid move with zero changes, that's just absurd.
 	if (move.changes.length === 0)

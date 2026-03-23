@@ -9,10 +9,11 @@
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Change } from './boardchanges.js';
-import type { _Move_Compact } from './icn/icnconverter.js';
+import type { MoveCoords } from './icn/icnconverter.js';
+import type { MovePacket } from '../../types.js';
+import type { GameConclusion } from '../util/winconutil.js';
+import type { Board, FullGame } from './gamefile.js';
 import type { EnPassant, MoveState } from './state.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
-import type { Board, FullGame, GameConclusion } from './gamefile.js';
 
 import state from './state.js';
 import bimath from '../../util/math/bimath.js';
@@ -32,58 +33,66 @@ import { rawTypes as r } from '../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------------------------------------------------------
 
+/** A special move tag name on {@link CoordsTagged}, both move tags and UI tags. */
+interface SpecialTags extends MoveSpecialTags, UISpecialTags {}
+
+/**
+ * A special move tag that is retained when transferring from {@link CoordsTagged} to a move.
+ * This describes what actually happened during the move execution.
+ */
+interface MoveSpecialTags {
+	/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
+	enpassantCreate: EnPassant;
+	/**
+	 * A special move tag for enpassant capture.
+	 *
+	 * If true, the specialMove function for pawns will read the gamefile's
+	 * enpassant property to figure out where the pawn to capture is.
+	 * After that, the captured piece is appended to the move's changes list,
+	 * so we don't actually need to store more information in here.
+	 */
+	enpassant: true;
+	/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
+	promotion: number;
+	/** A special move tag for castling. */
+	castle: {
+		/** 1 => King castled right   -1 => King castled left */
+		dir: 1n | -1n;
+		/** The coordinate of the piece the king castled with, usually a rook. */
+		coord: Coords;
+	};
+	/**
+	 * A special move tag that stores a list of all the waypoints along
+	 * the travel path of a piece. Inclusive to start and end.
+	 *
+	 * Used for Rose piece.
+	 */
+	path: Coords[];
+}
+
+/**
+ * A special move tag that is UI-only. It is present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and is
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+interface UISpecialTags {
+	/**
+	 * A special move tag that, when the move is attempted to be made should
+	 * trigger the promotion UI to open. The special detect functions are in
+	 * charge of adding this. selection.ts will delete it and open the promotion UI.
+	 */
+	promoteTrigger: boolean;
+}
+
 /**
  * A pair of coordinates, WITH attached special move information.
  * This usually denotes a legal square you can move to that will
  * activate said special move.
  */
-type CoordsSpecial = Coords & {
-	enpassantCreate?: enpassantCreate;
-	enpassant?: enpassant;
-	promoteTrigger?: promoteTrigger;
-	promotion?: promotion;
-	castle?: castle;
-	path?: path;
-};
+type CoordsTagged = Coords & Partial<SpecialTags>;
 
-/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
-type enpassantCreate = EnPassant;
-/**
- * A special move tag for enpassant capture.
- *
- * If true, the specialMove function for pawns will read the gamefile's
- * enpassant property to figure out where the pawn to capture is.
- * After that, the captured piece is appended to the move's changes list,
- * So we don't actually need to store more information in here.
- */
-type enpassant = true;
-/**
- * A special move tag that, when the move is attempted to be made, should trigger the promotion UI to open.
- * The special detect functions are in charge of adding this. selection.ts will delete it and open the promotion UI.
- */
-type promoteTrigger = boolean;
-/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
-type promotion = number;
-/** A special move tag for castling. */
-type castle = {
-	/** 1 => King castled right   -1 => King castled left */
-	dir: 1n | -1n;
-	/** The coordinate of the piece the king castled with, usually a rook. */
-	coord: Coords;
-};
-/**
- * A special move tag that stores a list of all the waypoints along
- * the travel path of a piece. Inclusive to start and end.
- *
- * Used for Rose piece.
- */
-type path = Coords[];
-
-/**
- * Move object of the BaseGame.
- * Does not need a ton of details.
- */
-interface BaseMove extends _Move_Compact {
+/** A move as stored in the base game. Does not need a lot of details. */
+interface MoveRecord extends MoveCoords {
 	/**
 	 * How much time the player had left after they made their move, in millis.
 	 *
@@ -92,22 +101,11 @@ interface BaseMove extends _Move_Compact {
 	 */
 	clockStamp?: number;
 	/** The move in most compact notation: `8,7>8,8=Q` */
-	compact: string;
+	token: string;
 }
 
-/** What a move looks like, before movepiece.js creates the `changes`, `state`, `compact`, and `generateIndex` properties on it. */
-interface MoveDraft extends _Move_Compact {
-	/** Present if the move was a double pawn push. This is the enpassant state that should be placed on the gamefile when making this move. */
-	enpassantCreate?: enpassantCreate;
-	/** Present if the move was special-move enpassant capture. This will be `true` */
-	enpassant?: enpassant;
-	/** Present if the move was a special-move casle. This may look like an
-	 * object: `{ coord, dir }` where `coord` is the starting coordinates of the
-	 * rook being castled with, and `dir` is the direction castled, 1 for right and -1 for left. */
-	castle?: castle;
-	/** Present if the move is for a Rose. */
-	path?: path;
-}
+/** A {@link MoveCoords} move with all special tags attached. */
+type MoveTagged = MoveCoords & Partial<MoveSpecialTags>;
 
 /** Information about some change on the chessboard, either by a move or some other property change (e.g. as used in the board editor) */
 interface Edit {
@@ -119,11 +117,10 @@ interface Edit {
 }
 
 /**
- * Contains all properties a {@link MoveDraft} and a {@link Edit} has, and more.
- * Including the changes it made to the board, the gamefile
- * state before and after the move, etc.
+ * All properties of a move needed to apply/unapply it
+ * to/from the board state, along with other useful flags.
  */
-interface Move extends Edit, MoveDraft, BaseMove {
+interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	/** The type of piece moved */
 	type: number;
 	/** The index this move was generated for. This can act as a safety net
@@ -144,30 +141,66 @@ interface Move extends Edit, MoveDraft, BaseMove {
 	comment?: string;
 }
 
+// Constants -------------------------------------------------------------------------------------------------------
+
+/**
+ * All special move tag names that are retained when transferring from {@link CoordsTagged}
+ * to a move. These describe what actually happened during the move execution.
+ */
+const MOVE_SPECIAL_TAGS = [
+	'enpassantCreate',
+	'enpassant',
+	'promotion',
+	'castle',
+	'path',
+] satisfies ReadonlyArray<keyof MoveSpecialTags>;
+
+/**
+ * All special move tag names that are UI-only. They are present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and are
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+const UI_SPECIAL_TAGS = ['promoteTrigger'] satisfies ReadonlyArray<keyof UISpecialTags>;
+
+/** All special move tags names on {@link CoordsTagged}, both move tags and UI tags. */
+const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies ReadonlyArray<
+	keyof SpecialTags
+>;
+
 // Move Generating --------------------------------------------------------------------------------------------------
 
 /**
- * Generates a full Move object from a MoveDraft,
+ * Generates a full MoveFull from a MoveTagged, then immediately applies it to the gamefile.
+ * @returns The generated MoveFull object
+ */
+function generateAndMakeMove(gamefile: FullGame, moveTagged: MoveTagged): MoveFull {
+	const move = generateMove(gamefile, moveTagged);
+	makeMove(gamefile, move);
+	return move;
+}
+
+/**
+ * Generates a full MoveFull object from a MoveTagged,
  * calculating and appending its board changes to its Changes list,
  * and queueing its gamefile StateChanges.
  */
-function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
+function generateMove(gamefile: FullGame, moveTagged: MoveTagged): MoveFull {
 	const { boardsim } = gamefile;
-	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
-			`Cannot make move because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`,
+			`Cannot make move because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
 		);
 
-	// Construct the full Move object
+	// Construct the full MoveFull object
 	// Initialize the state, and change list, as empty for now.
-	const move: Move = {
-		...moveDraft,
+	const move: MoveFull = {
+		...moveTagged,
 		type: piece.type,
 		changes: [],
 		generateIndex: boardsim.state.local.moveIndex + 1,
 		state: { local: [], global: [] },
-		compact: icnconverter.getCompactMoveFromDraft(moveDraft),
+		token: icnconverter.getCompactMoveFromDraft(moveTagged),
 		flags: {
 			// These will be set later, but we need a default value
 			check: false,
@@ -190,7 +223,7 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
 	// If a special move IS made, we skip the normal move piece method.
 	if (rawType in boardsim.specialMoves)
 		specialMoveMade = boardsim.specialMoves[rawType]!(boardsim, piece, move);
-	if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveDraft, move); // Move piece regularly (no special tag)
+	if (!specialMoveMade) calcMovesChanges(boardsim, piece, moveTagged, move); // Move piece regularly (no special tag)
 
 	// Must be set before calling queueIncrementMoveRuleStateChange()
 	move.flags.capture = boardchanges.wasACapture(move);
@@ -212,16 +245,11 @@ function generateMove(gamefile: FullGame, moveDraft: MoveDraft): Move {
  * @param piece - The piece that's being moved
  * @param move - The move that's being made
  */
-function calcMovesChanges(
-	boardsim: Board,
-	piece: Piece,
-	moveDraft: _Move_Compact,
-	edit: Edit,
-): void {
-	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.endCoords);
+function calcMovesChanges(boardsim: Board, piece: Piece, moveCoords: MoveCoords, edit: Edit): void {
+	const capturedPiece = boardutil.getPieceFromCoords(boardsim.pieces, moveCoords.endCoords);
 
 	if (capturedPiece) boardchanges.queueCapture(edit.changes, true, capturedPiece);
-	boardchanges.queueMovePiece(edit.changes, true, piece, moveDraft.endCoords);
+	boardchanges.queueMovePiece(edit.changes, true, piece, moveCoords.endCoords);
 }
 
 /**
@@ -346,7 +374,7 @@ function hasCastlingPartner(
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: Move): void {
+function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: MoveFull): void {
 	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
 
 	// Reset if it was a capture or pawn movement
@@ -362,13 +390,16 @@ function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, mov
 /**
  * Executes all the logical board changes of a global forward move in the game, no graphical changes.
  */
-function makeMove(gamefile: FullGame, move: Move): void {
+function makeMove(gamefile: FullGame, move: MoveFull): void {
 	gamefile.boardsim.moves.push(move);
 	gamefile.basegame.moves.push({
 		startCoords: move.startCoords,
 		endCoords: move.endCoords,
 		promotion: move.promotion,
-		compact: move.compact,
+		token: move.token,
+		// Propogate the clockStamp if already set. REQUIRED for server-side move
+		// validated games to persist their clock information over server restarts!
+		clockStamp: move.clockStamp,
 	});
 
 	applyMove(gamefile, move, true, { global: true }); // Apply the logical boardsim changes.
@@ -390,7 +421,12 @@ function makeMove(gamefile: FullGame, move: Move): void {
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the gamefile
  */
-function applyMove(gamefile: FullGame, move: Move, forward = true, { global = false } = {}): void {
+function applyMove(
+	gamefile: FullGame,
+	move: MoveFull,
+	forward = true,
+	{ global = false } = {},
+): void {
 	gamefile.boardsim.state.local.moveIndex += forward ? 1 : -1; // Update the gamefile moveIndex
 
 	// Stops stupid missing piece errors
@@ -430,7 +466,7 @@ function updateTurn(gamefile: FullGame): void {
  * Tests if the gamefile is currently in check,
  * then creates and set's the game state to reflect that.
  */
-function createCheckState(gamefile: FullGame, move: Move): void {
+function createCheckState(gamefile: FullGame, move: MoveFull): void {
 	const { boardsim, basegame } = gamefile;
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(
 		basegame,
@@ -458,7 +494,7 @@ function createCheckState(gamefile: FullGame, move: Move): void {
 
 /**
  * Accepts a move list in the most comapact form: `['1,2>3,4','10,7>10,8Q']`,
- * reconstructs each move's properties, INCLUDING special flags, and makes that move
+ * reconstructs each move's properties, INCLUDING special tags, and makes that move
  * in the game. At each step it has to calculate what legal special
  * moves are possible, so it can pass on those flags.
  *
@@ -469,7 +505,7 @@ function createCheckState(gamefile: FullGame, move: Move): void {
  */
 function makeAllMovesInGame(
 	gamefile: FullGame,
-	moves: ServerGameMoveMessage[],
+	moves: MovePacket[],
 	validateMoves?: boolean,
 ): void {
 	if (gamefile.boardsim.moves.length > 0)
@@ -478,18 +514,17 @@ function makeAllMovesInGame(
 	for (let i = 0; i < moves.length; i++) {
 		const shortmove = moves[i]!;
 
-		const move: Move = calculateMoveFromShortmove(gamefile, shortmove);
-
 		// If validateMoves flag is true, check if the move is actually legal!
 		if (validateMoves) {
-			const validationResult = movevalidation.isEnginesMoveLegal(gamefile, shortmove.compact);
+			const validationResult = movevalidation.isTokenMoveLegal(gamefile, shortmove.token);
 			if (!validationResult.valid) {
 				throw Error(
-					`Move ${i + 1} is illegal: ${shortmove.compact}. Reason: ${validationResult.reason}`,
+					`Move ${i + 1} is illegal: ${shortmove.token}. Reason: ${validationResult.reason}`,
 				);
 			}
 		}
 
+		const move: MoveFull = calculateMoveFromPacket(gamefile, shortmove);
 		makeMove(gamefile, move);
 
 		// Also if validateMoves flag is true, any move that comes AFTER
@@ -506,32 +541,29 @@ function makeAllMovesInGame(
 }
 
 /**
- * Accepts a move in the most compact short form, and constructs the whole Move object.
+ * Accepts a move in the most compact short form, and constructs the whole MoveFull object.
  * This has to calculate the piece's legal special
  * moves to be able to deduce if the move was a special move.
  *
  * **Returns undefined** if there was an error anywhere in the conversion.
  *
  * This does NOT perform legality checks, so still do that afterward.
- * @param {gamefile} gamefile - The gamefile
- * @param {string} shortmove - The move in most compact form: `1,2>3,4Q`
- * @returns {Move | undefined} The move object, or undefined if there was an error.
  */
-function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMoveMessage): Move {
+function calculateMoveFromPacket(gamefile: FullGame, movePacket: MovePacket): MoveFull {
 	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
 		throw Error(
-			"Cannot calculate Move object from shortmove when we're not viewing the most recently played move.",
+			"Cannot calculate MoveFull object from shortmove when we're not viewing the most recently played move.",
 		);
 
-	// Reconstruct the startCoords, endCoords, and special move properties of the MoveDraft
+	// Reconstruct the startCoords, endCoords, and special move properties of the MoveTagged
 
-	let moveDraft: MoveDraft;
+	let moveTagged: MoveTagged;
 	try {
-		moveDraft = icnconverter.parseCompactMove(shortmove.compact);
+		moveTagged = icnconverter.parseTokenMove(movePacket.token);
 	} catch (error) {
 		console.error(error);
 		throw Error(
-			`Failed to calculate Move from shortmove because it's in an incorrect format: ${shortmove.compact}`,
+			`Failed to calculate Move from shortmove because it's in an incorrect format: ${movePacket.token}`,
 		);
 	}
 
@@ -539,11 +571,11 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 	// special moves this piece can make, comparing them to the move's endCoords,
 	// and if there's a match, pass on the special move flag.
 
-	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveDraft.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveTagged.startCoords);
 	if (!piece) {
 		// No piece on start coordinates, can't calculate Move, because it's illegal
 		throw Error(
-			`Failed to calculate Move from shortmove because there's no piece on the start coords: ${shortmove.compact}`,
+			`Failed to calculate Move from shortmove because there's no piece on the start coords: ${movePacket.token}`,
 		);
 	}
 
@@ -551,14 +583,14 @@ function calculateMoveFromShortmove(gamefile: FullGame, shortmove: ServerGameMov
 	const legalSpecialMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendSpecialMoves(gamefile, piece, moveset, legalSpecialMoves, false);
 	for (const thisCoord of legalSpecialMoves.individual) {
-		if (!coordutil.areCoordsEqual(thisCoord, moveDraft.endCoords)) continue;
+		if (!coordutil.areCoordsEqual(thisCoord, moveTagged.endCoords)) continue;
 		// Matched coordinates! Transfer any special move tags
-		specialdetect.transferSpecialFlags_FromCoordsToMove(thisCoord, moveDraft);
+		specialdetect.transferSpecialTags_FromCoordsToMove(thisCoord, moveTagged);
 		break;
 	}
 
-	const move = generateMove(gamefile, moveDraft);
-	if (shortmove.clockStamp !== undefined) move.clockStamp = shortmove.clockStamp;
+	const move = generateMove(gamefile, moveTagged);
+	if (movePacket.clockStamp !== undefined) move.clockStamp = movePacket.clockStamp;
 	return move;
 }
 
@@ -593,7 +625,7 @@ function rewindMove(gamefile: FullGame): void {
  * @param {number} index
  * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
  */
-function goToMove(boardsim: Board, index: number, callback: (_move: Move) => void): void {
+function goToMove(boardsim: Board, index: number, callback: (_move: MoveFull) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;
 
 	const forwards = index >= boardsim.state.local.moveIndex;
@@ -627,9 +659,8 @@ function moveTowards(s: number, e: number, progress: number): number {
  * The move is automatically rewound when it's done.
  * @returns Whatever is returned by the callback
  */
-function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callback: () => R): R {
-	const move = generateMove(gamefile, moveDraft);
-	makeMove(gamefile, move);
+function simulateMoveWrapper<R>(gamefile: FullGame, moveTagged: MoveTagged, callback: () => R): R {
+	generateAndMakeMove(gamefile, moveTagged);
 	// What info can we pull from the game after simulating this move?
 	const info = callback();
 	rewindMove(gamefile);
@@ -642,32 +673,28 @@ function simulateMoveWrapper<R>(gamefile: FullGame, moveDraft: MoveDraft, callba
  */
 function getSimulatedConclusion(
 	gamefile: FullGame,
-	moveDraft: MoveDraft,
+	moveTagged: MoveTagged,
 ): GameConclusion | undefined {
-	return simulateMoveWrapper(gamefile, moveDraft, () => wincondition.getGameConclusion(gamefile));
+	return simulateMoveWrapper(gamefile, moveTagged, () =>
+		wincondition.getGameConclusion(gamefile),
+	);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-export type {
-	Move,
-	Edit,
-	BaseMove,
-	MoveDraft,
-	CoordsSpecial,
-	enpassantCreate,
-	enpassant,
-	promotion,
-	castle,
-	path,
-};
+export type { MoveFull, Edit, MoveRecord, MoveTagged, SpecialTags, MoveSpecialTags, CoordsTagged };
 
 export default {
+	// Constants
+	MOVE_SPECIAL_TAGS,
+	SPECIAL_TAGS,
+	// Functions
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,
 	hasCastlingPartner,
 	makeMove,
+	generateAndMakeMove,
 	updateTurn,
 	goToMove,
 	makeAllMovesInGame,

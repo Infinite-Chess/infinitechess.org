@@ -6,97 +6,127 @@
  *
  */
 
-import type { GameRules } from '../variants/gamerules.js';
-import type { GameConclusion } from '../logic/gamefile.js';
+import type { GameRules } from './gamerules.js';
 
-/** All possible game conclusion terminations. */
-const ALL_CONDITIONS = [
-	// Win/loss conditions (determined during gameplay)
+import * as z from 'zod';
+
+import typeutil from './typeutil.js';
+
+// Constants -----------------------------------------------------------------
+
+/**
+ * Win conditions that are valid gamerule options for either color.
+ * These are triggered by a move being made.
+ * This excludes action-based wins like time forfeit, resignation, and disconnect.
+ */
+const GAMERULE_WIN_CONDITIONS = [
 	'checkmate',
 	'royalcapture',
 	'allroyalscaptured',
 	'allpiecescaptured',
 	'koth', // King of the Hill
-	'time',
-	// Draw conditions
+] as const;
+
+/**
+ * Conditions where one player wins (victor is a Player).
+ * Covers both move-triggered wins and action-based wins.
+ */
+const WIN_CONDITIONS = [...GAMERULE_WIN_CONDITIONS, 'time', 'resignation', 'disconnect'] as const;
+
+/** Draw conditions that are triggered by a move being made. */
+const MOVE_TRIGGERED_DRAW_CONDITIONS = [
 	'stalemate',
 	'moverule',
 	'repetition',
-	'insuffmat', // insufficient material
-	'agreement',
-	// Game termination without completion
-	'resignation',
-	'disconnect',
-	'aborted',
+	'insuffmat', // Insufficient material
 ] as const;
+
+/** Conditions that result in a draw (victor is null). */
+const DRAW_CONDITIONS = [...MOVE_TRIGGERED_DRAW_CONDITIONS, 'agreement'] as const;
+
+/**
+ * List of all conclusions that are triggered by a move being made.
+ * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement,
+ * which can happen at any point in time.
+ */
+const MOVE_TRIGGERED_CONCLUSIONS = [
+	...GAMERULE_WIN_CONDITIONS,
+	...MOVE_TRIGGERED_DRAW_CONDITIONS,
+] as const;
+
+// Types --------------------------------------------------------------------------
+
+/** Condition where one player wins. victor will be a Player. */
+export type WinCondition = (typeof WIN_CONDITIONS)[number];
+/** Win condition that is a valid gamerule option for either color. */
+export type GameruleWinCondition = (typeof GAMERULE_WIN_CONDITIONS)[number];
+/** Condition that results in a draw. victor will be null. */
+export type DrawCondition = (typeof DRAW_CONDITIONS)[number];
+/** Condition that aborts the game. victor will be undefined. */
+type AbortCondition = 'aborted';
+type MoveTriggeredCondition = (typeof MOVE_TRIGGERED_CONCLUSIONS)[number];
 
 /**
  * Union type of all possible game conclusion conditions.
  * Represents how a game can be terminated.
  */
-export type Condition = (typeof ALL_CONDITIONS)[number];
+export type Condition = WinCondition | DrawCondition | AbortCondition;
 
-/** Valid win conditions that either color can have. */
-const validWinConditions = [
-	'checkmate',
-	'royalcapture',
-	'allroyalscaptured',
-	'allpiecescaptured',
-	'koth',
-];
+// Schemas --------------------------------------------------------------------------
+
+/** Stores the results of a game, including how it was terminated, and who won. */
+export type GameConclusion = z.infer<typeof gameConclusionSchema>;
+const gameConclusionSchema = z.discriminatedUnion('condition', [
+	z.strictObject({
+		condition: z.enum(WIN_CONDITIONS),
+		victor: typeutil.PlayerSchema,
+	}),
+	z.strictObject({
+		condition: z.enum(DRAW_CONDITIONS),
+		victor: z.literal(null),
+	}),
+	z.strictObject({
+		condition: z.literal('aborted'),
+		victor: z.undefined().optional(), // Allows accidental inclusion of undefined victor
+	}),
+]);
+
+// Constants --------------------------------------------------------------------------
 
 /**
- * List of all win conditions that happen after a move being made.
- * This excludes conclusions such as resignation, time, aborted, disconnect, and agreement.
- * which can happen at any point in time.
+ * Maps each game conclusion condition to its English termination string.
+ * Always English by convention, since ICN metadata should only ever be in English.
  */
-const decisiveGameConclusions = [
-	...validWinConditions,
-	'stalemate',
-	'repetition',
-	'moverule',
-	'insuffmat',
-];
+const TERMINATION_IN_ENGLISH = {
+	checkmate: 'Checkmate',
+	stalemate: 'Stalemate',
+	repetition: 'Threefold repetition',
+	/** The move count is inserted before this string. e.g. "50-move rule" */
+	moverule: '-move rule',
+	insuffmat: 'Insufficient material',
+	royalcapture: 'Royal capture',
+	allroyalscaptured: 'All royals captured',
+	allpiecescaptured: 'All pieces captured',
+	koth: 'King of the hill',
+	resignation: 'Resignation',
+	agreement: 'Agreement',
+	time: 'Time forfeit',
+	aborted: 'Aborted',
+	disconnect: 'Abandoned',
+} as const;
+
+// Functions --------------------------------------------------------------------------
 
 /**
- * true if the provided win condition is valid for any color to have in the gamerules.
- * This excludes draw conditions, and stuff like time forfeit or resignation.
- * @param winCondition - The win condition
- * @returns
- */
-function isWinConditionValid(winCondition: string): boolean {
-	return validWinConditions.includes(winCondition);
-}
-
-/**
- * Calculates if the provided game conclusion is a decisive conclusion.
+ * Calculates if the provided condition is move-triggered.
  * This is any conclusion that can happen after a move is made.
- * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
- * which can happen at any point in time.
- * @param gameConclusion - The gameConclusion
- * @returns *true* if the gameConclusion is decisive.
+ * Excludes conclusions like resignation, time, aborted, disconnect,
+ * and agreement, which can happen at any point in time.
+ * @param condition - The `condition` property of a `GameConclusion` object.
+ * @returns *true* if the condition is move-triggered.
  */
-function isGameConclusionDecisive(gameConclusion: GameConclusion | undefined): boolean {
-	if (gameConclusion === undefined) {
-		throw new Error(
-			'Should not be be testing if game conclusion is decisive when game is not over!',
-		);
-	}
-	return isConclusionDecisive(gameConclusion.condition);
-}
-
-/**
- * A variant of {@link isGameConclusionDecisive} with the game conclusion PRE-SPLIT to remove the victor from the first half of it!
- *
- * Calculates if the provided conclusion is a decisive conclusion.
- * This is any conclusion that can happen after a move is made.
- * Excludes conclusions like resignation, time, aborted, disconnect, and agreement.
- * which can happen at any point in time.
- * @param condition - The gameConclusion
- * @returns *true* if the gameConclusion is decisive.
- */
-function isConclusionDecisive(condition: string): boolean {
-	return decisiveGameConclusions.includes(condition);
+function isConclusionMoveTriggered(condition: Condition): boolean {
+	return MOVE_TRIGGERED_CONCLUSIONS.includes(condition as MoveTriggeredCondition);
 }
 
 /**
@@ -106,18 +136,18 @@ function isConclusionDecisive(condition: string): boolean {
  */
 function getTerminationInEnglish(gameRules: GameRules, condition: Condition): string {
 	if (condition === 'moverule') {
-		// One exception
+		// One exception - the move rule termination includes the number of moves until the auto-draw is triggered. For example, "50-move rule".
 		const numbWholeMovesUntilAutoDraw = gameRules.moveRule! / 2;
-		return `${translations['termination'].moverule[0]}${numbWholeMovesUntilAutoDraw}${translations['termination'].moverule[1]}`;
+		return `${numbWholeMovesUntilAutoDraw}${TERMINATION_IN_ENGLISH.moverule}`;
 	}
-	return translations['termination'][condition];
+	return TERMINATION_IN_ENGLISH[condition];
 }
 
 export default {
-	ALL_CONDITIONS,
+	gameConclusionSchema,
 
-	isWinConditionValid,
-	isGameConclusionDecisive,
-	isConclusionDecisive,
+	GAMERULE_WIN_CONDITIONS,
+
+	isConclusionMoveTriggered,
 	getTerminationInEnglish,
 };

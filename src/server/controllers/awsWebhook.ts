@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 
 import { addToBlacklist } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 const validator = new MessageValidator();
 
@@ -38,7 +38,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		});
 	} catch (err: unknown) {
 		const msg = err instanceof Error ? err.message : String(err);
-		logEventsAndPrint(
+		logEvents(
 			`[AWS WEBHOOK] Signature Verification Failed! Is this a hacker? Error: ${msg}`,
 			'awsNotifications.txt',
 		);
@@ -79,10 +79,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 	else if (messageType === 'Notification') {
 		// console.log('[AWS WEBHOOK] Processing notification...');
 		// Log entire message so we can learn unexpected structures
-		logEventsAndPrint(
-			`[AWS WEBHOOK] Received Notification: ${body.Message}`,
-			'awsNotifications.txt',
-		);
+		logEvents(`[AWS WEBHOOK] Received Notification: ${body.Message}`, 'awsNotifications.txt');
 
 		let sesMessage;
 		try {
@@ -109,17 +106,14 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				if (Array.isArray(recipients)) {
 					recipients.forEach((recipient: any) => {
 						const email = recipient.emailAddress;
-						logEventsAndPrint(
-							`[AWS WEBHOOK] Hard Bounce: ${email}`,
-							'awsNotifications.txt',
-						);
+						logEvents(`[AWS WEBHOOK] Hard Bounce: ${email}`, 'awsNotifications.txt');
 
 						// Add to our blacklist table (our db is synchronious, using better-sqlite3)
 						addToBlacklist(email, 'bounce');
 					});
 				}
 			} else {
-				logEventsAndPrint(
+				logEvents(
 					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${bounce.bounceType}`,
 					'awsNotifications.txt',
 				);
@@ -132,7 +126,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			if (Array.isArray(recipients)) {
 				recipients.forEach((recipient: any) => {
 					const email = recipient.emailAddress;
-					logEventsAndPrint(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications.txt');
+					logEvents(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications.txt');
 					addToBlacklist(email, 'spam_report');
 				});
 			}

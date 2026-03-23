@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'update-*'
+      - prod
       - distance-display
     paths-ignore:
       - '*.md'

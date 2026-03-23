@@ -8,7 +8,7 @@
 
 import type { Mesh } from '../../rendering/piecemodels';
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { _Move_Compact } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
@@ -26,8 +26,8 @@ import movesequence from '../../chess/movesequence';
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
  * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
  */
-function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Move_Compact): Edit {
-	const edit = generateMoveEdit(gamefile.boardsim, moveDraft);
+function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
+	const edit = generateMoveEdit(gamefile.boardsim, moveCoords);
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
 	GameBus.dispatch('physical-move');
@@ -44,11 +44,11 @@ function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveDraft: _Mo
  * which don't execute special moves, nor are appeneded to the game's moves list,
  * nor the gamefile's moveIndex property updated.
  */
-function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
-	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveDraft.startCoords);
+function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveCoords.startCoords);
 	if (!piece)
 		throw Error(
-			`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveDraft.startCoords)}.`,
+			`Cannot generate move edit because no piece exists at coords ${JSON.stringify(moveCoords.startCoords)}.`,
 		);
 
 	// Initialize the state, and change list, as empty for now.
@@ -57,11 +57,11 @@ function generateMoveEdit(boardsim: Board, moveDraft: _Move_Compact): Edit {
 		state: { local: [], global: [] },
 	};
 
-	movepiece.calcMovesChanges(boardsim, piece, moveDraft, edit); // Move piece regularly (no specials)
+	movepiece.calcMovesChanges(boardsim, piece, moveCoords, edit); // Move piece regularly (no specials)
 
 	// Queue the state change transfer of this edit's special right to its new destination.
-	const startCoordsKey = coordutil.getKeyFromCoords(moveDraft.startCoords);
-	const endCoordsKey = coordutil.getKeyFromCoords(moveDraft.endCoords);
+	const startCoordsKey = coordutil.getKeyFromCoords(moveCoords.startCoords);
+	const endCoordsKey = coordutil.getKeyFromCoords(moveCoords.endCoords);
 	const hasSpecialRight = boardsim.state.global.specialRights.has(startCoordsKey);
 	const destinationHasSpecialRight = boardsim.state.global.specialRights.has(endCoordsKey);
 	state.createSpecialRightsState(edit, startCoordsKey, hasSpecialRight, false); // Delete the special right from the startCoords, if it exists

@@ -15,20 +15,19 @@
  */
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { MetaData } from '../../../../../../shared/chess/util/metadata';
-import type { StorageType } from '../boardeditor';
 import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
-import type { ServerGameMoveMessage } from '../../../../../../server/game/gamemanager/gameutility';
+import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
 import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state';
+import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
 import variant from '../../../../../../shared/chess/variants/variant';
-import timeutil from '../../../../../../shared/util/timeutil';
+import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
-import typeutil, { players as p } from '../../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
@@ -39,7 +38,7 @@ import gamefile, {
 	FullGame,
 } from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
-	_Move_Out,
+	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
@@ -53,12 +52,13 @@ import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
+import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
-import gameformulator from '../../chess/gameformulator';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import clientmetadatautil from '../../chess/clientmetadatautil';
+import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
-import { engineDictionary, getFormattedEngineName } from '../../chess/engines/engine';
 
 // Constants ----------------------------------------------------------------------
 
@@ -91,14 +91,6 @@ async function clearAll(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
-	const metadata: MetaData = {
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
-	};
 	const gameRules = variant.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
@@ -113,7 +105,6 @@ async function clearAll(): Promise<void> {
 	boardeditor.clearActivePosition();
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
-			metadata,
 			additional: {
 				variantOptions,
 			},
@@ -130,21 +121,15 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 	// Unload logical and rendering parts of current position
 	gameloader.unloadLogicalAndRendering();
 
-	// Load given savestate
-	const metadata: MetaData = {
-		Variant: 'Classical',
-		TimeControl: '-',
-		Event: `Position created using ingame board editor`,
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		UTCDate: timeutil.getCurrentUTCDate(),
-		UTCTime: timeutil.getCurrentUTCTime(),
-	};
+	// prettier-ignore
+	const new_active_position: ActivePosition =
+		storage_type === 'cloud'
+			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
+			: { name: editorSaveState.position_name, storage_type: 'local' };
+	boardeditor.setActivePosition(new_active_position);
 
-	boardeditor.setActivePosition(editorSaveState.position_name, storage_type);
 	await gameloader.startBoardEditorFromCustomPosition(
 		{
-			metadata,
 			additional: {
 				variantOptions: editorSaveState.variantOptions,
 			},
@@ -217,24 +202,17 @@ function startLocalGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const variantOptions = getCurrentPositionInformation(true);
+	if (isPositionIllegal(variantOptions)) {
+		toast.show(translations.editor.illegal_position_king_capture, { error: true });
+		return;
+	}
 	if (variantOptions.position.size === 0) {
 		toast.show(translations.editor.cannot_start_local_empty, { error: true });
 		return;
 	}
 
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata: MetaData = {
-		Event: 'Position created using ingame board editor',
-		Site: 'https://www.infinitechess.org/',
-		TimeControl: '-',
-		Round: '-',
-		UTCDate,
-		UTCTime,
-	};
-
 	gameloader.unloadGame();
 	gameloader.startCustomLocalGame({
-		metadata,
 		additional: {
 			variantOptions,
 		},
@@ -248,6 +226,10 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 
 	// Get current position
 	const variantOptions = getCurrentPositionInformation(true);
+	if (isPositionIllegal(variantOptions)) {
+		toast.show(translations.editor.illegal_position_king_capture, { error: true });
+		return;
+	}
 
 	// Determine whether it's not supported...
 
@@ -301,29 +283,9 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
-	const formattedEngineName = getFormattedEngineName(currentEngine, engineUIConfig.strengthLevel);
-
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(Date.now());
-	const metadata: MetaData = {
-		Event: 'Position created using ingame board editor',
-		Site: 'https://www.infinitechess.org/',
-		Round: '-',
-		TimeControl: engineUIConfig.TimeControl,
-		White:
-			engineUIConfig.youAreColor === p.WHITE
-				? translations.you_indicator
-				: formattedEngineName,
-		Black:
-			engineUIConfig.youAreColor === p.BLACK
-				? translations.you_indicator
-				: formattedEngineName,
-		UTCDate,
-		UTCTime,
-	};
-
 	gameloader.unloadGame();
 	gameloader.startCustomEngineGame({
-		metadata,
+		timeControl: engineUIConfig.timeControl,
 		additional: {
 			variantOptions,
 		},
@@ -338,6 +300,26 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 }
 
 // Helpers ----------------------------------------------------------------
+
+/**
+ * Returns true if the current editor position is illegal to start a checkmate game from,
+ * because the 2nd player to move is already in check on turn 1 — meaning the 1st player
+ * could immediately capture their royal piece, which can only happen in illegal positions.
+ */
+function isPositionIllegal(variantOptions: VariantOptions): boolean {
+	// Only applicable when checkmate is used by any player
+	const checkmateUsed = Object.values(variantOptions.gameRules.winConditions).some((conds) =>
+		conds.includes('checkmate'),
+	);
+	if (!checkmateUsed) return false; // King capture legal in non-checkmate variants
+
+	// The 2nd player to move is the one whose royal could be captured on the 1st move
+	const secondPlayer = variantOptions.gameRules.turnOrder[1];
+	if (secondPlayer === undefined) return false; // Umm why did this happen?
+
+	const result = checkdetection.detectCheck(gameslot.getGamefile()!, secondPlayer);
+	return result.check; // Illegal position (allows king capture)
+}
 
 /** Queues the removal of all pieces from the position. */
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
@@ -414,14 +396,18 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
-	// If the variant has been translated, the variant metadata needs to be converted from language-specific to internal game code else keep it the same
-	if (longformOut.metadata.Variant)
-		longformOut.metadata.Variant =
-			gameformulator.convertVariantFromSpokenLanguageToCode(longformOut.metadata.Variant) ||
-			longformOut.metadata.Variant;
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
+	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
 
-	let { position, specialRights } =
-		pastegame.getPositionAndSpecialRightsFromLongFormat(longformOut);
+	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(
+		longformOut,
+		resolvedVariantCode,
+		timestamp,
+	);
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
@@ -436,12 +422,17 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		};
 		const additional: Additional = {
 			variantOptions,
-			moves: longformOut.moves.map((m: _Move_Out) => {
-				const move: ServerGameMoveMessage = { compact: m.compact };
+			moves: longformOut.moves.map((m: MoveParsed) => {
+				const move: MovePacket = { token: m.token };
 				return move;
 			}),
 		};
-		const loadedGamefile = gamefile.initFullGame(longformOut.metadata, additional);
+		const loadedGamefile = gamefile.initFullGame(
+			longformOut.metadata,
+			timestamp,
+			resolvedVariantCode,
+			additional,
+		);
 		const gamestate: SimplifiedGameState = {
 			position,
 			state_global,

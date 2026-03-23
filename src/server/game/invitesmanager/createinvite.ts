@@ -2,19 +2,17 @@
 
 /**
  * This script handles invite creation, making sure that the invites have valid properties.
- *
- * Here we also read allowinvites.js to see if we are currently allowing new invites or not.
  */
 
-import type { Rating } from '../../database/leaderboardsManager.js';
 import type { Invite } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { ServerUsernameContainer } from '../../../shared/types.js';
+import type { Rating, ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
-import variant from '../../../shared/chess/variants/variant.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import { variantCodes } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
@@ -23,11 +21,8 @@ import {
 
 import timecontrol from '../timecontrol.js';
 import { getTranslation } from '../../utility/translate.js';
-import { isServerRestarting } from '../updateServerRestart.js';
-import { printActiveGameCount } from '../gamemanager/gamecount.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { getMinutesUntilServerRestart } from '../timeServerRestarts.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	existingInviteHasID,
@@ -39,7 +34,7 @@ import {
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
 	.strictObject({
-		variant: z.string().refine(variant.isVariantValid, { error: 'Invalid variant.' }),
+		variant: z.enum(variantCodes),
 		// `${number}+${number}` | '-'
 		clock: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
@@ -67,18 +62,15 @@ type CreateInviteMessage = z.infer<typeof createinviteschem>;
 
 /**
  * Creates a new invite from their websocket message.
- *
- * This is async because we need to read allowinvites.json to see
- * if new invites are allowed, before we create it.
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
  * @param replyto - The incoming websocket message ID, to include in the reply
  */
-async function createInvite(
+function createInvite(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
 	replyto?: number,
-): Promise<void> {
+): void {
 	// invite: { id, owner, variant, clock, color, rated, publicity }
 	if (isSocketInAnActiveGame(ws))
 		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
@@ -95,9 +87,6 @@ async function createInvite(
 		console.error("Player already has existing invite, can't create another!");
 		return;
 	}
-
-	// Are we restarting the server soon (invites not allowed)?
-	if (!(await isAllowedToCreateInvite(ws, replyto))) return; // Our response will have already been sent
 
 	const invite = getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
 	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
@@ -175,7 +164,7 @@ function getInviteFromWebsocketMessageContents(
 
 	const usernamecontainer: ServerUsernameContainer = {
 		type: owner.signedIn ? 'player' : 'guest',
-		username: owner.signedIn ? owner.username : '(Guest)',
+		username: owner.signedIn ? owner.username : metadatautil.GUEST_NAME_ICN_METADATA,
 		rating,
 	};
 
@@ -190,33 +179,6 @@ function getInviteFromWebsocketMessageContents(
 		tag: messageContents.tag,
 		publicity: messageContents.publicity,
 	};
-}
-
-/**
- * Returns true if the user is allowed to create a new invite at this time,
- * depending on whether the server is about to restart, or they have the owner role.
- * @param ws - The socket attempting to create a new invite
- * @param replyto - The incoming websocket message ID, to include in the reply
- * @returns true if invite creation is allowed
- */
-async function isAllowedToCreateInvite(ws: CustomWebSocket, replyto?: number): Promise<boolean> {
-	if (!(await isServerRestarting())) return true; // Server not restarting, all new invites are allowed!
-
-	// Server is restarting... Do we have admin perms to create an invite anyway?
-
-	if (ws.metadata.memberInfo.signedIn && ws.metadata.memberInfo.roles?.includes('owner'))
-		return true; // They are allowed to make an invite!
-
-	// Making an invite is NOT allowed...
-
-	printActiveGameCount();
-	const timeUntilRestart = getMinutesUntilServerRestart();
-	const message = timeUntilRestart
-		? 'server.javascript.ws-server_restarting'
-		: 'server.javascript.ws-server_under_maintenance';
-	sendNotify(ws, message, { customNumber: timeUntilRestart, replyto });
-
-	return false; // NOT allowed to make an invite!
 }
 
 export { createInvite, createinviteschem };

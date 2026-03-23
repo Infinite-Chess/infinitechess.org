@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "90"
+version = "95"
 maintainer = "Naviary"
 
 [header]
@@ -233,7 +233,7 @@ clear_message = "Do you want to clear the board and create a new position? Unsav
 enter_position_name = "Enter position name:"
 save_button = "Save"
 name_header = "Name"
-pieces_header = "Pieces" # Represent piece count
+pieces_header = "Pieces" # Represents piece count
 date_header = "Date" # Represents date last modified
 # Game Rules window
 gamerules_header = "Game Rules"
@@ -502,7 +502,6 @@ cannot_paste_after_moves = "Cannot paste game after moves are made!"
 clipboard_denied = "Clipboard permission denied. This might be your browser."
 clipboard_invalid = "Clipboard is not in valid ICN notation."
 game_needs_to_specify = "Game needs to specify either the 'Variant' metadata, or 'position' property."
-invalid_wincon = "Player has an invalid win condition"
 pasting_game = "Pasting game..."
 pasting_in_private = "Pasting a game in a private match will cause a desync if your opponent doesn't do the same!"
 piece_count = "Piece count"
@@ -547,10 +546,6 @@ auto_aborting_in = "Auto-aborting in"
 not_logged_in = "You are not logged in. Please login to reconnect to this game."
 game_no_longer_exists = "Game no longer exists."
 another_window_connected = "Another window has connected."
-server_restarting = "Server restarting shortly..."
-server_restarting_in = "Server restarting in"
-minute = "minute"
-minutes = "minutes"
 
 [play.javascript.websocket]
 no_connection = "No connection."
@@ -564,22 +559,6 @@ origin_error = "Origin error."
 connection_closed = "Connection closed unexpectedly. Server message:"
 please_report_bug = "This should never happen, please report this bug!"
 malformed_message = "Received unexpected websocket message. Please report this bug!"
-
-[play.javascript.termination] # What caused the termination of the game, in spoken language
-checkmate = "Checkmate"
-stalemate = "Stalemate"
-repetition = "Threefold repetition"
-moverule = ["", "-move rule"]  # The game inserts a number inbetween these two strings
-insuffmat = "Insufficient material"
-royalcapture = "Royal capture"
-allroyalscaptured = "All royals captured"
-allpiecescaptured = "All pieces captured"
-koth = "King of the hill"
-resignation = "Resignation"
-agreement = "Agreement" 
-time = "Time forfeit"
-aborted = "Aborted" # Game was cancelled (no elo exchanged)
-disconnect = "Abandoned" # A player left
 
 [play.javascript.results]
 you_checkmate = "You win by checkmate!"
@@ -644,13 +623,14 @@ overwrite_message = ["Are you sure that you want to overwrite position \"", "\"?
 # Save list row tooltips
 tooltip_load_position = "Load position"
 tooltip_save_to_cloud = "Save to cloud"
-tooltip_remove_from_cloud = "Remove from cloud"
+tooltip_remove_from_cloud = "Remove from cloud" # Transfer position from cloud to local browser
 tooltip_delete_position = "Delete position"
 # Toast messages
 position_loaded = "Position successfully loaded."
 cannot_start_local_empty = "Cannot start local game from empty position!"
 cannot_start_engine_empty = "Cannot start engine game from empty position!"
 position_not_supported = "Position is not supported for reason:"
+illegal_position_king_capture = "Illegal position: King capture possible on turn 1."
 saved_in_browser = "Position saved in browser."
 position_corrupted = "The position was corrupted."
 failed_to_load = "Failed to load position:"
@@ -770,10 +750,6 @@ ws-server_error = "Sorry, there was a server error! Please go back."
 ws-not_found = "404 Not Found"
 ws-forbidden = "Forbidden."
 ws-already_in_game = "You are already in a game."
-ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
-ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
-ws-minutes = "minutes" # unit of time
-ws-minute = "minute" # unit of time
 ws-you_cheated = "Oops! You played something illegal. Game has been aborted. If this was a mistake, please report this bug!"
 ws-opponent_cheated = "We caught your opponent playing something illegal. Game has been aborted."
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."

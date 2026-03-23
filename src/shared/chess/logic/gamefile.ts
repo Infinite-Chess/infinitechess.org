@@ -1,17 +1,18 @@
 // src/shared/chess/logic/gamefile.ts
 
-import type { MetaData } from '../util/metadata.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { GameRules } from '../variants/gamerules.js';
-import type { Condition } from '../util/winconutil.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { ClockData } from './clock.js';
+import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
+import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
-import type { Move, BaseMove } from './movepiece.js';
+import type { GameConclusion } from '../util/winconutil.js';
 import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
-import type { ServerGameMoveMessage } from '../../../server/game/gamemanager/gameutility.js';
-import type { ClockData, ClockValues } from './clock.js';
+import type { MoveFull, MoveRecord } from './movepiece.js';
+import type { ClockValues, MetaData } from '../../types.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
@@ -22,7 +23,7 @@ import typeutil from '../util/typeutil.js';
 import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from '../util/gamerules.js';
 import legalmoves from './legalmoves.js';
 import initvariant from './initvariant.js';
 import wincondition from './wincondition.js';
@@ -41,14 +42,6 @@ interface Snapshot {
 	box: BoundingBox;
 }
 
-/** Stores the results of a game, including how it was terminated, and who won. */
-type GameConclusion = {
-	/** How the game terminated. */
-	condition: Condition;
-	/** Which player was victorious. null = DRAW. undefined = ABORTED */
-	victor?: Player | null;
-};
-
 /**
  * Purely game data
  * Used on both sides
@@ -56,7 +49,9 @@ type GameConclusion = {
 type Game = {
 	/** Information about the game */
 	metadata: MetaData;
-	moves: BaseMove[];
+	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
+	dateTimestamp: number;
+	moves: MoveRecord[];
 	gameRules: GameRules;
 	whosTurn: Player;
 	gameConclusion?: GameConclusion;
@@ -85,7 +80,7 @@ type Board = {
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[];
 
-	moves: Move[];
+	moves: MoveFull[];
 	pieces: OrganizedPieces;
 	state: GameState;
 
@@ -98,6 +93,12 @@ type Board = {
 
 	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
 	editor: boolean;
+
+	/**
+	 * The variant code. Null for custom/pasted positions without a known variant.
+	 * Is used to infer variant-specific game rules, such as piece movesets.
+	 */
+	variant: VariantCode | null;
 
 	/**
 	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
@@ -118,8 +119,8 @@ type FullGame = {
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
 interface Additional {
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves?: ServerGameMoveMessage[];
+	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. */
+	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
 	/** The conclusion of the game, if loading an online game that has already ended. */
@@ -137,21 +138,23 @@ interface Additional {
 /** Creates a new {@link Game} object from provided arguments */
 function initGame(
 	metadata: MetaData,
-	variantOptions?: VariantOptions,
+	dateTimestamp: number,
+	variantCode: VariantCode | null,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
+	variantOptions?: VariantOptions,
 ): Game {
-	const gameRules = initvariant.getVariantGamerules(metadata, variantOptions);
+	const gameRules = initvariant.getVariantGamerules(variantCode, dateTimestamp, variantOptions);
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
 		metadata,
+		dateTimestamp,
 		moves: [],
 		gameRules,
 		whosTurn: gameRules.turnOrder[0]!,
-		gameConclusion,
 		...clockDependantVars,
 	};
 
@@ -163,13 +166,16 @@ function initGame(
 		clock.edit(game.clocks, clockValues);
 	}
 
+	gamefileutility.setConclusion(game, gameConclusion);
+
 	return game;
 }
 
-/** Creates a new {@link Board} object from provided arguements */
+/** Creates a new {@link Board} object from provided arguments */
 function initBoard(
 	gameRules: GameRules,
-	metadata: MetaData,
+	variantCode: VariantCode | null,
+	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
@@ -177,7 +183,8 @@ function initBoard(
 ): Board {
 	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
 		gameRules,
-		metadata,
+		variantCode,
+		dateTimestamp,
 		variantOptions,
 	);
 
@@ -191,7 +198,8 @@ function initBoard(
 	};
 
 	const { pieceMovesets, specialMoves } = initvariant.getPieceMovesets(
-		metadata,
+		variantCode,
+		dateTimestamp,
 		gameRules.slideLimit,
 	);
 
@@ -211,7 +219,7 @@ function initBoard(
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(metadata.Variant);
+	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(variantCode);
 	if (worldBorderDist !== undefined) {
 		if (worldBorderProperty === undefined)
 			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
@@ -236,9 +244,13 @@ function initBoard(
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(metadata, existingRawTypes);
+	const specialVicinity = legalmoves.genSpecialVicinity(
+		variantCode,
+		dateTimestamp,
+		existingRawTypes,
+	);
 
-	const moves: Move[] = [];
+	const moves: MoveFull[] = [];
 	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
 	const colinearsPresent = movesets.areColinearsPresent(pieceMovesets);
 
@@ -254,6 +266,7 @@ function initBoard(
 		pieceMovesets,
 		specialMoves,
 		editor,
+		variant: variantCode,
 		startSnapshot,
 	};
 }
@@ -265,8 +278,7 @@ function initBoard(
 function loadGameWithBoard(
 	basegame: Game,
 	boardsim: Board,
-	moves: ServerGameMoveMessage[] = [],
-	gameConclusion?: GameConclusion,
+	moves: MovePacket[] = [],
 	validateMoves?: boolean,
 ): FullGame {
 	const gamefile = { basegame, boardsim };
@@ -292,10 +304,8 @@ function loadGameWithBoard(
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
-	/** The game's conclusion, if it is over. For example, `'1 checkmate'`
-	 * Server's gameConclusion should overwrite preexisting gameConclusion. */
-	if (gameConclusion) basegame.gameConclusion = gameConclusion;
-	else gamefileutility.doGameOverChecks(gamefile);
+	// Do not overwrite pre-existing server conclusion, if present.
+	if (basegame.gameConclusion === undefined) gamefileutility.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
@@ -306,36 +316,34 @@ function loadGameWithBoard(
  */
 function initFullGame(
 	metadata: MetaData,
+	dateTimestamp: number,
+	variantCode: VariantCode | null,
 	additional: Additional = {},
 	validateMoves?: true,
 ): FullGame {
 	const basegame = initGame(
 		metadata,
-		additional.variantOptions,
+		dateTimestamp,
+		variantCode,
 		additional.gameConclusion,
 		additional.clockValues,
+		additional.variantOptions,
 	);
 	const boardsim = initBoard(
 		basegame.gameRules,
-		basegame.metadata,
+		variantCode,
+		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(
-		basegame,
-		boardsim,
-		additional.moves,
-		additional.gameConclusion,
-		validateMoves,
-	);
+	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,
 	initBoard,
-	loadGameWithBoard,
 	initFullGame,
 };

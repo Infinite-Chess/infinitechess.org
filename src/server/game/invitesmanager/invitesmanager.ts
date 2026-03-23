@@ -32,7 +32,7 @@ import {
 //-------------------------------------------------------------------------------------------
 
 /** Whether to log new invite creations/deletions to the console */
-const printNewInviteCreationsAndDeletions = true;
+const printNewInviteCreationsAndDeletions = false;
 
 /** The number of digits generated invite IDs are. */
 const IDLengthOfInvites = 5;
@@ -268,12 +268,7 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
  * their socket was previously closed by a network interruption.
  */
 function subToInvitesList(ws: CustomWebSocket): void {
-	// data: { route, action, value, id }
-	if (ws.metadata.subscriptions.invites)
-		return console.log(
-			`CANNOT double-subscribe this socket to the invites list!! They should not have requested this! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
-	// if (ws.metadata.subscriptions.invites) return; // Already subscribed
+	if (ws.metadata.subscriptions.invites) return; // Already subscribed. Happens occasionally
 
 	addSocketToInvitesSubs(ws);
 	sendClientInvitesList(ws);
@@ -351,9 +346,10 @@ function deleteUsersExistingInvite(
 		// Match! Delete
 		invites.splice(i, 1); // Delete the invite
 		if (isInvitePublic(invite)) deletedPublicInvite = true;
-		console.log(
-			`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
-		);
+		if (printNewInviteCreationsAndDeletions)
+			console.log(
+				`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
+			);
 	}
 
 	if (deletedPublicInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted

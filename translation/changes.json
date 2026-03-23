@@ -1,4 +1,19 @@
 {
+  "95": {
+    "note": "Removed ws-server_restarting, ws-server_under_maintenance, ws-minutes, ws-minute, lines 757-760. Also removed server_restarting, server_restarting_in, minute, minutes, lines 549-552. "
+  },
+  "94": {
+    "note": "Update server_restarting line 549 to reflect games are resumed now after server restarts."
+  },
+  "93": {
+    "note": "Deleted the whole [play.javascript.termination] section, lines 567-581"
+  },
+  "92": {
+    "note": "Deleted invalid_wincon line 505"
+  },
+  "91": {
+    "note": "Added illegal_position_king_capture line 654."
+  },
   "90": {
     "note": "Removed editing_heading and editing_paragraphs from [play.guide] lines 309-314"
   },

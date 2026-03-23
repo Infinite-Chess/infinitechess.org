@@ -13,27 +13,23 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
-import type {
-	GameUpdateMessage,
-	ServerGameMoveMessage,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
+import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';
 
-import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
 import gameslot from '../../chess/gameslot.js';
-import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
+import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
-import animation from '../../rendering/animation.js';
 import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
-import { animateMove } from '../../chess/graphicalchanges.js';
 
 // Functions -----------------------------------------------------------------------------
 
@@ -56,25 +52,22 @@ function handleServerGameUpdate(
 	 * We need to do this because sometimes the game can end before the
 	 * server sees our move, but on our screen we have still played it.
 	 */
-	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion); // { opponentPlayedIllegalMove }
+	const result = synchronizeMovesList(
+		gamefile,
+		mesh,
+		message.moves,
+		claimedGameConclusion,
+		message.forceSync,
+	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
-		message.participantState,
-		message.serverRestartingAt,
-	);
+	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
 
 	// Must be set before editing the clocks.
-	gamefile.basegame.gameConclusion = claimedGameConclusion;
+	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);
 
 	// Adjust the timer whos turn it is depending on ping.
-	if (message.clockValues) {
-		if (gamefile.basegame.untimed)
-			throw Error('Received clock values in a game update for an untimed game??');
-		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-		clock.edit(gamefile.basegame.clocks, message.clockValues);
-		guiclock.edit(gamefile.basegame);
-	}
+	movesendreceive.applyClockValues(gamefile, message.clockValues);
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.concludeGame();
@@ -88,13 +81,15 @@ function handleServerGameUpdate(
  * @param gamefile - The gamefile
  * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
+ * @param forceSync - If true, skip the early-exit re-submit path and force our move list to exactly match the server's
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(
 	gamefile: FullGame,
 	mesh: Mesh | undefined,
-	moves: ServerGameMoveMessage[],
+	moves: MovePacket[],
 	claimedGameConclusion: GameConclusion | undefined,
+	forceSync: boolean,
 ): { opponentPlayedIllegalMove: boolean } {
 	const { boardsim } = gamefile;
 	// console.log("Resyncing...");
@@ -102,6 +97,8 @@ function synchronizeMovesList(
 	// Early exit case. If we have played exactly 1 more move than the server,
 	// and the rest of the moves list matches, don't modify our moves,
 	// just re-submit our move!
+	// Skip this if forceSync is set — the server wants us to match its state exactly
+	// (e.g. it rejected our last move as illegal).
 	const hasOneMoreMoveThanServer = boardsim.moves.length === moves.length + 1;
 	const finalMoveIsOurMove =
 		boardsim.moves.length > 0 &&
@@ -113,8 +110,9 @@ function synchronizeMovesList(
 		(moves.length === 0 && boardsim.moves.length === 1) ||
 		(boardsim.moves.length > 1 &&
 			moves.length > 0 &&
-			previousMove!.compact === moves[moves.length - 1]!.compact);
+			previousMove!.token === moves[moves.length - 1]!.token);
 	if (
+		!forceSync &&
 		!claimedGameConclusion &&
 		hasOneMoreMoveThanServer &&
 		finalMoveIsOurMove &&
@@ -129,95 +127,84 @@ function synchronizeMovesList(
 	movesequence.viewFront(gamefile, mesh);
 	let aChangeWasMade = false;
 
-	while (boardsim.moves.length > moves.length) {
-		// While we have more moves than what the server does.. (usually only happens if we move RIGHT before they resign)
-		premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
-		// Terminate all current animations to avoid a crash when undoing moves.
-		// Technically this only needs to be done once if rewinding at all.
-		animation.clearAnimations();
+	/** The index of the lastest move in the game we agree with the server on. -1 = starting position. */
+	const latestMatchingMoveIndex = findLastestMatchingMoveIndex(boardsim.moves, moves);
+
+	// Rewind moves until we reach the first move we agree with the server on.
+	// Catches our move if we moved RIGHT after the game ended but we haven't seen the conclusion.
+	for (let i = boardsim.moves.length - 1; i > latestMatchingMoveIndex; i--) {
+		console.log(`Rewinding move index ${i} while resyncing to online game.`);
 		movesequence.rewindMove(gamefile, mesh);
-		console.log('Rewound one move while resyncing to online game.');
 		aChangeWasMade = true;
 	}
 
-	let i = moves.length - 1;
-	while (true) {
-		// Decrement i until we find the latest move at which we're in sync, agreeing with the server about.
-		if (i === -1) break; // Beginning of game
-		const thisGamefileMove = boardsim.moves[i];
-		if (thisGamefileMove) {
-			// The move is defined
-			if (thisGamefileMove.compact! === moves[i]!.compact) break; // The moves MATCH
-			// The moves don't match... remove this one off our list.
-			premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
-			// Terminate all current animations to avoid a crash when undoing moves.
-			// Technically this only needs to be done once if rewinding at all.
-			animation.clearAnimations();
-			movesequence.rewindMove(gamefile, mesh);
-			console.log('Rewound one INCORRECT move while resyncing to online basegame.');
+	let opponentPlayedIllegalMove: boolean = false;
+	/** Whether or not we forwarded at least one of OUR OWN moves the server had that we didn't. */
+	let atleastOneOfOurMovesWasForwarded: boolean = false;
+
+	// Forward moves until we perfectly match the server's moves list.
+	premoves.performWithUnapplied(gamefile, mesh, () => {
+		const ourColor = onlinegame.getOurColor();
+		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
+			// Incrementally add the server's correct moves to our own moves list
+			const isLastMove = i === moves.length - 1;
+			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile.basegame, i);
+			const isOpponentMove = playerOfMove !== ourColor;
+
+			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
+			// Convert the move from compact short format "x,y>x,y=N" to JSON.
+			// Gauranteed by the server to be parsable.
+			const moveTagged: MoveTagged = icnconverter.parseTokenMove(thisShortmove.token);
+
+			if (isOpponentMove) {
+				// Perform legality checks
+				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
+					gamefile,
+					moveTagged,
+					claimedGameConclusion,
+				);
+				// Only report cheating in games where the server won't delete the game instantly when it ends
+				if (
+					movesendreceive.checkAndReportIllegalOpponentMove(
+						gamefile,
+						moveValidationResult,
+						thisShortmove.token,
+						i + 1,
+					)
+				) {
+					opponentPlayedIllegalMove = true;
+					return false; // Don't physically play next premove
+				}
+			} else {
+				atleastOneOfOurMovesWasForwarded = true;
+			}
+
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
+				doGameOverChecks: isLastMove,
+			}); // Automatically cancels animations of forwarded moves in previous loops
+
+			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
+			if (isOpponentMove) guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
+
+			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;
 		}
-		i--;
-	}
 
-	// i is now the index of the latest move that MATCHES in both ours and the server's moves lists.
-
-	// Unapply premoves before making board changes
-	premoves.rewindPremoves(gamefile, mesh);
-
-	const ourColor = onlinegame.getOurColor();
-	while (i < moves.length - 1) {
-		// Increment i, adding the server's correct moves to our moves list
-		i++;
-
-		const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
-		const moveDraft = icnconverter.parseCompactMove(thisShortmove.compact);
-
-		const colorThatPlayedThisMove = moveutil.getColorThatPlayedMoveIndex(gamefile.basegame, i);
-		const opponentPlayedThisMove = colorThatPlayedThisMove !== ourColor;
-
-		if (opponentPlayedThisMove) {
-			// Perform legality checks
-			// If not legal, this will be a string for why it is illegal.
-			// THIS ATTACHES ANY SPECIAL FLAGS TO THE MOVE
-			const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-				gamefile,
-				moveDraft,
-				claimedGameConclusion,
-			);
-			if (!moveValidationResult.valid) {
-				console.log(
-					`Buddy made an illegal play: "${thisShortmove.compact}". Reason: ${moveValidationResult.reason} Move number: ${i + 1}`,
-				);
-			}
-			if (!moveValidationResult.valid && !onlinegame.getIsPrivate()) {
-				// Only report cheating in non-private games
-				onlinegame.reportOpponentsMove(moveValidationResult.reason);
-				// Since we're about to early exit. Be sure to re-apply premoves, then cancel them!
-				premoves.applyPremoves(gamefile, mesh);
-				premoves.cancelPremoves(gamefile, mesh);
-				return { opponentPlayedIllegalMove: true };
-			}
+		// Whether we're good to physically play the next premove depends on whether it is our turn or not,
+		// AND whether we forwarded at least one of our own moves that the server had that we didn't.
+		if (!atleastOneOfOurMovesWasForwarded && ourColor === gamefile.basegame.whosTurn) {
+			return true; // Good to physically play next premove
+		} else {
+			return false; // Don't physically play next premove
 		}
+	});
 
-		onlinegame.onMovePlayed({ isOpponents: opponentPlayedThisMove });
+	// If we happened to forward one of our own moves forwarded (not sure when our state
+	// would be so behind to inherit this), then also cancel all premoves we had.
+	if (atleastOneOfOurMovesWasForwarded) premoves.cancelPremoves(gamefile, mesh);
 
-		const isLastMove = i === moves.length - 1; // Animate only if it's the last move.
-		const move = movesequence.makeMove(gamefile, mesh, moveDraft, {
-			doGameOverChecks: isLastMove,
-		});
-		if (isLastMove) animateMove(move.changes, true); // Only animate on the last forwarded move.
-
-		console.log('Forwarded one move while resyncing to online game.');
-		aChangeWasMade = true;
-	}
-
-	// Whether we call applyPremoves(), or onYourMove() depends on whether it is our turn or not.
-	if (ourColor === gamefile.basegame.whosTurn) {
-		premoves.onYourMove(gamefile, mesh); // Submits the next premove, if legal, and reapplies the remaining ones.
-	} else {
-		premoves.applyPremoves(gamefile, mesh); // Doesn't submit the first premove, but reapplies all of them.
-	}
+	if (opponentPlayedIllegalMove) return { opponentPlayedIllegalMove: true };
 
 	if (!aChangeWasMade) movesequence.viewIndex(gamefile, mesh, originalMoveIndex);
 	else selection.reselectPiece(); // Reselect the selected piece from before we resynced. Recalc its moves and recolor it if needed.
@@ -225,7 +212,21 @@ function synchronizeMovesList(
 	return { opponentPlayedIllegalMove: false }; // No cheating detected
 }
 
+/**
+ * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
+ * @param ourMoves - Our moves list in compact form: `['1,2>3,4','5,6>7,8Q']`
+ * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
+ */
+function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
+	if (ourMoves.length === 0) return -1; // We only agree with the starting position
+	for (let i = 0; i < ourMoves.length; i++) {
+		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
+	}
+	return ourMoves.length - 1; // We agree with all
+}
+
+// Exports -------------------------------------------------------------------
+
 export default {
 	handleServerGameUpdate,
-	synchronizeMovesList,
 };

@@ -21,30 +21,6 @@ function secondsToMillis(seconds: number): number {
 }
 
 /**
- * Returns the current UTC date in the "YYYY.MM.DD" format.
- */
-function getCurrentUTCDate(): string {
-	const now = new Date();
-	const year = now.getUTCFullYear();
-	const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-	const day = String(now.getUTCDate()).padStart(2, '0');
-
-	return `${year}.${month}.${day}`;
-}
-
-/**
- * Returns the current UTC time in the "HH:MM:SS" format.
- */
-function getCurrentUTCTime(): string {
-	const now = new Date();
-	const hours = String(now.getUTCHours()).padStart(2, '0');
-	const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-	const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-
-	return `${hours}:${minutes}:${seconds}`;
-}
-
-/**
  * Converts a timestamp to an object with UTCDate and UTCTime.
  * This time format is used for ICN metadata notation.
  * @param timestamp - The timestamp in milliseconds since the Unix Epoch.
@@ -236,8 +212,6 @@ function timestampToSqlite(timestamp: number): string {
 export default {
 	minutesToMillis,
 	secondsToMillis,
-	getCurrentUTCDate,
-	getCurrentUTCTime,
 	convertTimestampToUTCDateUTCTime,
 	convertUTCDateUTCTimeToTimeStamp,
 	getTotalMilliseconds,

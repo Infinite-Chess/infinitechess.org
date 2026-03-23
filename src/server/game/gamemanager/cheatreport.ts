@@ -11,6 +11,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import * as z from 'zod';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import { isGameInstantlyDeleted } from '../../../shared/chess/variants/servervalidation.js';
 
 import gameutility from './gameutility.js';
 import { setGameConclusion } from './gamemanager.js';
@@ -37,22 +38,30 @@ function onReport(
 	messageContents: ReportMessage,
 ): void {
 	// { reason, opponentsMoveNumber }
-	console.log('Client reported hacking!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
 	const ourColor =
 		ws.metadata.subscriptions.game?.color ||
 		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
-	if (servergame.match.publicity === 'private') {
-		const errString = `Player tried to report cheating in a private game! Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
+	// (i.e. games without server-side move validation AND are public)
+	if (
+		isGameInstantlyDeleted(
+			servergame.match.variant,
+			servergame.basegame.dateTimestamp,
+			servergame.match.publicity === 'private',
+		)
+	) {
+		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Publicity: ${servergame.match.publicity}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
+		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,
 			'general',
 			'printerror',
-			'Cannot report your friend for cheating in a private match!',
+			'Cannot report opponent in this game.',
 		);
 		return;
 	}
@@ -64,7 +73,7 @@ function onReport(
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,
@@ -80,7 +89,7 @@ function onReport(
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.compact}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 	console.error(errText);
 	logEvents(errText, 'hackLog.txt');
 
@@ -108,7 +117,6 @@ function onReport(
 	// Cheating report was valid, terminate the game..
 
 	setGameConclusion(servergame, { condition: 'aborted' });
-	gameutility.broadcastGameUpdate(servergame);
 }
 
 export { onReport, reportschem };

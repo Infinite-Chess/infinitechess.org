@@ -9,8 +9,8 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { PlayerGroup } from '../util/typeutil.js';
-import type { TimeControl } from '../util/metadata.js';
 import type { ClockDependant, Game } from './gamefile.js';
+import type { ClockValues, TimeControl } from '../../types.js';
 
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
@@ -20,28 +20,7 @@ import gamefileutility from '../util/gamefileutility.js';
 
 // Types --------------------------------------------------------------------------
 
-/** An object containg the values of each color's clock, and which one is currently counting down, if any. */
-interface ClockValues {
-	/** The actual clock values. An object containing each color in the game for the keys, and that color's time left in milliseconds for the values. */
-	clocks: { [_color in Player]?: number };
-	/**
-	 * If a player's timer is currently counting down, this should be specified.
-	 * No clock is ticking if less than 2 moves are played, or if game is over.
-	 *
-	 * The color specified should have their time immediately accomodated for ping.
-	 */
-	colorTicking?: Player;
-	/**
-	 * The timestamp the color ticking (if there is one) will lose by timeout.
-	 * This should be calulated AFTER we adjust the clock values for ping.
-	 *
-	 * The server should NOT specify this when sending the clock information
-	 * to the client, because the server and client's clocks are not always in sync.
-	 */
-	timeColorTickingLosesAt?: number;
-}
-
-type ClockData = {
+export type ClockData = {
 	/** The time each player has remaining, in milliseconds.*/
 	currentTime: PlayerGroup<number>;
 
@@ -172,7 +151,7 @@ function stop(basegame: Game): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
-	if (clocks.colorTicking === undefined) return;
+	if (clocks.colorTicking === undefined) return; // Clocks already stopped
 
 	const timeSpent = Date.now() - clocks.timeAtTurnStart!;
 	let newTime = clocks.timeRemainAtTurnStart! - timeSpent;
@@ -270,5 +249,3 @@ export default {
 	getColorTickingTrueTimeRemaining,
 	printClocks,
 };
-
-export type { ClockValues, ClockData };

@@ -7,14 +7,15 @@
  */
 
 import type { Game } from '../../../shared/chess/logic/gamefile.js';
-import type { ServerGame } from './gameutility.js';
 import type { RatingData } from './ratingcalculation.js';
+import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player, players } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -41,8 +42,8 @@ import {
  * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
  */
-async function logGame(servergame: ServerGame): Promise<RatingData | undefined> {
-	if (servergame.basegame.moves.length === 0) return undefined; // Don't log games with zero moves
+function logGame(servergame: ServerGame): RatingData | undefined {
+	if (servergame.basegame.moves.length === 0) return; // Don't log games with zero moves
 
 	try {
 		// Create the transaction by wrapping our orchestrator function.
@@ -60,15 +61,15 @@ async function logGame(servergame: ServerGame): Promise<RatingData | undefined> 
 		// This block will only execute if the orchestrator throws an error, causing a rollback.
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-		await logEventsAndPrint(
+		void logEventsAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog.txt',
 		);
-		await logEvents(
+		void logEvents(
 			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 			'unloggedGames.txt',
 		);
-		return undefined;
+		return;
 	}
 }
 
@@ -82,7 +83,17 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 	const { victor, condition: termination } = servergame.basegame.gameConclusion!;
 
 	// --- Part 1: Handle Rating Updates ---
-	const ratingData = updateLeaderboardsInTransaction(servergame, victor);
+	const ratingData = updateLeaderboardsInTransaction(servergame.match, victor);
+	// Immediately stamp the rating diffs onto the game's metadata so that
+	// they're present for ICN generation and any other downstream use.
+	if (ratingData !== undefined) {
+		servergame.basegame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+			ratingData[players.WHITE]!.elo_change_from_game!,
+		);
+		servergame.basegame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+			ratingData[players.BLACK]!.elo_change_from_game!,
+		);
+	}
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
 	addGameRecordsInTransaction(servergame, victor, termination, ratingData);
@@ -101,13 +112,12 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  * @throws An error if any database write fails.
  */
 function updateLeaderboardsInTransaction(
-	{ match, basegame }: ServerGame,
+	match: MatchInfo,
 	victor: Player | null | undefined,
 ): RatingData | undefined {
 	if (!match.rated || victor === undefined) return undefined; // If game is unrated or aborted, then no ratings get updated
 
-	const leaderboard_id = VariantLeaderboards[basegame.metadata.Variant!];
-	if (leaderboard_id === undefined) return undefined; // This should never happen. If it does it means the game should not have been rated.
+	const leaderboard_id = VariantLeaderboards[match.variant]!; // Will always be defined if the game is rated.
 
 	// 1. Build initial rating data by reading from the DB.
 	let ratingdata: RatingData = {};
@@ -198,9 +208,9 @@ function addGameRecordsInTransaction(
 		dateSqliteString,
 		base_time_seconds,
 		increment_seconds,
-		basegame.metadata.Variant!,
+		match.variant,
 		match.rated ? 1 : 0,
-		VariantLeaderboards[basegame.metadata.Variant!] ?? null,
+		VariantLeaderboards[match.variant] ?? null,
 		match.publicity === 'private' ? 1 : 0,
 		basegame.metadata.Result!,
 		termination,

@@ -1,29 +1,5 @@
 # Redesign TODO
 
-## Infrastructure Prerequisites
-
-- Determine the minimum live game properties required to reconstruct the in-memory game state, and timer states, on a server restart.
-
-- Create the `live_games` SQLite table and write full game state to it on every move / game update.
-
-- On server startup, read all rows from `live_games` and rehydrate the in-memory game objects so interrupted games survive restarts. Also reinstate all active game timers.
-
-- Remove `allowinvites.json` and its polling mechanism — live game persistence makes pre-restart blocking unnecessary.
-
-- Log all server startups and shutdowns, with timestamps and PIDs, to `logs/startupLog.txt` (e.g. `2026-03-10 14:32:03 | Server started. PID: 5389`).
-
-- Implement in-project automated DB backups: One triggered immediately before every deploy (before any server code performs any db operations, make sure there's no race conditions), and one daily backup. Store in `backups/` with timestamped filenames and auto-purge files older than 30 days.
-
-- Create the `prod` branch in the GitHub repo, and switch the production server to pull from `prod` instead of `update-1.10`.
-
-- Install PM2 on the production machine. Switch to PM2 for running the server. Verify we can view live logs. Verify we can view all logs. Verify that it auto restarts on crashes. Verify the server auto starts after rebooting the machine.
-
-- Install the self-hosted GitHub Actions runner on the production machine.
-
-- Write the GitHub Actions deploy workflow file with the three triggers. Verify each of them work as intended. Verify that restarts have near zero downtime.
-
-- Assess whether the current WebSocket reconnection logic reconnects quickly enough after a `pm2 reload` to be invisible to players. If not, implement exponential backoff.
-
 ---
 
 ## Build Pipeline
@@ -59,6 +35,8 @@
 - Add the inline `<script>` to `layout.njk <head>` that reads `localStorage` and sets `data-theme` on `<html>` before any CSS loads, preventing a flash of the wrong theme.
 
 - Create a `@font-face` declaration for Noto Sans and the font-stack CSS into the shared stylesheet.
+
+- Ensure our middleware is capable of serving fonts, with the same cache-control as other static assets.
 
 - Add other CSS rules we think will be shared across all pages.
 

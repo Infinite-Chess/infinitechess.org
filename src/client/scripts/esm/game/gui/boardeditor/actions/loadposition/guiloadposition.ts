@@ -5,7 +5,7 @@
  * Coordinates the floating window, save-as form, confirmation modal, and position list.
  */
 
-import editorutil from '../../../../../../../../shared/editor/editorutil';
+import editorutil from '../../../../../../../../shared/util/editorutil';
 
 import esave from '../../../../boardeditor/actions/esave';
 import boardeditor from '../../../../boardeditor/boardeditor';
@@ -127,7 +127,7 @@ async function onSaveButtonPress(): Promise<void> {
 	if (await esave.localSaveExists(positionname)) {
 		guiloadpositionmodal.openModal('overwrite_save', positionname, async () => {
 			await esave.saveLocal(positionname);
-			boardeditor.setActivePosition(positionname, 'local');
+			boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
 			guiloadpositionsavelist.updateSavedPositionListUI();
 		});
 		return;
@@ -135,7 +135,7 @@ async function onSaveButtonPress(): Promise<void> {
 
 	// No existing save found — save locally
 	await esave.saveLocal(positionname);
-	boardeditor.setActivePosition(positionname, 'local');
+	boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
 	element_saveAsPositionName.value = '';
 	guiloadpositionsavelist.updateSavedPositionListUI();
 }

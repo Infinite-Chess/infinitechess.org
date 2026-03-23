@@ -5,17 +5,17 @@
  * suitable for the icnconverter to turn it into ICN (Infinite Chess Notation).
  */
 
-import type { Move } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { EnPassant } from '../../../../../shared/chess/logic/state.js';
-import type { GameRules } from '../../../../../shared/chess/variants/gamerules.js';
+import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import {
-	_Move_In,
+	MovePreprint,
 	LongFormatIn,
 	PresetAnnotes,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -93,21 +93,21 @@ function compressGamefile(
 	return long_format_in;
 }
 
-function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
-	const mappedMoves = moves.map((move: Move) => {
-		const move_in: _Move_In = {
+function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
+	const mappedMoves = moves.map((move: MoveFull) => {
+		const movePreprint: MovePreprint = {
 			type: move.type,
 			startCoords: move.startCoords,
 			endCoords: move.endCoords,
-			compact: move.compact,
+			token: move.token,
 			flags: move.flags,
 		};
 		// Optionals
-		if (move.promotion !== undefined) move_in.promotion = move.promotion;
-		if (move.comment) move_in.comment = move.comment;
-		if (move.clockStamp !== undefined) move_in.clockStamp = move.clockStamp;
+		if (move.promotion !== undefined) movePreprint.promotion = move.promotion;
+		if (move.comment) movePreprint.comment = move.comment;
+		if (move.clockStamp !== undefined) movePreprint.clockStamp = move.clockStamp;
 
-		return move_in;
+		return movePreprint;
 	});
 	return jsutil.deepCopyObject(mappedMoves);
 }
@@ -122,7 +122,7 @@ function convertMovesToICNConverterInMove(moves: Move[]): _Move_In[] {
  */
 function GameToPosition(
 	longform: SimplifiedGameState,
-	moves: Move[],
+	moves: MoveFull[],
 	halfmoves: number = 0,
 ): SimplifiedGameState {
 	if (halfmoves === Infinity) halfmoves = moves.length; // If we want the final position, set halfmoves to the length of the moves array

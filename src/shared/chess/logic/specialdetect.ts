@@ -1,11 +1,15 @@
 // src/shared/chess/logic/specialdetect.ts
 
+/**
+ * This detects if special moves are legal.
+ * Does NOT execute the moves!
+ */
+
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { MoveDraft } from './movepiece.js';
-import type { CoordsSpecial } from './movepiece.js';
-import type { enpassantCreate } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { FullGame, Game, Board } from './gamefile.js';
+import type { MoveTagged, MoveSpecialTags, SpecialTags } from './movepiece.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -18,27 +22,15 @@ import typeutil from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
-import gamerules from '../variants/gamerules.js';
+import gamerules from '../util/gamerules.js';
+import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p, rawTypes as r } from '../util/typeutil.js';
 
-/**
- * This detects if special moves are legal.
- * Does NOT execute the moves!
- */
-
-/** All types of special moves that exist, for iterating through. */
-const allSpecials = [
-	'enpassantCreate',
-	'enpassant',
-	'promoteTrigger',
-	'promotion',
-	'castle',
-	'path',
-];
+// Functions -----------------------------------------------------------------------
 
 // EVERY one of these functions needs to include enough information in the special move tag
 // to be able to undo any of them!
@@ -55,8 +47,8 @@ function kings(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
-	const individualMoves: CoordsSpecial[] = [];
+): CoordsTagged[] {
+	const individualMoves: CoordsTagged[] = [];
 
 	const { boardsim, basegame } = gamefile;
 
@@ -166,8 +158,8 @@ function kings(
 
 		// All checks passed, this side is legal to castle with. Add the move!
 
-		const specialMove: CoordsSpecial = [coords[0] + 2n * dir, coords[1]];
-		specialMove.castle = { dir, coord: pieceCoord }; // The special move flag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
+		const specialMove: CoordsTagged = [coords[0] + 2n * dir, coords[1]];
+		specialMove.castle = { dir, coord: pieceCoord }; // The special move tag, containing: The direction the king is moving in, and the coordinates of the piece that the king is castling with.
 		individualMoves.push(specialMove);
 	}
 
@@ -177,7 +169,7 @@ function kings(
 /**
  * Appends legal pawn moves to the provided legal individual moves list.
  * This also is in charge of adding single-push, double-push, and capturing
- * pawn moves, even though those don't need a special move flag.
+ * pawn moves, even though those don't need a special move tag.
  * @param gamefile - The gamefile
  * @param coords - Coordinates of the pawn selected
  * @param color - The color of the pawn selected
@@ -188,17 +180,17 @@ function pawns(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
+): CoordsTagged[] {
 	const { boardsim, basegame } = gamefile;
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === p.WHITE ? 1n : -1n;
-	const individualMoves: CoordsSpecial[] = [];
+	const individualMoves: CoordsTagged[] = [];
 	// How do we go about calculating a pawn's legal moves?
 
 	// 1. It can move forward if there is no piece there
 
 	// Is there a piece in front of it?
-	const singlePushCoord: Coords = [coords[0], coords[1] + yOneorNegOne];
+	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yOneorNegOne];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
 		gamefile.basegame.gameRules.worldBorder,
@@ -210,10 +202,10 @@ function pawns(
 
 	if (moveValidity === 0) {
 		// Pawns forward-motion validity check must be 0, as they can't capture forward.
-		appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
+		appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, singlePushCoord, color); // Legal, add the move
 
 		// Further... Is the double push legal?
-		const doublePushCoord: CoordsSpecial = [
+		const doublePushCoord: CoordsTagged = [
 			singlePushCoord[0],
 			singlePushCoord[1] + yOneorNegOne,
 		];
@@ -228,19 +220,19 @@ function pawns(
 
 		if (doesPieceHaveSpecialRight(boardsim, coords) && moveValidity === 0) {
 			// Add the double push!
-			// Only create the enpassantCreate flag if it's not a premove.
+			// Only create the enpassantCreate tag if it's not a premove.
 			if (!premove)
 				doublePushCoord.enpassantCreate = getEnPassantGamefileProperty(
 					coords,
 					doublePushCoord,
 				);
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, doublePushCoord, color);
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, doublePushCoord, color);
 		}
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
 
-	const coordsToCapture: Coords[] = [
+	const coordsToCapture: CoordsTagged[] = [
 		[coords[0] - 1n, coords[1] + yOneorNegOne],
 		[coords[0] + 1n, coords[1] + yOneorNegOne],
 	];
@@ -254,7 +246,7 @@ function pawns(
 			true,
 		); // true for capture is required
 		if (moveValidity <= 1)
-			appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -273,10 +265,10 @@ function pawns(
 function getEnPassantGamefileProperty(
 	moveStartCoords: Coords,
 	moveEndCoords: Coords,
-): enpassantCreate {
+): MoveSpecialTags['enpassantCreate'] {
 	const y = (moveStartCoords[1] + moveEndCoords[1]) / 2n;
 	const enpassantSquare: Coords = [moveStartCoords[0], y];
-	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special flags
+	return { square: enpassantSquare, pawn: coordutil.copyCoords(moveEndCoords) }; // Copy needed to strip endCoords of existing special tags
 }
 
 /**
@@ -289,11 +281,11 @@ function getEnPassantGamefileProperty(
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(
 	{ boardsim, basegame }: FullGame,
-	individualMoves: Coords[],
+	individualMoves: CoordsTagged[],
 	coords: Coords,
 	color: Player,
 ): void {
-	if (boardsim.state.global.enpassant === undefined) return; // No enpassant flag on the game, no enpassant possible
+	if (boardsim.state.global.enpassant === undefined) return; // No enpassant tag on the game, no enpassant possible
 	if (color !== basegame.whosTurn) return; // Not our turn (the only color who can legally capture enpassant is whos turn it is). If it IS our turn, this also guarantees the captured pawn will be an enemy pawn.
 	const enpassantCapturedPawnType = boardutil.getTypeFromCoords(
 		boardsim.pieces,
@@ -310,24 +302,24 @@ function addPossibleEnPassant(
 	// It is capturable en passant!
 
 	/** The square the pawn lands on. */
-	const enPassantSquare: CoordsSpecial = coordutil.copyCoords(
+	const enPassantSquare: CoordsTagged = coordutil.copyCoords(
 		boardsim.state.global.enpassant.square,
 	);
 
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteFlag(basegame, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
  * Appends the provided move to the running individual moves list,
- * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
+ * and adds the `promoteTrigger` special tag to it if it landed on a promotion rank.
  */
-function appendPawnMoveAndAttachPromoteFlag(
+function appendPawnMoveAndAttachPromoteTag(
 	basegame: Game,
-	individualMoves: CoordsSpecial[],
-	landCoords: CoordsSpecial,
+	individualMoves: CoordsTagged[],
+	landCoords: CoordsTagged,
 	color: Player,
 ): void {
 	if (basegame.gameRules.promotionRanks !== undefined) {
@@ -351,16 +343,15 @@ function roses(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
-): CoordsSpecial[] {
+): CoordsTagged[] {
 	// prettier-ignore
 	const movements: Coords[] = [[-2n, -1n], [-1n, -2n], [1n, -2n], [2n, -1n], [2n, 1n], [1n, 2n], [-1n, 2n], [-2n, 1n]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
-	const individualMoves: CoordsSpecial[] = [];
+	const individualMoves: CoordsTagged[] = [];
 
 	for (let i = 0; i < movements.length; i++) {
 		for (const direction of directions) {
-			/** @type {CoordsSpecial} */
-			let currentCoord: CoordsSpecial = coordutil.copyCoords(coords);
+			let currentCoord: CoordsTagged = coordutil.copyCoords(coords);
 			let b = i;
 			const path = [coords]; // The running path of travel for the current spiral. Used for animating.
 			for (let c = 0; c < movements.length - 1; c++) {
@@ -395,7 +386,7 @@ function roses(
 	 * 3. Randomly pick one
 	 * @param {Coords} newCoord - The coordinate to append [x, y].
 	 */
-	function appendCoordToIndividuals(newCoord: CoordsSpecial, path: Coords[]): void {
+	function appendCoordToIndividuals(newCoord: CoordsTagged, path: Coords[]): void {
 		newCoord.path = jsutil.deepCopyObject(path);
 		for (let i = 0; i < individualMoves.length; i++) {
 			const coord = individualMoves[i]!;
@@ -486,48 +477,46 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
 }
 
 /**
- * Transfers any special move flags from the provided coordinates to the move.
- * @param coords - The coordinates
- * @param {MoveDraft} move - The move
+ * Transfers the move-retained special tags from the provided coordinates to the move.
+ * UI-only tags (e.g. `promoteTrigger`) are intentionally excluded — they are
+ * consumed and deleted before any call to this function.
  */
-function transferSpecialFlags_FromCoordsToMove(coords: CoordsSpecial, move: MoveDraft): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (coords[special] !== undefined) {
-			// @ts-ignore
-			move[special] = jsutil.deepCopyObject(coords[special]);
-		}
+function transferSpecialTags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
+	for (const special of movepiece.MOVE_SPECIAL_TAGS) {
+		transferSpecialTag(coords, move, special);
 	}
 }
 
 /**
- * Transfers any special move flags from the provided move to the coordinates.
- * @param coords - The coordinates
- * @param {MoveDraft} move - The move
- */
-function transferSpecialFlags_FromMoveToCoords(move: MoveDraft, coords: Coords): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (move[special]) coords[special] = jsutil.deepCopyObject(move[special]);
-	}
-}
-
-/**
- * Transfers any special move flags from the one pair of coordinates to another.
+ * Transfers all special move tags (move and UI) from one set of coordinates to another.
  * @param srcCoords - The source coordinates
  * @param destCoords - The destination coordinates
  */
-function transferSpecialFlags_FromCoordsToCoords(
-	srcCoords: CoordsSpecial,
-	destCoords: CoordsSpecial,
+function transferSpecialTags_FromCoordsToCoords(
+	srcCoords: CoordsTagged,
+	destCoords: CoordsTagged,
 ): void {
-	for (const special of allSpecials) {
-		// @ts-ignore
-		if (srcCoords[special] !== undefined)
-			// @ts-ignore
-			destCoords[special] = jsutil.deepCopyObject(srcCoords[special]);
+	for (const special of movepiece.SPECIAL_TAGS) {
+		transferSpecialTag(srcCoords, destCoords, special);
 	}
 }
+
+/**
+ * Copies a single {@link SpecialTags} key from `src` to `dest`.
+ *
+ * Keeping `Tags = MoveSpecialTags` fixed and `K` as a free parameter gives
+ * TypeScript full correlation between the key and value types on both sides,
+ * so the assignment is verified with full type safety.
+ */
+function transferSpecialTag<K extends keyof SpecialTags>(
+	src: Partial<SpecialTags>,
+	dest: Partial<SpecialTags>,
+	key: K,
+): void {
+	if (src[key] !== undefined) dest[key] = jsutil.deepCopyObject(src[key]); // SpecialTag[K] → SpecialTag[K] | undefined ✓
+}
+
+// Exports -----------------------------------------------------------------------
 
 export default {
 	kings,
@@ -535,7 +524,6 @@ export default {
 	roses,
 	getEnPassantGamefileProperty,
 	isPawnPromotion,
-	transferSpecialFlags_FromCoordsToMove,
-	transferSpecialFlags_FromMoveToCoords,
-	transferSpecialFlags_FromCoordsToCoords,
+	transferSpecialTags_FromCoordsToMove,
+	transferSpecialTags_FromCoordsToCoords,
 };

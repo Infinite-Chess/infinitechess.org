@@ -1,19 +1,17 @@
 // src/server/middleware/logEvents.ts
 
+import type { IncomingMessage } from 'node:http';
+import type { Request, Response } from 'express';
+
 import fs from 'fs';
 import path from 'path';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
-import { fileURLToPath } from 'node:url';
 import { promises as fsPromises } from 'fs';
 
+import paths from '../config/paths.js';
 import { getClientIP } from '../utility/IP.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-import type { Request, Response } from 'express';
-import type { IncomingMessage } from 'node:http';
 
 const giveLoggedItemsUUID = false;
 
@@ -33,9 +31,8 @@ async function logEvents(message: string, logName: string): Promise<void> {
 		: `${dateTime}   ${message}\n`;
 
 	try {
-		const logsPath = path.join(__dirname, '..', '..', '..', 'logs');
-		fs.mkdirSync(logsPath, { recursive: true });
-		await fsPromises.appendFile(path.join(logsPath, logName), logItem);
+		fs.mkdirSync(paths.LOGS_DIR, { recursive: true });
+		await fsPromises.appendFile(path.join(paths.LOGS_DIR, logName), logItem);
 	} catch (err: unknown) {
 		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
 		else console.error('Error logging event:', err);
@@ -49,7 +46,9 @@ async function logEvents(message: string, logName: string): Promise<void> {
  * @param logName - The name of the log file.
  */
 async function logEventsAndPrint(message: string, logName: string): Promise<void> {
-	console.error(message);
+	if (logName === 'errLog.txt') console.error(message);
+	else console.log(message); // Prevents non error logs from going to PM2's error logs.
+
 	await logEvents(message, logName);
 }
 
@@ -59,7 +58,12 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 
 	const origin = req.headers.origin || 'Unknown origin';
 
-	let logThis = `${origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	// Redact sensitive tokens that appear in URL paths so they are never written to log files.
+	const sanitizedUrl = req.url
+		.replace(/(\/reset-password\/)([^?#/]+)/, '$1[REDACTED]')
+		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]');
+
+	let logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
 	// Delete passwords from incoming form data
 	let sensoredBody;
 	if (JSON.stringify(req.body) !== '{}') {

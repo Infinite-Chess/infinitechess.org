@@ -204,11 +204,4 @@ function getMultipleGameData<K extends GamesColumn>(
 
 // Exports --------------------------------------------------------------------------------------------
 
-export {
-	genUniqueGameID,
-	getGameData,
-	getMultipleGameData,
-	// Commented out to emphasize they should not ever have to be used.
-	// updateGameColumns,
-	// deleteGame
-};
+export { genUniqueGameID, getGameData, getMultipleGameData };

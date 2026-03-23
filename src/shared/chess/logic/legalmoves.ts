@@ -5,9 +5,9 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { MetaData } from '../util/metadata.js';
+import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
-import type { CoordsSpecial } from './movepiece.js';
+import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
@@ -39,7 +39,7 @@ type SlideLimits = [bigint | null, bigint | null];
 /** An object containing all the legal moves of a piece. */
 interface LegalMoves {
 	/** A list of the legal jumping move coordinates: `[[1,2], [2,1]]` */
-	individual: CoordsSpecial[];
+	individual: CoordsTagged[];
 	/** A dict containing length-2 arrays with the legal left and right slide limits: `{[1,0]:[-5, Infinity]}` */
 	sliding: Record<Vec2Key, SlideLimits>;
 	/** If provided, all sliding moves will brute-force test for check to see if their actually legal to move to. Use when our piece moves colinearly to a piece pinning it, or if our piece is a royal queen. */
@@ -89,12 +89,17 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param metadata - The metadata of the gamefile
+ * @param variantCode - The variant code, or null for custom/pasted positions.
+ * @param timestamp - The game's start timestamp in ms since epoch.
  * @param existingRawTypes
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
-function genSpecialVicinity(metadata: MetaData, existingRawTypes: RawType[]): Vicinity {
-	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(metadata);
+function genSpecialVicinity(
+	variantCode: VariantCode | null,
+	timestamp: number,
+	existingRawTypes: RawType[],
+): Vicinity {
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(variantCode, timestamp);
 	const vicinity = {} as Vicinity;
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
@@ -556,7 +561,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * Checks if the provided move start and end coords is one of the
  * legal moves in the provided legalMoves object.
  *
- * **This will modify** the provided endCoords to attach any special move flags.
+ * **This will modify** the provided endCoords to attach any special move tags.
  * @param gamefile
  * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
  * @param startCoords - The coordinates of the piece owning the legal moves
@@ -570,7 +575,7 @@ function checkIfMoveLegal(
 	gamefile: FullGame,
 	legalMoves: LegalMoves,
 	startCoords: Coords,
-	endCoords: Coords,
+	endCoords: CoordsTagged,
 	colorOfFriendly: Player,
 	{ ignoreIndividualMoves = false } = {},
 ): boolean {
@@ -585,7 +590,7 @@ function checkIfMoveLegal(
 			const thisIndividual = individual[i]!;
 			if (!coordutil.areCoordsEqual(endCoords, thisIndividual)) continue;
 			// Subtle way of passing on the TAG of all special moves!
-			specialdetect.transferSpecialFlags_FromCoordsToCoords(thisIndividual, endCoords);
+			specialdetect.transferSpecialTags_FromCoordsToCoords(thisIndividual, endCoords);
 			return true;
 		}
 	}
@@ -609,8 +614,8 @@ function checkIfMoveLegal(
 			continue; // Sliding this direction
 		if (legalMoves.brute) {
 			// Don't allow the slide if it results in check
-			const moveDraft = { startCoords, endCoords };
-			if (checkresolver.getSimulatedCheck(gamefile, moveDraft, colorOfFriendly).check)
+			const moveTagged = { startCoords, endCoords };
+			if (checkresolver.getSimulatedCheck(gamefile, moveTagged, colorOfFriendly).check)
 				return false; // The move results in check => not legal
 		}
 		return true; // Move is legal
