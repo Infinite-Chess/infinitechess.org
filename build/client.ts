@@ -9,7 +9,7 @@ import browserslist from 'browserslist';
 // @ts-ignore this package doesn't have a declaration file
 import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
-import esbuild, { BuildOptions, Plugin, PluginBuild } from 'esbuild';
+import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
 
@@ -120,6 +120,33 @@ const GLSLMinifyPlugin = {
 	},
 };
 
+/** An esbuild plugin that writes the asset manifest after every (re)build. */
+const ManifestPlugin: Plugin = {
+	name: 'write-manifest',
+	setup(build: PluginBuild) {
+		build.onEnd((result) => {
+			if (result.metafile) writeManifest(result.metafile);
+		});
+	},
+};
+
+/**
+ * Reads esbuild's metafile and writes dist/manifest.json — a flat map of
+ * logical entry-point names (e.g. "scripts/esm/views/index") to their
+ * web-relative output paths (e.g. "/scripts/esm/views/index-ABCD1234.js").
+ */
+function writeManifest(metafile: Metafile): void {
+	const manifest: Record<string, string> = {};
+	for (const [rawOutputPath, output] of Object.entries(metafile.outputs)) {
+		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
+		const key = output.entryPoint
+			.replace(/^src\/client\//, '') // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
+			.replace(/\.[jt]s$/, ''); // strip extension
+		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
+	}
+	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
+}
+
 const ESMBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: ESMEntryPoints,
@@ -137,6 +164,7 @@ const ESMBuildOptions: BuildOptions = {
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	loader: { '.wasm': 'file' },
+	metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
 };
 
 const CJSBuildOptions: BuildOptions = {
@@ -162,8 +190,9 @@ export async function buildClient(isDev: boolean): Promise<void> {
 
 	const ESMContext = await esbuild.context({
 		...ESMBuildOptions,
+		entryNames: '[dir]/[name]-[hash]', // Content-hash output file names
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
-		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin],
+		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin, ManifestPlugin],
 	});
 	const CJSContext = await esbuild.context({
 		...CJSBuildOptions,
