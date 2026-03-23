@@ -12,20 +12,21 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
-import type { ClockValues } from '../../../../../shared/chess/logic/clock.js';
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from './engines/engine.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ServerGameInfo } from '../misc/onlinegame/onlinegamerouter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { Additional, GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
+import type { ServerGameInfo } from '../websocket/socketschemas.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type {
-	ParticipantState,
+	ClockValues,
+	MetaData,
 	MovePacket,
-} from '../../../../../server/game/gamemanager/gameutility.js';
+	ParticipantState,
+	TimeControl,
+} from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import variant from '../../../../../shared/chess/variants/variant.js';
@@ -172,8 +173,6 @@ async function startOnlineGame(options: {
 	clockValues?: ClockValues;
 	youAreColor?: Player;
 	participantState?: ParticipantState;
-	/** If the server us restarting soon for maintenance, this is the time (on the server's machine) that it will be restarting. */
-	serverRestartingAt?: number;
 }): Promise<void> {
 	// console.log("Starting online game with invite options:");
 	// console.log(jsutil.deepCopyObject(options));
@@ -215,7 +214,6 @@ async function startOnlineGame(options: {
 		gameInfo: options.gameInfo,
 		youAreColor: options.youAreColor,
 		participantState: options.participantState,
-		serverRestartingAt: options.serverRestartingAt,
 	});
 
 	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.

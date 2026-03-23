@@ -4,7 +4,7 @@
  * The web worker script for the ICN Validator Tool.
  */
 
-import type { GameConclusion } from '../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../shared/chess/util/winconutil.js';
 
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p, Player } from '../../../../shared/chess/util/typeutil.js';

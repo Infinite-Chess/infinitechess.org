@@ -13,12 +13,10 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { FullGame, GameConclusion } from '../../../../../../shared/chess/logic/gamefile.js';
-import type {
-	GameUpdateMessage,
-	MovePacket,
-} from '../../../../../../server/game/gamemanager/gameutility.js';
+import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -63,10 +61,7 @@ function handleServerGameUpdate(
 	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign_ServerRestarting(
-		message.participantState,
-		message.serverRestartingAt,
-	);
+	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
 
 	// Must be set before editing the clocks.
 	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);

@@ -9,7 +9,7 @@ import timeutil from '../../shared/util/timeutil.js';
 
 import db from './database.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from Database. */
@@ -128,14 +128,13 @@ function removeOldUnverifiedMembers(): void {
 
 		if (membersToDelete.length === 0) return; // Nothing to do.
 
-		console.log(`Found ${membersToDelete.length} old unverified account(s) to remove.`);
 		const reason_deleted = 'unverified';
 
 		// Iterate through the IDs and delete each account.
 		for (const member of membersToDelete) {
 			try {
 				deleteAccount(member.user_id, reason_deleted);
-				logEventsAndPrint(
+				logEvents(
 					`Removed old unverified account with ID: ${member.user_id}`,
 					'deletedAccounts.txt',
 				);
@@ -147,6 +146,8 @@ function removeOldUnverifiedMembers(): void {
 				);
 			}
 		}
+
+		console.log(`Cleanup: Removed ${membersToDelete.length} unverified account(s).`);
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error removing old unverified accounts: ${errorMessage}`, 'errLog.txt');

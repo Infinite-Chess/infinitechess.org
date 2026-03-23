@@ -1,7 +1,7 @@
 // src/server/database/blacklistManager.ts
 
 import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /** Adds an email to the blacklist, if it isn't already. */
 export function addToBlacklist(email: string, reason: string): void {
@@ -11,7 +11,7 @@ export function addToBlacklist(email: string, reason: string): void {
 			email,
 			reason,
 		]);
-		logEventsAndPrint(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
+		logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
 		logEventsAndPrint(`Database error when blacklisting email ${email}: ${msg}`, 'errLog.txt');
@@ -23,7 +23,7 @@ export function removeFromBlacklist(email: string): void {
 	try {
 		// Won't error if the email doesn't exist.
 		db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]);
-		logEventsAndPrint(`Removed ${email} from blacklist`, 'blacklistLog.txt');
+		logEvents(`Removed ${email} from blacklist`, 'blacklistLog.txt');
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
 		logEventsAndPrint(

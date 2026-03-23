@@ -11,7 +11,7 @@
  */
 
 import type { BaseRay } from '../../../util/math/geometry.js';
-import type { MetaData } from '../../util/metadatautil.js';
+import type { MetaData } from '../../../types.js';
 import type { GameRules } from '../../util/gamerules.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';

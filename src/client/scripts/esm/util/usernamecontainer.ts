@@ -4,8 +4,7 @@
  * This script provides functionalities for the username container that contains the players' username, elo etc.
  */
 
-import type { Rating } from '../../../../server/database/leaderboardsManager.js';
-import type { ServerUsernameContainer } from '../../../../shared/types.js';
+import type { Rating, ServerUsernameContainer } from '../../../../shared/types.js';
 
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 

@@ -140,27 +140,14 @@ function sendSocketMessage(
  * @param translationCode - The code corresponding to the message that needs to be retrieved for language-specific translation. For example, `"server.javascript.ws-already_in_game"`.
  * @param [options] - An object containing additional options.
  * @param [options.replyto] - The ID of the incoming WebSocket message to which this message is replying.
- * @param [options.customNumber] - A number to include with special messages if applicable, typically representing a duration in minutes.
  */
 function sendNotify(
 	ws: CustomWebSocket,
 	translationCode: TranslationKeys,
-	{ replyto, customNumber }: { replyto?: number; customNumber?: number } = {},
+	{ replyto }: { replyto?: number } = {},
 ): void {
 	const i18next = ws.metadata.cookies.i18next;
-	let text = getTranslation(translationCode, i18next);
-	// Special case: number of minutes to be displayed upon server restart
-	if (
-		translationCode === 'server.javascript.ws-server_restarting' &&
-		customNumber !== undefined
-	) {
-		const minutes = Number(customNumber); // Cast to number in case it's a string
-		const minutes_plurality =
-			minutes === 1
-				? getTranslation('server.javascript.ws-minute', i18next)
-				: getTranslation('server.javascript.ws-minutes', i18next);
-		text += ` ${minutes} ${minutes_plurality}.`;
-	}
+	const text = getTranslation(translationCode, i18next);
 	sendSocketMessage(ws, 'general', 'notify', text, replyto);
 }
 

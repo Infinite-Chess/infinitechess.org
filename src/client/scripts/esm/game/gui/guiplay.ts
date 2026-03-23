@@ -4,7 +4,7 @@
  * This script handles our Play page, containing our invite creation menu.
  */
 
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { TimeControl } from '../../../../../shared/types.js';
 import type { InviteOptions } from '../misc/invites.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';

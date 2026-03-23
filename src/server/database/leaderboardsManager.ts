@@ -5,6 +5,7 @@
  */
 
 import type { RunResult } from 'better-sqlite3'; // Import necessary types
+import type { Rating } from '../../shared/types.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import db from './database.js';
@@ -27,9 +28,6 @@ interface LeaderboardEntry {
 	rd_last_update_date: string | null; // Can be null if no games played yet
 	// Consider adding volatility if you use it in Glicko-2
 }
-
-/** A rating value and whether we are confident about it. */
-type Rating = { value: number; confident: boolean };
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -343,7 +341,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 			);
 		}
 		logEventsAndPrint(
-			`Finished updating all rating deviations in leaderboard table.`,
+			`Updated all rating deviations in leaderboard table.`,
 			'leaderboardLog.txt',
 		);
 	} catch (error: unknown) {
@@ -368,5 +366,3 @@ export {
 	getEloOfPlayerInLeaderboard,
 	startPeriodicLeaderboardRatingDeviationUpdate,
 };
-
-export type { Rating };

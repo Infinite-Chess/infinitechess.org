@@ -42,8 +42,11 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 			subject: 'Your Password Reset Request',
 			html: createEmailHtmlWrapper('Password Reset Request', content),
 		});
-		if (sent) console.log(`Password reset email sent to ${recipientEmail}`);
-		else console.log(`Password Reset Link: ${resetUrl}`);
+		if (sent) {
+			// console.log(`Password reset email sent to ${recipientEmail}`);
+		} else {
+			console.log(`Password Reset Link: ${resetUrl}`);
+		}
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
@@ -81,9 +84,9 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 
 	// Check the new 'is_verified' column directly.
 	if (record.is_verified === 1) {
-		console.log(
-			`User ${record.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`,
-		);
+		// console.log(
+		// 	`User ${record.username} (ID: ${user_id}) is already verified. Skipping email confirmation.`,
+		// );
 		return;
 	}
 
@@ -115,9 +118,12 @@ async function sendEmailConfirmation(user_id: number): Promise<void> {
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
 		});
-		if (sent)
-			console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
-		else console.log(`Verification Link: ${verificationUrl}`);
+
+		if (sent) {
+			// console.log(`Verification email sent to member ${record.username} of ID ${user_id}!`);
+		} else {
+			console.log(`Verification Link: ${verificationUrl}`);
+		}
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
@@ -163,8 +169,11 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 			subject: messageSubject,
 			text: messageText,
 		});
-		if (sent) console.log(`Rating abuse warning email sent successfully to ${mailer.FROM}.`);
-		else console.log("Didn't send rating abuse email.");
+		if (sent) {
+			// console.log(`Rating abuse warning email sent successfully to ${mailer.FROM}.`);
+		} else {
+			console.log("Didn't send rating abuse email.");
+		}
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		void logEventsAndPrint(

@@ -5,11 +5,9 @@
  * displaying the clocks, and whos turn it currently is.
  */
 
-import type { Rating } from '../../../../../server/database/leaderboardsManager.js';
-import type { MetaData } from '../../../../../shared/chess/util/metadatautil.js';
 import type { PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { GameConclusion } from '../../../../../shared/chess/logic/gamefile.js';
-import type { PlayerRatingChangeInfo } from '../../../../../server/game/gamemanager/gameutility.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { MetaData, PlayerRatingChangeInfo, Rating } from '../../../../../shared/types.js';
 import type { RatingItem, UsernameContainer, UsernameItem } from '../../util/usernamecontainer.js';
 
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';

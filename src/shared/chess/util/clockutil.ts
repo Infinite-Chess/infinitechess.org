@@ -5,7 +5,8 @@
  * start time in seconds, and the right is increment in seconds.
  * Untimed = `-`
  */
-export type TimeControl = `${number}+${number}` | '-';
+
+import type { TimeControl } from '../../types.js';
 
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);

@@ -46,7 +46,9 @@ async function logEvents(message: string, logName: string): Promise<void> {
  * @param logName - The name of the log file.
  */
 async function logEventsAndPrint(message: string, logName: string): Promise<void> {
-	console.error(message);
+	if (logName === 'errLog.txt') console.error(message);
+	else console.log(message); // Prevents non error logs from going to PM2's error logs.
+
 	await logEvents(message, logName);
 }
 

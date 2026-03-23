@@ -29,7 +29,7 @@ import {
  * @param servergame - The game they are in.
  */
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	console.log('Client offers a draw.');
+	// console.log('Client offers a draw.');
 	const { match, basegame } = servergame;
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
 
@@ -60,7 +60,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
  * @param servergame - The game they are in.
  */
 function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	console.log('Client accepts a draw.');
+	// console.log('Client accepts a draw.');
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 
 	if (gameutility.isGameOver(servergame.basegame))
@@ -89,7 +89,7 @@ function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// if their opponent doesn't have an open draw offer.
 	if (!doesColorHaveExtendedDrawOffer(servergame.match, opponentColor)) return;
 
-	console.log('Client declines a draw.');
+	// console.log('Client declines a draw.');
 
 	if (gameutility.isGameOver(servergame.basegame))
 		return console.error('Client declined a draw when the game is already over. Ignoring.');

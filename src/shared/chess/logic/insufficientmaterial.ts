@@ -6,8 +6,9 @@
  * @maintainer tsevasa
  */
 
+import type { Board } from './gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { Board, GameConclusion } from './gamefile.js';
+import type { GameConclusion } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';

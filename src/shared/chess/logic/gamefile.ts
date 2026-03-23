@@ -1,9 +1,9 @@
 // src/shared/chess/logic/gamefile.ts
 
-import type { MetaData } from '../util/metadatautil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { MovePacket } from '../../../server/game/gamemanager/gameutility.js';
+import type { ClockData } from './clock.js';
+import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
@@ -12,7 +12,7 @@ import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { MoveFull, MoveRecord } from './movepiece.js';
-import type { ClockData, ClockValues } from './clock.js';
+import type { ClockValues, MetaData } from '../../types.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
@@ -340,7 +340,7 @@ function initFullGame(
 	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
 }
 
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional, GameConclusion };
+export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,

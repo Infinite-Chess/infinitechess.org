@@ -1,4 +1,7 @@
 {
+  "95": {
+    "note": "Removed ws-server_restarting, ws-server_under_maintenance, ws-minutes, ws-minute, lines 757-760. Also removed server_restarting, server_restarting_in, minute, minutes, lines 549-552. "
+  },
   "94": {
     "note": "Update server_restarting line 549 to reflect games are resumed now after server restarts."
   },

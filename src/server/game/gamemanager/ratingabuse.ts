@@ -365,7 +365,10 @@ OpponentInfoList: ${JSON.stringify(opponentInfoList, undefined, 2)}.
 Game_id_list: ${JSON.stringify(game_id_list)}.
 \nGameInfo list: ${JSON.stringify(gameInfoList, undefined, 2)}.
 		`;
-		void logEventsAndPrint('\n' + messageText, 'ratingAbuseLog.txt');
+		console.log(
+			`User ${username} is under suspicion of rating abuse (weight: ${suspicion_total_weight})! - Check ratingAbuseLog.txt for more details.`,
+		);
+		void logEvents('\n' + messageText, 'ratingAbuseLog.txt');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (

@@ -6,10 +6,11 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { FullGame } from '../../../shared/chess/logic/gamefile.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
+import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { FullGame, GameConclusion } from '../../../shared/chess/logic/gamefile.js';
 
 import * as z from 'zod';
 
@@ -76,23 +77,21 @@ function submitMove(
 	// If the game is already over, don't accept it.
 	if (gameutility.isGameOver(servergame.basegame)) return;
 
+	// Make sure it's their turn
+	if (servergame.basegame.whosTurn !== color) {
+		// Can occasionally happen if they in rapid succession send a resync request and
+		// a move submission, then when their client resyncs they submit their move again.
+		// Just discard this submission and resync just in case they are actually out of sync.
+		resyncToGame(ws, servergame.match.id);
+		return;
+	}
+
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
 	const expectedMoveNumber = servergame.basegame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
 		resyncToGame(ws, servergame.match.id);
-		return;
-	}
-
-	// Make sure it's their turn
-	if (servergame.basegame.whosTurn !== color) {
-		sendSocketMessage(
-			ws,
-			'general',
-			'printerror',
-			"Cannot submit a move when it's not your turn.",
-		);
 		return;
 	}
 

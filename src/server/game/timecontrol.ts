@@ -4,7 +4,7 @@
  * Stores valid time controls for lobby invites.
  */
 
-import type { TimeControl } from '../../shared/chess/util/clockutil.js';
+import type { TimeControl } from '../../shared/types.js';
 
 /** These are the allowed time controls in production. */
 const validTimeControls = [

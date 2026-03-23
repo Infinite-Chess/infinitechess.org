@@ -218,7 +218,3 @@ Push a commit to the `main` branch of HydroChess (or manually trigger the `build
 While a deploy is in progress, open the play page in a browser with the console visible. You should observe the WebSocket disconnect and reconnect within approximately 2.5 seconds, with the game resuming normally.
 
 ---
-
-## Reminder
-
-- Remove `allowinvites.json` and all related polling/broadcast machinery once this infrastructure is fully verified. See `dev-utils/REDESIGN/todo.md` for the full scope of that cleanup.

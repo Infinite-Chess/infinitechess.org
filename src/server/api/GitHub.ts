@@ -153,7 +153,7 @@ function refreshGitHubContributorsList(): void {
 
 			contributors = currentContributors;
 			await writeFile(PATH_TO_CONTRIBUTORS_FILE, JSON.stringify(contributors, null, 2));
-			console.log('Contributors updated!');
+			// console.log('Contributors updated!');
 		});
 	});
 

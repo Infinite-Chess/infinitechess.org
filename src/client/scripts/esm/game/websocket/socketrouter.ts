@@ -7,6 +7,8 @@
 
 import type { GeneralMessage } from './socketschemas.js';
 
+import * as z from 'zod';
+
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
 
@@ -52,7 +54,11 @@ function onmessage(serverMessage: MessageEvent): void {
 			error: true,
 			durationMillis: 100000,
 		});
-		console.error('Received malformed websocket message from the server:', zod_result.error);
+		console.error(
+			'Received malformed websocket message from the server:',
+			parsedUnvalidatedMessage,
+		);
+		console.error('Error:', z.prettifyError(zod_result.error));
 		return;
 	}
 
