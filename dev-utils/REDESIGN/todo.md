@@ -91,3 +91,9 @@
 - Consider `@view-transition` if there's white flashes between page loads.
 
 - Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
+
+---
+
+## Cleanup Checklist
+
+- Uninstall ejs and its types
