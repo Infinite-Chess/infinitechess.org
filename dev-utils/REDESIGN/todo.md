@@ -18,10 +18,6 @@
 
 ## Nunjucks Migration
 
-- Install `nunjucks` and `@types/nunjucks`; configure the Nunjucks environment in the Express app (set views directory, autoescape, etc.).
-
-- Create `layout.njk` — the full HTML shell (`<html>`, `<head>`, `<body>`) with `{% block %}` slots for: page title, extra `<head>` tags, page stylesheet, body content, and page script.
-
 - Delete `build/views.ts`; remove the `copy:views` script from `package.json`; remove `src/client/views` from `nodemon.json`'s watch list.
 
 - Migrate all existing route handlers from `res.sendFile()` to `res.render()`, pointing each to a minimal placeholder `.njk` file that extends `layout.njk`. This keeps the site functional while individual pages are redesigned.
