@@ -117,15 +117,19 @@ Go to the extensions tab, search for "eslint", click the one by "Microsoft", the
 
 2. **Prettier - Code formatter**
 
-Using this extension will help your code changes be stylistically consistent with the rest of the codebase. After installing this extension, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation issues and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
+Automatically ensures your code changes meet the style requirements of the codebase. After installing this, open your VScode settings, set Prettier as your default code formatter in `Editor: Default Formatter` and enable `Editor: Format On Save`. This will automatically "prettify" the style every time you save a file; for example, it will fix indentation issues and replace double quotation marks with single quotation marks. You can have Prettier ignore a code block via `// prettier-ignore` if you think your style is more readable!
 
-3. **SQLite**
+3. **Nunjucks**
 
-Installing this extension will allow you to preview the contents of the database during development. The database stores all account information.
+Provides syntax highlighting for all `.njk` files, which are the server-side templates used for SSR.
 
-4. **GitHub Pull Requests**
+4. **SQLite**
 
-Installing this extension is not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
+Allows you to preview the contents of the database during development.
+
+5. **GitHub Pull Requests**
+
+Not required, but highly recommended. It allows you to test run the code of other peoples pull requests on your system, so you can give collective feedback!
 
 ### **You are all set up now to start developing!** 🥳
 
