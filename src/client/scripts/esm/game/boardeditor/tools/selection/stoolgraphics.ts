@@ -9,7 +9,7 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math';
 import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
-import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
+import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
 
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
@@ -78,13 +78,15 @@ function outlineRankAndFile(): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
-	const data: number[] = primitives.Rect(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
-		OUTLINE_COLOR,
-	);
+	const screenBox = camera.getRespectiveScreenBox();
+	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
+	const left = Math.max(worldBox.left, screenBox.left);
+	const right = Math.min(worldBox.right, screenBox.right);
+	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
+	const top = Math.min(worldBox.top, screenBox.top);
+	if (left >= right || bottom >= top) return; // Box is off-screen
+
+	const data: number[] = primitives.Rect(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
@@ -93,15 +95,23 @@ function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
+	const screenBox = camera.getRespectiveScreenBox();
+	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
+	const left = Math.max(worldBox.left, screenBox.left);
+	const right = Math.min(worldBox.right, screenBox.right);
+	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
+	const top = Math.min(worldBox.top, screenBox.top);
+	if (left >= right || bottom >= top) return; // Box is off-screen
+
 	// Convert virtual pixel dimensions to world space
 	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
 	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
 
 	const data: number[] = primitives.DashedRect(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
+		left,
+		bottom,
+		right,
+		top,
 		dashedWidth,
 		dashedLength,
 		dashedLength,
@@ -115,13 +125,15 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
  * @param worldBox - Contains the world space edge coordinates of the selection box.
  */
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
-	const fillData: number[] = primitives.Quad_Color(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
-		FILL_COLOR,
-	);
+	const screenBox = camera.getRespectiveScreenBox();
+	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
+	const left = Math.max(worldBox.left, screenBox.left);
+	const right = Math.min(worldBox.right, screenBox.right);
+	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
+	const top = Math.min(worldBox.top, screenBox.top);
+	if (left >= right || bottom >= top) return; // Box is off-screen
+
+	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, FILL_COLOR);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
 
@@ -134,13 +146,25 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const widthWorld = space.convertPixelsToWorldSpace_Virtual(CORNER_DOT_WIDTH);
 
 	// Bottom right corner world space
-	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];
+	const cornerX = worldBox.right;
+	const cornerY = worldBox.bottom;
 
 	// Calculate vertex data
-	const left = corner[0] - widthWorld / 2;
-	const right = corner[0] + widthWorld / 2;
-	const bottom = corner[1] - widthWorld / 2;
-	const top = corner[1] + widthWorld / 2;
+	const left = cornerX - widthWorld / 2;
+	const right = cornerX + widthWorld / 2;
+	const bottom = cornerY - widthWorld / 2;
+	const top = cornerY + widthWorld / 2;
+
+	const screenBox = camera.getRespectiveScreenBox();
+	// Skip rendering if the corner square is entirely off-screen,
+	// which also prevents float32 overflow glitches for very large selections.
+	if (
+		right < screenBox.left ||
+		left > screenBox.right ||
+		top < screenBox.bottom ||
+		bottom > screenBox.top
+	)
+		return;
 
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
