@@ -8,8 +8,10 @@
  */
 
 import type { Color } from '../../../../../../../shared/util/math/math';
-import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
 import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
+import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
+
+import bounds from '../../../../../../../shared/util/math/bounds';
 
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
@@ -80,12 +82,10 @@ function outlineRankAndFile(): void {
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
 	const screenBox = camera.getRespectiveScreenBox();
 	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
-	const left = Math.max(worldBox.left, screenBox.left);
-	const right = Math.min(worldBox.right, screenBox.right);
-	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
-	const top = Math.min(worldBox.top, screenBox.top);
-	if (left >= right || bottom >= top) return; // Box is off-screen
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
 
+	const { left, bottom, right, top } = clampedBox;
 	const data: number[] = primitives.Rect(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
@@ -97,16 +97,14 @@ function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
 function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 	const screenBox = camera.getRespectiveScreenBox();
 	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
-	const left = Math.max(worldBox.left, screenBox.left);
-	const right = Math.min(worldBox.right, screenBox.right);
-	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
-	const top = Math.min(worldBox.top, screenBox.top);
-	if (left >= right || bottom >= top) return; // Box is off-screen
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
 
 	// Convert virtual pixel dimensions to world space
 	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
 	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
 
+	const { left, bottom, right, top } = clampedBox;
 	const data: number[] = primitives.DashedRect(
 		left,
 		bottom,
@@ -127,12 +125,10 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
 	const screenBox = camera.getRespectiveScreenBox();
 	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
-	const left = Math.max(worldBox.left, screenBox.left);
-	const right = Math.min(worldBox.right, screenBox.right);
-	const bottom = Math.max(worldBox.bottom, screenBox.bottom);
-	const top = Math.min(worldBox.top, screenBox.top);
-	if (left >= right || bottom >= top) return; // Box is off-screen
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
 
+	const { left, bottom, right, top } = clampedBox;
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, FILL_COLOR);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
@@ -154,17 +150,6 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const right = cornerX + widthWorld / 2;
 	const bottom = cornerY - widthWorld / 2;
 	const top = cornerY + widthWorld / 2;
-
-	const screenBox = camera.getRespectiveScreenBox();
-	// Skip rendering if the corner square is entirely off-screen,
-	// which also prevents float32 overflow glitches for very large selections.
-	if (
-		right < screenBox.left ||
-		left > screenBox.right ||
-		top < screenBox.bottom ||
-		bottom > screenBox.top
-	)
-		return;
 
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
