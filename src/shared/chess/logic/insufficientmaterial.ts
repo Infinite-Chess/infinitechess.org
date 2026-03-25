@@ -4,6 +4,13 @@
  * This script detects draws by insufficient material
  *
  * @maintainer tsevasa
+ *
+ * TODO:
+ *
+ * Add the following piece combinations as insuffmat:
+ * * 1K1R1N-1k1n (and all combinations that are a subset of this)
+ * * 1K1B-1k1b (doesn't matter the colors)
+ * * 1k1p-1K (requires simulating all possible promotions according to gamerules)
  */
 
 import type { Board } from './gamefile.js';

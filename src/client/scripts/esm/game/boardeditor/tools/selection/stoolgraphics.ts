@@ -11,6 +11,8 @@ import type { Color } from '../../../../../../../shared/util/math/math';
 import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
 
+import bounds from '../../../../../../../shared/util/math/bounds';
+
 import mouse from '../../../../util/mouse';
 import space from '../../../misc/space';
 import camera from '../../../rendering/camera';
@@ -74,34 +76,44 @@ function outlineRankAndFile(): void {
 }
 
 /**
- * Renders a wireframe box around the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a wireframe box around the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
+	const screenBox = camera.getRespectiveScreenBox();
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
+
 	const data: number[] = primitives.Rect(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
 		OUTLINE_COLOR,
 	);
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
 /**
- * Renders a dashed wireframe box around the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a dashed wireframe box around the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
+	const screenBox = camera.getRespectiveScreenBox();
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
+
 	// Convert virtual pixel dimensions to world space
 	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
 	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
 
 	const data: number[] = primitives.DashedRect(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
 		dashedWidth,
 		dashedLength,
 		dashedLength,
@@ -111,15 +123,20 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 }
 
 /**
- * Renders a filled transparent box inside the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a filled transparent box inside the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
+	const screenBox = camera.getRespectiveScreenBox();
+	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
+
 	const fillData: number[] = primitives.Quad_Color(
-		worldBox.left,
-		worldBox.bottom,
-		worldBox.right,
-		worldBox.top,
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
 		FILL_COLOR,
 	);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();

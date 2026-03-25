@@ -173,6 +173,23 @@ function translateBoundingBox(box: BoundingBox, translation: Coords): BoundingBo
 	};
 }
 
+/**
+ * Returns a new {@link DoubleBoundingBox} with each edge clamped so it
+ * does not extend beyond the corresponding edge of `clampTo`.
+ * Non-mutating.
+ */
+function clampDoubleBoundingBox(
+	box: DoubleBoundingBox,
+	clampTo: DoubleBoundingBox,
+): DoubleBoundingBox {
+	return {
+		left: Math.max(box.left, clampTo.left),
+		right: Math.min(box.right, clampTo.right),
+		bottom: Math.max(box.bottom, clampTo.bottom),
+		top: Math.min(box.top, clampTo.top),
+	};
+}
+
 // Operations -----------------------------------------------------------------------
 
 /**
@@ -206,6 +223,7 @@ function boxContainsBoxBD(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boo
 
 /**
  * Determines if two bounding boxes have zero overlap.
+ * They are allowed to touch sides without overlapping.
  */
 function areBoxesDisjoint(box1: DoubleBoundingBox, box2: DoubleBoundingBox): boolean {
 	if (box1.right <= box2.left) return true;
@@ -284,6 +302,7 @@ export default {
 	mergeBoundingBoxBDs,
 	mergeBoundingBoxDoubles,
 	translateBoundingBox,
+	clampDoubleBoundingBox,
 
 	// Operations
 	boxContainsBox,
