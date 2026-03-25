@@ -45,13 +45,17 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 
 		// Cap the world box to the screen box.
 		// Fixes graphical glitches when the vertex data is beyond float32 range.
-		if (worldBorder.left === null || worldBox.left < screenBox.left)
-			worldBox.left = screenBox.left;
-		if (worldBorder.right === null || worldBox.right > screenBox.right)
-			worldBox.right = screenBox.right;
-		if (worldBorder.bottom === null || worldBox.bottom < screenBox.bottom)
-			worldBox.bottom = screenBox.bottom;
-		if (worldBorder.top === null || worldBox.top > screenBox.top) worldBox.top = screenBox.top;
+		// Null sides of worldBorder represent infinity, so we treat them as ±Infinity
+		// so that clampDoubleBoundingBox pulls those sides in to the screen edge.
+		worldBox = bounds.clampDoubleBoundingBox(
+			{
+				left: worldBorder.left === null ? -Infinity : worldBox.left,
+				right: worldBorder.right === null ? Infinity : worldBox.right,
+				bottom: worldBorder.bottom === null ? -Infinity : worldBox.bottom,
+				top: worldBorder.top === null ? Infinity : worldBox.top,
+			},
+			screenBox,
+		);
 
 		if (bounds.areBoxesDisjoint(worldBox, screenBox)) return; // No need to draw if playable area not on screen
 	} else {
