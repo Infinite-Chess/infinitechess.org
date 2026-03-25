@@ -22,6 +22,12 @@ Type or variable renames spanning several files (time consuming for me to review
 
 Massive refactors covering dozens of files in the codebase, unless it's required to fulfill the prompt.
 
+## Static Asset Versioning
+
+JavaScript and CSS files are content-hashed by the build pipeline and served with `Cache-Control: immutable`, so they never need manual versioning.
+
+For **images and fonts** (which are not content-hashed), browsers may cache them indefinitely. Whenever you change an image or font asset, append or increment a `?v=N` query string on every template reference to that file (e.g. `<img src="/img/logo.png?v=2">`). This forces browsers to fetch the updated file instead of serving the stale cached version.
+
 ## Code Standards
 
 > [!NOTE]

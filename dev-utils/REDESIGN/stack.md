@@ -55,3 +55,86 @@ Self-hosted on a Mac, no VPS. SSD storage. Cloudflare in front. Low traffic — 
 - **White flash on navigation.** `@view-transition { navigation: auto }` with `::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0s }` in the shared stylesheet eliminates a potential white flash between page loads by holding the old page visible until the new one is ready to paint — no crossfade, but an instant cut.
 
 - **Audio autoplay fallback.** If the browser blocks the first move's sound, when navigating to tbr game page, before the first user gesture, refer to Lichess's approach as a reference: they show a small red mute icon in the header when audio is blocked. See: https://lichess.org/faq#autoplay
+
+## SEO
+
+Search engine optimization should be built in from the start of the redesign, not bolted on at the end. The Nunjucks migration creates the ideal opportunity to do this correctly, since there is now one central `layout.njk` shell.
+
+### Base SEO Principles
+
+For context, the fundamentals search engines evaluate are:
+
+- **Crawlability** — `robots.txt` tells crawlers which paths to index or skip; a sitemap gives them a complete, prioritised list of URLs to visit.
+- **Relevance signals** — `<title>`, `<meta name="description">`, and heading hierarchy (`<h1>`…`<h6>`) tell both crawlers and users what a page is about.
+- **Canonical URL** — `<link rel="canonical">` tells search engines which URL is authoritative when the same content is accessible at multiple addresses (e.g. with/without a `?lng=` param).
+- **Structured data** — JSON-LD blocks using Schema.org vocabulary enable rich results (e.g. sitelinks, breadcrumbs) in Google Search.
+- **Social graph tags** — Open Graph (`og:*`) and Twitter Card (`twitter:*`) meta tags control how pages appear when shared on social platforms.
+- **Multilingual signals** — `<link rel="alternate" hreflang="xx">` tags tell search engines which URL serves each language, preventing the same content in different languages from competing in rankings.
+- **Performance / Core Web Vitals** — Google uses LCP, INP, and CLS as a ranking signal. Fast initial paint, low layout shift, and quick interaction response all matter.
+- **Semantic HTML** — One `<h1>` per page, correct landmark elements (`<nav>`, `<main>`, `<footer>`, `<article>`, `<section>`), and descriptive `alt` text on images all help crawlers and screen readers understand page structure.
+
+### Meta Tags in layout.njk
+
+`layout.njk` is the single HTML shell for every page, making it the right place to define default SEO meta tags and expose `{% block %}` slots for per-page overrides.
+
+- **`<title>`** — Already planned via `{% block title %}`. Keep it. Prefix with the page name; append `| Infinite Chess` as a suffix in the default layout block so the brand appears on every tab. Keep page names concise (≤ 60 characters total).
+- **`<meta name="description">`** — Add a `{% block description %}` with a sensible site-wide default. Each public-facing page overrides it with a 1–2 sentence summary (≤ 160 characters). This text appears as the snippet in search results.
+- **`<link rel="canonical">`** — Emit the canonical URL (scheme + host + clean pathname, without any `?lng=` parameter) on every page. The route handler injects it as a template variable. This is especially important for this site because the same HTML is reachable with different `?lng=` query strings.
+- **Open Graph / Twitter Card tags** — Add default `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, and `twitter:card` tags in the layout; let pages override via a `{% block og %}` slot. Use a single default social-preview image (e.g. `/img/social-preview.png`, at least 1200 × 630 px) for pages that don't provide their own.
+- **`<meta name="robots">`** — Add `<meta name="robots" content="noindex">` to pages that should not be indexed: `/login`, `/createaccount`, `/reset-password/…`, `/admin`, `/400`–`/500` error pages.
+
+### robots.txt
+
+Serve a static `robots.txt` from the document root (placed in `src/client/` so the existing `express.static` middleware picks it up):
+
+```
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /reset-password/
+Sitemap: https://www.infinitechess.org/sitemap.xml
+```
+
+Block API endpoints, the admin panel, and password-reset tokens (which are private by nature). Expose the sitemap URL so crawlers register it automatically.
+
+### Sitemap
+
+A dynamic `GET /sitemap.xml` route in `src/server/routes/` generates a fresh sitemap on each request (the payload is tiny and generation is trivial). Include the stable public pages — `/`, `/play`, `/guide`, `/news`, `/leaderboard`, `/credits`, `/termsofservice` — with appropriate `<changefreq>` and `<priority>` values. Omit `/login`, `/createaccount`, `/reset-password/…`, member profiles, `/admin`, and error pages.
+
+### Structured Data (JSON-LD)
+
+Add a `{% block jsonld %}{% endblock %}` slot in `layout.njk`. On the homepage, inject a `WebApplication` schema object:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Infinite Chess",
+  "url": "https://www.infinitechess.org",
+  "description": "Play infinite chess online against others or bots on an infinite board.",
+  "applicationCategory": "Game",
+  "operatingSystem": "All"
+}
+```
+
+This enables potential rich results in Google Search and gives crawlers unambiguous machine-readable metadata about what the site is.
+
+### hreflang for Multilingual Content
+
+For every page served in multiple languages, emit a set of `<link rel="alternate" hreflang="xx" href="…">` tags pointing to each language variant. The route handler already knows the supported language list; it should inject it into the template as a variable so the layout renders the full `<link>` set. This prevents different language versions of the same page from competing against each other in search rankings.
+
+### Semantic HTML
+
+- Keep one `<h1>` per page that names the page's primary subject. Do not use `<h1>` for the site logo or wordmark — that belongs in a `<p>` or `<span>` inside `<header>`.
+- Use landmark elements (`<nav>`, `<main>`, `<footer>`, `<article>`, `<section>`) as layout containers rather than generic `<div>`s — both accessibility and search engines benefit.
+- Every `<img>` must carry a meaningful `alt` attribute. Decorative images (e.g. background textures) get `alt=""`.
+
+### Performance & Core Web Vitals
+
+Google uses Core Web Vitals (LCP, INP, CLS) as a ranking signal. The choices already made in this redesign address the main factors directly:
+
+- SSR for the first paint eliminates client-side fetch waterfalls → fast LCP.
+- Content-hashed assets with `Cache-Control: immutable` caching → repeat-visit LCP near zero.
+- CSS custom properties with no layout-shifting JS patches → low CLS.
+- Self-hosted Noto Sans (no Google Fonts CDN) → no render-blocking cross-origin requests.
+- `<link rel="modulepreload">` (late-stage polish) → eliminates the ES module import waterfall.

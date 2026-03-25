@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /reset-password/
+Sitemap: https://www.infinitechess.org/sitemap.xml

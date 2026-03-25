@@ -91,3 +91,42 @@
 - Consider `@view-transition` if there's white flashes between page loads.
 
 - Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
+
+---
+
+## SEO
+
+*Most items below touch `layout.njk`; do them together once the layout shell is stable.*
+
+- Create `src/client/robots.txt` (picked up automatically by `express.static`). Disallow `/api/`, `/admin`, and `/reset-password/`; add a `Sitemap:` line pointing to `https://www.infinitechess.org/sitemap.xml`.
+
+- Add a `GET /sitemap.xml` route in `src/server/routes/` that responds with a dynamically generated XML sitemap covering the stable public pages: `/`, `/play`, `/guide`, `/news`, `/leaderboard`, `/credits`, `/termsofservice`. Omit login/registration, member profiles, admin, and error pages.
+
+- In `layout.njk`, add the following inside `<head>`:
+  - `<meta name="description" content="{% block description %}Play infinite chess online against others on a boundless board.{% endblock %}">` — each public page overrides this block with a page-specific summary (≤ 160 characters).
+  - `<link rel="canonical" href="{{ canonicalUrl }}">` — inject `canonicalUrl` (scheme + host + clean pathname, no `?lng=` param) from every route handler.
+  - Open Graph / Twitter Card block (default values in the layout; pages override via `{% block og %}`):
+    ```html
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="Infinite Chess" />
+    <meta property="og:url"         content="{{ canonicalUrl }}" />
+    <meta property="og:title"       content="{% block og_title %}Infinite Chess{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}Play infinite chess online against others on a boundless board.{% endblock %}" />
+    <meta property="og:image"       content="{% block og_image %}https://www.infinitechess.org/img/social-preview.png{% endblock %}" />
+    <meta name="twitter:card"       content="summary_large_image" />
+    ```
+  - A `{% block jsonld %}{% endblock %}` slot for page-specific JSON-LD structured data.
+
+- On the home page template, fill the `{% block jsonld %}` slot with a `WebApplication` JSON-LD block (name, url, description, applicationCategory: `"Game"`, operatingSystem: `"All"`).
+
+- Add a default social-preview image at `src/client/img/social-preview.png` (at least 1200 × 630 px, ≤ 300 KB). This image is used for Open Graph / Twitter Card previews on all pages that don't provide their own.
+
+- Add `<meta name="robots" content="noindex">` to pages that must not be indexed: `/login`, `/createaccount`, `/reset-password/…`, `/admin`, and all error pages (`/400`–`/500`).
+
+- For each localized page, emit `<link rel="alternate" hreflang="xx" href="…">` tags for every supported language. The route handler should inject the supported language list and base URL into the template so the layout can render the full set.
+
+- Ensure every public page template sets a unique, descriptive `{% block description %}` (≤ 160 characters).
+
+- Audit every `<img>` tag in every template and ensure it carries a meaningful `alt` attribute. Purely decorative images get `alt=""`.
+
+- Verify there is exactly one `<h1>` per page and that heading levels are not skipped.
