@@ -6,10 +6,9 @@
 
 import fs from 'fs';
 import path from 'path';
-import * as z from 'zod';
+import { parse } from 'smol-toml';
 import { marked } from 'marked';
 import { fileURLToPath } from 'node:url';
-import { parse, TomlTable } from 'smol-toml';
 import { format, parseISO } from 'date-fns';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
@@ -23,29 +22,12 @@ type Translations = Record<string, LanguageTranslations>;
 /** All translations for a single language. */
 type LanguageTranslations = { default: Record<string, any> };
 
-const changelogSchema = z.record(
-	z.string().refine((val) => Number.isInteger(Number(val)), {
-		message: 'Key must be an integer string',
-	}),
-	z.object({
-		// note: ,
-		note: z.union([
-			z.string().min(1, 'Note cannot be empty'),
-			z.array(z.string().min(1, 'Note cannot be empty')).min(1, 'Note cannot be empty'),
-		]),
-		changes: z.array(z.string()).optional(),
-	}),
-);
-type Changelog = z.infer<typeof changelogSchema>;
-
 // Constants -----------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** The folder path containing translation TOML files. */
 const translationsFolder = path.join(__dirname, '../../../translation');
-/** The changelog file path for tracking the English TOML version changes. */
-const changesFile = path.join(translationsFolder, 'changes.json');
 
 /** The folder path containing news markdown files for various languages. */
 const newsFolder = path.join(translationsFolder, 'news');
@@ -71,15 +53,13 @@ function loadTranslations(): Translations {
 	const translations: Translations = {};
 
 	const tomlFiles = fs.readdirSync(translationsFolder).filter((f) => f.endsWith('.toml'));
-	const changelog = loadChangelog();
 
 	tomlFiles.forEach((file) => {
 		const languageCode = file.replace('.toml', '');
 		const tomlPath = path.join(translationsFolder, file);
 		const toml = fs.readFileSync(tomlPath).toString(); // Load
 		const toml_parsed = parse(toml); // Parse
-		const toml_updated = removeOutdated(toml_parsed, changelog); // Version
-		const toml_sanitized = html_escape(toml_updated); // Sanitize
+		const toml_sanitized = html_escape(toml_parsed); // Sanitize
 
 		translations[languageCode] = { default: toml_sanitized };
 	});
@@ -123,13 +103,6 @@ function deepMerge(source: Record<string, any>, target: Record<string, any>): Re
 		}
 	}
 	return result;
-}
-
-/** Loads the English TOML changelog file into an object. */
-function loadChangelog(): Changelog {
-	const changelogRaw = fs.readFileSync(changesFile).toString();
-	const changelogParsed = JSON.parse(changelogRaw);
-	return changelogSchema.parse(changelogParsed);
 }
 
 /**
@@ -176,51 +149,6 @@ function loadNews(supportedLanguages: string[]): Record<string, string> {
 	});
 
 	return newsPosts;
-}
-
-/** Removes outdated translations from one language's toml object, according to the changelog. */
-function removeOutdated(object: TomlTable, changelog: Changelog): TomlTable {
-	const version = object['version'] as string;
-	// Filter out versions that are older than version of current language
-	const filtered_entries = Object.entries(changelog).filter(
-		([change]) => Number(version) < Number(change),
-	);
-
-	// Collect all keys to be removed
-	let key_strings: string[] = [];
-	for (const [, value] of filtered_entries) {
-		if (value.changes === undefined) continue;
-		key_strings = key_strings.concat(value.changes);
-	}
-	key_strings = [...new Set(key_strings)]; // Remove duplicates
-
-	let object_copy = object;
-	for (const key_string of key_strings) {
-		object_copy = remove_key(key_string, object_copy);
-	}
-
-	return object_copy;
-}
-
-/**
- * Removes keys from `object` based on string of format 'foo.bar'.
- * @param key_string - String representing key that has to be deleted in format 'foo.bar'.
- * @param object - Object that is target of the removal.
- * @returns Copy of `object` with deleted values
- * @example
- * const obj = { foo: { bar: 42, baz: 100 }, qux: 7 };
- * const result = remove_key('foo.bar', obj); // { foo: { baz: 100 }, qux: 7 }
- */
-function remove_key(key_string: string, object: Record<string, any>): Record<string, any> {
-	const keys = key_string.split('.');
-
-	let currentObj = object;
-	for (let i = 0; i < keys.length - 1; i++) {
-		if (currentObj[keys[i]!] !== undefined) currentObj = currentObj[keys[i]!];
-	}
-
-	if (currentObj[keys.at(-1)!] !== undefined) delete currentObj[keys.at(-1)!];
-	return object;
 }
 
 /**

@@ -1,0 +1,109 @@
+/* src/client/css/global.css */
+
+/*
+ * Shared stylesheet loaded on every page.
+ * Defines: CSS resets, @font-face, font stack, theme variables, utility classes.
+ *
+ * Theme variables are set via a [data-theme] attribute on <html>.
+ * The initial value is written by the server (SSR default: "dark").
+ * An inline <script> in layout.njk overwrites it from localStorage
+ * before CSS loads, preventing a flash of the wrong theme.
+ * Switching themes at runtime is one setAttribute + localStorage.setItem call.
+ */
+
+/* ============================================================
+   @font-face
+   ============================================================ */
+
+@font-face {
+	font-family: 'Noto Sans';
+	src: url('/fonts/noto-sans-v42-latin-regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap; /* Show fallback font immediately; swap in Noto Sans once loaded */
+}
+
+/* ============================================================
+   CSS Reset
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html {
+	height: 100%;
+	font-family: 'Noto Sans', Verdana, sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100%;
+	background-color: var(--c-bg);
+	color: var(--c-text);
+}
+
+/* ============================================================
+   Theme: Dark (default) - STARTER VARIABLES, refine as we go
+   ============================================================ */
+
+[data-theme='dark'] {
+	--c-bg: rgb(33, 33, 33);
+	--c-surface: rgb(50, 50, 50);
+	--c-surface-2: rgb(65, 65, 65);
+	--c-text: rgb(220, 220, 220);
+	--c-text-muted: rgb(160, 160, 160);
+	--c-brand: rgb(97, 169, 255);
+	--c-brand-hover: rgb(130, 190, 255);
+	--c-border: rgb(80, 80, 80);
+	--c-link: rgb(97, 169, 255);
+	--c-link-hover: rgb(130, 190, 255);
+}
+
+/* ============================================================
+   Theme: Light - STARTER VARIABLES, refine as we go
+   ============================================================ */
+
+[data-theme='light'] {
+	--c-bg: rgb(245, 245, 245);
+	--c-surface: rgb(255, 255, 255);
+	--c-surface-2: rgb(235, 235, 235);
+	--c-text: rgb(30, 30, 30);
+	--c-text-muted: rgb(100, 100, 100);
+	--c-brand: rgb(0, 102, 204);
+	--c-brand-hover: rgb(0, 80, 170);
+	--c-border: rgb(200, 200, 200);
+	--c-link: rgb(0, 102, 204);
+	--c-link-hover: rgb(0, 80, 170);
+}
+
+/* ============================================================
+   Utility classes
+   ============================================================ */
+
+.hidden {
+	display: none;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.center {
+	text-align: center;
+}
+
+.unselectable {
+	user-select: none;
+}

@@ -18,10 +18,6 @@
 
 ## Nunjucks Migration
 
-- Install `nunjucks` and `@types/nunjucks`; configure the Nunjucks environment in the Express app (set views directory, autoescape, etc.).
-
-- Create `layout.njk` — the full HTML shell (`<html>`, `<head>`, `<body>`) with `{% block %}` slots for: page title, extra `<head>` tags, page stylesheet, body content, and page script.
-
 - Delete `build/views.ts`; remove the `copy:views` script from `package.json`; remove `src/client/views` from `nodemon.json`'s watch list.
 
 - Migrate all existing route handlers from `res.sendFile()` to `res.render()`, pointing each to a minimal placeholder `.njk` file that extends `layout.njk`. This keeps the site functional while individual pages are redesigned.
@@ -45,8 +41,6 @@
 ## Translation System Refactor
 
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
-
-- Update `loadTranslations()` to remove versioning support entirely; delete `removeOutdated()`. Keep `deepMerge()` (fallback to English for missing keys).
 
 ---
 
@@ -91,3 +85,9 @@
 - Consider `@view-transition` if there's white flashes between page loads.
 
 - Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
+
+---
+
+## Cleanup Checklist
+
+- Uninstall ejs and its types

@@ -4,10 +4,10 @@
  * Defines and configures the Express application instance.
  */
 
-import ejs from 'ejs';
 import express from 'express';
 
 import { initTranslations } from './config/i18n.js';
+import { configureNunjucks } from './config/nunjucks.js';
 import { configureMiddleware } from './middleware/middleware.js';
 
 const app = express();
@@ -16,9 +16,8 @@ const app = express();
 app.set('trust proxy', 1); // '1' means trust the first proxy hop (Cloudflare)
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 
-// Set EJS as the view engine
-app.engine('html', ejs.renderFile);
-app.set('view engine', 'html');
+// Configure Nunjucks as the view engine.
+configureNunjucks(app);
 
 // This is in here so integration tests work, as otherwise if
 // this is in server.js, i18next is never initialized for tests.

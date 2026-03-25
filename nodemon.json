@@ -1,11 +1,6 @@
 {
-  "watch": [
-    "dist/server",
-    "dist/shared",
-    "src/client/views",
-    "src/client/scripts/cjs/game/htmlscript.js"
-  ],
-  "ext": "js,ejs,html",
+  "watch": ["dist/server", "dist/shared"],
+  "ext": "js",
   "exec": "node --enable-source-maps dist/server/server.js",
   "delay": "200"
 }
