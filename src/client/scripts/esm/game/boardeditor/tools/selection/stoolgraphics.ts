@@ -8,8 +8,8 @@
  */
 
 import type { Color } from '../../../../../../../shared/util/math/math';
-import type { Coords } from '../../../../../../../shared/chess/util/coordutil';
 import type { DoubleBoundingBox } from '../../../../../../../shared/util/math/bounds';
+import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil';
 
 import bounds from '../../../../../../../shared/util/math/bounds';
 
@@ -76,40 +76,44 @@ function outlineRankAndFile(): void {
 }
 
 /**
- * Renders a wireframe box around the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a wireframe box around the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxWireframe(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
 	const screenBox = camera.getRespectiveScreenBox();
-	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
 	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
-	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
 
-	const { left, bottom, right, top } = clampedBox;
-	const data: number[] = primitives.Rect(left, bottom, right, top, OUTLINE_COLOR);
+	const data: number[] = primitives.Rect(
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
+		OUTLINE_COLOR,
+	);
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
 /**
- * Renders a dashed wireframe box around the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a dashed wireframe box around the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
 	const screenBox = camera.getRespectiveScreenBox();
-	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
 	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
-	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
 
 	// Convert virtual pixel dimensions to world space
 	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
 	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
 
-	const { left, bottom, right, top } = clampedBox;
 	const data: number[] = primitives.DashedRect(
-		left,
-		bottom,
-		right,
-		top,
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
 		dashedWidth,
 		dashedLength,
 		dashedLength,
@@ -119,17 +123,22 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 }
 
 /**
- * Renders a filled transparent box inside the selection.
- * @param worldBox - Contains the world space edge coordinates of the selection box.
+ * Renders a filled transparent box inside the provided box.
+ * @param worldBox - Contains the world space edge coordinates of the box.
  */
 function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
+	// Clamp to screen box to prevent overflow glitches when the box is very large.
 	const screenBox = camera.getRespectiveScreenBox();
-	// Clamp to screen box to prevent float32 overflow glitches when the selection is very large.
 	const clampedBox = bounds.clampDoubleBoundingBox(worldBox, screenBox);
-	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen
+	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
 
-	const { left, bottom, right, top } = clampedBox;
-	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, FILL_COLOR);
+	const fillData: number[] = primitives.Quad_Color(
+		clampedBox.left,
+		clampedBox.bottom,
+		clampedBox.right,
+		clampedBox.top,
+		FILL_COLOR,
+	);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
 }
 
@@ -142,14 +151,13 @@ function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	const widthWorld = space.convertPixelsToWorldSpace_Virtual(CORNER_DOT_WIDTH);
 
 	// Bottom right corner world space
-	const cornerX = worldBox.right;
-	const cornerY = worldBox.bottom;
+	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];
 
 	// Calculate vertex data
-	const left = cornerX - widthWorld / 2;
-	const right = cornerX + widthWorld / 2;
-	const bottom = cornerY - widthWorld / 2;
-	const top = cornerY + widthWorld / 2;
+	const left = corner[0] - widthWorld / 2;
+	const right = corner[0] + widthWorld / 2;
+	const bottom = corner[1] - widthWorld / 2;
+	const top = corner[1] + widthWorld / 2;
 
 	const fillData: number[] = primitives.Quad_Color(left, bottom, right, top, OUTLINE_COLOR);
 	createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();

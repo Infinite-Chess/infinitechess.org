@@ -223,6 +223,7 @@ function boxContainsBoxBD(outerBox: BoundingBoxBD, innerBox: BoundingBoxBD): boo
 
 /**
  * Determines if two bounding boxes have zero overlap.
+ * They are allowed to touch sides without overlapping.
  */
 function areBoxesDisjoint(box1: DoubleBoundingBox, box2: DoubleBoundingBox): boolean {
 	if (box1.right <= box2.left) return true;

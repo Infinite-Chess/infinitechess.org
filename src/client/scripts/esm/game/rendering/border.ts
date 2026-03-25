@@ -46,7 +46,7 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 		// Cap the world box to the screen box.
 		// Fixes graphical glitches when the vertex data is beyond float32 range.
 		// Null sides of worldBorder represent infinity, so we treat them as ±Infinity
-		// so that clampDoubleBoundingBox pulls those sides in to the screen edge.
+		// so that clampDoubleBoundingBox clamps those sides to the screen edge.
 		worldBox = bounds.clampDoubleBoundingBox(
 			{
 				left: worldBorder.left === null ? -Infinity : worldBox.left,
