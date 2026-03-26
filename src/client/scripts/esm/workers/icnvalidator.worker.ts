@@ -188,16 +188,14 @@ function validateTermination(
 
 	const conditionMappings: Record<string, string> = {
 		Checkmate: 'checkmate',
+		'All pieces captured': 'allpiecescaptured',
 		'Draw by stalemate': 'stalemate',
 		'Draw by threefold repetition': 'repetition',
 		'Draw by fifty-move rule': 'moverule',
 		'Draw by insufficient material': 'insuffmat',
 	};
 
-	if (termination && termination.startsWith('Win by capturing all')) {
-		if (condition !== 'allpiecescaptured')
-			throw new Error(`Termination/Condition mismatch: ${termination} vs ${condition}`);
-	} else if (termination && termination in conditionMappings) {
+	if (termination && termination in conditionMappings) {
 		if (condition !== conditionMappings[termination])
 			throw new Error(`Termination/Condition mismatch: ${termination} vs ${condition}`);
 	} else if (termination) {
