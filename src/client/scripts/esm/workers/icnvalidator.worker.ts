@@ -159,28 +159,23 @@ function validateTermination(
 	result: string | undefined,
 	gameConclusion: GameConclusion | undefined,
 ): void {
-	if (termination === 'Draw by maximum moves reached') {
+	if (termination === 'Maximum moves reached') {
 		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is "Draw by maximum moves reached" but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
+				`Termination is "Maximum moves reached" but game is over: ${JSON.stringify(gameConclusion)}`,
 			);
 		return;
 	}
 	if (termination && termination.startsWith('Material adjudication')) {
 		if (gameConclusion !== undefined)
 			throw new Error(
-				`Termination is Material Adjudication but gameConclusion is defined: ${JSON.stringify(gameConclusion)}`,
+				`Termination is Material Adjudication, but game is over: ${JSON.stringify(gameConclusion)}`,
 			);
 		return;
 	}
-	if (termination === 'Loss on time') {
-		throw new Error(`Termination is "Loss on time"`);
-	}
 	if (gameConclusion === undefined) {
 		if (termination)
-			throw new Error(
-				`gameConclusion is undefined but Termination is specified: ${termination}`,
-			);
+			throw new Error(`Game isn't over, but Termination is specified: ${termination}`);
 		return;
 	}
 
@@ -189,17 +184,17 @@ function validateTermination(
 	const conditionMappings: Record<string, string> = {
 		Checkmate: 'checkmate',
 		'All pieces captured': 'allpiecescaptured',
-		'Draw by stalemate': 'stalemate',
-		'Draw by threefold repetition': 'repetition',
-		'Draw by fifty-move rule': 'moverule',
-		'Draw by insufficient material': 'insuffmat',
+		Stalemate: 'stalemate',
+		'Threefold repetition': 'repetition',
+		'50-move rule': 'moverule',
+		'Insufficient material': 'insuffmat',
 	};
 
 	if (termination && termination in conditionMappings) {
 		if (condition !== conditionMappings[termination])
-			throw new Error(`Termination/Condition mismatch: ${termination} vs ${condition}`);
+			throw new Error(`Game is over by ${condition}, but Termination is "${termination}"`);
 	} else if (termination) {
-		throw new Error(`Unknown Termination metadata: "${termination}"`);
+		throw new Error(`Disallowed Termination metadata: "${termination}"`);
 	}
 
 	if (victor !== undefined && result) {
