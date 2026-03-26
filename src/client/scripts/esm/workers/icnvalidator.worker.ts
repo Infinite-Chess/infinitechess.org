@@ -175,7 +175,7 @@ function validateTermination(
 	}
 	if (gameConclusion === undefined) {
 		if (termination)
-			throw new Error(`Game isn't over, but Termination is specified: ${termination}`);
+			throw new Error(`Game isn't over, but Termination is specified: "${termination}"`);
 		return;
 	}
 
