@@ -10,6 +10,7 @@
  */
 
 import type { Board } from './gamefile.js';
+import type { Coords } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
@@ -19,7 +20,6 @@ import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
-import type { Coords } from '../util/coordutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -211,7 +211,7 @@ function getCoordsParity(coords: Coords): 0 | 1 {
  * @param tuple - tuple of two numbers
  * @returns sum of tuple entries
  */
-function sum_tuple_coords(tuple: [number, number]): number {
+function sumTupleCount(tuple: [number, number]): number {
 	return tuple[0] + tuple[1];
 }
 
@@ -219,7 +219,7 @@ function sum_tuple_coords(tuple: [number, number]): number {
  * @param tuple - tuple of two numbers
  * @returns tuple ordered in descending order
  */
-function ordered_tuple_descending(tuple: [number, number]): [number, number] {
+function orderTupleDescending(tuple: [number, number]): [number, number] {
 	if (tuple[0] < tuple[1]) return [tuple[1], tuple[0]];
 	else return tuple;
 }
@@ -273,17 +273,16 @@ function buildBoardScenario(boardsim: Board): Scenario {
 			else if (player === p.BLACK) bishopsB_count[parity] += 1;
 		} else if (piece.type in scenario) {
 			const currentCount = scenario[piece.type];
-			if (typeof currentCount === 'number') {
-				(scenario[piece.type] as number) = currentCount + 1;
-			}
+			if (typeof currentCount === 'number') scenario[piece.type] = currentCount + 1;
+			else console.error('[Insuffmat] currentCount is not a number');
 		} else scenario[piece.type] = 1;
 	}
 
 	// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-	if (sum_tuple_coords(bishopsW_count) !== 0)
-		scenario[r.BISHOP + e.W] = ordered_tuple_descending(bishopsW_count);
-	if (sum_tuple_coords(bishopsB_count) !== 0)
-		scenario[r.BISHOP + e.B] = ordered_tuple_descending(bishopsB_count);
+	if (sumTupleCount(bishopsW_count) !== 0)
+		scenario[r.BISHOP + e.W] = orderTupleDescending(bishopsW_count);
+	if (sumTupleCount(bishopsB_count) !== 0)
+		scenario[r.BISHOP + e.B] = orderTupleDescending(bishopsB_count);
 
 	return scenario;
 }
