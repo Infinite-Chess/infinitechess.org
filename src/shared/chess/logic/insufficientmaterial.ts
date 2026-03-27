@@ -38,121 +38,96 @@ const boundForWorldBorderConsideration = 1_000_000n;
 // Lists of scenarios that lead to a draw by insufficient material
 // Entries for bishops are given by tuples ordered in descending order, because of parity
 // so that bishops on different colored squares are treated separately
+const INSUFFMAT_SCENARIOS = {
+	/** Checkmate one black king with one white king for help.
+	 * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list. */
+	'1K1k': [
+		{ [r.QUEEN + e.W]: 1 }, // 1K1Q-1k
+		{ [r.BISHOP + e.W]: [Infinity, 1] },
+		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
+		{ [r.HAWK + e.W]: 2 },
+		{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
+		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ROOK + e.W]: 1, [r.ROOK + e.B]: 1 },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
+		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
+		{ [r.GUARD + e.W]: 1 },
+		{ [r.CHANCELLOR + e.W]: 1 },
+		{ [r.KNIGHTRIDER + e.W]: 2 },
+		{ [r.PAWN + e.W]: 3 },
+		{ [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1B-1k1b
+		{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
+	],
+	/** Checkmate one black king with one white king for help, with the world border nearby.
+	 * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list. */
+	'1K1k_FINITE': [{ [r.BISHOP + e.W]: [Infinity, 0] }, { [r.KNIGHT + e.W]: 2 }],
+	/** Checkmate one black king without any white kings.
+	 * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list. */
+	'0K1k': [
+		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.W]: 1 },
+		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.W]: 1 },
+		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.QUEEN + e.W]: 1, [r.PAWN + e.W]: 1 },
+		{ [r.BISHOP + e.W]: [2, 2] },
+		{ [r.BISHOP + e.W]: [Infinity, 1] },
+		{ [r.KNIGHT + e.W]: 4 },
+		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [Infinity, 0] },
+		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 1] },
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [2, 1] },
+		{ [r.HAWK + e.W]: 3 },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.PAWN + e.W]: 1 },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 2 },
+		{ [r.ROOK + e.W]: 1, [r.GUARD + e.W]: 1 },
+		{ [r.ROOK + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ROOK + e.W]: 2, [r.KNIGHT + e.W]: 1 },
+		{ [r.ROOK + e.W]: 2, [r.PAWN + e.W]: 1 },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [2, 0] },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 2 },
+		{ [r.ARCHBISHOP + e.W]: 2 },
+		{ [r.CHANCELLOR + e.W]: 1, [r.GUARD + e.W]: 1 },
+		{ [r.CHANCELLOR + e.W]: 1, [r.KNIGHT + e.W]: 1 },
+		{ [r.CHANCELLOR + e.W]: 1, [r.ROOK + e.W]: 1 },
+		{ [r.GUARD + e.W]: 2 },
+		{ [r.AMAZON + e.W]: 1 },
+		{ [r.KNIGHTRIDER + e.W]: 3 },
+		{ [r.PAWN + e.W]: 6 },
+		{ [r.HUYGEN + e.W]: 4 },
+	],
+	/** Checkmate one black king without any white kings, with the world border nearby.
+	 * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list. */
+	'0K1k_FINITE': [{ [r.BISHOP + e.W]: [Infinity, 0] }, { [r.KNIGHT + e.W]: 2 }],
+	/** Other special insuffmat scenarios */
+	special: [
+		{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
+		{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
+		{ [r.ROYALCENTAUR + e.B]: 1, [r.AMAZON + e.W]: 1 },
+	],
+	/** Other special insuffmat scenarios, with the world border nearby */
+	special_FINITE: [
+		{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
+		{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
+	],
+} satisfies Record<string, readonly Scenario[]>;
 
-/**
- * Checkmate one black king with one white king for help.
- * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
- */
-const insuffmatScenarios_1K1k: Scenario[] = [
-	{ [r.QUEEN + e.W]: 1 }, // 1K1Q-1k
-	{ [r.BISHOP + e.W]: [Infinity, 1] },
-	{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
-	{ [r.HAWK + e.W]: 2 },
-	{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
-	{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ROOK + e.W]: 1, [r.ROOK + e.B]: 1 },
-	{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
-	{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
-	{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
-	{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
-	{ [r.GUARD + e.W]: 1 },
-	{ [r.CHANCELLOR + e.W]: 1 },
-	{ [r.KNIGHTRIDER + e.W]: 2 },
-	{ [r.PAWN + e.W]: 3 },
-	{ [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1B-1k1b
-	{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
-];
-
-/**
- * Checkmate one black king with one white king for help, with the world border nearby.
- * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
- */
-const insuffmatScenarios_1K1k_worldborder: Scenario[] = [
-	{ [r.BISHOP + e.W]: [Infinity, 0] },
-	{ [r.KNIGHT + e.W]: 2 },
-];
-
-/**
- * Checkmate one black king without any white kings.
- * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list.
- */
-const insuffmatScenarios_0K1k: Scenario[] = [
-	{ [r.QUEEN + e.W]: 1, [r.ROOK + e.W]: 1 },
-	{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.W]: 1 },
-	{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.QUEEN + e.W]: 1, [r.PAWN + e.W]: 1 },
-	{ [r.BISHOP + e.W]: [2, 2] },
-	{ [r.BISHOP + e.W]: [Infinity, 1] },
-	{ [r.KNIGHT + e.W]: 4 },
-	{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [Infinity, 0] },
-	{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 1] },
-	{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [2, 1] },
-	{ [r.HAWK + e.W]: 3 },
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.PAWN + e.W]: 1 },
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 2 },
-	{ [r.ROOK + e.W]: 1, [r.GUARD + e.W]: 1 },
-	{ [r.ROOK + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ROOK + e.W]: 2, [r.KNIGHT + e.W]: 1 },
-	{ [r.ROOK + e.W]: 2, [r.PAWN + e.W]: 1 },
-	{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [2, 0] },
-	{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
-	{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 2 },
-	{ [r.ARCHBISHOP + e.W]: 2 },
-	{ [r.CHANCELLOR + e.W]: 1, [r.GUARD + e.W]: 1 },
-	{ [r.CHANCELLOR + e.W]: 1, [r.KNIGHT + e.W]: 1 },
-	{ [r.CHANCELLOR + e.W]: 1, [r.ROOK + e.W]: 1 },
-	{ [r.GUARD + e.W]: 2 },
-	{ [r.AMAZON + e.W]: 1 },
-	{ [r.KNIGHTRIDER + e.W]: 3 },
-	{ [r.PAWN + e.W]: 6 },
-	{ [r.HUYGEN + e.W]: 4 },
-];
-
-/**
- * Checkmate one black king without any white kings, with the world border nearby.
- * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list.
- */
-const insuffmatScenarios_0K1k_worldborder: Scenario[] = [
-	{ [r.BISHOP + e.W]: [Infinity, 0] },
-	{ [r.KNIGHT + e.W]: 2 },
-];
-
-/** Other special insuffmat scenarios */
-const insuffmatScenarios_special: Scenario[] = [
-	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
-	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
-	{ [r.ROYALCENTAUR + e.B]: 1, [r.AMAZON + e.W]: 1 },
-];
-
-/** Other special insuffmat scenarios, with the world border nearby */
-const insuffmatScenarios_special_worldborder: Scenario[] = [
-	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
-	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
-];
-
-// Validate at load time that no scenario in any list is a subset of another in the same list
+// Validate at run time that no scenario in any list is a subset of another in the same list
 {
-	const allScenarioLists: Scenario[][] = [
-		insuffmatScenarios_1K1k,
-		insuffmatScenarios_1K1k_worldborder,
-		insuffmatScenarios_0K1k,
-		insuffmatScenarios_0K1k_worldborder,
-		insuffmatScenarios_special,
-		insuffmatScenarios_special_worldborder,
-	];
+	const allScenarioLists = Object.entries(INSUFFMAT_SCENARIOS);
 
-	for (const scenarios of allScenarioLists) {
-		for (let i = 0; i < scenarios.length; i++) {
-			for (let j = 0; j < scenarios.length; j++) {
+	for (const [name, scenario] of allScenarioLists) {
+		for (let i = 0; i < scenario.length; i++) {
+			for (let j = 0; j < scenario.length; j++) {
 				if (i === j) continue;
-				if (isSubsumedBy(scenarios[i]!, scenarios[j]!))
+				if (isSubsumedBy(scenario[i]!, scenario[j]!))
 					throw new Error(
-						`Redundant insuffmat scenario: entry ${i} is a subset of entry ${j}.`,
+						`Redundant insuffmat scenario in ${name}: entry ${i} is a subset of entry ${j}.`,
 					);
 			}
 		}
@@ -185,22 +160,22 @@ function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean)
 	let scenrariosForInsuffMat: Scenario[];
 	if (scenarioCopy[r.KING + e.B] === 1) {
 		if (scenarioCopy[r.KING + e.W] === 1) {
-			if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_1K1k_worldborder;
-			else scenrariosForInsuffMat = insuffmatScenarios_1K1k;
+			if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['1K1k_FINITE'];
+			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['1K1k'];
 			delete scenarioCopy[r.KING + e.W];
 			delete scenarioCopy[r.KING + e.B];
 		} else if (!scenarioCopy[r.KING + e.W]) {
-			if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_0K1k_worldborder;
-			else scenrariosForInsuffMat = insuffmatScenarios_0K1k;
+			if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['0K1k_FINITE'];
+			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['0K1k'];
 			delete scenarioCopy[r.KING + e.B];
 		} else {
 			if (worldBorderNearOrigin)
-				scenrariosForInsuffMat = insuffmatScenarios_special_worldborder;
-			else scenrariosForInsuffMat = insuffmatScenarios_special;
+				scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special_FINITE'];
+			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special'];
 		}
 	} else {
-		if (worldBorderNearOrigin) scenrariosForInsuffMat = insuffmatScenarios_special_worldborder;
-		else scenrariosForInsuffMat = insuffmatScenarios_special;
+		if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special_FINITE'];
+		else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special'];
 	}
 
 	// loop over all applicable draw scenarios to see if they apply here
