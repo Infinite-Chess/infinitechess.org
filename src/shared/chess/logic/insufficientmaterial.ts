@@ -116,14 +116,14 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 	// Both sides have one king
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
 		{ [r.BISHOP + e.W]: [Infinity, 0] },
-		{ [r.KNIGHT + e.W]: 2 },
+		{ [r.KNIGHT + e.W]: 1 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other (same as infinite case)
 	{ [r.KING + e.W]: Infinity, [r.KING + e.B]: Infinity },
 	{ [r.ROYALCENTAUR + e.W]: Infinity, [r.ROYALCENTAUR + e.B]: Infinity },
 ];
 
-// Validate at run time that no scenario in any list is a subset of another in the same list
+// Validate at run time that no scenario is a subset of another
 {
 	for (const scenarios of [INSUFFMAT_SCENARIOS, INSUFFMAT_SCENARIOS_FINITE]) {
 		for (let i = 0; i < scenarios.length; i++) {
