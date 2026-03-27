@@ -2,11 +2,6 @@
 
 /**
  * This script detects draws by insufficient material
- *
- * TODO:
- *
- * Add the following piece combinations as insuffmat:
- * * 1k1p-1K (requires simulating all possible promotions according to gamerules)
  */
 
 import type { Board } from './gamefile.js';
@@ -294,15 +289,110 @@ function detectInsufficientMaterial(
 	if (sum_tuple_coords(bishopsB_count) !== 0)
 		scenario[r.BISHOP + e.B] = ordered_tuple_descending(bishopsB_count);
 
-	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
-	// This is fully enough for the checkmate practice mode, for now
-	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
-	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
-		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
-		if (r.PAWN + e.W in scenario && promotionListWhite?.length !== 0) return undefined;
-		if (r.PAWN + e.B in scenario && promotionListBlack?.length !== 0) return undefined;
+	// Count unpromoted pawns
+	const whitePawnCount = (scenario[r.PAWN + e.W] as number | undefined) ?? 0;
+	const blackPawnCount = (scenario[r.PAWN + e.B] as number | undefined) ?? 0;
+	const totalPawnCount = whitePawnCount + blackPawnCount;
+
+	// If there are 2 or more pawns, we can't determine insuffmat (too complex to simulate)
+	if (totalPawnCount >= 2) return undefined;
+
+	// If there is exactly one pawn, we must simulate all possible promotions for it
+	if (totalPawnCount === 1) {
+		// If there are no promotion rules, we can't promote: bail out
+		if (!gameRules.promotionRanks || !gameRules.promotionsAllowed) return undefined;
+
+		const pawnColor = whitePawnCount === 1 ? p.WHITE : p.BLACK;
+		const pawnType = r.PAWN + (pawnColor === p.WHITE ? e.W : e.B);
+		const promotionRanks = gameRules.promotionRanks[pawnColor];
+		const promotionsAllowed = gameRules.promotionsAllowed[pawnColor];
+
+		// If this pawn's color has no promotions allowed (or an empty list), bail out
+		if (!promotionRanks || !promotionsAllowed || promotionsAllowed.length === 0)
+			return undefined;
+
+		// Find the pawn's coordinates to determine the promotion square parity
+		let pawnCoords: [bigint, bigint] | undefined;
+		for (const idx of boardsim.pieces.coords.values()) {
+			const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
+			if (piece.type === pawnType) {
+				pawnCoords = piece.coords;
+				break;
+			}
+		}
+		if (pawnCoords === undefined) return undefined; // Shouldn't happen
+
+		// Build the scenario without the pawn
+		const scenarioWithoutPawn: Scenario = { ...scenario };
+		delete scenarioWithoutPawn[pawnType];
+
+		// For each possible promotion, build a scenario and check if it's insufficient material.
+		// If every possible promotion results in insufficient material, then it IS a draw.
+		for (const promotedRawType of promotionsAllowed) {
+			// For bishop promotions, we need the parity of the promotion square.
+			// The pawn stays on its current x-coord and promotes at a promotionRank y.
+			// We pick the furthest promotion rank in the pawn's direction of travel to simulate
+			// the best-case promotion square (most favorable to the attacker).
+			// Since we're checking if ALL promotions are insuffmat, we check each promotion rank.
+			// A pawn can promote at any of its promotion ranks; we must check all combinations.
+			const promotionScenariosForThisType: Scenario[] = [];
+
+			if (promotedRawType === r.BISHOP) {
+				// Try every promotion rank to find all possible bishop parity outcomes
+				const encounteredParities = new Set<number>();
+				for (const promRank of promotionRanks) {
+					const parity: 0 | 1 = Number(bimath.abs(pawnCoords[0] + promRank) % 2n) as
+						| 0
+						| 1;
+					if (encounteredParities.has(parity)) continue;
+					encounteredParities.add(parity);
+
+					const bishopKey = r.BISHOP + (pawnColor === p.WHITE ? e.W : e.B);
+					const existingBishops = (scenarioWithoutPawn[bishopKey] as
+						| [number, number]
+						| undefined) ?? [0, 0];
+					const newBishops: [number, number] = [existingBishops[0], existingBishops[1]];
+					newBishops[parity] += 1;
+					const promotedScenario: Scenario = {
+						...scenarioWithoutPawn,
+						[bishopKey]: ordered_tuple_descending(newBishops),
+					};
+					promotionScenariosForThisType.push(promotedScenario);
+				}
+			} else {
+				const promotedType = promotedRawType + (pawnColor === p.WHITE ? e.W : e.B);
+				const existingCount =
+					(scenarioWithoutPawn[promotedType] as number | undefined) ?? 0;
+				const promotedScenario: Scenario = {
+					...scenarioWithoutPawn,
+					[promotedType]: existingCount + 1,
+				};
+				promotionScenariosForThisType.push(promotedScenario);
+			}
+
+			// For this promotion type, check if ANY of its possible scenarios is NOT insuffmat.
+			// If so, this promotion could lead to checkmate, so the overall position is not insuffmat.
+			for (const promotedScenario of promotionScenariosForThisType) {
+				const invertedPromotedScenario: Scenario = {};
+				for (const pieceTypeStr in promotedScenario) {
+					const pieceInverted = typeutil.invertType(Number(pieceTypeStr));
+					invertedPromotedScenario[pieceInverted] = promotedScenario[pieceTypeStr]!;
+				}
+				if (
+					!isScenarioInsuffMat(promotedScenario, worldBorderNearOrigin) &&
+					!isScenarioInsuffMat(invertedPromotedScenario, worldBorderNearOrigin)
+				) {
+					// This promotion leads to a position that is NOT insuffmat
+					return undefined;
+				}
+			}
+		}
+
+		// All possible promotions lead to insufficient material
+		return { victor: null, condition: 'insuffmat' };
 	}
+
+	// No pawns: proceed with the normal insuffmat check
 
 	// Create scenario object with inverted players
 	const invertedScenario: Scenario = {};
