@@ -8,9 +8,6 @@
  * TODO:
  *
  * Add the following piece combinations as insuffmat:
- * * 1K1R1N-1k1n (and all combinations that are a subset of this)
- * * 1K1B-1k1b (doesn't matter the colors)
- * * 1K2HU-1k
  * * 1k1p-1K (requires simulating all possible promotions according to gamerules)
  */
 
@@ -45,12 +42,13 @@ const boundForWorldBorderConsideration = 1_000_000n;
  * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list.
  */
 const insuffmatScenarios_1K1k: Scenario[] = [
-	{ [r.QUEEN + e.W]: 1 },
+	{ [r.QUEEN + e.W]: 1 }, // 1K1Q-1k
 	{ [r.BISHOP + e.W]: [Infinity, 1] },
-	{ [r.KNIGHT + e.W]: 3 },
+	{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
 	{ [r.HAWK + e.W]: 2 },
 	{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1 },
+	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
+	{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
 	{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 	{ [r.ROOK + e.W]: 1, [r.ROOK + e.B]: 1 },
 	{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
@@ -58,10 +56,13 @@ const insuffmatScenarios_1K1k: Scenario[] = [
 	{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
 	{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
 	{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
+	{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
 	{ [r.GUARD + e.W]: 1 },
 	{ [r.CHANCELLOR + e.W]: 1 },
 	{ [r.KNIGHTRIDER + e.W]: 2 },
 	{ [r.PAWN + e.W]: 3 },
+	{ [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1B-1k1b
+	{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
 ];
 
 /**
