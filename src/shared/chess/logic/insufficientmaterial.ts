@@ -58,13 +58,15 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
 		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
 		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.B]: 1 }, // 1K1N1B-1k1n
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: 1 }, // 1K1N1B-1k1b
+		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 }, // 1K1N1B-1k1r
 		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
 		{ [r.GUARD + e.W]: 1 },
 		{ [r.CHANCELLOR + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 2 },
 		{ [r.PAWN + e.W]: 3 },
-		{ [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1B-1k1b
 		{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
 	]),
 	// Only one side has a king (black, the side being checkmated)
