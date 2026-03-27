@@ -303,11 +303,11 @@ function detectInsufficientMaterial(
 	}
 
 	// Make the draw checks by comparing scenario and invertedScenario to scenariosForInsuffMat
-	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
+	if (
+		isScenarioInsuffMat(scenario, worldBorderNearOrigin) ||
+		isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin)
+	)
 		return { victor: null, condition: 'insuffmat' };
-	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
-		return { victor: null, condition: 'insuffmat' };
-	else return undefined;
 }
 
 export default {
