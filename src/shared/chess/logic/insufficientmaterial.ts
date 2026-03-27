@@ -160,20 +160,6 @@ function isSubsumedBy(a: Scenario, b: Scenario): boolean {
 }
 
 /**
- * Detects if the provided piecelist scenario is a draw by insufficient material
- * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
- * @param worldBorderNearOrigin - whether the world border is near the origin
- * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
- */
-function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean): boolean {
-	const scenarios = worldBorderNearOrigin ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
-	for (const drawScenario of scenarios) {
-		if (isSubsumedBy(scenario, drawScenario)) return true;
-	}
-	return false;
-}
-
-/**
  * Checks if a is larger than b, either as a number, or if it has some larger entry as a tuple
  * @param a - number or tuple of two numbers
  * @param b - number or tuple of two numbers
@@ -185,6 +171,20 @@ function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
 		const bArray = b as [number, number];
 		return a[0] > bArray[0] || a[1] > bArray[1];
 	}
+}
+
+/**
+ * Detects if the provided piecelist scenario is a draw by insufficient material
+ * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
+ * @param worldBorderNearOrigin - whether the world border is near the origin
+ * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
+ */
+function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean): boolean {
+	const scenarios = worldBorderNearOrigin ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
+	for (const drawScenario of scenarios) {
+		if (isSubsumedBy(scenario, drawScenario)) return true;
+	}
+	return false;
 }
 
 /**
