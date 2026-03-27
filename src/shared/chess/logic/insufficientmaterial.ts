@@ -174,11 +174,13 @@ function isSubsumedBy(a: Scenario, b: Scenario): boolean {
  * @param b - number or tuple of two numbers
  */
 function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
-	if (typeof a === 'number') {
-		return a > (b as number);
-	} else {
+	if (typeof a === 'number' && typeof b === 'number') {
+		return a > b;
+	} else if (a instanceof Array && b instanceof Array) {
 		const bArray = b as [number, number];
 		return a[0] > bArray[0] || a[1] > bArray[1];
+	} else {
+		throw new Error(`[Insuffmat] Invalid piece count comparison between ${a} and ${b}`);
 	}
 }
 
