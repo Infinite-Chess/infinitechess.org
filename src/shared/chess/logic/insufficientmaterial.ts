@@ -35,13 +35,16 @@ type Scenario = TypeGroup<PieceCount>;
  */
 const boundForWorldBorderConsideration = 1_000_000n;
 
-// Lists of scenarios that lead to a draw by insufficient material
-// Entries for bishops are given by tuples ordered in descending order, because of parity
-// so that bishops on different colored squares are treated separately
-const INSUFFMAT_SCENARIOS = {
-	/** Checkmate one black king with one white king for help.
-	 * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list. */
-	'1K1k': [
+/**
+ * List of scenarios that are a draw by insufficient material (checkmate and helpmate impossible).
+ * In each of these, black is the one being asked whether they're checkmateable.
+ *
+ * Entries for bishops are given by tuples ordered in descending order, because
+ * of parity, so that bishops on different colored squares are treated separately.
+ */
+const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
+	// Both sides have one king
+	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
 		{ [r.QUEEN + e.W]: 1 }, // 1K1Q-1k
 		{ [r.BISHOP + e.W]: [Infinity, 1] },
 		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
@@ -63,19 +66,14 @@ const INSUFFMAT_SCENARIOS = {
 		{ [r.PAWN + e.W]: 3 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1B-1k1b
 		{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
-	],
-	/** Checkmate one black king with one white king for help, with the world border nearby.
-	 * The pieces {'kingsB': 1, 'kingsW': 1} are assumed for each entry of this list. */
-	'1K1k_FINITE': [{ [r.BISHOP + e.W]: [Infinity, 0] }, { [r.KNIGHT + e.W]: 2 }],
-	/** Checkmate one black king without any white kings.
-	 * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list. */
-	'0K1k': [
+	]),
+	// Only one side has a king (black, the side being checkmated)
+	...withPieces({ [r.KING + e.B]: 1 }, [
 		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.W]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.W]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.QUEEN + e.W]: 1, [r.PAWN + e.W]: 1 },
 		{ [r.BISHOP + e.W]: [2, 2] },
-		{ [r.BISHOP + e.W]: [Infinity, 1] },
 		{ [r.KNIGHT + e.W]: 4 },
 		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [Infinity, 0] },
 		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 1] },
@@ -100,34 +98,37 @@ const INSUFFMAT_SCENARIOS = {
 		{ [r.KNIGHTRIDER + e.W]: 3 },
 		{ [r.PAWN + e.W]: 6 },
 		{ [r.HUYGEN + e.W]: 4 },
-	],
-	/** Checkmate one black king without any white kings, with the world border nearby.
-	 * The piece {[r.KING + e.B]: 1} is assumed for each entry of this list. */
-	'0K1k_FINITE': [{ [r.BISHOP + e.W]: [Infinity, 0] }, { [r.KNIGHT + e.W]: 2 }],
-	/** Other special insuffmat scenarios */
-	special: [
-		{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
-		{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
-		{ [r.ROYALCENTAUR + e.B]: 1, [r.AMAZON + e.W]: 1 },
-	],
-	/** Other special insuffmat scenarios, with the world border nearby */
-	special_FINITE: [
-		{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
-		{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
-	],
-} satisfies Record<string, readonly Scenario[]>;
+	]),
+	// Only royals -> Can never check each other let alone checkmate each other
+	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
+	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
+];
+
+/**
+ * Same as {@link INSUFFMAT_SCENARIOS} but for games with a world border nearby.
+ * These are less strict, as you require less pieces to be able to checkmate,
+ * when receiving help from the world border.
+ */
+const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
+	// Both sides have one king
+	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
+		{ [r.BISHOP + e.W]: [Infinity, 0] },
+		{ [r.KNIGHT + e.W]: 2 },
+	]),
+	// Only royals -> Can never check each other let alone checkmate each other (same as infinite case)
+	{ [r.KING + e.W]: Infinity, [r.KING + e.B]: Infinity },
+	{ [r.ROYALCENTAUR + e.W]: Infinity, [r.ROYALCENTAUR + e.B]: Infinity },
+];
 
 // Validate at run time that no scenario in any list is a subset of another in the same list
 {
-	const allScenarioLists = Object.entries(INSUFFMAT_SCENARIOS);
-
-	for (const [name, scenario] of allScenarioLists) {
-		for (let i = 0; i < scenario.length; i++) {
-			for (let j = 0; j < scenario.length; j++) {
+	for (const scenarios of [INSUFFMAT_SCENARIOS, INSUFFMAT_SCENARIOS_FINITE]) {
+		for (let i = 0; i < scenarios.length; i++) {
+			for (let j = 0; j < scenarios.length; j++) {
 				if (i === j) continue;
-				if (isSubsumedBy(scenario[i]!, scenario[j]!))
+				if (isSubsumedBy(scenarios[i]!, scenarios[j]!))
 					throw new Error(
-						`Redundant insuffmat scenario in ${name}: entry ${i} is a subset of entry ${j}.`,
+						`Redundant insuffmat scenario: entry ${i} is a subset of entry ${j}.`,
 					);
 			}
 		}
@@ -135,6 +136,16 @@ const INSUFFMAT_SCENARIOS = {
 }
 
 // Helpers ----------------------------------------------------------------------
+
+/**
+ * Merges a set of additional pieces into every scenario in the list.
+ * Used to factor out pieces that are implicitly shared across a group of scenarios.
+ * @param addedPieces - the pieces to add to every scenario in the list
+ * @param scenarios - the list of scenarios to add the pieces to
+ */
+function withPieces(addedPieces: Scenario, scenarios: readonly Scenario[]): Scenario[] {
+	return scenarios.map((s) => ({ ...addedPieces, ...s }));
+}
 
 /**
  * Checks if scenario a is subsumed by scenario b, i.e. every piece type
@@ -155,32 +166,9 @@ function isSubsumedBy(a: Scenario, b: Scenario): boolean {
  * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
  */
 function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean): boolean {
-	const scenarioCopy = { ...scenario };
-	// find out if we are in the 1 king vs 1 king, or in the 0 kings vs 1 king situation, and set scenrariosForInsuffMat accordingly
-	let scenrariosForInsuffMat: Scenario[];
-	if (scenarioCopy[r.KING + e.B] === 1) {
-		if (scenarioCopy[r.KING + e.W] === 1) {
-			if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['1K1k_FINITE'];
-			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['1K1k'];
-			delete scenarioCopy[r.KING + e.W];
-			delete scenarioCopy[r.KING + e.B];
-		} else if (!scenarioCopy[r.KING + e.W]) {
-			if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['0K1k_FINITE'];
-			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['0K1k'];
-			delete scenarioCopy[r.KING + e.B];
-		} else {
-			if (worldBorderNearOrigin)
-				scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special_FINITE'];
-			else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special'];
-		}
-	} else {
-		if (worldBorderNearOrigin) scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special_FINITE'];
-		else scenrariosForInsuffMat = INSUFFMAT_SCENARIOS['special'];
-	}
-
-	// loop over all applicable draw scenarios to see if they apply here
-	for (const drawScenario of scenrariosForInsuffMat) {
-		if (isSubsumedBy(scenarioCopy, drawScenario)) return true;
+	const scenarios = worldBorderNearOrigin ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
+	for (const drawScenario of scenarios) {
+		if (isSubsumedBy(scenario, drawScenario)) return true;
 	}
 	return false;
 }
@@ -312,7 +300,7 @@ function detectInsufficientMaterial(
 		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
 
-	// Make the draw checks by comparing scenario and invertedScenario to scenrariosForInsuffMat
+	// Make the draw checks by comparing scenario and invertedScenario to scenariosForInsuffMat
 	if (isScenarioInsuffMat(scenario, worldBorderNearOrigin))
 		return { victor: null, condition: 'insuffmat' };
 	else if (isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin))
