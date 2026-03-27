@@ -336,7 +336,7 @@ function detectInsufficientMaterial(
 			  (gameRules.worldBorder.right !== null && gameRules.worldBorder.right <= boundForWorldBorderConsideration) ||
 			  (gameRules.worldBorder.top !== null && gameRules.worldBorder.top <= boundForWorldBorderConsideration);
 
-	// Make the draw checks by comparing scenario and invertedScenario to scenariosForInsuffMat
+	// Make the draw checks by comparing the two board scenarios to known insuffmat scenarios
 	if (
 		isScenarioInsuffMat(boardScenario, boardIsFinite) ||
 		isScenarioInsuffMat(invertedBoardScenario, boardIsFinite)
