@@ -187,11 +187,11 @@ function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
 /**
  * Detects if the provided piecelist scenario is a draw by insufficient material
  * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
- * @param worldBorderNearOrigin - whether the world border is near the origin
+ * @param boardIsFinite - Whether the world border is close enough to assist with checkmate.
  * @returns *true*, if the scenario is a draw by insufficient material, otherwise *false*
  */
-function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean): boolean {
-	const scenarios = worldBorderNearOrigin ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
+function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolean {
+	const scenarios = boardIsFinite ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
 	for (const drawScenario of scenarios) {
 		if (isSubsumedBy(scenario, drawScenario)) return true;
 	}
@@ -247,44 +247,23 @@ function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): bo
 	return true;
 }
 
-/**
- * Detects if the game is drawn by insufficient material,
- * returning the game conclusion if so.
- */
-function detectInsufficientMaterial(
-	gameRules: GameRules,
-	boardsim: Board,
-): GameConclusion | undefined {
-	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
-
-	// Check if the world border exists and is closer than boundForWorldBorderConsideration in any direction
-	const worldBorderNearOrigin =
-		gameRules.worldBorder === undefined
-			? false
-			: (gameRules.worldBorder.bottom !== null &&
-					-gameRules.worldBorder.bottom <= boundForWorldBorderConsideration) ||
-				(gameRules.worldBorder.left !== null &&
-					-gameRules.worldBorder.left <= boundForWorldBorderConsideration) ||
-				(gameRules.worldBorder.right !== null &&
-					gameRules.worldBorder.right <= boundForWorldBorderConsideration) ||
-				(gameRules.worldBorder.top !== null &&
-					gameRules.worldBorder.top <= boundForWorldBorderConsideration);
-
+/** Builds the current piece scenario that is on the board. */
+function buildBoardScenario(boardsim: Board): Scenario {
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};
 	// bishops are treated specially and separated by parity
 	const bishopsW_count: [number, number] = [0, 0];
 	const bishopsB_count: [number, number] = [0, 0];
 	for (const idx of boardsim.pieces.coords.values()) {
-		const piece = boardutil.getPieceFromIdx(boardsim.pieces, idx)!;
-		const [raw, color] = typeutil.splitType(piece.type);
-		if (raw === r.OBSTACLE) continue;
-		else if (raw === r.BISHOP) {
+		const piece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, idx)!;
+		const [rawType, player] = typeutil.splitType(piece.type);
+		if (rawType === r.OBSTACLE) continue;
+		else if (rawType === r.BISHOP) {
 			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as
 				| 0
 				| 1;
-			if (color === p.WHITE) bishopsW_count[parity] += 1;
-			else if (color === p.BLACK) bishopsB_count[parity] += 1;
+			if (player === p.WHITE) bishopsW_count[parity] += 1;
+			else if (player === p.BLACK) bishopsB_count[parity] += 1;
 		} else if (piece.type in scenario) {
 			const currentCount = scenario[piece.type];
 			if (typeof currentCount === 'number') {
@@ -299,16 +278,14 @@ function detectInsufficientMaterial(
 	if (sum_tuple_coords(bishopsB_count) !== 0)
 		scenario[r.BISHOP + e.B] = ordered_tuple_descending(bishopsB_count);
 
-	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
-	// This is fully enough for the checkmate practice mode, for now
-	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
-	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
-		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
-		if (r.PAWN + e.W in scenario && promotionListWhite?.length !== 0) return undefined;
-		if (r.PAWN + e.B in scenario && promotionListBlack?.length !== 0) return undefined;
-	}
+	return scenario;
+}
 
+/**
+ * Inverts the player of each scenario piece and returns a new scenario.
+ * Non-mutating.
+ */
+function invertScenario(scenario: Scenario): Scenario {
 	// Create scenario object with inverted players
 	const invertedScenario: Scenario = {};
 	for (const pieceTypeStr in scenario) {
@@ -316,14 +293,50 @@ function detectInsufficientMaterial(
 		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
 
+	return invertedScenario;
+}
+
+/**
+ * Detects if the game is drawn by insufficient material,
+ * returning the game conclusion if so.
+ */
+function detectInsufficientMaterial(
+	gameRules: GameRules,
+	boardsim: Board,
+): GameConclusion | undefined {
+	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
+
+	const boardScenario = buildBoardScenario(boardsim);
+
+	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
+	// This is fully enough for the checkmate practice mode, for now
+	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
+	if (gameRules.promotionRanks) {
+		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
+		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
+		if (r.PAWN + e.W in boardScenario && promotionListWhite?.length !== 0) return undefined;
+		if (r.PAWN + e.B in boardScenario && promotionListBlack?.length !== 0) return undefined;
+	}
+
+	// Create scenario object with inverted players
+	const invertedBoardScenario: Scenario = invertScenario(boardScenario);
+
+	// Is the world border close enough to assist checkmate?
+	// prettier-ignore
+	const boardIsFinite =
+		gameRules.worldBorder === undefined ? false
+			: (gameRules.worldBorder.bottom !== null && -gameRules.worldBorder.bottom <= boundForWorldBorderConsideration) ||
+			  (gameRules.worldBorder.left !== null && -gameRules.worldBorder.left <= boundForWorldBorderConsideration) ||
+			  (gameRules.worldBorder.right !== null && gameRules.worldBorder.right <= boundForWorldBorderConsideration) ||
+			  (gameRules.worldBorder.top !== null && gameRules.worldBorder.top <= boundForWorldBorderConsideration);
+
 	// Make the draw checks by comparing scenario and invertedScenario to scenariosForInsuffMat
 	if (
-		isScenarioInsuffMat(scenario, worldBorderNearOrigin) ||
-		isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin)
+		isScenarioInsuffMat(boardScenario, boardIsFinite) ||
+		isScenarioInsuffMat(invertedBoardScenario, boardIsFinite)
 	)
 		return { victor: null, condition: 'insuffmat' };
-
-	return undefined;
+	else return undefined;
 }
 
 export default {
