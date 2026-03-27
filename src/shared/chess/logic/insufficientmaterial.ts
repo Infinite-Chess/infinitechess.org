@@ -19,6 +19,7 @@ import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
+import type { Coords } from '../util/coordutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -199,6 +200,14 @@ function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolea
 }
 
 /**
+ * Returns the parity of the square coordinates.
+ * 0 = Dark square. 1 = Light square.
+ */
+function getCoordsParity(coords: Coords): 0 | 1 {
+	return Number(bimath.abs(coords[0] + coords[1]) % 2n) as 0 | 1;
+}
+
+/**
  * @param tuple - tuple of two numbers
  * @returns sum of tuple entries
  */
@@ -259,9 +268,7 @@ function buildBoardScenario(boardsim: Board): Scenario {
 		const [rawType, player] = typeutil.splitType(piece.type);
 		if (rawType === r.OBSTACLE) continue;
 		else if (rawType === r.BISHOP) {
-			const parity: 0 | 1 = Number(bimath.abs(piece.coords[0] + piece.coords[1]) % 2n) as
-				| 0
-				| 1;
+			const parity: 0 | 1 = getCoordsParity(piece.coords);
 			if (player === p.WHITE) bishopsW_count[parity] += 1;
 			else if (player === p.BLACK) bishopsB_count[parity] += 1;
 		} else if (piece.type in scenario) {
