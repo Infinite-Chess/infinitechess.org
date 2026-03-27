@@ -3,8 +3,6 @@
 /**
  * This script detects draws by insufficient material
  *
- * @maintainer tsevasa
- *
  * TODO:
  *
  * Add the following piece combinations as insuffmat:
@@ -22,10 +20,14 @@ import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
+// Types -----------------------------------------------------------------------
+
 /** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
 type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
 type Scenario = TypeGroup<PieceCount>;
+
+// Constants -------------------------------------------------------------------
 
 /**
  * If the world border exists and is closer than this number in any direction,
@@ -133,6 +135,44 @@ const insuffmatScenarios_special_worldborder: Scenario[] = [
 	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
 ];
 
+// Validate at load time that no scenario in any list is a subset of another in the same list
+{
+	const allScenarioLists: Scenario[][] = [
+		insuffmatScenarios_1K1k,
+		insuffmatScenarios_1K1k_worldborder,
+		insuffmatScenarios_0K1k,
+		insuffmatScenarios_0K1k_worldborder,
+		insuffmatScenarios_special,
+		insuffmatScenarios_special_worldborder,
+	];
+
+	for (const scenarios of allScenarioLists) {
+		for (let i = 0; i < scenarios.length; i++) {
+			for (let j = 0; j < scenarios.length; j++) {
+				if (i === j) continue;
+				if (isSubsumedBy(scenarios[i]!, scenarios[j]!))
+					throw new Error(
+						`Redundant insuffmat scenario: entry ${i} is a subset of entry ${j}.`,
+					);
+			}
+		}
+	}
+}
+
+// Helpers ----------------------------------------------------------------------
+
+/**
+ * Checks if scenario a is subsumed by scenario b, i.e. every piece type
+ * in a is present in b with a count at least as large. If true, a is
+ * redundant and an insufficient material scenario.
+ */
+function isSubsumedBy(a: Scenario, b: Scenario): boolean {
+	for (const key in a) {
+		if (!(key in b) || has_more_pieces(a[key]!, b[key]!)) return false;
+	}
+	return true;
+}
+
 /**
  * Detects if the provided piecelist scenario is a draw by insufficient material
  * @param scenario - scenario of piececounts in the game, e.g. {'kingsB': 1, 'kingsW': 1, 'queensW': 3}
@@ -164,16 +204,8 @@ function isScenarioInsuffMat(scenario: Scenario, worldBorderNearOrigin: boolean)
 	}
 
 	// loop over all applicable draw scenarios to see if they apply here
-	drawscenarioloop: for (const drawScenario of scenrariosForInsuffMat) {
-		for (const pieceType in scenarioCopy) {
-			// discard draw scenario if it does not fit the scenario
-			if (
-				!(pieceType in drawScenario) ||
-				has_more_pieces(scenarioCopy[pieceType]!, drawScenario[pieceType]!)
-			)
-				continue drawscenarioloop;
-		}
-		return true;
+	for (const drawScenario of scenrariosForInsuffMat) {
+		if (isSubsumedBy(scenarioCopy, drawScenario)) return true;
 	}
 	return false;
 }
