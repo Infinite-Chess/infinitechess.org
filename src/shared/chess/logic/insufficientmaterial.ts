@@ -215,33 +215,25 @@ function ordered_tuple_descending(tuple: [number, number]): [number, number] {
 	else return tuple;
 }
 
-/**
- * Detects if the game is drawn for insufficient material
- * @param gameRules
- * @param boardsim
- * @returns `{ victor: 0, condition: 'insuffmat' }`, if the game is over by the insufficient material, otherwise *undefined*.
- */
-function detectInsufficientMaterial(
-	gameRules: GameRules,
-	boardsim: Board,
-): GameConclusion | undefined {
-	// Only make the draw check if the win condition is checkmate for both players
+/** Whether the position supports insufficient material checks. */
+function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): boolean {
+	// Is the win condition is checkmate for both players?
 	if (
 		!gamerules.doesColorHaveWinCondition(gameRules, p.WHITE, 'checkmate') ||
 		!gamerules.doesColorHaveWinCondition(gameRules, p.BLACK, 'checkmate')
 	)
-		return undefined;
+		return false;
 	if (
 		gamerules.getWinConditionCountOfColor(gameRules, p.WHITE) !== 1 ||
 		gamerules.getWinConditionCountOfColor(gameRules, p.BLACK) !== 1
 	)
-		return undefined;
+		return false;
 
-	// Only make the draw check if the last move was a capture or promotion or if there is no last move
+	// Was the last move a capture or promotion
 	const lastMove = moveutil.getLastMove(boardsim.moves);
-	if (lastMove && !(lastMove.flags.capture || lastMove.promotion !== undefined)) return undefined;
+	if (lastMove && !(lastMove.flags.capture || lastMove.promotion !== undefined)) return false;
 
-	// Only make the draw check if there are less than 11 non-obstacle or gargoyle pieces
+	// Is there less than 11 non-obstacle or gargoyle pieces?
 	if (
 		boardutil.getPieceCountOfGame(boardsim.pieces, {
 			ignoreRawTypes: new Set([r.OBSTACLE]),
@@ -250,7 +242,20 @@ function detectInsufficientMaterial(
 			boardutil.getPieceCountOfType(boardsim.pieces, r.VOID + e.N) >=
 		11
 	)
-		return undefined;
+		return false;
+
+	return true;
+}
+
+/**
+ * Detects if the game is drawn by insufficient material,
+ * returning the game conclusion if so.
+ */
+function detectInsufficientMaterial(
+	gameRules: GameRules,
+	boardsim: Board,
+): GameConclusion | undefined {
+	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
 
 	// Check if the world border exists and is closer than boundForWorldBorderConsideration in any direction
 	const worldBorderNearOrigin =
