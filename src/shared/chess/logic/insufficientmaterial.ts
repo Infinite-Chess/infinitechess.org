@@ -108,7 +108,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 
 /**
  * Same as {@link INSUFFMAT_SCENARIOS} but for games with a world border nearby.
- * These are less strict, as you require less pieces to be able to checkmate,
+ * These are less strict, as you require less pieces to be able to checkmate
  * when receiving help from the world border.
  */
 const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
@@ -128,12 +128,19 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 		for (let i = 0; i < scenarios.length; i++) {
 			for (let j = 0; j < scenarios.length; j++) {
 				if (i === j) continue;
-				if (isSubsumedBy(scenarios[i]!, scenarios[j]!))
+				if (isSubsumedBy(scenarios[i]!, scenarios[j]!)) {
 					throw new Error(
-						`Redundant insuffmat scenario: entry ${i} is a subset of entry ${j}.`,
+						`Redundant insuffmat scenario: ${makeScenReadable(scenarios[i]!)} is a subset of: ${makeScenReadable(scenarios[j]!)}.`,
 					);
+				}
 			}
 		}
+	}
+	function makeScenReadable(scen: Scenario): string {
+		const transformed = Object.fromEntries(
+			Object.entries(scen).map(([key, val]) => [typeutil.debugType(Number(key)), val]),
+		);
+		return JSON.stringify(transformed);
 	}
 }
 
