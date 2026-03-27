@@ -308,6 +308,8 @@ function detectInsufficientMaterial(
 		isScenarioInsuffMat(invertedScenario, worldBorderNearOrigin)
 	)
 		return { victor: null, condition: 'insuffmat' };
+
+	return undefined;
 }
 
 export default {
