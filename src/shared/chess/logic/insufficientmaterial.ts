@@ -308,15 +308,41 @@ export function detectInsufficientMaterial(
 
 	const boardScenario = buildBoardScenario(boardsim);
 
-	// Temporary: Short-circuit insuffmat check if a player has a pawn that he can promote
-	// This is fully enough for the checkmate practice mode, for now
-	// Future TODO: Create new scenarios for each possible promotion combination and check them all as well
-	if (gameRules.promotionRanks) {
-		const promotionListWhite = gameRules.promotionsAllowed![p.WHITE];
-		const promotionListBlack = gameRules.promotionsAllowed![p.BLACK];
-		if (r.PAWN + e.W in boardScenario && promotionListWhite?.length !== 0) return undefined;
-		if (r.PAWN + e.B in boardScenario && promotionListBlack?.length !== 0) return undefined;
+	const promoteIsAllowed: boolean =
+		gameRules.promotionsAllowed !== undefined &&
+		((gameRules.promotionsAllowed[p.WHITE]?.length ?? 0) > 0 ||
+			(gameRules.promotionsAllowed[p.BLACK]?.length ?? 0) > 0);
+	console.log('promoteIsAllowed:', promoteIsAllowed);
+
+	if (promoteIsAllowed) {
+		const pawnCount: number =
+			((boardScenario[r.PAWN + e.W] as number) ?? 0) +
+			((boardScenario[r.PAWN + e.B] as number) ?? 0);
+
+		// Due to complexity, skip insuffmat check if there's 2+ promotable pawns
+		if (pawnCount > 1) {
+			console.log('Early exiting due to 2+ pawns being able to promote');
+			return undefined;
+		}
+
+		const promoteToNonBishopIsAllowed: boolean =
+			(gameRules.promotionsAllowed![p.WHITE] ?? []).some((raw) => raw !== r.BISHOP) ||
+			(gameRules.promotionsAllowed![p.BLACK] ?? []).some((raw) => raw !== r.BISHOP);
+		console.log('promoteToNonBishopIsAllowed:', promoteToNonBishopIsAllowed);
+
+		// If promotion to bishops is the only promotion allowed, and there's 1+ pawns,
+		// skip insuffmat check, as promoting can actually make checkmate harder
+		// (cause a pawn can dual as a bishop of either color)
+		if (!promoteToNonBishopIsAllowed && pawnCount > 0) {
+			console.log('Early exiting due to 1+ pawns only being able to promote to bishops');
+			return undefined;
+		}
+
+		// In all other scenarios, it's okay to only test all scenarios resulting
+		// from all possible promotions, we don't have to test the scenario with the one raw pawn.
 	}
+
+	// TODO: Create new scenarios for each possible promotion combination and check them all as well
 
 	// Create scenario object with inverted players
 	const invertedBoardScenario: Scenario = invertScenario(boardScenario);
