@@ -206,22 +206,16 @@ function getCoordsParity(coords: Coords): 0 | 1 {
 	return Number(bimath.abs(coords[0] + coords[1]) % 2n) as 0 | 1;
 }
 
-/**
- * @param tuple - tuple of two numbers
- * @returns sum of tuple entries
- */
 function sumTupleCount(tuple: [number, number]): number {
 	return tuple[0] + tuple[1];
 }
 
-/**
- * @param tuple - tuple of two numbers
- * @returns tuple ordered in descending order
- */
 function orderTupleDescending(tuple: [number, number]): [number, number] {
 	if (tuple[0] < tuple[1]) return [tuple[1], tuple[0]];
 	else return tuple;
 }
+
+// Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
 function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): boolean {
@@ -343,6 +337,8 @@ function detectInsufficientMaterial(
 		return { victor: null, condition: 'insuffmat' };
 	else return undefined;
 }
+
+// Exports ----------------------------------------------------------------------
 
 export default {
 	detectInsufficientMaterial,
