@@ -374,16 +374,14 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
  * [0,1]  = Up. [0,-1] = Down
  * [1,0] = Right (4 Player). [-1,0] = Left (4 Player)
  */
-function determinePlayerFacingDirection(
-	player: Player,
-): [0n, 1n] | [0n, -1n] | [1n, 0n] | [-1n, 0n] {
-	if (player === p.WHITE) return [0n, 1n];
-	else if (player === p.BLACK) return [0n, -1n];
+function determinePlayerFacingDirection(player: Player): { vertical: boolean; positive: boolean } {
+	if (player === p.WHITE) return { vertical: true, positive: true };
+	else if (player === p.BLACK) return { vertical: true, positive: false };
 	// 4 Player colors
-	else if (player === p.RED) return [0n, 1n];
-	else if (player === p.BLUE) return [1n, 0n];
-	else if (player === p.YELLOW) return [0n, -1n];
-	else if (player === p.GREEN) return [-1n, 0n];
+	else if (player === p.RED) return { vertical: true, positive: true };
+	else if (player === p.BLUE) return { vertical: false, positive: true };
+	else if (player === p.YELLOW) return { vertical: true, positive: false };
+	else if (player === p.GREEN) return { vertical: false, positive: false };
 	else throw Error(`Cannot determine player facing direction of player ${player}!`);
 }
 
