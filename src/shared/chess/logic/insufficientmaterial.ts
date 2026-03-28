@@ -342,7 +342,8 @@ export function detectInsufficientMaterial(
 		// from all possible promotions, we don't have to test the scenario with the one raw pawn.
 	}
 
-	// TODO: Create new scenarios for each possible promotion combination and check them all as well
+	// TODO: Create new scenarios for each possible promotion combination and check them all as well.
+	// It's only insuffmat if ALL scenarios are insuffmat.
 
 	// Create scenario object with inverted players
 	const invertedBoardScenario: Scenario = invertScenario(boardScenario);
