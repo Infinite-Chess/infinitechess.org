@@ -125,6 +125,13 @@ type SpecialFunction = (
 	_premove: boolean,
 ) => CoordsTagged[];
 
+/** The direction a given player color is facing (which way their pawns move). */
+type PlayerFacingDirection = {
+	/** 1 -> Pawns move vertically. 0 -> Pawns move horizontally. */
+	axis: 0 | 1;
+	parity: 1n | -1n;
+};
+
 /** The default blocking function of each piece's sliding moves, if not specified. */
 function defaultBlockingFunction(
 	friendlyColor: Player,
@@ -373,14 +380,14 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
  * Returns the normalized vector direction a given player's pawns travel.
  * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
  */
-function determinePlayerFacingDirection(player: Player): { axis: 0 | 1; positive: boolean } {
-	if (player === p.WHITE) return { axis: 1, positive: true };
-	else if (player === p.BLACK) return { axis: 1, positive: false };
+function determinePlayerFacingDirection(player: Player): PlayerFacingDirection {
+	if (player === p.WHITE) return { axis: 1, parity: 1n };
+	else if (player === p.BLACK) return { axis: 1, parity: -1n };
 	// 4 Player colors
-	else if (player === p.RED) return { axis: 1, positive: true };
-	else if (player === p.BLUE) return { axis: 0, positive: true };
-	else if (player === p.YELLOW) return { axis: 1, positive: false };
-	else if (player === p.GREEN) return { axis: 0, positive: false };
+	else if (player === p.RED) return { axis: 1, parity: 1n };
+	else if (player === p.BLUE) return { axis: 0, parity: 1n };
+	else if (player === p.YELLOW) return { axis: 1, parity: -1n };
+	else if (player === p.GREEN) return { axis: 0, parity: -1n };
 	else throw Error(`Cannot determine player facing direction of player ${player}!`);
 }
 
@@ -395,4 +402,11 @@ export default {
 	determinePlayerFacingDirection,
 };
 
-export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };
+export type {
+	Movesets,
+	RawMovesets,
+	PieceMoveset,
+	BlockingFunction,
+	IgnoreFunction,
+	PlayerFacingDirection,
+};
