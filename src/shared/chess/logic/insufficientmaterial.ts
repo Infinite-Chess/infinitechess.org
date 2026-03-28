@@ -199,6 +199,13 @@ function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolea
 	return false;
 }
 
+function areScenariosInusffMat(scenarios: Scenario[], boardIsFinite: boolean): boolean {
+	for (const scenario of scenarios) {
+		if (!isScenarioInsuffMat(scenario, boardIsFinite)) return false; // At least one scenario is not insuffmat
+	}
+	return true; // All scenarios are insuffmat.
+}
+
 /**
  * Returns the parity of the square coordinates.
  * 0 = Dark square. 1 = Light square.
@@ -296,6 +303,10 @@ function invertScenario(scenario: Scenario): Scenario {
 	return invertedScenario;
 }
 
+function invertScenarios(scenarios: Scenario[]): Scenario[] {
+	return scenarios.map((scenario) => invertScenario(scenario));
+}
+
 /**
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
@@ -308,16 +319,21 @@ export function detectInsufficientMaterial(
 
 	const boardScenario = buildBoardScenario(boardsim);
 
-	const promoteIsAllowed: boolean =
+	const whiteCanPromote: boolean =
 		gameRules.promotionsAllowed !== undefined &&
-		((gameRules.promotionsAllowed[p.WHITE]?.length ?? 0) > 0 ||
-			(gameRules.promotionsAllowed[p.BLACK]?.length ?? 0) > 0);
-	console.log('promoteIsAllowed:', promoteIsAllowed);
+		(gameRules.promotionsAllowed[p.WHITE]?.length ?? 0) > 0;
+	const blackCanPromote: boolean =
+		gameRules.promotionsAllowed !== undefined &&
+		(gameRules.promotionsAllowed[p.BLACK]?.length ?? 0) > 0;
+	console.log('whiteCanPromote:', whiteCanPromote);
+	console.log('blackCanPromote:', blackCanPromote);
 
-	if (promoteIsAllowed) {
-		const pawnCount: number =
-			((boardScenario[r.PAWN + e.W] as number) ?? 0) +
-			((boardScenario[r.PAWN + e.B] as number) ?? 0);
+	const boardScenariosToCheck: Scenario[] = [];
+
+	if (whiteCanPromote || blackCanPromote) {
+		const whitePawnCount: number = (boardScenario[r.PAWN + e.W] as number) ?? 0;
+		const blackPawnCount: number = (boardScenario[r.PAWN + e.B] as number) ?? 0;
+		const pawnCount: number = whitePawnCount + blackPawnCount;
 
 		// Due to complexity, skip insuffmat check if there's 2+ promotable pawns
 		if (pawnCount > 1) {
@@ -325,28 +341,54 @@ export function detectInsufficientMaterial(
 			return undefined;
 		}
 
-		const promoteToNonBishopIsAllowed: boolean =
-			(gameRules.promotionsAllowed![p.WHITE] ?? []).some((raw) => raw !== r.BISHOP) ||
-			(gameRules.promotionsAllowed![p.BLACK] ?? []).some((raw) => raw !== r.BISHOP);
-		console.log('promoteToNonBishopIsAllowed:', promoteToNonBishopIsAllowed);
+		// Number of pawns is 0-1
 
-		// If promotion to bishops is the only promotion allowed, and there's 1+ pawns,
-		// skip insuffmat check, as promoting can actually make checkmate harder
-		// (cause a pawn can dual as a bishop of either color)
-		if (!promoteToNonBishopIsAllowed && pawnCount > 0) {
-			console.log('Early exiting due to 1+ pawns only being able to promote to bishops');
-			return undefined;
+		if (whiteCanPromote && whitePawnCount === 1) {
+			const whiteCanPromoteToNonBishop = gameRules.promotionsAllowed![p.WHITE]!.some(
+				(raw) => raw !== r.BISHOP,
+			);
+			console.log('whiteCanPromoteToNonBishop:', whiteCanPromoteToNonBishop);
+
+			// If promotion to bishops is the only promotion allowed, and there's 1+ pawns,
+			// skip insuffmat check, as promoting can actually make checkmate harder
+			// (cause a pawn can dual as a bishop of either color)
+			if (!whiteCanPromoteToNonBishop) {
+				console.log('Early exiting due to pawn only being able to promote to bishops');
+				return undefined;
+			}
+
+			// In all other scenarios. Promoting makes checkmate easier.
+			// So it's okay to only test all scenarios resulting from all possible promotions.
+			// We don't have to test the current scenario with the one raw pawn.
+
+			// Add scenarios for each possible promotion...
+
+			// For each promotion piece available, create a new scenario where a pawn is replaced by that piece, and add it to the list of scenarios to check.
+			const promotionOptions = gameRules.promotionsAllowed![p.WHITE]!;
+			// What is the coordinates of the pawn?
+
+			// OPTIMIZATION: Append them to boardScenariosToCheck in order of most powerful
+			// piece, as that makes insuffmat checks more likely to fail faster, allowing us
+			// to skip checking weaker promotion scenarios.
 		}
 
-		// In all other scenarios, it's okay to only test all scenarios resulting
-		// from all possible promotions, we don't have to test the scenario with the one raw pawn.
+		// Now the same check for black...
+
+		// And what about the case where whiteCanPromote but they have 0 pawns?
+		// Or the case where blackCanPromote but they have 0 pawns?
+
+		// Well if they CAN promote, then we shouldn't push the current scenario
+		// to boardScenariosToCheck because for all we know it can still promote, right?....
+	} else {
+		// No promotions allowed, check the current scenario with any pawns as is.
+		boardScenariosToCheck.push(boardScenario);
 	}
 
 	// TODO: Create new scenarios for each possible promotion combination and check them all as well.
 	// It's only insuffmat if ALL scenarios are insuffmat.
 
 	// Create scenario object with inverted players
-	const invertedBoardScenario: Scenario = invertScenario(boardScenario);
+	const invertedBoardScenariosToCheck: Scenario[] = invertScenarios(boardScenariosToCheck);
 
 	// Is the world border close enough to assist checkmate?
 	// prettier-ignore
@@ -359,8 +401,8 @@ export function detectInsufficientMaterial(
 
 	// Make the draw checks by comparing the two board scenarios to known insuffmat scenarios
 	if (
-		isScenarioInsuffMat(boardScenario, boardIsFinite) ||
-		isScenarioInsuffMat(invertedBoardScenario, boardIsFinite)
+		areScenariosInusffMat(boardScenariosToCheck, boardIsFinite) ||
+		areScenariosInusffMat(invertedBoardScenariosToCheck, boardIsFinite)
 	)
 		return { victor: null, condition: 'insuffmat' };
 	else return undefined;
