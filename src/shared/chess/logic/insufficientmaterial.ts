@@ -164,7 +164,7 @@ function withPieces(addedPieces: Scenario, scenarios: readonly Scenario[]): Scen
  */
 function isSubsumedBy(a: Scenario, b: Scenario): boolean {
 	for (const key in a) {
-		if (!(key in b) || has_more_pieces(a[key]!, b[key]!)) return false;
+		if (!(key in b) || hasMorePieces(a[key]!, b[key]!)) return false;
 	}
 	return true;
 }
@@ -174,7 +174,7 @@ function isSubsumedBy(a: Scenario, b: Scenario): boolean {
  * @param a - number or tuple of two numbers
  * @param b - number or tuple of two numbers
  */
-function has_more_pieces(a: PieceCount, b: PieceCount): boolean {
+function hasMorePieces(a: PieceCount, b: PieceCount): boolean {
 	if (typeof a === 'number' && typeof b === 'number') {
 		return a > b;
 	} else if (a instanceof Array && b instanceof Array) {
