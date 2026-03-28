@@ -374,7 +374,9 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
  * [0,1]  = Up. [0,-1] = Down
  * [1,0] = Right (4 Player). [-1,0] = Left (4 Player)
  */
-function determinePlayerFacingDirection(player: Player): Coords {
+function determinePlayerFacingDirection(
+	player: Player,
+): [0n, 1n] | [0n, -1n] | [1n, 0n] | [-1n, 0n] {
 	if (player === p.WHITE) return [0n, 1n];
 	else if (player === p.BLACK) return [0n, -1n];
 	// 4 Player colors
