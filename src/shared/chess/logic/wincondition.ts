@@ -14,10 +14,10 @@ import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
-import insufficientmaterial from './insufficientmaterial.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../util/typeutil.js';
+import { detectInsufficientMaterial } from './insufficientmaterial.js';
 import {
 	detectCheckmateOrStalemate,
 	pieceCountToDisableCheckmate,
@@ -48,10 +48,7 @@ function getGameConclusion(gamefile: FullGame): GameConclusion | undefined {
 		detectCheckmateOrStalemate(gamefile) ||
 		// This needs to be last so that a draw isn't enforced in a true win
 		detectMoveRule(gamefile) || // 50-move-rule
-		insufficientmaterial.detectInsufficientMaterial(
-			gamefile.basegame.gameRules,
-			gamefile.boardsim,
-		) || // checks for insufficient material
+		detectInsufficientMaterial(gamefile.basegame.gameRules, gamefile.boardsim) || // checks for insufficient material
 		undefined
 	); // No win condition passed. No game conclusion!
 }

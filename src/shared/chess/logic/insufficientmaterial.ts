@@ -299,7 +299,7 @@ function invertScenario(scenario: Scenario): Scenario {
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
  */
-function detectInsufficientMaterial(
+export function detectInsufficientMaterial(
 	gameRules: GameRules,
 	boardsim: Board,
 ): GameConclusion | undefined {
@@ -337,9 +337,3 @@ function detectInsufficientMaterial(
 		return { victor: null, condition: 'insuffmat' };
 	else return undefined;
 }
-
-// Exports ----------------------------------------------------------------------
-
-export default {
-	detectInsufficientMaterial,
-};

@@ -18,7 +18,7 @@ import type {
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
-import insufficientmaterial from '../../../../../../shared/chess/logic/insufficientmaterial.js';
+import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import {
 	rawTypes as r,
@@ -1684,13 +1684,7 @@ function runIterativeDeepening(
 						).pieces,
 					} as unknown as Board;
 
-					if (
-						insufficientmaterial.detectInsufficientMaterial(
-							basegame.gameRules,
-							dummy_board,
-						)
-					)
-						break;
+					if (detectInsufficientMaterial(basegame.gameRules, dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture
