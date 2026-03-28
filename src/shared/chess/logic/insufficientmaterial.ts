@@ -99,6 +99,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.GUARD + e.W]: 2 },
 		{ [r.AMAZON + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 3 },
+		{ [r.PAWN + e.W]: 6 },
 		{ [r.HUYGEN + e.W]: 4 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other
