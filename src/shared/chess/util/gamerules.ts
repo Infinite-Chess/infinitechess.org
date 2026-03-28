@@ -5,8 +5,10 @@
  * and contains utility methods for working with them.
  */
 
+import type { Coords } from './coordutil.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
+import type { PlayerFacingDirection } from '../logic/movesets.js';
 import type { Player, RawType, PlayerGroup } from './typeutil.js';
 
 interface GameRules {
@@ -77,10 +79,40 @@ function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 	if (changeMade) console.log('Swapped checkmate win conditions for royalcapture.');
 }
 
+/**
+ * Determines the first square the pawn at given coords may
+ * promote at, depending on the nearest promotion rank ahead of it.
+ *
+ * The only scenario a pawn may skip this rank is if it's one below it, and is able to double push.
+ */
+function determinePromotionSquare(
+	coords: Coords,
+	facingDirection: PlayerFacingDirection,
+	promotionRanks: bigint[],
+): Coords | undefined {
+	// The running closest rank ahead of the pawn
+	let nearestRank: bigint | undefined = undefined;
+	for (const rank of promotionRanks) {
+		if (
+			rank * facingDirection.parity > coords[facingDirection.axis] * facingDirection.parity &&
+			(nearestRank === undefined ||
+				rank * facingDirection.parity < nearestRank * facingDirection.parity)
+		) {
+			nearestRank = rank;
+		}
+	}
+	if (nearestRank === undefined) return undefined; // No promotion ranks ahead of the pawn
+	// Tweak the coords axis of movement to equal the promotion rank, to get the promotion square.
+	const promotionSquare: Coords = [...coords];
+	promotionSquare[facingDirection.axis] = nearestRank;
+	return promotionSquare;
+}
+
 export default {
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,
+	determinePromotionSquare,
 };
 
 export type { GameRules };
