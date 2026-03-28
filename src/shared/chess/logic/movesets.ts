@@ -15,8 +15,8 @@ import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
 import specialdetect from './specialdetect.js';
-import { rawTypes as r } from '../util/typeutil.js';
 import { primalityTest } from '../../util/isprime.js';
+import { players as p, rawTypes as r } from '../util/typeutil.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
 type Movesets = RawTypeGroup<PieceMoveset>;
@@ -369,6 +369,22 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
 	});
 }
 
+/**
+ * Returns the normalized vector direction a given player's pawns travel.
+ * [0,1]  = Up. [0,-1] = Down
+ * [1,0] = Right (4 Player). [-1,0] = Left (4 Player)
+ */
+function determinePlayerFacingDirection(player: Player): Coords {
+	if (player === p.WHITE) return [0n, 1n];
+	else if (player === p.BLACK) return [0n, -1n];
+	// 4 Player colors
+	else if (player === p.RED) return [0n, 1n];
+	else if (player === p.BLUE) return [1n, 0n];
+	else if (player === p.YELLOW) return [0n, -1n];
+	else if (player === p.GREEN) return [-1n, 0n];
+	else throw Error(`Cannot determine player facing direction of player ${player}!`);
+}
+
 export default {
 	defaultBlockingFunction,
 	defaultIgnoreFunction,
@@ -377,6 +393,7 @@ export default {
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
 	areColinearsPresent,
+	determinePlayerFacingDirection,
 };
 
 export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };
