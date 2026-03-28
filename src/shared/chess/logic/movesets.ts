@@ -371,17 +371,16 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
 
 /**
  * Returns the normalized vector direction a given player's pawns travel.
- * [0,1]  = Up. [0,-1] = Down
- * [1,0] = Right (4 Player). [-1,0] = Left (4 Player)
+ * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
  */
-function determinePlayerFacingDirection(player: Player): { vertical: boolean; positive: boolean } {
-	if (player === p.WHITE) return { vertical: true, positive: true };
-	else if (player === p.BLACK) return { vertical: true, positive: false };
+function determinePlayerFacingDirection(player: Player): { axis: 0 | 1; positive: boolean } {
+	if (player === p.WHITE) return { axis: 1, positive: true };
+	else if (player === p.BLACK) return { axis: 1, positive: false };
 	// 4 Player colors
-	else if (player === p.RED) return { vertical: true, positive: true };
-	else if (player === p.BLUE) return { vertical: false, positive: true };
-	else if (player === p.YELLOW) return { vertical: true, positive: false };
-	else if (player === p.GREEN) return { vertical: false, positive: false };
+	else if (player === p.RED) return { axis: 1, positive: true };
+	else if (player === p.BLUE) return { axis: 0, positive: true };
+	else if (player === p.YELLOW) return { axis: 1, positive: false };
+	else if (player === p.GREEN) return { axis: 0, positive: false };
 	else throw Error(`Cannot determine player facing direction of player ${player}!`);
 }
 
