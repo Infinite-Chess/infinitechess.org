@@ -335,7 +335,7 @@ export function detectInsufficientMaterial(
 	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
 
 	const boardScenariosToCheck = buildBoardScenarios(gameRules, boardsim);
-	if (boardScenariosToCheck === false) return undefined;
+	if (boardScenariosToCheck === false) return undefined; // Too many promotable pawns, skip insuffmat check entirely to avoid exponential blowup.
 
 	// console.log('Checking insuffmat scenarios:', boardScenariosToCheck.map(makeScenReadable));
 
