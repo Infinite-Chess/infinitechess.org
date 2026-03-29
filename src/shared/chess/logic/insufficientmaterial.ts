@@ -1,12 +1,7 @@
 // src/shared/chess/logic/insufficientmaterial.ts
 
 /**
- * This script detects draws by insufficient material
- *
- * TODO:
- *
- * Add the following piece combinations as insuffmat:
- * * 1k1p-1K (requires simulating all possible promotions according to gamerules)
+ * This script detects draws by insufficient material.
  */
 
 import type { Board } from './gamefile.js';
