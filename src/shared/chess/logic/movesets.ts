@@ -376,20 +376,22 @@ function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): b
 	});
 }
 
-/**
- * Returns the normalized vector direction a given player's pawns travel.
- * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
- */
-function determinePlayerFacingDirection(player: Player): PlayerFacingDirection {
-	if (player === p.WHITE) return { axis: 1, parity: 1n };
-	else if (player === p.BLACK) return { axis: 1, parity: -1n };
-	// 4 Player colors
-	else if (player === p.RED) return { axis: 1, parity: 1n };
-	else if (player === p.BLUE) return { axis: 0, parity: 1n };
-	else if (player === p.YELLOW) return { axis: 1, parity: -1n };
-	else if (player === p.GREEN) return { axis: 0, parity: -1n };
-	else throw Error(`Cannot determine player facing direction of player ${player}!`);
-}
+// /**
+//  * Returns the normalized vector direction a given player's pawns travel.
+//  * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
+//  *
+//  * @throws If player neutral is passed
+//  */
+// function determinePlayerFacingDirection(player: Player): PlayerFacingDirection {
+// 	if (player === p.WHITE) return { axis: 1, parity: 1n };
+// 	else if (player === p.BLACK) return { axis: 1, parity: -1n };
+// 	// 4 Player colors
+// 	else if (player === p.RED) return { axis: 1, parity: 1n };
+// 	else if (player === p.BLUE) return { axis: 0, parity: 1n };
+// 	else if (player === p.YELLOW) return { axis: 1, parity: -1n };
+// 	else if (player === p.GREEN) return { axis: 0, parity: -1n };
+// 	else throw Error(`Cannot determine player facing direction of player ${player}!`);
+// }
 
 export default {
 	defaultBlockingFunction,
@@ -399,7 +401,7 @@ export default {
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
 	areColinearsPresent,
-	determinePlayerFacingDirection,
+	// determinePlayerFacingDirection,
 };
 
 export type {
