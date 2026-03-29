@@ -108,8 +108,10 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.HUYGEN + e.W]: 4 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other
-	{ [r.KING + e.B]: Infinity, [r.KING + e.W]: Infinity },
-	{ [r.ROYALCENTAUR + e.B]: Infinity, [r.ROYALCENTAUR + e.W]: Infinity },
+	{ [r.KING + e.W]: Infinity, [r.KING + e.B]: Infinity },
+	{ [r.ROYALCENTAUR + e.W]: Infinity, [r.ROYALCENTAUR + e.B]: Infinity },
+	// For practice checkmate 2AM-1rc
+	{ [r.AMAZON + e.W]: 1, [r.ROYALCENTAUR + e.B]: 1 },
 ];
 
 /**
