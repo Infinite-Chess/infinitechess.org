@@ -202,7 +202,7 @@ function forEachPieceType(
 	}
 }
 
-/** Inverts the raw type so it belongs to the opposite color. */
+/** Inverts the type so it belongs to the opposite color. */
 function invertType(type: number): number {
 	const [r, p] = splitType(type);
 	const newp = invertPlayer(p); // This will throw an error if the type is not invertible because of its color. (We should never attempt to invert it anyway)

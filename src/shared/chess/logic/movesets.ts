@@ -16,7 +16,7 @@ import vectors from '../../util/math/vectors.js';
 import legalmoves from './legalmoves.js';
 import specialdetect from './specialdetect.js';
 import { primalityTest } from '../../util/isprime.js';
-import { players as p, rawTypes as r } from '../util/typeutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
 
 /** A Movesets object containing the movesets for every piece type in a game */
 type Movesets = RawTypeGroup<PieceMoveset>;
@@ -125,12 +125,12 @@ type SpecialFunction = (
 	_premove: boolean,
 ) => CoordsTagged[];
 
-/** The direction a given player color is facing (which way their pawns move). */
-type PlayerFacingDirection = {
-	/** 1 -> Pawns move vertically. 0 -> Pawns move horizontally. */
-	axis: 0 | 1;
-	parity: 1n | -1n;
-};
+// /** The direction a given player color is facing (which way their pawns move). */
+// type PlayerFacingDirection = {
+// 	/** 1 -> Pawns move vertically. 0 -> Pawns move horizontally. */
+// 	axis: 0 | 1;
+// 	parity: 1n | -1n;
+// };
 
 /** The default blocking function of each piece's sliding moves, if not specified. */
 function defaultBlockingFunction(
@@ -404,11 +404,4 @@ export default {
 	// determinePlayerFacingDirection,
 };
 
-export type {
-	Movesets,
-	RawMovesets,
-	PieceMoveset,
-	BlockingFunction,
-	IgnoreFunction,
-	PlayerFacingDirection,
-};
+export type { Movesets, RawMovesets, PieceMoveset, BlockingFunction, IgnoreFunction };
