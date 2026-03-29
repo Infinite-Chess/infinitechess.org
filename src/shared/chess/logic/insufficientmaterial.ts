@@ -329,8 +329,6 @@ export function detectInsufficientMaterial(
 ): GameConclusion | undefined {
 	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
 
-	console.time('insuffmat');
-
 	/** The running list of board scenarios to check for insuffmat. */
 	const boardScenariosToCheck: Scenario[] = [];
 
@@ -341,8 +339,7 @@ export function detectInsufficientMaterial(
 		boardScenariosToCheck,
 	);
 	if (!allPromotionsAccountedFor) {
-		console.log('Early exiting due to too many promotion scenarios to check');
-		console.timeEnd('insuffmat');
+		// console.log('Early exiting due to too many promotion scenarios to check');
 		return undefined;
 	}
 
@@ -368,13 +365,9 @@ export function detectInsufficientMaterial(
 	if (
 		areScenariosInsuffMat(boardScenariosToCheck, boardIsFinite) ||
 		areScenariosInsuffMat(invertedBoardScenariosToCheck, boardIsFinite)
-	) {
-		console.timeEnd('insuffmat');
+	)
 		return { victor: null, condition: 'insuffmat' };
-	} else {
-		console.timeEnd('insuffmat');
-		return undefined;
-	}
+	else return undefined;
 }
 
 /**
@@ -414,12 +407,11 @@ function addPawnPromotionScenarios(
 	// that the promotions allowed are weak enough that checkmate isn't possible after TWO promotions.
 	// prettier-ignore
 	const totalPromotablePawns = Object.values(playerPromotablePawnCounts).reduce((acc, x) => acc + x.length, 0);
-	console.log('totalPromotablePawns:', totalPromotablePawns);
 	if (totalPromotablePawns > 1) {
-		console.log('Early exiting due to 2+ pawns being able to promote');
+		// console.log('Early exiting due to 2+ pawns being able to promote');
 		return false;
 	} else if (totalPromotablePawns === 0) {
-		console.log('No promotable pawns. Not adding more promotion scenarios');
+		// console.log('No promotable pawns. Not adding more promotion scenarios');
 		return true;
 	}
 
