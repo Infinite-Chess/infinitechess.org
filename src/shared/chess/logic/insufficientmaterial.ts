@@ -438,13 +438,12 @@ function addPawnPromotionScenarios(
 				// Only if both scenarios are insuffmat, plus all other promotion scenarios, do we consider the position insuffmat, to be safe.
 				const bishopScenario1 = jsutil.deepCopyObject(pawnlessScenario);
 				const bishopScenario2 = jsutil.deepCopyObject(pawnlessScenario);
-				const playerBishopType = typeutil.buildType(r.BISHOP, player);
-				if (bishopScenario1[playerBishopType] === undefined)
-					bishopScenario1[playerBishopType] = [0, 0];
-				if (bishopScenario2[playerBishopType] === undefined)
-					bishopScenario2[playerBishopType] = [0, 0];
-				(bishopScenario1[playerBishopType] as [number, number])[0] += 1; // Add a bishop on a dark square
-				(bishopScenario2[playerBishopType] as [number, number])[1] += 1; // Add a bishop on a light square
+				if (bishopScenario1[promotionPieceType] === undefined)
+					bishopScenario1[promotionPieceType] = [0, 0];
+				if (bishopScenario2[promotionPieceType] === undefined)
+					bishopScenario2[promotionPieceType] = [0, 0];
+				(bishopScenario1[promotionPieceType] as [number, number])[0] += 1; // Add a bishop on a dark square
+				(bishopScenario2[promotionPieceType] as [number, number])[1] += 1; // Add a bishop on a light square
 				runningScenarios.push(bishopScenario1, bishopScenario2);
 			} else {
 				// Non-bishop (color doesn't matter)
