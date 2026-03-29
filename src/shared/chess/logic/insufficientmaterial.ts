@@ -50,14 +50,14 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 	// Both sides have one king
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
 		{ [r.QUEEN + e.W]: 1, [r.QUEEN + e.B]: 1 },
-		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.B]: 1, [r.KNIGHT + e.B]: 1 },
+		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.B]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.B]: [1, 0], [r.KNIGHT + e.B]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.B]: [1, 1] },
 		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.B]: 2 },
 		{ [r.QUEEN + e.W]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 },
 		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] },
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
+		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.B]: 1 },
 		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
 		{ [r.ROOK + e.W]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [Infinity, 1] },
