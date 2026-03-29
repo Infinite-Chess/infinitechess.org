@@ -72,7 +72,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.GUARD + e.W]: 1 },
 		{ [r.CHANCELLOR + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 2 },
-		{ [r.PAWN + e.W]: 3 },
+		{ [r.PAWN + e.W]: 1 },
 		{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
 	]),
 	// Only one side has a king (black, the side being checkmated)
@@ -202,7 +202,7 @@ function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolea
 }
 
 /** Whether ALL the given scenarios are insuffmat. */
-function areScenariosInusffMat(scenarios: Scenario[], boardIsFinite: boolean): boolean {
+function areScenariosInsuffMat(scenarios: Scenario[], boardIsFinite: boolean): boolean {
 	return scenarios.every((scenario) => isScenarioInsuffMat(scenario, boardIsFinite));
 }
 
@@ -352,8 +352,8 @@ export function detectInsufficientMaterial(
 
 	// Make the draw checks by comparing the two board scenario groups to known insuffmat scenarios
 	if (
-		areScenariosInusffMat(boardScenariosToCheck, boardIsFinite) ||
-		areScenariosInusffMat(invertedBoardScenariosToCheck, boardIsFinite)
+		areScenariosInsuffMat(boardScenariosToCheck, boardIsFinite) ||
+		areScenariosInsuffMat(invertedBoardScenariosToCheck, boardIsFinite)
 	) {
 		console.timeEnd('insuffmat');
 		return { victor: null, condition: 'insuffmat' };
@@ -399,7 +399,7 @@ function addPawnPromotionScenarios(
 	console.log('totalPromotablePawns:', totalPromotablePawns);
 	if (totalPromotablePawns > 1) {
 		console.log('Early exiting due to 2+ pawns being able to promote');
-		return undefined;
+		return;
 	} else if (totalPromotablePawns === 0) {
 		console.log('No promotable pawns. Not adding more promotion scenarios');
 		return;
@@ -431,7 +431,7 @@ function addPawnPromotionScenarios(
 		// OR: Naturally order the promotion pieces as descending most powerful.
 		for (const promotionPiece of gameRules.promotionsAllowed![player]!) {
 			const promotionPieceType = typeutil.buildType(promotionPiece, player);
-			if (promotionPieceType === r.BISHOP) {
+			if (promotionPiece === r.BISHOP) {
 				// Special case for bishops: make two copies of the pawnlessScenario and to each add one bishop of opposite colors.
 				// We can never predict exactly what square they will promote on, so we have to account for both possibilities of bishop color.
 				// (They might double-push skip the first promotion rank, or make a capture to swap columns)
