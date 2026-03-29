@@ -336,7 +336,16 @@ export function detectInsufficientMaterial(
 	const boardScenariosToCheck: Scenario[] = [boardScenario];
 
 	// Add more scenarios to check against for all possible promotions for a single pawn
-	addPawnPromotionScenarios(gameRules, boardsim, boardScenariosToCheck);
+	const allPromotionsAccountedFor = addPawnPromotionScenarios(
+		gameRules,
+		boardsim,
+		boardScenariosToCheck,
+	);
+	if (!allPromotionsAccountedFor) {
+		console.log('Early exiting due to too many promotion scenarios to check');
+		console.timeEnd('insuffmat');
+		return undefined;
+	}
 
 	// Create inverted scenario objects with inverted players
 	const invertedBoardScenariosToCheck: Scenario[] = invertScenarios(boardScenariosToCheck);
@@ -365,16 +374,19 @@ export function detectInsufficientMaterial(
 /**
  * If there is one promotable pawn: Adds a separate scenario for each piece the
  * pawn could promote to, for us to check insuffmat against all possible promotions.
+ * If there are 2+ promotable pawns, returns false (skip insuffmat check).
  * @param boardsim
  * @param gameRules
  * @param runningScenarios - The running list of all scenarios to check for insuffmat. This will be appended to.
+ * @returns Whether all possible promotions were actually added. If false, the insuffmat
+ * check should be skipped entirely, as there are too many promotion scenarios to check feasibly.
  */
 function addPawnPromotionScenarios(
 	gameRules: GameRules,
 	boardsim: Board,
 	runningScenarios: Scenario[],
-): void {
-	if (!gameRules.promotionsAllowed || !gameRules.promotionRanks) return;
+): boolean {
+	if (!gameRules.promotionsAllowed || !gameRules.promotionRanks) return true;
 
 	// Count the number of promotable pawns each player has
 	const playerPromotablePawnCounts: PlayerGroup<Coords[]> = {};
@@ -399,10 +411,10 @@ function addPawnPromotionScenarios(
 	console.log('totalPromotablePawns:', totalPromotablePawns);
 	if (totalPromotablePawns > 1) {
 		console.log('Early exiting due to 2+ pawns being able to promote');
-		return;
+		return false;
 	} else if (totalPromotablePawns === 0) {
 		console.log('No promotable pawns. Not adding more promotion scenarios');
-		return;
+		return true;
 	}
 
 	// Number of promotable pawns = 1
@@ -456,4 +468,6 @@ function addPawnPromotionScenarios(
 			}
 		}
 	});
+
+	return true;
 }
