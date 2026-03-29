@@ -359,7 +359,7 @@ export function detectInsufficientMaterial(
 			!isScenarioInsuffMat(scenario, boardIsFinite) &&
 			!isScenarioInsuffMat(invertedScenario, boardIsFinite)
 		) {
-			console.log('Scenario is not insuffmat:', makeScenReadable(scenario));
+			// console.log('Scenario is not insuffmat:', makeScenReadable(scenario));
 			return undefined; // At least one scenario pair is not insuffmat
 		}
 	}
