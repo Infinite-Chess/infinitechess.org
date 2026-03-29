@@ -15,15 +15,20 @@ import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import typeutil from '../util/typeutil.js';
+import typeutil, { Player, PlayerGroup } from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
 import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
+import coordutil from '../util/coordutil.js';
+import jsutil from '../../util/jsutil.js';
 
 // Types -----------------------------------------------------------------------
 
-/** Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately. */
+/**
+ * Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately.
+ * For the tuple, index `0` is the count of pieces on dark squares, and index `1` is the count of pieces on light squares.
+ */
 type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
 type Scenario = TypeGroup<PieceCount>;
@@ -137,12 +142,12 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 			}
 		}
 	}
-	function makeScenReadable(scen: Scenario): string {
-		const transformed = Object.fromEntries(
-			Object.entries(scen).map(([key, val]) => [typeutil.debugType(Number(key)), val]),
-		);
-		return JSON.stringify(transformed);
-	}
+}
+function makeScenReadable(scen: Scenario): string {
+	const transformed = Object.fromEntries(
+		Object.entries(scen).map(([key, val]) => [typeutil.debugType(Number(key)), val]),
+	);
+	return JSON.stringify(transformed);
 }
 
 // Helpers ----------------------------------------------------------------------
@@ -199,11 +204,9 @@ function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolea
 	return false;
 }
 
+/** Whether ALL the given scenarios are insuffmat. */
 function areScenariosInusffMat(scenarios: Scenario[], boardIsFinite: boolean): boolean {
-	for (const scenario of scenarios) {
-		if (!isScenarioInsuffMat(scenario, boardIsFinite)) return false; // At least one scenario is not insuffmat
-	}
-	return true; // All scenarios are insuffmat.
+	return scenarios.every((scenario) => isScenarioInsuffMat(scenario, boardIsFinite));
 }
 
 /**
@@ -257,8 +260,13 @@ function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): bo
 	return true;
 }
 
-/** Builds the current piece scenario that is on the board. */
-function buildBoardScenario(boardsim: Board): Scenario {
+/**
+ * Builds the current piece scenario that is on the board.
+ * @param boardsim
+ * @param exclude - Optional function, run for each piece, that returns
+ * whether that piece should be excluded from the scenario.
+ */
+function buildBoardScenario(boardsim: Board, exclude?: (coords: Coords) => boolean): Scenario {
 	// Create scenario object listing amount of all non-obstacle pieces in the game
 	const scenario: Scenario = {};
 	// bishops are treated specially and separated by parity
@@ -268,6 +276,8 @@ function buildBoardScenario(boardsim: Board): Scenario {
 		const piece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, idx)!;
 		const [rawType, player] = typeutil.splitType(piece.type);
 		if (rawType === r.OBSTACLE) continue;
+		if (exclude && exclude(piece.coords))
+			continue; // Exlude this piece as specified by the custom exclude() function
 		else if (rawType === r.BISHOP) {
 			const parity: 0 | 1 = getCoordsParity(piece.coords);
 			if (player === p.WHITE) bishopsW_count[parity] += 1;
@@ -319,73 +329,87 @@ export function detectInsufficientMaterial(
 
 	const boardScenario = buildBoardScenario(boardsim);
 
-	const whiteCanPromote: boolean =
-		gameRules.promotionsAllowed !== undefined &&
-		(gameRules.promotionsAllowed[p.WHITE]?.length ?? 0) > 0;
-	const blackCanPromote: boolean =
-		gameRules.promotionsAllowed !== undefined &&
-		(gameRules.promotionsAllowed[p.BLACK]?.length ?? 0) > 0;
-	console.log('whiteCanPromote:', whiteCanPromote);
-	console.log('blackCanPromote:', blackCanPromote);
+	const boardScenariosToCheck: Scenario[] = [boardScenario];
 
-	const boardScenariosToCheck: Scenario[] = [];
+	if (gameRules.promotionsAllowed && gameRules.promotionRanks) {
+		// Count the number of promotable pawns each player has
+		const playerPromotablePawnCounts: PlayerGroup<Coords[]> = {};
+		for (const idx of boardsim.pieces.coords.values()) {
+			const piece = boardutil.getDefinedPieceFromIdx(boardsim.pieces, idx)!;
+			const [rawType, player] = typeutil.splitType(piece.type);
+			if (rawType !== r.PAWN) continue; // Not a pawn
+			if (player === p.NEUTRAL) continue; // Player neutral can't even move pieces let alone promote pawns
+			if ((gameRules.promotionsAllowed[player]?.length ?? 0) === 0) continue; // None of them are promotable (this player can't promote to anything)
+			if ((gameRules.promotionRanks[player]?.length ?? 0) === 0) continue; // Player has no promotion ranks to promote at
+			// ASSUME THAT IF the pawn is behind a promotion rank!
+			// Worst case if it isn't: insuffmat isn't triggered when it could be.
+			playerPromotablePawnCounts[player] = playerPromotablePawnCounts[player] ?? [];
+			playerPromotablePawnCounts[player].push(piece.coords); // The pawn CAN be promoted!
+		}
 
-	if (whiteCanPromote || blackCanPromote) {
-		const whitePawnCount: number = (boardScenario[r.PAWN + e.W] as number) ?? 0;
-		const blackPawnCount: number = (boardScenario[r.PAWN + e.B] as number) ?? 0;
-		const pawnCount: number = whitePawnCount + blackPawnCount;
-
-		// Due to complexity, skip insuffmat check if there's 2+ promotable pawns
-		if (pawnCount > 1) {
+		// Due to exponential computation (N^P where N is the number of promotion options and P is the number of promotable pawns),
+		// skip the insuffmat check entirely if there's two or more promotable pawns. It's very rare anyway
+		// that the promotions allowed are weak enough that checkmate isn't possible after TWO promotions.
+		// prettier-ignore
+		const totalPromotablePawns = Object.values(playerPromotablePawnCounts).reduce((acc, x) => acc + x.length, 0);
+		if (totalPromotablePawns > 1) {
 			console.log('Early exiting due to 2+ pawns being able to promote');
 			return undefined;
 		}
 
-		// Number of pawns is 0-1
+		// Number of promotable pawns is 0-1
 
-		if (whiteCanPromote && whitePawnCount === 1) {
-			const whiteCanPromoteToNonBishop = gameRules.promotionsAllowed![p.WHITE]!.some(
-				(raw) => raw !== r.BISHOP,
-			);
-			console.log('whiteCanPromoteToNonBishop:', whiteCanPromoteToNonBishop);
-
-			// If promotion to bishops is the only promotion allowed, and there's 1+ pawns,
-			// skip insuffmat check, as promoting can actually make checkmate harder
-			// (cause a pawn can dual as a bishop of either color)
-			if (!whiteCanPromoteToNonBishop) {
-				console.log('Early exiting due to pawn only being able to promote to bishops');
-				return undefined;
-			}
-
-			// In all other scenarios. Promoting makes checkmate easier.
-			// So it's okay to only test all scenarios resulting from all possible promotions.
-			// We don't have to test the current scenario with the one raw pawn.
-
-			// Add scenarios for each possible promotion...
+		Object.entries(playerPromotablePawnCounts).forEach(([playerStr, promotablePawns]) => {
+			if (promotablePawns.length === 0) return;
+			// Realistically, the remaining logic only ever runs once, since we already checked that there aren't 2+ promotable pawns.
+			const player = Number(playerStr) as Player;
 
 			// For each promotion piece available, create a new scenario where a pawn is replaced by that piece, and add it to the list of scenarios to check.
-			const promotionOptions = gameRules.promotionsAllowed![p.WHITE]!;
-			// What is the coordinates of the pawn?
 
-			// OPTIMIZATION: Append them to boardScenariosToCheck in order of most powerful
-			// piece, as that makes insuffmat checks more likely to fail faster, allowing us
-			// to skip checking weaker promotion scenarios.
-		}
+			const promotablePawn: Coords = promotablePawns[0]!;
 
-		// Now the same check for black...
+			// First, recreate the current board scenario, but without this promotable pawn.
+			const pawnlessScenario = buildBoardScenario(boardsim, (coords) =>
+				coordutil.areCoordsEqual(coords, promotablePawn),
+			);
+			console.log('Original scenario:', makeScenReadable(boardScenario));
+			console.log('Promotable-pawn-less scenario:', makeScenReadable(pawnlessScenario));
 
-		// And what about the case where whiteCanPromote but they have 0 pawns?
-		// Or the case where blackCanPromote but they have 0 pawns?
+			// Now for each promotable piece, make a copy of the pawnlessScenario and add that promotion piece to the scenario...
 
-		// Well if they CAN promote, then we shouldn't push the current scenario
-		// to boardScenariosToCheck because for all we know it can still promote, right?....
-	} else {
-		// No promotions allowed, check the current scenario with any pawns as is.
-		boardScenariosToCheck.push(boardScenario);
+			// FUTURE OPTIMIZATION: Iterate in order of descending most powerful piece.
+			// Makes it more likely insuffmat checks will fail faster,
+			// allowing us to skip checking weaker promotion scenarios.
+			// OR: Naturally order the promotion pieces as descending most powerful.
+			for (const promotionPiece of gameRules.promotionsAllowed![player]!) {
+				const promotionPieceType = typeutil.buildType(promotionPiece, player);
+				if (promotionPieceType === r.BISHOP) {
+					// Special case for bishops: make two copies of the pawnlessScenario and to each add one bishop of opposite colors.
+					// We can never predict exactly what square they will promote on, so we have to account for both possibilities of bishop color.
+					// (They might double-push skip the first promotion rank, or make a capture to swap columns)
+					// Only if both scenarios are insuffmat, plus all other promotion scenarios, do we consider the position insuffmat, to be safe.
+					const bishopScenario1 = jsutil.deepCopyObject(pawnlessScenario);
+					const bishopScenario2 = jsutil.deepCopyObject(pawnlessScenario);
+					const playerBishopType = typeutil.buildType(r.BISHOP, player);
+					if (bishopScenario1[playerBishopType] === undefined)
+						bishopScenario1[playerBishopType] = [0, 0];
+					if (bishopScenario2[playerBishopType] === undefined)
+						bishopScenario2[playerBishopType] = [0, 0];
+					(bishopScenario1[playerBishopType] as [number, number])[0] += 1; // Add a bishop on a dark square
+					(bishopScenario2[playerBishopType] as [number, number])[1] += 1; // Add a bishop on a light square
+					boardScenariosToCheck.push(bishopScenario1, bishopScenario2);
+				} else {
+					// Non-bishop (color doesn't matter)
+					const promotionScenario = jsutil.deepCopyObject(pawnlessScenario);
+					if (promotionScenario[promotionPieceType] === undefined)
+						promotionScenario[promotionPieceType] = 0;
+					promotionScenario[promotionPieceType] =
+						(promotionScenario[promotionPieceType] as number) + 1; // Increment the count of the promotion piece
+					boardScenariosToCheck.push(promotionScenario);
+				}
+			}
+		});
 	}
-
-	// TODO: Create new scenarios for each possible promotion combination and check them all as well.
-	// It's only insuffmat if ALL scenarios are insuffmat.
 
 	// Create scenario object with inverted players
 	const invertedBoardScenariosToCheck: Scenario[] = invertScenarios(boardScenariosToCheck);
