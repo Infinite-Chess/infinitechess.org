@@ -151,7 +151,10 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 		for (let i = 0; i < scenarios.length; i++) {
 			for (let j = 0; j < scenarios.length; j++) {
 				if (i === j) continue;
-				if (isSubsumedBy(scenarios[i]!, scenarios[j]!)) {
+				if (
+					isSubsumedBy(scenarios[i]!, scenarios[j]!) ||
+					isSubsumedBy(invertScenario(scenarios[i]!), scenarios[j]!)
+				) {
 					throw new Error(
 						`Redundant insuffmat scenario:\n${makeScenReadable(scenarios[i]!)}   IS A SUBSET OF:\n${makeScenReadable(scenarios[j]!)}.`,
 					);
