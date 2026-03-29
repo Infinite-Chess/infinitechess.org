@@ -331,9 +331,8 @@ export function detectInsufficientMaterial(
 
 	console.time('insuffmat');
 
-	const boardScenario = buildBoardScenario(boardsim);
-
-	const boardScenariosToCheck: Scenario[] = [boardScenario];
+	/** The running list of board scenarios to check for insuffmat. */
+	const boardScenariosToCheck: Scenario[] = [];
 
 	// Add more scenarios to check against for all possible promotions for a single pawn
 	const allPromotionsAccountedFor = addPawnPromotionScenarios(
@@ -346,6 +345,12 @@ export function detectInsufficientMaterial(
 		console.timeEnd('insuffmat');
 		return undefined;
 	}
+
+	// Push the current board scenario (with promotable pawn(s) AFTER adding promotion scenarios,
+	// so that this is last in the list, since the promotion scenarios are less likely to be insuffmat,
+	// meaning the check is more likely to fail faster.
+	const boardScenario = buildBoardScenario(boardsim);
+	boardScenariosToCheck.push(boardScenario);
 
 	// Create inverted scenario objects with inverted players
 	const invertedBoardScenariosToCheck: Scenario[] = invertScenarios(boardScenariosToCheck);
@@ -371,6 +376,7 @@ export function detectInsufficientMaterial(
 		return undefined;
 	}
 }
+
 /**
  * If there is one promotable pawn: Adds a separate scenario for each piece the
  * pawn could promote to, for us to check insuffmat against all possible promotions.
@@ -432,8 +438,6 @@ function addPawnPromotionScenarios(
 		const pawnlessScenario = buildBoardScenario(boardsim, (coords) =>
 			coordutil.areCoordsEqual(coords, promotablePawn),
 		);
-		console.log('Original scenario:', makeScenReadable(runningScenarios[0]!));
-		console.log('Promotable-pawn-less scenario:', makeScenReadable(pawnlessScenario));
 
 		// Now for each promotable piece, make a copy of the pawnlessScenario and add that promotion piece to the scenario...
 
