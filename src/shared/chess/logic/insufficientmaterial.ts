@@ -51,42 +51,43 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
 		{ [r.QUEEN + e.W]: 1, [r.QUEEN + e.B]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.B]: 1, [r.KNIGHT + e.B]: 1 },
-		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.B]: 1, [r.BISHOP + e.B]: [1, 0] },
+		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.B]: [1, 0], [r.KNIGHT + e.B]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.B]: [1, 1] },
 		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.B]: 2 },
 		{ [r.QUEEN + e.W]: 1, [r.PAWN + e.B]: 1 },
-		{ [r.BISHOP + e.W]: [Infinity, 1] },
-		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
-		{ [r.HAWK + e.W]: 2 },
-		{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
 		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 },
 		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
 		{ [r.ROOK + e.W]: 1, [r.PAWN + e.B]: 1 },
-		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.B]: 1 }, // 1K1N1B-1k1n
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.BISHOP + e.B]: [1, 0] }, // 1K1N1B-1k1b
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 }, // 1K1N1B-1k1r
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.PAWN + e.B]: 1 },
-		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
-		{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
-		{ [r.KNIGHT + e.W]: 2, [r.ROOK + e.B]: 1 },
-		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.B]: [1, 0] },
-		{ [r.KNIGHT + e.W]: 2, [r.PAWN + e.B]: 1 },
+		{ [r.BISHOP + e.W]: [Infinity, 1] },
+		{ [r.BISHOP + e.W]: [Infinity, 0], [r.KNIGHT + e.W]: 1 },
 		{ [r.BISHOP + e.W]: [Infinity, 0], [r.PAWN + e.B]: 1 },
+		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.W]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.ROOK + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.BISHOP + e.B]: [1, 0] },
 		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.PAWN + e.B]: 1 },
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 2 },
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.ROOK + e.B]: 1 }, // 1K1N1B-1k1r
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1N1B-1k1n
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1N1B-1k1b
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.PAWN + e.B]: 1 },
+		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
+		{ [r.KNIGHT + e.W]: 2, [r.ROOK + e.B]: 1 },
+		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.B]: [1, 0] },
+		{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1n
+		{ [r.KNIGHT + e.W]: 2, [r.PAWN + e.B]: 1 },
 		{ [r.PAWN + e.W]: 3, [r.PAWN + e.B]: 1 },
-		{ [r.GUARD + e.W]: 1 },
+		// Fairy scenarios
 		{ [r.CHANCELLOR + e.W]: 1 },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
+		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 2 },
+		{ [r.HAWK + e.W]: 2 },
+		{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.HUYGEN + e.W]: 2, [r.HUYGEN + e.B]: 1 }, // 1K2HU-1k1hu
+		{ [r.GUARD + e.W]: 1 },
 	]),
 	// Only one side has a king (black, the side being checkmated)
 	...withPieces({ [r.KING + e.B]: 1 }, [
@@ -94,30 +95,27 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.W]: 1 },
 		{ [r.QUEEN + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.QUEEN + e.W]: 1, [r.PAWN + e.W]: 1 },
-		{ [r.BISHOP + e.W]: [2, 2] },
-		{ [r.KNIGHT + e.W]: 4 },
-		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [Infinity, 0] },
-		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 1] },
-		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [2, 1] },
-		{ [r.HAWK + e.W]: 3 },
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.PAWN + e.W]: 1 },
-		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 2 },
-		{ [r.ROOK + e.W]: 1, [r.GUARD + e.W]: 1 },
 		{ [r.ROOK + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.ROOK + e.W]: 2, [r.KNIGHT + e.W]: 1 },
 		{ [r.ROOK + e.W]: 2, [r.PAWN + e.W]: 1 },
+		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1 },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 2 },
+		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.PAWN + e.W]: 1 },
+		{ [r.BISHOP + e.W]: [Infinity, 0], [r.KNIGHT + e.W]: 2 },
+		{ [r.BISHOP + e.W]: [2, 2] },
+		{ [r.BISHOP + e.W]: [2, 1], [r.KNIGHT + e.W]: 1 },
+		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.W]: 2 },
+		{ [r.KNIGHT + e.W]: 4 },
+		{ [r.PAWN + e.W]: 6 },
+		// Fairy scenarios
+		{ [r.AMAZON + e.W]: 1 },
+		{ [r.CHANCELLOR + e.W]: 1, [r.ROOK + e.W]: 1 },
+		{ [r.CHANCELLOR + e.W]: 1, [r.KNIGHT + e.W]: 1 },
+		{ [r.ARCHBISHOP + e.W]: 2 },
 		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [2, 0] },
 		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 1] },
 		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 2 },
-		{ [r.ARCHBISHOP + e.W]: 2 },
-		{ [r.CHANCELLOR + e.W]: 1, [r.GUARD + e.W]: 1 },
-		{ [r.CHANCELLOR + e.W]: 1, [r.KNIGHT + e.W]: 1 },
-		{ [r.CHANCELLOR + e.W]: 1, [r.ROOK + e.W]: 1 },
-		{ [r.GUARD + e.W]: 2 },
-		{ [r.AMAZON + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 3 },
-		{ [r.PAWN + e.W]: 6 },
 		{ [r.HUYGEN + e.W]: 4 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other
