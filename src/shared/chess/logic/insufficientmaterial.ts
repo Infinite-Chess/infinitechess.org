@@ -294,11 +294,9 @@ function buildBoardScenario(boardsim: Board, exclude?: (coords: Coords) => boole
 		} else scenario[piece.type] = 1;
 	}
 
-	// add bishop tuples to scenario, and make sure the first entry of the bishop lists is the largest one
-	if (sumTupleCount(bishopsW_count) !== 0)
-		scenario[r.BISHOP + e.W] = orderTupleDescending(bishopsW_count);
-	if (sumTupleCount(bishopsB_count) !== 0)
-		scenario[r.BISHOP + e.B] = orderTupleDescending(bishopsB_count);
+	// add bishop tuples to scenario, as [dark_count, light_count] (NOT yet sorted).
+	if (sumTupleCount(bishopsW_count) !== 0) scenario[r.BISHOP + e.W] = bishopsW_count;
+	if (sumTupleCount(bishopsB_count) !== 0) scenario[r.BISHOP + e.B] = bishopsB_count;
 
 	return scenario;
 }
@@ -419,9 +417,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		if (outcome.bishopParity !== undefined) {
 			if (scen[outcome.pieceType] === undefined) scen[outcome.pieceType] = [0, 0];
 			(scen[outcome.pieceType] as [number, number])[outcome.bishopParity] += 1;
-			scen[outcome.pieceType] = orderTupleDescending(
-				scen[outcome.pieceType] as [number, number],
-			);
+			// Do NOT sort here - index 0 = dark, index 1 = light must be preserved across pawn iterations.
 		} else {
 			scen[outcome.pieceType] = ((scen[outcome.pieceType] as number | undefined) ?? 0) + 1;
 		}
@@ -437,5 +433,18 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 			outcomes.map((outcome) => applyOutcomeToScenario(base, outcome)),
 		);
 	}
+	/**
+	 * Now that all pawn outcomes have been applied, sort bishop tuples into descending order
+	 * (as required by isSubsumedBy). This must be deferred until here because
+	 * {@link applyOutcomeToScenario} uses index 0 = dark and index 1 = light throughout
+	 * construction; sorting mid-loop would corrupt subsequent parity-based increments.
+	 */
+	for (const scen of scenarios) {
+		for (const key in scen) {
+			if (scen[key] instanceof Array)
+				scen[key] = orderTupleDescending(scen[key] as [number, number]);
+		}
+	}
+
 	return scenarios;
 }
