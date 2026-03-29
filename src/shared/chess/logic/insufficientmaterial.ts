@@ -198,10 +198,7 @@ function hasMorePieces(a: PieceCount, b: PieceCount): boolean {
  */
 function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolean {
 	const scenarios = boardIsFinite ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
-	for (const drawScenario of scenarios) {
-		if (isSubsumedBy(scenario, drawScenario)) return true;
-	}
-	return false;
+	return scenarios.some((drawScenario) => isSubsumedBy(scenario, drawScenario));
 }
 
 /** Whether ALL the given scenarios are insuffmat. */
@@ -313,6 +310,11 @@ function invertScenario(scenario: Scenario): Scenario {
 	return invertedScenario;
 }
 
+/**
+ * Inverts the player of each scenario piece in each scenario
+ * in the list, and returns a new list of scenarios.
+ * Non-mutating.
+ */
 function invertScenarios(scenarios: Scenario[]): Scenario[] {
 	return scenarios.map((scenario) => invertScenario(scenario));
 }
@@ -361,8 +363,8 @@ export function detectInsufficientMaterial(
 	}
 }
 /**
- * If there is one promotable pawn: Adds a separate scenario for each piece
- * the pawn could promote to, for us to check insuffmat against all possible promotions.
+ * If there is one promotable pawn: Adds a separate scenario for each piece the
+ * pawn could promote to, for us to check insuffmat against all possible promotions.
  * @param boardsim
  * @param gameRules
  * @param runningScenarios - The running list of all scenarios to check for insuffmat. This will be appended to.
