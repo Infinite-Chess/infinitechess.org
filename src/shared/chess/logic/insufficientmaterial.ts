@@ -27,7 +27,8 @@ import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeut
 
 /**
  * Represents a piece's count, using a tuple for bishops to count them on light and dark squares separately.
- * For the tuple, index `0` is the count of pieces on dark squares, and index `1` is the count of pieces on light squares.
+ * The tuple should be SORTED in descending order! Otherwise, some insuffmat checks won't work.
+ * i.e. whatever light/dark square has the most bishops should be the first entry of the tuple.
  */
 type PieceCount = number | [number, number];
 /** Defines an object mapping piece types to their counts, representing a specific collection of pieces on the board. */
@@ -37,7 +38,9 @@ type Scenario = TypeGroup<PieceCount>;
 
 /**
  * If the world border exists and is closer than this number in any direction,
- * then take the world border under consideration when doing insuffmat checks
+ * then take the world border under consideration when doing insuffmat checks.
+ *
+ * Chosen to be as small as possible yet realistically never actually be reached in practice.
  */
 const boundForWorldBorderConsideration = 1_000_000n;
 
@@ -454,6 +457,13 @@ function addPawnPromotionScenarios(
 					bishopScenario2[promotionPieceType] = [0, 0];
 				(bishopScenario1[promotionPieceType] as [number, number])[0] += 1; // Add a bishop on a dark square
 				(bishopScenario2[promotionPieceType] as [number, number])[1] += 1; // Add a bishop on a light square
+				// Ensure the tuples are still ordered in descending order
+				bishopScenario1[promotionPieceType] = orderTupleDescending(
+					bishopScenario1[promotionPieceType] as [number, number],
+				);
+				bishopScenario2[promotionPieceType] = orderTupleDescending(
+					bishopScenario2[promotionPieceType] as [number, number],
+				);
 				runningScenarios.push(bishopScenario1, bishopScenario2);
 			} else {
 				// Non-bishop (color doesn't matter)
