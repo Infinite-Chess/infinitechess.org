@@ -15,13 +15,13 @@ import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import typeutil, { Player, PlayerGroup } from '../util/typeutil.js';
+import jsutil from '../../util/jsutil.js';
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import gamerules from '../util/gamerules.js';
-import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
-import jsutil from '../../util/jsutil.js';
+import typeutil, { Player, PlayerGroup } from '../util/typeutil.js';
+import { rawTypes as r, ext as e, players as p, TypeGroup } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -327,6 +327,8 @@ export function detectInsufficientMaterial(
 ): GameConclusion | undefined {
 	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
 
+	console.time('insuffmat');
+
 	const boardScenario = buildBoardScenario(boardsim);
 
 	const boardScenariosToCheck: Scenario[] = [boardScenario];
@@ -350,9 +352,13 @@ export function detectInsufficientMaterial(
 	if (
 		areScenariosInusffMat(boardScenariosToCheck, boardIsFinite) ||
 		areScenariosInusffMat(invertedBoardScenariosToCheck, boardIsFinite)
-	)
+	) {
+		console.timeEnd('insuffmat');
 		return { victor: null, condition: 'insuffmat' };
-	else return undefined;
+	} else {
+		console.timeEnd('insuffmat');
+		return undefined;
+	}
 }
 /**
  * If there is one promotable pawn: Adds a separate scenario for each piece
