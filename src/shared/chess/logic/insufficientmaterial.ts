@@ -54,15 +54,16 @@ const boundForWorldBorderConsideration = 1_000_000n;
 const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 	// Both sides have one king
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
-		{ [r.QUEEN + e.W]: 1 }, // 1K1Q-1k
+		{ [r.QUEEN + e.W]: 1, [r.ROOK + e.B]: 1 }, // 1K1Q-1k
+		{ [r.QUEEN + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1Q-1k
 		{ [r.BISHOP + e.W]: [Infinity, 1] },
 		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
 		{ [r.HAWK + e.W]: 2 },
 		{ [r.HAWK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 }, // 1K1R1N-1k1n
 		{ [r.ROOK + e.W]: 1, [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1R1N-1k1b
-		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
-		{ [r.ROOK + e.W]: 1, [r.ROOK + e.B]: 1 },
+		{ [r.ROOK + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 },
+		{ [r.ROOK + e.W]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.ARCHBISHOP + e.W]: 1, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.ARCHBISHOP + e.W]: 1, [r.KNIGHT + e.W]: 1 },
 		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [Infinity, 0] },
@@ -72,6 +73,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.KNIGHT + e.W]: 1, [r.BISHOP + e.W]: [1, 0], [r.ROOK + e.B]: 1 }, // 1K1N1B-1k1r
 		{ [r.KNIGHT + e.W]: 2, [r.BISHOP + e.W]: [1, 0] },
 		{ [r.KNIGHT + e.W]: 2, [r.KNIGHT + e.B]: 1 }, // 1K2N-1k1
+		{ [r.KNIGHT + e.W]: 2, [r.PAWN + e.B]: 1 },
 		{ [r.GUARD + e.W]: 1 },
 		{ [r.CHANCELLOR + e.W]: 1 },
 		{ [r.KNIGHTRIDER + e.W]: 2 },
@@ -141,7 +143,7 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 				if (i === j) continue;
 				if (isSubsumedBy(scenarios[i]!, scenarios[j]!)) {
 					throw new Error(
-						`Redundant insuffmat scenario: ${makeScenReadable(scenarios[i]!)} is a subset of: ${makeScenReadable(scenarios[j]!)}.`,
+						`Redundant insuffmat scenario:\n${makeScenReadable(scenarios[i]!)}   IS A SUBSET OF:\n${makeScenReadable(scenarios[j]!)}.`,
 					);
 				}
 			}
@@ -204,11 +206,6 @@ function hasMorePieces(a: PieceCount, b: PieceCount): boolean {
 function isScenarioInsuffMat(scenario: Scenario, boardIsFinite: boolean): boolean {
 	const scenarios = boardIsFinite ? INSUFFMAT_SCENARIOS_FINITE : INSUFFMAT_SCENARIOS;
 	return scenarios.some((drawScenario) => isSubsumedBy(scenario, drawScenario));
-}
-
-/** Whether ALL the given scenarios are insuffmat. */
-function areScenariosInsuffMat(scenarios: Scenario[], boardIsFinite: boolean): boolean {
-	return scenarios.every((scenario) => isScenarioInsuffMat(scenario, boardIsFinite));
 }
 
 /**
@@ -366,13 +363,25 @@ export function detectInsufficientMaterial(
 			  (gameRules.worldBorder.right !== null && gameRules.worldBorder.right <= boundForWorldBorderConsideration) ||
 			  (gameRules.worldBorder.top !== null && gameRules.worldBorder.top <= boundForWorldBorderConsideration);
 
-	// Make the draw checks by comparing the two board scenario groups to known insuffmat scenarios
-	if (
-		areScenariosInsuffMat(boardScenariosToCheck, boardIsFinite) ||
-		areScenariosInsuffMat(invertedBoardScenariosToCheck, boardIsFinite)
-	)
-		return { victor: null, condition: 'insuffmat' };
-	else return undefined;
+	// It is draw by insuffmat if EVERY board scenario pair is insuffmat.
+	// A pair is insuffmat if itself OR its invert is insuffmat.
+	for (let i = 0; i < boardScenariosToCheck.length; i++) {
+		const scenario = boardScenariosToCheck[i]!;
+		const invertedScenario = invertedBoardScenariosToCheck[i]!;
+		if (
+			!isScenarioInsuffMat(scenario, boardIsFinite) &&
+			!isScenarioInsuffMat(invertedScenario, boardIsFinite)
+		) {
+			console.log(
+				'Early exiting due to scenario not being insuffmat:',
+				makeScenReadable(scenario),
+			);
+			return undefined; // At least one scenario pair is not insuffmat
+		}
+	}
+
+	// Every scenario pair tested has been insuffmat
+	return { victor: null, condition: 'insuffmat' };
 }
 
 /**
