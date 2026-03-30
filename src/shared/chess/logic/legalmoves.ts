@@ -7,14 +7,15 @@
 import type { Piece } from '../util/boardutil.js';
 import type { VariantCode } from '../variants/variantdictionary.js';
 import type { PieceMoveset } from './movesets.js';
-import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
+import type { CoordsTagged, MoveTagged } from './movepiece.js';
 import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
+import bimath from '../../util/math/bimath.js';
 import variant from '../variants/variant.js';
 import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
@@ -28,11 +29,12 @@ import typeutil, { players as p, rawTypes as r } from '../util/typeutil.js';
 // Types ---------------------------------------------------------------------------
 
 /**
- * The negative/positive vector step-limit of a sliding direction.
- *
- * NULL === INFINITY
- * [-2,null] => Can slide 2 squares in the negative vector direction, or infinitely in the positive.
- * For knightriders, one [2,1] hop is considered 1 step.
+ * The step-count limits of a sliding direction.
+ * * NULL === INFINITY in that direction.
+ * * [-2,null] => Can slide 2 steps in the negative direction, or infinitely in the positive.
+ * * For knightriders, one [2,1] hop is considered 1 step.
+ * The range does NOT have to intersect the piece owning the slide (for example [8n, 12n],
+ * which could be the case for colinear blocks), but limits[0] <= limits[1] is true ALWAYS.
  */
 type SlideLimits = [bigint | null, bigint | null];
 
@@ -55,6 +57,17 @@ interface LegalMoves {
  * a list of raw piece types, typically that can capture from that distance.
  */
 type Vicinity = Record<CoordsKey, RawType[]>;
+
+// Constants -----------------------------------------------------------------------
+
+/**
+ * When testing a `brute` flagged slide to see if at least one square on it is legal,
+ * this is the maximum number of squares we will simulate, before safety exiting
+ * and assuming there is at least one legal move.
+ */
+const MAX_BRUTE_SIMULATIONS = 200n;
+
+// Functions -----------------------------------------------------------------------
 
 /**
  * Calculates the area around you in which jumping pieces can land on you from that distance.
@@ -654,26 +667,75 @@ function doesSlidingMovesetContainSquare(
 }
 
 /**
- * Accepts the calculated legal moves, tests to see if there are any
+ * Accepts the calculated legal moves, tests to see if there is at least one.
+ * In the extreme case, when the `brute` flag is present for slides, and the
+ * slide width exceeds {@link MAX_BRUTE_SIMULATIONS}, this may return true as
+ * a safety measure to avoid hangs, even if there may not actually be a legal move.
  * @param moves
+ * @param gamefile
+ * @param piece - The piece that owns these legal moves
  */
-function hasAtleast1Move(moves: LegalMoves): boolean {
+function hasAtleast1Move(moves: LegalMoves, gamefile: FullGame, piece: Piece): boolean {
 	if (moves.individual.length > 0) return true;
-	for (const limits of Object.values(moves.sliding)) {
-		if (doesSlideHaveWidth(limits)) return true;
+	for (const [lineKey, limits] of Object.entries(moves.sliding)) {
+		if (slideHasAtLeast1LegalMove(lineKey as Vec2Key, limits)) return true;
 	}
-
-	function doesSlideHaveWidth(slide: SlideLimits): boolean {
-		if (slide[0] === null || slide[1] === null) return true; // Infinite slide in at least one direction
-		return slide[1] - slide[0] > 0; // Both are finite, so this produces another bigint.
-
-		// In the future: If the `brute` flag is present, and there isn't
-		// too large of a slide range (maybe 50 max),
-		// then we could test if each of them would result in check.
-		// ...
-	}
-
 	return false;
+
+	/**
+	 * Checks whether a given slide range contains at least one legal move.
+	 * If the `brute` flag is present, up to {@link MAX_BRUTE_SIMULATIONS}
+	 * squares are simulated for legality before assuming there may be a
+	 * legal move and returning true for safety to avoid hangs.
+	 */
+	function slideHasAtLeast1LegalMove(lineKey: Vec2Key, slide: SlideLimits): boolean {
+		if (slide[0] === null || slide[1] === null) return true; // Infinite range
+
+		const rangeWidth = slide[1] - slide[0];
+
+		const offsetPositive = slide[0] > 0n; // Both limits positive
+		const offsetNegative = slide[1] < 0n; // Both limits negative
+
+		// Any non-empty range means there is at least one legal move
+		if (!moves.brute) {
+			// EXCEPTION: Width can be 0 if there is an offset (not centered on the piece)
+			return rangeWidth > 0n || offsetPositive || offsetNegative;
+		}
+
+		// Brute flag is present... this will require simulating moves for check
+
+		// If the range width is greater than our cap, just assume there's at least one legal move to avoid hangs.
+		if (rangeWidth > MAX_BRUTE_SIMULATIONS) return true;
+
+		const step = coordutil.getCoordsFromKey(lineKey);
+		const color = typeutil.getColorFromType(piece.type);
+
+		/** Simulates a single candidate step. Returns true if it's a legal move, false otherwise. */
+		function tryStep(s: bigint): boolean {
+			const targetCoords: Coords = [
+				piece.coords[0] + step[0] * s,
+				piece.coords[1] + step[1] * s,
+			];
+			if (!moves.ignoreFunc(piece.coords, targetCoords)) return false; // Not a valid landing (e.g., not prime for Huygens)
+			const moveTagged: MoveTagged = { startCoords: piece.coords, endCoords: targetCoords };
+			return !checkresolver.getSimulatedCheck(gamefile, moveTagged, color).check;
+		}
+
+		// Positive side. Skip if range is entirely negative
+		if (!offsetNegative) {
+			for (let s = bimath.max(1n, slide[0]); s <= slide[1]; s++) {
+				if (tryStep(s)) return true;
+			}
+		}
+		// Negative side. Skip if range is entirely positive
+		if (!offsetPositive) {
+			for (let s = bimath.min(-1n, slide[1]); s >= slide[0]; s--) {
+				if (tryStep(s)) return true;
+			}
+		}
+
+		return false; // No legal blocking move found in the bounded range
+	}
 }
 
 // Exports ----------------------------------------------------------------
