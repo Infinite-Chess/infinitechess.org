@@ -189,7 +189,7 @@ function generateMove(gamefile: FullGame, moveTagged: MoveTagged): MoveFull {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
-			`Cannot make move because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
+			`Cannot make move because no piece exists at coords [${moveTagged.startCoords[0]}, ${moveTagged.startCoords[1]}].`,
 		);
 
 	// Construct the full MoveFull object
@@ -473,23 +473,23 @@ function createCheckState(gamefile: FullGame, move: MoveFull): void {
 		boardsim.state.local.moveIndex,
 	);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
-	// Only track attackers if we're using checkmate win condition.
-	const trackAttackers = basegame.gameRules.winConditions[oppositeColor]!.includes('checkmate');
+	// Only track checks if we're using checkmate win condition.
+	const trackChecks = basegame.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
 	const checkResults = checkdetection.detectCheck(
 		gamefile,
 		whosTurnItWasAtMoveIndex,
-		trackAttackers,
-	); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		trackChecks,
+	); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 	const futureInCheck = checkResults.check === false ? false : checkResults.royalsInCheck;
 	// Passing in the gamefile into this method tells state.ts to immediately apply the state change.
 	state.createCheckState(move, boardsim.state.local.inCheck, futureInCheck, boardsim.state); // Passes in the gamefile as an argument
-	state.createAttackersState(
+	state.createChecksState(
 		move,
-		boardsim.state.local.attackers,
-		checkResults.attackers ?? [],
+		boardsim.state.local.checks,
+		checkResults.checks ?? [],
 		boardsim.state,
-	); // Erase the checking pieces calculated from previous turn and pass in new on
+	); // Erase the check pairs calculated from previous turn and pass in new ones
 }
 
 /**

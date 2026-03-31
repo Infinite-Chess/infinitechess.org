@@ -7,7 +7,7 @@
  */
 
 import type { Player } from '../util/typeutil.js';
-import type { Attacker } from './state.js';
+import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Board, FullGame } from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
@@ -27,29 +27,30 @@ import vectors, { Vec2 } from '../../util/math/vectors.js';
  * Tests if the provided player color is in check in the current position of the gamefile.
  * @param gamefile - The gamefile
  * @param color - The player color to test if any of their royals are in check in the current position.
- * @param trackAttackers - If true, the results object will contain a list of attackers checking the player's royals. This is useful for calculating blocking moves that may resolve the check. Should should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
- * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, where the attacking/checking pieces are.
+ * @param trackChecks - If true, the results object will contain a list of check pairs for the player's royals. This is useful for calculating blocking moves that may resolve the check. Should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
+ * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, the check pairs (each checked royal with its attacker).
  */
 function detectCheck(
 	gamefile: FullGame,
 	color: Player,
-	trackAttackers?: boolean,
-): { check: boolean; royalsInCheck: Coords[]; attackers?: Attacker[] } {
+	trackChecks?: boolean,
+): { check: boolean; royalsInCheck: Coords[]; checks?: CheckInfo[] } {
 	// Coordinates of ALL royals of this color!
 	const royalCoords: Coords[] = boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color);
 	// Array of coordinates of royal pieces that are in check
 	const royalsInCheck: Coords[] = [];
-	const attackers: Attacker[] | undefined = trackAttackers ? [] : undefined;
+	const checks: CheckInfo[] | undefined = trackChecks ? [] : undefined;
 
 	royalCoords.forEach((thisRoyalCoord) => {
-		if (isSquareBeingAttacked(gamefile, thisRoyalCoord, color, attackers))
+		if (isSquareBeingAttacked(gamefile, thisRoyalCoord, color, checks)) {
 			royalsInCheck.push(thisRoyalCoord);
+		}
 	});
 
 	return {
 		check: royalsInCheck.length > 0,
 		royalsInCheck,
-		attackers,
+		checks,
 	};
 }
 
@@ -58,13 +59,13 @@ function detectCheck(
  * @param gamefile
  * @param coord - The square of which to check if an opponent player color is attacking.
  * @param colorOfFriendly - The color of the friendly player. All other player colors will be tested to see if they attack the square.
- * @param [attackers] If provided, any opponent attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one attacker is discovered.
+ * @param [checks] If provided, any opponent attacking the square will be appended to this array as a CheckInfo pair. If it is not provided, we may exit early as soon as one attacker is discovered.
  */
 function isSquareBeingAttacked(
 	gamefile: FullGame,
 	coord: Coords,
 	colorOfFriendly: Player,
-	attackers?: Attacker[],
+	checks?: CheckInfo[],
 ): boolean {
 	let atleast1Attacker = false;
 
@@ -72,23 +73,23 @@ function isSquareBeingAttacked(
 
 	// 1. We check every square within a 3 block radius to see if there's any attacking pieces.
 
-	if (doesVicinityAttackSquare(gamefile.boardsim, coord, colorOfFriendly, attackers)) {
-		if (attackers)
-			atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
-		else return true; // Not keeping track of attackers, exit early
+	if (doesVicinityAttackSquare(gamefile.boardsim, coord, colorOfFriendly, checks)) {
+		if (checks)
+			atleast1Attacker = true; // ARE keeping track of checks, continue checking if there are more attacking the same square...
+		else return true; // Not keeping track of checks, exit early
 	}
 	// What about specials (e.g. pawns, roses...)? Could they capture us?
-	if (doesSpecialAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
-		if (attackers)
-			atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
-		else return true; // Not keeping track of attackers, exit early
+	if (doesSpecialAttackSquare(gamefile, coord, colorOfFriendly, checks)) {
+		if (checks)
+			atleast1Attacker = true; // ARE keeping track of checks, continue checking if there are more attacking the same square...
+		else return true; // Not keeping track of checks, exit early
 	}
 
 	// 2. We check every orthogonal and diagonal to see if there's any attacking pieces.
-	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, attackers)) {
-		if (attackers)
-			atleast1Attacker = true; // ARE keeping track of attackers, continue checking if there are more attacking the same square...
-		else return true; // Not keeping track of attackers, exit early
+	if (doesSlideAttackSquare(gamefile, coord, colorOfFriendly, checks)) {
+		if (checks)
+			atleast1Attacker = true; // ARE keeping track of checks, continue checking if there are more attacking the same square...
+		else return true; // Not keeping track of checks, exit early
 	}
 
 	return atleast1Attacker; // Being attacked if true
@@ -99,14 +100,14 @@ function isSquareBeingAttacked(
  * @param boardsim
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
- * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
+ * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
  * @returns true if the square is being attacked by at least one opponent jumper with an individual move (discounting special movers).
  */
 function doesVicinityAttackSquare(
 	boardsim: Board,
 	square: Coords,
 	friendlyColor: Player,
-	attackers?: Attacker[],
+	checks?: CheckInfo[],
 ): boolean {
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.vicinity)) {
 		const thisSquare = coordutil.getCoordsFromKey(coordsKey as CoordsKey); // [1,2], [2,1], ...
@@ -123,10 +124,8 @@ function doesVicinityAttackSquare(
 
 		// Is that a match with any piece type on this vicinity square?
 		if ((thisVicinity as number[]).includes(trimmedTypeOnSquare)) {
-			// This square can be captured
-			if (attackers)
-				appendAttackerToList(attackers, { coords: actualSquare, slidingCheck: false });
-			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so attackers won't be specified
+			checks?.push({ royal: square, attacker: actualSquare, slidingCheck: false });
+			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
 		}
 	}
 
@@ -138,14 +137,14 @@ function doesVicinityAttackSquare(
  * @param {gamefile} gamefile
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
- * @param [attackers] If provided, any opponent jumper attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
+ * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
  * @returns true if the square is being attacked by at least one piece via a special individual move.
  */
 function doesSpecialAttackSquare(
 	gamefile: FullGame,
 	square: CoordsTagged,
 	friendlyColor: Player,
-	attackers?: Attacker[],
+	checks?: CheckInfo[],
 ): boolean {
 	const { boardsim } = gamefile;
 	for (const [coordsKey, thisVicinity] of Object.entries(boardsim.specialVicinity)) {
@@ -192,17 +191,21 @@ function doesSpecialAttackSquare(
 
 			// console.log("SPECIAL PIECE CAN MAKE THE CAPTURE!!!!");
 
-			if (attackers) {
-				const attacker: Attacker = { coords: actualSquare, slidingCheck: false };
+			if (checks) {
 				/**
 				 * If the `path` special flag is present (which it would be for Roses),
-				 * attach that to the attacker, so that checkresolver can test if any
+				 * attach that to the CheckInfo, so that checkresolver can test if any
 				 * legal moves can block the path to stop this check.
 				 */
-				if (square.path !== undefined) attacker.path = square.path;
-				appendAttackerToList(attackers, attacker);
+				const checkInfo: CheckInfo = {
+					royal: square,
+					attacker: actualSquare,
+					slidingCheck: false,
+				};
+				if (square.path !== undefined) checkInfo.path = square.path;
+				checks.push(checkInfo);
 			}
-			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so attackers won't be specified
+			return true; // There'll never be more than 1 short-range/jumping checks! UNLESS it's multiplayer, but multiplayer won't use checkmate anyway so checks won't be specified
 		}
 	}
 
@@ -214,14 +217,14 @@ function doesSpecialAttackSquare(
  * @param boardsim
  * @param square - The square to check if any opponent sliders are attacking.
  * @param friendlyColor - The friendly player color
- * @param [attackers] If provided, any opponent slider attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one slider attacker is discovered.
+ * @param [checks] If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
  * @returns true if the square is being attacked by at least one opponent slider.
  */
 function doesSlideAttackSquare(
 	gamefile: FullGame,
 	square: Coords,
 	friendlyColor: Player,
-	attackers?: Attacker[],
+	checks?: CheckInfo[],
 ): boolean {
 	let atleast1Attacker = false;
 
@@ -236,10 +239,10 @@ function doesSlideAttackSquare(
 				direction,
 				square,
 				friendlyColor,
-				attackers,
+				checks,
 			)
 		) {
-			if (!attackers) return true; // Not keeping track of attackers, exit early
+			if (!checks) return true; // Not keeping track of checks, exit early
 			atleast1Attacker = true;
 		}
 	}
@@ -255,7 +258,7 @@ function doesSlideAttackSquare(
  * @param direction - The step of the line: [dx,dy]
  * @param coords - The coordinates of the square to test if any piece on the line can slide to. MUST be on the line!!!
  * @param color - The player color of friendlies. Friendlies can't capture us.
- * @param [attackers] - If provided, any opponent slider attacking the square will be appended to this array. If it is not provided, we may exit early as soon as one slider attacker is discovered.
+ * @param [checks] - If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
  * @returns true if the square is under threat
  */
 function doesLineAttackSquare(
@@ -264,7 +267,7 @@ function doesLineAttackSquare(
 	direction: Vec2,
 	coords: Coords,
 	color: Player,
-	attackers?: Attacker[],
+	checks?: CheckInfo[],
 ): boolean {
 	if (!line) return false; // This line doesn't exist, then obviously no pieces can attack our square
 
@@ -313,38 +316,20 @@ function doesLineAttackSquare(
 
 		// This piece is attacking this square!
 
-		if (!attackers)
-			return true; // Attackers array isn't being tracked, just insta-return to save compute not finding other attackers!
-		else
-			appendAttackerToList(attackers, {
-				coords: thisPiece.coords,
+		if (!checks) {
+			return true; // Checks array isn't being tracked, just insta-return to save compute not finding other checks!
+		} else {
+			checks.push({
+				royal: coords,
+				attacker: thisPiece.coords,
 				slidingCheck: true,
 				colinear: thisPieceMoveset.colinear,
 			});
+		}
 		atleast1Attacker = true;
 	}
 
 	return atleast1Attacker;
-}
-
-/**
- * Only appends the attacker giving us check if they aren't already in our list.
- * This can happen if the same piece is checking multiple royals.
- * However, we do want to upgrade them to `slidingCheck` if they are in the list.
- * @param attackers - The running attackers list of pieces that are checking us.
- * @param attacker - The new attacker we want to append
- */
-function appendAttackerToList(attackers: Attacker[], attacker: Attacker): void {
-	for (let i = 0; i < attackers.length; i++) {
-		const thisAttacker: Attacker = attackers[i]!; // { coords, slidingCheck }
-		if (!coordutil.areCoordsEqual(thisAttacker.coords, attacker.coords)) continue; // Not the same piece
-		// The same piece...
-		// Upgrade the slidingCheck to true, if applicable.
-		if (attacker.slidingCheck) thisAttacker.slidingCheck = true;
-		return;
-	}
-	// The piece was not found in the list, add it...
-	attackers.push(attacker);
 }
 
 /**
@@ -353,11 +338,11 @@ function appendAttackerToList(attackers: Attacker[], attacker: Attacker): void {
 function isPlayerInCheck(boardsim: Board, color: Player): boolean {
 	const royals = boardutil
 		.getRoyalCoordsOfColor(boardsim.pieces, color)
-		.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+		.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
 	if (royalsInCheck.length === 0) return false;
 
-	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const checkedRoyals = royalsInCheck.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
 	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
 	return new Set([...royals, ...checkedRoyals]).size !== royals.length + checkedRoyals.length;
 }

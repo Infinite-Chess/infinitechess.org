@@ -385,7 +385,7 @@ function pushSliding(
  * @param step - Of the line / moveset
  * @param intsect1 - What point this line intersect the left side of the screen box.
  * @param intsect2 - What point this line intersect the right side of the screen box.
- * @param limits - Slide limit: [-7,Infinity]
+ * @param limits - Slide limit: [-7,Infinity]. May be an offset segment (same-sign) for colinear blocking.
  * @param ignoreFunc - The ignore function
  * @param gamefile - A reference to the current loaded gamefile
  * @param friendlyColor - The color of friendly pieces
@@ -404,17 +404,7 @@ function pushSlide(
 	friendlyColor: Player,
 	brute?: boolean,
 ): void {
-	// Right moveset...
-
-	if (intsect2.positiveDotProduct) {
-		// The start coords are either on screen, or the ray points towards the screen
-		// prettier-ignore
-		pushRay(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1, intsect2, limits[1], ignoreFunc, gamefile, friendlyColor, brute);
-	} // else the start coords are off screen and ray points in the opposite direction of the screen
-
-	// Left moveset...
-
-	// Negate the vector
+	// Compute the negated direction and flipped intersections (used in offset-negative and normal cases)
 	const negStep: Vec2 = vectors.negateVector(step);
 
 	// Switch the order of intersections and negate their dot product
@@ -427,9 +417,37 @@ function pushSlide(
 		positiveDotProduct: !intsect1.positiveDotProduct,
 	};
 
+	// Special offset cases: the legal zone doesn't include the piece's own
+	// square or span in both directions infinitely — e.g. a Huygen blocked
+	// colinearly, so only squares 100-200 ahead are legal. Only one ray is rendered.
+	if (limits[0] !== null && limits[0] > 0n) {
+		// Offset positive: legal zone is entirely in the positive step direction.
+		if (intsect2.positiveDotProduct) {
+			// prettier-ignore
+			pushRay(instanceData_NonCapture, instanceData_Capture, coords, step, intsect1, intsect2, limits[1], ignoreFunc, gamefile, friendlyColor, brute, limits[0]);
+		}
+		return;
+	}
+	if (limits[1] !== null && limits[1] < 0n) {
+		// Offset negative: legal zone is entirely in the negative step direction.
+		if (negVecIntsect2.positiveDotProduct) {
+			const absLimit0 = limits[0] === null ? null : bimath.abs(limits[0]);
+			const absLimit1 = bimath.abs(limits[1]);
+			// prettier-ignore
+			pushRay(instanceData_NonCapture, instanceData_Capture, coords, negStep, negVecIntsect1, negVecIntsect2, absLimit0, ignoreFunc, gamefile, friendlyColor, brute, absLimit1);
+		}
+		return;
+	}
+
+	// Normal case: limits span 0 (or one side is null). Render both rays outward from the piece.
+	if (intsect2.positiveDotProduct) {
+		// The start coords are either on screen, or the ray points towards the screen
+		// prettier-ignore
+		pushRay(instanceData_NonCapture, instanceData_Capture, coords, step,    intsect1, intsect2, limits[1], ignoreFunc, gamefile, friendlyColor, brute);
+	} // else the start coords are off screen and ray points in the opposite direction of the screen
 	if (negVecIntsect2.positiveDotProduct) {
 		// The start coords are either on screen, or the ray points towards the screen
-		// The first index of slide limit is always negative
+		// The first index of slide limit is always negative (or null) in the normal case
 		const absoluteSlideLimit = limits[0] === null ? null : bimath.abs(limits[0]);
 		// prettier-ignore
 		pushRay(instanceData_NonCapture, instanceData_Capture, coords, negStep, negVecIntsect1, negVecIntsect2, absoluteSlideLimit, ignoreFunc, gamefile, friendlyColor, brute);
@@ -444,11 +462,12 @@ function pushSlide(
  * @param step - Of the line / moveset
  * @param intsect1 - What point this line intersect the left side of the screen box.
  * @param intsect2 - What point this line intersect the right side of the screen box.
- * @param limit - Needs to be POSITIVE.
+ * @param limit - Needs to be POSITIVE. The farthest number of steps the ray can travel.
  * @param ignoreFunc - The ignore function, to ignore squares
  * @param gamefile - A reference to the current loaded gamefile
  * @param friendlyColor - The color of friendly pieces
  * @param brute - If true, each move will be simulated as to whether it results in check, and if so, not added to the mesh data.
+ * @param startStep - The step number of the first highlight, counting from the piece. Default 1. Use > 1 for offset segments.
  */
 function pushRay(
 	instanceData_NonCapture: bigint[],
@@ -462,11 +481,12 @@ function pushRay(
 	gamefile: FullGame,
 	friendlyColor: Player,
 	brute?: boolean,
+	startStep: bigint = 1n,
 ): void {
-	if (limit === 0n) return; // Can't slide any spaces this ray's direction
+	if (limit !== null && limit < startStep) return; // Slide range ends before it even starts
 
 	// prettier-ignore
-	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false);
+	const iterationInfo: RayIterationInfo | undefined = getRayIterationInfo(coords, step, intsect1, intsect2, limit, false, startStep);
 	if (!iterationInfo) return; // None of the piece's slide is visible on screen, skip.
 
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
@@ -505,6 +525,7 @@ function pushRay(
  * to cover all squares a ray can reach in the render range,
  * and calculates where it should start and end.
  * @param isRay - This will also include the starting coordinate, as is not the behavior for selected pieces.
+ * @param startStep - The step number of the first highlight, counting from the piece. Defaults to 1. Pass a higher value for offset segments where the legal zone doesn't start adjacent to the piece.
  */
 function getRayIterationInfo(
 	coords: Coords,
@@ -513,6 +534,7 @@ function getRayIterationInfo(
 	intsect2: IntersectionPoint,
 	limit: bigint | null,
 	isRay: boolean,
+	startStep: bigint = 1n,
 ): RayIterationInfo | undefined {
 	const coordsBD: BDCoords = bdcoords.FromCoords(coords);
 	const stepBD: BDCoords = bdcoords.FromCoords(step);
@@ -523,9 +545,9 @@ function getRayIterationInfo(
 
 	let startCoords: Coords = [...coords];
 	if (!isRay) {
-		// The first highlight starts 1 square off the piece coords
-		startCoords[0] += step[0];
-		startCoords[1] += step[1];
+		// The first highlight starts startStep squares off the piece coords
+		startCoords[0] += step[0] * startStep;
+		startCoords[1] += step[1] * startStep;
 	}
 
 	// Is the piece off screen in the opposite direction of the step?
@@ -535,7 +557,12 @@ function getRayIterationInfo(
 		const distInSteps: bigint = bd.toBigInt(
 			bd.ceil(bd.divide(axisDistToIntsect1, stepBD[axis])),
 		); // Minimum number of steps to overtake the first intersection.
-		startCoords = [coords[0] + step[0] * distInSteps, coords[1] + step[1] * distInSteps];
+		// Use the larger of distInSteps and startStep to respect both the screen edge and the slide range start
+		const actualStartStep = distInSteps > startStep ? distInSteps : startStep;
+		startCoords = [
+			coords[0] + step[0] * actualStartStep,
+			coords[1] + step[1] * actualStartStep,
+		];
 	}
 
 	// Determine the end coords.
@@ -642,7 +669,8 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
  */
 function renderOutlineOfRenderBox(): void {
 	// const color: Color = [1,0,1, 1]; // Magenta
-	const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
+	// const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
+	const color: Color = [1, 1, 1, 1]; // White
 	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
 
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();

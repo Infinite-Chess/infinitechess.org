@@ -42,7 +42,7 @@ function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefi
 			const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
 			const moves = legalmoves.calculateAll(gamefile, thisPiece);
-			if (legalmoves.hasAtleast1Move(moves)) return undefined; // Not checkmate
+			if (legalmoves.hasAtleast1Move(moves, gamefile, thisPiece)) return undefined; // Not checkmate
 		}
 	}
 
