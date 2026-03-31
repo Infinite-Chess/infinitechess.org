@@ -338,15 +338,8 @@ function addressPins(
 
 				// Slide is along the pin line.
 				// Restrict to the zone strictly between the royal and the attacker (both exclusive, capturing move is added separately above).
-				restrictSlideBetweenSquares(
-					moves,
-					slideDir as Vec2Key,
-					slideDirVec,
-					pieceSelected.coords,
-					royal,
-					attacker,
-					check.colinear,
-				);
+				// prettier-ignore
+				restrictSlideBetweenSquares(moves, slideDir as Vec2Key, slideDirVec, pieceSelected.coords, royal, attacker, check.colinear);
 			}
 		}
 	}
@@ -486,15 +479,8 @@ function appendBlockingMoves(
 			// and add the `brute` flag if either piece is colinear.
 			// DON'T collapse the slide.
 			// console.log('Entered coincident blocking case.');
-			restrictSlideBetweenSquares(
-				moves,
-				lineKey as Vec2Key,
-				line,
-				coords,
-				square1,
-				square2,
-				attackerColinear,
-			);
+			// prettier-ignore
+			restrictSlideBetweenSquares(moves, lineKey as Vec2Key, line, coords, square1, square2, attackerColinear);
 		}
 	}
 }
