@@ -13,10 +13,12 @@ import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
 import type { LegalMoves } from './legalmoves.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
+import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import geometry from '../../util/math/geometry.js';
@@ -30,7 +32,6 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import { players as p } from '../util/typeutil.js';
-import vectors, { Vec2Key } from '../../util/math/vectors.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
 // Functions ------------------------------------------------------------------------------
@@ -319,22 +320,50 @@ function removeSlidingMovesThatOpenDiscovered(
 
 			// It's a sliding check. That means this piece is on the same line between the attacker and royal.
 
+			// If the piece can capture the attacker, append it as an
+			// individual move to be simulated later (removes the pin).
+			if (
+				legalmoves.checkIfMoveLegal(
+					gamefile,
+					moves,
+					pieceSelected.coords,
+					attacker,
+					color,
+					{ ignoreIndividualMoves: true },
+				)
+			) {
+				appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
+			}
+
 			const checkLineGeneralForm = vectors.getLineGeneralFormFrom2Coords(royal, attacker);
 			// Delete all sliding moves but the one in the direction of the line between the attacker and the royal.
 			for (const slideDir of Object.keys(moves.sliding)) {
 				// 'dx,dy'
 				const slideDirVec = vectors.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
-				// Does the line created from sliding this direction equal the line between the attacker and the royal?
+				// Delete the slide if it is NOT along the pin line.
 				const slideLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
 					pieceSelected.coords,
 					slideDirVec,
 				);
-				if (!vectors.areLinesInGeneralFormEqual(checkLineGeneralForm, slideLineGeneralForm))
+				if (
+					!vectors.areLinesInGeneralFormEqual(checkLineGeneralForm, slideLineGeneralForm)
+				) {
 					delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
-			}
+					continue;
+				}
 
-			// If a colinear mover is involved in the check (or we are one), add the `brute` flag too.
-			if (check.colinear) moves.brute = true;
+				// Slide is along the pin line.
+				// Restrict to the zone strictly between the royal and the attacker (both exclusive).
+				restrictSlideBetweenSquares(
+					moves,
+					slideDir as Vec2Key,
+					slideDirVec,
+					pieceSelected.coords,
+					royal,
+					attacker,
+					check.colinear,
+				);
+			}
 		}
 	}
 
@@ -342,6 +371,52 @@ function removeSlidingMovesThatOpenDiscovered(
 
 	// console.log("Legal moves after removing sliding moves that open discovered:");
 	// console.log(moves);
+}
+
+/**
+ * Restricts the slide `slideDir` in `moves.sliding` to the zone strictly between `royal` and `attacker`,
+ * intersected with the slide's current physical limits. Deletes the slide if no overlap remains.
+ * Both the royal and attacker squares are excluded; captures are appended as individual moves by the caller.
+ * @param direction - How much the piece moves in each step of the slide.
+ * @param colinear - If true, sets `moves.brute` so every surviving square is verified by simulation.
+ */
+function restrictSlideBetweenSquares(
+	moves: LegalMoves,
+	slideDir: Vec2Key,
+	direction: Vec2,
+	pieceCoords: Coords,
+	royal: Coords,
+	attacker: Coords,
+	colinear: boolean,
+): void {
+	const sliding = moves.sliding!;
+	const axis: 0 | 1 = direction[0] === 0n ? 1 : 0;
+	const stepsToRoyal = (royal[axis] - pieceCoords[axis]) / direction[axis];
+	const stepsToAttacker = (attacker[axis] - pieceCoords[axis]) / direction[axis];
+	// Both endpoints are excluded; captures are handled as individual moves.
+	const zoneMin = bimath.min(stepsToRoyal, stepsToAttacker) + 1n;
+	const zoneMax = bimath.max(stepsToRoyal, stepsToAttacker) - 1n;
+	if (zoneMin > zoneMax) {
+		delete sliding[slideDir]; // Zone is empty.
+		console.log('Deleting slide: No squares between the royal and the attacker.');
+		return;
+	}
+	const currentLimits = sliding[slideDir]!;
+	console.log(
+		`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`,
+	);
+	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
+	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
+	if (newMin > newMax) {
+		delete sliding[slideDir]; // Slide can't reach the zone.
+		console.log("Deleting slide because it can't reach the blocking zone.");
+		return;
+	}
+	sliding[slideDir] = [newMin, newMax];
+	console.log(
+		`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
+	);
+	if (colinear) moves.brute = true;
 }
 
 /**
@@ -416,49 +491,20 @@ function appendBlockingMoves(
 			// Add as an individual move to be simulated later.
 			appendMoveToIndividualsAvoidDuplicates(moves.individual, blockPointInt);
 		} else {
-			// Case 3: Coincident -> Restrict slide range to intersection between the royal and
-			// the checker, and add the `brute` flag if either piece is a colinear mover.
+			// Case 3: Coincident (Our piece is on the same line as the check)
+			// -> Restrict the slide to the blocking zone (strictly between the royal and checker),
+			// and add the `brute` flag if either piece is colinear.
 			// DON'T collapse the slide.
 			console.log('Entered coincident blocking case.');
-
-			const axis: 0 | 1 = line[0] === 0n ? 1 : 0;
-			const stepsToSquare1 = (square1[axis] - coords[axis]) / line[axis];
-			const stepToSquare2 = (square2[axis] - coords[axis]) / line[axis];
-			// The blocking zone: squares strictly between the attacker (square2) and the royal (square1)
-			const zoneMin = bimath.min(stepsToSquare1, stepToSquare2) + 1n;
-			const zoneMax = bimath.max(stepsToSquare1, stepToSquare2) - 1n;
-			if (zoneMin > zoneMax) {
-				// No squares between the royal and the attacker, so we can't block by sliding in between them.
-				delete moves.sliding[lineKey as Vec2Key];
-				console.log('Deleting slide: No squares between the royal and the attacker.');
-				continue;
-			}
-			// Intersect the zone with this slide's current physical limits
-			const currentLimits = moves.sliding[lineKey as Vec2Key]!;
-			console.log(
-				`For slide ${lineKey}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between ${square1} and ${square2} with steps [${zoneMin}, ${zoneMax}]`,
+			restrictSlideBetweenSquares(
+				moves,
+				lineKey as Vec2Key,
+				line,
+				coords,
+				square1,
+				square2,
+				attackerColinear,
 			);
-			const newMin =
-				currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
-			const newMax =
-				currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
-			if (newMin > newMax) {
-				delete moves.sliding[lineKey as Vec2Key]; // This slide can't reach the blocking zone
-				console.log("Deleting slide because it can't reach the blocking zone.");
-				continue;
-			}
-
-			// Restrict slide range to intersection
-			moves.sliding[lineKey as Vec2Key] = [newMin, newMax];
-			console.log(
-				`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
-			);
-
-			// Further add the brute flag if us or the checker moves colinearly (simulate each remaining move for check)
-			if (attackerColinear || moves.colinear) {
-				// console.log('Adding brute flag.');
-				moves.brute = true;
-			}
 		}
 	}
 }
