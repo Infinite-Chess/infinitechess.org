@@ -283,7 +283,7 @@ function addressPins(
 
 	// Filter to only the newly-exposed checks (ignore the pre-existing ones).
 	const newChecks: CheckInfo[] = checkResults.checks!.filter((c) => {
-		!preExistingChecks.some(
+		return !preExistingChecks.some(
 			(p) =>
 				coordutil.areCoordsEqual(p.royal, c.royal) &&
 				coordutil.areCoordsEqual(p.attacker, c.attacker),
