@@ -389,24 +389,24 @@ function restrictSlideBetweenSquares(
 	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
 	if (zoneMin > zoneMax) {
 		delete sliding[slideDir]; // Zone is empty.
-		console.log('Deleting slide: No squares between the royal and the attacker.');
+		// console.log('Deleting slide: No squares between the royal and the attacker.');
 		return;
 	}
 	const currentLimits = sliding[slideDir]!;
-	console.log(
-		`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`,
-	);
+	// console.log(
+	// 	`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`,
+	// );
 	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
 	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
 	if (newMin > newMax) {
 		delete sliding[slideDir]; // Slide can't reach the zone.
-		console.log("Deleting slide because it can't reach the blocking zone.");
+		// console.log("Deleting slide because it can't reach the blocking zone.");
 		return;
 	}
 	sliding[slideDir] = [newMin, newMax];
-	console.log(
-		`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
-	);
+	// console.log(
+	// 	`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
+	// );
 	if (colinear) moves.brute = true;
 }
 
@@ -485,7 +485,7 @@ function appendBlockingMoves(
 			// -> Restrict the slide to the blocking zone (strictly between the royal and checker),
 			// and add the `brute` flag if either piece is colinear.
 			// DON'T collapse the slide.
-			console.log('Entered coincident blocking case.');
+			// console.log('Entered coincident blocking case.');
 			restrictSlideBetweenSquares(
 				moves,
 				lineKey as Vec2Key,
