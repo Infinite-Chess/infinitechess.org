@@ -181,16 +181,8 @@ function addressChecks(
 	if (!capturingImpossible) {
 		// Add each unique attacker as a potential capture move (simulated later to confirm it resolves all checks).
 		for (const attacker of uniqueAttackers) {
-			if (
-				legalmoves.checkIfMoveLegal(
-					gamefile,
-					legalMoves,
-					selectedPieceCoords,
-					attacker,
-					color,
-					{ ignoreIndividualMoves: true },
-				)
-			) {
+			// prettier-ignore
+			if (legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker, color, { ignoreIndividualMoves: true })) {
 				appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, attacker);
 			}
 		}
@@ -306,16 +298,8 @@ function addressPins(
 						`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
 					);
 				// Check if a sliding move can capture the attacker BEFORE appendPathBlockingMoves wipes the slides.
-				if (
-					legalmoves.checkIfMoveLegal(
-						gamefile,
-						moves,
-						pieceSelected.coords,
-						attacker,
-						color,
-						{ ignoreIndividualMoves: true },
-					)
-				) {
+				// prettier-ignore
+				if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker, color, { ignoreIndividualMoves: true })) {
 					appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
 				}
 				// Append any legal blocking squares on the path, then collapse all slides.
@@ -330,16 +314,8 @@ function addressPins(
 
 			// If the piece can capture the attacker, append it as an
 			// individual move to be simulated later (removes the pin).
-			if (
-				legalmoves.checkIfMoveLegal(
-					gamefile,
-					moves,
-					pieceSelected.coords,
-					attacker,
-					color,
-					{ ignoreIndividualMoves: true },
-				)
-			) {
+			// prettier-ignore
+			if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker, color, { ignoreIndividualMoves: true })) {
 				appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
 			}
 
@@ -494,9 +470,8 @@ function appendBlockingMoves(
 				coordutil.areCoordsEqual(blockPointInt, square1) || // Can't move onto our piece that's in check,
 				coordutil.areCoordsEqual(blockPointInt, square2) || // nor to the piece that is checking us (those are considered outside this method)
 				// Does our piece's slide range include that block point? checkIfMoveLegal() needs the slide to be intact, so we can't collapse it before this.
-				!legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, {
-					ignoreIndividualMoves: true,
-				})
+				// prettier-ignore
+				!legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, { ignoreIndividualMoves: true })
 			) {
 				delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
 				continue;
@@ -552,16 +527,8 @@ function appendPathBlockingMoves(
 		// Iterate through all path points, EXCLUDING start and end.
 		const blockPoint = path[i]!;
 		// Can our selected piece move to this square?
-		if (
-			legalmoves.checkIfMoveLegal(
-				gamefile,
-				legalMoves,
-				selectedPieceCoords,
-				blockPoint,
-				color,
-				{ ignoreIndividualMoves: true },
-			)
-		)
+		// prettier-ignore
+		if (legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, blockPoint, color, { ignoreIndividualMoves: true }))
 			appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, blockPoint); // Can block!
 	}
 
