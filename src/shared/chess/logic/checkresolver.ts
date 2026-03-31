@@ -220,7 +220,7 @@ function addressExistingChecks(
 		(check.slidingCheck && dist === 1n)
 	) {
 		// Impossible to block
-		legalMoves.sliding = {}; // Collapse all sliding moves
+		legalMoves.sliding = {}; // Collapse all sliding moves.
 		return true;
 	}
 
@@ -558,6 +558,8 @@ function appendPathBlockingMoves(
 		)
 			appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, blockPoint); // Can block!
 	}
+
+	legalMoves.sliding = {}; // Collapse all sliding moves
 }
 
 /** Appends the provided move to the list of legal individual moves if it's not already present. */
