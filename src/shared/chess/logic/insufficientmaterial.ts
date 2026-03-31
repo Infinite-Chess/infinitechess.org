@@ -136,7 +136,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 	// Both sides have one king
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
-		{ [r.BISHOP + e.W]: [Infinity, 0] },
+		{ [r.BISHOP + e.W]: [Infinity, 0], [r.BISHOP + e.B]: [Infinity, 0] },
 		{ [r.KNIGHT + e.W]: 1 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other (same as infinite case)
