@@ -300,14 +300,12 @@ function addressPins(
 		for (const check of newChecks) {
 			const { royal, attacker } = check;
 			if (!check.slidingCheck) {
-				// This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
+				// A jumping-check via a `path` was exposed (Rose).
 				if (!check.path)
 					throw Error(
 						`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
 					);
-				// Delete all sliding moves and append legal blocking moves
-				appendPathBlockingMoves(gamefile, check.path, moves, pieceSelected.coords, color);
-				// Also append the capturing move if it's legal
+				// Check if a sliding move can capture the attacker BEFORE appendPathBlockingMoves wipes the slides.
 				if (
 					legalmoves.checkIfMoveLegal(
 						gamefile,
@@ -318,11 +316,12 @@ function addressPins(
 						{ ignoreIndividualMoves: true },
 					)
 				) {
-					moves.individual.push(attacker);
+					appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
 				}
-				moves.sliding = {}; // Erase all sliding moves
+				// Append any legal blocking squares on the path, then collapse all slides.
+				appendPathBlockingMoves(gamefile, check.path, moves, pieceSelected.coords, color);
 				// We don't have to keep iterating through check pairs, since
-				// if none of these newly added path-blocking moves are legal, nothing else will be.
+				// if none of these newly added path-blocking/capture moves are legal, nothing else will be.
 				// They are all simulated to see if they resolve the check. There are only finitely many.
 				break outer;
 			}
