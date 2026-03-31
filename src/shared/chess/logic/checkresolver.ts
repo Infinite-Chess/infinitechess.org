@@ -259,8 +259,10 @@ function addressPins(
 	pieceSelected: Piece,
 	color: Player,
 ): void {
+	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to remove (may have already all been removed in addressChecks())
+	// Does not reflect checks for `color` if it's not currently their turn to move.
+	// This is fine because only for whoever's turn it is, moves are check-respected.
 	const preExistingChecks = gamefile.boardsim.state.local.checks;
-	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to remove (may have already all been removed in addressExistingChecks)
 
 	/**
 	 * To find out if our piece is pinned (or opens a discovered), we delete it, then test for check.
