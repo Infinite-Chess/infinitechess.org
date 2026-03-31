@@ -189,7 +189,7 @@ function generateMove(gamefile: FullGame, moveTagged: MoveTagged): MoveFull {
 	const piece = boardutil.getPieceFromCoords(boardsim.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
-			`Cannot make move because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
+			`Cannot make move because no piece exists at coords [${moveTagged.startCoords[0]}, ${moveTagged.startCoords[1]}].`,
 		);
 
 	// Construct the full MoveFull object
