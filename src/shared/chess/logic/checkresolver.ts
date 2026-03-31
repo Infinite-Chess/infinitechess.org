@@ -136,9 +136,9 @@ function removeCheckInvalidMoves_Sliding(
 
 	// 1. By not blocking, or capturing an already-existing check.
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile.boardsim);
-	addressExistingChecks(gamefile, moves, royalsInCheck, piece.coords, color);
+	addressChecks(gamefile, moves, royalsInCheck, piece.coords, color);
 	// 2. By opening a discovered attack on one of our royals.
-	removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
+	addressPins(gamefile, moves, piece, color);
 }
 
 /**
@@ -151,7 +151,7 @@ function removeCheckInvalidMoves_Sliding(
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param color - The color of friendlies
  */
-function addressExistingChecks(
+function addressChecks(
 	gamefile: FullGame,
 	legalMoves: LegalMoves,
 	royalCoords: Coords[],
@@ -261,7 +261,7 @@ function addressExistingChecks(
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of the player the piece belongs to.
  */
-function removeSlidingMovesThatOpenDiscovered(
+function addressPins(
 	gamefile: FullGame,
 	moves: LegalMoves,
 	pieceSelected: Piece,
