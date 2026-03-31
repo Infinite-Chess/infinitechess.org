@@ -338,11 +338,11 @@ function doesLineAttackSquare(
 function isPlayerInCheck(boardsim: Board, color: Player): boolean {
 	const royals = boardutil
 		.getRoyalCoordsOfColor(boardsim.pieces, color)
-		.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+		.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
 	if (royalsInCheck.length === 0) return false;
 
-	const checkedRoyals = royalsInCheck.map(coordutil.getKeyFromCoords); // ['x,y','x,y']
+	const checkedRoyals = royalsInCheck.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
 	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
 	return new Set([...royals, ...checkedRoyals]).size !== royals.length + checkedRoyals.length;
 }
