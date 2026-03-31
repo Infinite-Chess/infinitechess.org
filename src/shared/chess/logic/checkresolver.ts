@@ -12,6 +12,7 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
+import type { CheckInfo } from './state.js';
 import type { LegalMoves } from './legalmoves.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
@@ -135,12 +136,9 @@ function removeCheckInvalidMoves_Sliding(
 
 	// 1. By not blocking, or capturing an already-existing check.
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile.boardsim);
-	if (addressExistingChecks(gamefile, moves, royalsInCheck, piece.coords, color)) return;
-	/**
-	 * 2. By opening a discovered attack on one of our royals.
-	 * We only need to do this if there wasn't an existing check we had to resolve,
-	 * as the few finitely many moves that resolve that check will have already been added.
-	 */ else removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
+	addressExistingChecks(gamefile, moves, royalsInCheck, piece.coords, color);
+	// 2. By opening a discovered attack on one of our royals.
+	removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
 }
 
 /**
@@ -152,7 +150,6 @@ function removeCheckInvalidMoves_Sliding(
  * @param royalCoords - A list of our friendly jumping royal pieces
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param color - The color of friendlies
- * @returns true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
 function addressExistingChecks(
 	gamefile: FullGame,
@@ -160,10 +157,10 @@ function addressExistingChecks(
 	royalCoords: Coords[],
 	selectedPieceCoords: Coords,
 	color: Player,
-): boolean {
+): void {
 	const { boardsim } = gamefile;
-	if (royalCoords.length === 0) return false; // Exit if nothing in check
-	if (!checkdetection.isPlayerInCheck(boardsim, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+	if (royalCoords.length === 0) return; // Exit if nothing in check
+	if (!checkdetection.isPlayerInCheck(boardsim, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const checks = boardsim.state.local.checks;
 	if (checks.length === 0)
@@ -217,7 +214,7 @@ function addressExistingChecks(
 	) {
 		// Impossible to block
 		legalMoves.sliding = {}; // Collapse all sliding moves.
-		return true;
+		return;
 	}
 
 	/**
@@ -252,17 +249,13 @@ function addressExistingChecks(
 			appendPathBlockingMoves(gamefile, check.path!, legalMoves, selectedPieceCoords, color);
 		}
 	}
-
-	return true;
 }
 
 /**
  * Deletes any sliding moves from the provided running legal moves that
  * open up a discovered attack on any of our royals.
- *
- * MUST NOT CALL IF the player of the provided color has an existing check!!!
- * Otherwise it will break this, as after it deletes the selected piece,
- * it tests for check again and assumes all checks result from the pin!
+ * Reads the current checks from the gamefile and ignores any that are already present —
+ * only newly-exposed checks (from deleting the piece) are treated as pins.
  * @param gamefile
  * @param moves - The running legal moves of the selected piece
  * @param pieceSelected - The piece with the provided running legal moves
@@ -274,17 +267,12 @@ function removeSlidingMovesThatOpenDiscovered(
 	pieceSelected: Piece,
 	color: Player,
 ): void {
-	if (checkdetection.isPlayerInCheck(gamefile.boardsim, color))
-		throw Error('We should not be in check when calling removeSlidingMovesThatOpenDiscovered!'); // Safety net
-	if (!moves.sliding) return; // No sliding moves to remove
+	const preExistingChecks = gamefile.boardsim.state.local.checks;
+	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to remove (may have already all been removed in addressExistingChecks)
 
 	/**
-	 * By this point, we know that there wasn't a previous check we had to resolve,
-	 * because our sliding moves would have been deleted in exchange for a finite
-	 * number of individual moves that resolve the check.
-	 *
-	 * WHICH MEANS, any new check that surfaces from this piece suddenly vanishing
-	 * we know is a check that results from breaking the pin!
+	 * To find out if our piece is pinned (or opens a discovered), we delete it, then test for check.
+	 * Any check that surfaces and is NOT in preExistingChecks resulted from breaking the pin.
 	 */
 
 	// To find out if our piece is pinned, we delete it, then test for check.
@@ -293,20 +281,29 @@ function removeSlidingMovesThatOpenDiscovered(
 
 	const checkResults = checkdetection.detectCheck(gamefile, color, true); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 
-	outer: if (checkResults.check) {
+	// Filter to only the newly-exposed checks (ignore the pre-existing ones).
+	const newChecks: CheckInfo[] = checkResults.checks!.filter((c) => {
+		!preExistingChecks.some(
+			(p) =>
+				coordutil.areCoordsEqual(p.royal, c.royal) &&
+				coordutil.areCoordsEqual(p.attacker, c.attacker),
+		);
+	});
+
+	outer: if (newChecks.length > 0) {
 		/**
-		 * Iterate through all check pairs (each correctly-paired royal with its attacker).
+		 * Iterate through all newly-exposed check pairs.
 		 * Check if it is a sliding check (non-sliding checks with a `path` may be present, if the Rose was pinning this piece).
 		 * If so, delete all sliding moves but the one in the direction of the line between the attacker and our royal.
 		 */
 
-		for (const check of checkResults.checks!) {
+		for (const check of newChecks) {
 			const { royal, attacker } = check;
 			if (!check.slidingCheck) {
 				// This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
 				if (!check.path)
 					throw Error(
-						`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a jumping check, unless the check was preexisting! Perhaps color ${typeutil.strcolors[color]} has an existing check? That would be an illegal position. Please enable royalcapture! removeSlidingMovesThatOpenDiscovered() should not be called if the specific color is already in check.`,
+						`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
 					);
 				// Delete all sliding moves and append legal blocking moves
 				appendPathBlockingMoves(gamefile, check.path, moves, pieceSelected.coords, color);
@@ -365,7 +362,7 @@ function removeSlidingMovesThatOpenDiscovered(
 				}
 
 				// Slide is along the pin line.
-				// Restrict to the zone strictly between the royal and the attacker (both exclusive).
+				// Restrict to the zone strictly between the royal and the attacker (both exclusive, capturing move is added separately above).
 				restrictSlideBetweenSquares(
 					moves,
 					slideDir as Vec2Key,
