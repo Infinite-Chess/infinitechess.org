@@ -337,10 +337,11 @@ function convertRawMovesetsToPieceMovesets(pieceMovesets: RawTypeGroup<RawPieceM
 /** Tests whether the provided moveset involves colinear sliding moves. */
 function isMovesetColinear(moveset: RawPieceMoveset): boolean {
 	/**
-	 * Colinears are present if an ignore function override is present (which can simulate non-primitive vectors).
+	 * Colinears are present if an ignore/blocking function override is present (which can simulate non-primitive vectors).
 	 * We cannot predict if the piece will not cause colinears.
+	 * A custom blocking function may trigger crazy checkmate colinear shenanigans because it can allow opponent pieces to phase through your pieces, so pinning works differently.
 	 */
-	if (moveset.ignore) return true; // This type has a custom ignore/blocking function being used (colinears may be present).
+	if (moveset.blocking || moveset.ignore) return true; // This type has a custom ignore/blocking function being used (colinears may be present).
 
 	/**
 	 * Colinears are present if any vector is NOT a primitive vector.
