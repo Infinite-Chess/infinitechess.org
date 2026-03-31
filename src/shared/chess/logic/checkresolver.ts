@@ -12,11 +12,16 @@ import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { FullGame } from './gamefile.js';
+import type { CheckInfo } from './state.js';
 import type { LegalMoves } from './legalmoves.js';
+import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
+import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import geometry from '../../util/math/geometry.js';
@@ -30,7 +35,6 @@ import specialdetect from './specialdetect.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
 import { players as p } from '../util/typeutil.js';
-import vectors, { Vec2Key } from '../../util/math/vectors.js';
 import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
 // Functions ------------------------------------------------------------------------------
@@ -132,12 +136,9 @@ function removeCheckInvalidMoves_Sliding(
 
 	// 1. By not blocking, or capturing an already-existing check.
 	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(gamefile.boardsim);
-	if (addressExistingChecks(gamefile, moves, royalsInCheck, piece.coords, color)) return;
-	/**
-	 * 2. By opening a discovered attack on one of our royals.
-	 * We only need to do this if there wasn't an existing check we had to resolve,
-	 * as the few finitely many moves that resolve that check will have already been added.
-	 */ else removeSlidingMovesThatOpenDiscovered(gamefile, moves, piece, color);
+	addressChecks(gamefile, moves, royalsInCheck, piece.coords, color);
+	// 2. By opening a discovered attack on one of our royals.
+	addressPins(gamefile, moves, piece, color);
 }
 
 /**
@@ -149,223 +150,259 @@ function removeCheckInvalidMoves_Sliding(
  * @param royalCoords - A list of our friendly jumping royal pieces
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param color - The color of friendlies
- * @returns true if we are in check. If so, all sliding moves are deleted, and finite individual blocking/capturing individual moves are appended.
  */
-function addressExistingChecks(
+function addressChecks(
 	gamefile: FullGame,
 	legalMoves: LegalMoves,
 	royalCoords: Coords[],
 	selectedPieceCoords: Coords,
 	color: Player,
-): boolean {
+): void {
 	const { boardsim } = gamefile;
-	if (royalCoords.length === 0) return false; // Exit if nothing in check
-	if (!checkdetection.isPlayerInCheck(boardsim, color)) return false; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
+	if (royalCoords.length === 0) return; // Exit if nothing in check
+	if (!checkdetection.isPlayerInCheck(boardsim, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
-	const attackerCount = boardsim.state.local.attackers.length;
-	if (attackerCount === 0)
-		throw new Error('We are in check, but there is no specified attacker!');
-
-	// To know how to address the check, we have to know where the check is coming from.
-	// Optimization: We only have to address checks for one attacker, not all.
-	// Because legal blocks are added as extra individual moves, they will be simulated afterward,
-	// and if the `check` property is false, then we know the move also blocks ALL attackers!
-	// PREFER addressing a non-colinear attacker, to avoid the `brute` flag being added as much as possible. This makes the checkmate algorithm cover more scenarios.
-	const attacker =
-		boardsim.state.local.attackers.find((a) => !a.slidingCheck || !a.colinear) ??
-		boardsim.state.local.attackers[0]!;
+	const checks = boardsim.state.local.checks;
+	if (checks.length === 0)
+		throw new Error('We are in check, but there are no specified check pairs!');
 
 	// Does this piece have a sliding moveset that will either...
 
 	// 1. Capture the checking piece
 
-	let capturingMove: Coords | undefined; // We will ONLY add this move if all sliding moves are deleted, otherwise it may be a duplicate.
-	const capturingImpossible = attackerCount > 1 && !boardsim.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
-	// Check if the piece has the ability to capture
-	if (
-		!capturingImpossible &&
-		legalmoves.checkIfMoveLegal(
-			gamefile,
-			legalMoves,
-			selectedPieceCoords,
-			attacker.coords,
-			color,
-			{ ignoreIndividualMoves: true },
-		)
-	) {
-		capturingMove = attacker.coords;
+	// With a double check (multiple distinct attackers), it's impossible to capture both pieces at once, forced to dodge with the king.
+	// This is true for as long as you can't make multiple captures in one move (atomic, anyone?).
+	const uniqueAttackers: Coords[] = [];
+	for (const c of checks) {
+		if (!uniqueAttackers.some((a) => coordutil.areCoordsEqual(a, c.attacker)))
+			uniqueAttackers.push(c.attacker);
+	}
+	const capturingImpossible = uniqueAttackers.length > 1 && !boardsim.colinearsPresent;
+	if (!capturingImpossible) {
+		// Add each unique attacker as a potential capture move (simulated later to confirm it resolves all checks).
+		for (const attacker of uniqueAttackers) {
+			// prettier-ignore
+			if (legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, attacker, color, { ignoreIndividualMoves: true })) {
+				appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, attacker);
+			}
+		}
 	}
 
-	// 2. Block the check
+	// 2. Block the check(s)
 
 	/**
-	 * If it's a jumping check,
-	 * AND it doesn't have the `path` special flag with at least 3 waypoints (blockable),
-	 *
-	 * or its a sliding move,
-	 * AND one square away from the checked piece,
-	 *
-	 * then it's impossible to block.
+	 * Optimization: If ANY check is an individual jumping check with
+	 * no `path`, or a sliding check from 1 square away), then no
+	 * slide can block it, only a capture (above) can resolve it.
 	 */
-	const dist = vectors.chebyshevDistance(royalCoords[0]!, attacker.coords);
 	if (
-		(!attacker.slidingCheck && (attacker.path?.length ?? 2) < 3) ||
-		(attacker.slidingCheck && dist === 1n)
+		checks.some((check) => {
+			const dist = vectors.chebyshevDistance(check.royal, check.attacker);
+			return (
+				(!check.slidingCheck && (check.path?.length ?? 2) < 3) ||
+				(check.slidingCheck && dist === 1n)
+			);
+		})
 	) {
 		// Impossible to block
-		legalMoves.sliding = {}; // Erase all sliding moves
-		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
-		return true;
+		legalMoves.sliding = {}; // Collapse all sliding moves.
+		return;
 	}
 
 	/**
-	 * By this point we know it's either a:
-	 * 1. Sliding check from 2+ squares away
-	 * 2. Individual check, with 3+ path length
+	 * By this point we know ALL checks are either:
+	 * 1. Sliding checks from 2+ squares away
+	 * 2. Individual checks, with 3+ path length
+	 *
+	 * Iterate all checks to properly narrow/collapse slides.
+	 * Process non-colinear checks first to avoid adding `brute` flag whenever possible.
 	 */
-
-	if (attacker.slidingCheck)
-		appendBlockingMoves(
-			gamefile,
-			royalCoords[0]!,
-			attacker.coords,
-			legalMoves,
-			selectedPieceCoords,
-			color,
-			attacker.colinear,
-		);
-	// Has a chance to delete all sliding moves except one, adding the `brute` flag.
-	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
-
-	if (!legalMoves.brute) {
-		legalMoves.sliding = {}; // Erase all sliding moves IF appendBlockingMoves() didn't flag any slide direction to brute force! It will have deleted all other sliding moves for us.
-		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
+	const sortedChecks = [...checks].sort((a, b) => {
+		const aIsColinear = a.slidingCheck && a.colinear;
+		const bIsColinear = b.slidingCheck && b.colinear;
+		if (aIsColinear === bIsColinear) return 0;
+		return aIsColinear ? 1 : -1; // Non-colinear checks first
+	});
+	for (const check of sortedChecks) {
+		// Early exit if all slides have been deleted/collapsed by a previous check.
+		if (Object.keys(legalMoves.sliding).length === 0) break;
+		if (check.slidingCheck) {
+			// Has a chance to delete all sliding moves except one, adding the `brute` flag.
+			appendBlockingMoves(
+				gamefile,
+				check.royal,
+				check.attacker,
+				legalMoves,
+				selectedPieceCoords,
+				color,
+				check.colinear,
+			);
+		} else {
+			appendPathBlockingMoves(gamefile, check.path!, legalMoves, selectedPieceCoords, color);
+		}
 	}
-
-	return true;
 }
 
 /**
  * Deletes any sliding moves from the provided running legal moves that
  * open up a discovered attack on any of our royals.
- *
- * MUST NOT CALL IF the player of the provided color has an existing check!!!
- * Otherwise it will break this, as after it deletes the selected piece,
- * it tests for check again and assumes all checks result from the pin!
+ * Reads the current checks from the gamefile and ignores any that are already present —
+ * only newly-exposed checks (from deleting the piece) are treated as pins.
  * @param gamefile
  * @param moves - The running legal moves of the selected piece
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of the player the piece belongs to.
  */
-function removeSlidingMovesThatOpenDiscovered(
+function addressPins(
 	gamefile: FullGame,
 	moves: LegalMoves,
 	pieceSelected: Piece,
 	color: Player,
 ): void {
-	if (checkdetection.isPlayerInCheck(gamefile.boardsim, color))
-		throw Error('We should not be in check when calling removeSlidingMovesThatOpenDiscovered!'); // Safety net
-	if (!moves.sliding) return; // No sliding moves to remove
+	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to remove (may have already all been removed in addressChecks())
+	// Does not reflect checks for `color` if it's not currently their turn to move.
+	// This is fine because only for whoever's turn it is, moves are check-respected.
+	const preExistingChecks = gamefile.boardsim.state.local.checks;
 
 	/**
-	 * By this point, we know that there wasn't a previous check we had to resolve,
-	 * because our sliding moves would have been deleted in exchange for a finite
-	 * number of individual moves that resolve the check.
-	 *
-	 * WHICH MEANS, any new check that surfaces from this piece suddenly vanishing
-	 * we know is a check that results from breaking the pin!
+	 * To find out if our piece is pinned (or opens a discovered), we delete it, then test for check.
+	 * Any check that surfaces and is NOT in preExistingChecks resulted from breaking the pin.
 	 */
 
 	// To find out if our piece is pinned, we delete it, then test for check.
 	const deleteChange = boardchanges.queueDeletePiece([], true, pieceSelected);
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, true);
 
-	const checkResults = checkdetection.detectCheck(gamefile, color, true); // { check: boolean, royalsInCheck: Coords[], attackers: Attacker[] }
+	const checkResults = checkdetection.detectCheck(gamefile, color, true); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 
-	outer: if (checkResults.check) {
+	// Filter to only the newly-exposed checks (ignore the pre-existing ones).
+	const newChecks: CheckInfo[] = checkResults.checks!.filter((c) => {
+		return !preExistingChecks.some(
+			(p) =>
+				coordutil.areCoordsEqual(p.royal, c.royal) &&
+				coordutil.areCoordsEqual(p.attacker, c.attacker),
+		);
+	});
+
+	outer: if (newChecks.length > 0) {
 		/**
-		 * Iterate through all attackers.
+		 * Iterate through all newly-exposed check pairs.
 		 * Check if it is a sliding check (non-sliding checks with a `path` may be present, if the Rose was pinning this piece).
 		 * If so, delete all sliding moves but the one in the direction of the line between the attacker and our royal.
 		 */
 
-		for (const checkedRoyalCoords of checkResults.royalsInCheck) {
-			for (const attacker of checkResults.attackers!) {
-				if (!attacker.slidingCheck) {
-					// This attacker is giving a check via a special individual move with a `path` (such as the Rose piece).
-					if (!attacker.path)
-						throw Error(
-							`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a jumping check, unless the check was preexisting! Perhaps color ${typeutil.strcolors[color]} has an existing check? That would be an illegal position. Please enable royalcapture! removeSlidingMovesThatOpenDiscovered() should not be called if the specific color is already in check.`,
-						);
-					// Delete all sliding moves and append legal blocking moves
-					appendPathBlockingMoves(
-						gamefile,
-						attacker.path,
-						moves,
-						pieceSelected.coords,
-						color,
+		for (const check of newChecks) {
+			const { royal, attacker } = check;
+			if (!check.slidingCheck) {
+				// A jumping-check via a `path` was exposed (Rose).
+				if (!check.path)
+					throw Error(
+						`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
 					);
-					// Also append the capturing move if it's legal
-					if (
-						legalmoves.checkIfMoveLegal(
-							gamefile,
-							moves,
-							pieceSelected.coords,
-							attacker.coords,
-							color,
-							{ ignoreIndividualMoves: true },
-						)
-					) {
-						moves.individual.push(attacker.coords);
-					}
-					moves.sliding = {}; // Erase all sliding moves
-					// We don't have to keep iterating through royals and attackers, since
-					// if none of these newly added path-blocking moves are legal, nothing else will be.
-					// They are all simulated to see if they resolve the check. There are only finitely many.
-					break outer;
+				// Check if a sliding move can capture the attacker BEFORE appendPathBlockingMoves wipes the slides.
+				// prettier-ignore
+				if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker, color, { ignoreIndividualMoves: true })) {
+					appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
+				}
+				// Append any legal blocking squares on the path, then collapse all slides.
+				appendPathBlockingMoves(gamefile, check.path, moves, pieceSelected.coords, color);
+				// We don't have to keep iterating through check pairs, since
+				// if none of these newly added path-blocking/capture moves are legal, nothing else will be.
+				// They are all simulated to see if they resolve the check. There are only finitely many.
+				break outer;
+			}
+
+			// It's a sliding check. That means this piece is on the same line between the attacker and royal.
+
+			// If the piece can capture the attacker, append it as an
+			// individual move to be simulated later (removes the pin).
+			// prettier-ignore
+			if (legalmoves.checkIfMoveLegal(gamefile, moves, pieceSelected.coords, attacker, color, { ignoreIndividualMoves: true })) {
+				appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
+			}
+
+			const checkLineGeneralForm = vectors.getLineGeneralFormFrom2Coords(royal, attacker);
+			// Delete all sliding moves but the one in the direction of the line between the attacker and the royal.
+			for (const slideDir of Object.keys(moves.sliding)) {
+				// 'dx,dy'
+				const slideDirVec = vectors.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
+				// Delete the slide if it is NOT along the pin line.
+				const slideLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
+					pieceSelected.coords,
+					slideDirVec,
+				);
+				if (
+					!vectors.areLinesInGeneralFormEqual(checkLineGeneralForm, slideLineGeneralForm)
+				) {
+					delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
+					continue;
 				}
 
-				const attackerCoords = attacker.coords;
-				// If our piece is not directly on the line connecting the attacker and the royal,
-				// this same attacker must be pinning our piece against a different royal in check.
-				// The piece is on the line connecting the attacker and the royal if the line
-				// connecting our piece and the royal are the same.
-				const line1GeneralForm = vectors.getLineGeneralFormFrom2Coords(
-					checkedRoyalCoords,
-					attackerCoords,
-				);
-				const line2GeneralForm = vectors.getLineGeneralFormFrom2Coords(
-					checkedRoyalCoords,
-					pieceSelected.coords,
-				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm))
-					continue; // Not on the same line, it's pinning us against a different royal
-				// SAME line! This attacker must be pinning us against this royal!
-				// Delete all sliding moves but the one in the direction of the line between the attacker and the royal.
-				for (const slideDir of Object.keys(moves.sliding)) {
-					// 'dx,dy'
-					const slideDirVec = vectors.getVec2FromKey(slideDir as Vec2Key); // [dx,dy]
-					// Does the line created from sliding this direction equal the line between the attacker and the royal?
-					const slideLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
-						pieceSelected.coords,
-						slideDirVec,
-					);
-					if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, slideLineGeneralForm))
-						delete moves.sliding[slideDir as Vec2Key]; // Not the same line, delete it.
-				}
+				// Slide is along the pin line.
+				// Restrict to the zone strictly between the royal and the attacker (both exclusive, capturing move is added separately above).
+				// prettier-ignore
+				restrictSlideBetweenSquares(moves, slideDir as Vec2Key, slideDirVec, pieceSelected.coords, royal, attacker, check.colinear);
 			}
 		}
-
-		if (Object.keys(moves.sliding).length === 0)
-			moves.sliding = {}; // No sliding moves left
-		// For any slides left, if colinears exist in the game, flag the legal moves to brute force check each square for check
-		else if (gamefile.boardsim.colinearsPresent) moves.brute = true;
 	}
 
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, false); // Add the piece back
 
 	// console.log("Legal moves after removing sliding moves that open discovered:");
 	// console.log(moves);
+}
+
+/**
+ * Restricts the slide `slideDir` in `moves.sliding` to the zone strictly between `royal` and `attacker`,
+ * intersected with the slide's current physical limits. Deletes the slide if no overlap remains.
+ * Both the royal and attacker squares are excluded; captures are appended as individual moves by the caller.
+ * @param direction - How much the piece moves in each step of the slide.
+ * @param colinear - If true, sets `moves.brute` so every surviving square is verified by simulation.
+ */
+function restrictSlideBetweenSquares(
+	moves: LegalMoves,
+	slideDir: Vec2Key,
+	direction: Vec2,
+	pieceCoords: Coords,
+	royal: Coords,
+	attacker: Coords,
+	colinear: boolean,
+): void {
+	const sliding = moves.sliding!;
+	const axis: 0 | 1 = direction[0] === 0n ? 1 : 0;
+	const stepsToRoyal: BigDecimal = bd.divide(
+		bd.fromBigInt(royal[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
+	const stepsToAttacker: BigDecimal = bd.divide(
+		bd.fromBigInt(attacker[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
+	// Both endpoints are excluded; captures are handled as individual moves.
+	// `floor(min) + 1` and `ceil(max) - 1` give correct integer bounds even when step counts are fractional (e.g. direction [2,0]).
+	const zoneMin = bd.toBigInt(bd.floor(bd.min(stepsToRoyal, stepsToAttacker))) + 1n;
+	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
+	if (zoneMin > zoneMax) {
+		delete sliding[slideDir]; // Zone is empty.
+		// console.log('Deleting slide: No squares between the royal and the attacker.');
+		return;
+	}
+	const currentLimits = sliding[slideDir]!;
+	// console.log(
+	// 	`For slide ${slideDir}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between royal ${royal} and attacker ${attacker} at steps [${zoneMin}, ${zoneMax}]`,
+	// );
+	const newMin = currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
+	const newMax = currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
+	if (newMin > newMax) {
+		delete sliding[slideDir]; // Slide can't reach the zone.
+		// console.log("Deleting slide because it can't reach the blocking zone.");
+		return;
+	}
+	sliding[slideDir] = [newMin, newMax];
+	// console.log(
+	// 	`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
+	// );
+	if (colinear) moves.brute = true;
 }
 
 /**
@@ -410,57 +447,43 @@ function appendBlockingMoves(
 			...line2GeneralForm,
 		); // The intersection point of the 2 lines.
 
-		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (
-			blockPoint === undefined && // Parallel
-			(attackerColinear || moves.colinear) && // Atleast one piece is colinear
-			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm) && // Coincident
-			// If this piece isn't colinear, then the only way it can have a chance to block check is if its between both pieces.
-			(moves.colinear || bounds.boxContainsSquare(box, coords))
-		) {
-			// The piece lies on the same line from the attacker to the royal!
-			// Flag this slide direction to brute force check each move for legality.
-			moves.brute = true;
-			// Delete all other sliding moves that aren't also colinear with this one.
-			for (const slideDir in moves.sliding) {
-				// 'dx,dy'
-				if (slideDir === lineKey) continue; // Same line, don't delete this one.
-				// Different line... but is it colinear? If so we also want to keep it.
-				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
-				const thisLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
-					coords,
-					thisSlideDir,
-				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) {
-					delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
-				}
+		const coincident = vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm);
+
+		if (blockPoint === undefined && !coincident) {
+			// Case 1: Parallel, but not coincident -> no intersection point.
+			delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+		} else if (blockPoint) {
+			// Case 2: Not parallel, and has a single intersection point.
+			if (!bdcoords.areCoordsIntegers(blockPoint)) {
+				// It doesn't intersect at a whole number, impossible for our piece to move here!
+				delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+				continue;
 			}
-			break; // All other slides were deleted, no point in continuing to iterate.
+			const blockPointInt = bdcoords.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
+			if (
+				!bounds.boxContainsSquare(box, blockPointInt) || // Intersection point not between our 2 points, but outside of them.
+				coordutil.areCoordsEqual(blockPointInt, square1) || // Can't move onto our piece that's in check,
+				coordutil.areCoordsEqual(blockPointInt, square2) || // nor to the piece that is checking us (those are considered outside this method)
+				// Does our piece's slide range include that block point? checkIfMoveLegal() needs the slide to be intact, so we can't collapse it before this.
+				// prettier-ignore
+				!legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, { ignoreIndividualMoves: true })
+			) {
+				delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+				continue;
+			}
+			// Can block!
+			delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide (can do this now because checkIfMoveLegal() was already called, which needed the slide to be intact).
+			// Add as an individual move to be simulated later.
+			appendMoveToIndividualsAvoidDuplicates(moves.individual, blockPointInt);
+		} else {
+			// Case 3: Coincident (Our piece is on the same line as the check)
+			// -> Restrict the slide to the blocking zone (strictly between the royal and checker),
+			// and add the `brute` flag if either piece is colinear.
+			// DON'T collapse the slide.
+			// console.log('Entered coincident blocking case.');
+			// prettier-ignore
+			restrictSlideBetweenSquares(moves, lineKey as Vec2Key, line, coords, square1, square2, attackerColinear);
 		}
-
-		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
-		if (!bdcoords.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
-		const blockPointInt = bdcoords.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
-		if (!bounds.boxContainsSquare(box, blockPointInt)) continue; // Intersection point not between our 2 points, but outside of them.
-		if (coordutil.areCoordsEqual(blockPointInt, square1)) continue; // Can't move onto our piece that's in check..
-		if (coordutil.areCoordsEqual(blockPointInt, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
-		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
-		if (
-			gamefile.boardsim.colinearsPresent &&
-			moves.individual.some(
-				(move: CoordsTagged) =>
-					move[0] === blockPointInt[0] && move[1] === blockPointInt[1],
-			)
-		)
-			continue;
-
-		// Can our piece legally move there?
-		if (
-			legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, {
-				ignoreIndividualMoves: true,
-			})
-		)
-			moves.individual.push(blockPointInt); // Can block!
 	}
 }
 
@@ -492,17 +515,18 @@ function appendPathBlockingMoves(
 		// Iterate through all path points, EXCLUDING start and end.
 		const blockPoint = path[i]!;
 		// Can our selected piece move to this square?
-		if (
-			legalmoves.checkIfMoveLegal(
-				gamefile,
-				legalMoves,
-				selectedPieceCoords,
-				blockPoint,
-				color,
-				{ ignoreIndividualMoves: true },
-			)
-		)
-			legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
+		// prettier-ignore
+		if (legalmoves.checkIfMoveLegal(gamefile, legalMoves, selectedPieceCoords, blockPoint, color, { ignoreIndividualMoves: true }))
+			appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, blockPoint); // Can block!
+	}
+
+	legalMoves.sliding = {}; // Collapse all sliding moves
+}
+
+/** Appends the provided move to the list of legal individual moves if it's not already present. */
+function appendMoveToIndividualsAvoidDuplicates(individuals: CoordsTagged[], move: Coords): void {
+	if (!individuals.some((im: CoordsTagged) => coordutil.areCoordsEqual(im, move))) {
+		individuals.push(move);
 	}
 }
 

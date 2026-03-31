@@ -119,8 +119,27 @@ function getLineComponents(): { rays: Ray[]; segments: Segment[] } {
 		const step: Vec2 = vectors.getVec2FromKey(slideKey);
 		const negStep: Vec2 = vectors.negateVector(step);
 
-		processComponent(coordutil.copyCoords(pieceCoords), negStep, limits[0]); // Negative slide direction
-		processComponent(coordutil.copyCoords(pieceCoords), step, limits[1]); // Positive slide direction
+		if (limits[0] !== null && limits[0] > 0n) {
+			// Special case: Offset positive -> legal zone is entirely ahead in the positive step direction. Close end is limits[0] steps away.
+			const closeCoords: Coords = [
+				pieceCoords[0] + step[0] * limits[0],
+				pieceCoords[1] + step[1] * limits[0],
+			];
+			const limit = limits[1] === null ? null : limits[1] - limits[0];
+			processComponent(closeCoords, step, limit);
+		} else if (limits[1] !== null && limits[1] < 0n) {
+			// Special case: Offset negative -> legal zone is entirely behind the piece in the negative step direction. Close end is abs(limits[1]) steps away.
+			const closeCoords: Coords = [
+				pieceCoords[0] + step[0] * limits[1],
+				pieceCoords[1] + step[1] * limits[1],
+			];
+			const limit = limits[0] === null ? null : limits[1] - limits[0];
+			processComponent(closeCoords, negStep, limit);
+		} else {
+			// Normal: limits span 0 (or one side is null), render both directions from the piece.
+			processComponent(coordutil.copyCoords(pieceCoords), negStep, limits[0]); // Negative slide direction
+			processComponent(coordutil.copyCoords(pieceCoords), step, limits[1]); // Positive slide direction
+		}
 	}
 
 	function processComponent(start: Coords, step: Vec2, limit: bigint | null): void {

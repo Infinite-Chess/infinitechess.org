@@ -192,7 +192,7 @@ function initBoard(
 		local: {
 			moveIndex: -1,
 			inCheck: false,
-			attackers: [],
+			checks: [],
 		},
 		global: jsutil.deepCopyObject(state_global),
 	};
@@ -288,19 +288,15 @@ function loadGameWithBoard(
 		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{
-		// Set the game's `inCheck` and `attackers` properties at the front of the game.
-		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(
+		// Set the game's `inCheck` and `checks` properties at the front of the game.
+		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
 			basegame,
 			basegame.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(
-			gamefile,
-			basegame.whosTurn,
-			trackAttackers,
-		); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
+		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);

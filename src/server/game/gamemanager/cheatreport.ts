@@ -14,8 +14,8 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import { isGameInstantlyDeleted } from '../../../shared/chess/variants/servervalidation.js';
 
 import gameutility from './gameutility.js';
+import { logEvents } from '../../middleware/logEvents.js';
 import { setGameConclusion } from './gamemanager.js';
-import { logEvents, logEventsAndPrint } from '../../middleware/logEvents.js';
 
 /** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({

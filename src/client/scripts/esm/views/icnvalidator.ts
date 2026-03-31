@@ -432,7 +432,7 @@ function displayResults(results: ValidationResults): void {
 					<div style="margin-top: 0.5rem; font-size: 0.9em; color: var(--accent-color);">
 						<div><strong>Termination:</strong> ${error.termination || 'undefined'}</div>
 						<div><strong>Result:</strong> ${error.result || 'undefined'}</div>
-						<div><strong>Game Conclusion:</strong> ${error.gameConclusion || 'undefined'}</div>
+						<div><strong>Game Conclusion:</strong> ${JSON.stringify(error.gameConclusion) || 'undefined'}</div>
 					</div>
 				`;
 			}
