@@ -179,7 +179,6 @@ function addressExistingChecks(
 
 	// 1. Capture the checking piece
 
-	let capturingMove: Coords | undefined; // We will ONLY add this move if all sliding moves are deleted, otherwise it may be a duplicate.
 	const capturingImpossible = attackerCount > 1 && !boardsim.colinearsPresent; // With a double check, it's impossible to capture both pieces at once, forced to dodge with the king.
 	// Check if the piece has the ability to capture
 	if (
@@ -193,13 +192,13 @@ function addressExistingChecks(
 			{ ignoreIndividualMoves: true },
 		)
 	) {
-		capturingMove = attacker.coords;
+		legalMoves.individual.push(attacker.coords);
 	}
 
 	// 2. Block the check
 
 	/**
-	 * If it's a jumping check,
+	 * Optimization: If it's a jumping check,
 	 * AND it doesn't have the `path` special flag with at least 3 waypoints (blockable),
 	 *
 	 * or its a sliding move,
@@ -214,7 +213,6 @@ function addressExistingChecks(
 	) {
 		// Impossible to block
 		legalMoves.sliding = {}; // Erase all sliding moves
-		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
 		return true;
 	}
 
@@ -236,11 +234,6 @@ function addressExistingChecks(
 		);
 	// Has a chance to delete all sliding moves except one, adding the `brute` flag.
 	else appendPathBlockingMoves(gamefile, attacker.path!, legalMoves, selectedPieceCoords, color);
-
-	if (!legalMoves.brute) {
-		legalMoves.sliding = {}; // Erase all sliding moves IF appendBlockingMoves() didn't flag any slide direction to brute force! It will have deleted all other sliding moves for us.
-		if (capturingMove) legalMoves.individual.push(capturingMove); // Add this, now that we know all sliding moves were deleted.
-	}
 
 	return true;
 }
@@ -410,57 +403,80 @@ function appendBlockingMoves(
 			...line2GeneralForm,
 		); // The intersection point of the 2 lines.
 
-		// If the lines are equal and colinears are present, retain ONLY this slide direction, and brute force check each square for legality.
-		if (
-			blockPoint === undefined && // Parallel
-			(attackerColinear || moves.colinear) && // Atleast one piece is colinear
-			vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm) && // Coincident
-			// If this piece isn't colinear, then the only way it can have a chance to block check is if its between both pieces.
-			(moves.colinear || bounds.boxContainsSquare(box, coords))
-		) {
-			// The piece lies on the same line from the attacker to the royal!
-			// Flag this slide direction to brute force check each move for legality.
-			moves.brute = true;
-			// Delete all other sliding moves that aren't also colinear with this one.
-			for (const slideDir in moves.sliding) {
-				// 'dx,dy'
-				if (slideDir === lineKey) continue; // Same line, don't delete this one.
-				// Different line... but is it colinear? If so we also want to keep it.
-				const thisSlideDir = coordutil.getCoordsFromKey(slideDir as Vec2Key); // [dx,dy]
-				const thisLineGeneralForm = vectors.getLineGeneralFormFromCoordsAndVec(
-					coords,
-					thisSlideDir,
-				);
-				if (!vectors.areLinesInGeneralFormEqual(line1GeneralForm, thisLineGeneralForm)) {
-					delete moves.sliding[slideDir as Vec2Key]; // Not colinear, delete it.
-				}
+		const coincident = vectors.areLinesInGeneralFormEqual(line1GeneralForm, line2GeneralForm);
+
+		if (blockPoint === undefined && !coincident) {
+			// Case 1: Parallel, but not coincident -> no intersection point.
+			delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+		} else if (blockPoint) {
+			// Case 2: Not parallel, and has a single intersection point.
+			if (!bdcoords.areCoordsIntegers(blockPoint)) {
+				// It doesn't intersect at a whole number, impossible for our piece to move here!
+				delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+				continue;
 			}
-			break; // All other slides were deleted, no point in continuing to iterate.
+			const blockPointInt = bdcoords.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
+			if (
+				!bounds.boxContainsSquare(box, blockPointInt) || // Intersection point not between our 2 points, but outside of them.
+				coordutil.areCoordsEqual(blockPointInt, square1) || // Can't move onto our piece that's in check,
+				coordutil.areCoordsEqual(blockPointInt, square2) || // nor to the piece that is checking us (those are considered outside this method)
+				// Does our piece's slide range include that block point? checkIfMoveLegal() needs the slide to be intact, so we can't collapse it before this.
+				!legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, {
+					ignoreIndividualMoves: true,
+				})
+			) {
+				delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide.
+				continue;
+			}
+			// Can block!
+			delete moves.sliding[lineKey as Vec2Key]; // Collapse the slide (can do this now because checkIfMoveLegal() was already called, which needed the slide to be intact).
+			// Add as an individual move to be simulated later.
+			appendMoveToIndividualsAvoidDuplicates(moves.individual, blockPointInt);
+		} else {
+			// Case 3: Coincident -> Restrict slide range to intersection between the royal and
+			// the checker, and add the `brute` flag if either piece is a colinear mover.
+			// DON'T collapse the slide.
+			// console.log('Entered coincident blocking case.');
+
+			const axis: 0 | 1 = line[0] === 0n ? 1 : 0;
+			const stepsToSquare1 = (square1[axis] - coords[axis]) / line[axis];
+			const stepToSquare2 = (square2[axis] - coords[axis]) / line[axis];
+			// The blocking zone: squares strictly between the attacker (square2) and the royal (square1)
+			const zoneMin = bimath.min(stepsToSquare1, stepToSquare2) + 1n;
+			const zoneMax = bimath.max(stepsToSquare1, stepToSquare2) - 1n;
+			if (zoneMin > zoneMax) {
+				// No squares between the royal and the attacker, so we can't block by sliding in between them.
+				delete moves.sliding[lineKey as Vec2Key];
+				// console.log('Deleting slide: No squares between the royal and the attacker.');
+				continue;
+			}
+			// Intersect the zone with this slide's current physical limits
+			const currentLimits = moves.sliding[lineKey as Vec2Key]!;
+			// console.log(
+			// 	`For slide ${lineKey}, intersecting current limits [${currentLimits[0]}, ${currentLimits[1]}] with blocking zone between ${square1} and ${square2} with steps [${zoneMin}, ${zoneMax}]`,
+			// );
+			const newMin =
+				currentLimits[0] === null ? zoneMin : bimath.max(currentLimits[0], zoneMin);
+			const newMax =
+				currentLimits[1] === null ? zoneMax : bimath.min(currentLimits[1], zoneMax);
+			if (newMin > newMax) {
+				delete moves.sliding[lineKey as Vec2Key]; // This slide can't reach the blocking zone
+				// console.log("Deleting slide because it can't reach the blocking zone.");
+				continue;
+			}
+
+			// Restrict slide range to intersection
+			moves.sliding[lineKey as Vec2Key] = [newMin, newMax];
+			// console.log(
+			// 	`Narrowing slide to steps [${newMin}, ${newMax}] to only include the blocking zone.`,
+			// );
+
+			// Further add the brute flag if us or the checker moves colinearly (simulate each remaining move for check)
+			if (attackerColinear || moves.colinear) {
+				// console.log('Adding brute flag.');
+				moves.brute = true;
+			}
 		}
-
-		if (blockPoint === undefined) continue; // None (or infinite) intersection points!
-		if (!bdcoords.areCoordsIntegers(blockPoint)) continue; // It doesn't intersect at a whole number, impossible for our piece to move here!
-		const blockPointInt = bdcoords.coordsToBigInt(blockPoint); // Zero precision loss since we're already confident they are integers.
-		if (!bounds.boxContainsSquare(box, blockPointInt)) continue; // Intersection point not between our 2 points, but outside of them.
-		if (coordutil.areCoordsEqual(blockPointInt, square1)) continue; // Can't move onto our piece that's in check..
-		if (coordutil.areCoordsEqual(blockPointInt, square2)) continue; // nor to the piece that is checking us (those are added prior to this if it's legal)!
-		// Don't add the move if it's already in the list. This can happen with colinear lines, since different slide direction can have the same exact vector, and thus blocking point.
-		if (
-			gamefile.boardsim.colinearsPresent &&
-			moves.individual.some(
-				(move: CoordsTagged) =>
-					move[0] === blockPointInt[0] && move[1] === blockPointInt[1],
-			)
-		)
-			continue;
-
-		// Can our piece legally move there?
-		if (
-			legalmoves.checkIfMoveLegal(gamefile, moves, coords, blockPointInt, color, {
-				ignoreIndividualMoves: true,
-			})
-		)
-			moves.individual.push(blockPointInt); // Can block!
 	}
 }
 
@@ -502,7 +518,14 @@ function appendPathBlockingMoves(
 				{ ignoreIndividualMoves: true },
 			)
 		)
-			legalMoves.individual.push(coordutil.copyCoords(blockPoint)); // Can block!
+			appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, blockPoint); // Can block!
+	}
+}
+
+/** Appends the provided move to the list of legal individual moves if it's not already present. */
+function appendMoveToIndividualsAvoidDuplicates(individuals: CoordsTagged[], move: Coords): void {
+	if (!individuals.some((im: CoordsTagged) => coordutil.areCoordsEqual(im, move))) {
+		individuals.push(move);
 	}
 }
 
