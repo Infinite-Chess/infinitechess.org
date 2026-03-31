@@ -169,13 +169,6 @@ function addressExistingChecks(
 	if (checks.length === 0)
 		throw new Error('We are in check, but there are no specified check pairs!');
 
-	// To know how to address the check, we have to know where the check is coming from.
-	// Optimization: We only have to address one check pair, not all.
-	// Because legal blocks are added as extra individual moves, they will be simulated afterward,
-	// and if the `check` property is false, then we know the move also blocks ALL attackers!
-	// PREFER addressing a non-colinear attacker, to avoid the `brute` flag being added as much as possible. This makes the checkmate algorithm cover more scenarios.
-	const check = checks.find((c) => !c.slidingCheck || !c.colinear) ?? checks[0]!;
-
 	// Does this piece have a sliding moveset that will either...
 
 	// 1. Capture the checking piece
@@ -188,36 +181,39 @@ function addressExistingChecks(
 			uniqueAttackers.push(c.attacker);
 	}
 	const capturingImpossible = uniqueAttackers.length > 1 && !boardsim.colinearsPresent;
-	// Check if the piece has the ability to capture
-	if (
-		!capturingImpossible &&
-		legalmoves.checkIfMoveLegal(
-			gamefile,
-			legalMoves,
-			selectedPieceCoords,
-			check.attacker,
-			color,
-			{ ignoreIndividualMoves: true },
-		)
-	) {
-		legalMoves.individual.push(check.attacker);
+	if (!capturingImpossible) {
+		// Add each unique attacker as a potential capture move (simulated later to confirm it resolves all checks).
+		for (const attacker of uniqueAttackers) {
+			if (
+				legalmoves.checkIfMoveLegal(
+					gamefile,
+					legalMoves,
+					selectedPieceCoords,
+					attacker,
+					color,
+					{ ignoreIndividualMoves: true },
+				)
+			) {
+				appendMoveToIndividualsAvoidDuplicates(legalMoves.individual, attacker);
+			}
+		}
 	}
 
-	// 2. Block the check
+	// 2. Block the check(s)
 
 	/**
-	 * Optimization: If it's a jumping check,
-	 * AND it doesn't have the `path` special flag with at least 3 waypoints (blockable),
-	 *
-	 * or its a sliding move,
-	 * AND one square away from the checked piece,
-	 *
-	 * then it's impossible to block.
+	 * Optimization: If ANY check is an individual jumping check with
+	 * no `path`, or a sliding check from 1 square away), then no
+	 * slide can block it, only a capture (above) can resolve it.
 	 */
-	const dist = vectors.chebyshevDistance(check.royal, check.attacker);
 	if (
-		(!check.slidingCheck && (check.path?.length ?? 2) < 3) ||
-		(check.slidingCheck && dist === 1n)
+		checks.some((check) => {
+			const dist = vectors.chebyshevDistance(check.royal, check.attacker);
+			return (
+				(!check.slidingCheck && (check.path?.length ?? 2) < 3) ||
+				(check.slidingCheck && dist === 1n)
+			);
+		})
 	) {
 		// Impossible to block
 		legalMoves.sliding = {}; // Collapse all sliding moves.
@@ -225,23 +221,37 @@ function addressExistingChecks(
 	}
 
 	/**
-	 * By this point we know it's either a:
-	 * 1. Sliding check from 2+ squares away
-	 * 2. Individual check, with 3+ path length
+	 * By this point we know ALL checks are either:
+	 * 1. Sliding checks from 2+ squares away
+	 * 2. Individual checks, with 3+ path length
+	 *
+	 * Iterate all checks to properly narrow/collapse slides.
+	 * Process non-colinear checks first to avoid adding `brute` flag whenever possible.
 	 */
-
-	if (check.slidingCheck)
-		appendBlockingMoves(
-			gamefile,
-			check.royal,
-			check.attacker,
-			legalMoves,
-			selectedPieceCoords,
-			color,
-			check.colinear,
-		);
-	// Has a chance to delete all sliding moves except one, adding the `brute` flag.
-	else appendPathBlockingMoves(gamefile, check.path!, legalMoves, selectedPieceCoords, color);
+	const sortedChecks = [...checks].sort((a, b) => {
+		const aIsColinear = a.slidingCheck && a.colinear;
+		const bIsColinear = b.slidingCheck && b.colinear;
+		if (aIsColinear === bIsColinear) return 0;
+		return aIsColinear ? 1 : -1; // Non-colinear checks first
+	});
+	for (const check of sortedChecks) {
+		// Early exit if all slides have been deleted/collapsed by a previous check.
+		if (Object.keys(legalMoves.sliding).length === 0) break;
+		if (check.slidingCheck) {
+			// Has a chance to delete all sliding moves except one, adding the `brute` flag.
+			appendBlockingMoves(
+				gamefile,
+				check.royal,
+				check.attacker,
+				legalMoves,
+				selectedPieceCoords,
+				color,
+				check.colinear,
+			);
+		} else {
+			appendPathBlockingMoves(gamefile, check.path!, legalMoves, selectedPieceCoords, color);
+		}
+	}
 
 	return true;
 }
