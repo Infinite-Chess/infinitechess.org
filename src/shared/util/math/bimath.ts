@@ -112,6 +112,16 @@ function estimateBigIntSize(bi: bigint): number {
 }
 
 /**
+ * Performs integer division of two BigInts, rounding up towards positive infinity.
+ * @param a - The dividend.
+ * @param b - The divisor (must be a positive BigInt).
+ * @returns The result of the division, rounded up.
+ */
+function roundUpDiv(a: bigint, b: bigint): bigint {
+	return a / b + ((a % b) * b > ZERO ? ONE : ZERO);
+}
+
+/**
  * Computes the positive modulus of two BigInts.
  * @param a - The dividend.
  * @param b - The divisor (must be a positive BigInt).
@@ -214,6 +224,7 @@ export default {
 	bitLength_bisection,
 	// Big Length Algorithms
 	estimateBigIntSize,
+	roundUpDiv,
 	posMod,
 	min,
 	max,
