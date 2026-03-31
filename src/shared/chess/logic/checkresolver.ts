@@ -16,6 +16,8 @@ import type { LegalMoves } from './legalmoves.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
 
+import bd, { BigDecimal } from '@naviary/bigdecimal';
+
 import jsutil from '../../util/jsutil.js';
 import bimath from '../../util/math/bimath.js';
 import vectors from '../../util/math/vectors.js';
@@ -391,11 +393,18 @@ function restrictSlideBetweenSquares(
 ): void {
 	const sliding = moves.sliding!;
 	const axis: 0 | 1 = direction[0] === 0n ? 1 : 0;
-	const stepsToRoyal = (royal[axis] - pieceCoords[axis]) / direction[axis];
-	const stepsToAttacker = (attacker[axis] - pieceCoords[axis]) / direction[axis];
+	const stepsToRoyal: BigDecimal = bd.divide(
+		bd.fromBigInt(royal[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
+	const stepsToAttacker: BigDecimal = bd.divide(
+		bd.fromBigInt(attacker[axis] - pieceCoords[axis]),
+		bd.fromBigInt(direction[axis]),
+	);
 	// Both endpoints are excluded; captures are handled as individual moves.
-	const zoneMin = bimath.min(stepsToRoyal, stepsToAttacker) + 1n;
-	const zoneMax = bimath.max(stepsToRoyal, stepsToAttacker) - 1n;
+	// `floor(min) + 1` and `ceil(max) - 1` give correct integer bounds even when step counts are fractional (e.g. direction [2,0]).
+	const zoneMin = bd.toBigInt(bd.floor(bd.min(stepsToRoyal, stepsToAttacker))) + 1n;
+	const zoneMax = bd.toBigInt(bd.ceil(bd.max(stepsToRoyal, stepsToAttacker))) - 1n;
 	if (zoneMin > zoneMax) {
 		delete sliding[slideDir]; // Zone is empty.
 		console.log('Deleting slide: No squares between the royal and the attacker.');
