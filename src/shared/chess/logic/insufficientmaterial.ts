@@ -71,7 +71,8 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.BISHOP + e.W]: [1, 1], [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 2 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 },
-		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] },
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] }, // 1K1B1N-1k1b same-color bishops
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [0, 1] }, // 1K1B1N-1k1b opposite-color bishops
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.B]: 2 },
 		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
@@ -448,9 +449,49 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 	 * (as required by isSubsumedBy). This must be deferred until here because
 	 * {@link applyOutcomeToScenario} uses index 0 = dark and index 1 = light throughout
 	 * construction; sorting mid-loop would corrupt subsequent parity-based increments.
+	 *
+	 * Crucially, white's and black's bishop tuples must be sorted with the SAME swap
+	 * direction so that relative parity between sides is preserved. For example, if white
+	 * has a dark-square bishop [1,0] and black has a light-square bishop [0,1], sorting
+	 * each independently would incorrectly produce [1,0] for both sides, making the
+	 * position look like same-color bishops when it isn't.
+	 *
+	 * Rule: sort white's tuple descending; if that required a swap, apply the same swap to
+	 * black's tuple. If white's counts are equal (parity irrelevant for white), sort
+	 * black's tuple independently. If there are no white bishops, sort black independently.
 	 */
+	const whiteBishopKey = r.BISHOP + e.W;
+	const blackBishopKey = r.BISHOP + e.B;
+	const whiteBishopKeyStr = String(whiteBishopKey);
+	const blackBishopKeyStr = String(blackBishopKey);
 	for (const scen of scenarios) {
+		const wb = scen[whiteBishopKey];
+		const bb = scen[blackBishopKey];
+
+		let didSwapWhite = false;
+		if (wb instanceof Array) {
+			if (wb[0] < wb[1]) {
+				scen[whiteBishopKey] = [wb[1], wb[0]];
+				didSwapWhite = true;
+			}
+		}
+
+		if (bb instanceof Array) {
+			if (didSwapWhite) {
+				// Apply the same swap as white to maintain the relative parity between sides.
+				scen[blackBishopKey] = [bb[1], bb[0]];
+			} else if (!(wb instanceof Array) || wb[0] === wb[1]) {
+				// No white bishops, or white has equal counts on both colors
+				// (parity is irrelevant for white) — sort black independently.
+				scen[blackBishopKey] = orderTupleDescending(bb);
+			}
+			// else: white is already descending and has unequal counts — black stays
+			// as-is to preserve the relative parity relationship.
+		}
+
+		// Sort any other array-type tuples (there should be none in standard scenarios).
 		for (const key in scen) {
+			if (key === whiteBishopKeyStr || key === blackBishopKeyStr) continue;
 			if (scen[key] instanceof Array)
 				scen[key] = orderTupleDescending(scen[key] as [number, number]);
 		}
