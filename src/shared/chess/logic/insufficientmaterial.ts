@@ -453,8 +453,8 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		for (const promotionRawType of gameRules.promotionsAllowed![pawn.player]!) {
 			const pieceType = typeutil.buildType(promotionRawType, pawn.player);
 			if (promotionRawType === r.BISHOP) {
-				outcomes.push({ pieceType, bishopParity: 0 }); // dark square
-				outcomes.push({ pieceType, bishopParity: 1 }); // light square
+				outcomes.push({ pieceType, bishopParity: 0 });
+				outcomes.push({ pieceType, bishopParity: 1 });
 			} else {
 				outcomes.push({ pieceType });
 			}
@@ -468,7 +468,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		if (outcome.bishopParity !== undefined) {
 			if (scen[outcome.pieceType] === undefined) scen[outcome.pieceType] = [0, 0];
 			(scen[outcome.pieceType] as [number, number])[outcome.bishopParity] += 1;
-			// Do NOT sort here - index 0 = dark, index 1 = light must be preserved across pawn iterations.
+			// Do NOT sort here - parity relationships must be preserved across pawn iterations.
 		} else {
 			scen[outcome.pieceType] = ((scen[outcome.pieceType] as number | undefined) ?? 0) + 1;
 		}
