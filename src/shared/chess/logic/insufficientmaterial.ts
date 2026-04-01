@@ -242,6 +242,45 @@ function orderTupleDescending(tuple: [number, number]): [number, number] {
 	else return tuple;
 }
 
+/**
+ * Normalizes bishop parity tuples in a scenario in place.
+ *
+ * White's bishop tuple is sorted into descending order.
+ * Black's bishop tuple uses the **same** swap direction as white's,
+ * so the relative parity between sides is preserved (e.g. a position
+ * where white's bishop is on dark and black's is on light stays distinct
+ * from the same-color case after normalization).
+ *
+ * When white has no bishops, or white has equal counts on both square colors
+ * (parity is irrelevant for white in that case), black's tuple is sorted
+ * independently.
+ */
+function normalizeBishopParities(scen: Scenario): void {
+	const wb = scen[r.BISHOP + e.W] as [number, number] | undefined;
+	const bb = scen[r.BISHOP + e.B] as [number, number] | undefined;
+
+	let didSwapWhite = false;
+	if (wb !== undefined) {
+		if (wb[0] < wb[1]) {
+			scen[r.BISHOP + e.W] = [wb[1], wb[0]];
+			didSwapWhite = true;
+		}
+	}
+
+	if (bb !== undefined) {
+		if (didSwapWhite) {
+			// Apply the same swap as white to preserve relative parity between sides.
+			scen[r.BISHOP + e.B] = [bb[1], bb[0]];
+		} else if (wb === undefined || wb[0] === wb[1]) {
+			// No white bishops, or white has equal counts on both colors
+			// (parity is irrelevant for white) — sort black independently.
+			scen[r.BISHOP + e.B] = orderTupleDescending(bb);
+		}
+		// else: white is already descending with unequal counts — black stays
+		// as-is to preserve the relative parity relationship.
+	}
+}
+
 // Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
@@ -342,7 +381,15 @@ export function detectInsufficientMaterial(
 
 	// console.log('Checking insuffmat scenarios:', boardScenariosToCheck.map(makeScenReadable));
 
-	const invertedBoardScenariosToCheck = boardScenariosToCheck.map((scen) => invertScenario(scen));
+	const invertedBoardScenariosToCheck = boardScenariosToCheck.map((scen) => {
+		const inverted = invertScenario(scen);
+		// Re-normalize bishop parities after inversion: what was black's tuple (preserved
+		// relative to white) is now white's, and may be in ascending order. Without this
+		// the inverted scenario won't match definitions that always expect white's tuple
+		// to be in descending order.
+		normalizeBishopParities(inverted);
+		return inverted;
+	});
 
 	// Is the world border close enough to assist checkmate?
 	// prettier-ignore
@@ -446,39 +493,11 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 	}
 
 	/**
-	 * Finally, sort bishop tuples while preserving relative parity between sides:
-	 *
-	 * Sort white's tuple descending; if that required a swap, apply the same swap to
-	 * black's tuple. If white's counts are equal (parity irrelevant for white), sort
-	 * black's tuple independently. If there are no white bishops, sort black independently.
+	 * Finally, normalize bishop parities. This must be deferred until here because
+	 * {@link applyOutcomeToScenario} uses index 0 = dark and index 1 = light throughout
+	 * construction; normalizing mid-loop would corrupt subsequent parity-based increments.
 	 */
-	const whiteBishopKey = r.BISHOP + e.W;
-	const blackBishopKey = r.BISHOP + e.B;
-	for (const scen of scenarios) {
-		const wb = scen[whiteBishopKey] as [number, number] | undefined;
-		const bb = scen[blackBishopKey] as [number, number] | undefined;
-
-		let didSwapWhite = false;
-		if (wb !== undefined) {
-			if (wb[0] < wb[1]) {
-				scen[whiteBishopKey] = [wb[1], wb[0]];
-				didSwapWhite = true;
-			}
-		}
-
-		if (bb !== undefined) {
-			if (didSwapWhite) {
-				// Apply the same swap as white to maintain the relative parity between sides.
-				scen[blackBishopKey] = [bb[1], bb[0]];
-			} else if (wb === undefined || wb[0] === wb[1]) {
-				// No white bishops, or white has equal counts on both colors
-				// (parity is irrelevant for white) — sort black independently.
-				scen[blackBishopKey] = orderTupleDescending(bb);
-			}
-			// else: white is already descending and has unequal counts — black stays
-			// as-is to preserve the relative parity relationship.
-		}
-	}
+	for (const scen of scenarios) normalizeBishopParities(scen);
 
 	return scenarios;
 }
