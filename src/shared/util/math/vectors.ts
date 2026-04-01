@@ -63,9 +63,6 @@ const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
 /** The positive/absolute knightrider hippogonals. */
 const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
 
-const ZERO: BigDecimal = bd.fromBigInt(0n);
-const ONE: BigDecimal = bd.fromBigInt(1n);
-
 // Construction ----------------------------------------------------------------------
 
 /**
