@@ -140,8 +140,12 @@ const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 		{ [r.KNIGHT + e.W]: 1 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other (same as infinite case)
-	{ [r.KING + e.W]: Infinity, [r.KING + e.B]: Infinity },
-	{ [r.ROYALCENTAUR + e.W]: Infinity, [r.ROYALCENTAUR + e.B]: Infinity },
+	{
+		[r.KING + e.W]: Infinity,
+		[r.ROYALCENTAUR + e.W]: Infinity,
+		[r.KING + e.B]: Infinity,
+		[r.ROYALCENTAUR + e.B]: Infinity,
+	},
 ];
 
 // Validate at run time that no scenario is a subset of another
