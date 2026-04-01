@@ -297,7 +297,6 @@ function removeObstructedSlidingMoves(
 		const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 		const key = organizedpieces.getKeyFromLine(line, piece.coords);
 		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
-			boardsim,
 			worldBorder,
 			blockingFunc,
 			boardsim.pieces,
@@ -428,7 +427,6 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
  * @param color - The color of friendlies
  */
 function slide_CalcLegalLimit(
-	boardsim: Board,
 	worldBorder: UnboundedRectangle | undefined,
 	blockingFunc: BlockingFunction,
 	o: OrganizedPieces,
@@ -557,7 +555,6 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
 	const blockingFunc = getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 	const friendlyColor = typeutil.getColorFromType(piece.type);
 	return slide_CalcLegalLimit(
-		boardsim,
 		worldBorder,
 		blockingFunc,
 		boardsim.pieces,

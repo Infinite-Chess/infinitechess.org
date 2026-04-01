@@ -70,8 +70,9 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 2 },
-		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] },
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [0, 1] },
+		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.KNIGHT + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.B]: 2 },
 		{ [r.KNIGHT + e.W]: 3 }, // 1K3N-1k
@@ -136,12 +137,16 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 const INSUFFMAT_SCENARIOS_FINITE: readonly Scenario[] = [
 	// Both sides have one king
 	...withPieces({ [r.KING + e.W]: 1, [r.KING + e.B]: 1 }, [
-		{ [r.BISHOP + e.W]: [Infinity, 0] },
+		{ [r.BISHOP + e.W]: [Infinity, 0], [r.BISHOP + e.B]: [Infinity, 0] },
 		{ [r.KNIGHT + e.W]: 1 },
 	]),
 	// Only royals -> Can never check each other let alone checkmate each other (same as infinite case)
-	{ [r.KING + e.W]: Infinity, [r.KING + e.B]: Infinity },
-	{ [r.ROYALCENTAUR + e.W]: Infinity, [r.ROYALCENTAUR + e.B]: Infinity },
+	{
+		[r.KING + e.W]: Infinity,
+		[r.ROYALCENTAUR + e.W]: Infinity,
+		[r.KING + e.B]: Infinity,
+		[r.ROYALCENTAUR + e.B]: Infinity,
+	},
 ];
 
 // Validate at run time that no scenario is a subset of another
@@ -237,6 +242,42 @@ function orderTupleDescending(tuple: [number, number]): [number, number] {
 	else return tuple;
 }
 
+/**
+ * Normalizes bishop parity tuples in a scenario in place.
+ *
+ * White's bishop tuple is sorted into descending order.
+ * Black's bishop tuple uses the **same** swap direction as white's,
+ * so the relative parity between sides is preserved.
+ *
+ * When white has no bishops, or white has equal counts on both square colors
+ * (parity is irrelevant for white in that case), black's tuple is sorted independently.
+ */
+function normalizeBishopParities(scen: Scenario): void {
+	const wb = scen[r.BISHOP + e.W] as [number, number] | undefined;
+	const bb = scen[r.BISHOP + e.B] as [number, number] | undefined;
+
+	let didSwapWhite = false;
+	if (wb !== undefined) {
+		if (wb[0] < wb[1]) {
+			scen[r.BISHOP + e.W] = [wb[1], wb[0]];
+			didSwapWhite = true;
+		}
+	}
+
+	if (bb !== undefined) {
+		if (didSwapWhite) {
+			// Apply the same swap as white to preserve relative parity between sides.
+			scen[r.BISHOP + e.B] = [bb[1], bb[0]];
+		} else if (wb === undefined || wb[0] === wb[1]) {
+			// No white bishops, or white has equal counts on both colors
+			// (parity is irrelevant for white) — sort black independently.
+			scen[r.BISHOP + e.B] = orderTupleDescending(bb);
+		}
+		// else: white is already descending with unequal counts — black stays
+		// as-is to preserve the relative parity relationship.
+	}
+}
+
 // Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
@@ -318,6 +359,10 @@ function invertScenario(scenario: Scenario): Scenario {
 		const pieceInverted = typeutil.invertType(Number(pieceTypeStr));
 		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
+
+	// Re-normalize bishop parities after inversion: what was black's tuple
+	// (preserved relative to white) is now white's, and may be in ascending order.
+	normalizeBishopParities(invertedScenario);
 
 	return invertedScenario;
 }
@@ -408,8 +453,8 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		for (const promotionRawType of gameRules.promotionsAllowed![pawn.player]!) {
 			const pieceType = typeutil.buildType(promotionRawType, pawn.player);
 			if (promotionRawType === r.BISHOP) {
-				outcomes.push({ pieceType, bishopParity: 0 }); // dark square
-				outcomes.push({ pieceType, bishopParity: 1 }); // light square
+				outcomes.push({ pieceType, bishopParity: 0 });
+				outcomes.push({ pieceType, bishopParity: 1 });
 			} else {
 				outcomes.push({ pieceType });
 			}
@@ -423,7 +468,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		if (outcome.bishopParity !== undefined) {
 			if (scen[outcome.pieceType] === undefined) scen[outcome.pieceType] = [0, 0];
 			(scen[outcome.pieceType] as [number, number])[outcome.bishopParity] += 1;
-			// Do NOT sort here - index 0 = dark, index 1 = light must be preserved across pawn iterations.
+			// Do NOT sort here - parity relationships must be preserved across pawn iterations.
 		} else {
 			scen[outcome.pieceType] = ((scen[outcome.pieceType] as number | undefined) ?? 0) + 1;
 		}
@@ -439,18 +484,9 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 			outcomes.map((outcome) => applyOutcomeToScenario(base, outcome)),
 		);
 	}
-	/**
-	 * Now that all pawn outcomes have been applied, sort bishop tuples into descending order
-	 * (as required by isSubsumedBy). This must be deferred until here because
-	 * {@link applyOutcomeToScenario} uses index 0 = dark and index 1 = light throughout
-	 * construction; sorting mid-loop would corrupt subsequent parity-based increments.
-	 */
-	for (const scen of scenarios) {
-		for (const key in scen) {
-			if (scen[key] instanceof Array)
-				scen[key] = orderTupleDescending(scen[key] as [number, number]);
-		}
-	}
+
+	// Finally, normalize bishop parities, keeping sides relationships intact.
+	for (const scen of scenarios) normalizeBishopParities(scen);
 
 	return scenarios;
 }
