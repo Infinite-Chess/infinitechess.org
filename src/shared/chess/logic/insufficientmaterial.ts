@@ -247,13 +247,10 @@ function orderTupleDescending(tuple: [number, number]): [number, number] {
  *
  * White's bishop tuple is sorted into descending order.
  * Black's bishop tuple uses the **same** swap direction as white's,
- * so the relative parity between sides is preserved (e.g. a position
- * where white's bishop is on dark and black's is on light stays distinct
- * from the same-color case after normalization).
+ * so the relative parity between sides is preserved.
  *
  * When white has no bishops, or white has equal counts on both square colors
- * (parity is irrelevant for white in that case), black's tuple is sorted
- * independently.
+ * (parity is irrelevant for white in that case), black's tuple is sorted independently.
  */
 function normalizeBishopParities(scen: Scenario): void {
 	const wb = scen[r.BISHOP + e.W] as [number, number] | undefined;
@@ -363,6 +360,10 @@ function invertScenario(scenario: Scenario): Scenario {
 		invertedScenario[pieceInverted] = scenario[pieceTypeStr]!;
 	}
 
+	// Re-normalize bishop parities after inversion: what was black's tuple
+	// (preserved relative to white) is now white's, and may be in ascending order.
+	normalizeBishopParities(invertedScenario);
+
 	return invertedScenario;
 }
 
@@ -381,15 +382,7 @@ export function detectInsufficientMaterial(
 
 	// console.log('Checking insuffmat scenarios:', boardScenariosToCheck.map(makeScenReadable));
 
-	const invertedBoardScenariosToCheck = boardScenariosToCheck.map((scen) => {
-		const inverted = invertScenario(scen);
-		// Re-normalize bishop parities after inversion: what was black's tuple (preserved
-		// relative to white) is now white's, and may be in ascending order. Without this
-		// the inverted scenario won't match definitions that always expect white's tuple
-		// to be in descending order.
-		normalizeBishopParities(inverted);
-		return inverted;
-	});
+	const invertedBoardScenariosToCheck = boardScenariosToCheck.map((scen) => invertScenario(scen));
 
 	// Is the world border close enough to assist checkmate?
 	// prettier-ignore
@@ -492,11 +485,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		);
 	}
 
-	/**
-	 * Finally, normalize bishop parities. This must be deferred until here because
-	 * {@link applyOutcomeToScenario} uses index 0 = dark and index 1 = light throughout
-	 * construction; normalizing mid-loop would corrupt subsequent parity-based increments.
-	 */
+	// Finally, normalize bishop parities, keeping sides relationships intact.
 	for (const scen of scenarios) normalizeBishopParities(scen);
 
 	return scenarios;
