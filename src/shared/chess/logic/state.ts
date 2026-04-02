@@ -122,6 +122,7 @@ type CheckInfo = {
 } & (
 	| {
 			slidingCheck: true;
+			/** Whether the attacker is moving colinearly. */
 			colinear: boolean;
 	  }
 	| {

@@ -365,17 +365,6 @@ function isVectorColinear(vector: Vec2): boolean {
 	return bimath.GCD(vector[0], vector[1]) !== 1n;
 }
 
-/**
- * Tests if the provided movesets has colinear slide directions present.
- * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
- */
-function areColinearsPresent(pieceMovesets: RawTypeGroup<() => PieceMoveset>): boolean {
-	return Object.values(pieceMovesets).some((movesetFunc) => {
-		const moveset: PieceMoveset = movesetFunc();
-		return moveset.colinear;
-	});
-}
-
 // /**
 //  * Returns the normalized vector direction a given player's pawns travel.
 //  * `axis` = 0 -> pawn moves horizontal. `axis` = 1 -> pawn moves vertical.
@@ -400,7 +389,6 @@ export default {
 	getPossibleSlides,
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
-	areColinearsPresent,
 	// determinePlayerFacingDirection,
 };
 
