@@ -16,7 +16,6 @@ import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import legalmoves from './legalmoves.js';
-import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
 import { players as p } from '../util/typeutil.js';
 import vectors, { Vec2 } from '../../util/math/vectors.js';
@@ -331,27 +330,11 @@ function doesLineAttackSquare(
 	return atleast1Attacker;
 }
 
-/**
- * Detects if a player of a provided color has one of the registered checks in gamefile this turn.
- */
-function isPlayerInCheck(boardsim: Board, color: Player): boolean {
-	const royals = boardutil
-		.getRoyalCoordsOfColor(boardsim.pieces, color)
-		.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
-	const royalsInCheck = gamefileutility.getCheckCoordsOfCurrentViewedPosition(boardsim);
-	if (royalsInCheck.length === 0) return false;
-
-	const checkedRoyals = royalsInCheck.map((c) => coordutil.getKeyFromCoords(c)); // ['x,y','x,y']
-	// If the set is the same length as our royals + checkedRoyals, in means none of them has matching coordinates.
-	return new Set([...royals, ...checkedRoyals]).size !== royals.length + checkedRoyals.length;
-}
-
 // Exports ----------------------------------------------------------------
 
 export default {
 	detectCheck,
 	doesLineAttackSquare,
-	isPlayerInCheck,
 };
 
 export type {};

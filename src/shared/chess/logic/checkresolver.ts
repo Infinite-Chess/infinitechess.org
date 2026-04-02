@@ -160,7 +160,6 @@ function addressChecks(
 ): void {
 	const { boardsim } = gamefile;
 	if (royalCoords.length === 0) return; // Exit if nothing in check
-	if (!checkdetection.isPlayerInCheck(boardsim, color)) return; // Our OPPONENT is in check, not us! Them being in check doesn't restrict our movement!
 
 	const checks = boardsim.state.local.checks;
 	if (checks.length === 0)
