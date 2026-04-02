@@ -577,8 +577,6 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * @param startCoords - The coordinates of the piece owning the legal moves
  * @param endCoords - The square to test if the piece can legally move to
  * @param colorOfFriendly - The player color owning the piece with the legal moves
- * @param options - An object that may contain the options:
- * - `ignoreIndividualMoves`: Whether to ignore individual (jumping) moves. Default: *false*.
  * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
 function checkIfMoveLegal(
@@ -587,48 +585,52 @@ function checkIfMoveLegal(
 	startCoords: Coords,
 	endCoords: CoordsTagged,
 	colorOfFriendly: Player,
-	{ ignoreIndividualMoves = false } = {},
 ): boolean {
-	// Return if it's the same exact square
-	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
-
 	// Do one of the individual moves match?
-	if (!ignoreIndividualMoves) {
-		const individual = legalMoves.individual;
-		const length = !individual ? 0 : individual.length;
-		for (let i = 0; i < length; i++) {
-			const thisIndividual = individual[i]!;
-			if (!coordutil.areCoordsEqual(endCoords, thisIndividual)) continue;
-			// Subtle way of passing on the TAG of all special moves!
-			specialdetect.transferSpecialTags_FromCoordsToCoords(thisIndividual, endCoords);
-			return true;
-		}
+	const individual = legalMoves.individual;
+	const length = !individual ? 0 : individual.length;
+	for (let i = 0; i < length; i++) {
+		const thisIndividual = individual[i]!;
+		if (!coordutil.areCoordsEqual(endCoords, thisIndividual)) continue;
+		// Subtle way of passing on the TAG of all special moves!
+		specialdetect.transferSpecialTags_FromCoordsToCoords(thisIndividual, endCoords);
+		return true;
 	}
+
+	if (!doSlideRangesContainSquare(legalMoves, startCoords, endCoords)) return false;
+	if (legalMoves.brute) {
+		// Don't allow the slide if it results in check
+		const moveTagged = { startCoords, endCoords };
+		if (checkresolver.getSimulatedCheck(gamefile, moveTagged, colorOfFriendly).check)
+			return false; // The move results in check => not legal
+	}
+	return true; // Move is legal
+}
+
+/**
+ * Checks if the provided end coords are reachable via any slide in the provided legal moves.
+ * @param legalMoves
+ * @param startCoords - The coordinates of the piece owning the legal moves
+ * @param endCoords - The square to test if the piece can slide to
+ * @returns *true* if the endCoords lie within the sliding range.
+ */
+function doSlideRangesContainSquare(
+	legalMoves: LegalMoves,
+	startCoords: Coords,
+	endCoords: Coords,
+): boolean {
+	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
 
 	for (const [strline, limits] of Object.entries(legalMoves.sliding)) {
 		const line = coordutil.getCoordsFromKey(strline as Vec2Key); // 'dx,dy'
 
 		const selectedPieceLine = organizedpieces.getKeyFromLine(line, startCoords);
 		const clickedCoordsLine = organizedpieces.getKeyFromLine(line, endCoords);
-		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't like on the same line.
+		if (selectedPieceLine !== clickedCoordsLine) continue; // Continue if they don't lie on the same line
 
-		if (
-			!doesSlidingMovesetContainSquare(
-				limits,
-				line,
-				startCoords,
-				endCoords,
-				legalMoves.ignoreFunc,
-			)
-		)
-			continue; // Sliding this direction
-		if (legalMoves.brute) {
-			// Don't allow the slide if it results in check
-			const moveTagged = { startCoords, endCoords };
-			if (checkresolver.getSimulatedCheck(gamefile, moveTagged, colorOfFriendly).check)
-				return false; // The move results in check => not legal
-		}
-		return true; // Move is legal
+		// prettier-ignore
+		if (doesSlidingMovesetContainSquare(limits, line, startCoords, endCoords, legalMoves.ignoreFunc))
+			return true;
 	}
 	return false;
 }
@@ -761,6 +763,7 @@ export default {
 	calcPiecesLegalSlideLimitOnSpecificLine,
 
 	checkIfMoveLegal,
+	doSlideRangesContainSquare,
 	doesSlidingMovesetContainSquare,
 	hasAtleast1Move,
 };
