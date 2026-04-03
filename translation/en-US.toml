@@ -1,7 +1,7 @@
 name = "English" # Name of language
 english_name = "English"
 direction = "ltr" # Change to "rtl" for right to left languages
-version = "95"
+version = "96"
 maintainer = "Naviary"
 
 [header]
@@ -235,6 +235,7 @@ save_button = "Save"
 name_header = "Name"
 pieces_header = "Pieces" # Represents piece count
 date_header = "Date" # Represents date last modified
+no_saves = "No saved positions."
 # Game Rules window
 gamerules_header = "Game Rules"
 player_to_move = "Player to move:"

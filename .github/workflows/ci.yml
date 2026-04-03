@@ -107,3 +107,63 @@ jobs:
 
       - name: Run build
         run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  smoke-test:
+    name: Server Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Smoke test server startup
+        run: |
+          node dist/server/server.js > server.log 2>&1 &
+          SERVER_PID=$!
+          sleep 5
+
+          if ! kill -0 $SERVER_PID 2>/dev/null; then
+            echo "Server process exited prematurely. Log output:"
+            cat server.log
+            exit 1
+          fi
+
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$HTTPPORT_LOCAL/)
+          kill $SERVER_PID 2>/dev/null || true
+          wait $SERVER_PID 2>/dev/null || true
+
+          if [ "$response" = "000" ]; then
+            echo "Health check failed (no response). Log output:"
+            cat server.log
+            exit 1
+          fi
+          echo "Server is healthy."
+        env:
+          NODE_ENV: development
+          HTTPPORT_LOCAL: 3000
+          ACCESS_TOKEN_SECRET: ci-smoke-test-placeholder
+          REFRESH_TOKEN_SECRET: ci-smoke-test-placeholder

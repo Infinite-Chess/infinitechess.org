@@ -1779,6 +1779,15 @@ svg.collapse {
 	overflow-y: auto;
 }
 
+.saved-position-list-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 80px;
+	color: #888;
+	font-style: italic;
+}
+
 .saved-position {
 	height: 2.5em;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.12);

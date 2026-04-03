@@ -31,7 +31,8 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 ## Conventions & Patterns
 
 - **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`. Change notes in `changes.json` should be clear and concise, not containing more information than necessary, and always indicate the line numbers of the removed/added keys.
-- **Rendering:** When asked to add new graphics and visuals, refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
+- **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
+- **Rendering:** When asked to add new graphics and visuals to the game (canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
 
 ## Integration Points
 
@@ -41,3 +42,11 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 ## VS Code Tool Notes
 
 - **Rename Symbol:** To rename a symbol across all files that import it, point the rename symbol tool at the symbol's name inside a named `export { }` or `export type { }` block — this works for named exports only; `export default { }` object-style exports require manual renaming of all external call sites regardless of where the rename is applied.
+
+## Integrated Browser
+
+- **Game interaction:** The infinite chess game board & pieces are on a canvas, which contents is only visible to you in screenshots. drag_element won't work on the canvas as it requires a DOM ref. Use run_playwright_code to probe board coordinates: hover page.mouse.move(sx, sy) at candidate screen positions and read await page.locator('#x').inputValue() / await page.locator('#y').inputValue() to map screen pixels to board squares.
+
+- **Moving pieces:** Use explicit mouse.down()+mouse.up() pairs, not page.mouse.click() — the game's input loop polls isKeyDown per frame and click() is too fast. After clicking "Start Game" to start a local game, wait at least 2000ms before making any moves — the canvas game loop needs time to initialize.
+
+- **Reading the board position:** press Digit5 (hold down for ~200ms so the game loop detects it) to trigger a clipboard copy of the ICN position string. Intercept it via: (1) inject `window._capturedClipboard=null; const orig=navigator.clipboard.writeText.bind(navigator.clipboard); navigator.clipboard.writeText=async(t)=>{window._capturedClipboard=t;navigator.clipboard.writeText=orig;return orig(t);}` into the page before pressing the key, then (2) `await page.keyboard.down('Digit5'); await page.waitForTimeout(200); await page.keyboard.up('Digit5');`, then (3) read `await page.evaluate(()=>window._capturedClipboard)`. navigator.clipboard.readText() will fail with permission denied — do not use it.
