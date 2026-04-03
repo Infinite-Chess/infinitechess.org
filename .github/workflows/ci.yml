@@ -140,7 +140,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist
-          path: dist/
 
       - name: Smoke test server startup
         run: |
