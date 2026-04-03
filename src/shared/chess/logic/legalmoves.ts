@@ -619,7 +619,7 @@ function doSlideRangesContainSquare(
 	startCoords: Coords,
 	endCoords: Coords,
 ): boolean {
-	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false;
+	if (coordutil.areCoordsEqual(startCoords, endCoords)) return false; // Can't slide to the square we're already on
 
 	for (const [strline, limits] of Object.entries(legalMoves.sliding)) {
 		const line = coordutil.getCoordsFromKey(strline as Vec2Key); // 'dx,dy'
