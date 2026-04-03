@@ -301,15 +301,8 @@ function doesLineAttackSquare(
 		if (!thisPieceLegalSlide) continue; // This piece can't move in the direction of this line, NEXT piece!
 
 		const ignoreFunc = legalmoves.getIgnoreFuncFromPieceMoveset(thisPieceMoveset);
-		if (
-			!legalmoves.doesSlidingMovesetContainSquare(
-				thisPieceLegalSlide,
-				direction,
-				thisPiece.coords,
-				coords,
-				ignoreFunc,
-			)
-		)
+		// prettier-ignore
+		if (!legalmoves.doesSlidingMovesetContainSquare(thisPieceLegalSlide, direction, thisPiece.coords, coords, ignoreFunc))
 			continue; // This piece can't slide so far as to reach us, NEXT piece!
 
 		// This piece is attacking this square!

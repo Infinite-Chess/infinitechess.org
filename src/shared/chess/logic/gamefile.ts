@@ -20,7 +20,6 @@ import clock from './clock.js';
 import jsutil from '../../util/jsutil.js';
 import variant from '../variants/variant.js';
 import typeutil from '../util/typeutil.js';
-import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
@@ -84,7 +83,6 @@ type Board = {
 	pieces: OrganizedPieces;
 	state: GameState;
 
-	colinearsPresent: boolean;
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 
@@ -251,8 +249,6 @@ function initBoard(
 	);
 
 	const moves: MoveFull[] = [];
-	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
-	const colinearsPresent = movesets.areColinearsPresent(pieceMovesets);
 
 	return {
 		pieces,
@@ -262,7 +258,6 @@ function initBoard(
 		moves,
 		vicinity,
 		specialVicinity,
-		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
 		editor,
