@@ -68,6 +68,7 @@ const INSUFFMAT_SCENARIOS: readonly Scenario[] = [
 		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.W]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.BISHOP + e.B]: [1, 0] },
 		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.B]: 1 },
+		{ [r.BISHOP + e.W]: [1, 1], [r.KNIGHT + e.B]: 1, [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 1], [r.PAWN + e.B]: 1 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 2 },
 		{ [r.BISHOP + e.W]: [1, 0], [r.KNIGHT + e.W]: 1, [r.BISHOP + e.B]: [1, 0] },
