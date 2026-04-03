@@ -162,10 +162,12 @@ function addressChecks(
 
 	// 1. Capture the checking piece
 
-	// Add each attacker as a potential capture move (simulated later to confirm it resolves all checks).
+	// Collect which attackers are currently reachable by slide, BEFORE any slide modifications.
+	// We'll add them as individual moves afterward.
+	const attackersCaptureableBySlide: CoordsTagged[] = [];
 	for (const c of checks) {
 		if (legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, c.attacker)) {
-			appendMoveToIndividualsAvoidDuplicates(moves.individual, c.attacker);
+			attackersCaptureableBySlide.push(c.attacker);
 		}
 	}
 
@@ -239,6 +241,17 @@ function addressChecks(
 		} else {
 			// Guaranteed non-arbitrary interpose squares.
 			appendPathBlockingMoves(check.path!, moves, selectedPieceCoords);
+		}
+	}
+
+	// ---------------------------
+
+	// (Deferred) Add attacker captures as individual moves, but only for those whose slide was
+	// collapsed during steps 2 or 3. If the slide is retained (e.g. a colinear check on the royal),
+	// the slide already covers the capture — adding an individual would be a duplicate.
+	for (const attacker of attackersCaptureableBySlide) {
+		if (!legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, attacker)) {
+			appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
 		}
 	}
 }
