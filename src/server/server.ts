@@ -37,6 +37,10 @@ httpsServer.listen(HTTPSPORT, () => {
 // WebSocket server
 socketServer.start(httpsServer);
 
+setTimeout(() => {
+	throw Error('TEST CRASH!!!');
+}, 1000);
+
 // On closing...
 
 let cleanupDone = false;
