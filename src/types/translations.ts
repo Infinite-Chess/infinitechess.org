@@ -166,6 +166,7 @@ export type TranslationKeys =
 	| 'play.editor.name_header'
 	| 'play.editor.pieces_header'
 	| 'play.editor.date_header'
+	| 'play.editor.no_saves'
 	| 'play.editor.gamerules_header'
 	| 'play.editor.player_to_move'
 	| 'play.editor.white'
@@ -788,6 +789,7 @@ export interface TranslationsObject {
 			name_header: string;
 			pieces_header: string;
 			date_header: string;
+			no_saves: string;
 			gamerules_header: string;
 			player_to_move: string;
 			white: string;
