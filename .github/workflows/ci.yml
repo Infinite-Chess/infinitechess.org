@@ -112,9 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: |
-            dist/
-            .env
+          path: dist/
           retention-days: 1
 
   smoke-test:
@@ -166,3 +164,5 @@ jobs:
         env:
           NODE_ENV: development
           HTTPPORT_LOCAL: 3000
+          ACCESS_TOKEN_SECRET: ci-smoke-test-placeholder
+          REFRESH_TOKEN_SECRET: ci-smoke-test-placeholder
