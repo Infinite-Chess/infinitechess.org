@@ -62,6 +62,7 @@ function removeCheckInvalidMoves(
 	const color = typeutil.getColorFromType(pieceSelected.type);
 	if (color === p.NEUTRAL) return; // Neutral pieces can't be in check
 	if (!gamefileutility.isOpponentUsingWinCondition(gamefile.basegame, color, 'checkmate')) return;
+	if (boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color).length === 0) return; // No royals -> zero checks possible, ever.
 
 	// There's a couple type of moves that put you in check:
 
@@ -120,8 +121,6 @@ function removeCheckInvalidMoves_Sliding(
 	color: Player,
 ): void {
 	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to being with.
-
-	if (boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color).length === 0) return; // No royals -> zero checks possible, ever.
 
 	const rawType = typeutil.getRawType(piece.type);
 	const isRoyal = typeutil.royals.includes(rawType);
