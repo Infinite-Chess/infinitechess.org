@@ -121,9 +121,7 @@ function removeCheckInvalidMoves_Sliding(
 ): void {
 	if (Object.keys(moves.sliding).length === 0) return; // No sliding moves to being with.
 
-	/** List of coordinates of all our royal pieces. */
-	const royalCoords: Coords[] = boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color);
-	if (royalCoords.length === 0) return; // No royals -> zero checks possible, ever.
+	if (boardutil.getRoyalCoordsOfColor(gamefile.boardsim.pieces, color).length === 0) return; // No royals -> zero checks possible, ever.
 
 	const rawType = typeutil.getRawType(piece.type);
 	const isRoyal = typeutil.royals.includes(rawType);
@@ -164,15 +162,12 @@ function addressChecks(
 
 	// 1. Capture the checking piece
 
-	const uniqueAttackers: Coords[] = [];
+	// Collect which attackers are currently reachable by slide, BEFORE any slide modifications.
+	// We'll add them as individual moves afterward.
+	const attackersCaptureableBySlide: CoordsTagged[] = [];
 	for (const c of checks) {
-		if (!uniqueAttackers.some((a) => coordutil.areCoordsEqual(a, c.attacker)))
-			uniqueAttackers.push(c.attacker);
-	}
-	// Add each unique attacker as a potential capture move (simulated later to confirm it resolves all checks).
-	for (const attacker of uniqueAttackers) {
-		if (legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, attacker)) {
-			appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
+		if (legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, c.attacker)) {
+			attackersCaptureableBySlide.push(c.attacker);
 		}
 	}
 
@@ -248,6 +243,17 @@ function addressChecks(
 			appendPathBlockingMoves(check.path!, moves, selectedPieceCoords);
 		}
 	}
+
+	// ---------------------------
+
+	// (Deferred) Add attacker captures as individual moves, but only for those whose slide was
+	// collapsed during steps 2 or 3. If the slide is retained (e.g. a colinear check on the royal),
+	// the slide already covers the capture — adding an individual would be a duplicate.
+	for (const attacker of attackersCaptureableBySlide) {
+		if (!legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, attacker)) {
+			appendMoveToIndividualsAvoidDuplicates(moves.individual, attacker);
+		}
+	}
 }
 
 /**
@@ -277,8 +283,6 @@ function addressPins(
 	 * To find out if our piece is pinned (or opens a discovered), we delete it, then test for check.
 	 * Any check that surfaces and is NOT in preExistingChecks resulted from breaking the pin.
 	 */
-
-	// To find out if our piece is pinned, we delete it, then test for check.
 	const deleteChange = boardchanges.queueDeletePiece([], true, pieceSelected);
 	boardchanges.runChanges(gamefile, deleteChange, boardchanges.changeFuncs, true);
 
