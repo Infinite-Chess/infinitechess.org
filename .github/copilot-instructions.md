@@ -41,3 +41,7 @@ BEFORE commiting any new changes, and before responding to review feedback, alwa
 ## VS Code Tool Notes
 
 - **Rename Symbol:** To rename a symbol across all files that import it, point the rename symbol tool at the symbol's name inside a named `export { }` or `export type { }` block — this works for named exports only; `export default { }` object-style exports require manual renaming of all external call sites regardless of where the rename is applied.
+
+## Integrated Browser
+
+- The infinite chess game board & piece interaction is on a canvas, which contents is only visible to you in screenshots. drag_element won't work on the canvas as it requires a DOM ref. Use run_playwright_code to probe board coordinates: hover page.mouse.move(sx, sy) at candidate screen positions and read await page.locator('#x').inputValue() / await page.locator('#y').inputValue() to map screen pixels to board squares. Two page.mouse.click() calls (select piece, then destination) can move a piece. Further screenshots can verify.
