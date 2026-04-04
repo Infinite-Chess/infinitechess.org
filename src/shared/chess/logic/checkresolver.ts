@@ -138,22 +138,6 @@ function removeCheckInvalidMoves_Sliding(
 }
 
 /**
- * Sorts checks by `path` first (guaranteed non-arbitrary interpose squares),
- * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible),
- * then colinear sliding checks last.
- */
-function sortChecks(checks: CheckInfo[]): CheckInfo[] {
-	return [...checks].sort((a, b) => {
-		const rank = (c: CheckInfo): number => {
-			if (!c.slidingCheck) return 0; // path check
-			if (!c.colinear) return 1; // non-colinear sliding check
-			return 2; // colinear sliding check
-		};
-		return rank(a) - rank(b);
-	});
-}
-
-/**
  * Collapses all sliding moves that don't have a chance at addressing
  * the checks, replacing them with individual moves to be simulated later.
  * @param gamefile - The gamefile
@@ -541,6 +525,23 @@ function appendMoveToIndividualsAvoidDuplicates(individuals: CoordsTagged[], mov
 	if (!individuals.some((im: CoordsTagged) => coordutil.areCoordsEqual(im, move))) {
 		individuals.push(move);
 	}
+}
+
+/**
+ * Sorts checks by `path` first (guaranteed non-arbitrary interpose squares),
+ * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible),
+ * then colinear sliding checks last.
+ * Mutating. Sorts in place.
+ */
+function sortChecks(checks: CheckInfo[]): CheckInfo[] {
+	return checks.sort((a, b) => {
+		const rank = (c: CheckInfo): number => {
+			if (!c.slidingCheck) return 0; // path check
+			if (!c.colinear) return 1; // non-colinear sliding check
+			return 2; // colinear sliding check
+		};
+		return rank(a) - rank(b);
+	});
 }
 
 /**
