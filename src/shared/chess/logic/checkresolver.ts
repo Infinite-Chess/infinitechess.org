@@ -172,18 +172,7 @@ function addressChecks(
 
 	// 2. Dodge the check(s) - only if we're the one in check (royal queen)
 
-	/**
-	 * Sort checks by `path` first (guaranteed non-arbitrary interpose squares),
-	 * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible).
-	 */
-	const sortedChecks = [...checks].sort((a, b) => {
-		const rank = (c: (typeof checks)[number]): number => {
-			if (!c.slidingCheck) return 0; // path check
-			if (!c.colinear) return 1; // non-colinear sliding check
-			return 2; // colinear sliding check
-		};
-		return rank(a) - rank(b);
-	});
+	const sortedChecks = sortChecks(checks);
 
 	for (const check of sortedChecks) {
 		// Early exit if all slides have already been collapsed by a previous check.
@@ -303,7 +292,7 @@ function addressPins(
 	 * If it was a `path` check (rose), then collapse all slides into only individuals that block the path.
 	 */
 
-	outer: for (const check of newChecks) {
+	outer: for (const check of sortChecks(newChecks)) {
 		// Early exit if all slides have been deleted/collapsed by a previous new check.
 		if (Object.keys(moves.sliding).length === 0) break;
 
@@ -536,6 +525,23 @@ function appendMoveToIndividualsAvoidDuplicates(individuals: CoordsTagged[], mov
 	if (!individuals.some((im: CoordsTagged) => coordutil.areCoordsEqual(im, move))) {
 		individuals.push(move);
 	}
+}
+
+/**
+ * Sorts checks by `path` first (guaranteed non-arbitrary interpose squares),
+ * then non-colinear sliding checks (to avoid adding the `brute` flag whenever possible),
+ * then colinear sliding checks last.
+ * Mutating. Sorts in place.
+ */
+function sortChecks(checks: CheckInfo[]): CheckInfo[] {
+	return checks.sort((a, b) => {
+		const rank = (c: CheckInfo): number => {
+			if (!c.slidingCheck) return 0; // path check
+			if (!c.colinear) return 1; // non-colinear sliding check
+			return 2; // colinear sliding check
+		};
+		return rank(a) - rank(b);
+	});
 }
 
 /**
