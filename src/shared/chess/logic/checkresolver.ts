@@ -189,8 +189,8 @@ function addressChecks(
 		// Early exit if all slides have already been collapsed by a previous check.
 		if (Object.keys(moves.sliding).length === 0) break;
 		if (
-			!check.slidingCheck ||
-			check.colinear ||
+			!check.slidingCheck || // The check isn't even made along a slide
+			check.colinear || // Don't need to delete the same slide as the check if it's a colinear check
 			!isRoyal || // Can't be the piece in check if you're not a royal to begin with
 			!coordutil.areCoordsEqual(check.royal, selectedPieceCoords) // Must be the piece in check
 		)
@@ -235,7 +235,7 @@ function addressChecks(
 
 		if (check.slidingCheck) {
 			// prettier-ignore
-			// Has a chance to delete all sliding moves except one, adding the `brute` flag.
+			// Has a chance to delete all sliding moves except one, adding the `brute` flag, if the check is colinear.
 			appendBlockingMoves(check.royal, check.attacker, moves, selectedPieceCoords, check.colinear);
 		} else {
 			// Guaranteed non-arbitrary interpose squares.
@@ -246,7 +246,7 @@ function addressChecks(
 	// ---------------------------
 
 	// (Deferred) Add attacker captures as individual moves, but only for those whose slide was
-	// collapsed during steps 2 or 3. If the slide is retained (e.g. a colinear check on the royal),
+	// collapsed during steps 2 or 3. If the slide was retained (e.g. a colinear check on the royal),
 	// the slide already covers the capture — adding an individual would be a duplicate.
 	for (const attacker of attackersCaptureableBySlide) {
 		if (!legalmoves.doSlideRangesContainSquare(moves, selectedPieceCoords, attacker)) {
@@ -322,12 +322,13 @@ function addressPins(
 		}
 
 		if (!check.slidingCheck) {
-			// A jumping-check via a `path` was exposed (Rose).
+			// Case 1: Individual jumping `path` check was exposed (Rose).
 			if (!check.path)
 				throw Error(
 					`Attacker giving non-sliding check has no path! It's impossible for a sliding move to expose a pathless jumping check. Either the position is illegal, or this check was pre-existing and was not correctly filtered out. Color: ${typeutil.strcolors[color]}`,
 				);
 			// Append any legal blocking squares on the path, then collapse all slides.
+			// Guaranteed non-arbitrary interpose squares.
 			appendPathBlockingMoves(check.path, moves, pieceSelected.coords);
 			// We don't have to keep iterating through check pairs, since
 			// if none of these newly added path-blocking/capture moves are legal, nothing else will be.
@@ -335,7 +336,8 @@ function addressPins(
 			break outer;
 		}
 
-		// It's a sliding check. That means this piece is on the same line between the attacker and royal.
+		// Case 2: Sliding check - That means this piece is on the same
+		// line between the attacker and royal, AND in between them!
 
 		const checkLineGeneralForm = vectors.getLineGeneralFormFrom2Coords(royal, attacker);
 		// Delete all sliding moves but the one in the direction of the line between the attacker and the royal.
