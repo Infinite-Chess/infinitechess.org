@@ -13,6 +13,8 @@
 
 import type { Color } from '../../../../../shared/util/math/math.js';
 
+import bd, { BigDecimal, toNumber } from '@naviary/bigdecimal';
+
 import bimath from '../../../../../shared/util/math/bimath.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
@@ -85,17 +87,21 @@ function formatCoord(coord: bigint): string {
 
 /**
  * Returns the smallest value from the sequence [1, 2, 5, 10, 20, 50, 100, 200, 500, ...]
- * that is >= minStep.
+ * such that `step * scale >= threshold`.
  */
-function computeStep(minStep: number): number {
-	const magnitudes = [1, 2, 5];
-	let power = 1;
+function computeStep(threshold: number, scale: BigDecimal): bigint {
+	const magnitudes = [1n, 2n, 5n];
+	let power = 1n;
 	while (true) {
 		for (const m of magnitudes) {
 			const step = m * power;
-			if (step >= minStep) return step;
+			// Multiplies rather than divides so that an arbitrarily small `scale` (BigDecimal)
+			// never causes float overflow or a division-by-zero. `toNumber` is safe here because
+			// values too large to represent become Infinity (still >= threshold) and values too
+			// small become 0 (still < threshold).
+			if (toNumber(bd.multiply(bd.fromBigInt(step), scale)) >= threshold) return step;
 		}
-		power *= 10;
+		power *= 10n;
 	}
 }
 
@@ -111,7 +117,7 @@ function ceilToMultiple(n: bigint, multiple: bigint): bigint {
 function render(): void {
 	if (perspective.getEnabled()) return;
 
-	const scale = boardpos.getBoardScaleAsNumber();
+	const scale = boardpos.getBoardScale();
 	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_SIZE_PX);
 	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
@@ -131,13 +137,8 @@ function render(): void {
 		textrenderer.getTextWidth(formatCoord(tileBox.left), sizeWorld),
 		textrenderer.getTextWidth(formatCoord(tileBox.right), sizeWorld),
 	);
-	const minStep = (widestFileLabelWidth + sizeWorld * LABEL_GAP_SIZE) / scale;
-
-	// Guard against degenerate states (e.g., extreme zoom-out overflowing floats).
-	if (!Number.isFinite(minStep) || minStep > Number.MAX_SAFE_INTEGER / 10) return;
-
-	const step = computeStep(minStep);
-	const stepBig = BigInt(step);
+	const threshold = widestFileLabelWidth + sizeWorld * LABEL_GAP_SIZE;
+	const stepBig = computeStep(threshold, scale);
 
 	// X-axis: file labels centered on each file column, fixed at the bottom of the screen.
 	// Shifted down by ATLAS_DESCENDER_FRACTION so the invisible descender space goes below
