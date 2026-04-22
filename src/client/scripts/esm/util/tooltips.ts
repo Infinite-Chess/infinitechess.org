@@ -1,7 +1,5 @@
 // src/client/scripts/esm/util/tooltips.ts
 
-// src/client/scripts/esm/util/tooltips.ts
-
 /**
  * JS-based tooltip system using event delegation. A single fixed div is appended to document.body
  * when the user hovers a tooltip element, avoiding any clipping issues from parent containers.
