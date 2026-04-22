@@ -91,7 +91,7 @@ Function bodies should also have comments for documentation, to help understand 
 
 Opt for using `import type` over `import`, when an import is only used for its type.
 
-Type imports, and regular imports, should be grouped separately. Type imports preferably should come first, with some spacing between them and the regular imports.
+Imports are automatically ordered according to the project standard when committing changes.
 
 ### Exports
 
