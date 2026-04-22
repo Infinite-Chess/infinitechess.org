@@ -338,7 +338,7 @@ function resetSuppressTimer(target: HTMLElement, state: TooltipState, direction:
 	state.suppressTimer = window.setTimeout(() => {
 		state.suppressed = false;
 		if (state.isHovering && !state.isHolding) tryShow(target, state, direction);
-	}, SUPPRESS_COOLDOWN_MILLIS * 1.0);
+	}, SUPPRESS_COOLDOWN_MILLIS);
 }
 
 // Delegated event listeners ------------------------------------------------------------
