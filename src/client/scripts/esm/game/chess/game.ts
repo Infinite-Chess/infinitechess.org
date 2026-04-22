@@ -48,7 +48,6 @@ import screenshake from '../rendering/screenshake.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
-import textrenderer from '../rendering/textrenderer.js';
 import guinavigation from '../gui/guinavigation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import webgl, { gl } from '../rendering/webgl.js';
@@ -316,11 +315,6 @@ function renderScene(): void {
 		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');
 		perspective.renderCrosshair();
-	});
-
-	// TEMPORARY: Demo to verify text rendering. Remove before merging.
-	webgl.executeWithDepthFunc_ALWAYS(() => {
-		textrenderer.renderText('1234567890', [0, 3], 0.5, [1, 1, 0, 1], 'center');
 	});
 }
 

@@ -7,12 +7,10 @@
  * replacement character U+FFFD (displayed when an unsupported character is requested).
  *
  * Glyphs are packed into a multi-row atlas with variable column widths so that the
- * texture remains roughly square (at most 512 × 512 px), which stays safely within
- * the WebGL-guaranteed minimum of 2048 px per dimension and avoids extreme aspect
- * ratios that could cause issues on older hardware.
+ * texture remains roughly square (at most 512 × 512 px).
  *
  * Each glyph cell is CELL_HEIGHT pixels tall and as wide as the character's measured
- * advance width (rounded up, with 1 px of padding on each side to prevent UV bleeding).
+ * advance width (rounded up, with some specified padding on each side to prevent UV bleeding).
  */
 
 import { gl } from './webgl.js';
@@ -51,14 +49,13 @@ const CELL_HEIGHT = 64;
 /** Font size used when rendering glyphs onto the atlas canvas. */
 const FONT_SIZE = Math.round(CELL_HEIGHT * 0.8);
 
-/** Font string passed to Canvas 2D context. */
-const FONT_STRING = `bold ${FONT_SIZE}px sans-serif`;
+const FONT_FAMILY = 'sans-serif';
 
 /**
  * Horizontal padding (pixels) added on each side of a glyph cell to prevent
  * UV bleeding between adjacent cells at low resolutions / with mipmaps.
  */
-const CELL_PADDING = 1;
+const CELL_PADDING = 2;
 
 /**
  * Target atlas width in pixels. Must be a power of two.
@@ -69,7 +66,7 @@ const ATLAS_WIDTH = 512;
 
 /**
  * The Unicode replacement character (U+FFFD '?'). Rendered whenever
- * {@link renderText} encounters a character that is not in the atlas.
+ * {@link render} encounters a character that is not in the atlas.
  */
 const REPLACEMENT_CHAR = '\uFFFD';
 
@@ -86,7 +83,7 @@ const SUPPORTED_CHARS: string[] = [
 
 // Variables -------------------------------------------------------------------------
 
-/** WebGL texture for the glyph atlas. Lazily initialised on first use. */
+/** WebGL texture for the glyph atlas. Lazily initialised on first use. Takes ~1 ms. */
 let atlasTexture: WebGLTexture | undefined;
 
 /**
@@ -97,9 +94,7 @@ let metricsTable: Map<string, GlyphMetrics> | undefined;
 
 // Functions -------------------------------------------------------------------------
 
-/**
- * Returns the next integer that is a power of two and ≥ `n`.
- */
+/** Returns the next integer that is a power of two and ≥ `n`. */
 function nextPowerOfTwo(n: number): number {
 	if (n <= 1) return 1;
 	let p = 1;
@@ -120,6 +115,9 @@ function initGlyphAtlas(): void {
 	const mCtx = measureCanvas.getContext('2d');
 	if (!mCtx) throw new Error('Could not get 2D context for glyph measurement.');
 
+	/** Font string passed to Canvas 2D context. */
+	const FONT_STRING = `${FONT_SIZE}px ${FONT_FAMILY}`;
+
 	mCtx.font = FONT_STRING;
 
 	/** Cell width (px) for each character, including padding on both sides. */
@@ -131,8 +129,10 @@ function initGlyphAtlas(): void {
 	// ── 2. Pack glyphs into rows ─────────────────────────────────────────────
 	interface GlyphPlacement {
 		char: string;
-		cellX: number; // pixel X of left edge of cell (including left padding)
-		cellY: number; // pixel Y of top edge of cell (row top, canvas-space, y-down)
+		/** Pixel X of left edge of cell (including left padding) */
+		cellX: number; //
+		/** Pixel Y of top edge of cell (row top, canvas-space, y-down) */
+		cellY: number;
 		cellWidth: number;
 	}
 
@@ -186,8 +186,9 @@ function initGlyphAtlas(): void {
 
 		// UV coordinates: (0,0) = bottom-left after UNPACK_FLIP_Y_WEBGL.
 		// Canvas Y increases downward; flipping maps canvasY → (atlasHeight - canvasY).
-		const u0 = p.cellX / ATLAS_WIDTH;
-		const u1 = (p.cellX + p.cellWidth) / ATLAS_WIDTH;
+		// Inset by CELL_PADDING so UVs reference only the inner glyph pixels, not the padding border.
+		const u0 = (p.cellX + CELL_PADDING) / ATLAS_WIDTH;
+		const u1 = (p.cellX + p.cellWidth - CELL_PADDING) / ATLAS_WIDTH;
 		// Cell top in flipped space is the larger V value.
 		const v0 = (atlasHeight - (p.cellY + CELL_HEIGHT)) / atlasHeight;
 		const v1 = (atlasHeight - p.cellY) / atlasHeight;
@@ -217,41 +218,38 @@ function initGlyphAtlas(): void {
 	atlasTexture = texture;
 	metricsTable = table;
 
-	// DEBUG: Uncomment the block below to log atlas dimensions and append the canvas to the
-	// document for visual inspection. Remove or re-comment before merging.
-	// {
-	// 	console.log(`[glyphatlas] Atlas generated: ${ATLAS_WIDTH} × ${atlasHeight} px, ${numRows} row(s), ${SUPPORTED_CHARS.length} glyphs.`);
-	// 	atlasCanvas.style.cssText = 'position:fixed;bottom:0;right:0;background:#888;z-index:9999;border:2px solid red;';
-	// 	document.body.appendChild(atlasCanvas);
-	// }
+	// DEBUG: Uncomment to log atlas dimensions and append the canvas to the document for visual inspection.
+	// console.log(
+	// 	`[glyphatlas] Atlas generated: ${ATLAS_WIDTH} × ${atlasHeight} px, ${numRows} row(s), ${SUPPORTED_CHARS.length} glyphs.`,
+	// );
+	// atlasCanvas.style.cssText =
+	// 	'position:fixed;bottom:0;right:0;background:#888;z-index:9999;border:2px solid red;';
+	// document.body.appendChild(atlasCanvas);
 }
 
-/** Lazily initialises the atlas on first access, then returns the WebGL texture. */
+// API -------------------------------------------------------------------------
+
+/**
+ * Returns the WebGL texture of the glyph atlas.
+ *
+ * Lazily initialises the atlas on first call, which takes ~1 ms.
+ */
 function getAtlasTexture(): WebGLTexture {
 	if (atlasTexture === undefined) initGlyphAtlas();
 	return atlasTexture!;
 }
 
 /**
- * Returns the {@link GlyphMetrics} for `char`, or `undefined` if the character
- * is not present in the atlas.
+ * Returns the {@link GlyphMetrics} for `char`, or the replacement
+ * character U+FFFD if the character is not present in the atlas.
  *
  * Lazily initialises the atlas on first call.
  */
-function getGlyphMetrics(char: string): GlyphMetrics | undefined {
+function getGlyphMetrics(char: string): GlyphMetrics {
 	if (metricsTable === undefined) initGlyphAtlas();
-	return metricsTable!.get(char);
-}
-
-/** Returns the metrics for the replacement character U+FFFD. Always defined. */
-function getReplacementMetrics(): GlyphMetrics {
-	const m = getGlyphMetrics(REPLACEMENT_CHAR);
-	if (!m) throw new Error('Replacement glyph missing from atlas — this should never happen.');
-	return m;
+	return metricsTable!.get(char) ?? metricsTable!.get(REPLACEMENT_CHAR)!; // fallback to replacement char for unsupported glyphs
 }
 
 // Exports -------------------------------------------------------------------------
 
-export { getAtlasTexture, getGlyphMetrics, getReplacementMetrics, REPLACEMENT_CHAR };
-
-export type { GlyphMetrics };
+export { getAtlasTexture, getGlyphMetrics };
