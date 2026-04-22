@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/textrenderer.ts
+// src/client/scripts/esm/game/rendering/text/textrenderer.ts
 
 /**
  * This script renders arbitrary strings in world space.
@@ -8,11 +8,11 @@
  * `advanceWidth` is the per-glyph ratio measured at atlas-generation time.
  */
 
-import type { Color } from '../../../../../shared/util/math/math.js';
-import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
+import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
-import primitives from './primitives.js';
-import { createRenderable } from '../../webgl/Renderable.js';
+import primitives from '../primitives.js';
+import { createRenderable } from '../../../webgl/Renderable.js';
 import { getAtlasTexture, getGlyphMetrics } from './glyphatlas.js';
 
 // Functions -------------------------------------------------------------------------

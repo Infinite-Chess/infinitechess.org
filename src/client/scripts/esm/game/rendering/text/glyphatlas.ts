@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/glyphatlas.ts
+// src/client/scripts/esm/game/rendering/text/glyphatlas.ts
 
 /**
  * This script generates and manages a runtime glyph atlas texture for text rendering.
@@ -13,7 +13,7 @@
  * advance width (rounded up, with some specified padding on each side to prevent UV bleeding).
  */
 
-import { gl } from './webgl.js';
+import { gl } from '../webgl.js';
 
 // Types -------------------------------------------------------------------------
 
