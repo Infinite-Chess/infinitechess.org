@@ -22,7 +22,6 @@ import premoves from '../chess/premoves.js';
 import selection from '../chess/selection.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import Transition from '../rendering/transitions/Transition.js';
-import coordlabels from '../rendering/coordlabels.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import edithistory from '../boardeditor/edithistory.js';
 import { GameBus } from '../GameBus.js';
@@ -206,7 +205,7 @@ function displayBigIntInInput(
 	if (inputElement.scrollWidth > inputElement.clientWidth + 1) {
 		// Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
 		// Format it and set the .value again.
-		inputElement.value = coordlabels.formatBigIntExponential(bigint, precision);
+		inputElement.value = bimath.formatBigIntExponential(bigint, precision);
 	}
 }
 

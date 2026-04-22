@@ -57,32 +57,11 @@ const ATLAS_DESCENDER_FRACTION = 0.5 - 0.3 * 0.8; // ≈ 0.26
 
 // Functions -------------------------------------------------------------------------
 
-/**
- * Formats a BigInt into scientific notation with the given number of significant figures.
- * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
- */
-function formatBigIntExponential(bigint: bigint, precision: number): string {
-	const isNegative = bigint < 0n;
-	const absString: string = bimath.abs(bigint).toString();
-
-	const exponent: number = absString.length - 1;
-	const mantissaDigits: string = absString.substring(0, precision);
-
-	let mantissa: string;
-	if (mantissaDigits.length > 1) {
-		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
-	} else {
-		mantissa = mantissaDigits;
-	}
-
-	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
-}
-
 /** Returns the display string for a coordinate label, switching to scientific notation for large values. */
 function formatCoord(coord: bigint): string {
 	const full = coord.toString();
 	if (full.length <= MAX_FULL_DISPLAY_LENGTH) return full;
-	return formatBigIntExponential(coord, COORD_E_PRECISION);
+	return bimath.formatBigIntExponential(coord, COORD_E_PRECISION);
 }
 
 /**
@@ -164,4 +143,4 @@ function render(): void {
 
 // Exports -------------------------------------------------------------------------
 
-export default { render, formatBigIntExponential };
+export default { render };

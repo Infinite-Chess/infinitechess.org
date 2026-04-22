@@ -215,6 +215,29 @@ function GCD(a: bigint, b: bigint): bigint {
 // 	return answer;
 // }
 
+// Displat Formatting -------------------------------------------------------------------------
+
+/**
+ * Formats a bigint in scientific notation with the given number of significant figures.
+ * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
+ */
+function formatBigIntExponential(bigint: bigint, precision: number): string {
+	const isNegative = bigint < 0n;
+	const absString: string = abs(bigint).toString();
+
+	const exponent: number = absString.length - 1;
+	const mantissaDigits: string = absString.substring(0, precision);
+
+	let mantissa: string;
+	if (mantissaDigits.length > 1) {
+		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
+	} else {
+		mantissa = mantissaDigits;
+	}
+
+	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
+}
+
 // Exports ============================================================
 
 export default {
@@ -232,4 +255,6 @@ export default {
 	clamp,
 	// Number-Theoretic Algorithms
 	GCD,
+	// Display Formatting
+	formatBigIntExponential,
 };
