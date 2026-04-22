@@ -320,7 +320,7 @@ function renderScene(): void {
 
 	// TEMPORARY: Demo to verify text rendering. Remove before merging.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		textrenderer.renderText('1234567890', 0, 3, 0.5, [1, 1, 0, 1], 'center');
+		textrenderer.renderText('1234567890', [0, 3], 0.5, [1, 1, 0, 1], 'center');
 	});
 }
 
