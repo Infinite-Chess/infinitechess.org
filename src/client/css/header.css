@@ -758,7 +758,7 @@ p.theme-title {
 	border-color: transparent transparent black transparent;
 }
 
-/* Arrow pointing upward (used for tooltip-u / tooltip-ul) */
+/* Arrow pointing upward (used for tooltip-u / tooltip-ul / tooltip-ur) */
 #tooltip-arrow.tooltip-arrow-up {
 	border-color: black transparent transparent transparent;
 }

@@ -1,5 +1,7 @@
 // src/client/scripts/esm/util/tooltips.ts
 
+// src/client/scripts/esm/util/tooltips.ts
+
 /**
  * JS-based tooltip system using event delegation. A single fixed div is appended to document.body
  * when the user hovers a tooltip element, avoiding any clipping issues from parent containers.
@@ -13,6 +15,7 @@
  *   tooltip-dr  – below, left-aligned to element
  *   tooltip-u   – above, centered
  *   tooltip-ul  – above, right-aligned to element
+ *   tooltip-ur  – above, left-aligned to element
  *
  * Tooltip text comes from the element's data-tooltip attribute.
  */
@@ -27,6 +30,7 @@ const tooltipClasses: string[] = [
 	'tooltip-dr',
 	'tooltip-u',
 	'tooltip-ul',
+	'tooltip-ur',
 ];
 /** CSS selector matching any element that is a tooltip target (has both a direction class and data-tooltip). */
 const TOOLTIP_SELECTOR = tooltipClasses.map((cls) => `.${cls}[data-tooltip]`).join(', ');

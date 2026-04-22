@@ -94,8 +94,8 @@ async function initUI(): Promise<void> {
 			svg.classList.add('piece');
 			const pieceContainer = document.createElement('div');
 
-			if (i % 4 === 0) pieceContainer.classList.add('tooltip-dr');
-			else pieceContainer.classList.add('tooltip-d');
+			if (i % 4 === 0) pieceContainer.classList.add('tooltip-ur');
+			else pieceContainer.classList.add('tooltip-u');
 			const localized_piece_name =
 				// @ts-ignore
 				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
@@ -130,7 +130,7 @@ async function initUI(): Promise<void> {
 	element_void.id = '0';
 
 	// Void tooltip
-	element_void.classList.add('tooltip-dr');
+	element_void.classList.add('tooltip-ur');
 	// @ts-ignore
 	const localized_void_name = translations.piecenames[typeutil.getRawTypeStr(r.VOID)!];
 	const void_abbreviation = icnconverter.piece_codes_raw[r.VOID];
@@ -145,9 +145,9 @@ async function initUI(): Promise<void> {
 		const pieceContainer = document.createElement('div');
 
 		// Neutral piece tooltips
-		if (i % 4 === 3) pieceContainer.classList.add('tooltip-dr');
-		else if (i % 4 === 2) pieceContainer.classList.add('tooltip-dl');
-		else pieceContainer.classList.add('tooltip-d');
+		if (i % 4 === 3) pieceContainer.classList.add('tooltip-ur');
+		else if (i % 4 === 2) pieceContainer.classList.add('tooltip-ul');
+		else pieceContainer.classList.add('tooltip-u');
 		const localized_piece_name =
 			// @ts-ignore
 			translations.piecenames[typeutil.getRawTypeStr(neutralTypes[i]!)!];
