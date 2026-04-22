@@ -293,6 +293,7 @@ function renderScene(): void {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
+		// coordlabels.render();
 		selectedpiecehighlightline.render();
 		highlights.render(gamefile.boardsim);
 		GameBus.dispatch('render-below-pieces');
