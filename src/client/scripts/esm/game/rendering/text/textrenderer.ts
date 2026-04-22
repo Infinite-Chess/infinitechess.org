@@ -82,4 +82,4 @@ function render(
 
 // Exports -------------------------------------------------------------------------
 
-export default { render };
+export default { getTextWidth, render };
