@@ -52,6 +52,22 @@ const FONT_SIZE = Math.round(CELL_HEIGHT * 0.8);
 const FONT_FAMILY = 'sans-serif';
 
 /**
+ * Fraction of the glyph cell height that lies below the alphabetic baseline.
+ * For typical sans-serif: ascent ≈ 0.8 × FONT_SIZE, descent ≈ 0.2 × FONT_SIZE.
+ * The baseline sits (ascent − descent) / 2 = 0.3 × FONT_SIZE below the em midpoint,
+ * so the fraction of the cell below the baseline is 0.5 − 0.3 × (FONT_SIZE / CELL_HEIGHT).
+ */
+const ATLAS_DESCENDER_FRACTION = 0.5 - 0.3 * (FONT_SIZE / CELL_HEIGHT); // ≈ 0.26
+
+/**
+ * Fraction of the glyph cell height from the em-midpoint (drawing y) up to the top of a digit glyph.
+ * For typical sans-serif: cap height ≈ 0.72 × FONT_SIZE; baseline is 0.3 × FONT_SIZE below the midpoint,
+ * so the distance from midpoint to digit top ≈ (0.72 − 0.3) × FONT_SIZE = 0.42 × FONT_SIZE.
+ * As a fraction of CELL_HEIGHT: 0.42 × (FONT_SIZE / CELL_HEIGHT).
+ */
+const ATLAS_ASCENT_FRACTION = 0.42 * (FONT_SIZE / CELL_HEIGHT);
+
+/**
  * Horizontal padding (pixels) added on each side of a glyph cell to prevent
  * UV bleeding between adjacent cells at low resolutions / with mipmaps.
  */
@@ -252,4 +268,4 @@ function getGlyphMetrics(char: string): GlyphMetrics {
 
 // Exports -------------------------------------------------------------------------
 
-export { getAtlasTexture, getGlyphMetrics };
+export { getAtlasTexture, getGlyphMetrics, ATLAS_DESCENDER_FRACTION, ATLAS_ASCENT_FRACTION };

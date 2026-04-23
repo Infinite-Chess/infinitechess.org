@@ -10,10 +10,16 @@
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { DoubleBoundingBox } from '../../../../../../shared/util/math/bounds.js';
 
 import primitives from '../primitives.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
-import { getAtlasTexture, getGlyphMetrics } from './glyphatlas.js';
+import {
+	getAtlasTexture,
+	getGlyphMetrics,
+	ATLAS_ASCENT_FRACTION,
+	ATLAS_DESCENDER_FRACTION,
+} from './glyphatlas.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -28,6 +34,38 @@ function getTextWidth(text: string, size: number): number {
 		width += size * m.advanceWidth;
 	}
 	return width;
+}
+
+/**
+ * Computes the world-space axis-aligned bounding box of `text` when rendered at the given parameters.
+ * The bottom edge is at the alphabetic baseline rather than the bottom of the cell,
+ * so the invisible descender space below the baseline is excluded.
+ * @param text - The string to measure.
+ * @param coords - World-space [x, y] of the anchor point, positioned according to `align`.
+ * @param size - World-space height of each character.
+ * @param align - Horizontal alignment relative to `coords[0]`.
+ */
+function getTextBounds(
+	text: string,
+	coords: DoubleCoords,
+	size: number,
+	align: 'left' | 'center' | 'right',
+): DoubleBoundingBox {
+	const totalWidth = getTextWidth(text, size);
+
+	let left: number;
+	if (align === 'left') left = coords[0];
+	else if (align === 'center') left = coords[0] - totalWidth / 2;
+	else left = coords[0] - totalWidth; // 'right'
+
+	return {
+		left,
+		right: left + totalWidth,
+		// Exclude the descender space: bottom is the alphabetic baseline, not the cell bottom.
+		bottom: coords[1] - size * (0.5 - ATLAS_DESCENDER_FRACTION),
+		// Use the measured cap height of a digit so the top aligns with the visible top of numbers.
+		top: coords[1] + size * ATLAS_ASCENT_FRACTION,
+	};
 }
 
 /**
@@ -82,4 +120,4 @@ function render(
 
 // Exports -------------------------------------------------------------------------
 
-export default { getTextWidth, render };
+export default { getTextWidth, getTextBounds, render };

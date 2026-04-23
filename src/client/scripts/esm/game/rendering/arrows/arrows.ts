@@ -294,6 +294,30 @@ function areHoveringAtleastOneArrow(): boolean {
 	return hoveredArrows.length > 0;
 }
 
+/**
+ * Returns the world-space locations of all arrow indicators present for the current frame.
+ * Must be called after update().
+ */
+function getAllArrowWorldLocations(): DoubleCoords[] {
+	const locations: DoubleCoords[] = [];
+	for (const linesOfDirection of Object.values(slideArrows)) {
+		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
+			for (const arrow of line.posDotProd) locations.push(arrow.worldLocation);
+			for (const arrow of line.negDotProd) locations.push(arrow.worldLocation);
+		}
+	}
+	for (const arrow of animatedArrows) locations.push(arrow.worldLocation);
+	return locations;
+}
+
+/**
+ * Returns the world-space half-width of each arrow indicator's square hitbox for the current frame.
+ * This is the Chebyshev-distance radius used to detect hover/opacity changes.
+ */
+function getArrowIndicatorHalfWidth(): number {
+	return (width * boardpos.getBoardScaleAsNumber()) / 2;
+}
+
 // Updating -----------------------------------------------------------------------------------------------------------
 
 /**
@@ -759,7 +783,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 	if (Object.keys(slideArrows).length > 0)
 		throw Error('SHOULD have erased all slide arrows before recalcing');
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
@@ -1039,7 +1063,7 @@ function executeArrowShifts(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2; // The world-space width of our images
+	const worldHalfWidth = getArrowIndicatorHalfWidth(); // The world-space width of our images
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	shifts.forEach((shift) => {
@@ -1213,7 +1237,7 @@ function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void
 
 		// Calculate more detailed information, enough to render...
 
-		const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
+		const worldHalfWidth = getArrowIndicatorHalfWidth();
 
 		const pointerWorlds = mouse.getAllPointerWorlds();
 
@@ -1269,7 +1293,7 @@ function render(): void {
 function regenerateModelAndRender(): void {
 	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
 
 	// Position data of the single instance
 	const left = -worldHalfWidth;
@@ -1437,6 +1461,8 @@ export default {
 	toggleArrows,
 	getHoveredArrows,
 	areHoveringAtleastOneArrow,
+	getAllArrowWorldLocations,
+	getArrowIndicatorHalfWidth,
 	// Arrow Shifting
 	deleteArrow,
 	moveArrow,
