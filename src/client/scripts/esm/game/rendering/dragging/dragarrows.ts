@@ -26,6 +26,7 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
+import webgl from '../webgl.js';
 import camera from '../camera.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
@@ -36,6 +37,7 @@ import droparrows from './droparrows.js';
 import preferences from '../../../components/header/preferences.js';
 import renderanims from '../renderanims.js';
 import frametracker from '../frametracker.js';
+import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
@@ -59,9 +61,18 @@ interface CandidateArrow {
 // Constants -------------------------------------------------------------------------------
 
 /** The width of the slide zone, as a percentage of arrow indicator images. */
-const SLIDE_ZONE_WIDTH = 1.5;
-const SLIDE_ZONE_FILL_COLOR: Color = [1, 1, 1, 0.2];
-const SLIDE_ZONE_OUTLINE_COLOR: Color = [1, 1, 1, 0.7];
+const SLIDE_ZONE_WIDTH = 1.7;
+/** Radial gradient rendered inside the slide zone. */
+const SLIDE_ZONE_GRADIENT = {
+	COLORS: [
+		[1, 1, 1, 0.2],
+		[1, 1, 1, 0.6],
+	] as Color[],
+	/** World units between each individual color ring. */
+	SPACING: 5,
+	/** World units per second the phase advances. */
+	VELOCITY: 8,
+};
 
 // State ---------------------------------------------------------------------------------
 
@@ -71,6 +82,9 @@ let candidate: CandidateArrow | undefined;
 let isDragActive: boolean = false;
 /** Whether the mouse is currently inside the slide zone while the drag is active. */
 let currentlyInSlideZone: boolean = false;
+
+/** Current phase offset for the slide zone radial gradient, in world units. */
+let slideZonePhase: number = 0;
 
 // Main update ---------------------------------------------------------------------------
 
@@ -88,6 +102,14 @@ function update(): void {
 		updateCandidate();
 	} else {
 		detectCandidateArrow();
+	}
+
+	if (isDragActive && candidate) {
+		// Update the phase of the slide zone gradient to create a moving effect
+		slideZonePhase =
+			(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * loadbalancer.getDeltaTime()) %
+			(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
+		frametracker.onVisualChange(); // Render this frame (slide zone is being animated)
 	}
 }
 
@@ -272,11 +294,7 @@ function updateOnScreenDrag(): void {
 
 // Rendering ---------------------------------------------------------------------------
 
-/**
- * Renders the slide zone rectangle(s) along the screen edge(s) indicated by
- * the candidate arrow's direction.
- * Only renders when a drag is active and the mouse is inside the slide zone.
- */
+/** Renders a radial gradient over the slide zone when active. */
 function renderSlideZone(): void {
 	if (!isDragActive || !candidate) return;
 
@@ -285,34 +303,46 @@ function renderSlideZone(): void {
 	const depth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
 	const dir = candidate.vector;
 
-	const fillData: number[] = [];
+	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
+	const maskData: number[] = [];
+	const dummyColor: Color = [0, 0, 0, 1];
+	// prettier-ignore
+	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor));
+	// prettier-ignore
+	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor));
+	// prettier-ignore
+	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth, screenBox.right, screenBox.top, dummyColor));
+	// prettier-ignore
+	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth, dummyColor));
 
-	// prettier-ignore
-	if (dir[0] > 0n) renderSlideRect(fillData, screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top);
-	// prettier-ignore
-	if (dir[0] < 0n) renderSlideRect(fillData, screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top);
-	// prettier-ignore
-	if (dir[1] > 0n) renderSlideRect(fillData, screenBox.left, screenBox.top - depth, screenBox.right, screenBox.top);
-	// prettier-ignore
-	if (dir[1] < 0n) renderSlideRect(fillData, screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth);
+	if (maskData.length === 0) return;
 
-	if (fillData.length > 0) createRenderable(fillData, 2, 'TRIANGLES', 'color', true).render();
+	const maskRenderable = createRenderable(maskData, 2, 'TRIANGLES', 'color', true);
+	webgl.executeMaskedDraw(
+		() => maskRenderable.render(),
+		undefined,
+		() =>
+			renderRadialGradient(
+				SLIDE_ZONE_GRADIENT.COLORS,
+				SLIDE_ZONE_GRADIENT.SPACING,
+				slideZonePhase,
+			),
+		'and',
+	);
 }
 
 /**
- * Appends fill data for one slide zone rectangle and immediately renders its outline.
- * Outlines are rendered per-rect to avoid LINE_LOOP incorrectly connecting separate rectangles.
+ * Renders a full-screen radial gradient emanating from the screen center.
+ * Colors repeat outward with the given spacing (world units) and phase offset.
  */
-function renderSlideRect(
-	fillData: number[],
-	left: number,
-	bottom: number,
-	right: number,
-	top: number,
-): void {
-	fillData.push(...primitives.Quad_Color(left, bottom, right, top, SLIDE_ZONE_FILL_COLOR));
-	const outlineData = primitives.Rect(left, bottom, right, top, SLIDE_ZONE_OUTLINE_COLOR);
-	createRenderable(outlineData, 2, 'LINE_LOOP', 'color', true).render();
+function renderRadialGradient(colors: Color[], spacing: number, phase: number): void {
+	const screenBox = camera.getScreenBoundingBox(false);
+	const maxX = Math.max(Math.abs(screenBox.left), Math.abs(screenBox.right));
+	const maxY = Math.max(Math.abs(screenBox.top), Math.abs(screenBox.bottom));
+	const radius = Math.sqrt(maxX * maxX + maxY * maxY);
+
+	const data = primitives.RadialGradient(0, 0, radius, colors, spacing, phase, 360);
+	if (data.length > 0) createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 }
 
 // Cleanup -----------------------------------------------------------------------------
