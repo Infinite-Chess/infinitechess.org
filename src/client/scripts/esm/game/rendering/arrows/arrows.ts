@@ -819,18 +819,8 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 					const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
 					// Whether this piece can slide in the direction of the arrow
 					const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
-					output.push(
-						processPiece(
-							arrowDraft.piece,
-							dir,
-							intersection,
-							index,
-							worldHalfWidth,
-							pointerWorlds,
-							true,
-							ownsSlide,
-						),
-					);
+					// prettier-ignore
+					output.push(processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds, true, ownsSlide));
 				});
 			}
 
