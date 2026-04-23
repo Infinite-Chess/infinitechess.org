@@ -36,10 +36,12 @@ import starfield from '../rendering/starfield.js';
 import gameloader from './gameloader.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
+import dragarrows from '../rendering/dragging/dragarrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import primitives from '../rendering/primitives.js';
+import renderanims from '../rendering/renderanims.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
@@ -179,7 +181,9 @@ function update(): void {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
+	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts(). Handles drag-from-arrow feature.
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	renderanims.update(); // Garbage-collect expired visual effect animations.
 
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
@@ -311,7 +315,9 @@ function renderScene(): void {
 		animation.renderAnimations();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
+		renderanims.render(); // Render pulse animations below arrow indicators, but above pieces.
 		arrows.render();
+		dragarrows.renderSlideZone();
 		boardeditor.render();
 		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');

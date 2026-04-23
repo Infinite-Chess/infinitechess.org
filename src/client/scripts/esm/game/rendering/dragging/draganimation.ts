@@ -80,6 +80,11 @@ const perspectiveConfigs: { z: number; shadowColor: Color } = {
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
 /**
+ * When true, the rank/file outline is always rendered during dragging,
+ * regardless of zoom level. Set by dragarrows.ts during slide zone mode.
+ */
+let forceRankFileOutline: boolean = false;
+/**
  * When true, the next time a piece is dropped on its own square, it will NOT be unselected.
  * But if this is false, it WOULD be unselected.
  * Pieces are unselected every second time dropped.
@@ -102,6 +107,11 @@ let pieceType: number | undefined;
 
 function areDraggingPiece(): boolean {
 	return areDragging;
+}
+
+/** Forces the rank/file outline to always render during dragging. Used by dragarrows.ts in slide zone mode. */
+function setForceRankFileOutline(value: boolean): void {
+	forceRankFileOutline = value;
 }
 
 /** If true, the last pick-up action newly selected that piece, vs picking up an already-selected piece. */
@@ -170,6 +180,15 @@ function setDragLocationAndHoverSquare(worldLoc: DoubleCoords, hoverSquare: Coor
 function getPointerIdDraggingPiece(): string | undefined {
 	if (!areDragging) throw Error('Unexpected!');
 	return pointerId;
+}
+
+/**
+ * Returns the square the dragged piece is currently hovering over.
+ * Set by updateDragLocation or setDragLocationAndHoverSquare
+ * by the droparrows or dragarrows features.
+ */
+function getHoveredCoords(): Coords | undefined {
+	return hoveredCoords;
 }
 
 /** Whether the pointer dragging the selected piece has released yet. */
@@ -308,7 +327,7 @@ function genOutlineModel(): Renderable {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();
@@ -419,7 +438,9 @@ export default {
 	pickUpPiece,
 	updateDragLocation,
 	setDragLocationAndHoverSquare,
+	setForceRankFileOutline,
 	getPointerIdDraggingPiece,
+	getHoveredCoords,
 	hasPointerReleased,
 	dropPiece,
 	renderTransparentSquare,

@@ -164,6 +164,8 @@ interface HoveredArrow {
 	 * Negated is auto-negated when applicable.
 	 */
 	vector: Vec2;
+	/** The world-space position of this arrow indicator on the screen edge. */
+	worldLocation: DoubleCoords;
 }
 
 // Variables ----------------------------------------------------------------------------
@@ -883,7 +885,9 @@ function processPiece(
 			// Mouse inside the picture bounding box
 			hovered = true;
 			// ADD the piece to the list of arrows being hovered over!!!
-			if (appendHover) hoveredArrows.push({ piece, vector });
+			// Convert direction the piece travels to reach arrow into the direction the arrow points, which is the OPPOSITE.
+			if (appendHover)
+				hoveredArrows.push({ piece, vector: vectors.negateVector(vector), worldLocation });
 		}
 	}
 	// If we clicked, then teleport!
@@ -942,10 +946,8 @@ function teleportToPieceIfClicked(
 				)!; // We know it will be defined because they are PERPENDICULAR
 
 				Transition.startPanTransition(telCoords, false);
-			} else {
-				// Mouse down
-				listener.claimMouseDown(button); // Don't let the board be dragged by this mouse down, or start drawing an arrow by this finger down
 			}
+			// Mouse down: claiming is now the responsibility of dragarrows.ts
 		}
 	}
 }
@@ -1473,4 +1475,4 @@ export default {
 	render,
 };
 
-export type { ArrowPiece };
+export type { ArrowPiece, HoveredArrow };

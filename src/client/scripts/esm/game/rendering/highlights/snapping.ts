@@ -80,7 +80,10 @@ type Snap = {
 
 // Entity Hovering ---------------------------------------------------------
 
-/** {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units. This can change depending on the screen dimensions. */
+/**
+ * {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units, and as if scale was 1.0.
+ * This can change depending on the screen dimensions.
+ */
 function getEntityWidthWorld(): number {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
