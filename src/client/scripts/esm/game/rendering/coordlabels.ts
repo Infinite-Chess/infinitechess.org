@@ -17,7 +17,6 @@ import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.j
 
 import bd, { BigDecimal, toNumber } from '@naviary/bigdecimal';
 
-import bimath from '../../../../../shared/util/math/bimath.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
@@ -40,9 +39,7 @@ const LABEL_SIZE_PX = 24;
 const LABEL_PADDING_PX = 5;
 /** RGBA color applied to all coordinate labels. */
 const LABEL_COLOR: Color = [0, 0, 0, 0.65];
-/** Significant figures used when a coordinate is too long to display in full. */
-const COORD_E_PRECISION = 3;
-/** Labels with more characters than this threshold switch to scientific notation. */
+/** Labels with more characters than this threshold switch to the abbreviated "...XX" format. */
 const MAX_FULL_DISPLAY_LENGTH = 7;
 /** Gap between adjacent labels as a multiple of the label height. */
 const LABEL_GAP_SIZE = 0.4;
@@ -57,11 +54,11 @@ const DEBUG_RENDER_LABEL_BOUNDS = false;
 
 // Functions -------------------------------------------------------------------------
 
-/** Returns the display string for a coordinate label, switching to scientific notation for large values. */
+/** Returns the display string for a coordinate label, abbreviating large values to "...XX" (last two digits). */
 function formatCoord(coord: bigint): string {
 	const full = coord.toString();
 	if (full.length <= MAX_FULL_DISPLAY_LENGTH) return full;
-	return bimath.formatBigIntExponential(coord, COORD_E_PRECISION);
+	return '...' + full.slice(-2);
 }
 
 /**
