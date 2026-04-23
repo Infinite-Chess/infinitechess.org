@@ -166,6 +166,11 @@ interface HoveredArrow {
 	vector: Vec2;
 	/** The world-space position of this arrow indicator on the screen edge. */
 	worldLocation: DoubleCoords;
+	/**
+	 * Whether the piece can generally slide in the arrow direction.
+	 * IS NOT calculated for shifted arrows (always true).
+	 */
+	ownsSlide: boolean;
 }
 
 // Variables ----------------------------------------------------------------------------
@@ -758,7 +763,7 @@ function getSlideExceptions(): Vec2Key[] {
 	if (mode === 2)
 		slideExceptions = gamefile.boardsim.pieces.slides
 			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n)
-			.map(vectors.getKeyFromVec2); // Filter out all hippogonal and greater vectors
+			.map((v) => vectors.getKeyFromVec2(v)); // Filter out all hippogonal and greater vectors
 	return slideExceptions;
 }
 
@@ -785,8 +790,8 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 	if (Object.keys(slideArrows).length > 0)
 		throw Error('SHOULD have erased all slide arrows before recalcing');
 
+	const boardsim = gameslot.getGamefile()!.boardsim;
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
-
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	// Take the arrows draft, construct the actual
@@ -807,6 +812,9 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 			const negDotProd: Arrow[] = [];
 
 			arrowLineDraft.posDotProd.forEach((arrowDraft, index) => {
+				const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+				// Whether this piece can slide in the direction of the arrow
+				const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
 				const arrow = processPiece(
 					arrowDraft.piece,
 					vector,
@@ -815,11 +823,15 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 					worldHalfWidth,
 					pointerWorlds,
 					true,
+					ownsSlide,
 				);
 				posDotProd.push(arrow);
 			});
 
 			arrowLineDraft.negDotProd.forEach((arrowDraft, index) => {
+				const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+				// Whether this piece can slide in the direction of the arrow
+				const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
 				const arrow = processPiece(
 					arrowDraft.piece,
 					negVector,
@@ -828,6 +840,7 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 					worldHalfWidth,
 					pointerWorlds,
 					true,
+					ownsSlide,
 				);
 				negDotProd.push(arrow);
 			});
@@ -864,6 +877,7 @@ function processPiece(
 	worldHalfWidth: number,
 	pointerWorlds: DoubleCoords[],
 	appendHover: boolean,
+	ownsSlide: boolean = true,
 ): Arrow {
 	const renderCoords = intersection; // Don't think we need to deep copy?
 
@@ -887,7 +901,12 @@ function processPiece(
 			// ADD the piece to the list of arrows being hovered over!!!
 			// Convert direction the piece travels to reach arrow into the direction the arrow points, which is the OPPOSITE.
 			if (appendHover)
-				hoveredArrows.push({ piece, vector: vectors.negateVector(vector), worldLocation });
+				hoveredArrows.push({
+					piece,
+					vector: vectors.negateVector(vector),
+					worldLocation,
+					ownsSlide,
+				});
 		}
 	}
 	// If we clicked, then teleport!

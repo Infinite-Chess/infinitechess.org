@@ -186,6 +186,7 @@ function detectCandidateArrow(): void {
 
 	for (const hoveredArrow of hoveredArrowsList) {
 		if (hoveredArrow.piece.floating) continue; // Ignore animated arrows.
+		if (!hoveredArrow.ownsSlide) continue; // Piece can't slide in this direction.
 		const pieceType = hoveredArrow.piece.type;
 		if (selection.canSelectPieceType(gamefile.basegame, pieceType) !== 2) continue; // Not own draggable piece.
 
