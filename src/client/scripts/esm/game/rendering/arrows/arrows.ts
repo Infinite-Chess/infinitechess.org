@@ -811,39 +811,28 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 			const posDotProd: Arrow[] = [];
 			const negDotProd: Arrow[] = [];
 
-			arrowLineDraft.posDotProd.forEach((arrowDraft, index) => {
-				const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
-				// Whether this piece can slide in the direction of the arrow
-				const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
-				const arrow = processPiece(
-					arrowDraft.piece,
-					vector,
-					arrowLineDraft.intersections[0],
-					index,
-					worldHalfWidth,
-					pointerWorlds,
-					true,
-					ownsSlide,
-				);
-				posDotProd.push(arrow);
-			});
-
-			arrowLineDraft.negDotProd.forEach((arrowDraft, index) => {
-				const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
-				// Whether this piece can slide in the direction of the arrow
-				const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
-				const arrow = processPiece(
-					arrowDraft.piece,
-					negVector,
-					arrowLineDraft.intersections[1],
-					index,
-					worldHalfWidth,
-					pointerWorlds,
-					true,
-					ownsSlide,
-				);
-				negDotProd.push(arrow);
-			});
+			for (const [drafts, dir, intersection, output] of [
+				[arrowLineDraft.posDotProd, vector, arrowLineDraft.intersections[0], posDotProd],
+				[arrowLineDraft.negDotProd, negVector, arrowLineDraft.intersections[1], negDotProd],
+			] as [ArrowDraft[], Vec2, BDCoords, Arrow[]][]) {
+				drafts.forEach((arrowDraft, index) => {
+					const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+					// Whether this piece can slide in the direction of the arrow
+					const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
+					output.push(
+						processPiece(
+							arrowDraft.piece,
+							dir,
+							intersection,
+							index,
+							worldHalfWidth,
+							pointerWorlds,
+							true,
+							ownsSlide,
+						),
+					);
+				});
+			}
 
 			linesOfDirection[lineKey] = { posDotProd, negDotProd };
 		}
