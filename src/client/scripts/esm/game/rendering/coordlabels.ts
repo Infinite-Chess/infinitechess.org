@@ -125,26 +125,39 @@ function render(): void {
 		space.convertPixelsToWorldSpace_Virtual(LABEL_ARROW_PADDING_PX);
 	const arrowLocations = arrows.getAllArrowWorldLocations();
 
+	const isBlackPerspective = perspective.getIsViewingBlackPerspective();
+	// Arrow hitbox locations in black's perspective need to be negated so overlap detection remains accurate.
+	const effectiveArrowLocations: DoubleCoords[] = isBlackPerspective
+		? arrowLocations.map((loc) => [-loc[0], -loc[1]])
+		: arrowLocations;
+
 	// X-axis: file labels centered on each file column, fixed at the bottom of the screen.
 	// Shifted down by ATLAS_DESCENDER_FRACTION so the invisible descender space goes below
 	// the screen edge rather than adding unwanted gap above the visible characters.
 	const fileWorldY =
 		screenBox.bottom + paddingWorld + sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
 	const firstFile = ceilToMultiple(tileBox.left, stepBig);
-	for (let file = firstFile; file <= tileBox.right; file += stepBig) {
-		const worldX = space.convertCoordToWorldSpace(bdcoords.FromCoords([file, 0n]))[0];
-		// prettier-ignore
-		renderLabel(formatCoord(file), [worldX, fileWorldY], sizeWorld, 'center', arrowHalfWidth, arrowLocations);
-	}
 
 	// Y-axis: rank labels left-aligned from the left edge of the screen, at each rank row.
 	const rankWorldX = screenBox.left + paddingWorld;
 	const firstRank = ceilToMultiple(tileBox.bottom, stepBig);
-	for (let rank = firstRank; rank <= tileBox.top; rank += stepBig) {
-		const rankWorldY = space.convertCoordToWorldSpace(bdcoords.FromCoords([0n, rank]))[1];
-		// prettier-ignore
-		renderLabel(formatCoord(rank), [rankWorldX, rankWorldY], sizeWorld, 'left', arrowHalfWidth, arrowLocations);
-	}
+
+	// Render without any rotation so glyphs always appear upright.
+	// In black's perspective the view matrix carries a 180° Z-rotation that would otherwise flip the text.
+	perspective.renderWithoutPerspectiveRotations(() => {
+		for (let file = firstFile; file <= tileBox.right; file += stepBig) {
+			let worldX = space.convertCoordToWorldSpace(bdcoords.FromCoords([file, 0n]))[0];
+			if (isBlackPerspective) worldX = -worldX; // Invert world coords
+			// prettier-ignore
+			renderLabel(formatCoord(file), [worldX, fileWorldY], sizeWorld, 'center', arrowHalfWidth, effectiveArrowLocations);
+		}
+		for (let rank = firstRank; rank <= tileBox.top; rank += stepBig) {
+			let worldY = space.convertCoordToWorldSpace(bdcoords.FromCoords([0n, rank]))[1];
+			if (isBlackPerspective) worldY = -worldY; // Invert world coords
+			// prettier-ignore
+			renderLabel(formatCoord(rank), [rankWorldX, worldY], sizeWorld, 'left', arrowHalfWidth, effectiveArrowLocations);
+		}
+	});
 }
 
 /**

@@ -237,9 +237,10 @@ function renderCrosshair(): void {
  * Renders (performs) whatever function is passed to it,
  * as if our camera was looking straight at the board from
  * white's perspective. ZERO perspective rotations!
+ * Works both in 3D perspective mode and in 2D black's-perspective mode.
  */
 function renderWithoutPerspectiveRotations(func: Function): void {
-	if (!enabled) return func();
+	if (haveZeroRotation()) return func();
 
 	const perspectiveViewMatrixCopy = camera.getViewMatrix();
 	camera.initViewMatrix(true); // Init view while ignoring perspective rotations
