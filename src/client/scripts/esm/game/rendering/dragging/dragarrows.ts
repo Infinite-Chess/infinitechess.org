@@ -126,7 +126,7 @@ function updateActiveDrag(): void {
 		// Mouse moved back within threshold — deactivate the drag.
 		draganimation.setForceRankFileOutline(false);
 		isDragActive = false;
-		console.log('Set isDragActive = false');
+		// console.log('Set isDragActive = false');
 		selection.unselectPiece(); // Fires 'piece-unselected' → draganimation.cancelDragging()
 		return;
 	}
@@ -143,7 +143,7 @@ function updateCandidate(): void {
 	if (!respectiveListener.isPointerHeld(candidate!.pointerId)) {
 		// Pointer released without crossing threshold — clear candidate, allow normal arrow click.
 		candidate = undefined;
-		console.log('Set candidate = undefined');
+		// console.log('Set candidate = undefined');
 		return;
 	}
 
@@ -158,14 +158,14 @@ function updateCandidate(): void {
 	if (!piece) {
 		// Piece disappeared (shouldn't happen during candidate phase, but guard it).
 		candidate = undefined;
-		console.log('Set candidate = undefined');
+		// console.log('Set candidate = undefined');
 		return;
 	}
 
 	selection.selectPiece(gamefile, gameslot.getMesh(), piece, true);
 	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
-	console.log('Set isDragActive = true');
+	// console.log('Set isDragActive = true');
 	draganimation.setForceRankFileOutline(true);
 	frametracker.onVisualChange();
 }
@@ -200,7 +200,7 @@ function detectCandidateArrow(): void {
 			vector: hoveredArrow.vector,
 			pointerId,
 		};
-		console.log('Set candidate');
+		// console.log('Set candidate');
 
 		renderanims.startPulse(hoveredArrow.worldLocation);
 		break;
@@ -349,7 +349,7 @@ function renderRadialGradient(colors: Color[], spacing: number, phase: number): 
 
 /** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
 function reset(): void {
-	console.error('Resetting state');
+	// console.error('Resetting state');
 	candidate = undefined;
 	isDragActive = false;
 	draganimation.setForceRankFileOutline(false);
