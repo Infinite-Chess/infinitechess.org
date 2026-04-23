@@ -78,10 +78,11 @@ const SLIDE_ZONE_GRADIENT = {
 
 /** The candidate arrow — set when mouse is pressed on an own-piece arrow, cleared when pointer releases. */
 let candidate: CandidateArrow | undefined;
-/** Whether the drag has been activated (mouse moved past the activation threshold). */
+/**
+ * Whether the drag has been activated (mouse moved past the activation threshold).
+ * Can only ever be true if candidate is also defined.
+ */
 let isDragActive: boolean = false;
-/** Whether the mouse is currently inside the slide zone while the drag is active. */
-let currentlyInSlideZone: boolean = false;
 
 /** Current phase offset for the slide zone radial gradient, in world units. */
 let slideZonePhase: number = 0;
@@ -104,7 +105,7 @@ function update(): void {
 		detectCandidateArrow();
 	}
 
-	if (isDragActive && candidate) {
+	if (isDragActive) {
 		// Update the phase of the slide zone gradient to create a moving effect
 		slideZonePhase =
 			(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * loadbalancer.getDeltaTime()) %
@@ -239,9 +240,7 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	const inLeft = dir[0] < 0n && mouseWorld[0] < screenBox.left + slideZoneDepth;
 	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth;
 	const inBottom = dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth;
-	currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
-
-	// console.log('Set currentlyInSlideZone = ', currentlyInSlideZone);
+	const currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
 
 	if (currentlyInSlideZone) {
 		updateSlideZoneDrag(mouseWorld);
@@ -353,7 +352,6 @@ function reset(): void {
 	console.error('Resetting state');
 	candidate = undefined;
 	isDragActive = false;
-	currentlyInSlideZone = false;
 	draganimation.setForceRankFileOutline(false);
 }
 
