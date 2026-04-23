@@ -100,7 +100,7 @@ function render(): void {
 	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_SIZE_PX);
 	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
-	const tileBox = boardtiles.gboundingBox();
+	const tileBox = boardtiles.gboundingBox(false);
 	// Shrink the bounding box by 1 on each side to skip cut off edge tiles.
 	tileBox.left += 1n;
 	tileBox.right -= 1n;
