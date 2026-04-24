@@ -367,8 +367,15 @@ function renderCandidateArrows(): void {
 	const screenBox = camera.getScreenBoundingBox(false);
 	const cx = worldLocation[0];
 	const cy = worldLocation[1];
+	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
+		guigameinfo.getHeightOfGameInfoBar(),
+	);
 	const distToHorizontalEdge = screenBox.right - Math.abs(cx);
-	const distToVerticalEdge = screenBox.top - Math.abs(cy);
+	const distToVerticalEdge = Math.min(
+		screenBox.top - topBarDepth - cy,
+		cy - screenBox.bottom - bottomBarDepth,
+	);
 	// px/py is the unit vector along which the extra arrows oscillate
 	let px: number, py: number;
 	if (distToHorizontalEdge < distToVerticalEdge) {
