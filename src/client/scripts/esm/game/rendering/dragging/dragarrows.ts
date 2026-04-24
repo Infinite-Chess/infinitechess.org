@@ -396,6 +396,17 @@ function renderSlideMoveHighlights(): void {
 	// Only proceed if the piece actually slides in this direction
 	if (!moveset.sliding?.[lineKey]) return;
 
+	// For pieces that skip squares (e.g. knightriders), the hovered square may not be
+	// a valid landing spot for the piece from its actual position. Skip in that case.
+	const draggedPiece = boardutil.getPieceFromCoords(
+		gamefile.boardsim.pieces,
+		candidate.pieceCoords,
+	)!;
+	const legalMoves: LegalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	legalmoves.appendPotentialMoves(draggedPiece, moveset, legalMoves); // Appending potential is enough
+	if (!legalmoves.doSlideRangesContainSquare(legalMoves, candidate.pieceCoords, hoveredCoords))
+		return;
+
 	// Create a virtual piece at the hovered coords for move calculation
 	const piece: Piece = { type: pieceType, coords: hoveredCoords, index: -1 };
 
