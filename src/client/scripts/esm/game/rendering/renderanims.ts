@@ -30,7 +30,7 @@ interface PulseAnim {
 /** Duration of a single pulse animation in milliseconds. */
 const PULSE_DURATION_MS = 250;
 /** Maximum radius of the pulse circle in world-space units (at boardScale=1). Scaled by boardScale at render time. */
-const PULSE_MAX_RADIUS = 0.55;
+const PULSE_MAX_RADIUS = 0.65;
 /** Number of triangles used to approximate the pulse circle. */
 const PULSE_RESOLUTION = 24;
 /** Color of the pulse: white, with alpha controlled by animation progress. */
