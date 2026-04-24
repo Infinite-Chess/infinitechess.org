@@ -46,6 +46,7 @@ import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
 import { GameBus } from '../GameBus.js';
+import coordlabels from '../rendering/coordlabels.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -293,7 +294,7 @@ function renderScene(): void {
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
-		// coordlabels.render();
+		coordlabels.render();
 		selectedpiecehighlightline.render();
 		highlights.render(gamefile.boardsim);
 		GameBus.dispatch('render-below-pieces');

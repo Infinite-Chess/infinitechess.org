@@ -28,14 +28,33 @@ import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import perspective from './perspective.js';
+import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
 // Constants -------------------------------------------------------------------------
 
-/** Virtual-pixel height of each coordinate label. Zoom-independent. */
+/** Virtual-pixel height of each coordinate label at full size. Zoom-independent. */
 const LABEL_SIZE_PX = 24;
+/**
+ * Controls how labels shrink on small screens.
+ * The smaller canvas dimension (min of width and height) is used as the screen-size metric.
+ */
+const LABEL_SHRINK = {
+	/**
+	 * Virtual-pixel threshold for the smaller canvas dimension.
+	 * Above this value labels are always {@link LABEL_SIZE_PX} tall; below it they start shrinking.
+	 */
+	threshold: 1000,
+	/**
+	 * How aggressively labels shrink below the threshold.
+	 * At `1.0` labels scale fully to zero as the screen shrinks to zero.
+	 * At `0.5` they only ever shrink to half of {@link LABEL_SIZE_PX} no matter how small the screen gets.
+	 * Valid range: [0, 1].
+	 */
+	rate: 0.5,
+} as const;
 /** Virtual-pixel gap between the screen edge and the near edge of each label. */
 const LABEL_PADDING_PX = 5;
 /** RGBA color applied to all coordinate labels. */
@@ -54,6 +73,17 @@ const LABEL_ARROW_PADDING_PX = 6;
 const DEBUG_RENDER_LABEL_BOUNDS = false;
 
 // Functions -------------------------------------------------------------------------
+
+/** Returns the label size in virtual pixels for the current frame. */
+function calcLabelSizePx(): number {
+	const minDim = Math.min(
+		camera.getCanvasWidthVirtualPixels(),
+		camera.getCanvasHeightVirtualPixels(),
+	);
+	if (minDim >= LABEL_SHRINK.threshold) return LABEL_SIZE_PX;
+	const ratio = minDim / LABEL_SHRINK.threshold;
+	return LABEL_SIZE_PX * (1 - LABEL_SHRINK.rate * (1 - ratio));
+}
 
 /** Returns the display string for a coordinate label, abbreviating large values to "...XX" (last two digits). */
 function formatCoord(coord: bigint): string {
@@ -92,10 +122,12 @@ function ceilToMultiple(n: bigint, multiple: bigint): bigint {
 
 /** Renders the file (x-axis) and rank (y-axis) coordinate labels for the current frame. */
 function render(): void {
+	if (!preferences.getCoordinatesEnabled()) return; // Not enabled in the setting dropdown
 	if (perspective.getEnabled()) return;
 
 	const scale = boardpos.getBoardScale();
-	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_SIZE_PX);
+	const labelSizePx = calcLabelSizePx();
+	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(labelSizePx);
 	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
 	const tileBox = boardtiles.gboundingBox(false);

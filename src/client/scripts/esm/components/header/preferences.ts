@@ -20,6 +20,7 @@ const clientSidePrefs: string[] = [
 	'perspective_fov',
 	'drag_enabled',
 	'premove_enabled',
+	'coordinates_enabled',
 	'starfield_enabled',
 	'advanced_effects_enabled',
 	'master_volume',
@@ -35,6 +36,7 @@ interface ClientSidePreferences {
 	/** Master volume level from 0 (silent) to 1 (full volume) */
 	master_volume: number;
 	ambience_enabled: boolean;
+	coordinates_enabled: boolean;
 	[key: string]: any;
 }
 
@@ -62,6 +64,7 @@ const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
 const default_lingering_annotations: boolean = false;
+const default_coordinates_enabled: boolean = false;
 const default_starfield_enabled: boolean = true;
 const default_advanced_effects_enabled: boolean = true;
 const default_master_volume: number = 1;
@@ -89,6 +92,7 @@ function loadPreferences(): void {
 		premove_enabled: default_premove_enabled,
 		animations: default_animations,
 		lingering_annotations: default_lingering_annotations,
+		coordinates_enabled: default_coordinates_enabled,
 		starfield_enabled: default_starfield_enabled,
 		advanced_effects_enabled: default_advanced_effects_enabled,
 		master_volume: default_master_volume,
@@ -181,6 +185,15 @@ function setTheme(theme: string): void {
 	preferences.theme = theme;
 	console.log('Set theme');
 	onChangeMade();
+	savePreferences();
+}
+
+function getCoordinatesEnabled(): boolean {
+	return preferences.coordinates_enabled ?? default_coordinates_enabled;
+}
+
+function setCoordinatesEnabled(value: boolean): void {
+	preferences.coordinates_enabled = value;
 	savePreferences();
 }
 
@@ -533,6 +546,8 @@ function getTintColorOfType(type: number): Color {
 export default {
 	getTheme,
 	setTheme,
+	getCoordinatesEnabled,
+	setCoordinatesEnabled,
 	getStarfieldMode,
 	setStarfieldMode,
 	getLegalMovesShape,

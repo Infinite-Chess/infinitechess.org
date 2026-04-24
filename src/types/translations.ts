@@ -28,6 +28,7 @@ export type TranslationKeys =
 	| 'header.settings.language'
 	| 'header.settings.appearance'
 	| 'header.settings.appearance-theme'
+	| 'header.settings.appearance-coordinates'
 	| 'header.settings.appearance-starfield'
 	| 'header.settings.appearance-advanced-effects'
 	| 'header.settings.legalmoves'
@@ -617,6 +618,7 @@ export interface TranslationsObject {
 			language: string;
 			appearance: string;
 			'appearance-theme': string;
+			'appearance-coordinates': string;
 			'appearance-starfield': string;
 			'appearance-advanced-effects': string;
 			legalmoves: string;

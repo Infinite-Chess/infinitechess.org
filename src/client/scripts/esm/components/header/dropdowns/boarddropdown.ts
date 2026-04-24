@@ -12,6 +12,9 @@ const boardDropdownTitle = document.querySelector('.board-dropdown .dropdown-tit
 const boardDropdown = document.querySelector('.board-dropdown')!;
 const themeList = document.querySelector('.theme-list')!; // Get the theme list div
 
+const coordinatesCheckbox = document.querySelector<HTMLInputElement>(
+	'.boolean-option.coordinates input',
+)!;
 const starfieldCheckbox = document.querySelector<HTMLInputElement>(
 	'.boolean-option.starfield input',
 )!;
@@ -27,6 +30,7 @@ const advancedEffectsCheckbox = document.querySelector<HTMLInputElement>(
 })();
 
 function showCheckmarkOnSelectedOptions(): void {
+	coordinatesCheckbox.checked = preferences.getCoordinatesEnabled();
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
 	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
 }
@@ -68,6 +72,8 @@ function close(): void {
 function initListeners(): void {
 	boardDropdownTitle.addEventListener('click', close);
 	initThemeChangeListeners();
+	// Coordinates toggle
+	coordinatesCheckbox.addEventListener('click', toggleCoordinates);
 	// Starfield toggle
 	starfieldCheckbox.addEventListener('click', toggleStarfield);
 	// Advanced Effects toggle
@@ -76,6 +82,8 @@ function initListeners(): void {
 function closeListeners(): void {
 	boardDropdownTitle.removeEventListener('click', close);
 	closeThemeChangeListeners();
+	// Coordinates toggle
+	coordinatesCheckbox.removeEventListener('click', toggleCoordinates);
 	// Starfield toggle
 	starfieldCheckbox.removeEventListener('click', toggleStarfield);
 	// Advanced Effects toggle
@@ -113,6 +121,10 @@ function updateThemeSelectedStyling(): void {
 		if (theme.getAttribute('theme') === selectedTheme) theme.classList.add('selected');
 		else theme.classList.remove('selected');
 	}
+}
+
+function toggleCoordinates(): void {
+	preferences.setCoordinatesEnabled(coordinatesCheckbox.checked);
 }
 
 function toggleStarfield(): void {
