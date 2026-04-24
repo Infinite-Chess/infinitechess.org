@@ -187,36 +187,6 @@ function updateElement_Coords(): void {
 }
 
 /**
- * Formats a BigInt into a string with exponential notation.
- * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
- * @param bigint The BigInt to format.
- * @param precision The number of significant digits for the mantissa.
- * @returns The formatted string.
- */
-function formatBigIntExponential(bigint: bigint, precision: number): string {
-	// Work with the absolute value and track the sign
-	const isNegative = bigint < 0n;
-	const absString: string = bimath.abs(bigint).toString();
-
-	const exponent: number = absString.length - 1;
-
-	// Get the digits for the mantissa (the part before 'e')
-	const mantissaDigits: string = absString.substring(0, precision);
-
-	let mantissa: string;
-	if (mantissaDigits.length > 1) {
-		// Insert the decimal point, e.g., "123" -> "1.23"
-		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
-	} else {
-		// If precision is 1, no decimal point is needed
-		mantissa = mantissaDigits;
-	}
-
-	// Re-attach the negative sign if needed and combine the parts
-	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
-}
-
-/**
  * Displays a BigInt in an input element. If it overflows,
  * it's displayed in exponential notation instead.
  * @param inputElement The input element to display the number in.
@@ -235,7 +205,7 @@ function displayBigIntInInput(
 	if (inputElement.scrollWidth > inputElement.clientWidth + 1) {
 		// Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
 		// Format it and set the .value again.
-		inputElement.value = formatBigIntExponential(bigint, precision);
+		inputElement.value = bimath.formatBigIntExponential(bigint, precision);
 	}
 }
 

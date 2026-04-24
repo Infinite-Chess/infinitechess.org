@@ -310,6 +310,37 @@ function generateModelsForPiecesLegalMoveHighlights(
 	};
 }
 
+/**
+ * Generates a single instanced rendering model of white box outlines for all squares
+ * in the given legal moves (captures and non-captures alike share the same shape).
+ * Used for rendering slide-move highlights when dragging an off-screen piece via its arrow indicator.
+ * @param coords - The coordinates of the piece with the provided legal moves.
+ * @param legalMoves - The legal moves of which to generate the outline model for.
+ */
+function generateModelForSlideHighlightOutlines(
+	coords: Coords,
+	legalMoves: LegalMoves,
+): RenderableInstanced {
+	const vertexData: number[] = instancedshapes.getDataBoxOutline();
+	/** The instance-specific position data. Stride 2 (2 instanceposition). Captures and non-captures share the same outline shape. */
+	const instanceData: bigint[] = [];
+
+	const gamefile = gameslot.getGamefile()!;
+
+	// Pass the same array for both capture and non-capture — the outline looks identical for both.
+	pushIndividual(instanceData, instanceData, legalMoves, gamefile.boardsim);
+	// prettier-ignore
+	pushSliding(instanceData, instanceData, coords, legalMoves, gamefile, gamefile.basegame.whosTurn);
+
+	return createRenderable_Instanced(
+		vertexData,
+		piecemodels.castBigIntArrayToFloat32(instanceData),
+		'TRIANGLES',
+		'colorInstanced',
+		true,
+	);
+}
+
 // Individual Moves ------------------------------------------------------------------------------------------------------
 
 /**
@@ -695,6 +726,7 @@ export default {
 	updateRenderRange,
 	// Generating Legal Move Buffer Models
 	generateModelsForPiecesLegalMoveHighlights,
+	generateModelForSlideHighlightOutlines,
 	// Rays
 	genModelForRays,
 	// Rendering

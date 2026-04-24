@@ -10,8 +10,8 @@ import type { Color } from '../../../../../../../shared/util/math/math.js';
 
 import variant from '../../../../../../../shared/chess/variants/variant.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import vectors, { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
-import vectors, { Ray, Vec3 } from '../../../../../../../shared/util/math/vectors.js';
 import coordutil, {
 	BDCoords,
 	Coords,
@@ -464,11 +464,7 @@ function genAndRenderRays(rays: Ray[], color: Color): void {
 		highlightline.genLinesModel(lines).render();
 	} else {
 		// Zoomed in, render rays as infinite legal move highlights
-		const boardPos: BDCoords = boardpos.getBoardPos();
-		const model_Offset: Coords = legalmovemodel.getOffset();
-		const position = meshes.getModelPosition(boardPos, model_Offset, 0);
-		const boardScale: number = boardpos.getBoardScaleAsNumber();
-		const scale: Vec3 = [boardScale, boardScale, 1];
+		const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
 
 		legalmovemodel.genModelForRays(rays, color).render(position, scale);
 	}

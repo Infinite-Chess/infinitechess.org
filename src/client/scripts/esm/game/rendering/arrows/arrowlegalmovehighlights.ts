@@ -5,7 +5,6 @@
  * legal moves of all arrow indicators being hovered over.
  */
 
-import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
@@ -19,7 +18,6 @@ import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil
 
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
-import boardpos from '../boardpos.js';
 import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
 import preferences from '../../../components/header/preferences.js';
@@ -173,11 +171,7 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 function renderEachHoveredPieceLegalMoves(): void {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
-	const boardPos = boardpos.getBoardPos();
-	const model_Offset = legalmovemodel.getOffset();
-	const position: Vec3 = meshes.getModelPosition(boardPos, model_Offset, 0);
-	const boardScale = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
 
 	hoveredArrowsLegalMoves.forEach((hoveredArrow) => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)

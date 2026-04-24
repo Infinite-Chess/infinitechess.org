@@ -130,18 +130,20 @@ interface ArrowsLine {
 }
 
 /** A single arrow indicator, with enough information to be able to render it. */
-interface Arrow {
+export interface Arrow {
 	worldLocation: DoubleCoords;
 	piece: ArrowPiece;
 	/** Whether the arrow is being hovered over by the mouse */
 	hovered: boolean;
+	/** Opacity to render this arrow at when not hovered. Defaults to the module-level opacity constant. */
+	opacity: number;
 }
 
 /**
  * Reflection of the {@link Piece} type, but with extra decimal precision
  * for the coordinates (needed for animated arrows).
  */
-interface ArrowPiece {
+export interface ArrowPiece {
 	type: number;
 	coords: BDCoords;
 	index: number;
@@ -155,7 +157,7 @@ interface AnimatedArrow extends Arrow {
 }
 
 /** An arrow that is being hovered over this frame */
-interface HoveredArrow {
+export interface HoveredArrow {
 	/** A reference to the piece it is pointing to */
 	piece: ArrowPiece;
 	/**
@@ -164,6 +166,13 @@ interface HoveredArrow {
 	 * Negated is auto-negated when applicable.
 	 */
 	vector: Vec2;
+	/** The world-space position of this arrow indicator on the screen edge. */
+	worldLocation: DoubleCoords;
+	/**
+	 * Whether the piece can generally slide in the arrow direction.
+	 * IS NOT calculated for shifted arrows (always true).
+	 */
+	ownsSlide: boolean;
 }
 
 // Variables ----------------------------------------------------------------------------
@@ -281,6 +290,22 @@ function toggleArrows(): void {
 }
 
 /**
+ * Returns all Arrow objects currently in the slide arrows structure.
+ * Does NOT include animated arrows.
+ * Callers may mutate arrow properties (e.g. opacity) before rendering.
+ */
+function getAllArrows(): Arrow[] {
+	const result: Arrow[] = [];
+	for (const linesOfDirection of Object.values(slideArrows)) {
+		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
+			for (const arrow of line.posDotProd) result.push(arrow);
+			for (const arrow of line.negDotProd) result.push(arrow);
+		}
+	}
+	return result;
+}
+
+/**
  * Returns the list of arrow indicators hovered over this frame,
  * with references to the piece they are pointing to.
  *
@@ -292,6 +317,30 @@ function getHoveredArrows(): HoveredArrow[] {
 
 function areHoveringAtleastOneArrow(): boolean {
 	return hoveredArrows.length > 0;
+}
+
+/**
+ * Returns the world-space locations of all arrow indicators present for the current frame.
+ * Must be called after update().
+ */
+function getAllArrowWorldLocations(): DoubleCoords[] {
+	const locations: DoubleCoords[] = [];
+	for (const linesOfDirection of Object.values(slideArrows)) {
+		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
+			for (const arrow of line.posDotProd) locations.push(arrow.worldLocation);
+			for (const arrow of line.negDotProd) locations.push(arrow.worldLocation);
+		}
+	}
+	for (const arrow of animatedArrows) locations.push(arrow.worldLocation);
+	return locations;
+}
+
+/**
+ * Returns the world-space half-width of each arrow indicator's square hitbox for the current frame.
+ * This is the Chebyshev-distance radius used to detect hover/opacity changes.
+ */
+function getArrowIndicatorHalfWidth(): number {
+	return (width * boardpos.getBoardScaleAsNumber()) / 2;
 }
 
 // Updating -----------------------------------------------------------------------------------------------------------
@@ -732,7 +781,7 @@ function getSlideExceptions(): Vec2Key[] {
 	if (mode === 2)
 		slideExceptions = gamefile.boardsim.pieces.slides
 			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n)
-			.map(vectors.getKeyFromVec2); // Filter out all hippogonal and greater vectors
+			.map((v) => vectors.getKeyFromVec2(v)); // Filter out all hippogonal and greater vectors
 	return slideExceptions;
 }
 
@@ -759,8 +808,8 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 	if (Object.keys(slideArrows).length > 0)
 		throw Error('SHOULD have erased all slide arrows before recalcing');
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
-
+	const boardsim = gameslot.getGamefile()!.boardsim;
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	// Take the arrows draft, construct the actual
@@ -780,31 +829,18 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 			const posDotProd: Arrow[] = [];
 			const negDotProd: Arrow[] = [];
 
-			arrowLineDraft.posDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(
-					arrowDraft.piece,
-					vector,
-					arrowLineDraft.intersections[0],
-					index,
-					worldHalfWidth,
-					pointerWorlds,
-					true,
-				);
-				posDotProd.push(arrow);
-			});
-
-			arrowLineDraft.negDotProd.forEach((arrowDraft, index) => {
-				const arrow = processPiece(
-					arrowDraft.piece,
-					negVector,
-					arrowLineDraft.intersections[1],
-					index,
-					worldHalfWidth,
-					pointerWorlds,
-					true,
-				);
-				negDotProd.push(arrow);
-			});
+			for (const [drafts, dir, intersection, output] of [
+				[arrowLineDraft.posDotProd, vector, arrowLineDraft.intersections[0], posDotProd],
+				[arrowLineDraft.negDotProd, negVector, arrowLineDraft.intersections[1], negDotProd],
+			] as [ArrowDraft[], Vec2, BDCoords, Arrow[]][]) {
+				drafts.forEach((arrowDraft, index) => {
+					const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+					// Whether this piece can slide in the direction of the arrow
+					const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
+					// prettier-ignore
+					output.push(processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds, true, ownsSlide));
+				});
+			}
 
 			linesOfDirection[lineKey] = { posDotProd, negDotProd };
 		}
@@ -838,6 +874,7 @@ function processPiece(
 	worldHalfWidth: number,
 	pointerWorlds: DoubleCoords[],
 	appendHover: boolean,
+	ownsSlide: boolean = true,
 ): Arrow {
 	const renderCoords = intersection; // Don't think we need to deep copy?
 
@@ -859,13 +896,20 @@ function processPiece(
 			// Mouse inside the picture bounding box
 			hovered = true;
 			// ADD the piece to the list of arrows being hovered over!!!
-			if (appendHover) hoveredArrows.push({ piece, vector });
+			// Convert direction the piece travels to reach arrow into the direction the arrow points, which is the OPPOSITE.
+			if (appendHover)
+				hoveredArrows.push({
+					piece,
+					vector: vectors.negateVector(vector),
+					worldLocation,
+					ownsSlide,
+				});
 		}
 	}
 	// If we clicked, then teleport!
 	teleportToPieceIfClicked(piece, worldLocation, vector, worldHalfWidth);
 
-	return { worldLocation, piece, hovered };
+	return { worldLocation, piece, hovered, opacity };
 }
 
 /**
@@ -918,10 +962,7 @@ function teleportToPieceIfClicked(
 				)!; // We know it will be defined because they are PERPENDICULAR
 
 				Transition.startPanTransition(telCoords, false);
-			} else {
-				// Mouse down
-				listener.claimMouseDown(button); // Don't let the board be dragged by this mouse down, or start drawing an arrow by this finger down
-			}
+			} // Mouse down claiming is now the responsibility of dragarrows.ts
 		}
 	}
 }
@@ -1039,7 +1080,7 @@ function executeArrowShifts(): void {
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2; // The world-space width of our images
+	const worldHalfWidth = getArrowIndicatorHalfWidth(); // The world-space width of our images
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	shifts.forEach((shift) => {
@@ -1213,7 +1254,7 @@ function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void
 
 		// Calculate more detailed information, enough to render...
 
-		const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
+		const worldHalfWidth = getArrowIndicatorHalfWidth();
 
 		const pointerWorlds = mouse.getAllPointerWorlds();
 
@@ -1269,7 +1310,7 @@ function render(): void {
 function regenerateModelAndRender(): void {
 	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
 
-	const worldHalfWidth = (width * boardpos.getBoardScaleAsNumber()) / 2;
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
 
 	// Position data of the single instance
 	const left = -worldHalfWidth;
@@ -1389,7 +1430,7 @@ function concatData(
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
+	const a = arrow.hovered ? 1 : arrow.opacity;
 
 	// Opacity changing with distance
 	// let maxAxisDist = vectors.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
@@ -1435,16 +1476,18 @@ export default {
 	getMode,
 	setMode,
 	toggleArrows,
+	getAllArrows,
 	getHoveredArrows,
 	areHoveringAtleastOneArrow,
+	getAllArrowWorldLocations,
+	getArrowIndicatorHalfWidth,
 	// Arrow Shifting
 	deleteArrow,
 	moveArrow,
 	animateArrow,
 	addArrow,
 	executeArrowShifts,
+	areArrowsActiveThisFrame,
 	update,
 	render,
 };
-
-export type { ArrowPiece };

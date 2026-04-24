@@ -18,9 +18,26 @@ import space from '../../misc/space.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
+import frametracker from '../frametracker.js';
 import draganimation from './draganimation.js';
 
+// Constants -------------------------------------------------------------------------------
+
+/** Settings for the opacity pulsation on legally capturable arrow indicators. */
+const LEGAL_CAPTURE_PULSATE = {
+	/** Period of the oscillation, in milliseconds. */
+	PERIOD_MS: 700,
+	/** Lower bound of the opacity oscillation. */
+	MIN_OPACITY: 0.4,
+} as const;
+
+// State -----------------------------------------------------------------------------------
+
 let capturedPieceThisFrame: Piece | undefined;
+/** Timestamp when the current drag started, used to anchor the pulsation phase to 0. */
+let dragStartTime: number | undefined;
+
+// Functions -------------------------------------------------------------------------------
 
 /**
  * Update the piece that would be captured if we were to let
@@ -112,13 +129,64 @@ function shiftArrows(): void {
 	else arrows.deleteArrow(selectedPiece.coords);
 }
 
+/**
+ * Every frame while dragging, iterates all visible arrow indicators and pulsates
+ * the opacity of any that the dragged piece could legally capture.
+ */
+function updateLegalCaptureArrows(): void {
+	if (!draganimation.areDraggingPiece()) return;
+
+	const gamefile = gameslot.getGamefile()!;
+
+	const selectedPiece = selection.getPieceSelected()!;
+	const selectedPieceLegalMoves = selection.getLegalMovesOfSelectedPiece()!;
+	const selectedPieceColor = typeutil.getColorFromType(selectedPiece.type);
+
+	if (dragStartTime === undefined) dragStartTime = performance.now();
+	const phase =
+		(2 * Math.PI * (performance.now() - dragStartTime)) / LEGAL_CAPTURE_PULSATE.PERIOD_MS;
+	const alpha =
+		LEGAL_CAPTURE_PULSATE.MIN_OPACITY +
+		((1 - LEGAL_CAPTURE_PULSATE.MIN_OPACITY) * (Math.cos(phase) + 1)) / 2;
+
+	let hasCapturable = false;
+	for (const arrow of arrows.getAllArrows()) {
+		if (arrow.piece.floating) continue;
+		const intCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
+		if (coordutil.areCoordsEqual(intCoords, selectedPiece.coords)) continue;
+		// When a capture is pending, the arrows at the capture destination have been replaced
+		// by the dragged piece's own arrows — skip them so they don't pulsate.
+		if (
+			capturedPieceThisFrame !== undefined &&
+			coordutil.areCoordsEqual(intCoords, capturedPieceThisFrame.coords)
+		)
+			continue;
+		if (
+			legalmoves.checkIfMoveLegal(
+				gamefile,
+				selectedPieceLegalMoves,
+				selectedPiece.coords,
+				intCoords,
+				selectedPieceColor,
+			)
+		) {
+			arrow.opacity = alpha;
+			hasCapturable = true;
+		}
+	}
+
+	if (hasCapturable) frametracker.onVisualChange();
+}
+
 function onDragTermination(): void {
 	capturedPieceThisFrame = undefined;
+	dragStartTime = undefined;
 }
 
 export default {
 	updateCapturedPiece,
 	getCaptureCoords,
 	shiftArrows,
+	updateLegalCaptureArrows,
 	onDragTermination,
 };
