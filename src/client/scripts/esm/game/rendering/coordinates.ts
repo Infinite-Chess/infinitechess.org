@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/coordlabels.ts
+// src/client/scripts/esm/game/rendering/coordinates.ts
 
 /**
  * Renders coordinate labels (file numbers along the bottom, rank numbers along

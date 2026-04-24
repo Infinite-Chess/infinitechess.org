@@ -31,12 +31,12 @@ interface ClientSidePreferences {
 	perspective_fov: number;
 	drag_enabled: boolean;
 	premove_enabled: boolean;
+	coordinates_enabled: boolean;
 	starfield_enabled: boolean;
 	advanced_effects_enabled: boolean;
 	/** Master volume level from 0 (silent) to 1 (full volume) */
 	master_volume: number;
 	ambience_enabled: boolean;
-	coordinates_enabled: boolean;
 	[key: string]: any;
 }
 
