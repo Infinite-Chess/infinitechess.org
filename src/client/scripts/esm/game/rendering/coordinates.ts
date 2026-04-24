@@ -1,6 +1,8 @@
-// src/client/scripts/esm/game/rendering/coordlabels.ts
+// src/client/scripts/esm/game/rendering/coordinates.ts
 
 /**
+ * Board Coordinates
+ *
  * Renders coordinate labels (file numbers along the bottom, rank numbers along
  * the left side) in a style similar to classical chess board notation.
  *
@@ -17,7 +19,6 @@ import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.j
 
 import bd, { BigDecimal, toNumber } from '@naviary/bigdecimal';
 
-import bimath from '../../../../../shared/util/math/bimath.js';
 import bounds from '../../../../../shared/util/math/bounds.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 
@@ -27,22 +28,40 @@ import arrows from './arrows/arrows.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
+import guigameinfo from '../gui/guigameinfo.js';
 import perspective from './perspective.js';
+import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
 // Constants -------------------------------------------------------------------------
 
-/** Virtual-pixel height of each coordinate label. Zoom-independent. */
+/** Virtual-pixel height of each coordinate label at full size. Zoom-independent. */
 const LABEL_SIZE_PX = 24;
+/**
+ * Controls how labels shrink on small screens.
+ * The smaller canvas dimension (min of width and height) is used as the screen-size metric.
+ */
+const LABEL_SHRINK = {
+	/**
+	 * Virtual-pixel threshold for the smaller canvas dimension.
+	 * Above this value labels are always {@link LABEL_SIZE_PX} tall; below it they start shrinking.
+	 */
+	threshold: 1000,
+	/**
+	 * How aggressively labels shrink below the threshold.
+	 * At `1.0` labels scale fully to zero as the screen shrinks to zero.
+	 * At `0.5` they only ever shrink to half of {@link LABEL_SIZE_PX} no matter how small the screen gets.
+	 * Valid range: [0, 1].
+	 */
+	rate: 0.6,
+} as const;
 /** Virtual-pixel gap between the screen edge and the near edge of each label. */
 const LABEL_PADDING_PX = 5;
 /** RGBA color applied to all coordinate labels. */
 const LABEL_COLOR: Color = [0, 0, 0, 0.65];
-/** Significant figures used when a coordinate is too long to display in full. */
-const COORD_E_PRECISION = 3;
-/** Labels with more characters than this threshold switch to scientific notation. */
+/** Labels with more characters than this threshold switch to the abbreviated "...XX" format. */
 const MAX_FULL_DISPLAY_LENGTH = 7;
 /** Gap between adjacent labels as a multiple of the label height. */
 const LABEL_GAP_SIZE = 0.4;
@@ -57,11 +76,26 @@ const DEBUG_RENDER_LABEL_BOUNDS = false;
 
 // Functions -------------------------------------------------------------------------
 
-/** Returns the display string for a coordinate label, switching to scientific notation for large values. */
+/** Returns the label size in virtual pixels for the current frame. */
+function calcLabelSizePx(): number {
+	const minDim = Math.min(
+		camera.getCanvasWidthVirtualPixels(),
+		camera.getCanvasHeightVirtualPixels(),
+	);
+	if (minDim >= LABEL_SHRINK.threshold) return LABEL_SIZE_PX;
+	const ratio = minDim / LABEL_SHRINK.threshold;
+	return LABEL_SIZE_PX * (1 - LABEL_SHRINK.rate * (1 - ratio));
+}
+
+/**
+ * Returns the display string for a coordinate label, abbreviating large
+ * values to "...XX" (or "-...XX" for negatives) using the last two digits.
+ */
 function formatCoord(coord: bigint): string {
 	const full = coord.toString();
 	if (full.length <= MAX_FULL_DISPLAY_LENGTH) return full;
-	return bimath.formatBigIntExponential(coord, COORD_E_PRECISION);
+	const prefix = coord < 0n ? '-...' : '...';
+	return prefix + full.slice(-2);
 }
 
 /**
@@ -94,10 +128,12 @@ function ceilToMultiple(n: bigint, multiple: bigint): bigint {
 
 /** Renders the file (x-axis) and rank (y-axis) coordinate labels for the current frame. */
 function render(): void {
+	if (!preferences.getCoordinatesEnabled()) return; // Not enabled in the setting dropdown
 	if (perspective.getEnabled()) return;
 
 	const scale = boardpos.getBoardScale();
-	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_SIZE_PX);
+	const labelSizePx = calcLabelSizePx();
+	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(labelSizePx);
 	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
 	const tileBox = boardtiles.gboundingBox(false);
@@ -112,9 +148,24 @@ function render(): void {
 	// The step is driven by the widest visible file label (width-based overlap).
 	// File labels overlap sooner than rank labels because characters are wider than
 	// they are tall, so a step sufficient for files is automatically sufficient for ranks.
+
+	// If both endpoints are abbreviated but the visible range spans the non-abbreviated zone,
+	// the endpoints would underestimate the widest label. Guard against that by also
+	// measuring the widest possible non-abbreviated label when the zone is in range.
+	const unabbrevMax = 10n ** BigInt(MAX_FULL_DISPLAY_LENGTH) - 1n; // e.g. 9999999n
+	const unabbrevMin = -(10n ** BigInt(MAX_FULL_DISPLAY_LENGTH - 1) - 1n); // e.g. -999999n
+	// Only needed when at least one endpoint is abbreviated (outside the non-abbreviated zone)
+	// but the range still spans into it, meaning interior labels will be wider than the endpoints.
+	const hasUnabbrevInRange =
+		(tileBox.left < unabbrevMin || tileBox.right > unabbrevMax) &&
+		tileBox.left <= unabbrevMax &&
+		tileBox.right >= unabbrevMin;
 	const widestFileLabelWidth = Math.max(
 		textrenderer.getTextWidth(formatCoord(tileBox.left), sizeWorld),
 		textrenderer.getTextWidth(formatCoord(tileBox.right), sizeWorld),
+		hasUnabbrevInRange
+			? textrenderer.getTextWidth('9'.repeat(MAX_FULL_DISPLAY_LENGTH), sizeWorld)
+			: 0,
 	);
 	const threshold = widestFileLabelWidth + sizeWorld * LABEL_GAP_SIZE;
 	const stepBig = computeStep(threshold, scale);
@@ -134,8 +185,15 @@ function render(): void {
 	// X-axis: file labels centered on each file column, fixed at the bottom of the screen.
 	// Shifted down by ATLAS_DESCENDER_FRACTION so the invisible descender space goes below
 	// the screen edge rather than adding unwanted gap above the visible characters.
+	// Shifted up by the game info bar height so labels aren't covered when it's visible.
+	const gameInfoBarOffsetWorld = space.convertPixelsToWorldSpace_Virtual(
+		guigameinfo.getHeightOfGameInfoBar(),
+	);
 	const fileWorldY =
-		screenBox.bottom + paddingWorld + sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
+		screenBox.bottom +
+		gameInfoBarOffsetWorld +
+		paddingWorld +
+		sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
 	const firstFile = ceilToMultiple(tileBox.left, stepBig);
 
 	// Y-axis: rank labels left-aligned from the left edge of the screen, at each rank row.
