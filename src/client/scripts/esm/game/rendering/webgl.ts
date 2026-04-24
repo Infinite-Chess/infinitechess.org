@@ -245,6 +245,8 @@ function executeMaskedDraw(
 		// Return to a normal state.
 		gl.disable(gl.STENCIL_TEST);
 		gl.enable(gl.DEPTH_TEST);
+		// Clear leftover stencil values.
+		gl.clear(gl.STENCIL_BUFFER_BIT);
 	}
 }
 

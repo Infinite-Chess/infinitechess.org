@@ -17,6 +17,7 @@ import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js
 import board from './boardtiles.js';
 import meshes from './meshes.js';
 import primitives from './primitives.js';
+import preferences from '../../components/header/preferences.js';
 
 // Variables ------------------------------------------------------------------------------
 
@@ -49,6 +50,12 @@ const CORNER_TRIS = {
 	 * so increasing their opacity helps.
 	 */
 	OPACITY_OFFSET: 0.2,
+};
+
+/** Properties for the box outline that is rendered over the hovered square during dragging. */
+const BOX_OUTLINE = {
+	/** The width of the outline border, where 1 equals the width of one square. */
+	EDGE_WIDTH: 0.07,
 };
 
 /**
@@ -226,6 +233,96 @@ function getDataPlusSign(color: Color): number[] {
 }
 
 /**
+ * Generates the vertex data for a box outline (frame) indicating a hovered square, centered on [0,0].
+ * The outline wraps exactly around the full square tile. The color is taken from the current theme.
+ * @returns The vertex data for the box outline.
+ */
+function getDataBoxOutline(): number[] {
+	const [r, g, b, a] = preferences.getBoxOutlineColor();
+
+	const squareCenter = board.getSquareCenterAsNumber();
+	const centerX = 0.5 - squareCenter;
+	const centerY = 0.5 - squareCenter;
+
+	const halfBox = 0.5;
+	const outerLeft = centerX - halfBox;
+	const outerRight = centerX + halfBox;
+	const outerTop = centerY + halfBox;
+	const outerBottom = centerY - halfBox;
+
+	const edgeWidth = BOX_OUTLINE.EDGE_WIDTH;
+	const innerLeft = outerLeft + edgeWidth;
+	const innerRight = outerRight - edgeWidth;
+	const innerTop = outerTop - edgeWidth;
+	const innerBottom = outerBottom + edgeWidth;
+
+	const vertices: number[] = [];
+
+	// Helper to add a rectangle (two triangles)
+	// prettier-ignore
+	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void {
+		vertices.push(
+			x1, y1,   r, g, b, a, // Triangle 1, Vertex 1
+			x2, y2,   r, g, b, a, // Triangle 1, Vertex 2
+			x3, y3,   r, g, b, a, // Triangle 1, Vertex 3
+			x3, y3,   r, g, b, a, // Triangle 2, Vertex 1
+			x4, y4,   r, g, b, a, // Triangle 2, Vertex 2
+			x1, y1,   r, g, b, a  // Triangle 2, Vertex 3
+		);
+	}
+
+	// Top edge
+	addRectangle(
+		outerLeft,
+		outerTop, // Outer top-left
+		outerRight,
+		outerTop, // Outer top-right
+		innerRight,
+		innerTop, // Inner top-right
+		innerLeft,
+		innerTop, // Inner top-left
+	);
+
+	// Bottom edge
+	addRectangle(
+		outerLeft,
+		outerBottom, // Outer bottom-left
+		innerLeft,
+		innerBottom, // Inner bottom-left
+		innerRight,
+		innerBottom, // Inner bottom-right
+		outerRight,
+		outerBottom, // Outer bottom-right
+	);
+
+	// Left edge
+	addRectangle(
+		outerLeft,
+		outerTop, // Outer top-left
+		innerLeft,
+		innerTop, // Inner top-left
+		innerLeft,
+		innerBottom, // Inner bottom-left
+		outerLeft,
+		outerBottom, // Outer bottom-left
+	);
+
+	// Right edge
+	addRectangle(
+		outerRight,
+		outerTop, // Outer top-right
+		outerRight,
+		outerBottom, // Outer bottom-right
+		innerRight,
+		innerBottom, // Inner bottom-right
+		innerRight,
+		innerTop, // Inner top-right
+	);
+
+	return vertices;
+}
+
+/**
  * Generates the vertex data for a single square draw with a texture, centered on [0,0]
  * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
  */
@@ -259,6 +356,7 @@ export default {
 	getDataLegalMoveDot,
 	getDataLegalMoveCornerTris,
 	getDataPlusSign,
+	getDataBoxOutline,
 	getDataTexture,
 	getDataColoredTexture,
 };

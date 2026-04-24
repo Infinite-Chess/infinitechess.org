@@ -6,14 +6,13 @@
  * and plays the sound when the piece is dropped.
  */
 
+import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { Renderable } from '../../../webgl/Renderable.js';
 import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
-import themes from '../../../../../../shared/components/header/themes.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
@@ -34,8 +33,10 @@ import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
 import frametracker from '../frametracker.js';
-import { createRenderable } from '../../../webgl/Renderable.js';
+import legalmovemodel from '../highlights/legalmovemodel.js';
+import instancedshapes from '../instancedshapes.js';
 import { listener_overlay } from '../../chess/game.js';
+import { createRenderable, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------------------------------
 
@@ -80,6 +81,11 @@ const perspectiveConfigs: { z: number; shadowColor: Color } = {
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
 /**
+ * When true, the rank/file outline is always rendered during dragging,
+ * regardless of zoom level. Set by dragarrows.ts during slide zone mode.
+ */
+let forceRankFileOutline: boolean = false;
+/**
  * When true, the next time a piece is dropped on its own square, it will NOT be unselected.
  * But if this is false, it WOULD be unselected.
  * Pieces are unselected every second time dropped.
@@ -102,6 +108,11 @@ let pieceType: number | undefined;
 
 function areDraggingPiece(): boolean {
 	return areDragging;
+}
+
+/** Forces the rank/file outline to always render during dragging. Used by dragarrows.ts in slide zone mode. */
+function setForceRankFileOutline(value: boolean): void {
+	forceRankFileOutline = value;
 }
 
 /** If true, the last pick-up action newly selected that piece, vs picking up an already-selected piece. */
@@ -172,6 +183,15 @@ function getPointerIdDraggingPiece(): string | undefined {
 	return pointerId;
 }
 
+/**
+ * Returns the square the dragged piece is currently hovering over.
+ * Set by updateDragLocation or setDragLocationAndHoverSquare
+ * by the droparrows or dragarrows features.
+ */
+function getHoveredCoords(): Coords | undefined {
+	return hoveredCoords;
+}
+
 /** Whether the pointer dragging the selected piece has released yet. */
 function hasPointerReleased(): boolean {
 	if (!areDragging) throw Error("Don't call hasPointerReleased() when not dragging a piece");
@@ -229,15 +249,12 @@ function renderTransparentSquare(): void {
 function renderPiece(): void {
 	if (!areDragging || perspective.isLookingUp() || !worldLocation) return;
 
-	genOutlineModel().render();
-	genPieceModel()?.render();
+	renderOutline();
+	renderPieceModel();
 }
 
-/**
- * Generates the model of the dragged piece and its shadow.
- * @returns The buffer model
- */
-function genPieceModel(): Renderable | undefined {
+/** Generates the model of the dragged piece and its shadow. */
+function renderPieceModel(): void {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
@@ -277,25 +294,23 @@ function genPieceModel(): Renderable | undefined {
 	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
 	// prettier-ignore
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
-	return createRenderable(
+	createRenderable(
 		data,
 		3,
 		'TRIANGLES',
 		'colorTexture',
 		true,
 		spritesheet.getSpritesheet(),
-	);
+	).render();
 }
 
 /**
- * Generates a model to enphasize the hovered square.
+ * Renders the outline emphasizing the hovered square.
  * If mouse is being used the square is outlined.
- * On touchscreen the entire rank and file are outlined.
- * @returns The buffer model
+ * On touchscreen (or in slide zone mode) the entire rank and file are outlined.
  */
 // prettier-ignore
-function genOutlineModel(): Renderable {
-	const data: number[] = [];
+function renderOutline(): void {
 	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
 	// The coordinates of the edges of the square
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
@@ -303,114 +318,33 @@ function genOutlineModel(): Renderable {
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();
 
-	// Outline the enire rank & file when:
+	// Outline the entire rank & file when:
 	// 1. We're not hovering over the start square.
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();
-
+		const data: number[] = [];
 		data.push(...primitives.Quad_Color(left, screenBox.bottom, left + width, screenBox.top, color)); // left
 		data.push(...primitives.Quad_Color(screenBox.left, bottom, screenBox.right, bottom + width, color)); // bottom
 		data.push(...primitives.Quad_Color(right - width, screenBox.bottom, right, screenBox.top, color)); // right
 		data.push(...primitives.Quad_Color(screenBox.left, top - width, screenBox.right, top, color)); // top
+		createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 	} else {
-		// Outline the hovered square
-		data.push(...getBoxFrameData(hoveredCoords!));
+		// Outline the hovered square using an instanced box outline model
+		const vertexData = instancedshapes.getDataBoxOutline();
+		const boardPos = boardpos.getBoardPos();
+		const offset = legalmovemodel.getOffset();
+		const offsetCoord = coordutil.subtractCoords(hoveredCoords!, offset);
+		const instanceData: number[] = [Number(offsetCoord[0]), Number(offsetCoord[1])];
+		const position: Vec3 = meshes.getModelPosition(boardPos, offset, 0);
+		const scale: Vec3 = [boardScale, boardScale, 1];
+		createRenderable_Instanced(vertexData, instanceData, 'TRIANGLES', 'colorInstanced', true)
+			.render(position, scale);
 	}
-
-	return createRenderable(data, 2, 'TRIANGLES', 'color', true);
-}
-
-/**
- * Generates vertex data for a rectangular frame (box).
- * @param coords - The coordinate of the box frame
- * @returns The vertex data for the frame.
- */
-// prettier-ignore
-function getBoxFrameData(coords: Coords): number[] {
-	const boardPos = boardpos.getBoardPos();
-	// We should be able to work with scale converted to a number
-	// because we don't drag pieces when zoomed out far.
-	const boardScale: number = boardpos.getBoardScaleAsNumber();
-	const squareCenter = boardtiles.getSquareCenterAsNumber();
-	const edgeWidth = 0.07 * boardScale;
-	const color = themes.getPropertyOfTheme(preferences.getTheme(), 'boxOutlineColor');
-
-	// Subtracting these two arbitrary numbers should result in a small number,
-	// since you know how would we be dragging the piece anyway if it wasn't close.
-	// (coords - boardPos) * scale
-	const relativeX = bd.toNumber(bd.subtract(bd.fromBigInt(coords[0]), boardPos[0])) * boardScale;
-	const relativeY = bd.toNumber(bd.subtract(bd.fromBigInt(coords[1]), boardPos[1])) * boardScale;
-
-	// Account for square center offset
-	const centerX = relativeX + (0.5 - squareCenter) * boardScale;
-	const centerY = relativeY + (0.5 - squareCenter) * boardScale;
-
-	const vertices: number[] = [];
-	const [r, g, b, a] = color;
-
-	// Calculate outer bounds
-	const halfBox = (1 / 2) * boardScale;
-	const outerLeft = centerX - halfBox;
-	const outerRight = centerX + halfBox;
-	const outerTop = centerY + halfBox;
-	const outerBottom = centerY - halfBox;
-
-	// Calculate inner bounds
-	const innerLeft = outerLeft + edgeWidth;
-	const innerRight = outerRight - edgeWidth;
-	const innerTop = outerTop - edgeWidth;
-	const innerBottom = outerBottom + edgeWidth;
-
-	// Helper function to add a rectangle (two triangles)
-	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void {
-		vertices.push(
-			x1, y1, r, g, b, a, // Triangle 1, Vertex 1
-			x2, y2, r, g, b, a, // Triangle 1, Vertex 2
-			x3, y3, r, g, b, a, // Triangle 1, Vertex 3
-			x3, y3, r, g, b, a, // Triangle 2, Vertex 1
-			x4, y4, r, g, b, a, // Triangle 2, Vertex 2
-			x1, y1, r, g, b, a  // Triangle 2, Vertex 3
-		);
-	}
-
-	// Top edge
-	addRectangle(
-		outerLeft, outerTop,  // Outer top-left
-		outerRight, outerTop, // Outer top-right
-		innerRight, innerTop, // Inner top-right
-		innerLeft, innerTop   // Inner top-left
-	);
-
-	// Bottom edge
-	addRectangle(
-		outerLeft, outerBottom,  // Outer bottom-left
-		innerLeft, innerBottom,  // Inner bottom-left
-		innerRight, innerBottom, // Inner bottom-right
-		outerRight, outerBottom  // Outer bottom-right
-	);
-
-	// Left edge
-	addRectangle(
-		outerLeft, outerTop,    // Outer top-left
-		innerLeft, innerTop,    // Inner top-left
-		innerLeft, innerBottom, // Inner bottom-left
-		outerLeft, outerBottom  // Outer bottom-left
-	);
-
-	// Right edge
-	addRectangle(
-		outerRight, outerTop,    // Outer top-right
-		outerRight, outerBottom, // Outer bottom-right
-		innerRight, innerBottom, // Inner bottom-right
-		innerRight, innerTop     // Inner top-right
-	);
-
-	return vertices;
 }
 
 export default {
@@ -419,7 +353,9 @@ export default {
 	pickUpPiece,
 	updateDragLocation,
 	setDragLocationAndHoverSquare,
+	setForceRankFileOutline,
 	getPointerIdDraggingPiece,
+	getHoveredCoords,
 	hasPointerReleased,
 	dropPiece,
 	renderTransparentSquare,

@@ -36,6 +36,7 @@ import starfield from '../rendering/starfield.js';
 import gameloader from './gameloader.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
+import dragarrows from '../rendering/dragging/dragarrows.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
@@ -179,6 +180,7 @@ function update(): void {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
+	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
@@ -311,6 +313,7 @@ function renderScene(): void {
 		animation.renderAnimations();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
+		dragarrows.render();
 		arrows.render();
 		boardeditor.render();
 		annotations.render_abovePieces();
