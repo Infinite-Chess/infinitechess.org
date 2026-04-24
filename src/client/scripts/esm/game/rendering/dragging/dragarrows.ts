@@ -76,8 +76,8 @@ const CANDIDATE_ANIM = {
 	/** Initial phase offset as a fraction of the full period (0–1). */
 	PHASE_INITIAL: 0.1,
 	/** Color of the arrows [r, g, b, a]. */
-	COLOR: [0, 0, 0, 0.8] as Color,
-};
+	COLOR: [0, 0, 0, 0.8] satisfies Color,
+} as const;
 
 /** The width of the slide zone, as a percentage of arrow indicator images. */
 const SLIDE_ZONE_WIDTH = 1.7;
@@ -86,12 +86,12 @@ const SLIDE_ZONE_GRADIENT = {
 	COLORS: [
 		[1, 1, 1, 0.2],
 		[1, 1, 1, 0.6],
-	] as Color[],
+	] satisfies Color[],
 	/** World units between each individual color ring. */
 	SPACING: 5,
 	/** World units per second the phase advances. */
 	VELOCITY: 9,
-};
+} as const;
 
 // State ---------------------------------------------------------------------------------
 

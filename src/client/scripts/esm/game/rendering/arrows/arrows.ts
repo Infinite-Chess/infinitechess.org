@@ -130,11 +130,13 @@ interface ArrowsLine {
 }
 
 /** A single arrow indicator, with enough information to be able to render it. */
-interface Arrow {
+export interface Arrow {
 	worldLocation: DoubleCoords;
 	piece: ArrowPiece;
 	/** Whether the arrow is being hovered over by the mouse */
 	hovered: boolean;
+	/** Opacity to render this arrow at when not hovered. Defaults to the module-level opacity constant. */
+	opacity: number;
 }
 
 /**
@@ -285,6 +287,22 @@ function toggleArrows(): void {
 	const cap = gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent ? 3 : 2;
 	if (nextMode > cap) nextMode = 0; // Wrap back to zero
 	setMode(nextMode);
+}
+
+/**
+ * Returns all Arrow objects currently in the slide arrows structure.
+ * Does NOT include animated arrows.
+ * Callers may mutate arrow properties (e.g. opacity) before rendering.
+ */
+function getAllArrows(): Arrow[] {
+	const result: Arrow[] = [];
+	for (const linesOfDirection of Object.values(slideArrows)) {
+		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
+			for (const arrow of line.posDotProd) result.push(arrow);
+			for (const arrow of line.negDotProd) result.push(arrow);
+		}
+	}
+	return result;
 }
 
 /**
@@ -891,7 +909,7 @@ function processPiece(
 	// If we clicked, then teleport!
 	teleportToPieceIfClicked(piece, worldLocation, vector, worldHalfWidth);
 
-	return { worldLocation, piece, hovered };
+	return { worldLocation, piece, hovered, opacity };
 }
 
 /**
@@ -1412,7 +1430,7 @@ function concatData(
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
 	// Color
-	const a = arrow.hovered ? 1 : opacity; // Are we hovering over? If so, opacity needs to be 100%
+	const a = arrow.hovered ? 1 : arrow.opacity;
 
 	// Opacity changing with distance
 	// let maxAxisDist = vectors.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
@@ -1458,6 +1476,7 @@ export default {
 	getMode,
 	setMode,
 	toggleArrows,
+	getAllArrows,
 	getHoveredArrows,
 	areHoveringAtleastOneArrow,
 	getAllArrowWorldLocations,

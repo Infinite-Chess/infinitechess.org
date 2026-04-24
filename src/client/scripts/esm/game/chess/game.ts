@@ -182,6 +182,7 @@ function update(): void {
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	droparrows.updateLegalCaptureArrows(); // AFTER executeArrowShifts(), so rebuilt arrow lines don't reset pulsating opacities.
 
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()
 
