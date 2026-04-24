@@ -189,7 +189,7 @@ function update(): void {
 	// 1. The draganimation hover coords, if present. The droparrows and dragarrows features can change this.
 	// 2. Fallback to current mouse coords.
 	hoverSquare = draganimation.getHoveredCoords() ?? mouse.getTileMouseOver_Integer(); // Update the tile the mouse is hovering over, if any.
-	// console.log("Hover square:", hoverSquare);
+	// console.log('Hover square:', hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 	if (!hoverSquare) return; // Looking into sky
