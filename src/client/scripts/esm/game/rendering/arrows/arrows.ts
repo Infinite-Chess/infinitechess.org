@@ -141,7 +141,7 @@ interface Arrow {
  * Reflection of the {@link Piece} type, but with extra decimal precision
  * for the coordinates (needed for animated arrows).
  */
-interface ArrowPiece {
+export interface ArrowPiece {
 	type: number;
 	coords: BDCoords;
 	index: number;
@@ -155,7 +155,7 @@ interface AnimatedArrow extends Arrow {
 }
 
 /** An arrow that is being hovered over this frame */
-interface HoveredArrow {
+export interface HoveredArrow {
 	/** A reference to the piece it is pointing to */
 	piece: ArrowPiece;
 	/**
@@ -944,8 +944,7 @@ function teleportToPieceIfClicked(
 				)!; // We know it will be defined because they are PERPENDICULAR
 
 				Transition.startPanTransition(telCoords, false);
-			}
-			// Mouse down: claiming is now the responsibility of dragarrows.ts
+			} // Mouse down claiming is now the responsibility of dragarrows.ts
 		}
 	}
 }
@@ -1473,5 +1472,3 @@ export default {
 	update,
 	render,
 };
-
-export type { ArrowPiece, HoveredArrow };

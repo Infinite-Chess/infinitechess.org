@@ -180,7 +180,7 @@ function update(): void {
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
-	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts(). Handles drag-from-arrow feature.
+	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
 	arrows.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
 
 	arrowlegalmovehighlights.update(); // After executeArrowShifts()

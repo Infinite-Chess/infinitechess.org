@@ -501,9 +501,9 @@ function enforceWorldBorderOnSlideLimit(
 	if (!worldBorder) return; // No world border, skip
 
 	if (!bounds.boxContainsSquare(worldBorder, coords)) {
-		// console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
 		// This can legitimately happen when using the drag arrows feature
 		// to drag an arrow's piece outside of the world border.
+		// console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
 	}
 
 	// Helper to apply logic for a single border
