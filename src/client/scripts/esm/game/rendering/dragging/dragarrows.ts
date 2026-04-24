@@ -13,7 +13,7 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { HoveredArrow } from '../arrows/arrows.js';
-import type { Vec2, Vec2Key, Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type {
 	Coords,
 	BDCoords,
@@ -33,7 +33,6 @@ import webgl from '../webgl.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
 import arrows from '../arrows/arrows.js';
-import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
@@ -526,11 +525,7 @@ function renderSlideMoveHighlights(): void {
 
 	// Render white box outlines for all reachable squares using the shared transform
 	const model = legalmovemodel.generateModelForSlideHighlightOutlines(hoveredCoords, moves);
-	const boardPos = boardpos.getBoardPos();
-	const model_Offset = legalmovemodel.getOffset();
-	const position: Vec3 = meshes.getModelPosition(boardPos, model_Offset, 0);
-	const boardScale = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
 	model.render(position, scale);
 }
 

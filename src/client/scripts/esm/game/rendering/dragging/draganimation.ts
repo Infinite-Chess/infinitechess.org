@@ -6,7 +6,6 @@
  * and plays the sound when the piece is dropped.
  */
 
-import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Coords, DoubleCoords } from '../../../../../../shared/chess/util/coordutil.js';
@@ -336,12 +335,10 @@ function renderOutline(): void {
 	} else {
 		// Outline the hovered square using an instanced box outline model
 		const vertexData = instancedshapes.getDataBoxOutline();
-		const boardPos = boardpos.getBoardPos();
 		const offset = legalmovemodel.getOffset();
 		const offsetCoord = coordutil.subtractCoords(hoveredCoords!, offset);
 		const instanceData: number[] = [Number(offsetCoord[0]), Number(offsetCoord[1])];
-		const position: Vec3 = meshes.getModelPosition(boardPos, offset, 0);
-		const scale: Vec3 = [boardScale, boardScale, 1];
+		const { position, scale } = meshes.getBoardRenderTransform(offset);
 		createRenderable_Instanced(vertexData, instanceData, 'TRIANGLES', 'colorInstanced', true)
 			.render(position, scale);
 	}

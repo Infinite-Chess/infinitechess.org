@@ -6,9 +6,8 @@
  * Enable by pressing `7`.
  */
 
-import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
@@ -103,11 +102,7 @@ function regenModel(): void {
 function renderSpecialRights(): void {
 	if (!model) throw Error('Specialrights model not initialized');
 
-	const boardPos: BDCoords = boardpos.getBoardPos();
-	const offset: Coords = legalmovemodel.getOffset();
-	const position: Vec3 = meshes.getModelPosition(boardPos, offset, 0);
-	const boardScale: number = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
 
 	model.render(position, scale);
 }

@@ -7,10 +7,8 @@
  * * All hovered arrows
  */
 
-import type { Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
-import type { BDCoords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
@@ -18,7 +16,6 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
 import camera from '../camera.js';
 import meshes from '../meshes.js';
-import boardpos from '../boardpos.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../components/header/preferences.js';
 import piecemodels from '../piecemodels.js';
@@ -159,11 +156,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 function renderSelectedPieceLegalMoves(): void {
 	if (!pieceSelected) return; // No model to render
 
-	const boardPos: BDCoords = boardpos.getBoardPos();
-	// Add the model's offset
-	const position = meshes.getModelPosition(boardPos, legalmovemodel.getOffset(), 0);
-	const boardScale: number = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
 
 	// Render each of the models using instanced rendering.
 	model_SelectedPiece!.render(position, scale);

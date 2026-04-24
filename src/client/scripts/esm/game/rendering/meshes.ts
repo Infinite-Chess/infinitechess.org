@@ -197,6 +197,15 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 
 // Other Generic Rendering Methods -------------------------------------------------------
 
+/** Returns the position and uniform scale needed to render a board-space model. */
+function getBoardRenderTransform(offset: Coords, z: number = 0): { position: Vec3; scale: Vec3 } {
+	const boardPos = boardpos.getBoardPos();
+	const position = getModelPosition(boardPos, offset, z);
+	const boardScale = boardpos.getBoardScaleAsNumber();
+	const scale: Vec3 = [boardScale, boardScale, 1];
+	return { position, scale };
+}
+
 /**
  * Returns a model's transformed position that should be used when rendering its buffer model.
  *
@@ -235,5 +244,5 @@ export default {
 	RectWorld,
 	// RectWorld_Filled,
 	// Other Generic Rendering Methods
-	getModelPosition,
+	getBoardRenderTransform,
 };
