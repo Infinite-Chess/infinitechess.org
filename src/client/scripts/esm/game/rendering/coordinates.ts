@@ -87,11 +87,15 @@ function calcLabelSizePx(): number {
 	return LABEL_SIZE_PX * (1 - LABEL_SHRINK.rate * (1 - ratio));
 }
 
-/** Returns the display string for a coordinate label, abbreviating large values to "...XX" (last two digits). */
+/**
+ * Returns the display string for a coordinate label, abbreviating large
+ * values to "...XX" (or "-...XX" for negatives) using the last two digits.
+ */
 function formatCoord(coord: bigint): string {
 	const full = coord.toString();
 	if (full.length <= MAX_FULL_DISPLAY_LENGTH) return full;
-	return '...' + full.slice(-2);
+	const prefix = coord < 0n ? '-...' : '...';
+	return prefix + full.slice(-2);
 }
 
 /**
