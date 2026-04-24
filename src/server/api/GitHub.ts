@@ -4,6 +4,11 @@
  * This module, in the future, where be where we connect to GitHub's API
  * to dynamically refresh a list of github contributors on the webiste,
  * probably below our patron donors.
+ *
+ * INSTRUCTIONS:
+ * In ANY github account (does not need to be a maintainer of the project),
+ * create a classic access token with ZERO permissions (that is enough),
+ * and paste it in the GITHUB_API_KEY field in the .env file.
  */
 
 import fs from 'fs';

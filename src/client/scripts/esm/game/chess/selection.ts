@@ -185,8 +185,11 @@ function update(): void {
 		return;
 	}
 
-	hoverSquare = mouse.getTileMouseOver_Integer(); // Update the tile the mouse is hovering over, if any.
-	// console.log("Hover square:", hoverSquare);
+	// Update the hover square to:
+	// 1. The draganimation hover coords, if present. The droparrows and dragarrows features can change this.
+	// 2. Fallback to current mouse coords.
+	hoverSquare = draganimation.getHoveredCoords() ?? mouse.getTileMouseOver_Integer(); // Update the tile the mouse is hovering over, if any.
+	// console.log('Hover square:', hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 	if (!hoverSquare) return; // Looking into sky
@@ -312,10 +315,6 @@ function testIfPieceDropped(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (!draganimation.hasPointerReleased()) return; // The pointer has not released yet, don't drop it.
 
 	// The pointer has released, drop the piece.
-
-	// If it was dropped on an arrow indicator pointing to a legal piece to capture, capture that!
-	const dropArrowsCaptureCoords = droparrows.getCaptureCoords();
-	if (dropArrowsCaptureCoords) return moveGamefilePiece(gamefile, mesh, dropArrowsCaptureCoords);
 
 	// If it was dropped on its own square, AND the parity is negative, then also deselect the piece.
 
@@ -640,4 +639,6 @@ export default {
 	isOpponentPieceSelected,
 	arePremoving,
 	stealPointer,
+	selectPiece,
+	canSelectPieceType,
 };

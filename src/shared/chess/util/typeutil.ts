@@ -202,12 +202,17 @@ function forEachPieceType(
 	}
 }
 
+/** Inverts the type so it belongs to the opposite color. */
 function invertType(type: number): number {
 	const [r, p] = splitType(type);
 	const newp = invertPlayer(p); // This will throw an error if the type is not invertible because of its color. (We should never attempt to invert it anyway)
 	return buildType(r, newp);
 }
 
+/**
+ * Inverts the player id.
+ * Neutral gets inverted to neutral.
+ */
 function invertPlayer(player: Player): Player {
 	// prettier-ignore
 	return player === players.NEUTRAL ? players.NEUTRAL :

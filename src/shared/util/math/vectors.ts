@@ -63,9 +63,6 @@ const VECTORS_DIAGONAL: Coords[] = [[1n,1n],[1n,-1n]];
 /** The positive/absolute knightrider hippogonals. */
 const VECTORS_HIPPOGONAL: Coords[] = [[1n,2n],[1n,-2n],[2n,1n],[2n,-1n]];
 
-const ZERO: BigDecimal = bd.fromBigInt(0n);
-const ONE: BigDecimal = bd.fromBigInt(1n);
-
 // Construction ----------------------------------------------------------------------
 
 /**
@@ -145,22 +142,22 @@ function getLineGeneralFormFrom2Coords(coords1: Coords, coords2: Coords): LineCo
 	return [A, B, C];
 }
 
-/**
- * {@link getLineGeneralFormFrom2Coords} but for BigDecimal coordinates.
- */
-function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): LineCoefficientsBD {
-	// Handle the case of a vertical line (infinite slope)
-	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
-	if (bd.areEqual(coords1[0], coords2[0])) return [ONE, ZERO, bd.negate(coords1[0])];
-
-	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
-	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
-	const A = bd.subtract(coords2[1], coords1[1]); // y2 - y1
-	const B = bd.subtract(coords1[0], coords2[0]); // x1 - x2
-	const C = bd.subtract(bd.multiply(coords2[0], coords1[1]), bd.multiply(coords1[0], coords2[1])); // x2*y1 - x1*y2
-
-	return [A, B, C];
-}
+// /**
+//  * {@link getLineGeneralFormFrom2Coords} but for BigDecimal coordinates.
+//  */
+// function getLineGeneralFormFrom2CoordsBD(coords1: BDCoords, coords2: BDCoords): LineCoefficientsBD {
+// 	// Handle the case of a vertical line (infinite slope)
+// 	// The line equation is x = x1, which in general form is: 1*x + 0*y - x1 = 0
+// 	if (bd.areEqual(coords1[0], coords2[0])) return [ONE, ZERO, bd.negate(coords1[0])];
+//
+// 	// To avoid division and floating-point/truncation issues, we use the cross-multiplication method.
+// 	// The equation (y - y1)(x2 - x1) = (x - x1)(y2 - y1) is rearranged to Ax + By + C = 0.
+// 	const A = bd.subtract(coords2[1], coords1[1]); // y2 - y1
+// 	const B = bd.subtract(coords1[0], coords2[0]); // x1 - x2
+// 	const C = bd.subtract(bd.multiply(coords2[0], coords1[1]), bd.multiply(coords1[0], coords2[1])); // x2*y1 - x1*y2
+//
+// 	return [A, B, C];
+// }
 
 /**
  * Upgrades bigint line coefficients [A, B, C] to BigDecimals.
@@ -194,14 +191,14 @@ function getLineCFromCoordsAndVec(coords: Coords, vector: Vec2): bigint {
 	return vector[0] * coords[1] - vector[1] * coords[0];
 }
 
-/**
- * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
- */
-function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
-	const vectorBD = bdcoords.FromCoords(vector);
-	// Coords first since they are likely higher precision.
-	return bd.subtract(bd.multiply(coords[1], vectorBD[0]), bd.multiply(coords[0], vectorBD[1]));
-}
+// /**
+//  * {@link getLineCFromCoordsAndVec} but for BigDecimal coordinates.
+//  */
+// function getLineCFromCoordsAndVecBD(coords: BDCoords, vector: Vec2): BigDecimal {
+// 	const vectorBD = bdcoords.FromCoords(vector);
+// 	// Coords first since they are likely higher precision.
+// 	return bd.subtract(bd.multiply(coords[1], vectorBD[0]), bd.multiply(coords[0], vectorBD[1]));
+// }
 
 // Operations -----------------------------------------------------------------------------
 
@@ -291,19 +288,19 @@ function absVector(vec2: Vec2): Vec2 {
 	else return vec2;
 }
 
-/**
- * Normalizes a vector to its smallest possible integer components while preserving its direction.
- */
-function normalizeVector(vec2: Vec2): Vec2 {
-	// Calculate the GCD of all the components in the vector.
-	const gcd = bimath.GCD(vec2[0], vec2[1]);
+// /**
+//  * Normalizes a vector to its smallest possible integer components while preserving its direction.
+//  */
+// function normalizeVector(vec2: Vec2): Vec2 {
+// 	// Calculate the GCD of all the components in the vector.
+// 	const gcd = bimath.GCD(vec2[0], vec2[1]);
 
-	// If the GCD is 0, it means all elements were 0
-	if (gcd === 0n) return [0n, 0n];
+// 	// If the GCD is 0, it means all elements were 0
+// 	if (gcd === 0n) return [0n, 0n];
 
-	// Divide each component by the GCD to get the smallest integer representation.
-	return [vec2[0] / gcd, vec2[1] / gcd];
-}
+// 	// Divide each component by the GCD to get the smallest integer representation.
+// 	return [vec2[0] / gcd, vec2[1] / gcd];
+// }
 
 /**
  * Normalizes a floating point arbitrarily large vector into a range
@@ -443,12 +440,12 @@ export default {
 	getLineGeneralFormFromCoordsAndVec,
 	getLineGeneralFormFromCoordsAndVecBD,
 	getLineGeneralFormFrom2Coords,
-	getLineGeneralFormFrom2CoordsBD,
+	// getLineGeneralFormFrom2CoordsBD,
 	convertCoeficcientsToBD,
 	calculateVectorFromPoints,
 	calculateVectorFromBDPoints,
 	getLineCFromCoordsAndVec,
-	getLineCFromCoordsAndVecBD,
+	// getLineCFromCoordsAndVecBD,
 
 	// Operations
 	areLinesInGeneralFormEqual,
@@ -460,7 +457,7 @@ export default {
 	negateBDVector,
 	negateDoubleVector,
 	absVector,
-	normalizeVector,
+	// normalizeVector,
 	normalizeVectorBD,
 	getPerpendicularVector,
 	getPerpendicularLine,

@@ -20,7 +20,6 @@ import clock from './clock.js';
 import jsutil from '../../util/jsutil.js';
 import variant from '../variants/variant.js';
 import typeutil from '../util/typeutil.js';
-import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
@@ -84,7 +83,6 @@ type Board = {
 	pieces: OrganizedPieces;
 	state: GameState;
 
-	colinearsPresent: boolean;
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 
@@ -192,7 +190,7 @@ function initBoard(
 		local: {
 			moveIndex: -1,
 			inCheck: false,
-			attackers: [],
+			checks: [],
 		},
 		global: jsutil.deepCopyObject(state_global),
 	};
@@ -251,8 +249,6 @@ function initBoard(
 	);
 
 	const moves: MoveFull[] = [];
-	// We can set these now, since processInitialPosition() trims the movesets of all pieces not in the game.
-	const colinearsPresent = movesets.areColinearsPresent(pieceMovesets);
 
 	return {
 		pieces,
@@ -262,7 +258,6 @@ function initBoard(
 		moves,
 		vicinity,
 		specialVicinity,
-		colinearsPresent,
 		pieceMovesets,
 		specialMoves,
 		editor,
@@ -288,19 +283,15 @@ function loadGameWithBoard(
 		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{
-		// Set the game's `inCheck` and `attackers` properties at the front of the game.
-		const trackAttackers = gamefileutility.isOpponentUsingWinCondition(
+		// Set the game's `inCheck` and `checks` properties at the front of the game.
+		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
 			basegame,
 			basegame.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(
-			gamefile,
-			basegame.whosTurn,
-			trackAttackers,
-		); // { check: boolean, royalsInCheck: Coords[], attackers?: Attacker[] }
+		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackAttackers) boardsim.state.local.attackers = checkResults.attackers ?? [];
+		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);

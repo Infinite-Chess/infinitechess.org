@@ -4,7 +4,6 @@
  * This generates and renders the meshes of each individual piece type in the game.
  */
 
-import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
@@ -417,10 +416,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const boardPos = boardpos.getBoardPos();
-	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
-	const boardScale = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
 
 	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
 		// Only render voids
@@ -450,10 +446,7 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 function renderVoids(mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const boardPos = boardpos.getBoardPos();
-	const position = meshes.getModelPosition(boardPos, mesh.offset, Z);
-	const boardScale = boardpos.getBoardScaleAsNumber();
-	const scale: Vec3 = [boardScale, boardScale, 1];
+	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
 
 	mesh.types[r.VOID]?.model.render(position, scale);
 }

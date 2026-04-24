@@ -1,4 +1,13 @@
 {
+  "98": {
+    "note": "Added appearance-coordinates on line 21."
+  },
+  "97": {
+    "note": "Added credits.code_credits[2] 'by FirePlank.' on line 114."
+  },
+  "96": {
+    "note": "Added play.editor.no_saves on line 238."
+  },
   "95": {
     "note": "Removed ws-server_restarting, ws-server_under_maintenance, ws-minutes, ws-minute, lines 757-760. Also removed server_restarting, server_restarting_in, minute, minutes, lines 549-552. "
   },

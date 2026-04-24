@@ -157,6 +157,11 @@ function lerpCoordsDouble(start: DoubleCoords, end: DoubleCoords, t: number): Do
 
 // Debugging --------------------------------------------------------------------
 
+/** [DEBUG] Stringifies a pair of bigint coordinates into a human-readable string. */
+function stringifyCoords(coords: Coords): string {
+	return `(${coords[0]}, ${coords[1]})`;
+}
+
 /** [DEBUG] Stringifies a pair of BigDecimal coordinates into their exact representation. SLOW. */
 function stringifyBDCoords(coords: BDCoords): string {
 	// return `(${bd.toNumber(coords[0])}, ${bd.toNumber(coords[1])})`;
@@ -181,6 +186,7 @@ export default {
 	lerpCoords,
 	lerpCoordsDouble,
 	// Debugging
+	stringifyCoords,
 	stringifyBDCoords,
 };
 

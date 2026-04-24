@@ -1,12 +1,11 @@
-
-// src/client/scripts/esm/chess/logic/positionnormalizer/positioncompressor.ts
+// dev-utils/scripts/positionnormalizer/positioncompressor.ts
 
 /**
  * This script contains an algorithm that can take an infinite chess position,
  * which may have pieces at arbitrarily large coordinates, and compress it
- * so that all pieces are within the bounds of standard javascript doubles.
+ * so that all pieces are within the bounds of standard javascript doubles,
+ * while retaining all piece relationships to each other.
  */
-
 
 import type { Vec2Key } from "../../../util/math/vectors.js";
 
@@ -15,7 +14,6 @@ import { solve, Model } from "yalps"; // Linear Programming Solver!
 import bimath from "../../../util/bigdecimal/bimath.js";
 import coordutil, { Coords, CoordsKey } from "../../util/coordutil.js";
 import typeutil, { players as p, rawTypes as r } from "../../util/typeutil.js";
-
 
 // ============================== Type Definitions ==============================
 

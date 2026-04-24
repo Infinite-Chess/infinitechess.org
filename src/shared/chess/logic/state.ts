@@ -24,10 +24,13 @@ interface LocalGameState {
 	/** If the currently-viewed move is in check, this will be a list of coordinates
 	 * of all the royal pieces in check: `[[5,1],[10,1]]`, otherwise *false*. @type {} */
 	inCheck: Coords[] | false;
-	/** List of maximum 2 pieces currently checking whoever's turn is next,
-	 * with their coords and slidingCheck property. ONLY USED with `checkmate` wincondition!!
-	 * Only used to calculate legal moves, and checkmate. @type {}*/
-	attackers: Attacker[];
+	/**
+	 * All active checks against whoever's turn it is, each pairing the checked royal with
+	 * its attacker. ONLY USED with the `checkmate` win condition!!
+	 * Only used to calculate legal moves, and detect checkmate.
+	 * The same royal or attacker may appear in multiple checks, in scenarios such as double checks.
+	 */
+	checks: CheckInfo[];
 }
 
 /**
@@ -52,7 +55,7 @@ type inCheck = false | Coords[];
  *
  * Local statechanges are unique to the move you're viewing, and are always applied. Those include:
  *
- * check, attackers
+ * check, checks
  *
  * Global statechanges are a property of the game as a whole, not unique to the move,
  * and are not applied when VIEWING a move.
@@ -64,7 +67,7 @@ type inCheck = false | Coords[];
 /**
  * Contains the statechanges for the turn before and after a move is made
  *
- * Local state change examples: (check, attackers)
+ * Local state change examples: (check, checks)
  * Global state change examples: (enpassant, specialrights, moverule state, running check counter)
  */
 interface MoveState {
@@ -86,9 +89,9 @@ type StateChange =
 			future: inCheck;
 	  }
 	| {
-			type: 'attackers';
-			current: Attacker[];
-			future: Attacker[];
+			type: 'checks';
+			current: CheckInfo[];
+			future: CheckInfo[];
 	  }
 	| {
 			type: 'enpassant';
@@ -108,15 +111,18 @@ type StateChange =
 			future: number;
 	  };
 
-/** A single piece attacking/checking a royal */
-type Attacker = {
-	/** The coordinates of the attacker */
-	coords: Coords;
-	/** Whether the check is from a sliding movement (not individual, NOR special with a `path` attribute) */
+/** A single check being delivered: the checked royal paired with its attacker. */
+type CheckInfo = {
+	/** The coordinates of the royal being checked */
+	royal: Coords;
+	/** The coordinates of the attacking piece */
+	attacker: Coords;
+	/** Whether the check is delivered via a sliding movement (not individual, NOR special with a `path` attribute) */
 	slidingCheck: boolean;
 } & (
 	| {
 			slidingCheck: true;
+			/** Whether the attacker is moving colinearly. */
 			colinear: boolean;
 	  }
 	| {
@@ -154,16 +160,16 @@ function createCheckState(
 	applyLocalState(gamestate.local, newStateChange, true);
 }
 
-/** Creates an attackers local StateChange, adding it to the Move and immediately applying it to the gamefile. */
-function createAttackersState(
+/** Creates a checks local StateChange, adding it to the Move and immediately applying it to the gamefile. */
+function createChecksState(
 	move: Edit,
-	current: Attacker[],
-	future: Attacker[],
+	current: CheckInfo[],
+	future: CheckInfo[],
 	gamestate: GameState,
 ): void {
-	const newStateChange: StateChange = { type: 'attackers', current, future };
-	move.state.local.push(newStateChange); // Attackers is a local state
-	// Attackers states are immediately applied to the gamefile
+	const newStateChange: StateChange = { type: 'checks', current, future };
+	move.state.local.push(newStateChange); // Checks is a local state
+	// Checks states are immediately applied to the gamefile
 	applyLocalState(gamestate.local, newStateChange, true);
 }
 
@@ -255,9 +261,9 @@ function applyLocalState(gamestate: LocalGameState, state: StateChange, forward:
 		case 'check':
 			gamestate.inCheck = forward ? state.future : state.current;
 			break;
-		case 'attackers':
-			if (noNewValue) gamestate.attackers = [];
-			else gamestate.attackers = forward ? state.future : state.current;
+		case 'checks':
+			if (noNewValue) gamestate.checks = [];
+			else gamestate.checks = forward ? state.future : state.current;
 			break;
 		default:
 			throw new Error(`State ${state.type} is not a local state change.`);
@@ -291,10 +297,10 @@ export default {
 	applyMove,
 	applyGlobalStateChanges,
 	createCheckState,
-	createAttackersState,
+	createChecksState,
 	createEnPassantState,
 	createSpecialRightsState,
 	createMoveRuleState,
 };
 
-export type { GameState, GlobalGameState, MoveState, StateChange, Attacker, EnPassant };
+export type { GameState, GlobalGameState, MoveState, StateChange, CheckInfo, EnPassant };

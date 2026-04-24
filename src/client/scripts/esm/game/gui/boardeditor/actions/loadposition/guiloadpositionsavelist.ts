@@ -42,6 +42,9 @@ const element_savedPositions = document.querySelector('.saved-positions')!;
 /** List of saved positions */
 const element_savedPositionsToLoad = document.getElementById('saved-position-list')!;
 
+/** Empty-state message shown when there are no saves */
+const element_noSavesMessage = document.getElementById('saved-position-list-empty')!;
+
 /** Spinny pawn loading animation shown during in-flight API requests */
 const element_loadingPawn = document.getElementById('load-position-loading-pawn')!;
 
@@ -206,8 +209,13 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 
 	// All data is ready — unregister old listeners, generate new rows, then swap in atomically
 	unregisterAllPositionButtonListeners();
+
+	// If there are no saves, show the "No saved positions." message; otherwise hide it
+	const isEmpty = allSaves.length === 0;
+	element_noSavesMessage.classList.toggle('hidden', !isEmpty);
+
 	const newRows = allSaves.map((save) => generateRowForSavedPositionsElement(save, areLoggedIn));
-	element_savedPositionsToLoad.replaceChildren(...newRows);
+	element_savedPositionsToLoad.replaceChildren(element_noSavesMessage, ...newRows);
 }
 
 /**

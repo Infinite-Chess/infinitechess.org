@@ -100,11 +100,11 @@ async function initBoardEditor(
 
 	edithistory.init(initial_pawnDoublePush, initial_castling);
 
-	// Erase the `inCheck` and `attackers` state of the gamefile, which were auto-calculated in the constructor.
+	// Erase the `inCheck` and `checks` state of the gamefile, which were auto-calculated in the constructor.
 	// Prevents check highlights from rendering when opening the board editor.
 	const gamefile = gameslot.getGamefile()!;
 	gamefile.boardsim.state.local.inCheck = false;
-	gamefile.boardsim.state.local.attackers = [];
+	gamefile.boardsim.state.local.checks = [];
 	// Also set gameConclusion to undefined. Otherwise, starting from a position that
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
 	gamefileutility.setConclusion(gamefile.basegame, undefined);

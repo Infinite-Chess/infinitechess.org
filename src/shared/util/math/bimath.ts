@@ -111,6 +111,16 @@ function estimateBigIntSize(bi: bigint): number {
 	return headerBytes + dataBytes;
 }
 
+// /**
+//  * Performs integer division of two BigInts, rounding up towards positive infinity.
+//  * @param a - The dividend.
+//  * @param b - The divisor (must be a positive BigInt).
+//  * @returns The result of the division, rounded up.
+//  */
+// function roundUpDiv(a: bigint, b: bigint): bigint {
+// 	return a / b + ((a % b) * b > ZERO ? ONE : ZERO);
+// }
+
 /**
  * Computes the positive modulus of two BigInts.
  * @param a - The dividend.
@@ -205,6 +215,29 @@ function GCD(a: bigint, b: bigint): bigint {
 // 	return answer;
 // }
 
+// Displat Formatting -------------------------------------------------------------------------
+
+/**
+ * Formats a bigint in scientific notation with the given number of significant figures.
+ * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
+ */
+function formatBigIntExponential(bigint: bigint, precision: number): string {
+	const isNegative = bigint < 0n;
+	const absString: string = abs(bigint).toString();
+
+	const exponent: number = absString.length - 1;
+	const mantissaDigits: string = absString.substring(0, precision);
+
+	let mantissa: string;
+	if (mantissaDigits.length > 1) {
+		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
+	} else {
+		mantissa = mantissaDigits;
+	}
+
+	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
+}
+
 // Exports ============================================================
 
 export default {
@@ -214,6 +247,7 @@ export default {
 	bitLength_bisection,
 	// Big Length Algorithms
 	estimateBigIntSize,
+	// roundUpDiv,
 	posMod,
 	min,
 	max,
@@ -221,4 +255,6 @@ export default {
 	clamp,
 	// Number-Theoretic Algorithms
 	GCD,
+	// Display Formatting
+	formatBigIntExponential,
 };
