@@ -1,6 +1,8 @@
 // src/client/scripts/esm/game/rendering/coordinates.ts
 
 /**
+ * Board Coordinates
+ *
  * Renders coordinate labels (file numbers along the bottom, rank numbers along
  * the left side) in a style similar to classical chess board notation.
  *
@@ -142,9 +144,24 @@ function render(): void {
 	// The step is driven by the widest visible file label (width-based overlap).
 	// File labels overlap sooner than rank labels because characters are wider than
 	// they are tall, so a step sufficient for files is automatically sufficient for ranks.
+
+	// If both endpoints are abbreviated but the visible range spans the non-abbreviated zone,
+	// the endpoints would underestimate the widest label. Guard against that by also
+	// measuring the widest possible non-abbreviated label when the zone is in range.
+	const unabbrevMax = 10n ** BigInt(MAX_FULL_DISPLAY_LENGTH) - 1n; // e.g. 9999999n
+	const unabbrevMin = -(10n ** BigInt(MAX_FULL_DISPLAY_LENGTH - 1) - 1n); // e.g. -999999n
+	// Only needed when at least one endpoint is abbreviated (outside the non-abbreviated zone)
+	// but the range still spans into it, meaning interior labels will be wider than the endpoints.
+	const hasUnabbrevInRange =
+		(tileBox.left < unabbrevMin || tileBox.right > unabbrevMax) &&
+		tileBox.left <= unabbrevMax &&
+		tileBox.right >= unabbrevMin;
 	const widestFileLabelWidth = Math.max(
 		textrenderer.getTextWidth(formatCoord(tileBox.left), sizeWorld),
 		textrenderer.getTextWidth(formatCoord(tileBox.right), sizeWorld),
+		hasUnabbrevInRange
+			? textrenderer.getTextWidth('9'.repeat(MAX_FULL_DISPLAY_LENGTH), sizeWorld)
+			: 0,
 	);
 	const threshold = widestFileLabelWidth + sizeWorld * LABEL_GAP_SIZE;
 	const stepBig = computeStep(threshold, scale);
