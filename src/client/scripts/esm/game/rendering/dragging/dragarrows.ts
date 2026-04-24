@@ -103,6 +103,7 @@ let slideZonePhase: number = 0;
  */
 function update(): void {
 	if (!gameslot.getGamefile()) return;
+	if (!arrows.areArrowsActiveThisFrame()) return;
 
 	if (isDragActive) {
 		updateActiveDrag();
@@ -314,6 +315,7 @@ function reset(): void {
 
 /** Renders all dragarrows visuals: the slide zone gradient and the slide move highlights. */
 function render(): void {
+	if (!arrows.areArrowsActiveThisFrame()) return;
 	renderSlideZone();
 	renderSlideMoveHighlights();
 }

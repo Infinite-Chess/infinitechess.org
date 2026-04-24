@@ -1469,6 +1469,7 @@ export default {
 	animateArrow,
 	addArrow,
 	executeArrowShifts,
+	areArrowsActiveThisFrame,
 	update,
 	render,
 };
