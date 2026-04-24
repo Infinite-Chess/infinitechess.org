@@ -40,9 +40,11 @@ import primitives from '../primitives.js';
 import droparrows from './droparrows.js';
 import preferences from '../../../components/header/preferences.js';
 import renderanims from '../renderanims.js';
+import guigameinfo from '../../gui/guigameinfo.js';
 import frametracker from '../frametracker.js';
 import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
+import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
@@ -244,10 +246,16 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.vector;
 
+	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
+		guigameinfo.getHeightOfGameInfoBar(),
+	);
+
 	const inRight = dir[0] > 0n && mouseWorld[0] > screenBox.right - slideZoneDepth;
 	const inLeft = dir[0] < 0n && mouseWorld[0] < screenBox.left + slideZoneDepth;
-	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth;
-	const inBottom = dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth;
+	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth - topBarDepth;
+	const inBottom =
+		dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth + bottomBarDepth;
 	currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
 
 	if (currentlyInSlideZone) {
@@ -332,14 +340,18 @@ function renderSlideZone(): void {
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
 	const maskData: number[] = [];
 	const dummyColor: Color = [0, 0, 0, 1];
+	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
+	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
+		guigameinfo.getHeightOfGameInfoBar(),
+	);
 	// prettier-ignore
 	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor));
 	// prettier-ignore
 	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor));
 	// prettier-ignore
-	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth, screenBox.right, screenBox.top, dummyColor));
+	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor));
 	// prettier-ignore
-	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth, dummyColor));
+	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor));
 
 	if (maskData.length === 0) return;
 
