@@ -29,8 +29,8 @@ When you finish making any new changes, always ensure all workflow checks pass: 
 ## Conventions & Patterns
 
 - **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`. Change notes in `changes.json` should be clear and concise, not containing more information than necessary, and always indicate the line numbers of the removed/added keys.
-- **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
 - **Rendering:** When asked to add new graphics and visuals to the game (canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
+- When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
 
 ## Integration Points
 
