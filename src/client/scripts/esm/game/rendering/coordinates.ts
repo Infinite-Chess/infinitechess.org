@@ -55,7 +55,7 @@ const LABEL_SHRINK = {
 	 * At `0.5` they only ever shrink to half of {@link LABEL_SIZE_PX} no matter how small the screen gets.
 	 * Valid range: [0, 1].
 	 */
-	rate: 0.5,
+	rate: 0.6,
 } as const;
 /** Virtual-pixel gap between the screen edge and the near edge of each label. */
 const LABEL_PADDING_PX = 5;
