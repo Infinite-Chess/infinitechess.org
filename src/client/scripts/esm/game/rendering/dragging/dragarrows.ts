@@ -9,9 +9,10 @@
  * dragged piece onto arrows to capture off-screen opponent pieces).
  */
 
-import type { Vec2 } from '../../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
+import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { Vec2, Vec2Key, Vec3 } from '../../../../../../shared/util/math/vectors.js';
 import type {
 	Coords,
 	BDCoords,
@@ -23,12 +24,15 @@ import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
 import webgl from '../webgl.js';
 import camera from '../camera.js';
+import meshes from '../meshes.js';
 import arrows from '../arrows/arrows.js';
+import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
@@ -39,6 +43,7 @@ import renderanims from '../renderanims.js';
 import frametracker from '../frametracker.js';
 import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
+import legalmovemodel from '../highlights/legalmovemodel.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -71,7 +76,7 @@ const SLIDE_ZONE_GRADIENT = {
 	/** World units between each individual color ring. */
 	SPACING: 5,
 	/** World units per second the phase advances. */
-	VELOCITY: 8,
+	VELOCITY: 9,
 };
 
 // State ---------------------------------------------------------------------------------
@@ -83,6 +88,8 @@ let candidate: CandidateArrow | undefined;
  * Can only ever be true if candidate is also defined.
  */
 let isDragActive: boolean = false;
+/** Whether the dragged piece is currently positioned inside the slide zone. */
+let currentlyInSlideZone: boolean = false;
 
 /** Current phase offset for the slide zone radial gradient, in world units. */
 let slideZonePhase: number = 0;
@@ -240,7 +247,7 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	const inLeft = dir[0] < 0n && mouseWorld[0] < screenBox.left + slideZoneDepth;
 	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth;
 	const inBottom = dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth;
-	const currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
+	currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
 
 	if (currentlyInSlideZone) {
 		updateSlideZoneDrag(mouseWorld);
@@ -292,7 +299,24 @@ function updateOnScreenDrag(): void {
 	arrows.deleteArrow(candidate!.pieceCoords);
 }
 
+// Cleanup -----------------------------------------------------------------------------
+
+/** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
+function reset(): void {
+	// console.error('Resetting state');
+	candidate = undefined;
+	isDragActive = false;
+	currentlyInSlideZone = false;
+	draganimation.setForceRankFileOutline(false);
+}
+
 // Rendering ---------------------------------------------------------------------------
+
+/** Renders all dragarrows visuals: the slide zone gradient and the slide move highlights. */
+function render(): void {
+	renderSlideZone();
+	renderSlideMoveHighlights();
+}
 
 /** Renders a radial gradient over the slide zone when active. */
 function renderSlideZone(): void {
@@ -345,17 +369,62 @@ function renderRadialGradient(colors: Color[], spacing: number, phase: number): 
 	if (data.length > 0) createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 }
 
-// Cleanup -----------------------------------------------------------------------------
+/**
+ * When dragging an arrow indicator and the mouse is inside the slide zone,
+ * renders white box outlines along the piece's sliding direction,
+ * showing you what squares you can reach next by sliding the piece there.
+ */
+function renderSlideMoveHighlights(): void {
+	if (!candidate || !currentlyInSlideZone) return;
 
-/** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
-function reset(): void {
-	// console.error('Resetting state');
-	candidate = undefined;
-	isDragActive = false;
-	draganimation.setForceRankFileOutline(false);
+	const hoveredCoords = draganimation.getHoveredCoords();
+	if (!hoveredCoords) return;
+
+	const gamefile = gameslot.getGamefile()!;
+	const pieceType = candidate.pieceType;
+
+	// Get the piece's moveset
+	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, pieceType);
+
+	// Find the canonical moveset sliding key (x-component is never negative in moveset keys)
+	const normalizedVec: Vec2 = vectors.absVector(candidate.vector);
+	const lineKey: Vec2Key = vectors.getKeyFromVec2(normalizedVec);
+
+	// If the slide direction is orthogonal, skip. The entire orthogonal lines are already outlined in draganimation.ts
+	if (normalizedVec[0] === 0n || normalizedVec[1] === 0n) return;
+
+	// Only proceed if the piece actually slides in this direction
+	if (!moveset.sliding?.[lineKey]) return;
+
+	// Create a virtual piece at the hovered coords for move calculation
+	const piece: Piece = { type: pieceType, coords: hoveredCoords, index: -1 };
+
+	// Build premove-style LegalMoves containing ONLY the arrow's sliding direction.
+	// Premoves ignore friendly/enemy blocking (only voids and world border restrict).
+	const moves: LegalMoves = legalmoves.getEmptyLegalMoves(moveset);
+	moves.sliding[lineKey] = moveset.sliding[lineKey]!;
+	legalmoves.removeObstructedMoves(
+		gamefile.boardsim,
+		gamefile.basegame.gameRules.worldBorder,
+		piece,
+		moveset,
+		moves,
+		true, // premove = true: only voids and world border restrict movement
+	);
+
+	// Render white box outlines for all reachable squares using the shared transform
+	const model = legalmovemodel.generateModelForSlideHighlightOutlines(hoveredCoords, moves);
+	const boardPos = boardpos.getBoardPos();
+	const model_Offset = legalmovemodel.getOffset();
+	const position: Vec3 = meshes.getModelPosition(boardPos, model_Offset, 0);
+	const boardScale = boardpos.getBoardScaleAsNumber();
+	const scale: Vec3 = [boardScale, boardScale, 1];
+	model.render(position, scale);
 }
+
+// Exports ------------------------------------------------------------------------------
 
 export default {
 	update,
-	renderSlideZone,
+	render,
 };

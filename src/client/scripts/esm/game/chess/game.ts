@@ -315,9 +315,9 @@ function renderScene(): void {
 		animation.renderAnimations();
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
-		renderanims.render(); // Render pulse animations below arrow indicators, but above pieces.
+		renderanims.render(); // Render pulse animations
+		dragarrows.render();
 		arrows.render();
-		dragarrows.renderSlideZone();
 		boardeditor.render();
 		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');

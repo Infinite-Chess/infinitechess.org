@@ -296,11 +296,13 @@ function removeObstructedSlidingMoves(
 		if (lines === undefined) continue;
 		const line = coordutil.getCoordsFromKey(linekey as Vec2Key);
 		const key = organizedpieces.getKeyFromLine(line, piece.coords);
+		const piecesLine = lines.get(key);
+		if (piecesLine === undefined) continue; // No pieces on this line, so no obstructions. Needed so dragarrows feature doesn't crash on empty lines.
 		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
 			worldBorder,
 			blockingFunc,
 			boardsim.pieces,
-			lines.get(key)!,
+			piecesLine,
 			line,
 			limits,
 			piece.coords,
@@ -499,7 +501,9 @@ function enforceWorldBorderOnSlideLimit(
 	if (!worldBorder) return; // No world border, skip
 
 	if (!bounds.boxContainsSquare(worldBorder, coords)) {
-		console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
+		// console.warn('Piece outside world border.'); // Doesn't crash game, but does yield strange legal move results.
+		// This can legitimately happen when using the drag arrows feature
+		// to drag an arrow's piece outside of the world border.
 	}
 
 	// Helper to apply logic for a single border
