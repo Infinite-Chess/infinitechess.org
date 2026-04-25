@@ -276,7 +276,7 @@ let boundingBoxFloat: BoundingBoxBD | undefined;
 let boundingBoxInt: BoundingBox | undefined;
 
 /**
- * A list of all arrows being hovered over this frame,
+ * A list of all piece-arrows being hovered over this frame (excludes move hints),
  * with a reference to the piece they are pointing to.
  * Other scripts may access this so they can add interaction with them.
  */
