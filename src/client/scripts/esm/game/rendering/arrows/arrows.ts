@@ -1008,34 +1008,6 @@ function transitionTowardTargetIfClicked(
 // Hint Arrows ----------------------------------------------------------------------------------------------------------------------------------
 
 /**
- * Given a coordinate lying off-screen and a direction toward the screen,
- * returns the world-space position of the near-side screen-edge intersection.
- * Returns undefined if no valid intersection exists.
- */
-function getOffscreenArrowWorldLocation(
-	coords: BDCoords,
-	direction: Vec2,
-): DoubleCoords | undefined {
-	const intersections = geometry.findLineBoxIntersectionsBD(coords, direction, boundingBoxFloat!);
-	if (intersections.length < 2) return undefined;
-	const nearSide = intersections[0]!.positiveDotProduct
-		? intersections[0]!.coords
-		: intersections[1]!.coords;
-	return space.convertCoordToWorldSpace_IgnoreSquareCenter(nearSide);
-}
-
-/** Returns true if any pointer is within worldHalfWidth of the given world location. */
-function isArrowHovered(
-	worldLocation: DoubleCoords,
-	worldHalfWidth: number,
-	pointerWorlds: DoubleCoords[],
-): boolean {
-	return pointerWorlds.some(
-		(p) => vectors.chebyshevDistanceDoubles(worldLocation, p) < worldHalfWidth,
-	);
-}
-
-/**
  * Computes and populates {@link hintArrows} for the current frame.
  * For each off-screen square returned by {@link selectedpieceindividualmovehints.getSquares},
  * creates a hint arrow at the nearest screen edge pointing toward that square.
@@ -1054,7 +1026,7 @@ function updateHintArrows(): void {
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	for (const hintSquare of hintSquares) {
-		const sqBD = bdcoords.FromCoords(hintSquare);
+		const hintSquareBD = bdcoords.FromCoords(hintSquare);
 
 		// Skip if the hint square is already visible on screen
 		if (bounds.boxContainsSquare(boundingBoxInt!, hintSquare)) continue;
@@ -1062,13 +1034,29 @@ function updateHintArrows(): void {
 		// Direction from the selected piece toward the hint square
 		// const direction: Vec2 = vectors.normalizeVector([hintSquare[0] - pieceCoords[0], hintSquare[1] - pieceCoords[1]]);
 		const difference = coordutil.subtractCoords(hintSquare, pieceCoords);
-		const direction: Vec2 = vectors.normalizeVector(difference);
+		let direction: Vec2 = vectors.normalizeVector(difference);
 
-		const worldLocation = getOffscreenArrowWorldLocation(sqBD, direction);
-		if (worldLocation === undefined) continue;
+		// Calculate the world space position of the near-side screen edge intersection
+		// along the line from the piece to the hint square.
+		const intersections = geometry.findLineBoxIntersectionsBD(
+			hintSquareBD,
+			direction,
+			boundingBoxFloat!,
+		);
+		if (intersections.length < 2) continue;
+		const nearSide = intersections[0]!.positiveDotProduct
+			? intersections[0]!.coords
+			: intersections[1]!.coords;
+		const worldLocation = space.convertCoordToWorldSpace_IgnoreSquareCenter(nearSide);
 
-		const hovered = isArrowHovered(worldLocation, worldHalfWidth, pointerWorlds);
-		transitionTowardTargetIfClicked(sqBD, direction, worldLocation, worldHalfWidth);
+		// If we've panned past the hint square, flip the triangle so it still points toward the square
+		if (intersections[0]!.positiveDotProduct) direction = vectors.negateVector(direction);
+
+		// Whether any pointer is within worldHalfWidth of the given world location.
+		const hovered = pointerWorlds.some(
+			(p) => vectors.chebyshevDistanceDoubles(worldLocation, p) < worldHalfWidth,
+		);
+		transitionTowardTargetIfClicked(hintSquareBD, direction, worldLocation, worldHalfWidth);
 
 		hintArrows.push({ worldLocation, direction, targetSquare: hintSquare, hovered });
 	}
