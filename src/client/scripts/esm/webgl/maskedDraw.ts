@@ -1,5 +1,10 @@
 // src/client/scripts/esm/webgl/maskedDraw.ts
 
+/**
+ * This module manages stencil-masked rendering.
+ * Both "inclusion" and "exclusion" masks are supported.
+ */
+
 import { gl } from '../game/rendering/webgl.js';
 import { ProgramManager } from './ProgramManager.js';
 
