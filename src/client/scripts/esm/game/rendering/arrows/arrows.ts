@@ -204,9 +204,7 @@ const pieceCountToDisableArrows = 40_000;
 const lineCountToDisableArrows = 8;
 
 /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
-const PIECE_WIDTH = 0.65;
-/** The width of hint arrow indicators as a fraction of the normal arrow indicator width {@link PIECE_WIDTH}. */
-const HINT_WIDTH_FRACTION = 0.75;
+const WIDTH = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
 const sidePadding = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
 /** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
@@ -371,7 +369,7 @@ function getAllArrowWorldLocations(): DoubleCoords[] {
  * This is the Chebyshev-distance radius used to detect hover/opacity changes.
  */
 function getArrowIndicatorHalfWidth(): number {
-	return (PIECE_WIDTH * boardpos.getBoardScaleAsNumber()) / 2;
+	return (WIDTH * boardpos.getBoardScaleAsNumber()) / 2;
 }
 
 // Updating -----------------------------------------------------------------------------------------------------------
@@ -498,7 +496,7 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 
 /** Returns the distance one arrow's picture's center should be from the screen edge. */
 function getPadding(): BigDecimal {
-	return bd.fromNumber(PIECE_WIDTH / 2 + sidePadding);
+	return bd.fromNumber(WIDTH / 2 + sidePadding);
 }
 
 /**
@@ -1052,7 +1050,7 @@ function updateHintArrows(): void {
 
 	const pieceCoords = selectedpieceindividualmovehints.getPieceCoords()!;
 
-	const worldHalfWidth = getArrowIndicatorHalfWidth() * HINT_WIDTH_FRACTION;
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	for (const hintSquare of hintSquares) {
@@ -1473,6 +1471,52 @@ function regenerateModelAndRender(): void {
 		concatData(instanceData_Pictures, instanceData_Arrows, pieceArrow, pieceArrow.direction, 0);
 	}
 
+	// Render hint squares and triangles first (below piece images)
+	if (hintArrows.length > 0) {
+		const hintColor = preferences.getLegalMoveHighlightColor({
+			isOpponentPiece: false,
+			isPremove: false,
+		});
+
+		const size = worldHalfWidth * 2;
+
+		// Green squares at screen edge for each hint arrow
+		const hintSquaresInstanceData: number[] = [];
+		for (const ha of hintArrows) hintSquaresInstanceData.push(...ha.worldLocation);
+		createRenderable_Instanced(
+			instancedshapes.getDataLegalMoveSquare(hintColor),
+			hintSquaresInstanceData,
+			'TRIANGLES',
+			'highlights',
+			true,
+		).render(undefined, undefined, { u_size: size });
+
+		// Re-render hovered hint squares at increased opacity on top
+		const hoveredHintSquaresInstanceData: number[] = [];
+		for (const ha of hintArrows) {
+			if (ha.hovered) hoveredHintSquaresInstanceData.push(...ha.worldLocation);
+		}
+		if (hoveredHintSquaresInstanceData.length > 0) {
+			const hoveredHintColor: Color = [...hintColor];
+			hoveredHintColor[3] = drawsquares.HOVER_OPACITY;
+			createRenderable_Instanced(
+				instancedshapes.getDataLegalMoveSquare(hoveredHintColor),
+				hoveredHintSquaresInstanceData,
+				'TRIANGLES',
+				'highlights',
+				true,
+			).render(undefined, undefined, { u_size: size });
+		}
+
+		// Append hint direction triangles into the shared arrow triangle array
+		for (const ha of hintArrows) {
+			const dirAsDoubles = vectors.convertVectorToDoubles(ha.direction);
+			const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]);
+			const a = ha.hovered ? 1 : opacity;
+			instanceData_Arrows.push(...ha.worldLocation, 0, 0, 0, a, angle);
+		}
+	}
+
 	// Render piece images for regular arrow indicators
 	if (instanceData_Pictures.length > 0) {
 		/*
@@ -1499,52 +1543,6 @@ function regenerateModelAndRender(): void {
 			'arrowImages',
 			[{ texture, uniformName: 'u_sampler' }],
 		).render();
-	}
-
-	// Render hint squares and append hint direction triangles to the shared arrow triangle array
-	if (hintArrows.length > 0) {
-		const hintColor = preferences.getLegalMoveHighlightColor({
-			isOpponentPiece: false,
-			isPremove: false,
-		});
-
-		const size = worldHalfWidth * 2 * HINT_WIDTH_FRACTION;
-
-		// Green squares at screen edge for each hint arrow
-		const hintSquaresInstanceData: number[] = [];
-		for (const ha of hintArrows) hintSquaresInstanceData.push(...ha.worldLocation);
-		createRenderable_Instanced(
-			instancedshapes.getDataLegalMoveSquare(hintColor),
-			hintSquaresInstanceData,
-			'TRIANGLES',
-			'highlights',
-			true,
-		).render(undefined, undefined, { u_size: size });
-
-		// Re-render hovered hint squares at full opacity on top
-		const hoveredHintSquaresInstanceData: number[] = [];
-		for (const ha of hintArrows) {
-			if (ha.hovered) hoveredHintSquaresInstanceData.push(...ha.worldLocation);
-		}
-		if (hoveredHintSquaresInstanceData.length > 0) {
-			const hoveredHintColor: Color = [...hintColor];
-			hoveredHintColor[3] = drawsquares.HOVER_OPACITY;
-			createRenderable_Instanced(
-				instancedshapes.getDataLegalMoveSquare(hoveredHintColor),
-				hoveredHintSquaresInstanceData,
-				'TRIANGLES',
-				'highlights',
-				true,
-			).render(undefined, undefined, { u_size: size });
-		}
-
-		// Append hint direction triangles into the shared arrow triangle array
-		for (const ha of hintArrows) {
-			const dirAsDoubles = vectors.convertVectorToDoubles(ha.direction);
-			const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]);
-			const a = ha.hovered ? 1 : opacity;
-			instanceData_Arrows.push(...ha.worldLocation, 0, 0, 0, a, angle);
-		}
 	}
 
 	// Render all arrow direction triangles (regular piece arrows + hint arrows) together
