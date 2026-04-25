@@ -45,6 +45,7 @@ import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
 import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
+import arrowscalculator from '../arrows/arrowscalculator.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -261,7 +262,7 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
  */
 function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	// Slide zone depth in world space units
-	const slideZoneDepth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const slideZoneDepth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.direction;
@@ -360,7 +361,7 @@ function renderCandidateArrows(): void {
 	const worldLocation = findCandidateHoveredArrow()?.worldLocation;
 	if (!worldLocation) return;
 
-	const halfWidth = arrows.getArrowIndicatorHalfWidth();
+	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
 	const size = halfWidth * 0.3; // Same proportions as the standard small arrows
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
@@ -428,7 +429,7 @@ function renderSlideZone(): void {
 
 	const screenBox = camera.getScreenBoundingBox(false);
 	// Slide zone depth in world space units
-	const depth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const depth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
 	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.

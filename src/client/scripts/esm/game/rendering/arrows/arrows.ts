@@ -246,14 +246,6 @@ function getAllArrowWorldLocations(): DoubleCoords[] {
 }
 
 /**
- * Returns the world-space half-width of each arrow indicator's square hitbox for the current frame.
- * This is the Chebyshev-distance radius used to detect hover/opacity changes.
- */
-function getArrowIndicatorHalfWidth(): number {
-	return arrowscalculator.getArrowIndicatorHalfWidth();
-}
-
-/**
  * Whether the piece arrows should be calculated and rendered this frame.
  * Excludes move hint arrows.
  */
@@ -310,7 +302,12 @@ function update(): void {
  * arrows to be updated.
  */
 function render(): void {
-	arrowsrendering.render(slideArrows, animatedArrows, hintArrows, getArrowIndicatorHalfWidth());
+	arrowsrendering.render(
+		slideArrows,
+		animatedArrows,
+		hintArrows,
+		arrowscalculator.getArrowIndicatorHalfWidth(),
+	);
 }
 
 // Arrow Shifting: Adding / Removing Arrows before rendering ---------------------------
@@ -371,7 +368,6 @@ export default {
 	getHoveredArrows,
 	areHoveringAtleastOneArrow,
 	getAllArrowWorldLocations,
-	getArrowIndicatorHalfWidth,
 	// Arrow Shifting
 	deleteArrow,
 	moveArrow,
