@@ -353,15 +353,7 @@ function areHoveringAtleastOneArrow(): boolean {
  * Must be called after update().
  */
 function getAllArrowWorldLocations(): DoubleCoords[] {
-	const locations: DoubleCoords[] = [];
-	for (const linesOfDirection of Object.values(slideArrows)) {
-		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
-			for (const arrow of line.posDotProd) locations.push(arrow.worldLocation);
-			for (const arrow of line.negDotProd) locations.push(arrow.worldLocation);
-		}
-	}
-	for (const arrow of animatedArrows) locations.push(arrow.worldLocation);
-	return locations;
+	return [...getAllArrows(), ...animatedArrows].map((a) => a.worldLocation);
 }
 
 /**
@@ -417,10 +409,7 @@ function update(): void {
 	 */
 
 	/** The object that stores all arrows that should be visible this frame. */
-	const slideArrowsDraft: SlideArrowsDraft = generateArrowsDraft(
-		boundingBoxInt!,
-		boundingBoxFloat!,
-	);
+	const slideArrowsDraft: SlideArrowsDraft = generateArrowsDraft();
 
 	// Remove arrows based on our mode
 	removeUnnecessaryArrows(slideArrowsDraft);
@@ -503,10 +492,7 @@ function getPadding(): BigDecimal {
  * Generates a draft of all the arrows for a game, as if All (plus hippogonals) mode was on.
  * This contains minimal information, as some may be removed later.
  */
-function generateArrowsDraft(
-	boundingBoxInt: BoundingBox,
-	boundingBoxFloat: BoundingBoxBD,
-): SlideArrowsDraft {
+function generateArrowsDraft(): SlideArrowsDraft {
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
@@ -518,7 +504,7 @@ function generateArrowsDraft(
 		// that will contain all organized lines of the given vector
 		// intersecting the box between them.
 
-		const containingPoints = geometry.findCrossSectionalWidthPoints(slide, boundingBoxInt);
+		const containingPoints = geometry.findCrossSectionalWidthPoints(slide, boundingBoxInt!);
 		const containingPointsLineC = containingPoints.map((point) =>
 			vectors.getLineCFromCoordsAndVec(point, slide),
 		) as [bigint, bigint];
@@ -538,14 +524,7 @@ function generateArrowsDraft(
 				continue; // Next line, this one is off-screen, so no piece arrows are visible
 
 			// Calculate the ACTUAL arrows that should be visible for this specific organized line.
-			const arrowsLine = calcArrowsLineDraft(
-				gamefile,
-				boundingBoxInt,
-				boundingBoxFloat,
-				slide,
-				slideKey,
-				organizedLine,
-			);
+			const arrowsLine = calcArrowsLineDraft(gamefile, slide, slideKey, organizedLine);
 			if (arrowsLine === undefined) continue;
 			if (!slideArrowsDraft[slideKey]) slideArrowsDraft[slideKey] = {}; // Make sure this exists first
 			slideArrowsDraft[slideKey][lineKey] = arrowsLine; // Add this arrows line to our object containing all arrows for this frame
@@ -565,8 +544,6 @@ function generateArrowsDraft(
  */
 function calcArrowsLineDraft(
 	gamefile: FullGame,
-	boundingBoxInt: BoundingBox,
-	boundingBoxFloat: BoundingBoxBD,
 	slideDir: Vec2,
 	slideKey: Vec2Key,
 	organizedline: number[],
@@ -592,10 +569,12 @@ function calcArrowsLineDraft(
 		.findLineBoxIntersectionsBD(
 			bdcoords.FromCoords(firstPiece.coords),
 			slideDir,
-			boundingBoxFloat,
+			boundingBoxFloat!,
 		)
 		.map((c) => c.coords);
 	if (intersections.length < 2) return; // Arrow line intersected screen box exactly on the corner!! Let's skip constructing this line. No arrow will be visible
+
+	const boundingBoxIntBD = bounds.castBoundingBoxToBigDecimal(boundingBoxInt!);
 
 	organizedline.forEach((idx) => {
 		const piece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, idx)!;
@@ -607,7 +586,6 @@ function calcArrowsLineDraft(
 		};
 
 		// Is the piece off-screen?
-		const boundingBoxIntBD = bounds.castBoundingBoxToBigDecimal(boundingBoxInt);
 		if (bounds.boxContainsSquareBD(boundingBoxIntBD, arrowPiece.coords)) return; // On-screen, no arrow needed
 
 		// Piece is guaranteed off-screen...
@@ -616,7 +594,7 @@ function calcArrowsLineDraft(
 		const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(
 			arrowPiece.coords,
 			slideDir,
-			boundingBoxFloat,
+			boundingBoxFloat!,
 		);
 		if (thisPieceIntersections.length < 2) return;
 		const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
@@ -839,6 +817,47 @@ function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft):
 }
 
 /**
+ * Converts an {@link ArrowsLineDraft} into a fully computed {@link ArrowsLine},
+ * resolving world-space positions and hover detection for each arrow.
+ * When appendHover is true, also computes ownsSlide and registers hovered arrows.
+ */
+function convertLineDraftToLine(
+	draft: ArrowsLineDraft,
+	slideDir: Vec2,
+	vec2Key: Vec2Key,
+	worldHalfWidth: number,
+	pointerWorlds: DoubleCoords[],
+	appendHover: boolean,
+): ArrowsLine {
+	const negVector = vectors.negateVector(slideDir);
+	const boardsim = appendHover ? gameslot.getGamefile()!.boardsim : undefined;
+
+	const toArrow = (
+		dir: Vec2,
+		intersection: BDCoords,
+		arrowDraft: ArrowDraft,
+		index: number,
+	): Arrow => {
+		let ownsSlide = true;
+		if (boardsim !== undefined) {
+			const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+			ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
+		}
+		// prettier-ignore
+		return processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds, appendHover, ownsSlide);
+	};
+
+	return {
+		posDotProd: draft.posDotProd.map((ad, i) =>
+			toArrow(slideDir, draft.intersections[0], ad, i),
+		),
+		negDotProd: draft.negDotProd.map((ad, i) =>
+			toArrow(negVector, draft.intersections[1], ad, i),
+		),
+	};
+}
+
+/**
  * Calculates the more detailed information of the visible arrow indicators this frame,
  * enough so we are able to render them.
  *
@@ -848,41 +867,19 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 	if (Object.keys(slideArrows).length > 0)
 		throw Error('SHOULD have erased all slide arrows before recalcing');
 
-	const boardsim = gameslot.getGamefile()!.boardsim;
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	// Take the arrows draft, construct the actual
 	for (const [key, value] of Object.entries(slideArrowsDraft)) {
 		const vec2Key = key as Vec2Key;
 		const linesOfDirectionDraft = value as { [lineKey: string]: ArrowsLineDraft };
-
 		const slideDir = vectors.getVec2FromKey(vec2Key as Vec2Key);
 		const linesOfDirection: { [lineKey: string]: ArrowsLine } = {};
 
-		const vector = slideDir;
-		const negVector = vectors.negateVector(slideDir);
-
 		for (const [lineKey, value] of Object.entries(linesOfDirectionDraft)) {
 			const arrowLineDraft = value as ArrowsLineDraft;
-
-			const posDotProd: Arrow[] = [];
-			const negDotProd: Arrow[] = [];
-
-			for (const [drafts, dir, intersection, output] of [
-				[arrowLineDraft.posDotProd, vector, arrowLineDraft.intersections[0], posDotProd],
-				[arrowLineDraft.negDotProd, negVector, arrowLineDraft.intersections[1], negDotProd],
-			] as [ArrowDraft[], Vec2, BDCoords, Arrow[]][]) {
-				drafts.forEach((arrowDraft, index) => {
-					const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
-					// Whether this piece can slide in the direction of the arrow
-					const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
-					// prettier-ignore
-					output.push(processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds, true, ownsSlide));
-				});
-			}
-
-			linesOfDirection[lineKey] = { posDotProd, negDotProd };
+			// prettier-ignore
+			linesOfDirection[lineKey] = convertLineDraftToLine(arrowLineDraft, slideDir, vec2Key, worldHalfWidth, pointerWorlds, true);
 		}
 
 		slideArrows[vec2Key] = linesOfDirection;
@@ -1180,6 +1177,7 @@ function executeArrowShifts(): void {
 
 	const worldHalfWidth = getArrowIndicatorHalfWidth(); // The world-space width of our images
 	const pointerWorlds = mouse.getAllPointerWorlds();
+	const slideExceptions = getSlideExceptions();
 
 	shifts.forEach((shift) => {
 		// { type: string, index?: number } & ({ start: Coords, end?: Coords } | { start?: Coords, end: Coords });
@@ -1286,11 +1284,13 @@ function executeArrowShifts(): void {
 	shifts.forEach((shift) => {
 		if (shift.kind === 'delete' || shift.kind === 'move' || shift.kind === 'animate') {
 			// Recalculate the lines through the start coordinate
-			recalculateLinesThroughCoords(gamefile, shift.start);
+			// prettier-ignore
+			recalculateLinesThroughCoords(gamefile, shift.start, worldHalfWidth, pointerWorlds, slideExceptions);
 		}
 		if (shift.kind === 'add' || shift.kind === 'move') {
 			// Recalculate the lines through the end coordinate
-			recalculateLinesThroughCoords(gamefile, shift.end);
+			// prettier-ignore
+			recalculateLinesThroughCoords(gamefile, shift.end, worldHalfWidth, pointerWorlds, slideExceptions);
 		}
 	});
 
@@ -1305,7 +1305,13 @@ function executeArrowShifts(): void {
  * Recalculates all of the arrow lines the given piece
  * is on, adding them to this frame's list of arrows.
  */
-function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void {
+function recalculateLinesThroughCoords(
+	gamefile: FullGame,
+	coords: Coords,
+	worldHalfWidth: number,
+	pointerWorlds: DoubleCoords[],
+	slideExceptions: Vec2Key[],
+): void {
 	// console.log("Recalculating lines through coords: ", coords);
 	// Recalculate every single line it is on.
 
@@ -1331,65 +1337,19 @@ function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void
 		const organizedLine = linegroup.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = calcArrowsLineDraft(
-			gamefile,
-			boundingBoxInt!,
-			boundingBoxFloat!,
-			slide,
-			slideKey,
-			organizedLine,
-		);
+		const arrowsLineDraft = calcArrowsLineDraft(gamefile, slide, slideKey, organizedLine);
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
-
-		const slideExceptions = getSlideExceptions();
 		if (!slideExceptions.includes(slideKey)) {
 			removeTypesThatCantSlideOntoScreenFromLineDraft(arrowsLineDraft);
 			if (arrowsLineDraft.negDotProd.length === 0 && arrowsLineDraft.posDotProd.length === 0)
 				continue; // No more pieces on this line
 		}
 
-		// Calculate more detailed information, enough to render...
-
-		const worldHalfWidth = getArrowIndicatorHalfWidth();
-
-		const pointerWorlds = mouse.getAllPointerWorlds();
-
-		const vector = slide;
-		const negVector = vectors.negateVector(slide);
-
-		const posDotProd: Arrow[] = [];
-		const negDotProd: Arrow[] = [];
-
-		arrowsLineDraft.posDotProd.forEach((arrowDraft, index) => {
-			const arrow = processPiece(
-				arrowDraft.piece,
-				vector,
-				arrowsLineDraft.intersections[0],
-				index,
-				worldHalfWidth,
-				pointerWorlds,
-				false,
-			);
-			posDotProd.push(arrow);
-		});
-
-		arrowsLineDraft.negDotProd.forEach((arrowDraft, index) => {
-			const arrow = processPiece(
-				arrowDraft.piece,
-				negVector,
-				arrowsLineDraft.intersections[1],
-				index,
-				worldHalfWidth,
-				pointerWorlds,
-				false,
-			);
-			negDotProd.push(arrow);
-		});
-
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
-		slideArrows[slideKey][lineKey] = { posDotProd, negDotProd }; // Set the new arrow line
+		// prettier-ignore
+		slideArrows[slideKey][lineKey] = convertLineDraftToLine(arrowsLineDraft, slide, slideKey, worldHalfWidth, pointerWorlds, false);
 	}
 }
 
@@ -1402,10 +1362,6 @@ function recalculateLinesThroughCoords(gamefile: FullGame, coords: Coords): void
  * arrows to be updated.
  */
 function render(): void {
-	regenerateModelAndRender();
-}
-
-function regenerateModelAndRender(): void {
 	if (
 		Object.keys(slideArrows).length === 0 &&
 		animatedArrows.length === 0 &&
