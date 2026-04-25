@@ -10,6 +10,7 @@
  * Other scripts may add/remove arrows in between update() and render() calls.
  */
 
+import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
@@ -47,6 +48,7 @@ import spritesheet from '../spritesheet.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import perspective from '../perspective.js';
 import preferences from '../../../components/header/preferences.js';
+import drawsquares from '../highlights/annotations/drawsquares.js';
 import frametracker from '../frametracker.js';
 import guinavigation from '../../gui/guinavigation.js';
 import instancedshapes from '../instancedshapes.js';
@@ -202,13 +204,15 @@ const pieceCountToDisableArrows = 40_000;
 const lineCountToDisableArrows = 8;
 
 /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
-const width: number = 0.65;
+const PIECE_WIDTH = 0.65;
+/** The width of hint arrow indicators as a fraction of the normal arrow indicator width {@link PIECE_WIDTH}. */
+const HINT_WIDTH_FRACTION = 0.75;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
-const sidePadding: number = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
+const sidePadding = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
 /** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
-const paddingBetwAdjacentPictures: number = 0.35;
+const paddingBetwAdjacentPictures = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
-const opacity: number = 0.6;
+const opacity = 0.6;
 /** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
 const renderZoomLimitVirtualPixels: BigDecimal = bd.fromBigInt(12n); // virtual pixels. Default: 20
 
@@ -367,7 +371,7 @@ function getAllArrowWorldLocations(): DoubleCoords[] {
  * This is the Chebyshev-distance radius used to detect hover/opacity changes.
  */
 function getArrowIndicatorHalfWidth(): number {
-	return (width * boardpos.getBoardScaleAsNumber()) / 2;
+	return (PIECE_WIDTH * boardpos.getBoardScaleAsNumber()) / 2;
 }
 
 // Updating -----------------------------------------------------------------------------------------------------------
@@ -494,7 +498,7 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 
 /** Returns the distance one arrow's picture's center should be from the screen edge. */
 function getPadding(): BigDecimal {
-	return bd.fromNumber(width / 2 + sidePadding);
+	return bd.fromNumber(PIECE_WIDTH / 2 + sidePadding);
 }
 
 /**
@@ -1048,7 +1052,7 @@ function updateHintArrows(): void {
 
 	const pieceCoords = selectedpieceindividualmovehints.getPieceCoords()!;
 
-	const worldHalfWidth = getArrowIndicatorHalfWidth();
+	const worldHalfWidth = getArrowIndicatorHalfWidth() * HINT_WIDTH_FRACTION;
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
 	for (const hintSquare of hintSquares) {
@@ -1504,6 +1508,8 @@ function regenerateModelAndRender(): void {
 			isPremove: false,
 		});
 
+		const size = worldHalfWidth * 2 * HINT_WIDTH_FRACTION;
+
 		// Green squares at screen edge for each hint arrow
 		const hintSquaresInstanceData: number[] = [];
 		for (const ha of hintArrows) hintSquaresInstanceData.push(...ha.worldLocation);
@@ -1513,21 +1519,31 @@ function regenerateModelAndRender(): void {
 			'TRIANGLES',
 			'highlights',
 			true,
-		).render(undefined, undefined, { u_size: worldHalfWidth * 2 });
+		).render(undefined, undefined, { u_size: size });
+
+		// Re-render hovered hint squares at full opacity on top
+		const hoveredHintSquaresInstanceData: number[] = [];
+		for (const ha of hintArrows) {
+			if (ha.hovered) hoveredHintSquaresInstanceData.push(...ha.worldLocation);
+		}
+		if (hoveredHintSquaresInstanceData.length > 0) {
+			const hoveredHintColor: Color = [...hintColor];
+			hoveredHintColor[3] = drawsquares.HOVER_OPACITY;
+			createRenderable_Instanced(
+				instancedshapes.getDataLegalMoveSquare(hoveredHintColor),
+				hoveredHintSquaresInstanceData,
+				'TRIANGLES',
+				'highlights',
+				true,
+			).render(undefined, undefined, { u_size: size });
+		}
 
 		// Append hint direction triangles into the shared arrow triangle array
 		for (const ha of hintArrows) {
 			const dirAsDoubles = vectors.convertVectorToDoubles(ha.direction);
 			const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]);
 			const a = ha.hovered ? 1 : opacity;
-			instanceData_Arrows.push(
-				...ha.worldLocation,
-				hintColor[0],
-				hintColor[1],
-				hintColor[2],
-				a,
-				angle,
-			);
+			instanceData_Arrows.push(...ha.worldLocation, 0, 0, 0, a, angle);
 		}
 	}
 
