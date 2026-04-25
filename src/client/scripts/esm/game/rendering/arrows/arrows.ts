@@ -1241,15 +1241,8 @@ function executeArrowShifts(): void {
 					? thisPieceIntersections[0]!.coords
 					: thisPieceIntersections[1]!.coords;
 
-				const arrow: Arrow = processPiece(
-					piece,
-					line,
-					intersect,
-					0,
-					worldHalfWidth,
-					pointerWorlds,
-					false,
-				);
+				// prettier-ignore
+				const arrow: Arrow = processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds, false);
 				const animatedArrow: AnimatedArrow = {
 					...arrow,
 					direction: line,
