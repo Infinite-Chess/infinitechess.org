@@ -150,6 +150,16 @@ export interface Arrow extends BaseArrow {
 	piece: ArrowPiece;
 	/** Opacity to render this arrow at when not hovered. Defaults to the module-level opacity constant. */
 	opacity: number;
+	/**
+	 * The direction the arrow triangle points.
+	 * Equals `negateVector(processPiece vector)`, used directly as the render angle.
+	 */
+	direction: Vec2;
+	/**
+	 * Index within the adjacent-picture stack on this line. 0 for the primary (outermost)
+	 * indicator; > 0 for stacked indicators closer to the screen center.
+	 */
+	stackIndex: number;
 }
 
 /**
@@ -162,12 +172,6 @@ export interface ArrowPiece {
 	index: number;
 	/** Whether the piece is at a floating point coordinate. */
 	floating: boolean;
-}
-
-/** Animated piece arrows additionally carry their direction for rendering. */
-interface AnimatedArrow extends Arrow, BaseArrow {
-	/** Direction this indicator points, from the screen edge toward its target. */
-	direction: Vec2;
 }
 
 /** Hovered-arrow event: identifies which arrow indicator is currently being hovered. */
@@ -207,6 +211,8 @@ const lineCountToDisableArrows = 8;
 const WIDTH = 0.65;
 /** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
 const sidePadding = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
+/** The distance one arrow's picture's center should be from the screen edge. */
+const PADDING: BigDecimal = bd.fromNumber(WIDTH / 2 + sidePadding);
 /** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
 const paddingBetwAdjacentPictures = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
@@ -220,6 +226,34 @@ const perspectiveDist = 17;
 
 const ONE = bd.fromBigInt(1n);
 const HALF = bd.fromNumber(0.5);
+
+/**
+ * Attribute layout for the instanced piece-image renderable (arrow indicators).
+ * Defined once here to avoid re-allocating the object every frame.
+ */
+const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [
+		{ name: 'a_position', numComponents: 2 },
+		{ name: 'a_texturecoord', numComponents: 2 },
+	],
+	instanceDataAttribInfo: [
+		{ name: 'a_instanceposition', numComponents: 2 },
+		{ name: 'a_instancetexcoord', numComponents: 2 },
+		{ name: 'a_instancecolor', numComponents: 4 },
+	],
+};
+/**
+ * Attribute layout for the instanced arrow-triangle renderable.
+ * Defined once here to avoid re-allocating the object every frame.
+ */
+const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
+	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
+	instanceDataAttribInfo: [
+		{ name: 'a_instanceposition', numComponents: 2 },
+		{ name: 'a_instancecolor', numComponents: 4 },
+		{ name: 'a_instancerotation', numComponents: 1 },
+	],
+};
 
 /**
  * The mode the arrow indicators on the edges of the screen is currently in.
@@ -264,7 +298,7 @@ let slideArrows: SlideArrows = {};
  * the piece captured being rendered in place.
  * Still animation's lines are recalculated manually.
  */
-const animatedArrows: AnimatedArrow[] = [];
+const animatedArrows: Arrow[] = [];
 
 /**
  * A list of all hint arrows computed for the current frame.
@@ -476,16 +510,10 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the
 	 * arrows indicators aren't touching the edge of the screen.
 	 */
-	const padding: BigDecimal = getPadding();
-	boundingBoxFloat.left = bd.add(boundingBoxFloat.left, padding);
-	boundingBoxFloat.right = bd.subtract(boundingBoxFloat.right, padding);
-	boundingBoxFloat.bottom = bd.add(boundingBoxFloat.bottom, padding);
-	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, padding);
-}
-
-/** Returns the distance one arrow's picture's center should be from the screen edge. */
-function getPadding(): BigDecimal {
-	return bd.fromNumber(WIDTH / 2 + sidePadding);
+	boundingBoxFloat.left = bd.add(boundingBoxFloat.left, PADDING);
+	boundingBoxFloat.right = bd.subtract(boundingBoxFloat.right, PADDING);
+	boundingBoxFloat.bottom = bd.add(boundingBoxFloat.bottom, PADDING);
+	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, PADDING);
 }
 
 /**
@@ -655,7 +683,7 @@ function calcArrowsLineDraft(
 			firstIntersection.coords,
 		);
 		// Subtract the padding from the intersection so we get the distance to the intersection of the SCREEN EDGE.
-		firstIntersectionDist = bd.subtract(firstIntersectionDist, getPadding());
+		firstIntersectionDist = bd.subtract(firstIntersectionDist, PADDING);
 
 		// What is the distance to the farthest point this piece can slide along this direction?
 		let farthestSlidePoint: Coords | null;
@@ -830,7 +858,7 @@ function convertLineDraftToLine(
 	appendHover: boolean,
 ): ArrowsLine {
 	const negVector = vectors.negateVector(slideDir);
-	const boardsim = appendHover ? gameslot.getGamefile()!.boardsim : undefined;
+	const boardsim = gameslot.getGamefile()!.boardsim!;
 
 	const toArrow = (
 		dir: Vec2,
@@ -838,13 +866,20 @@ function convertLineDraftToLine(
 		arrowDraft: ArrowDraft,
 		index: number,
 	): Arrow => {
-		let ownsSlide = true;
-		if (boardsim !== undefined) {
-			const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
-			ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
-		}
 		// prettier-ignore
-		return processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds, appendHover, ownsSlide);
+		const arrow = processPiece(arrowDraft.piece, dir, intersection, index, worldHalfWidth, pointerWorlds);
+		if (appendHover && arrow.hovered) {
+			const moveset = legalmoves.getPieceMoveset(boardsim, arrowDraft.piece.type);
+			const ownsSlide = !!(moveset.sliding && moveset.sliding[vec2Key]);
+
+			hoveredArrows.push({
+				piece: arrow.piece,
+				direction: arrow.direction,
+				worldLocation: arrow.worldLocation,
+				ownsSlide,
+			});
+		}
+		return arrow;
 	};
 
 	return {
@@ -870,14 +905,13 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	for (const [key, value] of Object.entries(slideArrowsDraft)) {
-		const vec2Key = key as Vec2Key;
-		const linesOfDirectionDraft = value as { [lineKey: string]: ArrowsLineDraft };
-		const slideDir = vectors.getVec2FromKey(vec2Key as Vec2Key);
+	for (const vec2Key of Object.keys(slideArrowsDraft) as Vec2Key[]) {
+		const linesOfDirectionDraft = slideArrowsDraft[vec2Key]!;
+		const slideDir = vectors.getVec2FromKey(vec2Key);
 		const linesOfDirection: { [lineKey: string]: ArrowsLine } = {};
 
-		for (const [lineKey, value] of Object.entries(linesOfDirectionDraft)) {
-			const arrowLineDraft = value as ArrowsLineDraft;
+		for (const lineKey of Object.keys(linesOfDirectionDraft)) {
+			const arrowLineDraft = linesOfDirectionDraft[lineKey]!;
 			// prettier-ignore
 			linesOfDirection[lineKey] = convertLineDraftToLine(arrowLineDraft, slideDir, vec2Key, worldHalfWidth, pointerWorlds, true);
 		}
@@ -895,23 +929,20 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): vo
 /**
  * Calculates the detailed information about a single arrow indicator, enough to be able to render.
  * @param piece
- * @param vector - A vector pointing in the direction the arrow points.
+ * @param vector - A vector pointing TOWARD the piece (from screen edge outward). Used for adjacent-picture offsets and click transitions.
  * @param intersection - The intersection with the screen window that the line the piece is on intersects.
- * @param index - If there are adjacent pictures, this may be > 0
+ * @param stackIndex - If there are adjacent pictures, this may be > 0
  * @param worldHalfWidth
  * @param pointerWorlds - A list of all world coordinates every existing pointer is over.
- * @param appendHover - Whether the arrow, when hovered over, should add itself to the list of arrows hovered over this frame. Should be false for arrows added by other scripts.
  * @returns
  */
 function processPiece(
 	piece: ArrowPiece,
 	vector: Vec2,
 	intersection: BDCoords,
-	index: number,
+	stackIndex: number,
 	worldHalfWidth: number,
 	pointerWorlds: DoubleCoords[],
-	appendHover: boolean,
-	ownsSlide: boolean = true,
 ): Arrow {
 	const renderCoords = intersection; // Don't think we need to deep copy?
 
@@ -919,34 +950,23 @@ function processPiece(
 		space.convertCoordToWorldSpace_IgnoreSquareCenter(renderCoords);
 
 	// If this picture is an adjacent picture, adjust it's positioning
-	if (index > 0) {
+	if (stackIndex > 0) {
 		const scale = boardpos.getBoardScaleAsNumber();
-		worldLocation[0] += Number(vector[0]) * index * paddingBetwAdjacentPictures * scale;
-		worldLocation[1] += Number(vector[1]) * index * paddingBetwAdjacentPictures * scale;
+		worldLocation[0] += Number(vector[0]) * stackIndex * paddingBetwAdjacentPictures * scale;
+		worldLocation[1] += Number(vector[1]) * stackIndex * paddingBetwAdjacentPictures * scale;
 	}
 
 	// Does the mouse hover over the piece?
 	let hovered = false;
 	for (const pointerWorld of pointerWorlds) {
 		const chebyshevDist = vectors.chebyshevDistanceDoubles(worldLocation, pointerWorld);
-		if (chebyshevDist < worldHalfWidth) {
-			// Mouse inside the picture bounding box
-			hovered = true;
-			// ADD the piece to the list of arrows being hovered over!!!
-			// Convert direction the piece travels to reach arrow into the direction the arrow points, which is the OPPOSITE.
-			if (appendHover)
-				hoveredArrows.push({
-					piece,
-					direction: vectors.negateVector(vector),
-					worldLocation,
-					ownsSlide,
-				});
-		}
+		if (chebyshevDist < worldHalfWidth) hovered = true; // Mouse inside the picture bounding box
 	}
 	// Teleports toward the given piece if its arrow indicator is clicked this frame.
 	transitionTowardTargetIfClicked(piece.coords, vector, worldLocation, worldHalfWidth);
 
-	return { worldLocation, piece, hovered, opacity };
+	const direction = vectors.negateVector(vector);
+	return { worldLocation, piece, hovered, opacity, direction, stackIndex };
 }
 
 /**
@@ -1235,19 +1255,17 @@ function executeArrowShifts(): void {
 				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
 
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
-				if (positiveDotProduct) line = vectors.negateVector(line);
+				// Negate the vector if it is pointing AWAY from the screen (negative dot product side),
+				// so that `processPiece` always receives a vector pointing TOWARD the piece.
+				if (!positiveDotProduct) line = vectors.negateVector(line);
 				// At what point does it intersect the screen?
 				const intersect = positiveDotProduct
 					? thisPieceIntersections[0]!.coords
 					: thisPieceIntersections[1]!.coords;
 
 				// prettier-ignore
-				const arrow: Arrow = processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds, false);
-				const animatedArrow: AnimatedArrow = {
-					...arrow,
-					direction: line,
-				};
-				animatedArrows.push(animatedArrow);
+				const arrow: Arrow = processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds);
+				animatedArrows.push(arrow);
 			}
 		}
 	});
@@ -1384,31 +1402,16 @@ function render(): void {
 
 	// ADD THE DATA...
 
-	for (const [key, value] of Object.entries(slideArrows)) {
-		const vec2Key = key as Vec2Key;
-		const slideLinesOfDirection = value as { [lineKey: string]: ArrowsLine };
-
-		const slideDir = vectors.getVec2FromKey(vec2Key as Vec2Key);
-
-		// These are swamped so the arrow always points and the opposite direction the piece is able to slide.
-		const vector = vectors.negateVector(slideDir);
-		const negVector = slideDir;
-
-		for (const value of Object.values(slideLinesOfDirection)) {
-			const slideLine = value as ArrowsLine;
-
-			slideLine.posDotProd.forEach((arrow, index) =>
-				concatData(instanceData_Pictures, instanceData_Arrows, arrow, vector, index),
-			);
-			slideLine.negDotProd.forEach((arrow, index) =>
-				concatData(instanceData_Pictures, instanceData_Arrows, arrow, negVector, index),
-			);
+	for (const linesOfDirection of Object.values(slideArrows)) {
+		for (const line of Object.values(linesOfDirection) as ArrowsLine[]) {
+			for (const arrow of line.posDotProd)
+				concatData(instanceData_Pictures, instanceData_Arrows, arrow);
+			for (const arrow of line.negDotProd)
+				concatData(instanceData_Pictures, instanceData_Arrows, arrow);
 		}
 	}
-
-	// Add the animated arrows that are in motion
-	for (const pieceArrow of animatedArrows) {
-		concatData(instanceData_Pictures, instanceData_Arrows, pieceArrow, pieceArrow.direction, 0);
+	for (const arrow of animatedArrows) {
+		concatData(instanceData_Pictures, instanceData_Arrows, arrow);
 	}
 
 	// Render hint squares and triangles first (below piece images)
@@ -1459,26 +1462,11 @@ function render(): void {
 
 	// Render piece images for regular arrow indicators
 	if (instanceData_Pictures.length > 0) {
-		/*
-		 * The buffer model of the piece mini images on
-		 * the edge of the screen. **Doesn't include** the little arrows.
-		 */
-		const attribInfoInstancedPictures: AttributeInfoInstanced = {
-			vertexDataAttribInfo: [
-				{ name: 'a_position', numComponents: 2 },
-				{ name: 'a_texturecoord', numComponents: 2 },
-			],
-			instanceDataAttribInfo: [
-				{ name: 'a_instanceposition', numComponents: 2 },
-				{ name: 'a_instancetexcoord', numComponents: 2 },
-				{ name: 'a_instancecolor', numComponents: 4 },
-			],
-		};
 		const texture = spritesheet.getSpritesheet();
 		createRenderable_Instanced_GivenInfo(
 			vertexData_Pictures,
 			instanceData_Pictures,
-			attribInfoInstancedPictures,
+			ATTRIB_INFO_PICTURES,
 			'TRIANGLES',
 			'arrowImages',
 			[{ texture, uniformName: 'u_sampler' }],
@@ -1487,22 +1475,10 @@ function render(): void {
 
 	// Render all arrow direction triangles (regular piece arrows + hint arrows) together
 	if (instanceData_Arrows.length > 0) {
-		/*
-		 * The buffer model of the little arrows on
-		 * the edge of the screen next to the mini piece images.
-		 */
-		const attribInfoInstancedArrows: AttributeInfoInstanced = {
-			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
-			instanceDataAttribInfo: [
-				{ name: 'a_instanceposition', numComponents: 2 },
-				{ name: 'a_instancecolor', numComponents: 4 },
-				{ name: 'a_instancerotation', numComponents: 1 },
-			],
-		};
 		createRenderable_Instanced_GivenInfo(
 			vertexData_Arrows,
 			instanceData_Arrows,
-			attribInfoInstancedArrows,
+			ATTRIB_INFO_ARROWS,
 			'TRIANGLES',
 			'arrows',
 		).render();
@@ -1517,8 +1493,6 @@ function concatData(
 	instanceData_Pictures: number[],
 	instanceData_Arrows: number[],
 	arrow: Arrow,
-	vector: Vec2,
-	index: number,
 ): void {
 	/**
 	 * Our pictures' instance data needs to contain:
@@ -1533,16 +1507,12 @@ function concatData(
 	// Color
 	const a = arrow.hovered ? 1 : arrow.opacity;
 
-	// Opacity changing with distance
-	// let maxAxisDist = vectors.chebyshevDistance(boardpos.getBoardPos(), pieceCoords) - 8;
-	// opacity = Math.sin(maxAxisDist / 40) * 0.5
-
 	//							   instaceposition	   instancetexcoord  instancecolor
 	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1, 1, 1, a);
 
 	// Next append the data of the little arrow!
 
-	if (index > 0) return; // We can skip, since it is an adjacent picture!
+	if (arrow.stackIndex > 0) return; // We can skip, since it is an adjacent picture!
 
 	/**
 	 * Our arrow's instance data needs to contain:
@@ -1552,9 +1522,9 @@ function concatData(
 	 * rotation offset (1 number)
 	 */
 
-	const vectorAsDoubles = vectors.convertVectorToDoubles(vector);
-	const angle = Math.atan2(vectorAsDoubles[1], vectorAsDoubles[0]); // Y value first
-	//								position		  color	 rotation
+	const dirAsDoubles = vectors.convertVectorToDoubles(arrow.direction);
+	const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]); // Y value first
+	//								position		   color	rotation
 	instanceData_Arrows.push(...arrow.worldLocation, 0, 0, 0, a, angle);
 }
 
@@ -1568,7 +1538,7 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 	return [halfWorldWidth, -size, halfWorldWidth, size, halfWorldWidth + size, 0];
 }
 
-// ----------------------------------------------------------------------------------------------------------------
+// Exports -------------------------------------------------------------------------
 
 export default {
 	pieceCountToDisableArrows,
