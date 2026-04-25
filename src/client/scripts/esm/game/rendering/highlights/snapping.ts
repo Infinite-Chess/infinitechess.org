@@ -31,6 +31,7 @@ import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
 import miniimage from '../miniimage.js';
 import { Mouse } from '../../input.js';
+import movehints from './movehints.js';
 import Transition from '../transitions/Transition.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
@@ -39,7 +40,6 @@ import annotations from './annotations/annotations.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
-import selectedpieceindividualmovehints from './selectedpieceindividualmovehints.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
@@ -92,10 +92,7 @@ function getEntityWidthWorld(): number {
 
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
-	const allSquares: Coords[] = [
-		...annotations.getSquares(),
-		...selectedpieceindividualmovehints.getSquares(),
-	];
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
 	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
 }
@@ -117,10 +114,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 	let closestEntity: ClosestEntity | undefined = undefined;
 
 	const imagesHovered = miniimage.getImagesBelowWorld(world, true);
-	const allSquares: Coords[] = [
-		...annotations.getSquares(),
-		...selectedpieceindividualmovehints.getSquares(),
-	];
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
 	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, true);
 
 	// Pieces

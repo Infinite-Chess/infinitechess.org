@@ -41,6 +41,7 @@ import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
+import movehints from '../highlights/movehints.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
 import Transition from '../transitions/Transition.js';
@@ -54,7 +55,6 @@ import guinavigation from '../../gui/guinavigation.js';
 import instancedshapes from '../instancedshapes.js';
 import { listener_overlay } from '../../chess/game.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
-import selectedpieceindividualmovehints from '../highlights/selectedpieceindividualmovehints.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 import {
 	createRenderable_Instanced,
@@ -1009,18 +1009,18 @@ function transitionTowardTargetIfClicked(
 
 /**
  * Computes and populates {@link hintArrows} for the current frame.
- * For each off-screen square returned by {@link selectedpieceindividualmovehints.getSquares},
+ * For each off-screen square returned by {@link movehints.getSquares},
  * creates a hint arrow at the nearest screen edge pointing toward that square.
  *
  * Respects the zoom threshold but ignores the current arrow mode,
  * so hint arrows are visible even when mode is 0 (off).
  */
 function updateHintArrows(): void {
-	const hintSquares = selectedpieceindividualmovehints.getSquares();
+	const hintSquares = movehints.getSquares();
 	if (hintSquares.length === 0) return;
 	if (!areZoomedInEnoughForArrows()) return;
 
-	const pieceCoords = selectedpieceindividualmovehints.getPieceCoords()!;
+	const pieceCoords = movehints.getPieceCoords()!;
 
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();

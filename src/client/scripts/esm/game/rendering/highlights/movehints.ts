@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/highlights/selectedpieceindividualmovehints.ts
+// src/client/scripts/esm/game/rendering/highlights/movehints.ts
 
 /**
  * This script renders individual legal move hints when the position is in check
