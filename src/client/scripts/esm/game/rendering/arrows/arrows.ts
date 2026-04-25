@@ -310,6 +310,7 @@ function render(): void {
 // Exports -----------------------------------------------------------------------------
 
 export default {
+	// Constants
 	MAX_PIECES,
 	MAX_LINES,
 	// Mode management
