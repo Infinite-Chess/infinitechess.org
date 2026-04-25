@@ -372,7 +372,7 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (player === p.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	// It is our piece type...
-	const isOurTurn = gameloader.isItOurTurn(player);
+	const isOurTurn = gameloader.isItOurTurn();
 	if (!isOurTurn && !preferences.getPremoveEnabled()) return 1; // Can select our piece when it's not our turn, but not draggable.
 	return preferences.getDragEnabled() ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
