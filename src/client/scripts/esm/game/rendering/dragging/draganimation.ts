@@ -21,6 +21,7 @@ import mouse from '../../../util/mouse.js';
 import meshes from '../meshes.js';
 import camera from '../camera.js';
 import boardpos from '../boardpos.js';
+import keybinds from '../../misc/keybinds.js';
 import selection from '../../chess/selection.js';
 import animation from '../animation.js';
 import { Mouse } from '../../input.js';
@@ -125,7 +126,7 @@ function getDragParity(): boolean {
  * @param pieceCoords - the square the piece was on
  */
 function pickUpPiece(piece: Piece, resetParity: boolean): void {
-	if (!preferences.getDragEnabled()) return; // Dragging is disabled
+	if (!keybinds.getEffectiveDragEnabled()) return; // Dragging is disabled
 	areDragging = true;
 	if (resetParity) parity = true;
 

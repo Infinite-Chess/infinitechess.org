@@ -12,6 +12,7 @@ import webgl from './rendering/webgl.js';
 import camera from './rendering/camera.js';
 import socketman from './websocket/socketman.js';
 import IndexedDB from '../util/IndexedDB.js';
+import maskedDraw from '../webgl/maskedDraw.js';
 import guiloading from './gui/guiloading.js';
 import LocalStorage from '../util/LocalStorage.js';
 import frametracker from './rendering/frametracker.js';
@@ -71,6 +72,7 @@ function render(): void {
 	// console.log("Rendering this frame");
 
 	webgl.clearScreen(); // Clear the color buffer and depth buffers
+	maskedDraw.onFrameStart(); // Reset stencil bit-pair index for this frame
 	game.render();
 
 	frametracker.onFrameRender();

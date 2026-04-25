@@ -108,6 +108,7 @@ function init(): void {
  */
 function clearScreen(): void {
 	gl.clearColor(...clearColor, 1.0);
+	gl.stencilMask(0xff); // Ensure all stencil bits are writable before clearing.
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 }
 
@@ -153,101 +154,6 @@ function executeWithInverseBlending(func: Function): void {
 	enableBlending_Inverse();
 	func();
 	toggleNormalBlending();
-}
-
-/**
- * Renders content using a flexible stencil mask.
- * Handles all stencil buffer state changes internally, ensuring a clean state before and after.
- * @param drawInclusionMaskFunc - A function that renders the INCLUSION ZONE MASK. The main scene will appear inside this zone.
- * @param drawExclusionMaskFunc - A function that renders the EXCLUSION ZONE MASK. The main scene will NOT appear inside this zone.
- * @param drawContentFunc - A function that renders the main scene content. Will be masked.
- * @param intersectionMode - Determines the behavior for intersections of the two mask types:
- * 							'and' => Main scene will only be drawn where the inclusion mask and inversion of the exclusion mask intersect.
- * 							'or' => Main scene will be drawn inside the inclusion mask and inversion of the exclusion mask.
- * 							Has no effect if only one mask type is provided.
- */
-function executeMaskedDraw(
-	drawInclusionMaskFunc: Function | undefined,
-	drawExclusionMaskFunc: Function | undefined,
-	drawContentFunc: Function,
-	intersectionMode: 'and' | 'or',
-): void {
-	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc)
-		throw Error('No mask functions provided.');
-
-	// Enable the stencil test.
-	gl.enable(gl.STENCIL_TEST);
-	// We don't want the mask to be affected by depth.
-	// WITHOUT THIS, sometimes the mask doesn't do its masking, because it
-	// initially failed the depth test if something else is rendered in front of it!
-	gl.disable(gl.DEPTH_TEST);
-
-	try {
-		// We want to write to the stencil buffer, but make the mask itself invisible.
-		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
-		gl.depthMask(false); // Disable writing to the depth buffer
-
-		// Draw the Masks
-
-		if (intersectionMode === 'and') {
-			drawInclusion();
-			drawExclusion();
-		} else {
-			drawExclusion();
-			drawInclusion();
-		}
-
-		function drawInclusion(): void {
-			if (!drawInclusionMaskFunc) return;
-			// Inclusion mask writes with '2'.
-			gl.stencilFunc(gl.ALWAYS, 2, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
-			drawInclusionMaskFunc();
-		}
-		function drawExclusion(): void {
-			if (!drawExclusionMaskFunc) return;
-			// Exclusion mask writes with '1'.
-			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
-			drawExclusionMaskFunc();
-		}
-
-		// Draw the Main Content
-
-		// Re-enable drawing to the screen.
-		gl.colorMask(true, true, true, true);
-		gl.depthMask(true);
-		// We only want to test against the buffer, not change it.
-		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-
-		if (drawExclusionMaskFunc && drawInclusionMaskFunc) {
-			// Case: COMPOSITE MASK (both exclusion and inclusion masks provided)
-			// The buffer now has 0s, 1s, and 2s.
-			if (intersectionMode === 'or') {
-				// We want to draw where it's 0 or 2 (not 1).
-				gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
-			} else {
-				// We want to draw where it's 2 (exclusion mask would have overwritten some 2's with 1's).
-				gl.stencilFunc(gl.EQUAL, 2, 0xff);
-			}
-		} else if (drawExclusionMaskFunc) {
-			// Case: EXCLUSION ONLY.
-			// The buffer has 0s and 1s. We want to draw ONLY where the value is 0 (not 1).
-			gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
-		} else if (drawInclusionMaskFunc) {
-			// Case: INCLUSION ONLY.
-			// The buffer has 0s and 2s. We want to draw ONLY where the value is 2 (not 0).
-			gl.stencilFunc(gl.EQUAL, 2, 0xff);
-		} else throw Error('Unexpected!');
-
-		drawContentFunc();
-	} finally {
-		// Return to a normal state.
-		gl.disable(gl.STENCIL_TEST);
-		gl.enable(gl.DEPTH_TEST);
-		// Clear leftover stencil values.
-		gl.clear(gl.STENCIL_BUFFER_BIT);
-	}
 }
 
 // /**
@@ -366,7 +272,6 @@ export default {
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,
-	executeMaskedDraw,
 	setClearColor,
 	// queryWebGLContextInfo,
 	enableDepthTest,

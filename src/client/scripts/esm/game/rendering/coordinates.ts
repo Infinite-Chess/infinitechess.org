@@ -160,6 +160,7 @@ function render(): void {
 		(tileBox.left < unabbrevMin || tileBox.right > unabbrevMax) &&
 		tileBox.left <= unabbrevMax &&
 		tileBox.right >= unabbrevMin;
+
 	const widestFileLabelWidth = Math.max(
 		textrenderer.getTextWidth(formatCoord(tileBox.left), sizeWorld),
 		textrenderer.getTextWidth(formatCoord(tileBox.right), sizeWorld),
