@@ -103,12 +103,21 @@ function init(): void {
 }
 
 /**
+ * Tracks how many times {@link executeMaskedDraw} has been called this frame.
+ * Each call gets its own isolated bit pair in the 8-bit stencil buffer (2 bits per call, 4
+ * calls max), so old stencil values from one call can never contaminate a later call.
+ */
+let stencilCallIndex: number = 0;
+
+/**
  * Clears color buffer and depth buffers.
  * Needs to be called every frame.
  */
 function clearScreen(): void {
 	gl.clearColor(...clearColor, 1.0);
+	gl.stencilMask(0xff); // Ensure all stencil bits are writable before clearing.
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	stencilCallIndex = 0; // Each call to executeMaskedDraw gets a fresh bit pair this frame.
 }
 
 /**
@@ -175,6 +184,27 @@ function executeMaskedDraw(
 	if (!drawExclusionMaskFunc && !drawInclusionMaskFunc)
 		throw Error('No mask functions provided.');
 
+	/**
+	 * Assign this call its own isolated bit pair in the 8-bit stencil buffer.
+	 *
+	 * We use 2 bits per call (supporting up to 4 calls/frame — we currently use up to 3).
+	 * The bit pairs from different calls never overlap, so leftover stencil values from
+	 * earlier calls are invisible to us because we only test/write bits within our own mask.
+	 *
+	 * Example  callIndex 0 → bitMask=0x03, exclusionBit=0x01, inclusionBit=0x02
+	 *          callIndex 1 → bitMask=0x0C, exclusionBit=0x04, inclusionBit=0x08
+	 *          callIndex 2 → bitMask=0x30, exclusionBit=0x10, inclusionBit=0x20
+	 */
+
+	if (stencilCallIndex >= 4)
+		throw Error(
+			'executeMaskedDraw() called more than 4 times per frame. The 8-bit stencil buffer only supports 4 calls (2 bits each).',
+		);
+	const callIndex = stencilCallIndex++;
+	const exclusionBit = 1 << (callIndex * 2); // e.g. 0x01, 0x04, 0x10
+	const inclusionBit = 1 << (callIndex * 2 + 1); // e.g. 0x02, 0x08, 0x20
+	const bitMask = exclusionBit | inclusionBit; // e.g. 0x03, 0x0C, 0x30
+
 	// Enable the stencil test.
 	gl.enable(gl.STENCIL_TEST);
 	// We don't want the mask to be affected by depth.
@@ -186,6 +216,9 @@ function executeMaskedDraw(
 		// We want to write to the stencil buffer, but make the mask itself invisible.
 		gl.colorMask(false, false, false, false); // Disable writing to the color buffer
 		gl.depthMask(false); // Disable writing to the depth buffer
+		// Only write to our assigned bit pair; bits from other calls are preserved.
+		gl.stencilMask(bitMask);
+		gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
 
 		// Draw the Masks
 
@@ -199,16 +232,15 @@ function executeMaskedDraw(
 
 		function drawInclusion(): void {
 			if (!drawInclusionMaskFunc) return;
-			// Inclusion mask writes with '2'.
-			gl.stencilFunc(gl.ALWAYS, 2, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+			// Writes inclusionBit into our bit pair. The readMask in stencilFunc is
+			// irrelevant here (ALWAYS passes regardless), but ref is what REPLACE stores.
+			gl.stencilFunc(gl.ALWAYS, inclusionBit, bitMask);
 			drawInclusionMaskFunc();
 		}
 		function drawExclusion(): void {
 			if (!drawExclusionMaskFunc) return;
-			// Exclusion mask writes with '1'.
-			gl.stencilFunc(gl.ALWAYS, 1, 0xff);
-			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+			// Writes exclusionBit into our bit pair.
+			gl.stencilFunc(gl.ALWAYS, exclusionBit, bitMask);
 			drawExclusionMaskFunc();
 		}
 
@@ -217,27 +249,24 @@ function executeMaskedDraw(
 		// Re-enable drawing to the screen.
 		gl.colorMask(true, true, true, true);
 		gl.depthMask(true);
-		// We only want to test against the buffer, not change it.
+		// During content draw, don't write to the stencil; only test against our bit pair.
 		gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 
 		if (drawExclusionMaskFunc && drawInclusionMaskFunc) {
 			// Case: COMPOSITE MASK (both exclusion and inclusion masks provided)
-			// The buffer now has 0s, 1s, and 2s.
 			if (intersectionMode === 'or') {
-				// We want to draw where it's 0 or 2 (not 1).
-				gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
+				// Draw where our bit pair is NOT set to exclusionBit (i.e. 0 or inclusionBit).
+				gl.stencilFunc(gl.NOTEQUAL, exclusionBit, bitMask);
 			} else {
-				// We want to draw where it's 2 (exclusion mask would have overwritten some 2's with 1's).
-				gl.stencilFunc(gl.EQUAL, 2, 0xff);
+				// Draw where our bit pair is exactly inclusionBit (not 0, not exclusionBit).
+				gl.stencilFunc(gl.EQUAL, inclusionBit, bitMask);
 			}
 		} else if (drawExclusionMaskFunc) {
-			// Case: EXCLUSION ONLY.
-			// The buffer has 0s and 1s. We want to draw ONLY where the value is 0 (not 1).
-			gl.stencilFunc(gl.NOTEQUAL, 1, 0xff);
+			// Case: EXCLUSION ONLY. Draw where our bit pair is not exclusionBit (i.e. 0).
+			gl.stencilFunc(gl.NOTEQUAL, exclusionBit, bitMask);
 		} else if (drawInclusionMaskFunc) {
-			// Case: INCLUSION ONLY.
-			// The buffer has 0s and 2s. We want to draw ONLY where the value is 2 (not 0).
-			gl.stencilFunc(gl.EQUAL, 2, 0xff);
+			// Case: INCLUSION ONLY. Draw where our bit pair is inclusionBit.
+			gl.stencilFunc(gl.EQUAL, inclusionBit, bitMask);
 		} else throw Error('Unexpected!');
 
 		drawContentFunc();
@@ -245,8 +274,6 @@ function executeMaskedDraw(
 		// Return to a normal state.
 		gl.disable(gl.STENCIL_TEST);
 		gl.enable(gl.DEPTH_TEST);
-		// Clear leftover stencil values.
-		gl.clear(gl.STENCIL_BUFFER_BIT);
 	}
 }
 
