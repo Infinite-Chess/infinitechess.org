@@ -57,12 +57,7 @@ const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
 
 // Functions ---------------------------------------------------------------------------
 
-/**
- * Renders all the arrow indicators for this frame.
- *
- * Also calls for the cached legal moves of the hovered
- * arrows to be updated.
- */
+/** Renders all the arrow indicators for this frame. */
 export function render(
 	slideArrows: SlideArrows,
 	animatedArrows: Arrow[],

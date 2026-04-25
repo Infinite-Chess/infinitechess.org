@@ -27,9 +27,7 @@ import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
 // Types -------------------------------------------------------------------------------
 
-/**
- * An object containing all the arrow lines of a single frame.
- */
+/** An object containing all the arrow lines of a single frame. */
 export interface SlideArrows {
 	/** An object containing all existing arrows for a specific slide direction */
 	[vec2Key: Vec2Key]: {
@@ -48,7 +46,7 @@ export interface SlideArrows {
  * The FIRST index in each of these left/right arrays, is the picture
  * which gets rendered at the default location.
  * The FINAL index in each of these, is the picture of the piece
- * that is CLOSEST to you (or the screen) on the line!
+ * that is CLOSEST to you (screen center) on the line!
  */
 export interface ArrowsLine {
 	/** Pieces on this line that intersect the screen with a positive dot product.
@@ -58,14 +56,6 @@ export interface ArrowsLine {
 	 * SORTED in order of closest to the screen to farthest.
 	 * The arrow direction for these will be flipped to the other side. */
 	negDotProd: Arrow[];
-}
-
-/** Shared base for all screen-edge arrow indicators. */
-interface BaseArrow {
-	/** The world-space position of this indicator on the screen edge. */
-	worldLocation: DoubleCoords;
-	/** Whether this indicator is being hovered over by the mouse. */
-	hovered: boolean;
 }
 
 /** A single piece-based arrow indicator, with enough information to be able to render it. */
@@ -97,6 +87,14 @@ export interface ArrowPiece {
 	floating: boolean;
 }
 
+/** Shared base for all screen-edge arrow indicators. */
+interface BaseArrow {
+	/** The world-space position of this indicator on the screen edge. */
+	worldLocation: DoubleCoords;
+	/** Whether this indicator is being hovered over by the mouse. */
+	hovered: boolean;
+}
+
 /** Hovered-arrow event: identifies which arrow indicator is currently being hovered. */
 export interface HoveredArrow {
 	/** A reference to the piece it is pointing to */
@@ -126,9 +124,9 @@ export interface HintArrow extends BaseArrow {
 // Constants ---------------------------------------------------------------------------
 
 /** The maximum number of pieces in a game before we disable arrow indicator rendering, for performance. */
-const pieceCountToDisableArrows = 40_000;
+const MAX_PIECES = 40_000;
 /** The maximum number of lines in a game before we disable arrow indicator rendering, for performance. */
-const lineCountToDisableArrows = 8;
+const MAX_LINES = 8;
 
 // State -------------------------------------------------------------------------------
 
@@ -142,13 +140,6 @@ const lineCountToDisableArrows = 8;
 let mode: 0 | 1 | 2 | 3 = 1;
 
 /**
- * A list of all piece-arrows being hovered over this frame (excludes move hints),
- * with a reference to the piece they are pointing to.
- * Other scripts may access this so they can add interaction with them.
- */
-const hoveredArrows: HoveredArrow[] = [];
-
-/**
  * A list of all arrows present for the current frame.
  *
  * Other scripts are given an opportunity to add/remove
@@ -158,33 +149,35 @@ const hoveredArrows: HoveredArrow[] = [];
 let slideArrows: SlideArrows = {};
 
 /**
+ * A list of all piece-arrows being hovered over this frame (excludes move hints),
+ * with a reference to the piece they are pointing to.
+ * Other scripts may access this so they can add interaction with them.
+ */
+let hoveredArrows: HoveredArrow[] = [];
+
+/**
  * A list of all animated arrows IN MOTION for the current frame.
  *
  * This does not include still ones, for example rendered from
  * the piece captured being rendered in place.
  * Still animation's lines are recalculated manually.
  */
-const animatedArrows: Arrow[] = [];
+let animatedArrows: Arrow[] = [];
 
 /**
  * A list of all hint arrows computed for the current frame.
  * Each hints at an off-screen individual legal move destination.
- * Reset each frame in reset().
  */
-const hintArrows: HintArrow[] = [];
+let hintArrows: HintArrow[] = [];
 
 // Mode management ---------------------------------------------------------------------
 
-/**
- * Returns the mode the arrow indicators on the edges of the screen is currently in.
- */
+/** Returns the mode the arrow indicators on the edges of the screen is currently in. */
 function getMode(): typeof mode {
 	return mode;
 }
 
-/**
- * Sets the current mode of the arrow indicators.
- */
+/** Sets the current mode of the arrow indicators. */
 function setMode(value: typeof mode): void {
 	mode = value;
 	if (mode === 0) {
@@ -233,6 +226,10 @@ function getHoveredArrows(): HoveredArrow[] {
 	return hoveredArrows;
 }
 
+/**
+ * Whether the mouse is currently hovering over at least one
+ * arrow indicator of any type (piece or move hint) on the screen.
+ */
 function areHoveringAtleastOneArrow(): boolean {
 	return hoveredArrows.length > 0 || hintArrows.some((ha) => ha.hovered);
 }
@@ -247,7 +244,7 @@ function getAllArrowWorldLocations(): DoubleCoords[] {
 
 /**
  * Whether the piece arrows should be calculated and rendered this frame.
- * Excludes move hint arrows.
+ * Excludes move hint arrows--those are always active so long as we're zoomed in enough.
  */
 function areArrowsActiveThisFrame(): boolean {
 	// false if the arrows are off, or if the board is too zoomed out
@@ -261,9 +258,9 @@ function areArrowsActiveThisFrame(): boolean {
  */
 function reset(): void {
 	slideArrows = {};
-	animatedArrows.length = 0;
-	hoveredArrows.length = 0;
-	hintArrows.length = 0;
+	animatedArrows = [];
+	hoveredArrows = [];
+	hintArrows = [];
 	arrowshifts.resetShifts();
 }
 
@@ -273,17 +270,13 @@ function reset(): void {
  * Needs to be done every frame, even if the mouse isn't moved,
  * since actions such as rewinding/forwarding may change them,
  * or board velocity.
- *
- * DOES NOT GENERATE THE MODEL OF THE hovered arrow legal moves.
- * This is so that other scripts have the opportunity to modify the list of
- * visible arrows before rendering.
  */
 function update(): void {
 	reset();
 
-	const result = arrowscalculator.calculateArrows(mode);
+	const result = arrowscalculator.calculateArrows(mode); // { active, slideArrows, hoveredArrows, hintArrows }
 
-	for (const h of result.hintArrows) hintArrows.push(h);
+	hintArrows = result.hintArrows;
 
 	if (!result.active) {
 		// Arrow indicators are off, nothing is visible.
@@ -291,16 +284,11 @@ function update(): void {
 		return;
 	}
 
-	for (const h of result.hoveredArrows) hoveredArrows.push(h);
+	hoveredArrows = result.hoveredArrows;
 	slideArrows = result.slideArrows;
 }
 
-/**
- * Renders all the arrow indicators for this frame.
- *
- * Also calls for the cached legal moves of the hovered
- * arrows to be updated.
- */
+/** Renders all the arrow indicators for this frame. */
 function render(): void {
 	arrowsrendering.render(
 		slideArrows,
@@ -358,23 +346,25 @@ function executeArrowShifts(): void {
 // Exports -----------------------------------------------------------------------------
 
 export default {
-	pieceCountToDisableArrows,
-	lineCountToDisableArrows,
-
+	MAX_PIECES,
+	MAX_LINES,
+	// Mode management
 	getMode,
 	setMode,
 	toggleArrows,
+	// Getters
 	getAllArrows,
 	getHoveredArrows,
 	areHoveringAtleastOneArrow,
 	getAllArrowWorldLocations,
+	areArrowsActiveThisFrame,
+	// Frame lifecycle
+	update,
+	render,
 	// Arrow Shifting
 	deleteArrow,
 	moveArrow,
 	animateArrow,
 	addArrow,
 	executeArrowShifts,
-	areArrowsActiveThisFrame,
-	update,
-	render,
 };

@@ -167,8 +167,8 @@ function loadLogical(loadOptions: LoadOptions): void {
 	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (
-		pieceCount > arrows.pieceCountToDisableArrows ||
-		loadedGamefile.boardsim.pieces.slides.length > arrows.lineCountToDisableArrows
+		pieceCount > arrows.MAX_PIECES ||
+		loadedGamefile.boardsim.pieces.slides.length > arrows.MAX_LINES
 	)
 		arrows.setMode(0);
 

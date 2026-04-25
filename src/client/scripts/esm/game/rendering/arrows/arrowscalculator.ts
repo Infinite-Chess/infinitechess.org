@@ -159,7 +159,7 @@ export function getArrowIndicatorHalfWidth(): number {
  * Always computes bounding boxes and hint arrows.
  * Only computes slide arrows when the mode is non-zero and zoom is sufficient.
  *
- * @returns active - whether slide arrows are active this frame
+ * @returns active - whether piece arrows are active this frame
  */
 export function calculateArrows(mode: 0 | 1 | 2 | 3): {
 	active: boolean;
