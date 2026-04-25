@@ -41,6 +41,7 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import primitives from '../rendering/primitives.js';
+import maskedDraw from '../../webgl/maskedDraw.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
@@ -91,6 +92,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 function init(): void {
 	programManager = new ProgramManager(gl);
 	buffermodel.init(gl, programManager);
+	maskedDraw.init(programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
@@ -267,7 +269,7 @@ function renderScene(): void {
 	}
 
 	// Star Field Animation: Appears in border & voids
-	webgl.executeMaskedDraw(
+	maskedDraw.execute(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
 		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
@@ -276,7 +278,7 @@ function renderScene(): void {
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
-	webgl.executeMaskedDraw(
+	maskedDraw.execute(
 		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE

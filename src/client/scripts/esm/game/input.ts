@@ -739,8 +739,17 @@ function CreateInputListener(
 					shiftKey: e.shiftKey,
 				});
 			}
-			// Only add to keyHelds if no meta key was held
-			if (!keyHelds.includes(e.code) && !(e.ctrlKey || e.metaKey)) keyHelds.push(e.code);
+			// Only add to keyHelds if no meta key was held, unless the key IS a meta key itself.
+			// Prevents stuff like `Ctrl > A` from panning the board.
+			const isMetaKey =
+				e.code === 'ControlLeft' ||
+				e.code === 'ControlRight' ||
+				e.code === 'MetaLeft' ||
+				e.code === 'MetaRight' ||
+				e.code === 'AltLeft' ||
+				e.code === 'AltRight';
+			if (!keyHelds.includes(e.code) && (isMetaKey || !(e.ctrlKey || e.metaKey || e.altKey)))
+				keyHelds.push(e.code);
 
 			// Prevent default behavior for shortcuts without a built in event.
 			// This still allows copy & paste events to bubble through to our listeners,

@@ -31,6 +31,7 @@ import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
 import miniimage from '../miniimage.js';
 import { Mouse } from '../../input.js';
+import movehints from './movehints.js';
 import Transition from '../transitions/Transition.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
@@ -91,11 +92,8 @@ function getEntityWidthWorld(): number {
 
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		false,
-	).squares;
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
 }
 
@@ -116,11 +114,8 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 	let closestEntity: ClosestEntity | undefined = undefined;
 
 	const imagesHovered = miniimage.getImagesBelowWorld(world, true);
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		true,
-	);
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, true);
 
 	// Pieces
 	for (let i = 0; i < imagesHovered.images.length; i++) {
@@ -130,7 +125,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 			closestEntity = { coords, dist, type: 'miniimage', index: i };
 	}
 
-	// Square Highlights
+	// Square Highlights and Individual legal move hints
 	for (let i = 0; i < highlightsHovered.squares.length; i++) {
 		const coords = highlightsHovered.squares[i]!;
 		const dist = highlightsHovered.dists![i]!;

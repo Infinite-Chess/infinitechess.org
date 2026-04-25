@@ -8,8 +8,10 @@
  */
 
 import perspective from '../rendering/perspective.js';
+import preferences from '../../components/header/preferences.js';
 import etoolmanager from '../boardeditor/tools/etoolmanager.js';
 import guinavigation from '../gui/guinavigation.js';
+import { listener_document } from '../chess/game.js';
 import { Mouse, MouseButton } from '../input.js';
 
 /** Returns the mouse button currently assigned to board dragging. */
@@ -43,9 +45,21 @@ function getPieceSelectionMouseButton(): MouseButton | undefined {
 	return Mouse.LEFT;
 }
 
+/**
+ * Returns true if piece dragging should currently be treated as enabled.
+ * The Ctrl key, if held, temporarily inverts the drag preference.
+ */
+function getEffectiveDragEnabled(): boolean {
+	const dragEnabled = preferences.getDragEnabled();
+	const ctrlOverride =
+		listener_document.isKeyHeld('ControlLeft') || listener_document.isKeyHeld('ControlRight');
+	return ctrlOverride ? !dragEnabled : dragEnabled;
+}
+
 export default {
 	getBoardDragMouseButton,
 	getAnnotationMouseButton,
 	getCollapseMouseButton,
 	getPieceSelectionMouseButton,
+	getEffectiveDragEnabled,
 };

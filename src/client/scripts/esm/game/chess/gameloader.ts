@@ -84,14 +84,14 @@ function areInLocalGame(): boolean {
 	return typeOfGameWeAreIn === 'local';
 }
 
-function isItOurTurn(color?: Player): boolean {
+function isItOurTurn(): boolean {
 	if (typeOfGameWeAreIn === undefined)
 		throw Error("Can't tell if it's our turn when we're not in a game!");
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'editor') return true;
 	else if (typeOfGameWeAreIn === 'local')
-		return gameslot.getGamefile()!.basegame.whosTurn === color;
+		return true; // Always our turn in this case
 	else
 		throw Error(
 			"Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn,
