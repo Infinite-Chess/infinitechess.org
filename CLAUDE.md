@@ -2,7 +2,7 @@
 
 ### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/GUIDELINES.md`!
 
-When you finish making any new changes, always ensure all workflow checks pass: `npm run lint --silent`, `npx npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
+When you finish making any new changes, always ensure all workflow checks pass: `npm run lint --silent`, `npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
 ## Key Guidelines
 
