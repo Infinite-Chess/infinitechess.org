@@ -59,7 +59,7 @@ interface CandidateArrow {
 	/** The type of the off-screen piece the arrow points to. */
 	pieceType: number;
 	/** The direction vector of the arrow indicator. */
-	vector: Vec2;
+	direction: Vec2;
 	/** The input pointer ID holding the mouse button down. */
 	pointerId: string;
 }
@@ -226,7 +226,7 @@ function detectCandidateArrow(): void {
 		candidate = {
 			pieceCoords,
 			pieceType,
-			vector: hoveredArrow.vector,
+			direction: hoveredArrow.direction,
 			pointerId,
 		};
 		// console.log('Set candidate');
@@ -249,7 +249,7 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
 		const hCoords = bdcoords.coordsToBigInt(h.piece.coords);
 		return (
 			coordutil.areCoordsEqual(hCoords, candidate!.pieceCoords) &&
-			coordutil.areCoordsEqual(h.vector, candidate!.vector)
+			coordutil.areCoordsEqual(h.direction, candidate!.direction)
 		);
 	});
 }
@@ -263,7 +263,7 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	const slideZoneDepth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
-	const dir = candidate!.vector;
+	const dir = candidate!.direction;
 
 	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
@@ -293,7 +293,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 
 	const mouseBDCoords: BDCoords = space.convertWorldSpaceToCoords(mouseWorld);
 	const pieceBDCoords: BDCoords = bdcoords.FromCoords(candidate!.pieceCoords);
-	const arrowDir = candidate!.vector;
+	const arrowDir = candidate!.direction;
 	const perpDir = vectors.getPerpendicularVector(arrowDir);
 
 	// Line 1: through mouse in arrow direction.
@@ -428,7 +428,7 @@ function renderSlideZone(): void {
 	const screenBox = camera.getScreenBoundingBox(false);
 	// Slide zone depth in world space units
 	const depth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
-	const dir = candidate.vector;
+	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
 	const maskData: number[] = [];
@@ -494,7 +494,7 @@ function renderSlideMoveHighlights(): void {
 	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, pieceType);
 
 	// Find the canonical moveset sliding key (x-component is never negative in moveset keys)
-	const normalizedVec: Vec2 = vectors.absVector(candidate.vector);
+	const normalizedVec: Vec2 = vectors.absVector(candidate.direction);
 	const lineKey: Vec2Key = vectors.getKeyFromVec2(normalizedVec);
 
 	// If the slide direction is orthogonal, skip. The entire orthogonal lines are already outlined in draganimation.ts

@@ -288,19 +288,19 @@ function absVector(vec2: Vec2): Vec2 {
 	else return vec2;
 }
 
-// /**
-//  * Normalizes a vector to its smallest possible integer components while preserving its direction.
-//  */
-// function normalizeVector(vec2: Vec2): Vec2 {
-// 	// Calculate the GCD of all the components in the vector.
-// 	const gcd = bimath.GCD(vec2[0], vec2[1]);
+/**
+ * Normalizes a vector to its smallest possible integer components while preserving its direction.
+ */
+function normalizeVector(vec2: Vec2): Vec2 {
+	// Calculate the GCD of all the components in the vector.
+	const gcd = bimath.GCD(vec2[0], vec2[1]);
 
-// 	// If the GCD is 0, it means all elements were 0
-// 	if (gcd === 0n) return [0n, 0n];
+	// If the GCD is 0, it means all elements were 0
+	if (gcd === 0n) return [0n, 0n];
 
-// 	// Divide each component by the GCD to get the smallest integer representation.
-// 	return [vec2[0] / gcd, vec2[1] / gcd];
-// }
+	// Divide each component by the GCD to get the smallest integer representation.
+	return [vec2[0] / gcd, vec2[1] / gcd];
+}
 
 /**
  * Normalizes a floating point arbitrarily large vector into a range
@@ -457,7 +457,7 @@ export default {
 	negateBDVector,
 	negateDoubleVector,
 	absVector,
-	// normalizeVector,
+	normalizeVector,
 	normalizeVectorBD,
 	getPerpendicularVector,
 	getPerpendicularLine,

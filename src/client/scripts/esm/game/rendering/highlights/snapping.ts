@@ -39,6 +39,7 @@ import annotations from './annotations/annotations.js';
 import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
+import selectedpieceindividualmovehints from './selectedpieceindividualmovehints.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
@@ -91,11 +92,11 @@ function getEntityWidthWorld(): number {
 
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		false,
-	).squares;
+	const allSquares: Coords[] = [
+		...annotations.getSquares(),
+		...selectedpieceindividualmovehints.getSquares(),
+	];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
 }
 
@@ -116,11 +117,11 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 	let closestEntity: ClosestEntity | undefined = undefined;
 
 	const imagesHovered = miniimage.getImagesBelowWorld(world, true);
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		true,
-	);
+	const allSquares: Coords[] = [
+		...annotations.getSquares(),
+		...selectedpieceindividualmovehints.getSquares(),
+	];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, true);
 
 	// Pieces
 	for (let i = 0; i < imagesHovered.images.length; i++) {
@@ -130,7 +131,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 			closestEntity = { coords, dist, type: 'miniimage', index: i };
 	}
 
-	// Square Highlights
+	// Square Highlights and Individual legal move hints
 	for (let i = 0; i < highlightsHovered.squares.length; i++) {
 		const coords = highlightsHovered.squares[i]!;
 		const dist = highlightsHovered.dists![i]!;

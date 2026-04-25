@@ -46,12 +46,18 @@ import Transition from '../transitions/Transition.js';
 import spritesheet from '../spritesheet.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import perspective from '../perspective.js';
+import preferences from '../../../components/header/preferences.js';
 import frametracker from '../frametracker.js';
 import guinavigation from '../../gui/guinavigation.js';
+import instancedshapes from '../instancedshapes.js';
 import { listener_overlay } from '../../chess/game.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
+import selectedpieceindividualmovehints from '../highlights/selectedpieceindividualmovehints.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
-import { createRenderable_Instanced_GivenInfo } from '../../../webgl/Renderable.js';
+import {
+	createRenderable_Instanced,
+	createRenderable_Instanced_GivenInfo,
+} from '../../../webgl/Renderable.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -129,12 +135,17 @@ interface ArrowsLine {
 	negDotProd: Arrow[];
 }
 
-/** A single arrow indicator, with enough information to be able to render it. */
-export interface Arrow {
+/** Shared base for all screen-edge arrow indicators. */
+interface BaseArrow {
+	/** The world-space position of this indicator on the screen edge. */
 	worldLocation: DoubleCoords;
-	piece: ArrowPiece;
-	/** Whether the arrow is being hovered over by the mouse */
+	/** Whether this indicator is being hovered over by the mouse. */
 	hovered: boolean;
+}
+
+/** A single piece-based arrow indicator, with enough information to be able to render it. */
+export interface Arrow extends BaseArrow {
+	piece: ArrowPiece;
 	/** Opacity to render this arrow at when not hovered. Defaults to the module-level opacity constant. */
 	opacity: number;
 }
@@ -151,21 +162,21 @@ export interface ArrowPiece {
 	floating: boolean;
 }
 
-/** Animated arrows are treated separately, we also need to know their direction. */
-interface AnimatedArrow extends Arrow {
+/** Animated piece arrows additionally carry their direction for rendering. */
+interface AnimatedArrow extends Arrow, BaseArrow {
+	/** Direction this indicator points, from the screen edge toward its target. */
 	direction: Vec2;
 }
 
-/** An arrow that is being hovered over this frame */
+/** Hovered-arrow event: identifies which arrow indicator is currently being hovered. */
 export interface HoveredArrow {
 	/** A reference to the piece it is pointing to */
 	piece: ArrowPiece;
 	/**
-	 * The slide direction / slope / step for this arrow.
-	 * Is the same as the direction the arrow is pointing.
-	 * Negated is auto-negated when applicable.
+	 * The direction this arrow points (from the screen edge toward the piece).
+	 * Matches the slide direction the arrow indicator represents.
 	 */
-	vector: Vec2;
+	direction: Vec2;
 	/** The world-space position of this arrow indicator on the screen edge. */
 	worldLocation: DoubleCoords;
 	/**
@@ -173,6 +184,14 @@ export interface HoveredArrow {
 	 * IS NOT calculated for shifted arrows (always true).
 	 */
 	ownsSlide: boolean;
+}
+
+/** An arrow indicator for an off-screen individual legal move, shown when in check. */
+interface HintArrow extends BaseArrow {
+	/** Direction this indicator points, from the screen edge toward its target. */
+	direction: Vec2;
+	/** The target square this hint arrow points to. */
+	targetSquare: Coords;
 }
 
 // Variables ----------------------------------------------------------------------------
@@ -245,6 +264,13 @@ let slideArrows: SlideArrows = {};
  */
 const animatedArrows: AnimatedArrow[] = [];
 
+/**
+ * A list of all hint arrows computed for the current frame.
+ * Each hints at an off-screen individual legal move destination.
+ * Reset each frame in reset().
+ */
+const hintArrows: HintArrow[] = [];
+
 // Utility ------------------------------------------------------------------------------
 
 /**
@@ -261,13 +287,14 @@ function reset(): void {
 	slideArrows = {};
 	animatedArrows.length = 0;
 	hoveredArrows.length = 0;
+	hintArrows.length = 0;
 	boundingBoxFloat = undefined;
 	boundingBoxInt = undefined;
 	shifts.length = 0;
 }
 
 /**
- * Sets the rendering mode of the arrow indicators on the edges of the screen.
+ * Sets the current mode of the arrow indicators.
  */
 function setMode(value: typeof mode): void {
 	mode = value;
@@ -358,11 +385,6 @@ function getArrowIndicatorHalfWidth(): number {
  */
 function update(): void {
 	reset(); // Initiate the arrows empty
-	if (!areArrowsActiveThisFrame()) {
-		// Arrow indicators are off, nothing is visible.
-		arrowlegalmovehighlights.reset(); // Also reset this
-		return;
-	}
 
 	/**
 	 * To be able to test if a piece is offscreen or not,
@@ -370,8 +392,19 @@ function update(): void {
 	 *
 	 * Even if a tiny portion of the square the piece is on
 	 * is visible on screen, we will not create an arrow for it.
+	 *
+	 * This is also needed for hint arrows, so it must be calculated
+	 * before the early return below.
 	 */
 	updateBoundingBoxesOfVisibleScreen();
+
+	updateHintArrows();
+
+	if (!areArrowsActiveThisFrame()) {
+		// Arrow indicators are off, nothing is visible.
+		arrowlegalmovehighlights.reset(); // Also reset this
+		return;
+	}
 
 	/**
 	 * Next, we are going to iterate through each slide existing in the game,
@@ -398,13 +431,18 @@ function update(): void {
 	calculateSlideArrows_AndHovered(slideArrowsDraft);
 }
 
-/** Whether the arrows should be calculated and rendered this frame */
+/**
+ * Whether the piece arrows should be calculated and rendered this frame.
+ * Excludes move hint arrows.
+ */
 function areArrowsActiveThisFrame(): boolean {
 	// false if the arrows are off, or if the board is too zoomed out
-	return (
-		mode !== 0 &&
-		bd.compare(boardtiles.gtileWidth_Pixels(false), renderZoomLimitVirtualPixels) >= 0
-	);
+	return mode !== 0 && areZoomedInEnoughForArrows();
+}
+
+/** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
+function areZoomedInEnoughForArrows(): boolean {
+	return bd.compare(boardtiles.gtileWidth_Pixels(false), renderZoomLimitVirtualPixels) >= 0;
 }
 
 /**
@@ -900,70 +938,137 @@ function processPiece(
 			if (appendHover)
 				hoveredArrows.push({
 					piece,
-					vector: vectors.negateVector(vector),
+					direction: vectors.negateVector(vector),
 					worldLocation,
 					ownsSlide,
 				});
 		}
 	}
-	// If we clicked, then teleport!
-	teleportToPieceIfClicked(piece, worldLocation, vector, worldHalfWidth);
+	// Teleports toward the given piece if its arrow indicator is clicked this frame.
+	transitionTowardTargetIfClicked(piece.coords, vector, worldLocation, worldHalfWidth);
 
 	return { worldLocation, piece, hovered, opacity };
 }
 
 /**
- * This teleports you to the piece it is pointing to IF the mouse has clicked it this frame.
+ * If a recognized click falls within worldHalfWidth of
+ * worldLocation, claims it and pans towards the target coordinates.
  */
-function teleportToPieceIfClicked(
-	piece: ArrowPiece,
-	pieceWorld: DoubleCoords,
-	vector: Vec2,
+function transitionTowardTargetIfClicked(
+	targetCoords: BDCoords,
+	direction: Vec2,
+	worldLocation: DoubleCoords,
 	worldHalfWidth: number,
 ): void {
+	let button: MouseButton;
+	let listener: typeof mouse | InputListener;
+
 	// Left mouse button
-	if (mouse.isMouseDown(Mouse.LEFT) || mouse.isMouseClicked(Mouse.LEFT))
-		processMouseClick(Mouse.LEFT, mouse);
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		button = Mouse.LEFT;
+		listener = mouse;
+	}
 	// Finger simulating right mouse down (annotations mode ON)
 	else if (
-		(listener_overlay.isMouseDown(Mouse.RIGHT) ||
-			listener_overlay.isMouseClicked(Mouse.RIGHT)) &&
+		listener_overlay.isMouseClicked(Mouse.RIGHT) &&
 		listener_overlay.isMouseTouch(Mouse.RIGHT)
-	)
-		processMouseClick(Mouse.RIGHT, listener_overlay);
+	) {
+		button = Mouse.RIGHT;
+		listener = listener_overlay;
+	} else return; // No recognized click
 
-	function processMouseClick(button: MouseButton, listener: typeof mouse | InputListener): void {
-		const clickWorld = mouse.getMouseWorld(button);
-		if (!clickWorld) return; // Maybe we're looking into sky?
-		const chebyshevDist = vectors.chebyshevDistanceDoubles(pieceWorld, clickWorld);
-		if (chebyshevDist < worldHalfWidth) {
-			// Mouse inside the picture bounding box
-			if (listener.isMouseClicked(button)) {
-				listener.claimMouseClick(button); // Don't let annotations erase/draw
+	const clickWorld = mouse.getMouseWorld(button);
+	if (!clickWorld) return; // Maybe we're looking into sky?
+	if (vectors.chebyshevDistanceDoubles(worldLocation, clickWorld) >= worldHalfWidth) return;
+	// Mouse is inside the picture bounding box...
+	listener.claimMouseClick(button); // Don't let annotations erase/draw
 
-				// Teleport in the direction of the piece's arrow, NOT straight to the piece.
+	// Pan along parallel direction to the perpendicular foot of targetCoords, NOT straight to the piece.
 
-				const startCoords = boardpos.getBoardPos();
-				// The direction we will follow when teleporting
-				const line1GeneralForm = vectors.getLineGeneralFormFromCoordsAndVecBD(
-					startCoords,
-					vector,
-				);
-				// The line perpendicular to the target piece === The Normal
-				const perpendicularSlideDir: Vec2 = vectors.getPerpendicularVector(vector);
-				const line2GeneralForm = vectors.getLineGeneralFormFromCoordsAndVecBD(
-					piece.coords,
-					perpendicularSlideDir,
-				);
-				// The target teleport coords
-				const telCoords = geometry.calcIntersectionPointOfLinesBD(
-					...line1GeneralForm,
-					...line2GeneralForm,
-				)!; // We know it will be defined because they are PERPENDICULAR
+	const startCoords = boardpos.getBoardPos();
+	// The direction we will follow when teleporting
+	const line1GeneralForm = vectors.getLineGeneralFormFromCoordsAndVecBD(startCoords, direction);
+	// The line perpendicular to the target piece === The Normal
+	const perpendicularSlideDir: Vec2 = vectors.getPerpendicularVector(direction);
+	const line2GeneralForm = vectors.getLineGeneralFormFromCoordsAndVecBD(
+		targetCoords,
+		perpendicularSlideDir,
+	);
+	// The target teleport coords
+	const telCoords = geometry.calcIntersectionPointOfLinesBD(
+		...line1GeneralForm,
+		...line2GeneralForm,
+	)!; // We know it will be defined because they are PERPENDICULAR
 
-				Transition.startPanTransition(telCoords, false);
-			} // Mouse down claiming is now the responsibility of dragarrows.ts
-		}
+	Transition.startPanTransition(telCoords, false);
+}
+
+// Hint Arrows ----------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Given a coordinate lying off-screen and a direction toward the screen,
+ * returns the world-space position of the near-side screen-edge intersection.
+ * Returns undefined if no valid intersection exists.
+ */
+function getOffscreenArrowWorldLocation(
+	coords: BDCoords,
+	direction: Vec2,
+): DoubleCoords | undefined {
+	const intersections = geometry.findLineBoxIntersectionsBD(coords, direction, boundingBoxFloat!);
+	if (intersections.length < 2) return undefined;
+	const nearSide = intersections[0]!.positiveDotProduct
+		? intersections[0]!.coords
+		: intersections[1]!.coords;
+	return space.convertCoordToWorldSpace_IgnoreSquareCenter(nearSide);
+}
+
+/** Returns true if any pointer is within worldHalfWidth of the given world location. */
+function isArrowHovered(
+	worldLocation: DoubleCoords,
+	worldHalfWidth: number,
+	pointerWorlds: DoubleCoords[],
+): boolean {
+	return pointerWorlds.some(
+		(p) => vectors.chebyshevDistanceDoubles(worldLocation, p) < worldHalfWidth,
+	);
+}
+
+/**
+ * Computes and populates {@link hintArrows} for the current frame.
+ * For each off-screen square returned by {@link selectedpieceindividualmovehints.getSquares},
+ * creates a hint arrow at the nearest screen edge pointing toward that square.
+ *
+ * Respects the zoom threshold but ignores the current arrow mode,
+ * so hint arrows are visible even when mode is 0 (off).
+ */
+function updateHintArrows(): void {
+	const hintSquares = selectedpieceindividualmovehints.getSquares();
+	if (hintSquares.length === 0) return;
+	if (!areZoomedInEnoughForArrows()) return;
+
+	const pieceCoords = selectedpieceindividualmovehints.getPieceCoords()!;
+
+	const worldHalfWidth = getArrowIndicatorHalfWidth();
+	const pointerWorlds = mouse.getAllPointerWorlds();
+
+	for (const hintSquare of hintSquares) {
+		const sqBD = bdcoords.FromCoords(hintSquare);
+
+		// Skip if the hint square is already visible on screen
+		if (bounds.boxContainsSquare(boundingBoxInt!, hintSquare)) continue;
+
+		// Direction from the selected piece toward the hint square
+		// const direction: Vec2 = vectors.normalizeVector([hintSquare[0] - pieceCoords[0], hintSquare[1] - pieceCoords[1]]);
+		const difference = coordutil.subtractCoords(hintSquare, pieceCoords);
+		const direction: Vec2 = vectors.normalizeVector(difference);
+
+		const worldLocation = getOffscreenArrowWorldLocation(sqBD, direction);
+		if (worldLocation === undefined) continue;
+
+		const hovered = isArrowHovered(worldLocation, worldHalfWidth, pointerWorlds);
+		transitionTowardTargetIfClicked(sqBD, direction, worldLocation, worldHalfWidth);
+
+		hintArrows.push({ worldLocation, direction, targetSquare: hintSquare, hovered });
 	}
 }
 
@@ -1308,7 +1413,12 @@ function render(): void {
 }
 
 function regenerateModelAndRender(): void {
-	if (Object.keys(slideArrows).length === 0 && animatedArrows.length === 0) return; // No visible arrows, don't generate the model
+	if (
+		Object.keys(slideArrows).length === 0 &&
+		animatedArrows.length === 0 &&
+		hintArrows.length === 0
+	)
+		return; // No visible arrows, don't generate the model
 
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
 
@@ -1359,53 +1469,90 @@ function regenerateModelAndRender(): void {
 		concatData(instanceData_Pictures, instanceData_Arrows, pieceArrow, pieceArrow.direction, 0);
 	}
 
-	/*
-	 * The buffer model of the piece mini images on
-	 * the edge of the screen. **Doesn't include** the little arrows.
-	 */
-	const attribInfoInstancedPictures: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [
-			{ name: 'a_position', numComponents: 2 },
-			{ name: 'a_texturecoord', numComponents: 2 },
-		],
-		instanceDataAttribInfo: [
-			{ name: 'a_instanceposition', numComponents: 2 },
-			{ name: 'a_instancetexcoord', numComponents: 2 },
-			{ name: 'a_instancecolor', numComponents: 4 },
-		],
-	};
-	const texture = spritesheet.getSpritesheet();
-	const modelPictures = createRenderable_Instanced_GivenInfo(
-		vertexData_Pictures,
-		instanceData_Pictures,
-		attribInfoInstancedPictures,
-		'TRIANGLES',
-		'arrowImages',
-		[{ texture, uniformName: 'u_sampler' }],
-	);
+	// Render piece images for regular arrow indicators
+	if (instanceData_Pictures.length > 0) {
+		/*
+		 * The buffer model of the piece mini images on
+		 * the edge of the screen. **Doesn't include** the little arrows.
+		 */
+		const attribInfoInstancedPictures: AttributeInfoInstanced = {
+			vertexDataAttribInfo: [
+				{ name: 'a_position', numComponents: 2 },
+				{ name: 'a_texturecoord', numComponents: 2 },
+			],
+			instanceDataAttribInfo: [
+				{ name: 'a_instanceposition', numComponents: 2 },
+				{ name: 'a_instancetexcoord', numComponents: 2 },
+				{ name: 'a_instancecolor', numComponents: 4 },
+			],
+		};
+		const texture = spritesheet.getSpritesheet();
+		createRenderable_Instanced_GivenInfo(
+			vertexData_Pictures,
+			instanceData_Pictures,
+			attribInfoInstancedPictures,
+			'TRIANGLES',
+			'arrowImages',
+			[{ texture, uniformName: 'u_sampler' }],
+		).render();
+	}
 
-	/*
-	 * The buffer model of the little arrows on
-	 * the edge of the screen next to the mini piece images.
-	 */
-	const attribInfoInstancedArrows: AttributeInfoInstanced = {
-		vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
-		instanceDataAttribInfo: [
-			{ name: 'a_instanceposition', numComponents: 2 },
-			{ name: 'a_instancecolor', numComponents: 4 },
-			{ name: 'a_instancerotation', numComponents: 1 },
-		],
-	};
-	const modelArrows = createRenderable_Instanced_GivenInfo(
-		vertexData_Arrows,
-		instanceData_Arrows,
-		attribInfoInstancedArrows,
-		'TRIANGLES',
-		'arrows',
-	);
+	// Render hint squares and append hint direction triangles to the shared arrow triangle array
+	if (hintArrows.length > 0) {
+		const hintColor = preferences.getLegalMoveHighlightColor({
+			isOpponentPiece: false,
+			isPremove: false,
+		});
 
-	modelPictures.render();
-	modelArrows.render();
+		// Green squares at screen edge for each hint arrow
+		const hintSquaresInstanceData: number[] = [];
+		for (const ha of hintArrows) hintSquaresInstanceData.push(...ha.worldLocation);
+		createRenderable_Instanced(
+			instancedshapes.getDataLegalMoveSquare(hintColor),
+			hintSquaresInstanceData,
+			'TRIANGLES',
+			'highlights',
+			true,
+		).render(undefined, undefined, { u_size: worldHalfWidth * 2 });
+
+		// Append hint direction triangles into the shared arrow triangle array
+		for (const ha of hintArrows) {
+			const dirAsDoubles = vectors.convertVectorToDoubles(ha.direction);
+			const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]);
+			const a = ha.hovered ? 1 : opacity;
+			instanceData_Arrows.push(
+				...ha.worldLocation,
+				hintColor[0],
+				hintColor[1],
+				hintColor[2],
+				a,
+				angle,
+			);
+		}
+	}
+
+	// Render all arrow direction triangles (regular piece arrows + hint arrows) together
+	if (instanceData_Arrows.length > 0) {
+		/*
+		 * The buffer model of the little arrows on
+		 * the edge of the screen next to the mini piece images.
+		 */
+		const attribInfoInstancedArrows: AttributeInfoInstanced = {
+			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
+			instanceDataAttribInfo: [
+				{ name: 'a_instanceposition', numComponents: 2 },
+				{ name: 'a_instancecolor', numComponents: 4 },
+				{ name: 'a_instancerotation', numComponents: 1 },
+			],
+		};
+		createRenderable_Instanced_GivenInfo(
+			vertexData_Arrows,
+			instanceData_Arrows,
+			attribInfoInstancedArrows,
+			'TRIANGLES',
+			'arrows',
+		).render();
+	}
 }
 
 /**

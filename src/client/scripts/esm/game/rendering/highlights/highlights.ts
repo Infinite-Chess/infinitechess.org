@@ -22,6 +22,7 @@ import checkhighlight from './checkhighlight.js';
 import squarerendering from './squarerendering.js';
 import legalmovehighlights from './legalmovehighlights.js';
 import specialrighthighlights from './specialrighthighlights.js';
+import selectedpieceindividualmovehints from './selectedpieceindividualmovehints.js';
 
 /**
  * Renders all highlights, including:
@@ -43,6 +44,7 @@ function render(boardsim: Board): void {
 	premoves.render(); // Premove highlights
 	// Needs to render EVEN if zoomed out (different mode)
 	annotations.render_belowPieces(); // The square highlights added by the user
+	selectedpieceindividualmovehints.render(); // Individual legal move hints when in check
 	enginegame.render(); // Engine games can render a debug of engine generated moves
 }
 
