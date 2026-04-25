@@ -90,9 +90,11 @@ function isItOurTurn(color?: Player): boolean {
 	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
 	else if (typeOfGameWeAreIn === 'editor') return true;
-	else if (typeOfGameWeAreIn === 'local')
+	else if (typeOfGameWeAreIn === 'local') {
+		if (color === undefined) return true; // Always our turn in this case
+		// A specific color was specified as "us", check against that.
 		return gameslot.getGamefile()!.basegame.whosTurn === color;
-	else
+	} else
 		throw Error(
 			"Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn,
 		);

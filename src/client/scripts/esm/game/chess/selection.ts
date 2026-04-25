@@ -385,7 +385,7 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	// It is our piece type...
-	const isOurTurn = gameloader.areInLocalGame() || gameloader.isItOurTurn();
+	const isOurTurn = gameloader.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
 	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
 }
@@ -509,7 +509,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 	pieceSelected = piece;
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
+	isPremove = !isOpponentPiece && !gameloader.isItOurTurn();
 
 	// Calculate the legal moves it has...
 
