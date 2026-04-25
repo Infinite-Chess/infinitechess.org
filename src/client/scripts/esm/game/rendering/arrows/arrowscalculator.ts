@@ -580,14 +580,8 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): {
 
 		for (const lineKey of Object.keys(linesOfDirectionDraft)) {
 			const arrowLineDraft = linesOfDirectionDraft[lineKey]!;
-			const { line, newHoveredArrows } = convertLineDraftToLine(
-				arrowLineDraft,
-				slideDir,
-				vec2Key,
-				worldHalfWidth,
-				pointerWorlds,
-				true,
-			);
+			// prettier-ignore
+			const { line, newHoveredArrows } = convertLineDraftToLine(arrowLineDraft, slideDir, vec2Key, worldHalfWidth, pointerWorlds, true);
 			linesOfDirection[lineKey] = line;
 			allHoveredArrows.push(...newHoveredArrows);
 		}

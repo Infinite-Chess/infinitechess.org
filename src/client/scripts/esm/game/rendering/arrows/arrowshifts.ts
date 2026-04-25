@@ -327,14 +327,8 @@ function recalculateLinesThroughCoords(
 		}
 
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
-		const { line } = arrowscalculator.convertLineDraftToLine(
-			arrowsLineDraft,
-			slide,
-			slideKey,
-			worldHalfWidth,
-			pointerWorlds,
-			false,
-		);
+		// prettier-ignore
+		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, slide, slideKey, worldHalfWidth, pointerWorlds, false);
 		slideArrows[slideKey][lineKey] = line;
 	}
 }
