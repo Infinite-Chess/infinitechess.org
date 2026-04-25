@@ -12,6 +12,9 @@ import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 
+import vectors from '../../../../../../shared/util/math/vectors.js';
+import coordutil from '../../../../../../shared/chess/util/coordutil.js';
+import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
 import boardpos from '../boardpos.js';
@@ -60,8 +63,15 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 		return;
 	}
 
-	individualMoves = legalMoves.individual;
-	selectedPieceCoords = selection.getPieceSelected()!.coords;
+	const piece = selection.getPieceSelected()!;
+	selectedPieceCoords = piece.coords;
+	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
+	individualMoves = legalMoves.individual.filter((hintSquare) => {
+		const diff = coordutil.subtractCoords(hintSquare, selectedPieceCoords!);
+		const dir = vectors.absVector(vectors.normalizeVector(diff));
+		const vec2Key = vectors.getKeyFromVec2(dir);
+		return !!(moveset.sliding && moveset.sliding[vec2Key]);
+	});
 }
 
 function clearIndividualMoves(): void {
