@@ -34,11 +34,11 @@ import camera from '../camera.js';
 import meshes from '../meshes.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
+import keybinds from '../../misc/keybinds.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
 import primitives from '../primitives.js';
 import droparrows from './droparrows.js';
-import preferences from '../../../components/header/preferences.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import frametracker from '../frametracker.js';
 import loadbalancer from '../../misc/loadbalancer.js';
@@ -210,7 +210,7 @@ function detectCandidateArrow(): void {
 	mouse.claimMouseDown(Mouse.LEFT);
 
 	// Early exit on dragging disabled now, since the mouse down has been claimed.
-	if (!preferences.getDragEnabled()) return;
+	if (!keybinds.getEffectiveDragEnabled()) return;
 
 	const gamefile = gameslot.getGamefile()!;
 
