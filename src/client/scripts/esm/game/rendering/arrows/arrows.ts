@@ -226,6 +226,15 @@ function getHoveredArrows(): HoveredArrow[] {
 	return hoveredArrows;
 }
 
+/** Returns the shared arrow state needed by arrowshifts.ts. */
+function getArrowsState(): {
+	slideArrows: SlideArrows;
+	animatedArrows: Arrow[];
+	mode: typeof mode;
+} {
+	return { slideArrows, animatedArrows, mode };
+}
+
 /**
  * Whether the mouse is currently hovering over at least one
  * arrow indicator of any type (piece or move hint) on the screen.
@@ -298,51 +307,6 @@ function render(): void {
 	);
 }
 
-// Arrow Shifting: Adding / Removing Arrows before rendering ---------------------------
-
-/**
- * Piece deleted from start coords
- * => Arrow line recalculated
- */
-function deleteArrow(start: Coords): void {
-	arrowshifts.deleteArrow(start, areArrowsActiveThisFrame());
-}
-
-/**
- * Piece deleted on start coords and added on end coords
- * => Arrow lines recalculated
- */
-function moveArrow(start: Coords, end: Coords): void {
-	arrowshifts.moveArrow(start, end, areArrowsActiveThisFrame());
-}
-
-/**
- * Piece deleted on start coords. Uniquely animate arrow on floating point end coords.
- * => Recalculate start coords arrow lines.
- * @param start
- * @param end - Floating point coords of the current animation position
- * @param type - The piece type, so we know what type of piece the arrow should be.
- * 				We CANNOT just read the type of piece at the destination square, because
- * 				the piece is not guaranteed to be there. In Atomic Chess, the piece can
- * 				move, and then explode itself, leaving its destination square empty.
- */
-function animateArrow(start: Coords, end: BDCoords, type: number): void {
-	arrowshifts.animateArrow(start, end, type, areArrowsActiveThisFrame());
-}
-
-/**
- * Piece added on end coords.
- * => Arrow lines recalculated
- */
-function addArrow(type: number, end: Coords): void {
-	arrowshifts.addArrow(type, end, areArrowsActiveThisFrame());
-}
-
-/** Execute any arrow modifications made by animation.js or arrowsdrop.js */
-function executeArrowShifts(): void {
-	arrowshifts.executeArrowShifts(slideArrows, animatedArrows, mode);
-}
-
 // Exports -----------------------------------------------------------------------------
 
 export default {
@@ -355,16 +319,11 @@ export default {
 	// Getters
 	getAllArrows,
 	getHoveredArrows,
+	getArrowsState,
 	areHoveringAtleastOneArrow,
 	getAllArrowWorldLocations,
 	areArrowsActiveThisFrame,
 	// Frame lifecycle
 	update,
 	render,
-	// Arrow Shifting
-	deleteArrow,
-	moveArrow,
-	animateArrow,
-	addArrow,
-	executeArrowShifts,
 };

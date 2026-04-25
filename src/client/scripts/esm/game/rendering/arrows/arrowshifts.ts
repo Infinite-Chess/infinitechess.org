@@ -30,6 +30,7 @@ import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 
 import mouse from '../../../util/mouse.js';
+import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import arrowscalculator from './arrowscalculator.js';
 
@@ -83,8 +84,8 @@ export function resetShifts(): void {
  * Piece deleted from start coords
  * => Arrow line recalculated
  */
-export function deleteArrow(start: Coords, areArrowsActive: boolean): void {
-	if (!areArrowsActive) return;
+export function deleteArrow(start: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame()) return;
 	overwriteArrows(start);
 	shifts.push({ kind: 'delete', start });
 }
@@ -93,8 +94,8 @@ export function deleteArrow(start: Coords, areArrowsActive: boolean): void {
  * Piece deleted on start coords and added on end coords
  * => Arrow lines recalculated
  */
-export function moveArrow(start: Coords, end: Coords, areArrowsActive: boolean): void {
-	if (!areArrowsActive) return;
+export function moveArrow(start: Coords, end: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame()) return;
 	overwriteArrows(start);
 	shifts.push({ kind: 'move', start, end });
 }
@@ -109,13 +110,8 @@ export function moveArrow(start: Coords, end: Coords, areArrowsActive: boolean):
  * 				the piece is not guaranteed to be there. In Atomic Chess, the piece can
  * 				move, and then explode itself, leaving its destination square empty.
  */
-export function animateArrow(
-	start: Coords,
-	end: BDCoords,
-	type: number,
-	areArrowsActive: boolean,
-): void {
-	if (!areArrowsActive) return;
+export function animateArrow(start: Coords, end: BDCoords, type: number): void {
+	if (!arrows.areArrowsActiveThisFrame()) return;
 	overwriteArrows(start);
 	shifts.push({ kind: 'animate', start, end, type });
 }
@@ -124,8 +120,8 @@ export function animateArrow(
  * Piece added on end coords.
  * => Arrow lines recalculated
  */
-export function addArrow(type: number, end: Coords, areArrowsActive: boolean): void {
-	if (!areArrowsActive) return;
+export function addArrow(type: number, end: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame()) return;
 	shifts.push({ kind: 'add', type, end });
 }
 
@@ -155,11 +151,8 @@ function overwriteArrows(start: Coords): void {
 }
 
 /** Execute any arrow modifications made by animation.js or arrowsdrop.js */
-export function executeArrowShifts(
-	slideArrows: SlideArrows,
-	animatedArrows: Arrow[],
-	mode: 0 | 1 | 2 | 3,
-): void {
+export function executeArrowShifts(): void {
+	const { slideArrows, animatedArrows, mode } = arrows.getArrowsState();
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 

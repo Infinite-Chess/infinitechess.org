@@ -40,6 +40,7 @@ import maskedDraw from '../../../webgl/maskedDraw.js';
 import primitives from '../primitives.js';
 import droparrows from './droparrows.js';
 import guigameinfo from '../../gui/guigameinfo.js';
+import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../frametracker.js';
 import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
@@ -317,7 +318,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 
 	// Queue arrow shifts — animateArrow handles deletion of the original arrow and places
 	// animated arrows (for each applicable slide direction) at the intersection.
-	arrows.animateArrow(candidate!.pieceCoords, intersectionBD, candidate!.pieceType);
+	arrowshifts.animateArrow(candidate!.pieceCoords, intersectionBD, candidate!.pieceType);
 }
 
 /** Mouse is outside the slide zone — piece follows mouse normally, original arrow removed. */
@@ -326,7 +327,7 @@ function updateOnScreenDrag(): void {
 	// droparrows has already queued a moveArrow shift — don't overwrite it with a deleteArrow.
 	if (droparrows.getCaptureCoords() !== undefined) return;
 	// Delete the original arrow. Normal drag rendering takes over.
-	arrows.deleteArrow(candidate!.pieceCoords);
+	arrowshifts.deleteArrow(candidate!.pieceCoords);
 }
 
 // Cleanup -----------------------------------------------------------------------------
