@@ -207,6 +207,7 @@ function detectCandidateArrow(): void {
 	if (hoveredArrowsList.length === 0) return;
 
 	// Claim the mouse down for any arrow hover to prevent board drag.
+	// Mouse down for move hint arrow indicators must be claimed separately.
 	mouse.claimMouseDown(Mouse.LEFT);
 
 	// Early exit on dragging disabled now, since the mouse down has been claimed.

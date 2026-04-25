@@ -345,7 +345,7 @@ function getHoveredArrows(): HoveredArrow[] {
 }
 
 function areHoveringAtleastOneArrow(): boolean {
-	return hoveredArrows.length > 0;
+	return hoveredArrows.length > 0 || hintArrows.some((ha) => ha.hovered);
 }
 
 /**
@@ -1056,6 +1056,9 @@ function updateHintArrows(): void {
 		const hovered = pointerWorlds.some(
 			(p) => vectors.chebyshevDistanceDoubles(worldLocation, p) < worldHalfWidth,
 		);
+		// Prevent dragging the board when clicking on the move hint arrow.
+		if (hovered && mouse.isMouseDown(Mouse.LEFT)) mouse.claimMouseDown(Mouse.LEFT);
+
 		transitionTowardTargetIfClicked(hintSquareBD, direction, worldLocation, worldHalfWidth);
 
 		hintArrows.push({ worldLocation, direction, targetSquare: hintSquare, hovered });
