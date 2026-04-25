@@ -20,6 +20,7 @@ import guipause from '../../gui/guipause.js';
 import snapping from './snapping.js';
 import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
+import drawsquares from './annotations/drawsquares.js';
 import preferences from '../../../components/header/preferences.js';
 import { GameBus } from '../../GameBus.js';
 import squarerendering from './squarerendering.js';
@@ -86,13 +87,20 @@ function getSquares(): Coords[] {
 function render(): void {
 	if (individualMoves.length === 0 || !boardpos.areZoomedOut() || guipause.areWePaused()) return;
 
-	const color_options = {
+	const color: Color = preferences.getLegalMoveHighlightColor({
 		isOpponentPiece: false,
 		isPremove: false,
-	};
-	const color: Color = preferences.getLegalMoveHighlightColor(color_options);
+	});
 	const u_size = snapping.getEntityWidthWorld();
 	squarerendering.genModel(individualMoves, color).render(undefined, undefined, { u_size });
+
+	// Render hovered move hints at higher opacity
+	const allHovered = drawsquares.getAllSquaresHovered(individualMoves);
+	if (allHovered.length > 0) {
+		const hoverColor: Color = [...color];
+		hoverColor[3] = drawsquares.HOVER_OPACITY;
+		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { u_size });
+	}
 }
 
 // Exports -------------------------------------------------------------------------

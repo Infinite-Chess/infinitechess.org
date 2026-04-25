@@ -25,16 +25,10 @@ import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import squarerendering from '../squarerendering.js';
 
-// Variables -----------------------------------------------------------------
+// Constants -----------------------------------------------------------------
 
 /** The color of preset squares for the variant. */
 const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.19   Transparent orange (makes preset squares less noticeable/distracting)
-
-/**
- * The preset square overrides if provided from the ICN.
- * These override the variant's preset squares.
- */
-let preset_squares: Square[] | undefined;
 
 /**
  * To make single Square highlight more visible than rays (which
@@ -43,11 +37,19 @@ let preset_squares: Square[] | undefined;
 const OPACITY_OFFSET = 0.08;
 
 /** ADDITONAL (not overriding) opacity when hovering over highlights. */
-const hover_opacity = 0.5;
+const HOVER_OPACITY = 0.5;
+
+// Variables -----------------------------------------------------------------
+
+/**
+ * The preset square overrides if provided from the ICN.
+ * These override the variant's preset squares.
+ */
+let preset_squares: Square[] | undefined;
 
 // Updating -----------------------------------------------------------------
 
-/** Returns a list of all drawn-square highlights being hovered over by any pointer. */
+/** Returns a list of all square highlights being hovered over by any pointer. */
 function getAllSquaresHovered(highlights: Square[]): Coords[] {
 	const allHovered: Square[] = [];
 
@@ -195,7 +197,7 @@ function render(highlights: Square[]): void {
 	const allHovered = getAllSquaresHovered(highlights);
 	if (allHovered.length > 0) {
 		const hoverColor = preferences.getAnnoteSquareColor();
-		hoverColor[3] = hover_opacity;
+		hoverColor[3] = HOVER_OPACITY;
 		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { u_size });
 	}
 }
@@ -204,7 +206,9 @@ function render(highlights: Square[]): void {
 
 export default {
 	PRESET_SQUARE_COLOR,
+	HOVER_OPACITY,
 	update,
+	getAllSquaresHovered,
 	getSquaresBelowWorld,
 	setPresetOverrides,
 	getPresetOverrides,
