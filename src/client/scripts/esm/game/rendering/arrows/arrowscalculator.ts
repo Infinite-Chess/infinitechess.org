@@ -11,6 +11,11 @@
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type {
+	BDCoords,
+	Coords,
+	DoubleCoords,
+} from '../../../../../../shared/chess/util/coordutil.js';
+import type {
 	Arrow,
 	ArrowPiece,
 	HoveredArrow,
@@ -18,16 +23,12 @@ import type {
 	ArrowsLine,
 	SlideArrows,
 } from './arrows.js';
-import type {
-	BDCoords,
-	Coords,
-	DoubleCoords,
-} from '../../../../../../shared/chess/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import bimath from '../../../../../../shared/util/math/bimath.js';
+import bounds from '../../../../../../shared/util/math/bounds.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import geometry from '../../../../../../shared/util/math/geometry.js';
 import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
@@ -37,7 +38,6 @@ import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import { rawTypes as r } from '../../../../../../shared/chess/util/typeutil.js';
 import vectors, { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/organizedpieces.js';
-import bounds from '../../../../../../shared/util/math/bounds.js';
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
@@ -47,10 +47,10 @@ import movehints from '../highlights/movehints.js';
 import boardtiles from '../boardtiles.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
-import guinavigation from '../../gui/guinavigation.js';
 import guigameinfo from '../../gui/guigameinfo.js';
-import { InputListener, Mouse, MouseButton } from '../../input.js';
+import guinavigation from '../../gui/guinavigation.js';
 import { listener_overlay } from '../../chess/game.js';
+import { InputListener, Mouse, MouseButton } from '../../input.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -355,7 +355,7 @@ export function calcArrowsLineDraft(
 		}
 
 		/**
-		 * Calculate it's maximum slide.
+		 * Calculate its maximum slide.
 		 *
 		 * If it is able to slide (ignoring ignore function, and ignoring check respection)
 		 * into our screen area, then it should be guaranteed an arrow,
@@ -379,7 +379,7 @@ export function calcArrowsLineDraft(
 		 *
 		 * We already know the intersection points of its slide with the screen box.
 		 *
-		 * Next, how do find test if it's legal slide protrudes into the screen?
+		 * Next, how do we test if its legal slide protrudes into the screen?
 		 *
 		 * All we do is test if the piece's distance to the furthest point it can
 		 * slide is GREATER than its distance to the first intersection of the screen...
