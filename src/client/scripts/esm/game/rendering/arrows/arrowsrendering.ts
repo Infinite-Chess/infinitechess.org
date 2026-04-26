@@ -7,11 +7,12 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Arrow, ArrowsLine } from './arrows.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
-import type { Arrow, SlideArrows, ArrowsLine, HintArrow } from './arrows.js';
 
 import vectors from '../../../../../../shared/util/math/vectors.js';
 
+import arrows from './arrows.js';
 import primitives from '../primitives.js';
 import spritesheet from '../spritesheet.js';
 import perspective from '../perspective.js';
@@ -26,10 +27,7 @@ import {
 
 // Constants ---------------------------------------------------------------------------
 
-/**
- * Attribute layout for the instanced piece-image renderable (arrow indicators).
- * Defined once here to avoid re-allocating the object every frame.
- */
+/** Attribute layout for the instanced piece-image renderable. */
 const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
 		{ name: 'a_position', numComponents: 2 },
@@ -42,10 +40,7 @@ const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
 	],
 };
 
-/**
- * Attribute layout for the instanced arrow-triangle renderable.
- * Defined once here to avoid re-allocating the object every frame.
- */
+/** Attribute layout for the instanced arrow-triangle renderable. */
 const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
 	instanceDataAttribInfo: [
@@ -58,12 +53,11 @@ const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
 // Functions ---------------------------------------------------------------------------
 
 /** Renders all the arrow indicators for this frame. */
-export function render(
-	slideArrows: SlideArrows,
-	animatedArrows: Arrow[],
-	hintArrows: HintArrow[],
-	worldHalfWidth: number,
-): void {
+export function render(): void {
+	const slideArrows = arrows.getSlideArrows();
+	const animatedArrows = arrows.getAnimatedArrows();
+	const hintArrows = arrows.getHintArrows();
+	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
 	if (
 		Object.keys(slideArrows).length === 0 &&
 		animatedArrows.length === 0 &&
@@ -82,14 +76,13 @@ export function render(
 
 	// Initialize the data arrays...
 
-	// prettier-ignore
-	const vertexData_Pictures: number[] = primitives.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop);
+	const vertexData_Pictures: number[] = primitives.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop); // prettier-ignore
 	const instanceData_Pictures: number[] = [];
 
 	const vertexData_Arrows: number[] = getVertexDataOfArrow(worldHalfWidth);
 	const instanceData_Arrows: number[] = [];
 
-	// ADD THE DATA...
+	// Add the data...
 
 	for (const linesOfDirection of Object.values(slideArrows)) {
 		for (const line of Object.values(linesOfDirection) as ArrowsLine[]) {
@@ -103,7 +96,7 @@ export function render(
 		concatData(instanceData_Pictures, instanceData_Arrows, arrow);
 	}
 
-	// Render hint squares and triangles first (below piece images)
+	// Render hint squares first (below piece images)
 	if (hintArrows.length > 0) {
 		const hintColor = preferences.getLegalMoveHighlightColor({
 			isOpponentPiece: false,
@@ -113,8 +106,7 @@ export function render(
 		const size = worldHalfWidth * 2;
 
 		// Green squares at screen edge for each hint arrow
-		const hintSquaresInstanceData: number[] = [];
-		for (const ha of hintArrows) hintSquaresInstanceData.push(...ha.worldLocation);
+		const hintSquaresInstanceData: number[] = hintArrows.flatMap((ha) => ha.worldLocation);
 		createRenderable_Instanced(
 			instancedshapes.getDataLegalMoveSquare(hintColor),
 			hintSquaresInstanceData,
@@ -124,10 +116,7 @@ export function render(
 		).render(undefined, undefined, { u_size: size });
 
 		// Re-render hovered hint squares at increased opacity on top
-		const hoveredHintSquaresInstanceData: number[] = [];
-		for (const ha of hintArrows) {
-			if (ha.hovered) hoveredHintSquaresInstanceData.push(...ha.worldLocation);
-		}
+		const hoveredHintSquaresInstanceData: number[] = hintArrows.filter((ha) => ha.hovered).flatMap((ha) => ha.worldLocation); // prettier-ignore
 		if (hoveredHintSquaresInstanceData.length > 0) {
 			const hoveredHintColor: Color = [...hintColor];
 			hoveredHintColor[3] = drawsquares.HOVER_OPACITY;
@@ -175,7 +164,7 @@ export function render(
 }
 
 /**
- * Takes an arrow, generates the vertex data of both the PICTURE and ARROW,
+ * Takes a piece arrow, generates the vertex data of both the PICTURE and ARROW,
  * and appends them to their respective vertex data arrays.
  */
 function concatData(
@@ -193,15 +182,14 @@ function concatData(
 
 	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
 
-	// Color
 	const a = arrow.hovered ? 1 : arrow.opacity;
 
-	//							   instaceposition	   instancetexcoord  instancecolor
+	//							   instaceposition	    instancetexcoord  instancecolor
 	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1, 1, 1, a);
 
 	// Next append the data of the little arrow!
 
-	if (arrow.stackIndex > 0) return; // We can skip, since it is an adjacent picture!
+	if (arrow.stackIndex > 0) return; // We can skip, since it is a stacked picture! Each stack gets just one arrow.
 
 	/**
 	 * Our arrow's instance data needs to contain:
@@ -224,7 +212,12 @@ function concatData(
  */
 function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 	const size = halfWorldWidth * 0.3; // Default size of the little arrows
-	return [halfWorldWidth, -size, halfWorldWidth, size, halfWorldWidth + size, 0];
+	// prettier-ignore
+	return [
+		halfWorldWidth,       -size,
+		halfWorldWidth,        size,
+		halfWorldWidth + size, 0,
+	];
 }
 
 // Exports -----------------------------------------------------------------------------

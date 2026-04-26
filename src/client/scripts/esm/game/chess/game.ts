@@ -56,6 +56,7 @@ import guinavigation from '../gui/guinavigation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import promotionlines from '../rendering/promotionlines.js';
+import arrowsrendering from '../rendering/arrows/arrowsrendering.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
@@ -319,7 +320,7 @@ function renderScene(): void {
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		dragarrows.render();
-		arrows.render();
+		arrowsrendering.render();
 		boardeditor.render();
 		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');

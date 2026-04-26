@@ -150,7 +150,10 @@ function overwriteArrows(start: Coords): void {
 
 /** Execute any pending arrow shift modifications. */
 export function executeArrowShifts(): void {
-	const { slideArrows, animatedArrows, mode } = arrows.getArrowsState();
+	const slideArrows = arrows.getSlideArrows();
+	const animatedArrows = arrows.getAnimatedArrows();
+	const mode = arrows.getMode();
+
 	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 

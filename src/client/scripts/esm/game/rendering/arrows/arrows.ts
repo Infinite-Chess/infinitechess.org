@@ -21,7 +21,6 @@ import type {
 import gameslot from '../../chess/gameslot.js';
 import arrowshifts from './arrowshifts.js';
 import frametracker from '../frametracker.js';
-import arrowsrendering from './arrowsrendering.js';
 import arrowscalculator from './arrowscalculator.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
@@ -216,23 +215,27 @@ function getAllArrows(): Arrow[] {
 	return result;
 }
 
+/** Returns the current slide arrows state for this frame. */
+function getSlideArrows(): SlideArrows {
+	return slideArrows;
+}
+
+/** Returns the current animated arrows for this frame. */
+function getAnimatedArrows(): Arrow[] {
+	return animatedArrows;
+}
+
 /**
  * Returns the list of arrow indicators hovered over this frame,
  * with references to the piece they are pointing to.
- *
- * MUST be called after the update() method!
  */
 function getHoveredArrows(): HoveredArrow[] {
 	return hoveredArrows;
 }
 
-/** Returns the shared arrow state needed by arrowshifts.ts. */
-function getArrowsState(): {
-	slideArrows: SlideArrows;
-	animatedArrows: Arrow[];
-	mode: typeof mode;
-} {
-	return { slideArrows, animatedArrows, mode };
+/** Returns the current hint arrows for this frame. */
+function getHintArrows(): HintArrow[] {
+	return hintArrows;
 }
 
 /**
@@ -297,16 +300,6 @@ function update(): void {
 	slideArrows = result.slideArrows!;
 }
 
-/** Renders all the arrow indicators for this frame. */
-function render(): void {
-	arrowsrendering.render(
-		slideArrows,
-		animatedArrows,
-		hintArrows,
-		arrowscalculator.getArrowIndicatorHalfWidth(),
-	);
-}
-
 // Exports -----------------------------------------------------------------------------
 
 export default {
@@ -319,12 +312,13 @@ export default {
 	toggleArrows,
 	// Getters
 	getAllArrows,
+	getSlideArrows,
+	getAnimatedArrows,
 	getHoveredArrows,
-	getArrowsState,
+	getHintArrows,
 	areHoveringAtleastOneArrow,
 	getAllArrowWorldLocations,
 	areArrowsActiveThisFrame,
 	// Frame lifecycle
 	update,
-	render,
 };
