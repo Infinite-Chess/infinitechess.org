@@ -1,4 +1,4 @@
-// src/client/scripts/esm/chess/rendering/spritesheetGenerator.ts
+// dev-utils/spritesheet_generator/spritesheetGenerator.ts
 
 /**
  * This script takes a list of images, and converts it into a renderable

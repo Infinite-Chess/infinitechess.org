@@ -40,7 +40,6 @@ import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gameloader from './gameloader.js';
-import spritesheet from '../rendering/spritesheet.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
@@ -121,7 +120,7 @@ function isLoadedGameViewingWhitePerspective(): boolean {
  * Loads a gamefile onto the board.
  *
  * This loads the logical stuff first, then returns a PROMISE that resolves
- * when the GRAPHICAL stuff is finished loading (such as the spritesheet).
+ * when the GRAPHICAL stuff is finished loading (such as piece textures).
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
@@ -191,7 +190,6 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
-	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.boardsim);
 	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
