@@ -146,16 +146,31 @@ function QuadWorld_Color(coords: Coords, color: Color): number[] {
  * [World Space] Generates the vertex data of a colored texture.
  */
 function QuadWorld_ColorTexture(coords: Coords, color: Color): number[] {
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const texleft = rotation === 1 ? 0 : 1;
-	const texbottom = rotation === 1 ? 0 : 1;
-	const texright = rotation === 1 ? 1 : 0;
-	const textop = rotation === 1 ? 1 : 0;
+	const { texleft, texbottom, texright, textop } = getPieceTexCoords();
 	const { left, right, bottom, top } = getCoordBoxWorld(coords);
 	const [r, g, b, a] = color;
 
 	// prettier-ignore
 	return primitives.Quad_ColorTexture(left, bottom, right, top, texleft, texbottom, texright, textop, r, g, b, a);
+}
+
+/**
+ * Returns the texture coordinates for a full-texture piece quad (UV range 0–1),
+ * flipped when viewing from black's perspective.
+ */
+function getPieceTexCoords(): {
+	texleft: number;
+	texbottom: number;
+	texright: number;
+	textop: number;
+} {
+	const isBlack = perspective.getIsViewingBlackPerspective();
+	return {
+		texleft: isBlack ? 1 : 0,
+		texbottom: isBlack ? 1 : 0,
+		texright: isBlack ? 0 : 1,
+		textop: isBlack ? 0 : 1,
+	};
 }
 
 /**
@@ -243,6 +258,7 @@ export default {
 	QuadModel_Color,
 	QuadWorld_Color,
 	QuadWorld_ColorTexture,
+	getPieceTexCoords,
 	RectWorld,
 	// RectWorld_Filled,
 	// Other Generic Rendering Methods

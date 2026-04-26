@@ -261,11 +261,7 @@ function renderPieceModel(): void {
 	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-
-	const texleft = rotation === 1 ? 0 : 1;
-	const texbottom = rotation === 1 ? 0 : 1;
-	const texright = rotation === 1 ? 1 : 0;
-	const textop = rotation === 1 ? 1 : 0;
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;

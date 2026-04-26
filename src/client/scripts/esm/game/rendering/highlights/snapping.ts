@@ -25,6 +25,7 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
+import meshes from '../meshes.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
@@ -559,11 +560,7 @@ function render(): void {
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 	const dataGhost: number[] = [];
 
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const texleft = rotation === 1 ? 0 : 1;
-	const texbottom = rotation === 1 ? 0 : 1;
-	const texright = rotation === 1 ? 1 : 0;
-	const textop = rotation === 1 ? 1 : 0;
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;
