@@ -230,5 +230,6 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 // Exports -----------------------------------------------------------------------------
 
 export default {
+	// Frame lifecycle
 	render,
 };

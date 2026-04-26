@@ -80,7 +80,7 @@ interface SlideArrowsDraft {
  * The FINAL index in each of these, is the picture of the piece
  * that is CLOSEST to you (screen center) on the line!
  */
-export interface ArrowsLineDraft {
+interface ArrowsLineDraft {
 	/** Pieces on this line that intersect the screen with a positive dot product.
 	 * SORTED in order of closest to the screen to farthest. */
 	posDotProd: ArrowDraft[];
@@ -142,10 +142,6 @@ let boundingBoxInt: BoundingBox | undefined;
 
 export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 	return boundingBoxFloat;
-}
-
-export function getBoundingBoxInt(): BoundingBox | undefined {
-	return boundingBoxInt;
 }
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
@@ -304,9 +300,9 @@ export function calcArrowsLineDraft(
 	const negDotProd: ArrowDraft[] = [];
 	const posDotProd: ArrowDraft[] = [];
 
-	/** The piece on the side that is closest to the screen center. */
+	/** The innermost piece on the side that is closest to us (screen center). */
 	let closestPosDotProd: ArrowDraft | undefined;
-	/** The piece on the side that is closest to the screen center. */
+	/** The innermost piece on the side that is closest to us (screen center). */
 	let closestNegDotProd: ArrowDraft | undefined;
 
 	const axis = slideDir[0] === 0n ? 1 : 0;
@@ -693,7 +689,7 @@ export function processPiece(
  * If a recognized click falls within worldHalfWidth of
  * worldLocation, claims it and pans towards the target coordinates.
  */
-export function transitionTowardTargetIfClicked(
+function transitionTowardTargetIfClicked(
 	targetCoords: BDCoords,
 	direction: Vec2,
 	worldLocation: DoubleCoords,
@@ -808,15 +804,19 @@ function updateHintArrows(): HintArrow[] {
 export default {
 	// Constants
 	OPACITY,
-	calculateArrows,
+	// Getters
 	getBoundingBoxFloat,
-	getBoundingBoxInt,
 	areZoomedInEnoughForArrows,
 	getArrowIndicatorHalfWidth,
-	getSlideExceptions,
-	isAnimatedArrowUnnecessary,
+	// Main entry point
+	calculateArrows,
+	// Arrow draft generation
 	calcArrowsLineDraft,
+	// Mode-based filtering
+	isAnimatedArrowUnnecessary,
+	getSlideExceptions,
 	removeTypesThatCantSlideOntoScreenFromLineDraft,
+	// Finalizing arrows
 	convertLineDraftToLine,
 	processPiece,
 };

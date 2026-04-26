@@ -329,10 +329,13 @@ function recalculateLinesThroughCoords(
 // Exports -----------------------------------------------------------------------------
 
 export default {
+	// State management
 	resetShifts,
+	// Queuing modifications
 	deleteArrow,
 	moveArrow,
 	animateArrow,
 	addArrow,
+	// Executing modifications
 	executeArrowShifts,
 };
