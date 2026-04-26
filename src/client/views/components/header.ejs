@@ -112,7 +112,7 @@
                 <p class="text"><%=t('header.settings.language')%></p>
                 <span class="arrow-head-right"></span>
             </div>
-            <div id="board-settings-dropdown-item" class="settings-dropdown-item">
+            <div id="appearance-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
                 <p class="text"><%=t('header.settings.appearance')%></p>
                 <span class="arrow-head-right"></span>
@@ -122,9 +122,9 @@
                 <p class="text"><%=t('header.settings.legalmoves')%></p>
                 <span class="arrow-head-right"></span>
             </div>
-            <div id="selection-settings-dropdown-item" class="settings-dropdown-item">
+            <div id="gameplay-settings-dropdown-item" class="settings-dropdown-item">
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <p class="text"><%=t('header.settings.selection')%></p>
+                <p class="text"><%=t('header.settings.gameplay')%></p>
                 <span class="arrow-head-right"></span>
             </div>
             <div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden"> <!-- Hidden Initially until we test if mouse (& perspective mode) is supported -->
@@ -172,8 +172,8 @@
                 <% } %>
             </div>
         </div>
-        <!-- Board Theme -->
-        <div class="board-dropdown dropdown visibility-hidden">
+        <!-- Appearance -->
+        <div class="appearance-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-board"><use href="#svg-board"></use></svg>
@@ -226,37 +226,44 @@
                 </div>
             </div>
         </div>
-        <!-- Selection Presets -->
-        <div class="selection-dropdown dropdown visibility-hidden">
+        <!-- Gameplay -->
+        <div class="gameplay-dropdown dropdown visibility-hidden">
             <div class="dropdown-title">
                 <span class="arrow-head-left"></span>
                 <svg class="svg-selection"><use href="#svg-selection"></use></svg>
-                <p class="text"><%=t('header.settings.selection')%></p>
+                <p class="text"><%=t('header.settings.gameplay')%></p>
             </div>
-            <!-- Selection Boolean Options -->
+            <!-- Gameplay Boolean Options -->
             <label class="boolean-option drag">
-                <p class="text"><%=t('header.settings.selection-drag')%></p>
+                <p class="text"><%=t('header.settings.gameplay-drag')%></p>
                 <div class="switch">
                     <input type="checkbox">
                     <span></span>
                 </div>
             </label>
             <label class="boolean-option premove">
-                <p class="text"><%=t('header.settings.selection-premove')%></p>
+                <p class="text"><%=t('header.settings.gameplay-premove')%></p>
                 <div class="switch">
                     <input type="checkbox">
                     <span></span>
                 </div>
             </label>
             <label class="boolean-option animations">
-                <p class="text"><%=t('header.settings.selection-animations')%></p>
+                <p class="text"><%=t('header.settings.gameplay-animations')%></p>
+                <div class="switch">
+                    <input type="checkbox">
+                    <span></span>
+                </div>
+            </label>
+            <label class="boolean-option fast-transitions">
+                <p class="text"><%=t('header.settings.gameplay-fast_transitions')%></p>
                 <div class="switch">
                     <input type="checkbox">
                     <span></span>
                 </div>
             </label>
             <label class="boolean-option lingering-annotations">
-                <p class="text"><%=t('header.settings.selection-lingering_annotations')%></p>
+                <p class="text"><%=t('header.settings.gameplay-lingering_annotations')%></p>
                 <div class="switch">
                     <input type="checkbox">
                     <span></span>

@@ -31,6 +31,7 @@ import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
+import preferences from '../../../components/header/preferences.js';
 import area, { Area } from '../area.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -62,14 +63,11 @@ type PanTransition = {
 /** The maximum number of transitions we will retain in our history, for undoing transitions. */
 const HISTORY_CAP = 20;
 
-/** Whether to use fast transition mode. May change dynamically each frame. */
-const FAST_TRANSITIONS = false;
-
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
 	/** Duration of ALL Panning Transitions. */
 	get DURATION_MILLIS() {
-		return FAST_TRANSITIONS ? 500 : 800;
+		return preferences.getFastTransitionsMode() ? 500 : 800;
 	},
 	/**
 	 * The maximum distance a Panning Transition will travel before
@@ -77,7 +75,7 @@ const PAN_TRANSITION_CONFIG = {
 	 * in world space units (not affected by board scale).
 	 */
 	get MAX_PAN_DISTANCE() {
-		return FAST_TRANSITIONS ? 45 : 90;
+		return preferences.getFastTransitionsMode() ? 45 : 90;
 	},
 } as const;
 
@@ -85,17 +83,17 @@ const PAN_TRANSITION_CONFIG = {
 const ZOOM_TRANSITION_CONFIG = {
 	/** The minimum duration any zooming transition must take. */
 	get MIN_DURATION() {
-		return FAST_TRANSITIONS ? 400 : 600;
+		return preferences.getFastTransitionsMode() ? 400 : 600;
 	},
 	/** The maximum duration any zooming transition can take. */
 	get MAX_DURATION() {
-		return FAST_TRANSITIONS ? 1200 : 3500;
+		return preferences.getFastTransitionsMode() ? 1200 : 3500;
 	},
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	DURATION_PERSPECTIVE_MULTIPLIER: 1.3,
 	/** The "comfortable" acceleration used for the start and end of the 2 & 3 stage models. */
 	get EDGE_ACCELERATION() {
-		return FAST_TRANSITIONS ? 70.0 : 40.0;
+		return preferences.getFastTransitionsMode() ? 80.0 : 40.0;
 	},
 	/** How the total duration of the 3-Stage Model is split between them. MUST sum to 1.0. */
 	STAGE_SPLIT: {
