@@ -106,7 +106,6 @@ document.addEventListener('theme-change', (_event) => {
 	// texturecache.deleteTextureCache(gl);
 	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
 		// Regenerate piece textures with the new tinted images
-
 		texturecache.initTexturesForGame(gl, gamefile.boardsim);
 		piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
 	});
