@@ -45,6 +45,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
+import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -250,8 +251,8 @@ function startStartingTransition(): void {
 	);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
-	const amount = bd.fromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
-	const startScale = bd.multiply(centerArea.scale, amount);
+	const INITIAL_ZOOM_MULTIPLIER = preferences.getFastTransitionsMode() ? 1.4 : 1.75; // We start 1.75x zoomed in then normal, then transition into 1x
+	const startScale = bd.multiply(centerArea.scale, bd.fromNumber(INITIAL_ZOOM_MULTIPLIER));
 	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
 	Transition.eraseTelHist();
