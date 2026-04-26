@@ -13,11 +13,11 @@ import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
 import vectors from '../../../../../../shared/util/math/vectors.js';
 
 import arrows from './arrows.js';
+import meshes from '../meshes.js';
 import primitives from '../primitives.js';
-import spritesheet from '../spritesheet.js';
-import perspective from '../perspective.js';
 import preferences from '../../../components/header/preferences.js';
 import drawsquares from '../highlights/annotations/drawsquares.js';
+import texturecache from '../../../chess/rendering/texturecache.js';
 import instancedshapes from '../instancedshapes.js';
 import arrowscalculator from './arrowscalculator.js';
 import {
@@ -38,7 +38,6 @@ const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
 	],
 	instanceDataAttribInfo: [
 		{ name: 'a_instanceposition', numComponents: 2 },
-		{ name: 'a_instancetexcoord', numComponents: 2 },
 		{ name: 'a_instancecolor', numComponents: 4 },
 	],
 };
@@ -68,19 +67,19 @@ export function render(): void {
 	)
 		return; // No visible arrows, don't generate the model
 
-	// Position data of the single instance
+	// Position data of the single quad instance
 	const left = -worldHalfWidth;
 	const right = worldHalfWidth;
 	const bottom = -worldHalfWidth;
 	const top = worldHalfWidth;
-	// Texture data of the single instance
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texright, texbottom, textop } = spritesheet.getTexDataGeneric(rotation);
+	// Texture data of the single quad instance
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	// Initialize the data arrays...
 
 	const vertexData_Pictures: number[] = primitives.Quad_Texture(left, bottom, right, top, texleft, texbottom, texright, textop); // prettier-ignore
-	const instanceData_Pictures: number[] = [];
+	/** Maps each piece type to its list of instance data (position + color per instance). */
+	const instanceDataByType = new Map<number, number[]>();
 
 	const vertexData_Arrows: number[] = getVertexDataOfArrow(worldHalfWidth);
 	const instanceData_Arrows: number[] = [];
@@ -90,13 +89,13 @@ export function render(): void {
 	for (const linesOfDirection of Object.values(slideArrows)) {
 		for (const line of Object.values(linesOfDirection) as ArrowsLine[]) {
 			for (const arrow of line.posDotProd)
-				concatData(instanceData_Pictures, instanceData_Arrows, arrow);
+				concatData(instanceDataByType, instanceData_Arrows, arrow);
 			for (const arrow of line.negDotProd)
-				concatData(instanceData_Pictures, instanceData_Arrows, arrow);
+				concatData(instanceDataByType, instanceData_Arrows, arrow);
 		}
 	}
 	for (const arrow of animatedArrows) {
-		concatData(instanceData_Pictures, instanceData_Arrows, arrow);
+		concatData(instanceDataByType, instanceData_Arrows, arrow);
 	}
 
 	// Render hint squares first (below piece images)
@@ -141,16 +140,15 @@ export function render(): void {
 		}
 	}
 
-	// Render piece images for regular arrow indicators
-	if (instanceData_Pictures.length > 0) {
-		const texture = spritesheet.getSpritesheet();
+	// Render piece images for regular (piece) arrow indicators, one draw call per type.
+	for (const [type, instanceData] of instanceDataByType) {
 		createRenderable_Instanced_GivenInfo(
 			vertexData_Pictures,
-			instanceData_Pictures,
+			instanceData,
 			ATTRIB_INFO_PICTURES,
 			'TRIANGLES',
 			'arrowImages',
-			[{ texture, uniformName: 'u_sampler' }],
+			[{ texture: texturecache.getTexture(type), uniformName: 'u_sampler' }],
 		).render();
 	}
 
@@ -167,11 +165,11 @@ export function render(): void {
 }
 
 /**
- * Takes a piece arrow, generates the vertex data of both the PICTURE and ARROW,
- * and appends them to their respective vertex data arrays.
+ * Takes a piece arrow, appends its picture instance data into the per-type map
+ * and (if not stacked) appends its triangle instance data to the arrows array.
  */
 function concatData(
-	instanceData_Pictures: number[],
+	instanceDataByType: Map<number, number[]>,
 	instanceData_Arrows: number[],
 	arrow: Arrow,
 ): void {
@@ -179,16 +177,17 @@ function concatData(
 	 * Our pictures' instance data needs to contain:
 	 *
 	 * position offset (2 numbers)
-	 * unique texcoord (2 numbers)
 	 * unique color (4 numbers)
 	 */
 
-	const thisTexLocation = spritesheet.getSpritesheetDataTexLocation(arrow.piece.type);
-
 	const a = arrow.hovered ? 1 : arrow.opacity;
 
-	//							   instaceposition	    instancetexcoord  instancecolor
-	instanceData_Pictures.push(...arrow.worldLocation, ...thisTexLocation, 1, 1, 1, a);
+	let typeData = instanceDataByType.get(arrow.piece.type);
+	if (typeData === undefined) {
+		typeData = [];
+		instanceDataByType.set(arrow.piece.type, typeData);
+	}
+	typeData.push(...arrow.worldLocation, 1, 1, 1, a);
 
 	// Next append the data of the little arrow!
 
