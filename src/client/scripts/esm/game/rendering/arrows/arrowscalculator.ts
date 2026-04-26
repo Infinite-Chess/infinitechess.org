@@ -41,6 +41,7 @@ import organizedpieces, { LineKey } from '../../../../../../shared/chess/logic/o
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
+import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
 import movehints from '../highlights/movehints.js';
@@ -77,7 +78,7 @@ interface SlideArrowsDraft {
  * The FIRST index in each of these left/right arrays, is the picture
  * which gets rendered at the default location.
  * The FINAL index in each of these, is the picture of the piece
- * that is CLOSEST to you (or the screen) on the line!
+ * that is CLOSEST to you (screen center) on the line!
  */
 export interface ArrowsLineDraft {
 	/** Pieces on this line that intersect the screen with a positive dot product.
@@ -93,33 +94,41 @@ export interface ArrowsLineDraft {
 }
 
 /** A single arrow indicator DRAFT. This may be removed depending on our mode. */
-type ArrowDraft = { piece: ArrowPiece; canSlideOntoScreen: boolean };
+type ArrowDraft = {
+	piece: ArrowPiece;
+	/** Whether the piece the arrow is pointing to can legally slide at least
+	 * partially into the screen, not whether it can slide in that direction EVER. */
+	canSlideOntoScreen: boolean;
+};
 
 // Constants ---------------------------------------------------------------------------
 
-/** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
+/** The width of all pictures of the pieces and their arrows, in percentage of 1 tile. */
 const WIDTH = 0.65;
-/** How much padding to include between the mini image of the pieces & arrows and the edge of the screen, in percentage of 1 tile. */
-const sidePadding = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
-/** The distance one arrow's picture's center should be from the screen edge. */
-const PADDING: BigDecimal = bd.fromNumber(WIDTH / 2 + sidePadding);
-/** How much separation between adjacent pictures pointing to multiple pieces on the same line, in percentage of 1 tile. */
-const paddingBetwAdjacentPictures = 0.35;
+/** How much padding to include between the pictures of the arrow
+ * indicators and the edge of the screen, in percentage of 1 tile. */
+const EDGE_GAP = 0.15; // Default: 0.15   0.1 Lines up the tip of the arrows right against the edge
+/** The precalculated distance one picture's center should be from the screen edge. */
+const IMAGE_EDGE_DIST: BigDecimal = bd.fromNumber(WIDTH / 2 + EDGE_GAP);
+/** How much separation should be between stacked pictures pointing
+ * to multiple pieces on the same line, in percentage of 1 tile. */
+const STACK_PADDING = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
-export const opacity = 0.6;
-/** When we're zoomed out far enough that 1 tile is as wide as this many virtual pixels, we don't render the arrow indicators. */
-const renderZoomLimitVirtualPixels: BigDecimal = bd.fromBigInt(12n); // virtual pixels. Default: 20
-
+export const OPACITY = 0.6;
+/** The smallest width squares can be in virtual pixels
+ * before skipping rendering arrow indicators (too small). */
+const MIN_SQUARE_SIZE: BigDecimal = bd.fromBigInt(12n);
 /** The distance in perspective mode to render the arrow indicators from the camera.
  * We need this because there is no normal edge of the screen like in 2D mode. */
-const perspectiveDist = 17;
+const PERSPECTIVE_EDGE_DIST = 17;
 
 const HALF = bd.fromNumber(0.5);
 
 // State -------------------------------------------------------------------------------
 
 /**
- * The bounding box of the screen for this frame.
+ * The bounding box of the screen for this frame, with padding added so
+ * that arrow indicators aren't touching the very edge of the screen.
  */
 let boundingBoxFloat: BoundingBoxBD | undefined;
 /**
@@ -141,7 +150,7 @@ export function getBoundingBoxInt(): BoundingBox | undefined {
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
 export function areZoomedInEnoughForArrows(): boolean {
-	return bd.compare(boardtiles.gtileWidth_Pixels(false), renderZoomLimitVirtualPixels) >= 0;
+	return bd.compare(boardtiles.gtileWidth_Pixels(false), MIN_SQUARE_SIZE) >= 0;
 }
 
 /**
@@ -158,40 +167,42 @@ export function getArrowIndicatorHalfWidth(): number {
  * Calculates which arrows should be visible for a frame.
  * Always computes bounding boxes and hint arrows.
  * Only computes slide arrows when the mode is non-zero and zoom is sufficient.
- *
- * @returns active - whether piece arrows are active this frame
  */
 export function calculateArrows(mode: 0 | 1 | 2 | 3): {
+	/** Whether piece arrows are active this frame. */
 	active: boolean;
-	slideArrows: SlideArrows;
-	hoveredArrows: HoveredArrow[];
-	hintArrows: HintArrow[];
+	slideArrows?: SlideArrows;
+	hoveredArrows?: HoveredArrow[];
+	hintArrows?: HintArrow[];
 } {
 	updateBoundingBoxesOfVisibleScreen();
-	const newHintArrows = updateHintArrows();
 
-	if (mode === 0 || !areZoomedInEnoughForArrows()) {
-		return { active: false, slideArrows: {}, hoveredArrows: [], hintArrows: newHintArrows };
+	if (!areZoomedInEnoughForArrows()) return { active: false };
+
+	const hintArrows = updateHintArrows();
+
+	if (!arrows.areArrowsActiveThisFrame()) {
+		return { active: false, hintArrows: hintArrows };
 	}
 
 	const slideArrowsDraft = generateArrowsDraft();
 	removeUnnecessaryArrows(slideArrowsDraft, mode);
-	const { slideArrows, hoveredArrows } = calculateSlideArrows_AndHovered(slideArrowsDraft);
-	return { active: true, slideArrows, hoveredArrows, hintArrows: newHintArrows };
+	const { slideArrows, hoveredArrows } = calculatePieceArrows(slideArrowsDraft);
+	return { active: true, slideArrows, hoveredArrows, hintArrows };
 }
 
 // Bounding box ------------------------------------------------------------------------
 
 /**
  * Calculates the visible bounding box of the screen for this frame,
- * both the integer-rounded, and the exact floating point one.
+ * both the integer-rounded-away, and the exact floating point one.
  *
  * These boxes are used to test whether a piece is visible on-screen or not.
  * As if it's not, it should get an arrow.
  */
 function updateBoundingBoxesOfVisibleScreen(): void {
 	boundingBoxFloat = perspective.getEnabled()
-		? boardtiles.generatePerspectiveBoundingBox(perspectiveDist)
+		? boardtiles.generatePerspectiveBoundingBox(PERSPECTIVE_EDGE_DIST)
 		: boardtiles.gboundingBoxFloat();
 
 	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
@@ -222,10 +233,10 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 	 * Adds a little bit of padding to the bounding box, so that the arrows of the
 	 * arrows indicators aren't touching the edge of the screen.
 	 */
-	boundingBoxFloat.left = bd.add(boundingBoxFloat.left, PADDING);
-	boundingBoxFloat.right = bd.subtract(boundingBoxFloat.right, PADDING);
-	boundingBoxFloat.bottom = bd.add(boundingBoxFloat.bottom, PADDING);
-	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, PADDING);
+	boundingBoxFloat.left = bd.add(boundingBoxFloat.left, IMAGE_EDGE_DIST);
+	boundingBoxFloat.right = bd.subtract(boundingBoxFloat.right, IMAGE_EDGE_DIST);
+	boundingBoxFloat.bottom = bd.add(boundingBoxFloat.bottom, IMAGE_EDGE_DIST);
+	boundingBoxFloat.top = bd.subtract(boundingBoxFloat.top, IMAGE_EDGE_DIST);
 }
 
 // Arrow draft generation --------------------------------------------------------------
@@ -281,7 +292,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
  * organized line of pieces intersecting our screen.
  *
  * In a game with Huygens, there may be multiple arrows
- * next to each other on the same line, since Huygens
+ * stacked on each other in the same line, since Huygens
  * can jump/skip over other pieces.
  */
 export function calcArrowsLineDraft(
@@ -293,9 +304,9 @@ export function calcArrowsLineDraft(
 	const negDotProd: ArrowDraft[] = [];
 	const posDotProd: ArrowDraft[] = [];
 
-	/** The piece on the side that is closest to our screen. */
+	/** The piece on the side that is closest to the screen center. */
 	let closestPosDotProd: ArrowDraft | undefined;
-	/** The piece on the side that is closest to our screen. */
+	/** The piece on the side that is closest to the screen center. */
 	let closestNegDotProd: ArrowDraft | undefined;
 
 	const axis = slideDir[0] === 0n ? 1 : 0;
@@ -363,14 +374,8 @@ export function calcArrowsLineDraft(
 		 * (which would mean it phased/skipped over pieces due to a custom blocking function)
 		 */
 
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(
-			gamefile.boardsim,
-			gamefile.basegame.gameRules.worldBorder,
-			piece,
-			slideDir,
-			slideKey,
-			organizedline,
-		);
+		// prettier-ignore
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile.boardsim, gamefile.basegame.gameRules.worldBorder, piece, slideDir, slideKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 
 		/**
@@ -396,7 +401,7 @@ export function calcArrowsLineDraft(
 			firstIntersection.coords,
 		);
 		// Subtract the padding from the intersection so we get the distance to the intersection of the SCREEN EDGE.
-		firstIntersectionDist = bd.subtract(firstIntersectionDist, PADDING);
+		firstIntersectionDist = bd.subtract(firstIntersectionDist, IMAGE_EDGE_DIST);
 
 		// What is the distance to the farthest point this piece can slide along this direction?
 		let farthestSlidePoint: Coords | null;
@@ -539,8 +544,8 @@ export function getSlideExceptions(mode: 0 | 1 | 2 | 3): Vec2Key[] {
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2)
 		slideExceptions = gamefile.boardsim.pieces.slides
-			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n)
-			.map((v) => vectors.getKeyFromVec2(v)); // Filter out all hippogonal and greater vectors
+			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n) // Filter out all hippogonal and greater vectors
+			.map((v) => vectors.getKeyFromVec2(v));
 	return slideExceptions;
 }
 
@@ -563,12 +568,12 @@ export function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLine
  * Converts all arrow drafts into fully computed arrows with world-space positions
  * and hover detection. Collects all hovered arrows.
  */
-function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): {
+function calculatePieceArrows(slideArrowsDraft: SlideArrowsDraft): {
 	slideArrows: SlideArrows;
 	hoveredArrows: HoveredArrow[];
 } {
-	const newSlideArrows: SlideArrows = {};
-	const allHoveredArrows: HoveredArrow[] = [];
+	const slideArrows: SlideArrows = {};
+	const hoveredArrows: HoveredArrow[] = [];
 
 	const worldHalfWidth = getArrowIndicatorHalfWidth();
 	const pointerWorlds = mouse.getAllPointerWorlds();
@@ -583,13 +588,13 @@ function calculateSlideArrows_AndHovered(slideArrowsDraft: SlideArrowsDraft): {
 			// prettier-ignore
 			const { line, newHoveredArrows } = convertLineDraftToLine(arrowLineDraft, slideDir, vec2Key, worldHalfWidth, pointerWorlds, true);
 			linesOfDirection[lineKey] = line;
-			allHoveredArrows.push(...newHoveredArrows);
+			hoveredArrows.push(...newHoveredArrows);
 		}
 
-		newSlideArrows[vec2Key] = linesOfDirection;
+		slideArrows[vec2Key] = linesOfDirection;
 	}
 
-	return { slideArrows: newSlideArrows, hoveredArrows: allHoveredArrows };
+	return { slideArrows, hoveredArrows };
 }
 
 /**
@@ -650,7 +655,6 @@ export function convertLineDraftToLine(
  * @param stackIndex - If there are adjacent pictures, this may be > 0
  * @param worldHalfWidth
  * @param pointerWorlds - A list of all world coordinates every existing pointer is over.
- * @returns
  */
 export function processPiece(
 	piece: ArrowPiece,
@@ -665,11 +669,11 @@ export function processPiece(
 	const worldLocation: DoubleCoords =
 		space.convertCoordToWorldSpace_IgnoreSquareCenter(renderCoords);
 
-	// If this picture is an adjacent picture, adjust it's positioning
+	// If this picture is a stacked picture, adjust it's positioning
 	if (stackIndex > 0) {
 		const scale = boardpos.getBoardScaleAsNumber();
-		worldLocation[0] += Number(vector[0]) * stackIndex * paddingBetwAdjacentPictures * scale;
-		worldLocation[1] += Number(vector[1]) * stackIndex * paddingBetwAdjacentPictures * scale;
+		worldLocation[0] += Number(vector[0]) * stackIndex * STACK_PADDING * scale;
+		worldLocation[1] += Number(vector[1]) * stackIndex * STACK_PADDING * scale;
 	}
 
 	// Does the mouse hover over the piece?
@@ -682,7 +686,7 @@ export function processPiece(
 	transitionTowardTargetIfClicked(piece.coords, vector, worldLocation, worldHalfWidth);
 
 	const direction = vectors.negateVector(vector);
-	return { worldLocation, piece, hovered, opacity, direction, stackIndex };
+	return { worldLocation, piece, hovered, opacity: OPACITY, direction, stackIndex };
 }
 
 /**
@@ -751,7 +755,6 @@ export function transitionTowardTargetIfClicked(
 function updateHintArrows(): HintArrow[] {
 	const hintSquares = movehints.getSquares();
 	if (hintSquares.length === 0) return [];
-	if (!areZoomedInEnoughForArrows()) return [];
 
 	const pieceCoords = movehints.getPieceCoords()!;
 
@@ -776,7 +779,7 @@ function updateHintArrows(): HintArrow[] {
 			direction,
 			boundingBoxFloat!,
 		);
-		if (intersections.length < 2) continue;
+		if (intersections.length < 2) continue; // Arrow line does not intersect screen.
 		const nearSide = intersections[0]!.positiveDotProduct
 			? intersections[0]!.coords
 			: intersections[1]!.coords;
@@ -803,6 +806,8 @@ function updateHintArrows(): HintArrow[] {
 // Exports -----------------------------------------------------------------------------
 
 export default {
+	// Constants
+	OPACITY,
 	calculateArrows,
 	getBoundingBoxFloat,
 	getBoundingBoxInt,
@@ -814,5 +819,4 @@ export default {
 	removeTypesThatCantSlideOntoScreenFromLineDraft,
 	convertLineDraftToLine,
 	processPiece,
-	opacity,
 };

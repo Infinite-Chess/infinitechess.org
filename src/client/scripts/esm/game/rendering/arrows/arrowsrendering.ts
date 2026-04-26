@@ -144,7 +144,7 @@ export function render(
 		for (const ha of hintArrows) {
 			const dirAsDoubles = vectors.convertVectorToDoubles(ha.direction);
 			const angle = Math.atan2(dirAsDoubles[1], dirAsDoubles[0]);
-			const a = ha.hovered ? 1 : arrowscalculator.opacity;
+			const a = ha.hovered ? 1 : arrowscalculator.OPACITY;
 			instanceData_Arrows.push(...ha.worldLocation, 0, 0, 0, a, angle);
 		}
 	}

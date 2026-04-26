@@ -285,7 +285,7 @@ function update(): void {
 
 	const result = arrowscalculator.calculateArrows(mode); // { active, slideArrows, hoveredArrows, hintArrows }
 
-	hintArrows = result.hintArrows;
+	if (result.hintArrows) hintArrows = result.hintArrows;
 
 	if (!result.active) {
 		// Arrow indicators are off, nothing is visible.
@@ -293,8 +293,8 @@ function update(): void {
 		return;
 	}
 
-	hoveredArrows = result.hoveredArrows;
-	slideArrows = result.slideArrows;
+	hoveredArrows = result.hoveredArrows!;
+	slideArrows = result.slideArrows!;
 }
 
 /** Renders all the arrow indicators for this frame. */
