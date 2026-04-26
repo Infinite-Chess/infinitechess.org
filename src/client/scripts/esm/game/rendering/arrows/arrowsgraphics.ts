@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/arrows/arrowsrendering.ts
+// src/client/scripts/esm/game/rendering/arrows/arrowsgraphics.ts
 
 /**
  * This script renders all arrow indicators on the screen edges,

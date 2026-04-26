@@ -8,7 +8,7 @@
  *
  * Other scripts may add/remove arrows in between update() and render() calls.
  * Calculation is handled by arrowscalculator, shifting by arrowshifts,
- * and rendering by arrowsrendering.
+ * and rendering by arrowsgraphics.
  */
 
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
