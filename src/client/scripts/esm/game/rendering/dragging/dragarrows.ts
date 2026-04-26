@@ -47,6 +47,7 @@ import draganimation from './draganimation.js';
 import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowscalculator from '../arrows/arrowscalculator.js';
+import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -363,7 +364,7 @@ function renderCandidateArrows(): void {
 	if (!worldLocation) return;
 
 	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
-	const size = halfWidth * 0.3; // Same proportions as the standard small arrows
+	const size = halfWidth * ARROW_SIZE_RATIO;
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
 	// the raw world-space distance to each edge pair. The indicator sits on whichever edge is closer.

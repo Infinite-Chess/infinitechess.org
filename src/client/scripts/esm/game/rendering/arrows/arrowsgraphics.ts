@@ -27,6 +27,9 @@ import {
 
 // Constants ---------------------------------------------------------------------------
 
+/** The size of arrow triangles as a fraction of the arrow indicator half-width. */
+export const ARROW_SIZE_RATIO = 0.3;
+
 /** Attribute layout for the instanced piece-image renderable. */
 const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
@@ -211,7 +214,7 @@ function concatData(
  * @param halfWorldWidth - Half of the width of the arrow indicators for the current frame (dependant on scale).
  */
 function getVertexDataOfArrow(halfWorldWidth: number): number[] {
-	const size = halfWorldWidth * 0.3; // Default size of the little arrows
+	const size = halfWorldWidth * ARROW_SIZE_RATIO;
 	// prettier-ignore
 	return [
 		halfWorldWidth,       -size,
