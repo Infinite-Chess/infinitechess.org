@@ -29,7 +29,6 @@ import coordutil, {
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
-import spritesheet from './spritesheet.js';
 import perspective from './perspective.js';
 
 // Constants -------------------------------------------------------------------------
@@ -146,9 +145,12 @@ function QuadWorld_Color(coords: Coords, color: Color): number[] {
 /**
  * [World Space] Generates the vertex data of a colored texture.
  */
-function QuadWorld_ColorTexture(coords: Coords, type: number, color: Color): number[] {
+function QuadWorld_ColorTexture(coords: Coords, color: Color): number[] {
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
+	const texleft = rotation === 1 ? 0 : 1;
+	const texbottom = rotation === 1 ? 0 : 1;
+	const texright = rotation === 1 ? 1 : 0;
+	const textop = rotation === 1 ? 1 : 0;
 	const { left, right, bottom, top } = getCoordBoxWorld(coords);
 	const [r, g, b, a] = color;
 

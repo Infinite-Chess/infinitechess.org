@@ -194,7 +194,7 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.boardsim);
 	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
-	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
+	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
