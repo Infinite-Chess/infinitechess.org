@@ -11,8 +11,8 @@ import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 
 import meshes from './meshes.js';
 import miniimage from './miniimage.js';
-import spritesheet from './spritesheet.js';
 import piecemodels from './piecemodels.js';
+import texturecache from '../../chess/rendering/texturecache.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 
 // Variables ---------------------------------------------------------------------
@@ -33,14 +33,14 @@ function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords): void {
-	const data = meshes.QuadWorld_ColorTexture(coords, type, [1, 1, 1, ghostOpacity]);
+	const data = meshes.QuadWorld_ColorTexture(coords, [1, 1, 1, ghostOpacity]);
 	const model = createRenderable(
 		data,
 		2,
 		'TRIANGLES',
 		'colorTexture',
 		true,
-		spritesheet.getSpritesheet(),
+		texturecache.getTexture(type),
 	);
 	model.render();
 }

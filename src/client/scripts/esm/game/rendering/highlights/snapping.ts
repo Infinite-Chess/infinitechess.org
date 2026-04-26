@@ -25,6 +25,7 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
+import meshes from '../meshes.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
@@ -37,8 +38,8 @@ import primitives from '../primitives.js';
 import perspective from '../perspective.js';
 import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
-import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
+import texturecache from '../../../chess/rendering/texturecache.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
@@ -556,12 +557,10 @@ function render(): void {
 	}
 }
 
-/** TODO: Dont use the spritesheet */
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 	const dataGhost: number[] = [];
 
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;
@@ -582,7 +581,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 		'TRIANGLES',
 		'colorTexture',
 		true,
-		spritesheet.getSpritesheet(),
+		texturecache.getTexture(type),
 	);
 }
 

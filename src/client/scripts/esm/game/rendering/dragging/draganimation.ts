@@ -28,10 +28,10 @@ import { Mouse } from '../../input.js';
 import droparrows from './droparrows.js';
 import boardtiles from '../boardtiles.js';
 import primitives from '../primitives.js';
-import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
+import texturecache from '../../../chess/rendering/texturecache.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../instancedshapes.js';
@@ -261,11 +261,7 @@ function renderPieceModel(): void {
 	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(
-		pieceType!,
-		rotation,
-	);
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : z;
@@ -300,7 +296,7 @@ function renderPieceModel(): void {
 		'TRIANGLES',
 		'colorTexture',
 		true,
-		spritesheet.getSpritesheet(),
+		texturecache.getTexture(pieceType!),
 	).render();
 }
 

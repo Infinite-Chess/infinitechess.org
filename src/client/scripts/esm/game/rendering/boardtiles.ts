@@ -24,7 +24,6 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 import piecemodels from './piecemodels.js';
-import spritesheet from './spritesheet.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
@@ -106,8 +105,8 @@ document.addEventListener('theme-change', (_event) => {
 	imagecache.deleteImageCache();
 	// texturecache.deleteTextureCache(gl);
 	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
-		// Regenerate the spritesheet with the new tinted images
-		spritesheet.initSpritesheetForGame(gl, gamefile.boardsim);
+		// Regenerate piece textures with the new tinted images
+
 		texturecache.initTexturesForGame(gl, gamefile.boardsim);
 		piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
 	});
