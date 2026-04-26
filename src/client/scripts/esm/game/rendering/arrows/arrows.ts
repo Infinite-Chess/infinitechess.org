@@ -251,7 +251,7 @@ function areHoveringAtleastOneArrow(): boolean {
  * Must be called after update().
  */
 function getAllArrowWorldLocations(): DoubleCoords[] {
-	return [...getAllArrows(), ...animatedArrows].map((a) => a.worldLocation);
+	return [...getAllArrows(), ...animatedArrows, ...hintArrows].map((a) => a.worldLocation);
 }
 
 /**
