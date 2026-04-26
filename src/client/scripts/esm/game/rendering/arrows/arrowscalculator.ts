@@ -596,7 +596,7 @@ function calculatePieceArrows(slideArrowsDraft: SlideArrowsDraft): {
 /**
  * Converts an {@link ArrowsLineDraft} into a fully computed {@link ArrowsLine},
  * resolving world-space positions and hover detection for each arrow.
- * When appendHover is true, also computes ownsSlide and collects hovered arrows.
+ * @param appendHover - When true, also computes ownsSlide and collects hovered arrows.
  */
 export function convertLineDraftToLine(
 	draft: ArrowsLineDraft,

@@ -1,10 +1,10 @@
 // src/client/scripts/esm/game/rendering/arrows/arrowshifts.ts
 
 /**
- * This script manages mid-frame arrow modifications (shifts).
+ * This script manages mid-frame arrow modifications (arrow shifts).
  *
  * Other scripts call deleteArrow(), moveArrow(), animateArrow(), and addArrow()
- * between the arrows update() and render() calls. Those shifts are then
+ * between the arrows update() and render() calls. Those "shifts" are then
  * applied all at once by executeArrowShifts() before rendering.
  */
 
@@ -34,12 +34,9 @@ import arrows from './arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import arrowscalculator from './arrowscalculator.js';
 
-// Types -------------------------------------------------------------------------------
+// Types ----------------------------------------------------
 
-/**
- * An Arrow Shift/Modification.
- * These take effect after update() and before render(),
- */
+/** An Arrow Shift/Modification. */
 type Shift =
 	| {
 			kind: 'delete';
@@ -62,21 +59,22 @@ type Shift =
 			end: Coords;
 	  };
 
-// State -------------------------------------------------------------------------------
+// Constants ----------------------------------------------
 
 const ONE = bd.fromBigInt(1n);
 
+// State --------------------------------------------------
+
 /**
- * A list of arrow modifications made by other scripts
- * after update() and before render(),
- * such as animation.js or droparrows.js
+ * A list of arrow modifications made by other
+ * scripts after update() and before render().
  */
 let shifts: Shift[] = [];
 
-// Functions ---------------------------------------------------------------------------
+// Functions -------------------------------------------------------------
 
 /** Clears the pending shifts list. Called from arrows.reset() at the start of each frame. */
-export function resetShifts(): void {
+export function reset(): void {
 	shifts.length = 0;
 }
 
@@ -150,7 +148,7 @@ function overwriteArrows(start: Coords): void {
 	});
 }
 
-/** Execute any arrow modifications made by animation.js or arrowsdrop.js */
+/** Execute any pending arrow shift modifications. */
 export function executeArrowShifts(): void {
 	const { slideArrows, animatedArrows, mode } = arrows.getArrowsState();
 	const gamefile = gameslot.getGamefile()!;
@@ -202,24 +200,13 @@ export function executeArrowShifts(): void {
 			for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
 				let line = vectors.getVec2FromKey(lineKey);
 
-				if (
-					arrowscalculator.isAnimatedArrowUnnecessary(
-						gamefile.boardsim,
-						piece.type,
-						line,
-						lineKey,
-						mode,
-					)
-				)
+				// prettier-ignore
+				if (arrowscalculator.isAnimatedArrowUnnecessary(gamefile.boardsim, piece.type, line, lineKey, mode))
 					continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
 
 				// Determine the line's dot product with the screen box.
 				// Flip the vector if need be, to point it in the right direction.
-				const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(
-					piece.coords,
-					line,
-					boundingBoxFloat,
-				);
+				const thisPieceIntersections = geometry.findLineBoxIntersectionsBD(piece.coords, line, boundingBoxFloat); // prettier-ignore
 				if (thisPieceIntersections.length < 2) continue; // Slide direction doesn't intersect with screen box, no arrow needed
 
 				const positiveDotProduct = thisPieceIntersections[0]!.positiveDotProduct; // We know the dot product of both intersections will be identical, because the piece is off-screen.
@@ -231,8 +218,7 @@ export function executeArrowShifts(): void {
 					? thisPieceIntersections[0]!.coords
 					: thisPieceIntersections[1]!.coords;
 
-				// prettier-ignore
-				const arrow: Arrow = arrowscalculator.processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds);
+				const arrow: Arrow = arrowscalculator.processPiece(piece, line, intersect, 0, worldHalfWidth, pointerWorlds); // prettier-ignore
 				animatedArrows.push(arrow);
 			}
 		}
@@ -257,16 +243,15 @@ export function executeArrowShifts(): void {
 	// Apply the board changes
 	boardchanges.runChanges(gamefile, changes, boardchanges.changeFuncs, true);
 
+	// Recalculate the arrow lines for each shift
 	shifts.forEach((shift) => {
 		if (shift.kind === 'delete' || shift.kind === 'move' || shift.kind === 'animate') {
 			// Recalculate the lines through the start coordinate
-			// prettier-ignore
-			recalculateLinesThroughCoords(slideArrows, gamefile, shift.start, worldHalfWidth, pointerWorlds, slideExceptions);
+			recalculateLinesThroughCoords(slideArrows, gamefile, shift.start, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
 		}
 		if (shift.kind === 'add' || shift.kind === 'move') {
 			// Recalculate the lines through the end coordinate
-			// prettier-ignore
-			recalculateLinesThroughCoords(slideArrows, gamefile, shift.end, worldHalfWidth, pointerWorlds, slideExceptions);
+			recalculateLinesThroughCoords(slideArrows, gamefile, shift.end, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
 		}
 	});
 
@@ -304,12 +289,7 @@ function recalculateLinesThroughCoords(
 		const organizedLine = linegroup.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(
-			gamefile,
-			slide,
-			slideKey,
-			organizedLine,
-		);
+		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(gamefile, slide, slideKey, organizedLine); // prettier-ignore
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
@@ -319,9 +299,8 @@ function recalculateLinesThroughCoords(
 				continue; // No more pieces on this line
 		}
 
+		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, slide, slideKey, worldHalfWidth, pointerWorlds, false); // prettier-ignore
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
-		// prettier-ignore
-		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, slide, slideKey, worldHalfWidth, pointerWorlds, false);
 		slideArrows[slideKey][lineKey] = line;
 	}
 }
@@ -330,7 +309,7 @@ function recalculateLinesThroughCoords(
 
 export default {
 	// State management
-	resetShifts,
+	reset,
 	// Queuing modifications
 	deleteArrow,
 	moveArrow,

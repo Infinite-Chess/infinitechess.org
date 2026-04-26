@@ -270,7 +270,7 @@ function reset(): void {
 	animatedArrows = [];
 	hoveredArrows = [];
 	hintArrows = [];
-	arrowshifts.resetShifts();
+	arrowshifts.reset();
 }
 
 /**
