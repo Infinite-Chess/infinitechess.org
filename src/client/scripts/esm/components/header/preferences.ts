@@ -20,6 +20,7 @@ const clientSidePrefs: string[] = [
 	'perspective_fov',
 	'drag_enabled',
 	'premove_enabled',
+	'fast_transitions_enabled',
 	'coordinates_enabled',
 	'starfield_enabled',
 	'advanced_effects_enabled',
@@ -31,6 +32,7 @@ interface ClientSidePreferences {
 	perspective_fov: number;
 	drag_enabled: boolean;
 	premove_enabled: boolean;
+	fast_transitions_enabled: boolean;
 	coordinates_enabled: boolean;
 	starfield_enabled: boolean;
 	advanced_effects_enabled: boolean;
@@ -59,6 +61,7 @@ let preferences: Preferences;
 const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
 const default_drag_enabled: boolean = true;
 const default_premove_enabled: boolean = true;
+const default_fast_transitions_enabled: boolean = false;
 /** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
@@ -90,6 +93,7 @@ function loadPreferences(): void {
 		perspective_fov: default_perspective_fov,
 		drag_enabled: default_drag_enabled,
 		premove_enabled: default_premove_enabled,
+		fast_transitions_enabled: default_fast_transitions_enabled,
 		animations: default_animations,
 		lingering_annotations: default_lingering_annotations,
 		coordinates_enabled: default_coordinates_enabled,
@@ -237,13 +241,23 @@ function getPremoveEnabled(): boolean {
 }
 
 function setPremoveMode(value: boolean): void {
-	if (typeof value !== 'boolean')
-		throw new Error('Cannot set preference premove_mode when it is not a boolean.');
 	preferences.premove_enabled = value;
 	savePreferences();
 
 	// Dispatch an event so that the game code can detect it, if present.
 	document.dispatchEvent(new CustomEvent('premoves-toggle', { detail: value }));
+}
+
+function getFastTransitionsMode(): boolean {
+	return preferences.fast_transitions_enabled ?? default_fast_transitions_enabled;
+}
+
+function setFastTransitionsMode(value: boolean): void {
+	preferences.fast_transitions_enabled = value;
+	savePreferences();
+
+	// Dispatch an event so that the game code can detect it, if present.
+	document.dispatchEvent(new CustomEvent('fast-transitions-toggle', { detail: value }));
 }
 
 function getAnimationsMode(): boolean {
@@ -288,8 +302,6 @@ function getLingeringAnnotationsMode(): boolean {
 }
 
 function setLingeringAnnotationsMode(value: boolean): void {
-	if (typeof value !== 'boolean')
-		throw new Error('Cannot set preference lingering_annotations when it is not a boolean.');
 	preferences.lingering_annotations = value;
 	onChangeMade();
 	savePreferences();
@@ -304,8 +316,6 @@ function getAdvancedEffectsMode(): boolean {
 }
 
 function setAdvancedEffectsMode(value: boolean): void {
-	if (typeof value !== 'boolean')
-		throw new Error('Cannot set preference advanced_effects_enabled when it is not a boolean.');
 	preferences.advanced_effects_enabled = value;
 	savePreferences();
 }
@@ -556,6 +566,8 @@ export default {
 	setDragEnabled,
 	getPremoveEnabled,
 	setPremoveMode,
+	getFastTransitionsMode,
+	setFastTransitionsMode,
 	getAnimationsMode,
 	setAnimationsMode,
 	getPerspectiveSensitivity,

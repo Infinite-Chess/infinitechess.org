@@ -297,43 +297,6 @@ function Ring(x: number, y: number, inRad: number, outRad: number, resolution: n
 	return data;
 }
 
-// =========================================== Other Shapes ================================================
-
-/** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
-// prettier-ignore
-function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
-	return [
-		//     Vertex                   Color
-        left,  bottom, startZ,      r, g, b, a,
-        left,  bottom, endZ,        r, g, b, a,
-        right, bottom, startZ,      r, g, b, a,
-        right, bottom, startZ,      r, g, b, a,
-        left,  bottom, endZ,        r, g, b, a,
-        right, bottom, endZ,        r, g, b, a,
-
-        right, bottom, startZ,      r, g, b, a,
-        right, bottom, endZ,        r, g, b, a,
-        right, top,    startZ,      r, g, b, a,
-        right, top,    startZ,      r, g, b, a,
-        right, bottom, endZ,        r, g, b, a,
-        right, top,    endZ,        r, g, b, a,
-
-        right, top,    startZ,      r, g, b, a,
-        right, top,    endZ,        r, g, b, a,
-        left,  top,    startZ,      r, g, b, a,
-        left,  top,    startZ,      r, g, b, a,
-        right, top,    endZ,        r, g, b, a,
-        left,  top,    endZ,        r, g, b, a,
-
-        left,  top,    startZ,      r, g, b, a,
-        left,  top,    endZ,        r, g, b, a,
-        left,  bottom, startZ,      r, g, b, a,
-        left,  bottom, startZ,      r, g, b, a,
-        left,  top,    endZ,        r, g, b, a,
-        left,  bottom, endZ,        r, g, b, a,
-	];
-}
-
 /**
  * [TRIANGLES] Generates vertex data for a radial gradient centered at (x, y).
  * Colors repeat outward with the given spacing (same units as x/y) and phase offset.
@@ -415,6 +378,43 @@ function RadialGradient(x: number, y: number, radius: number, colors: Color[], s
 	return data;
 }
 
+// =========================================== Other Shapes ================================================
+
+/** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
+// prettier-ignore
+function BoxTunnel(left: number, bottom: number, startZ: number, right: number, top: number, endZ: number, r: number, g: number, b: number, a: number): number[] {
+	return [
+		//     Vertex                   Color
+        left,  bottom, startZ,      r, g, b, a,
+        left,  bottom, endZ,        r, g, b, a,
+        right, bottom, startZ,      r, g, b, a,
+        right, bottom, startZ,      r, g, b, a,
+        left,  bottom, endZ,        r, g, b, a,
+        right, bottom, endZ,        r, g, b, a,
+
+        right, bottom, startZ,      r, g, b, a,
+        right, bottom, endZ,        r, g, b, a,
+        right, top,    startZ,      r, g, b, a,
+        right, top,    startZ,      r, g, b, a,
+        right, bottom, endZ,        r, g, b, a,
+        right, top,    endZ,        r, g, b, a,
+
+        right, top,    startZ,      r, g, b, a,
+        right, top,    endZ,        r, g, b, a,
+        left,  top,    startZ,      r, g, b, a,
+        left,  top,    startZ,      r, g, b, a,
+        right, top,    endZ,        r, g, b, a,
+        left,  top,    endZ,        r, g, b, a,
+
+        left,  top,    startZ,      r, g, b, a,
+        left,  top,    endZ,        r, g, b, a,
+        left,  bottom, startZ,      r, g, b, a,
+        left,  bottom, startZ,      r, g, b, a,
+        left,  top,    endZ,        r, g, b, a,
+        left,  bottom, endZ,        r, g, b, a,
+	];
+}
+
 // =========================================== Exports ================================================
 
 export default {
@@ -431,7 +431,7 @@ export default {
 	Circle,
 	GlowDot,
 	Ring,
+	RadialGradient,
 	// Other Shapes
 	BoxTunnel,
-	RadialGradient,
 };

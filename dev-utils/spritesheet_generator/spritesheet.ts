@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/spritesheet.ts
+// dev-utils/spritesheet_generator/spritesheet.ts
 
 /**
  * This script stores the spritesheet FOR THE CURRENT GAME,
@@ -11,7 +11,6 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
-
 import imagecache from '../../chess/rendering/imagecache.js';
 import { GameBus } from '../GameBus.js';
 import TextureLoader from '../../webgl/TextureLoader.js';

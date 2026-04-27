@@ -59,7 +59,6 @@ type Attributes_ArrowImages =
 	| 'a_position'
 	| 'a_texturecoord'
 	| 'a_instanceposition'
-	| 'a_instancetexcoord'
 	| 'a_instancecolor';
 type Uniforms_ArrowImages = 'u_transformmatrix' | 'u_sampler';
 type Attributes_Starfield =

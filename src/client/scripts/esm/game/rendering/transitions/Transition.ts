@@ -31,6 +31,7 @@ import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
+import preferences from '../../../components/header/preferences.js';
 import area, { Area } from '../area.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -65,25 +66,35 @@ const HISTORY_CAP = 20;
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
 	/** Duration of ALL Panning Transitions. */
-	DURATION_MILLIS: 800,
+	get DURATION_MILLIS() {
+		return preferences.getFastTransitionsMode() ? 500 : 800;
+	},
 	/**
 	 * The maximum distance a Panning Transition will travel before
 	 * teleporting mid-transition to reach its destination in constant time,
 	 * in world space units (not affected by board scale).
 	 */
-	MAX_PAN_DISTANCE: 90,
+	get MAX_PAN_DISTANCE() {
+		return preferences.getFastTransitionsMode() ? 45 : 90;
+	},
 } as const;
 
 /** Stores config for Zooming Transitions. */
 const ZOOM_TRANSITION_CONFIG = {
 	/** The minimum duration any zooming transition must take. */
-	MIN_DURATION: 600, // Default: 600
+	get MIN_DURATION() {
+		return preferences.getFastTransitionsMode() ? 400 : 600;
+	},
 	/** The maximum duration any zooming transition can take. */
-	MAX_DURATION: 3500,
+	get MAX_DURATION() {
+		return preferences.getFastTransitionsMode() ? 1200 : 3500;
+	},
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
 	DURATION_PERSPECTIVE_MULTIPLIER: 1.3,
 	/** The "comfortable" acceleration used for the start and end of the 2 & 3 stage models. */
-	EDGE_ACCELERATION: 40.0, // Default: 40.0
+	get EDGE_ACCELERATION() {
+		return preferences.getFastTransitionsMode() ? 80.0 : 40.0;
+	},
 	/** How the total duration of the 3-Stage Model is split between them. MUST sum to 1.0. */
 	STAGE_SPLIT: {
 		ACCELERATE: 0.25, // 25% of time accelerating scale
@@ -279,7 +290,7 @@ function startZoomTransition(
 
 /** Sets up the C-Infinity 1-Stage Model for the current zoom transition. */
 function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration: number): void {
-	// console.log("Using C-Infinity 1-Stage Model");
+	// console.log('Using C-Infinity 1-Stage Model');
 	zoomModel = 'C_INF';
 
 	// Add the base duration to the natural duration, and cap at the long zoom duration.
@@ -300,7 +311,7 @@ function setupCInfinityModel(natural_duration_c_inf_millis: number, maxDuration:
 /** Sets up the C¹ 2-Stage Model for the current zoom transition. */
 function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: number): void {
 	// --- CASE B: C¹ 2-STAGE MODEL (Velocity Continuous) ---
-	// console.log("Using C¹ 2-Stage Model");
+	// console.log('Using C¹ 2-Stage Model');
 	zoomModel = 'C_ONE_2_STAGE';
 
 	durationMillis = natural_duration_c_one_millis;
@@ -323,7 +334,7 @@ function setupCOne2StageModel(natural_duration_c_one_millis: number, edgeAccel: 
 /** Sets up the C¹ 3-Stage Model for the current zoom transition. */
 function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 	// --- CASE C: 3-STAGE MODEL ---
-	// console.log("Using C¹ 3-Stage Model");
+	// console.log('Using C¹ 3-Stage Model');
 	zoomModel = 'C_ONE_3_STAGE';
 
 	durationMillis = maxDuration;

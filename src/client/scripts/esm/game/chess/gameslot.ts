@@ -40,12 +40,12 @@ import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gameloader from './gameloader.js';
-import spritesheet from '../rendering/spritesheet.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
+import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -121,7 +121,7 @@ function isLoadedGameViewingWhitePerspective(): boolean {
  * Loads a gamefile onto the board.
  *
  * This loads the logical stuff first, then returns a PROMISE that resolves
- * when the GRAPHICAL stuff is finished loading (such as the spritesheet).
+ * when the GRAPHICAL stuff is finished loading (such as piece textures).
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<void> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
@@ -167,8 +167,8 @@ function loadLogical(loadOptions: LoadOptions): void {
 	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (
-		pieceCount > arrows.pieceCountToDisableArrows ||
-		loadedGamefile.boardsim.pieces.slides.length > arrows.lineCountToDisableArrows
+		pieceCount > arrows.MAX_PIECES ||
+		loadedGamefile.boardsim.pieces.slides.length > arrows.MAX_LINES
 	)
 		arrows.setMode(0);
 
@@ -191,10 +191,9 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
-	await spritesheet.initSpritesheetForGame(gl, loadedGamefile!.boardsim);
 	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
-	// MUST BE AFTER creating the spritesheet, as we won't have the SVGs fetched before then.
+	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
@@ -252,8 +251,8 @@ function startStartingTransition(): void {
 	);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
-	const amount = bd.fromNumber(1.75); // We start 1.75x zoomed in then normal, then transition into 1x
-	const startScale = bd.multiply(centerArea.scale, amount);
+	const INITIAL_ZOOM_MULTIPLIER = preferences.getFastTransitionsMode() ? 1.4 : 1.75; // We start 1.75x zoomed in then normal, then transition into 1x
+	const startScale = bd.multiply(centerArea.scale, bd.fromNumber(INITIAL_ZOOM_MULTIPLIER));
 	boardpos.setBoardScale(startScale);
 	guinavigation.recenter();
 	Transition.eraseTelHist();
