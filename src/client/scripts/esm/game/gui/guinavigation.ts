@@ -9,6 +9,7 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import boardlimits from '../../../../../shared/util/boardlimits.js';
 
 import toast from './toast.js';
 import stats from './stats.js';
@@ -59,19 +60,7 @@ const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
 
-/**
- * A limit posed against teleporting too far.
- *
- * Don't want players to discover new zones quickly
- * without doing the work of zooming out :)
- * That would decrease the reward.
- *
- * FUTURE: I could allow teleporting up to 1e10000.
- * I roughly determined 1e75000 to be the bound for
- * no noticeable lag in websocket message size.
- * That would still prevent instantly exceeding that.
- */
-const TELEPORT_LIMIT: bigint = 10n ** 30n; // 10^30 squares
+const { TELEPORT_LIMIT } = boardlimits;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
