@@ -15,6 +15,7 @@
  * I roughly determined 1e75000 to be the bound for
  * no noticeable lag in websocket message size.
  * That would still prevent instantly exceeding that.
+ * However, 1e10000 also experiences noticeable frame drops.
  */
 const TELEPORT_LIMIT = 10n ** 30n; // 10^30 squares
 
