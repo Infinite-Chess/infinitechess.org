@@ -79,7 +79,7 @@ Do not opt for "band-aid" patches for bugs that only patch symptoms. Bugs are a 
 
 ### Functions
 
-Should have one single purpose. If it does multiple things, refactor it out into multiple functions. Aim for under 40 lines.
+Should have one single purpose. If it does multiple things, refactor it out into multiple functions, even if those functions are only called once. Aim for under 40 lines, but it is not mandatory.
 
 Require atleast one sentence of JSDoc. Do not make the documentation too verbose.
 
