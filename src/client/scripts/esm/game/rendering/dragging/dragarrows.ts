@@ -355,7 +355,7 @@ function render(): void {
 
 /**
  * Renders two animated arrowhead triangles on either side of the candidate arrow indicator,
- * perpendicular to the arrow direction, while awaiting drag activation.
+ * parallel to the edge of the screen the arrow is next to, while awaiting drag activation.
  */
 function renderCandidateArrows(): void {
 	if (!candidate || isDragActive) return;
@@ -441,14 +441,11 @@ function renderSlideZone(): void {
 	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
 		guigameinfo.getHeightOfGameInfoBar(),
 	);
-	// prettier-ignore
-	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor));
+
+	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor)); // prettier-ignore
 
 	if (maskData.length === 0) return;
 

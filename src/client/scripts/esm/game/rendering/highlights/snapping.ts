@@ -1,9 +1,11 @@
 // src/client/scripts/esm/game/rendering/highlights/snapping.ts
 
 /**
- * This script initiates teleports to all mini images and square annotes clicked.
- *
- * It also manages all renderd entities when zoomed out.
+ * This script:
+ * * Enables mouse-ray snapping to pieces, square annotes, and other rays when zoomed out,
+ * making it easy to line up long distance shots without having to do big number math.
+ * * Manages all renderd entities when zoomed out.
+ * * Initiates teleports to all mini images and square annotes clicked.
  */
 
 import type { Line } from './highlightline.js';
@@ -317,8 +319,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// Minimal snapping vectors
 	// prettier-ignore
 	const searchVectors = boardsim.pieces.hippogonalsPresent ? [
-				...vectors.VECTORS_ORTHOGONAL,
-				...vectors.VECTORS_DIAGONAL,
+		...vectors.VECTORS_ORTHOGONAL,
+		...vectors.VECTORS_DIAGONAL,
 		...vectors.VECTORS_HIPPOGONAL
 	] : [
 		...vectors.VECTORS_ORTHOGONAL,
