@@ -20,7 +20,7 @@ Adding/removing package dependancies.
 
 Type or variable renames spanning several files (time consuming for me to review, but taking one minute to make the changes myself).
 
-Massive refactors covering dozens of files in the codebase, unless it's required to fulfill the prompt.
+Massive refactors covering dozens of files in the codebase (allowed if you are an AI agent and it is required to fulfill the user's prompt).
 
 ## Code Standards
 
