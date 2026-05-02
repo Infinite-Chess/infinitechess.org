@@ -18,7 +18,7 @@ import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
-import boardlimits from '../../../shared/util/boardlimits.js';
+import gameconfig from '../../../shared/util/gameconfig.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
@@ -42,9 +42,8 @@ type SubmitMoveMessage = z.infer<typeof submitmoveschem>;
 
 /** The number of additional coordinate digits allowed per second of game duration. */
 const DIGITS_PER_SECOND = 4.5;
-
-/** The number of digits in the maximum teleport coordinate, cached at module load. */
-const TELEPORT_LIMIT_DIGITS = bimath.countDigits(boardlimits.TELEPORT_LIMIT);
+/** The number of digits in the maximum teleport coordinate. */
+const TELEPORT_LIMIT_DIGITS = bimath.countDigits(gameconfig.TELEPORT_LIMIT);
 
 /**
  *
@@ -257,8 +256,6 @@ function getMaxAllowedCoordinateDigits(gameStartTime: number): number {
 	const baselineDigits = 1;
 	const extraDigits = gameElapsedSeconds * DIGITS_PER_SECOND;
 
-	// Add the number of digits in TELEPORT_LIMIT to account for players instantly
-	// teleporting to that distance via the coordinate field at the start of the game.
 	return Math.floor(baselineDigits + extraDigits) + TELEPORT_LIMIT_DIGITS;
 }
 

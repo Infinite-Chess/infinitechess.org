@@ -1,8 +1,7 @@
-// src/shared/util/boardlimits.ts
+// src/shared/util/gameconfig.ts
 
 /**
- * This module contains shared board limit constants
- * used by both the client and server.
+ * Shared game configuration constants used by both the client and server.
  */
 
 /**
@@ -16,9 +15,8 @@
  * I roughly determined 1e75000 to be the bound for
  * no noticeable lag in websocket message size.
  * That would still prevent instantly exceeding that.
- * However, 1e10000 also experiences noticeable frame drops.
  */
-const TELEPORT_LIMIT: bigint = 10n ** 30n; // 10^30 squares
+const TELEPORT_LIMIT = 10n ** 30n; // 10^30 squares
 
 export default {
 	TELEPORT_LIMIT,

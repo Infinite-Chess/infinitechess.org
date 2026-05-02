@@ -9,7 +9,7 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import boardlimits from '../../../../../shared/util/boardlimits.js';
+import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import toast from './toast.js';
 import stats from './stats.js';
@@ -59,8 +59,6 @@ const element_moveForward = document.getElementById('move-right')!;
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
 const element_pause = document.getElementById('pause')!;
-
-const { TELEPORT_LIMIT } = boardlimits;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -391,7 +389,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 		return;
 	}
 
-	if (bimath.abs(proposed) > TELEPORT_LIMIT) {
+	if (bimath.abs(proposed) > gameconfig.TELEPORT_LIMIT) {
 		toast.show(translations['coords-exceeded'], { error: true });
 		return;
 	}
