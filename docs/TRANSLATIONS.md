@@ -1,5 +1,8 @@
 # Translation guide
 
+> [!IMPORTANT]
+> The website is shortly undergoing a large redesign. At the same time, we will overhaul the translation system and reset all language translations, as the text everywhere on the website will have changed dramatically. Because of this, new translators may want to wait until after this redesign is completed, so a lot of your work isn't wasted.
+
 This guide will walk you through the process of translating [InfiniteChess.org](https://www.infinitechess.org) into another language.
 
 [← Back to README](../README.md) | [Setup Guide](./SETUP.md) | [Contributing Guide](./GUIDELINES.md) | [Translation Directory](../translation/) | [English TOML](../translation/en-US.toml) | [Changelog](../translation/changes.json) | [English News Posts](../translation/news/en-US/)
