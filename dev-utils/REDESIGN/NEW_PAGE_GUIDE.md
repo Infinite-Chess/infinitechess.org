@@ -91,5 +91,4 @@ No route entry needed. The component's CSS link goes in `{% block style %}` on p
 
 ## Missing Context
 
-
 If during your designing, you had to spend a considerable amount of tokens deducing further needed context, that would apply to future agents designing other pages, and that would have been much more easily be obtained from this guide, then please update this guide! But keep the new information concise and compact.
