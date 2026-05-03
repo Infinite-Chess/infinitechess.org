@@ -28,12 +28,12 @@
 
 ## Page Redesigns
 
-*Each page: new Nunjucks template extending `layout.njk`, new colocated CSS file, updated route handler with full SSR context, and updated/new TS where needed.*
+*Each page: new Nunjucks template extending `layout.njk`, new CSS file in `src/client/css/`, updated route handler with full SSR context, and updated/new TS where needed.*
 
 **Working with pages during the redesign:**
-- **Redesigning a page** — replace its placeholder `.njk` stub with the real template; add a colocated CSS file and an esbuild entry point.
+- **Redesigning a page** — replace its placeholder `.njk` stub with the real template; add a CSS file in `src/client/css/` and an esbuild entry point.
 - **Removing a page** — delete its `.njk`, its CSS, and its entry point together; remove the route from `root.ts`.
-- **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a colocated CSS file, add an esbuild entry point.
+- **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a CSS file in `src/client/css/`, add an esbuild entry point.
 
 - Redesign the **home (index)** page.
 
@@ -58,9 +58,3 @@
 - Consider `@view-transition` if there's white flashes between page loads.
 
 - Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
-
----
-
-## Cleanup Checklist
-
-- Uninstall ejs and its types

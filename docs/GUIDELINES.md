@@ -115,6 +115,6 @@ When writing names, keep context in mind. For example, a script whos responsibil
 
 ## Static Asset Cache Busting
 
-JS and CSS files emitted by esbuild are content-hashed (e.g. `landing-D3TD6A64.js`, `global-A1B2C3D4.css`) and served with `Cache-Control: immutable`. The hash changes automatically whenever the file content changes, so browsers always fetch the latest version.
+JS and CSS files emitted by esbuild are content-hashed (e.g. `index-D3TD6A64.js`, `global-A1B2C3D4.css`) and served with `Cache-Control: immutable`. The hash changes automatically whenever the file content changes, so browsers always fetch the latest version.
 
-All other static assets — images, fonts, and audio — are served with `Cache-Control: max-age=31536000` (no `immutable`). **When any of these files change, you must append or bump a `?v=N` query string on every reference to that file in Nunjucks templates** (e.g. `<img src="/img/logo.png?v=2">`). This forces browsers to treat it as a new URL and fetch the updated file instead of using their cached copy.
+All other static assets — images, svgs, fonts, and audio — are served with `Cache-Control: max-age=31536000` (no `immutable`). **When any of these files change, you must append or bump a `?v=N` query string on every reference to that file in Nunjucks templates** (e.g. `<img src="/img/logo.png?v=2">`). This forces browsers to treat it as a new URL and fetch the updated file instead of using their cached copy.
