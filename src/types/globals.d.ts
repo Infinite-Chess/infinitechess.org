@@ -5,7 +5,7 @@ import type { TranslationsObject } from './translations';
 
 /**
  * Client-side translations subset.
- * EJS templates use spread operators to flatten nested translation objects.
+ * Nunjucks templates spread nested translation objects into the global translations namespace.
  * For example, `...t('play.javascript', {returnObjects: true})` spreads all properties
  * from `play.javascript` directly into the global translations object.
  */
@@ -21,7 +21,7 @@ type ClientTranslations = TranslationsObject['index']['javascript'] &
 
 declare global {
 	/**
-	 * Global translations object injected by EJS templates.
+	 * Global translations object injected by Nunjucks templates.
 	 * Contains flattened translation properties from various sections.
 	 * The actual shape varies by page, but this represents the union of all possible translations.
 	 */

@@ -2,37 +2,7 @@
 
 ---
 
-## Build Pipeline
-
-- Add `entryNames: '[dir]/[name]-[hash]'` to the esbuild client build options in `build/client.ts` so JS and CSS output filenames are content-hashed.
-
-- Add `metafile: true` to the esbuild client build and write a `writeManifest()` post-build function that reads esbuild's input→output map and writes `dist/manifest.json`.
-
-- At server startup, load `dist/manifest.json` and expose the hashed filenames to the Nunjucks render context so templates can reference them.
-
-- Update static asset middleware: serve hashed JS/CSS with `Cache-Control: immutable, max-age=31536000`; serve HTML with `Cache-Control: no-store`; serve images/fonts with `Cache-Control: max-age=31536000` (without `immutable`).
-
-- Add to the Pull Request Requirements and Guidelines that whenever an image or font asset changes, we must append a `?v=2` manually in the template so browsers know to fetch the new version instead of using the cached one. (Not needed for JS/CSS since those are content-hashed).
-
----
-
-## Nunjucks Migration
-
-- Delete `build/views.ts`; remove the `copy:views` script from `package.json`; remove `src/client/views` from `nodemon.json`'s watch list.
-
-- Migrate all existing route handlers from `res.sendFile()` to `res.render()`, pointing each to a minimal placeholder `.njk` file that extends `layout.njk`. This keeps the site functional while individual pages are redesigned.
-
----
-
 ## CSS Foundation
-
-- Create the shared stylesheet (`src/client/css/global.css`) with some CSS custom property variables for both `[data-theme="dark"]` and `[data-theme="light"]` (e.g. `--c-bg`, `--c-surface`, `--c-text`, `--c-brand`, `--c-border`).
-
-- Add the inline `<script>` to `layout.njk <head>` that reads `localStorage` and sets `data-theme` on `<html>` before any CSS loads, preventing a flash of the wrong theme.
-
-- Create a `@font-face` declaration for Noto Sans and the font-stack CSS into the shared stylesheet.
-
-- Ensure our middleware is capable of serving fonts, with the same cache-control as other static assets.
 
 - Add other CSS rules we think will be shared across all pages.
 
@@ -54,8 +24,6 @@
 
 - Implement logout-in-another-tab handling: on all socket-connected pages, call `window.location.reload()` when the socket logout event is received so the server re-renders the correct logged-out state.
 
-- Install `snabbdom` — required before any page that uses it for reactive lists.
-
 ---
 
 ## Page Redesigns
@@ -64,7 +32,7 @@
 
 - Redesign the **home (index)** page.
 
-- Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initla batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
+- Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
 
 - Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
 

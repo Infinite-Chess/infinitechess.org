@@ -79,7 +79,7 @@ export default [
 				...globals.browser, // Defines all browser environment variables for the game code
 				// Game code scripts are considered public variables
 				// MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.
-				translations: 'readonly', // Injected into the html through ejs
+				translations: 'readonly', // Injected into the html by Nunjucks templates
 				header: 'readonly',
 				htmlscript: 'readonly',
 				EventListener: 'readonly',

@@ -66,7 +66,7 @@ function loadTranslations(): Translations {
 
 	// Deep-merge the English (fallback) translations into every other language so that
 	// missing nested keys are always present. i18next's fallbackLng only handles leaf-key
-	// lookups; when an EJS template calls t('some.section', { returnObjects: true }) it
+	// lookups; when a Nunjucks template calls t('some.section', { returnObjects: true }) it
 	// receives the language's partial object with no further fallback for missing sub-trees.
 	const englishTranslations = translations[DEFAULT_LANGUAGE]!.default;
 	for (const [languageCode, languageTranslations] of Object.entries(translations)) {
