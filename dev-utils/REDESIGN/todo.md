@@ -30,6 +30,11 @@
 
 *Each page: new Nunjucks template extending `layout.njk`, new colocated CSS file, updated route handler with full SSR context, and updated/new TS where needed.*
 
+**Working with pages during the redesign:**
+- **Redesigning a page** — replace its placeholder `.njk` stub with the real template; add a colocated CSS file and an esbuild entry point.
+- **Removing a page** — delete its `.njk`, its CSS, and its entry point together; remove the route from `root.ts`.
+- **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a colocated CSS file, add an esbuild entry point.
+
 - Redesign the **home (index)** page.
 
 - Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
