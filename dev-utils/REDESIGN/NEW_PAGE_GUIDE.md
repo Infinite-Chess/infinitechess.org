@@ -2,6 +2,8 @@
 
 Quick reference for agents designing or redesigning a page.
 
+Old pages used the old EJS + static HTML approach (now completely removed). New pages should follow the new Nunjucks + SSR approach outlined here.
+
 ---
 
 ## File Checklist
