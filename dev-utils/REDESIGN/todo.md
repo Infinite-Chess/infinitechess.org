@@ -2,25 +2,11 @@
 
 ---
 
-## CSS Foundation
-
-- Add other CSS rules we think will be shared across all pages.
-
----
-
-## Translation System Refactor
-
-- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
-
----
-
 ## Shared Components
 
-*All page redesigns depend on these being done first.*
+- Build a **minimal functional header** (`src/client/components/header/`) — logo, auth state (logged-in vs logged-out), and nav links for the pages known to exist. CSS-only responsive layout, no JS measurement. Server passes auth state via `req.memberInfo`. Nav items can be updated later as the page set becomes clearer.
 
-- Redesign and implement the shared header component (`src/client/components/header/`) — Nunjucks partial, CSS (CSS-only responsive layout, no JS measurement), and TS. Server receives auth state via `req.memberInfo` and passes it to the template.
-
-- Redesign and implement the shared footer component — Nunjucks partial and CSS.
+- Build the **shared footer** — Nunjucks partial and CSS.
 
 - Implement logout-in-another-tab handling: on all socket-connected pages, call `window.location.reload()` when the socket logout event is received so the server re-renders the correct logged-out state.
 
@@ -28,7 +14,7 @@
 
 ## Page Redesigns
 
-*Each page: new Nunjucks template extending `layout.njk`, new CSS file in `src/client/css/`, updated route handler with full SSR context, and updated/new TS where needed.*
+*Each page: new Nunjucks template extending `layout.njk`, new CSS file in `src/client/css/`, updated route handler with full SSR context, and updated/new TS where needed. Add shared CSS rules to `global.css` as you encounter the need for them.*
 
 **Working with pages during the redesign:**
 - **Redesigning a page** — replace its placeholder `.njk` stub with the real template; add a CSS file in `src/client/css/` and an esbuild entry point.
@@ -42,6 +28,14 @@
 - Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
 
 - Add the **Privacy Policy** page — English only, same approach as ToS.
+
+---
+
+## Translation System Refactor
+
+*Do this incrementally alongside page redesigns — add new keys in the right component as each page is built; don't migrate old keys upfront.*
+
+- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
 
 ---
 
