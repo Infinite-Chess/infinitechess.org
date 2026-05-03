@@ -4,7 +4,7 @@
     {# Reads the saved UI color scheme from localStorage and applies it before CSS loads,
        preventing a flash of the wrong theme on initial page paint.
        Falls back to the SSR default of "dark" when no preference is stored. #}
-    <script>(function()var t=localStorage.getItem('color-scheme');if(t){document.documentElement.setAttribute('data-theme',t)})()</script>
+    <script>(function(){var t=localStorage.getItem('color-scheme');if(t){document.documentElement.setAttribute('data-theme',t)}})()</script>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,7 +15,7 @@
     <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" />
 
     {# Global stylesheet: CSS variables, font-face, and shared utility classes #}
-    <link rel="stylesheet" href="/css/global.css" />
+    <link rel="stylesheet" href="{{ manifest['css/global'] }}" />
 
     {# Page-specific stylesheet #}
     {% block style %}{% endblock %}
