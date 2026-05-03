@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const MANIFEST_PATH = path.join(__dirname, '../../manifest.json');
+const MANIFEST_PATH = path.join(process.cwd(), 'dist/manifest.json');
 
 /**
  * Configures Nunjucks as the view engine for the given Express app,
@@ -37,7 +37,6 @@ export function configureNunjucks(app: Application): void {
 	// names to their output paths, which are content-hashed.
 	if (!fs.existsSync(MANIFEST_PATH))
 		throw new Error('Manifest file not found. Did we build first?');
-	const rawManifest = fs.readFileSync(MANIFEST_PATH, 'utf8');
-	const manifest = JSON.parse(rawManifest);
+	const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
 	nunjucksEnv.addGlobal('manifest', manifest);
 }
