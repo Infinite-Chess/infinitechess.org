@@ -163,7 +163,8 @@ export function configureMiddleware(app: Express): void {
 		express.static(path.join(__dirname, '../../client'), {
 			setHeaders(res, filePath) {
 				if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-					// Content-hashed files are cached immutably forever — the hash changes when content changes.
+					// All JS and CSS files are content-hashed by esbuild (e.g. index-D3TD6A64.js).
+					// The hash changes when content changes, so cached URLs never go stale.
 					res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 				} else {
 					// Other static assets (images, svgs, audio, fonts) are cached for 1 year

@@ -26,22 +26,27 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * into their own bundle!
  */
 const ESMEntryPoints = [
-	'src/client/scripts/esm/game/main.ts',
-	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
-	'src/client/scripts/esm/components/header/header.ts',
+	// Stylesheets — bundled as content-hashed CSS entry points.
+	'src/client/css/global.css',
+
+	// Scripts
 	'src/client/scripts/esm/views/index.ts',
-	'src/client/scripts/esm/views/member.ts',
-	'src/client/scripts/esm/views/leaderboard.ts',
-	'src/client/scripts/esm/views/login.ts',
-	'src/client/scripts/esm/views/news.ts',
-	'src/client/scripts/esm/views/createaccount.ts',
-	'src/client/scripts/esm/views/resetpassword.ts',
-	'src/client/scripts/esm/views/guide.ts',
-	'src/client/scripts/esm/views/admin.ts',
-	'src/client/scripts/esm/views/icnvalidator.ts',
-	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
-	'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
-	'src/client/scripts/esm/workers/icnvalidator.worker.ts',
+
+	// 'src/client/scripts/esm/game/main.ts',
+	// 'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
+	// 'src/client/scripts/esm/components/header/header.ts',
+	// 'src/client/scripts/esm/views/member.ts',
+	// 'src/client/scripts/esm/views/leaderboard.ts',
+	// 'src/client/scripts/esm/views/login.ts',
+	// 'src/client/scripts/esm/views/news.ts',
+	// 'src/client/scripts/esm/views/createaccount.ts',
+	// 'src/client/scripts/esm/views/resetpassword.ts',
+	// 'src/client/scripts/esm/views/guide.ts',
+	// 'src/client/scripts/esm/views/admin.ts',
+	// 'src/client/scripts/esm/views/icnvalidator.ts',
+	// 'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+	// 'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
+	// 'src/client/scripts/esm/workers/icnvalidator.worker.ts',
 ];
 
 /** CommonJS modules imported by html pages. */
@@ -141,7 +146,7 @@ function writeManifest(metafile: Metafile): void {
 		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
 		const key = output.entryPoint
 			.replace(/^src\/client\//, '') // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
-			.replace(/\.[jt]s$/, ''); // strip extension
+			.replace(/\.\w+$/, ''); // strip extension (.ts, .js, .css)
 		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
 	}
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
@@ -150,7 +155,7 @@ function writeManifest(metafile: Metafile): void {
 const ESMBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: ESMEntryPoints,
-	outdir: './dist/client/scripts/esm',
+	outdir: './dist/client',
 	/**
 	 * Enable code splitting, which means if multiple entry points require the same module,
 	 * that dependancy will be separated out of both of them which means it isn't duplicated,
@@ -164,6 +169,9 @@ const ESMBuildOptions: BuildOptions = {
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	loader: { '.wasm': 'file' },
+	// Font URLs in CSS (e.g. @font-face url('/fonts/...')) are absolute web paths — mark them
+	// external so esbuild doesn't try to resolve them as files on disk.
+	external: ['/fonts/*'],
 	metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
 };
 
