@@ -28,9 +28,9 @@ Quick reference for agents designing or redesigning a page.
 {% endblock %}
 
 {% block body %}
+{% include "components/header/header.njk" %}
 <main class="<page>">
   <!-- content -->
-  {% include "components/header/header.njk" %}
 </main>
 {% endblock %}
 
@@ -39,33 +39,17 @@ Quick reference for agents designing or redesigning a page.
 {% endblock %}
 ```
 
-`lang`, `dir`, and `manifest` are available in every template automatically — do not pass them manually.
+`lang` and `manifest` are available in every template automatically — do not pass them manually.
 
 ---
 
 ## SSR Context
 
-`req.memberInfo` contains auth state (set by `verifyJWT` middleware). Here's the type:
-```ts
-type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
-
-type SignedInMemberInfo = {
-	signedIn: true;
-	user_id: number;
-	username: string;
-	roles: Role[] | null;
-	browser_id?: string;
-};
-
-type SignedOutMemberInfo = {
-	signedIn: false;
-	browser_id?: string;
-};
-```
+`req.memberInfo` contains auth state (set by `verifyJWT` middleware). It can be used directly in templates to conditionally elements depending on login state.
 Pass what the template needs as the second argument to `res.render()`:
-  ```ts
-  res.render('page.njk', { username: req.memberInfo?.username });
-  ```
+```ts
+res.render('page.njk', { memberInfo: req.memberInfo });
+```
 
 **Rule:** SSR everything that affects the first paint (header auth state, profile data, notification count, "NEW" badges). Use client-side fetching only for things triggered by user interaction or that need live updates.
 
@@ -89,3 +73,23 @@ Hashed asset URLs are looked up by their source path relative to `src/client/`, 
 | `src/client/css/index.css` | `manifest['css/index']` |
 | `src/client/scripts/esm/views/index.ts` | `manifest['scripts/esm/views/index']` |
 | `src/client/css/global.css` | `manifest['css/global']` — already in `layout.njk` |
+
+---
+
+## Creating a Component (header, footer, etc.)
+
+Components have no route. CSS is colocated with the template. Pages include them with `{% include %}`.
+
+| File | Location |
+|------|----------|
+| Nunjucks partial | `src/server/views/components/<name>/<name>.njk` |
+| Component CSS | `src/client/components/<name>/<name>.css` |
+
+No route entry needed. The component's CSS link goes in `{% block style %}` on pages that use it, or directly in `layout.njk` if used on every page.
+
+---
+
+## Missing Context
+
+
+If during your designing, you had to spend a considerable amount of tokens deducing further needed context, that would apply to future agents designing other pages, and that would have been much more easily be obtained from this guide, then please update this guide! But keep the new information concise and compact.
