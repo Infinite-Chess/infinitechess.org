@@ -22,6 +22,7 @@
 - GitHub
 - Discord
 - Youtube
+- Credits
 
 
 ## Homepage
