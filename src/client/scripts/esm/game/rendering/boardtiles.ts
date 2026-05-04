@@ -98,7 +98,7 @@ let darkTiles: Color;
 // Add event listener for theme changes
 document.addEventListener('theme-change', (_event) => {
 	// Custom Event listener.
-	console.log(`Theme change event detected: ${preferences.getTheme()}`);
+	console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
 	updateTheme();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
@@ -348,7 +348,7 @@ function updateNavColor(): void {
 	let navG = 255;
 	let navB = 255;
 
-	if (preferences.getTheme() !== 'white') {
+	if (preferences.getBoardColor() !== 'white') {
 		const brightAmount = 0.6; // 50% closer to white
 		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
 		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;

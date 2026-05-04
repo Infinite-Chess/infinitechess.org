@@ -159,9 +159,9 @@ function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 
 /** Updates the stylesheet colors --background-theme-color and --switch-on-color based on the current theme. */
 function updateBackgroundColor(): void {
-	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
-	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
+	const boardColor = preferences.getBoardColor();
+	const lightTiles = themes.getPropertyOfTheme(boardColor, 'lightTiles');
+	const darkTiles = themes.getPropertyOfTheme(boardColor, 'darkTiles');
 
 	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
 	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
