@@ -14,6 +14,11 @@ const button = document.querySelector<HTMLButtonElement>('.header-hamburger')!;
 const panel = document.getElementById('header-mobile-panel')!;
 const overlay = document.querySelector<HTMLElement>('.header-mobile-overlay')!;
 
+(function init() {
+	initHamburger();
+	initNavDropdowns();
+})();
+
 function initHamburger(): void {
 	const setOpen = (open: boolean): void => {
 		panel.classList.toggle('open', open);
@@ -30,7 +35,17 @@ function initHamburger(): void {
 	});
 }
 
-initHamburger();
+/** Makes it so clicking nav links with dropdowns doesn't leave them open when the mouse leaves. */
+function initNavDropdowns(): void {
+	const btns = Array.from(
+		document.querySelectorAll<HTMLElement>('.header-dropdown-parent .header-nav-link'),
+	);
+	btns.forEach((btn) => {
+		btn.addEventListener('pointerdown', (e: PointerEvent) => {
+			e.preventDefault();
+		});
+	});
+}
 
 // OVERRIDE the viewport height variable in CSS based on how much screen space
 // the home button bar takes up on mobile devices — 100vh alone is incorrect.
