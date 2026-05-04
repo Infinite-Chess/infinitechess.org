@@ -17,8 +17,8 @@
 
 @font-face {
 	font-family: 'Noto Sans';
-	src: url('/fonts/noto-sans-v42-latin-regular.woff2') format('woff2');
-	font-weight: 400;
+	src: url('/fonts/noto-sans-latin.woff2') format('woff2');
+	font-weight: 100 900;
 	font-style: normal;
 	font-display: swap; /* Show fallback font immediately; swap in Noto Sans once loaded */
 }
