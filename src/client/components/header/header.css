@@ -55,14 +55,8 @@
 .header-logo-glyph,
 .header-logo-shadow {
 	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 45px;
-	font-weight: 700;
-	line-height: 1;
-	pointer-events: none;
+	height: 50px;
+	bottom: 15%;
 }
 
 .header-logo-shadow {

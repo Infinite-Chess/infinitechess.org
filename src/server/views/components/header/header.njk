@@ -5,6 +5,9 @@
 		<symbol id="svg-pawn" viewBox="0 0 45 45">
 			<path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
 		</symbol>
+		<symbol id="svg-omega" viewBox="0 0 1645 2048">
+			<path fill="currentColor" stroke="currentColor" stroke-width="40" stroke-linejoin="round" paint-order="stroke fill" d="M637 2048H109V1877H435Q262 1715 204.5 1554.0Q147 1393 147 1238Q147 1022 234.5 827.5Q322 633 471.0 541.5Q620 450 823 450Q1024 450 1175.0 543.5Q1326 637 1412.0 829.0Q1498 1021 1498 1238Q1498 1393 1441.0 1554.0Q1384 1715 1211 1877H1536V2048H1009V1877Q1135 1778 1211.5 1605.5Q1288 1433 1288 1252Q1288 1073 1225.5 910.5Q1163 748 1059.0 676.5Q955 605 823 605Q690 605 585.5 678.0Q481 751 419.0 911.0Q357 1071 357 1252Q357 1433 433.5 1605.5Q510 1778 637 1877Z"/>
+		</symbol>
 	</svg>
 
 	{# Hamburger toggle - only visible on narrow screens via CSS. #}
@@ -16,9 +19,9 @@
 
 	<a class="header-home" href="/" aria-label="Infinite Chess home">
 		<span class="header-logo" aria-hidden="true">
-			<span class="header-logo-glyph">Ω</span>
-			<span class="header-logo-shadow header-logo-shadow-a">Ω</span>
-			<span class="header-logo-shadow header-logo-shadow-b">Ω</span>
+			<svg class="header-logo-glyph" viewBox="0 0 1645 2048"><use href="#svg-omega"/></svg>
+			<svg class="header-logo-shadow header-logo-shadow-a" viewBox="0 0 1645 2048"><use href="#svg-omega"/></svg>
+			<svg class="header-logo-shadow header-logo-shadow-b" viewBox="0 0 1645 2048"><use href="#svg-omega"/></svg>
 		</span>
 		<span class="header-sitename">Infinite&nbsp;Chess</span>
 	</a>
