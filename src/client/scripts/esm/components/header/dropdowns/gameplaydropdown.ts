@@ -6,8 +6,6 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
-
 const gameplayDropdown = document.querySelector('.gameplay-dropdown')!;
 const gameplayDropdownTitle = document.querySelector('.gameplay-dropdown .dropdown-title')!;
 
@@ -40,12 +38,10 @@ function showCheckmarkOnSelectedOptions(): void {
 function open(): void {
 	gameplayDropdown.classList.remove('visibility-hidden');
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
 	gameplayDropdown.classList.add('visibility-hidden');
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {

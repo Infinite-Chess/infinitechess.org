@@ -2,15 +2,21 @@
 
 import express, { NextFunction, Request, Response } from 'express';
 
+import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
 
 const router = express.Router();
 
-// Resolve the user's language once per request and expose it as res.locals.lang.
+// Page routes need auth state for SSR (header shows Profile/Logout vs Login/Register).
+// verifyJWT does DB work, so it's only attached to the routers that need it.
+router.use(verifyJWT);
+
+// Resolve the user's language and expose auth state to every template.
 // Nunjucks automatically merges res.locals into every template's render context,
-// so {{ lang }} is available in every template without passing it per-route.
+// so {{ lang }} and {{ memberInfo }} are available in every template.
 router.use((req: Request, res: Response, next: NextFunction) => {
 	res.locals['lang'] = getLanguageToServe(req);
+	res.locals['memberInfo'] = req.memberInfo;
 	next();
 });
 
@@ -28,6 +34,11 @@ router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.rend
 router.get('/member(.html)?/:member', (_req: Request, res: Response) => res.render('member.njk'));
 router.get('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
 router.get('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
+router.get('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
+router.get('/checkmate-practice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
+router.get('/analysis(.html)?', (_req: Request, res: Response) => res.render('analysis.njk'));
+router.get('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
+router.get('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
 // Error pages
 router.get('/400(.html)?', (_req: Request, res: Response) => res.render('errors/400.njk'));

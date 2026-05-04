@@ -8,8 +8,6 @@ import docutil from '../../../util/docutil.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
-
 const languageDropdown = document.querySelector('.language-dropdown')!;
 const dropdownItems = document.querySelectorAll('.language-dropdown-item');
 const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title')!;
@@ -65,12 +63,10 @@ function removeLngQueryParam(): void {
 function open(): void {
 	languageDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
 	languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {

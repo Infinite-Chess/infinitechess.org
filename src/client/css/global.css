@@ -60,13 +60,15 @@ body {
 
 [data-theme='dark'] {
 	--c-bg: rgb(33, 33, 33);
-	--c-surface: rgb(50, 50, 50);
-	--c-surface-2: rgb(65, 65, 65);
-	--c-text: rgb(220, 220, 220);
-	--c-text-muted: rgb(160, 160, 160);
+	--c-surface: rgb(35, 35, 35);
+	--c-surface-2: rgb(55, 55, 55);
+	--c-text: rgb(170, 170, 170);
+	--c-text-emphasis: rgb(220, 220, 220);
+	--c-text-muted: rgb(135, 135, 135);
 	--c-brand: rgb(97, 169, 255);
 	--c-brand-hover: rgb(130, 190, 255);
-	--c-border: rgb(80, 80, 80);
+	--c-border: rgb(60, 60, 60);
+	--c-border-2: rgb(100, 100, 100);
 	--c-link: rgb(97, 169, 255);
 	--c-link-hover: rgb(130, 190, 255);
 }
@@ -80,10 +82,12 @@ body {
 	--c-surface: rgb(255, 255, 255);
 	--c-surface-2: rgb(235, 235, 235);
 	--c-text: rgb(30, 30, 30);
+	--c-text-emphasis: rgb(0, 0, 0);
 	--c-text-muted: rgb(100, 100, 100);
 	--c-brand: rgb(0, 102, 204);
 	--c-brand-hover: rgb(0, 80, 170);
 	--c-border: rgb(200, 200, 200);
+	--c-border-2: rgb(150, 150, 150);
 	--c-link: rgb(0, 102, 204);
 	--c-link-hover: rgb(0, 80, 170);
 }

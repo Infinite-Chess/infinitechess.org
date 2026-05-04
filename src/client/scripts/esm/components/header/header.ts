@@ -1,101 +1,41 @@
 // src/client/scripts/esm/components/header/header.ts
 
-// This script contains the code related to the
-// header that runs on every single page
-
-import validatorama from '../../util/validatorama.js';
-import languagedropdown from './dropdowns/languagedropdown.js';
-
-import './spacing.js';
-import './settings.js';
-import './faviconselector.js';
-import './currpage-greyer.js';
-import './news-notification.js'; // Handles unread news badge
-import '../../util/tooltips.js'; // This should be imported on EVERY page!
-
-// --------------------------------------------------------------------------------------
-
-const loginLink = document.getElementById('login-link') as HTMLAnchorElement;
-const loginText = document.getElementById('login')!;
-const loginSVG = document.getElementById('svg-login')!;
-const profileText = document.getElementById('profile')!;
-const profileSVG = document.getElementById('svg-profile')!;
-const createaccountLink = document.getElementById('createaccount-link') as HTMLAnchorElement;
-const createaccountText = document.getElementById('createaccount')!;
-const createaccountSVG = document.getElementById('svg-createaccount')!;
-const logoutText = document.getElementById('logout')!;
-const logoutSVG = document.getElementById('svg-logout')!;
-
-(function init() {
-	initListeners();
-	updateNavigationLinks(); // Do this once initially
-})();
-
-function initListeners(): void {
-	window.addEventListener('pageshow', updateNavigationLinks); // Fired on initial page load AND when hitting the back button to return.
-	document.addEventListener('login', updateNavigationLinks); // Custom-event listener. Fired when the validator script receives a response from the server with either our access token or new browser-id cookie.
-	document.addEventListener('logout', updateNavigationLinks); // Custom-event listener. Often fired when a web socket connection closes due to us logging out.
-}
-
 /**
- * Changes the navigation links, depending on if we're logged in, to
- * go to our Profile or the Log Out route, or the Log In / Create Account pages.
+ * Site header runtime. Imported on every page via the layout.
+ *
+ * Manages the Learn/Tools dropdowns, and the hamburger menu on mobile,
+ * and updating the --vh CSS variable for mobile devices.
  */
-function updateNavigationLinks(): void {
-	const username = validatorama.getOurUsername();
-	if (username) {
-		// Logged in
-		loginText.classList.add('hidden');
-		loginSVG.classList.add('hidden');
-		createaccountText.classList.add('hidden');
-		createaccountSVG.classList.add('hidden');
-		profileText.classList.remove('hidden');
-		profileSVG.classList.remove('hidden');
-		logoutText.classList.remove('hidden');
-		logoutSVG.classList.remove('hidden');
 
-		loginLink.href = languagedropdown.addLngQueryParamToLink(
-			`/member/${username.toLowerCase()}`,
-		);
-		createaccountLink.href = languagedropdown.addLngQueryParamToLink('/logout');
-	} else {
-		// Not logged in
-		profileText.classList.add('hidden');
-		profileSVG.classList.add('hidden');
-		logoutSVG.classList.add('hidden');
-		logoutText.classList.add('hidden');
-		loginText.classList.remove('hidden');
-		loginSVG.classList.remove('hidden');
-		createaccountText.classList.remove('hidden');
-		createaccountSVG.classList.remove('hidden');
+import './settings.js';
+import '../../util/tooltips.js'; // Should be imported on EVERY page
 
-		loginLink.href = languagedropdown.addLngQueryParamToLink('/login');
-		createaccountLink.href = languagedropdown.addLngQueryParamToLink('/createaccount');
-	}
+const button = document.querySelector<HTMLButtonElement>('.header-hamburger')!;
+const panel = document.getElementById('header-mobile-panel')!;
+const overlay = document.querySelector<HTMLElement>('.header-mobile-overlay')!;
 
-	// Manually dispatch a window resize event so that our javascript knows to
-	// recalc the spacing/compactness of the header, as the items have changed their content.
-	document.dispatchEvent(new CustomEvent('resize'));
+function initHamburger(): void {
+	const setOpen = (open: boolean): void => {
+		panel.classList.toggle('open', open);
+		overlay.classList.toggle('open', open);
+		panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+		button.setAttribute('aria-expanded', open ? 'true' : 'false');
+	};
+
+	button.addEventListener('click', () => setOpen(!panel.classList.contains('open')));
+	overlay.addEventListener('click', () => setOpen(false));
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') setOpen(false);
+	});
 }
 
-// For every '.badge img' in the document, prevent long-press context menu
-// Specify <HTMLImageElement> so TS knows these are HTMLElements (which have 'contextmenu')
-document.querySelectorAll<HTMLImageElement>('.badge img').forEach((img) => {
-	// The native definition of contextmenu is MouseEvent.
-	img.addEventListener('contextmenu', (event: MouseEvent) => {
-		if (!(event instanceof PointerEvent)) return;
-		// Only prevent default if the context menu is triggered by touch or pen
-		if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-		console.log('Preventing context menu for badge image.');
-		event.preventDefault();
-	});
-});
+initHamburger();
 
-// OVERRIDE the viewport height variable in header.css based on how
-// much screen space the home button bar takes up on mobile devices!
-// Just using 100vh is incorrect as the home button bar doesn't affect that.
+// OVERRIDE the viewport height variable in CSS based on how much screen space
+// the home button bar takes up on mobile devices — 100vh alone is incorrect.
 updateViewportHeight();
-window.addEventListener('resize', () => updateViewportHeight());
+window.addEventListener('resize', updateViewportHeight);
 function updateViewportHeight(): void {
 	document.documentElement.style.setProperty('--vh', `${window.innerHeight}px`);
 }

@@ -6,8 +6,6 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown') as HTMLElement;
-
 const soundDropdown = document.querySelector('.sound-dropdown') as HTMLElement;
 const soundDropdownTitle = document.querySelector('.sound-dropdown .dropdown-title') as HTMLElement;
 
@@ -40,12 +38,10 @@ function setInitialValues(): void {
 function open(): void {
 	soundDropdown.classList.remove('visibility-hidden');
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
 	soundDropdown.classList.add('visibility-hidden');
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {

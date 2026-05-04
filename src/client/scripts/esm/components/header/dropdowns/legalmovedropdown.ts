@@ -8,8 +8,6 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
-
 const legalmoveDropdown = document.querySelector('.legalmove-dropdown')!;
 // const dropdownItems = document.querySelectorAll(".legalmove-option");
 const legalmoveDropdownTitle = document.querySelector('.legalmove-dropdown .dropdown-title')!;
@@ -34,12 +32,10 @@ function showCheckmarkOnSelectedOption(): void {
 function open(): void {
 	legalmoveDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
 	legalmoveDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {

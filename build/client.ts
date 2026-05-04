@@ -28,8 +28,10 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
 const ESMEntryPoints = [
 	// Stylesheets — bundled as content-hashed CSS entry points.
 	'src/client/css/global.css',
+	'src/client/components/header/header.css',
 
 	// Scripts
+	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index.ts',
 
 	// 'src/client/scripts/esm/game/main.ts',

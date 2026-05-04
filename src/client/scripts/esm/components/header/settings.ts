@@ -49,6 +49,7 @@ const allSettingsDropdownsExceptMainOne = [
 // Variables ---------------------------------------------------------------------------------
 
 const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
+const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
 let settingsIsOpen = settings.classList.contains('open');
 
 // Functions ---------------------------------------------------------------------------------
@@ -84,54 +85,57 @@ function openSettingsDropdown(): void {
 function closeAllSettingsDropdowns(): void {
 	// Closes all dropdowns that may be open
 	settings.classList.remove('open');
-	closeMainSettingsDropdown();
-	closeAllSettingsDropdownsExceptMainOne();
-	settingsIsOpen = false;
-}
-function closeMainSettingsDropdown(): void {
+
 	settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeSettingsListeners();
 	preferences.sendPrefsToServer();
-}
-function closeAllSettingsDropdownsExceptMainOne(): void {
+
 	languagedropdown.close();
 	appearancedropdown.close();
 	legalmovedropdown.close();
 	gameplaydropdown.close();
 	perspectivedropdown.close();
 	sounddropdown.close();
+
+	settingsIsOpen = false;
+}
+
+function hideMainSettingsPanel(): void {
+	settingsDropdown.classList.add('visibility-hidden');
+}
+function showMainSettingsPanel(): void {
+	settingsDropdown.classList.remove('visibility-hidden');
 }
 
 function initSettingsListeners(): void {
-	languageDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	languageDropdownSelection.addEventListener('click', languagedropdown.open);
-	appearanceDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	languageDropdownSelection.addEventListener('click', hideMainSettingsPanel);
 	appearanceDropdownSelection.addEventListener('click', appearancedropdown.open);
-	legalmoveDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	appearanceDropdownSelection.addEventListener('click', hideMainSettingsPanel);
 	legalmoveDropdownSelection.addEventListener('click', legalmovedropdown.open);
-	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	legalmoveDropdownSelection.addEventListener('click', hideMainSettingsPanel);
 	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
-	gameplayDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.addEventListener('click', hideMainSettingsPanel);
 	gameplayDropdownSelection.addEventListener('click', gameplaydropdown.open);
-	soundDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	gameplayDropdownSelection.addEventListener('click', hideMainSettingsPanel);
 	soundDropdownSelection.addEventListener('click', sounddropdown.open);
+	soundDropdownSelection.addEventListener('click', hideMainSettingsPanel);
+	allBackButtons.forEach((btn) => btn.addEventListener('click', showMainSettingsPanel));
 }
 function closeSettingsListeners(): void {
-	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	languageDropdownSelection.removeEventListener('click', languagedropdown.open);
-	appearanceDropdownSelection.removeEventListener(
-		'click',
-		closeAllSettingsDropdownsExceptMainOne,
-	);
+	languageDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
 	appearanceDropdownSelection.removeEventListener('click', appearancedropdown.open);
-	legalmoveDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	appearanceDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
-	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	legalmoveDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
 	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	gameplayDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	mouseDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
 	gameplayDropdownSelection.removeEventListener('click', gameplaydropdown.open);
-	soundDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	gameplayDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
 	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
+	soundDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
+	allBackButtons.forEach((btn) => btn.removeEventListener('click', showMainSettingsPanel));
 }
 
 function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): void {

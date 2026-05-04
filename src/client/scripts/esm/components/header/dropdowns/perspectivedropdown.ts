@@ -7,8 +7,6 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
-
 // The option in the main settings menu
 const perspectiveSettingsDropdownItem = document.getElementById(
 	'perspective-settings-dropdown-item',
@@ -55,12 +53,10 @@ function setInitialValues(): void {
 function open(): void {
 	perspectiveDropdown.classList.remove('visibility-hidden');
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
 	perspectiveDropdown.classList.add('visibility-hidden');
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {

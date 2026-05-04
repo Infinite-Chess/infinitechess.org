@@ -17,6 +17,9 @@
     {# Global stylesheet: CSS variables, font-face, and shared utility classes #}
     <link rel="stylesheet" href="{{ manifest['css/global'] }}" />
 
+    {# Site-wide header stylesheet #}
+    <link rel="stylesheet" href="{{ manifest['components/header/header'] }}" />
+
     {# Page-specific stylesheet #}
     {% block style %}{% endblock %}
 
@@ -26,6 +29,9 @@
 <body>
 
     {% block body %}{% endblock %}
+
+    {# Site-wide header script #}
+    <script type="module" src="{{ manifest['scripts/esm/components/header/header'] }}"></script>
 
     {# Page entry-point script #}
     {% block script %}{% endblock %}
