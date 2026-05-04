@@ -91,6 +91,12 @@ No route entry needed. The component's CSS link goes in `{% block style %}` on p
 
 ---
 
+## Tying in Existing Game Code
+
+Any page that requires importing game logic (online game, local game, computer game, editor, analysis board, checkmate practice, etc.) should only import the relative and minimum code needed to run that feature. Currently, the game code is highly coupled and interdependent (for example, loading the main branch's play page loads all game code for EVERY type of game), so this may require some refactoring to decouple the code and make it more modular, as-in specific modules should be only imported dynamically, when they are needed. When decoupling is needed, bring this up to the user, this refactoring should be done *before* starting to design the page. It is okay to forgo designing of the page to do this, even if the user explicitly asked for the page to be designed. For this reason, game code requirements of new pages should be analyzed first. We might need a manager script for dynamic importing and serving of scripts when they are needed.
+
+---
+
 ## Missing Context
 
 If during your designing, you had to spend a considerable amount of tokens deducing further needed context, that would apply to future agents designing other pages, and that would have been much more easily be obtained from this guide, then please update this guide! But keep the new information concise and compact.
