@@ -37,6 +37,21 @@ export function configureNunjucks(app: Application): void {
 	// names to their output paths, which are content-hashed.
 	if (!fs.existsSync(MANIFEST_PATH))
 		throw new Error('Manifest file not found. Did we build first?');
-	const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
-	nunjucksEnv.addGlobal('manifest', manifest);
+	nunjucksEnv.addGlobal('manifest', JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
+
+	// In dev, esbuild watch-mode rewrites manifest.json after every rebuild while the
+	// server keeps running. Watch the file and refresh the Nunjucks global only when
+	// it actually changes, so rendered HTML always references the current hashed filenames.
+	if (process.env['NODE_ENV'] !== 'production') {
+		fs.watch(MANIFEST_PATH, () => {
+			try {
+				nunjucksEnv.addGlobal(
+					'manifest',
+					JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')),
+				);
+			} catch (_err) {
+				// File may be mid-write; the next 'change' event will pick it up.
+			}
+		});
+	}
 }
