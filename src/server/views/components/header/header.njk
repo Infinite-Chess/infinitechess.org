@@ -1,0 +1,323 @@
+{# Site-wide header. Included by every page. #}
+<header class="site-header">
+	{# SVG defs — only the pawn is still used (ping meter loading indicator). #}
+	<svg class="hidden" aria-hidden="true">
+		<symbol id="svg-pawn" viewBox="0 0 45 45">
+			<path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill-opacity="1" fill-rule="nonzero" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5" opacity="1"/>
+		</symbol>
+	</svg>
+
+	{# Hamburger toggle - only visible on narrow screens via CSS. #}
+	<button class="header-hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="header-mobile-panel">
+		<span class="header-hamburger-bar"></span>
+		<span class="header-hamburger-bar"></span>
+		<span class="header-hamburger-bar"></span>
+	</button>
+
+	<a class="header-home" href="/" aria-label="Infinite Chess home">
+		<span class="header-logo" aria-hidden="true">
+			<span class="header-logo-glyph">Ω</span>
+			<span class="header-logo-shadow header-logo-shadow-a">Ω</span>
+			<span class="header-logo-shadow header-logo-shadow-b">Ω</span>
+		</span>
+		<span class="header-sitename">Infinite&nbsp;Chess</span>
+	</a>
+
+	<nav class="header-nav" aria-label="Primary">
+		<div class="header-nav-item header-dropdown-parent">
+			<button class="header-nav-link" type="button">Learn</button>
+			<div class="header-dropdown" role="menu">
+				<a class="header-dropdown-item" role="menuitem" href="/tutorial">Tutorial</a>
+				<a class="header-dropdown-item" role="menuitem" href="/checkmate-practice">Checkmate Practice</a>
+			</div>
+		</div>
+
+		<div class="header-nav-item header-dropdown-parent">
+			<button class="header-nav-link" type="button">Tools</button>
+			<div class="header-dropdown" role="menu">
+				<a class="header-dropdown-item" role="menuitem" href="/analysis">Analysis Board</a>
+				<a class="header-dropdown-item" role="menuitem" href="/editor">Board Editor</a>
+			</div>
+		</div>
+
+		<div class="header-nav-item">
+			<a class="header-nav-link" href="/leaderboard">Leaderboard</a>
+		</div>
+
+		<div class="header-nav-item">
+			<a class="header-nav-link" href="/news">News</a>
+		</div>
+
+		<div class="header-nav-item">
+			<a class="header-nav-link" href="/patron">Donate</a>
+		</div>
+	</nav>
+
+	<div class="header-actions">
+		{% if memberInfo and memberInfo.signedIn %}
+			<a id="login-link" class="header-icon-btn" href="/member/{{ memberInfo.username }}" aria-label="Profile" title="Profile">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000" aria-hidden="true">
+					<path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="currentColor" fill-rule="evenodd" />
+				</svg>
+			</a>
+			<a id="createaccount-link" class="header-icon-btn" href="/logout" aria-label="Logout" title="Logout">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+					<path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
+				</svg>
+			</a>
+		{% else %}
+			<a id="login-link" class="header-icon-btn" href="/login" aria-label="Login" title="Login">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+					<path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
+				</svg>
+			</a>
+			<a id="createaccount-link" class="header-icon-btn header-icon-btn-tight" href="/createaccount" aria-label="Create account" title="Create account">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100" aria-hidden="true">
+					<path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800" fill="currentColor" />
+				</svg>
+			</a>
+		{% endif %}
+
+		<div id="settings" class="settings header-icon-btn header-icon-btn-tight">
+			<svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+				<path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
+			</svg>
+
+			<div class="settings-dropdown dropdown visibility-hidden">
+				<div id="language-settings-dropdown-item" class="settings-dropdown-item">
+					<p class="text">Language</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div id="appearance-settings-dropdown-item" class="settings-dropdown-item">
+					<p class="text">Appearance</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div id="legalmove-settings-dropdown-item" class="settings-dropdown-item">
+					<p class="text">Legal Moves</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div id="gameplay-settings-dropdown-item" class="settings-dropdown-item">
+					<p class="text">Gameplay</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden">
+					<p class="text">Perspective</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div id="sound-settings-dropdown-item" class="settings-dropdown-item">
+					<p class="text">Sound</p>
+					<span class="arrow-head-right"></span>
+				</div>
+				<div class="ping-meter hidden">
+					<div>
+						<span class="ping">Ping:</span>
+						<strong class="ping-value">-</strong>
+						<span class="ms">ms</span>
+					</div>
+					<div class="ping-bars">
+						<div class="ping-bar" style="height: 6px;"></div>
+						<div class="ping-bar" style="height: 12px;"></div>
+						<div class="ping-bar" style="height: 18px;"></div>
+						<div class="ping-bar" style="height: 24px;"></div>
+						<div class="ping-glow"></div>
+					</div>
+					<svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
+				</div>
+			</div>
+
+			{# Language #}
+			<div class="language-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Language</p>
+				</div>
+				<div class="dropdown-scrollable">
+					<div class="language-dropdown-item selected" value="en-US">
+						<div class="language-names">
+							<p class="name">English</p>
+							<p class="englishName">English</p>
+						</div>
+						<span class="checkmark">✓</span>
+					</div>
+				</div>
+			</div>
+
+			{# Appearance #}
+			<div class="appearance-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Appearance</p>
+				</div>
+				<div class="dropdown-scrollable">
+					<div class="theme-option ui-theme" data-theme-toggle>
+						<p class="text">Theme</p>
+						<span class="header-theme-indicator"></span>
+					</div>
+					<p class="theme-title">Board Tiles</p>
+					<div class="board-color-list"></div>
+					<label class="boolean-option coordinates">
+						<p class="text">Coordinates</p>
+						<div class="switch">
+							<input type="checkbox">
+							<span></span>
+						</div>
+					</label>
+					<label class="boolean-option starfield">
+						<p class="text">Starfield</p>
+						<div class="switch">
+							<input type="checkbox">
+							<span></span>
+						</div>
+					</label>
+					<label class="boolean-option advanced-effects">
+						<p class="text">Advanced Effects</p>
+						<div class="switch">
+							<input type="checkbox">
+							<span></span>
+						</div>
+					</label>
+				</div>
+			</div>
+
+			{# Legal Move Shape #}
+			<div class="legalmove-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Legal Moves</p>
+				</div>
+				<div class="legalmove-options">
+					<div class="legalmove-option squares">
+						<p class="text">Squares</p>
+						<span class="checkmark visibility-hidden">✓</span>
+					</div>
+					<div class="legalmove-option dots">
+						<p class="text">Dots</p>
+						<span class="checkmark visibility-hidden">✓</span>
+					</div>
+				</div>
+			</div>
+
+			{# Gameplay #}
+			<div class="gameplay-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Gameplay</p>
+				</div>
+				<label class="boolean-option drag">
+					<p class="text">Drag</p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
+				<label class="boolean-option premove">
+					<p class="text">Premove</p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
+				<label class="boolean-option animations">
+					<p class="text">Animations</p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
+				<label class="boolean-option fast-transitions">
+					<p class="text">Fast Transitions</p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
+				<label class="boolean-option lingering-annotations">
+					<p class="text">Lingering Annotations</p>
+					<div class="switch">
+						<input type="checkbox">
+						<span></span>
+					</div>
+				</label>
+			</div>
+
+			{# Perspective #}
+			<div class="perspective-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Perspective</p>
+				</div>
+				<div class="perspective-options">
+					<div class="perspective-option mouse-sensitivity">
+						<div class="perspective-option-title">
+							<p>Mouse Sensitivity</p>
+						</div>
+						<div class="slider-container">
+							<input class="slider" type="range" min="25" max="200" value="100">
+							<span class="value"></span>
+						</div>
+					</div>
+					<div class="perspective-option fov">
+						<div class="perspective-option-title">
+							<p>Field of View</p>
+						</div>
+						<div class="slider-container">
+							<input class="slider" type="range" min="60" max="150" value="90">
+							<span class="value"></span>
+						</div>
+						<div class="reset-default-container hidden">
+							<div class="reset-default">
+								<span>Reset</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{# Sound #}
+			<div class="sound-dropdown dropdown visibility-hidden">
+				<div class="dropdown-title">
+					<span class="arrow-head-left"></span>
+					<p class="text">Sound</p>
+				</div>
+				<div class="sound-options">
+					<div class="sound-option master-volume">
+						<div class="sound-option-title">
+							<p>Master Volume</p>
+						</div>
+						<div class="slider-container">
+							<input class="slider" type="range" min="0" max="100" value="100">
+							<span class="value"></span>
+						</div>
+					</div>
+					<label class="boolean-option ambience">
+						<p class="text">Ambience</p>
+						<div class="switch">
+							<input type="checkbox">
+							<span></span>
+						</div>
+					</label>
+				</div>
+			</div>
+		</div>
+	</div>
+</header>
+
+{# Slide-in mobile menu (visible only at narrow widths). #}
+<div id="header-mobile-panel" class="header-mobile-panel" aria-hidden="true">
+	<nav class="header-mobile-nav" aria-label="Mobile primary">
+		<div class="header-mobile-group">
+			<span class="header-mobile-group-title">Learn</span>
+			<a class="header-mobile-child" href="/tutorial">Tutorial</a>
+			<a class="header-mobile-child" href="/checkmate-practice">Checkmate Practice</a>
+		</div>
+		<div class="header-mobile-group">
+			<span class="header-mobile-group-title">Tools</span>
+			<a class="header-mobile-child" href="/analysis">Analysis Board</a>
+			<a class="header-mobile-child" href="/editor">Board Editor</a>
+		</div>
+		<a class="header-mobile-link" href="/leaderboard">Leaderboard</a>
+		<a class="header-mobile-link" href="/news">News</a>
+		<a class="header-mobile-link" href="/patron">Donate</a>
+	</nav>
+</div>
+<div class="header-mobile-overlay" aria-hidden="true"></div>
