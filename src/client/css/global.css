@@ -111,3 +111,106 @@ body {
 .unselectable {
 	user-select: none;
 }
+
+/* ============================================================
+   Tooltips
+   ============================================================ */
+
+#tooltip-popup {
+	position: fixed;
+	background-color: black;
+	color: rgb(236, 236, 236);
+	text-align: center;
+	border-radius: 6px;
+	font-size: 12px;
+	width: max-content;
+	max-width: 150px;
+	padding: 5px;
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	pointer-events: none;
+	word-wrap: break-word;
+	word-break: break-word;
+	white-space: normal;
+	z-index: 10000;
+}
+
+#tooltip-arrow {
+	position: fixed;
+	width: 0;
+	height: 0;
+	border-width: 5px; /* MUST match ARROW_HALF in tooltips.ts */
+	border-style: solid;
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	pointer-events: none;
+	z-index: 10000;
+}
+
+/* Arrow pointing downward (tooltip-d / tooltip-dl / tooltip-dr) */
+#tooltip-arrow.tooltip-arrow-down {
+	border-color: transparent transparent black transparent;
+}
+
+/* Arrow pointing upward (tooltip-u / tooltip-ul / tooltip-ur) */
+#tooltip-arrow.tooltip-arrow-up {
+	border-color: black transparent transparent transparent;
+}
+
+/* ============================================================
+   Badge shine
+   ============================================================ */
+
+#checkmate-badge-bronze {
+	--shine-color: rgba(229, 203, 180, 0.3);
+}
+
+#checkmate-badge-silver {
+	--shine-color: rgba(192, 192, 192, 0.22);
+}
+
+#checkmate-badge-gold {
+	--shine-color: rgba(255, 215, 0, 0.24);
+}
+
+.badge .shine-clockwise,
+.badge .shine-anticlockwise {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 200%;
+	height: 200%;
+	transform: translate(-50%, -50%);
+	background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
+	mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	-webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	animation: rotateShine linear infinite;
+	pointer-events: none;
+	z-index: -1;
+}
+
+.badge .shine-clockwise {
+	animation-direction: normal;
+	animation-duration: 13s;
+}
+
+.badge .shine-anticlockwise {
+	animation-direction: reverse;
+	animation-duration: 26s;
+}
+
+.badge:hover .shine-clockwise,
+.badge:hover .shine-anticlockwise {
+	opacity: 1;
+}
+
+@keyframes rotateShine {
+	from {
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
+}
