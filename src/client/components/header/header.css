@@ -341,7 +341,6 @@
 .dropdown-title:hover,
 .settings-dropdown-item:hover,
 .language-dropdown-item:hover,
-.legalmove-option:hover,
 .boolean-option:hover {
 	background-color: var(--c-surface-2);
 }
@@ -430,7 +429,6 @@ span.arrow-head-left {
 /* Language nested dropdown */
 
 .language-dropdown-item,
-.legalmove-option,
 .boolean-option {
 	display: flex;
 	align-items: center;
@@ -511,15 +509,6 @@ p.theme-title {
 .board-color-list img:hover,
 .board-color-list img.selected {
 	outline: 5px solid var(--c-text);
-}
-
-.legalmove-option {
-	height: var(--dropdown-item-height);
-	padding: 0 14px;
-}
-
-.boolean-option p.text {
-	padding: 6px 6px 6px 3px;
 }
 
 .boolean-option {

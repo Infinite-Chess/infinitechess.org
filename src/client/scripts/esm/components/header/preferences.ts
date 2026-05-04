@@ -187,7 +187,7 @@ function getBoardColor(): string {
 
 function setBoardColor(boardColor: string): void {
 	preferences.theme = boardColor;
-	console.log('Set theme');
+	// console.log('Set theme');
 	onChangeMade();
 	savePreferences();
 }

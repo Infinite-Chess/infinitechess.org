@@ -14,6 +14,10 @@ const themeToggleContainer = document.querySelector<HTMLElement>('[data-theme-to
 const themeIndicator = document.querySelector<HTMLElement>(
 	'[data-theme-toggle] .header-theme-indicator',
 )!;
+const legalMoveToggleContainer = document.querySelector<HTMLElement>('[data-legal-move-toggle]')!;
+const legalMoveIndicator = document.querySelector<HTMLElement>(
+	'[data-legal-move-toggle] .header-theme-indicator',
+)!;
 const boardColorList = document.querySelector('.board-color-list')!; // Get the board color list div
 
 const coordinatesCheckbox = document.querySelector<HTMLInputElement>(
@@ -44,6 +48,7 @@ type Theme = typeof THEME_DARK | typeof THEME_LIGHT;
 	showCheckmarkOnSelectedOptions();
 	addBoardThemesToDropdown();
 	initThemeToggle();
+	initLegalMoveToggle();
 })();
 
 function initThemeToggle(): void {
@@ -54,6 +59,19 @@ function initThemeToggle(): void {
 		localStorage.setItem(THEME_KEY, next);
 		themeIndicator.textContent = next === THEME_DARK ? 'Dark' : 'Light';
 	});
+}
+
+function initLegalMoveToggle(): void {
+	legalMoveIndicator.textContent =
+		preferences.getLegalMovesShape() === 'squares' ? 'Squares' : 'Dots';
+	legalMoveToggleContainer.addEventListener('click', toggleLegalMoveShape);
+}
+
+function toggleLegalMoveShape(): void {
+	const next = preferences.getLegalMovesShape() === 'squares' ? 'dots' : 'squares';
+	preferences.setLegalMovesShape(next);
+	legalMoveIndicator.textContent = next === 'squares' ? 'Squares' : 'Dots';
+	document.dispatchEvent(new CustomEvent('legalmove-shape-change'));
 }
 
 function getCurrentTheme(): Theme {
