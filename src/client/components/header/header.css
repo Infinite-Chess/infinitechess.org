@@ -692,7 +692,7 @@ p.theme-title {
 	box-shadow: 4px 0 16px rgba(0, 0, 0, 0.35);
 	/* Clip the upward shadow bleed so it doesn't spill into the header bar. */
 	clip-path: inset(0 -20px -20px 0);
-	z-index: 200;
+	z-index: 300;
 	transform: translateX(-100%);
 	visibility: hidden;
 	overflow-y: auto;
@@ -708,7 +708,7 @@ p.theme-title {
 	position: fixed;
 	right: 0;
 	background-color: rgba(0, 0, 0, 0.55);
-	z-index: 150;
+	z-index: 200;
 	visibility: hidden;
 	opacity: 0;
 }
