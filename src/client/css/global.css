@@ -58,6 +58,12 @@ body {
    Theme: Dark (default) - STARTER VARIABLES, refine as we go
    ============================================================ */
 
+:root {
+	/* Placeholder board-tile-theme variables, will be set by js */
+	--c-tile: rgb(97, 97, 97);
+	--c-tile-2: rgb(110, 110, 110);
+}
+
 [data-theme='dark'] {
 	--c-bg: rgb(33, 33, 33);
 	--c-surface: rgb(35, 35, 35);
@@ -66,7 +72,6 @@ body {
 	--c-text-emphasis: rgb(220, 220, 220);
 	--c-text-muted: rgb(135, 135, 135);
 	--c-brand: rgb(97, 169, 255);
-	--c-brand-hover: rgb(130, 190, 255);
 	--c-border: rgb(60, 60, 60);
 	--c-border-2: rgb(100, 100, 100);
 	--c-link: rgb(97, 169, 255);
@@ -87,7 +92,6 @@ body {
 	--c-text-emphasis: rgb(0, 0, 0);
 	--c-text-muted: rgb(100, 100, 100);
 	--c-brand: rgb(0, 102, 204);
-	--c-brand-hover: rgb(0, 80, 170);
 	--c-border: rgb(200, 200, 200);
 	--c-border-2: rgb(150, 150, 150);
 	--c-link: rgb(0, 102, 204);
@@ -114,6 +118,56 @@ body {
 
 .unselectable {
 	user-select: none;
+}
+
+.selectable {
+	user-select: text;
+}
+
+.set-cursor-to-not-allowed {
+	cursor: not-allowed;
+}
+
+/* ============================================================
+   Username embed containers
+   ============================================================ */
+
+.username-embed {
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+	width: fit-content;
+}
+
+.username-embed .svg-profile,
+.svg-engine {
+	width: 1em;
+	height: 1em;
+	aspect-ratio: 1;
+}
+
+.username-embed .username {
+	font-size: 1em;
+	font-weight: bold;
+	text-decoration: none;
+	color: var(--c-text-emphasis);
+}
+
+.username-embed .elo {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+.username-embed .eloChange {
+	font-size: 0.9em;
+}
+
+.username-embed .eloChange.positive {
+	color: green;
+}
+
+.username-embed .eloChange.negative {
+	color: red;
 }
 
 /* ============================================================
