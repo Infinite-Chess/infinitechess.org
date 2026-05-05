@@ -26,10 +26,10 @@ import coordutil, {
 	DoubleCoords,
 } from '../../../../../shared/chess/util/coordutil.js';
 
+import camera from './camera.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
-import perspective from './perspective.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ function getPieceTexCoords(): {
 	texright: number;
 	textop: number;
 } {
-	const isBlack = perspective.getIsViewingBlackPerspective();
+	const isBlack = camera.getIsViewingBlackPerspective();
 	return {
 		texleft: isBlack ? 1 : 0,
 		texbottom: isBlack ? 1 : 0,

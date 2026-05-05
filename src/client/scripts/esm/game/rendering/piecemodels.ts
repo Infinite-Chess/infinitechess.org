@@ -19,9 +19,9 @@ import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
 import { gl } from './webgl.js';
+import camera from './camera.js';
 import boardpos from './boardpos.js';
 import miniimage from './miniimage.js';
-import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
@@ -112,7 +112,7 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
 	// Update the offset
 	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
-	mesh.inverted = perspective.getIsViewingBlackPerspective();
+	mesh.inverted = camera.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
@@ -432,7 +432,7 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 		shiftAll(boardsim, mesh);
 
 	// Test if the rotation has changed
-	const correctInverted = perspective.getIsViewingBlackPerspective();
+	const correctInverted = camera.getIsViewingBlackPerspective();
 	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
 
 	for (const [typeStr, meshData] of Object.entries(mesh.types)) {

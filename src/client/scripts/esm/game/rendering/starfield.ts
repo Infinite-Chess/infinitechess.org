@@ -372,7 +372,7 @@ function render(): void {
 		instanceData.push(...star.position, ...currentColor, currentSize);
 	});
 
-	perspective.renderWithoutPerspectiveRotations(() => {
+	camera.renderWithoutPerspectiveRotations(() => {
 		createRenderable_Instanced_GivenInfo(
 			vertexData,
 			instanceData,

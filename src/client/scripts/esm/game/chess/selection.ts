@@ -26,6 +26,7 @@ import toast from '../gui/toast.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
+import camera from '../rendering/camera.js';
 import guipause from '../gui/guipause.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
@@ -176,7 +177,7 @@ function update(): void {
 		boardpos.areZoomedOut() ||
 		gamefileutility.isGameOver(gamefile.basegame) ||
 		guipause.areWePaused() ||
-		perspective.isLookingUp()
+		camera.isLookingUp()
 	) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.

@@ -247,7 +247,7 @@ function renderTransparentSquare(): void {
 
 // Renders the box outline, the dragged piece and its shadow
 function renderPiece(): void {
-	if (!areDragging || perspective.isLookingUp() || !worldLocation) return;
+	if (!areDragging || camera.isLookingUp() || !worldLocation) return;
 
 	renderOutline();
 	renderPieceModel();
@@ -260,7 +260,7 @@ function renderPieceModel(): void {
 	const perspectiveEnabled = perspective.getEnabled();
 	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
+	const rotation = camera.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	// In perspective the piece is rendered above the surface of the board.

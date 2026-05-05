@@ -151,7 +151,7 @@ function detectPanning(): void {
 
 /** Accelerates the given pan velocity in the provided vector direction. */
 function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
-	const baseAngle = -perspective.getRotZ();
+	const baseAngle = -camera.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
 	const XYComponents: DoubleCoords = vectors.getXYComponents_FromAngle(angleRad);

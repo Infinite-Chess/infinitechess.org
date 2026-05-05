@@ -26,6 +26,7 @@ import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import space from '../misc/space.js';
 import mouse from '../../util/mouse.js';
+import camera from './camera.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
 import snapping from './highlights/snapping.js';
@@ -353,7 +354,7 @@ function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 
 	const boardsim = gameslot.getGamefile()!.boardsim;
-	const inverted = perspective.getIsViewingBlackPerspective();
+	const inverted = camera.getIsViewingBlackPerspective();
 
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 

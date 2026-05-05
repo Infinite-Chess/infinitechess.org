@@ -20,28 +20,38 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
 import { gl } from './webgl.js';
-import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
 
+// Types --------------------------------------------------------------
+
 /** A 4x4 matrix, represented as a 16-element Float32Array */
 type Mat4 = Float32Array;
 
-/** If true, the camera is stationed farther back. */
-let DEBUG: boolean = false;
+// Constants -------------------------------------------------------------
 
 // This will NEVER change! The camera stays while the board position is what moves!
 // What CAN change is the rotation of the view matrix!
 const position: Vec3 = [0, 0, 12]; // [x, y, z]
 const position_devMode: Vec3 = [0, 0, 18]; // Default: 18
 
-/** Field of view, in radians */
-let fieldOfView: number;
+/** How far to render the board into the distance when in perspective mode. */
+const DIST_TO_RENDER_BOARD = 1500;
+
 // The closer near & far limits are in terms of orders of magnitude, the more accurate
 // and less often things appear out of order. Should be within 5-6 magnitude orders.
-const zNear: number = 1;
-const zFar: number = 1500 * Math.SQRT2; // Default 1500. Has to at least be  perspective.distToRenderBoard * sqrt(2)
+const zNear = 1;
+/** Has to be at least {@link DIST_TO_RENDER_BOARD} * sqrt(2) */
+const zFar = DIST_TO_RENDER_BOARD * Math.SQRT2;
+
+// State ---------------------------------------------------------------
+
+/** Field of view, in radians */
+let fieldOfView: number;
+
+/** If true, the camera is stationed farther back. */
+let DEBUG: boolean = false;
 
 /** The canvas document element that WebGL renders the game onto. */
 const canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
@@ -72,6 +82,92 @@ let projMatrix: Mat4; // Same for every shader program
  * because it specifies the translation and rotation of the bound mesh. */
 let viewMatrix: Mat4;
 
+/** Perspective camera rotation around the X axis. Positive looks down. Min -180, max 0. */
+let rotX = 0;
+/** Perspective camera rotation around the Z axis. Positive looks right. Range 0–360. */
+let rotZ = 0;
+
+// Functions -----------------------------------------------------------------------
+
+/** Returns true if we have no perspective rotation */
+function haveZeroRotation(): boolean {
+	return rotX === 0 && rotZ === 0;
+}
+
+/** Makes sure we don't go upside-down. */
+function capRotations(): void {
+	if (rotX > 0) rotX = 0;
+	else if (rotX < -180) rotX = -180;
+	if (rotZ < 0) rotZ += 360;
+	else if (rotZ > 360) rotZ -= 360;
+}
+
+/** Applies perspective rotation to default camera viewMatrix. */
+function applyPerspectiveRotations(viewMat: Mat4): void {
+	if (haveZeroRotation()) return;
+
+	const cameraPos = getPosition(); // devMode-sensitive
+
+	// Shift the origin before rotating plane
+	mat4.translate(viewMat, viewMat, cameraPos);
+
+	if (rotX < 0) {
+		// Looking up somewhat
+		const rotXRad = rotX * (Math.PI / 180);
+		mat4.rotate(viewMat, viewMat, rotXRad, [1, 0, 0]);
+	}
+	// const rotYRad = rotY * (Math.PI / 180);
+	// mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
+	const rotZRad = rotZ * (Math.PI / 180);
+	mat4.rotate(viewMat, viewMat, rotZRad, [0, 0, 1]);
+
+	// Shift the origin back where it was
+	const negativeCameraPos = [-cameraPos[0], -cameraPos[1], -cameraPos[2]];
+	mat4.translate(viewMat, viewMat, negativeCameraPos);
+}
+
+function getRotX(): number {
+	return rotX;
+}
+
+function getRotZ(): number {
+	return rotZ;
+}
+
+/** True when rotZ is between 90 and 270, meaning we're viewing from black's side. */
+function getIsViewingBlackPerspective(): boolean {
+	return rotZ > 90 && rotZ < 270;
+}
+
+/** Returns true if the camera X rotation is past the horizon (looking up or directly up). */
+function isLookingUp(): boolean {
+	return rotX <= -90;
+}
+
+/**
+ * Renders (performs) whatever function is passed to it,
+ * as if our camera was looking straight at the board from
+ * white's perspective. ZERO perspective rotations!
+ * Works both in 3D perspective mode and in 2D black's-perspective mode.
+ */
+function renderWithoutPerspectiveRotations(func: Function): void {
+	if (haveZeroRotation()) return func();
+
+	const perspectiveViewMatrixCopy = getViewMatrix();
+	initViewMatrix(true); // Init view while ignoring perspective rotations
+
+	func();
+
+	setViewMatrix(perspectiveViewMatrixCopy); // Re-put back the perspective rotation
+}
+
+function setPerspectiveRotation(newRotX: number, newRotZ: number): void {
+	rotX = newRotX;
+	rotZ = newRotZ;
+	capRotations();
+	onPositionChange(); // Calculate new viewMatrix
+}
+
 // Returns devMode-sensitive camera position.
 function getPosition(ignoreDevmode?: boolean): Vec3 {
 	return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? position_devMode : position);
@@ -93,7 +189,7 @@ function toggleDebug(): void {
 	DEBUG = !DEBUG;
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	onPositionChange();
-	perspective.initCrosshairModel();
+	document.dispatchEvent(new CustomEvent('camera-debug-toggle'));
 
 	console.log(`Toggled camera debug: ${DEBUG}`);
 }
@@ -138,14 +234,18 @@ function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false):
  * Ignorant of debug mode.
  */
 function getRespectiveScreenBox(): DoubleBoundingBox {
-	if (perspective.getEnabled()) return getPerspectiveScreenBox();
+	if (rotX !== 0 || !(rotZ === 0 || rotZ === 180)) return getPerspectiveScreenBox();
 	else return getScreenBoundingBox(false, true);
 }
 
 /** Returns the world bounding box of the visible range when in perspective mode. */
 function getPerspectiveScreenBox(): DoubleBoundingBox {
-	const dist = perspective.distToRenderBoard;
-	return { left: -dist, right: dist, bottom: -dist, top: dist };
+	return {
+		left: -DIST_TO_RENDER_BOARD,
+		right: DIST_TO_RENDER_BOARD,
+		bottom: -DIST_TO_RENDER_BOARD,
+		top: DIST_TO_RENDER_BOARD,
+	};
 }
 
 /**
@@ -249,7 +349,7 @@ function initViewMatrix(ignoreRotations?: boolean): void {
 	// Apply to our view matrix to shake the camera
 	mat4.multiply(newViewMatrix, newViewMatrix, shakeMatrix);
 
-	if (!ignoreRotations) perspective.applyRotations(newViewMatrix);
+	if (!ignoreRotations) applyPerspectiveRotations(newViewMatrix);
 
 	viewMatrix = newViewMatrix;
 
@@ -303,7 +403,6 @@ function initScreenBoundingBox(): void {
 function onScreenResize(): void {
 	updateCanvasDimensions(); // Also updates viewport
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
-	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	// console.log('Resized window.')
 }
@@ -318,7 +417,6 @@ function onFOVChange(): void {
 	initFOV();
 	initProjMatrix();
 	recalcCanvasVariables(); // The only thing inside here we don't actually need to change is the aspect variable, but it doesn't matter.
-	perspective.initCrosshairModel();
 }
 
 // Call both when camera moves or rotates
@@ -346,8 +444,16 @@ function getScaleWhenZoomedOut(): BigDecimal {
 export type { Mat4 };
 
 export default {
-	getPosition,
+	DIST_TO_RENDER_BOARD,
 	canvas,
+	getRotX,
+	getRotZ,
+	getIsViewingBlackPerspective,
+	isLookingUp,
+	renderWithoutPerspectiveRotations,
+	setPerspectiveRotation,
+	getPosition,
+	getZFar,
 	getCanvasWidthVirtualPixels,
 	getCanvasHeightVirtualPixels,
 	toggleDebug,
@@ -357,12 +463,11 @@ export default {
 	getPerspectiveScreenBox,
 	getScreenHeightWorld,
 	getViewMatrix,
-	setViewMatrix,
 	getProjAndViewMatrixes,
 	init,
-	onPositionChange,
+	setViewMatrix,
 	initViewMatrix,
-	getZFar,
+	onPositionChange,
 	getScaleWhenTilesInvisible,
 	getScaleWhenZoomedOut,
 };

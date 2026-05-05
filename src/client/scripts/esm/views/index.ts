@@ -7,7 +7,6 @@ import boardpos from '../game/rendering/boardpos.js';
 import deltatime from '../game/misc/deltatime.js';
 import boardtiles from '../game/rendering/boardtiles.js';
 import Renderable from '../webgl/Renderable.js';
-import perspective from '../game/rendering/perspective.js';
 import frametracker from '../game/rendering/frametracker.js';
 import webgl, { gl } from '../game/rendering/webgl.js';
 import frameratelimiter from '../game/rendering/frameratelimiter.js';
@@ -43,8 +42,7 @@ function initBoard(): void {
 	boardtiles.init();
 	boardpos.setBoardScale(BOARD_SCALE);
 	boardpos.setPanVel([0, PAN_SPEED]);
-	perspective.enable();
-	perspective.setRotation(-45, 0); // Minimum angle to hide all sky
+	camera.setPerspectiveRotation(-45, 0); // Minimum angle to hide all sky
 }
 
 function animationLoop(runtime: number): void {

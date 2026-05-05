@@ -319,7 +319,7 @@ function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): 
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
 function renderSolidCover(): void {
-	// const dist = perspective.distToRenderBoard;
+	// const dist = camera.DIST_TO_RENDER_BOARD;
 	const dist = camera.getZFar() / Math.SQRT2;
 	const z = getRelativeZ();
 	const cameraZ = camera.getPosition(true)[2];

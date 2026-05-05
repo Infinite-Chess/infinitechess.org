@@ -19,12 +19,12 @@ import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/t
 
 import toast from '../gui/toast.js';
 import meshes from './meshes.js';
+import camera from './camera.js';
 import splines from '../../util/splines.js';
 import boardpos from './boardpos.js';
 import gamesound from '../misc/gamesound.js';
 import arrowshifts from './arrows/arrowshifts.js';
 import piecemodels from './piecemodels.js';
-import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -421,7 +421,7 @@ function renderAnimations(): void {
 	const boardPos = boardpos.getBoardPos();
 
 	/** Whether the textures should be inverted or not, based on whether we're viewing black's perspective. */
-	const inverted = perspective.getIsViewingBlackPerspective();
+	const inverted = camera.getIsViewingBlackPerspective();
 
 	const vertexData = instancedshapes.getDataTexture(inverted);
 
