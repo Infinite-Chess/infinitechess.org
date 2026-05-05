@@ -91,7 +91,7 @@ let darkTiles: Color;
 // Add event listener for theme changes
 document.addEventListener('theme-change', () => {
 	// Custom Event listener.
-	console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
+	// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
 	updateTheme();
 });
 
