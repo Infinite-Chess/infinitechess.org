@@ -4,11 +4,14 @@
  * Site header runtime. Imported on every page via the layout.
  *
  * Manages the Learn/Tools dropdowns, and the hamburger menu on mobile,
- * and updating the --vh CSS variable for mobile devices.
+ * and updating the --vh CSS variable for mobile devices, and the logo
+ * pulse aura animation on hover.
  */
 
 import './settings.js';
 import '../../util/tooltips.js'; // Should be imported on EVERY page
+
+// Elements ---------------------------------------------------------------------
 
 const button = document.querySelector<HTMLButtonElement>('.header-hamburger')!;
 const panel = document.getElementById('header-mobile-panel')!;
@@ -16,10 +19,24 @@ const panel = document.getElementById('header-mobile-panel')!;
 const dimContent = document.querySelector<HTMLElement>('.header-mobile-dim-content')!;
 const dimHeader = document.querySelector<HTMLElement>('.header-mobile-dim-header')!;
 
-(function init() {
-	initHamburger();
-	initNavDropdowns();
-})();
+const home = document.querySelector<HTMLElement>('.header-home')!;
+const aura = document.querySelector<SVGElement>('.header-logo-aura')!;
+
+// Constants --------------------------------------------------------------------
+
+/** Settings for the logo aura pulse animation triggered on hover. */
+const LOGO_PULSE = {
+	/** Duration of one full oscillation cycle, in milliseconds. */
+	PERIOD_MS: 1300,
+	/** Minimum scale of the aura (bottom of oscillation). */
+	MIN_SCALE: 0.7,
+	/** Maximum scale of the aura (top of oscillation). */
+	MAX_SCALE: 1.2,
+} as const;
+
+const LOGO_PULSE_START_PHASE = Math.acos(1 - 2 * (1 - LOGO_PULSE.MIN_SCALE) / (LOGO_PULSE.MAX_SCALE - LOGO_PULSE.MIN_SCALE)) / (2 * Math.PI); // prettier-ignore
+
+// Functions ----------------------------------------------------------------------
 
 function initHamburger(): void {
 	const setOpen = (open: boolean): void => {
@@ -38,6 +55,7 @@ function initHamburger(): void {
 		if (event.key === 'Escape') setOpen(false);
 	});
 }
+initHamburger();
 
 /** Makes it so clicking nav links with dropdowns doesn't leave them open when the mouse leaves. */
 function initNavDropdowns(): void {
@@ -50,6 +68,42 @@ function initNavDropdowns(): void {
 		});
 	});
 }
+initNavDropdowns();
+
+function initLogoAnimation(): void {
+	let rafId: number | null = null;
+	let startTime: number | null = null;
+	let hovering = false;
+
+	function sineScale(t: number): number {
+		const phase = (t + LOGO_PULSE_START_PHASE) % 1;
+		return (LOGO_PULSE.MIN_SCALE + ((LOGO_PULSE.MAX_SCALE - LOGO_PULSE.MIN_SCALE) * (1 - Math.cos(2 * Math.PI * phase))) / 2); // prettier-ignore
+	}
+
+	function tick(now: number): void {
+		if (!hovering) {
+			aura.style.transform = '';
+			rafId = null;
+			return;
+		}
+		if (startTime === null) startTime = now;
+		const t = ((now - startTime) / LOGO_PULSE.PERIOD_MS) % 1;
+		aura.style.transform = `scale(${sineScale(t).toFixed(4)})`;
+		rafId = requestAnimationFrame(tick);
+	}
+
+	home.addEventListener('mouseenter', () => {
+		hovering = true;
+		if (rafId !== null) return;
+		startTime = null;
+		rafId = requestAnimationFrame(tick);
+	});
+
+	home.addEventListener('mouseleave', () => {
+		hovering = false;
+	});
+}
+initLogoAnimation();
 
 // OVERRIDE the viewport height variable in CSS based on how much screen space
 // the home button bar takes up on mobile devices — 100vh alone is incorrect.
