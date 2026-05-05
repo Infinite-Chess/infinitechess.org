@@ -11,6 +11,10 @@
 :root {
 	--header-height: 56px;
 	--header-btn-width: 50px;
+	--dropdown-item-height: 34px;
+	--vh: 100vh;
+	--c-tile: rgb(97, 97, 97);
+	--c-tile-2: rgb(110, 110, 110);
 	--dropdown-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
 	--dropdown-clip: inset(0 -20px -20px -20px round 0 0 4px 4px);
 	--dropdown-border-radius: 0 0 4px 4px;
@@ -297,13 +301,6 @@ a.header-donate:hover {
    Settings dropdown (ported from main, re-themed)
    =================================================================== */
 
-:root {
-	--dropdown-item-height: 34px;
-	--vh: 100vh;
-	--c-tile: rgb(97, 97, 97);
-	--c-tile-2: rgb(110, 110, 110);
-}
-
 .svg-pawn {
 	position: relative;
 	bottom: 3px;
@@ -315,6 +312,15 @@ a.header-donate:hover {
 .spinny-pawn {
 	transform-origin: 50% 60%;
 	animation: spin 0.65s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .dropdown {
@@ -687,15 +693,6 @@ p.theme-title {
 }
 .visibility-hidden {
 	visibility: hidden;
-}
-
-@keyframes spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
 }
 
 /* ===================================================================
