@@ -146,7 +146,7 @@
 
 /* For dropdown parents, show the accent left border on the nav link when open */
 .header-dropdown-parent:hover .header-nav-link {
-	border-left-color: var(--switch-on-color);
+	border-left-color: var(--c-tile);
 }
 
 /* ---------- Right-side action icons ---------- */
@@ -246,7 +246,7 @@
 	left: 0;
 	min-width: 100%;
 	background-color: var(--c-surface-2);
-	border-left: 2px solid var(--switch-on-color);
+	border-left: 2px solid var(--c-tile);
 	border-radius: 0 0 4px 4px;
 	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
@@ -289,7 +289,8 @@
 :root {
 	--dropdown-item-height: 34px;
 	--vh: 100vh;
-	--switch-on-color: rgb(97, 97, 97);
+	--c-tile: rgb(97, 97, 97);
+	--c-tile-2: rgb(110, 110, 110);
 }
 
 .svg-pawn {
@@ -422,8 +423,8 @@ span.arrow-head-left {
 	transform: translateX(100%);
 }
 .switch input:checked + * {
-	background-color: var(--switch-on-color);
-	border-color: var(--switch-on-color);
+	background-color: var(--c-tile);
+	border-color: var(--c-tile);
 }
 
 /* Language nested dropdown */

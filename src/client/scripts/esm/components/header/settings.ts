@@ -148,7 +148,7 @@ function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 	return clickedDropdown;
 }
 
-/** Updates the stylesheet colors --background-theme-color and --switch-on-color based on the current theme. */
+/** Updates the stylesheet colors --c-tile and --c-tile-2 based on the current theme. */
 function updateBackgroundColor(): void {
 	const boardColor = preferences.getBoardColor();
 	const lightTiles = themes.getPropertyOfTheme(boardColor, 'lightTiles');
@@ -164,7 +164,7 @@ function updateBackgroundColor(): void {
 
 	const cssSwitch = style.rgbToCssString(switchR, switchG, switchB);
 
-	// Also set the --background-theme-color property, which is just a slightly brightened version!
+	// Also set the --c-tile-2 property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
 
 	// Convert to HSL Color
@@ -181,8 +181,8 @@ function updateBackgroundColor(): void {
 	// Set CSS properties
 
 	const root = document.documentElement;
-	root.style.setProperty('--switch-on-color', cssSwitch);
-	root.style.setProperty('--background-theme-color', cssBackground);
+	root.style.setProperty('--c-tile', cssSwitch);
+	root.style.setProperty('--c-tile-2', cssBackground);
 }
 
 export default {};
