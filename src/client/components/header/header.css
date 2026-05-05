@@ -140,7 +140,6 @@
 .header-nav-link:focus-visible,
 .header-dropdown-parent:hover .header-nav-link {
 	background-color: var(--c-surface-2);
-	color: var(--c-link);
 	outline: none;
 }
 
@@ -174,7 +173,6 @@
 .header-icon-btn:hover,
 .header-icon-btn:focus-visible {
 	background-color: var(--c-surface-2);
-	color: var(--c-link);
 	outline: none;
 }
 
@@ -226,7 +224,6 @@
 .header-hamburger:hover,
 .header-hamburger:focus-visible {
 	background-color: var(--c-surface-2);
-	color: var(--c-link);
 	outline: none;
 }
 
@@ -278,7 +275,6 @@
 .header-dropdown-item:hover,
 .header-dropdown-item:focus-visible {
 	background-color: var(--c-surface);
-	color: var(--c-link);
 	outline: none;
 }
 
@@ -745,14 +741,13 @@ p.theme-title {
 	color: var(--c-text);
 	font-size: 13px;
 	font-weight: 400;
-	border-left: 3px solid var(--c-link);
+	border-left: 3px solid var(--c-tile);
 	margin-left: 14px;
 }
 
 .header-mobile-link:hover,
 .header-mobile-child:hover {
 	background-color: var(--c-surface-2);
-	color: var(--c-link);
 }
 
 /* ===================================================================
