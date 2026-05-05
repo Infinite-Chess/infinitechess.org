@@ -24,7 +24,6 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 router.get('^/$|/index(.html)?', (_req: Request, res: Response) => res.render('index.njk'));
 router.get('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
 router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));
-router.get('/guide(.html)?', (_req: Request, res: Response) => res.render('guide.njk'));
 router.get('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 router.get('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 router.get('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
