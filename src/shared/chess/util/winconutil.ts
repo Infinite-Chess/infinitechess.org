@@ -10,7 +10,7 @@ import type { GameRules } from './gamerules.js';
 
 import * as z from 'zod';
 
-import typeutil from './typeutil.js';
+import typeschemas from './typeschemas.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -79,7 +79,7 @@ export type GameConclusion = z.infer<typeof gameConclusionSchema>;
 const gameConclusionSchema = z.discriminatedUnion('condition', [
 	z.strictObject({
 		condition: z.enum(WIN_CONDITIONS),
-		victor: typeutil.PlayerSchema,
+		victor: typeschemas.PlayerSchema,
 	}),
 	z.strictObject({
 		condition: z.enum(DRAW_CONDITIONS),

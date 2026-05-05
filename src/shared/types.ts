@@ -8,8 +8,8 @@
 
 import * as z from 'zod';
 
-import typeutil from './chess/util/typeutil.js';
 import winconutil from './chess/util/winconutil.js';
+import typeschemas from './chess/util/typeschemas.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -48,13 +48,13 @@ export const ServerUsernameContainerSchema = z.strictObject({
 export type ClockValues = z.infer<typeof ClockValuesSchema>;
 export const ClockValuesSchema = z.strictObject({
 	/** Each color's remaining time in milliseconds, keyed by player number. */
-	clocks: typeutil.GenPlayerGroupSchema(z.number()),
+	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
 	/**
 	 * If a player's timer is currently counting down, this should be specified.
 	 * No clock is ticking if less than 2 moves are played, or if the game is over.
 	 * The color specified should have their time immediately accommodated for ping.
 	 */
-	colorTicking: typeutil.PlayerSchema.optional(),
+	colorTicking: typeschemas.PlayerSchema.optional(),
 	/**
 	 * The timestamp the color ticking (if there is one) will lose by timeout.
 	 * This should be calculated AFTER we adjust the clock values for ping.

@@ -11,7 +11,7 @@
 
 import * as z from 'zod';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import typeschemas from '../../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
@@ -45,7 +45,7 @@ const InviteSchema = z.strictObject({
 	/** The clock value. */
 	clock: TimeControlSchema,
 	/** The player color (null = Random). */
-	color: z.union([typeutil.PlayerSchema, z.literal(null)]),
+	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	/** Whether the game is public or private. */
 	publicity: PublicitySchema,
 	/** Whether the game is rated or casual. */
@@ -67,7 +67,7 @@ const ServerGameInfoSchema = z.strictObject({
 	id: GameIDSchema,
 	rated: z.boolean(),
 	publicity: PublicitySchema,
-	playerRatings: typeutil.GenPlayerGroupSchema(RatingSchema),
+	playerRatings: typeschemas.GenPlayerGroupSchema(RatingSchema),
 });
 
 /**
@@ -82,7 +82,7 @@ const JoinGameMessageSchema = GameUpdateMessageSchema.extend({
 	gameInfo: ServerGameInfoSchema,
 	/** The metadata of the game, including the TimeControl, player names, date, etc. */
 	metadata: MetaDataSchema,
-	youAreColor: typeutil.PlayerSchema,
+	youAreColor: typeschemas.PlayerSchema,
 });
 
 // General Schema ---------------------------------------------------------------
