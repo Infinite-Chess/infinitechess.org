@@ -3,11 +3,11 @@
 /**
  * Owns frame delta-time calculation and storage.
  * Called each frame by loadbalancer.ts with the current timestamp.
- *
- * ZERO dependencies — safe to import from pure rendering scripts.
  */
 
 let lastFrameTime: number = 0;
+
+/** The amount of seconds that have passed since the last frame. */
 let deltaTime: number = 0;
 
 /** Returns the amount of seconds that have passed since the last frame. */
