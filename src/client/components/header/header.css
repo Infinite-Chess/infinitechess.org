@@ -112,7 +112,6 @@
 }
 
 .header-nav-link:hover,
-.header-nav-link:focus-visible,
 .header-dropdown-parent:hover .header-nav-link {
 	background-color: var(--c-surface-2);
 	outline: none;
@@ -121,6 +120,16 @@
 /* For dropdown parents, show the accent left border on the nav link when open */
 .header-dropdown-parent:hover .header-nav-link {
 	border-left-color: var(--c-tile);
+}
+
+/* Donate link — golden accent */
+a.header-donate {
+	color: var(--c-donate);
+}
+
+a.header-donate:hover {
+	background-color: var(--c-donate-bg-hover);
+	color: var(--c-donate-hover);
 }
 
 /* ---------- Right-side action icons ---------- */
@@ -145,8 +154,7 @@
 	cursor: pointer;
 }
 
-.header-icon-btn:hover,
-.header-icon-btn:focus-visible {
+.header-icon-btn:hover {
 	background-color: var(--c-surface-2);
 	outline: none;
 }
@@ -208,8 +216,7 @@
 	cursor: pointer;
 }
 
-.header-hamburger:hover,
-.header-hamburger:focus-visible {
+.header-hamburger:hover {
 	background-color: var(--c-surface-2);
 	outline: none;
 }
@@ -276,8 +283,7 @@
 	letter-spacing: 0.02em;
 }
 
-.header-dropdown-item:hover,
-.header-dropdown-item:focus-visible {
+.header-dropdown-item:hover {
 	background-color: var(--c-surface);
 	outline: none;
 }
