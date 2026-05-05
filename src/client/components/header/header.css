@@ -8,9 +8,11 @@
  * The only exceptions are the omega-one logo pulse and the gear rotation.
  */
 
-.site-header {
+:root {
 	--header-height: 56px;
+}
 
+.site-header {
 	position: sticky;
 	top: 0;
 	z-index: 100;
@@ -249,6 +251,23 @@
 	height: 2px;
 	background-color: currentColor;
 	border-radius: 1px;
+	transition:
+		transform 0.18s cubic-bezier(0.55, 0.055, 0.675, 0.19),
+		opacity 0.1s ease-in;
+}
+
+/* Animate the three bars into an X when the menu is open. */
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(1) {
+	transform: translateY(6px) rotate(45deg);
+}
+
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(2) {
+	opacity: 0;
+	transform: scaleX(0);
+}
+
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(3) {
+	transform: translateY(-6px) rotate(-45deg);
 }
 
 /* ---------- Learn / Tools dropdowns (hover-only, CSS-driven) ---------- */
@@ -693,7 +712,7 @@ p.theme-title {
 
 .header-mobile-panel {
 	position: fixed;
-	top: 0;
+	top: var(--header-height);
 	left: 0;
 	bottom: 0;
 	width: min(80vw, 320px);
@@ -705,7 +724,7 @@ p.theme-title {
 	transform: translateX(-100%);
 	visibility: hidden;
 	overflow-y: auto;
-	padding: calc(var(--header-height, 56px) + 12px) 0 24px;
+	padding: 12px 0 24px;
 }
 
 .header-mobile-panel.open {
@@ -715,7 +734,10 @@ p.theme-title {
 
 .header-mobile-overlay {
 	position: fixed;
-	inset: 0;
+	top: var(--header-height);
+	left: 0;
+	right: 0;
+	bottom: 0;
 	background-color: rgba(0, 0, 0, 0.55);
 	z-index: 150;
 	visibility: hidden;
@@ -795,7 +817,7 @@ p.theme-title {
 }
 
 /* T3: Symbol + nav still too wide — nav moves into hamburger, full logo returns */
-@media (max-width: 660px) {
+@media (max-width: 670px) {
 	.header-sitename {
 		display: block;
 	}
