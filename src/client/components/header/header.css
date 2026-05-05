@@ -194,6 +194,14 @@
 	height: 18px;
 }
 
+/* Nudge slightly for better centering. */
+#login-link svg,
+#createaccount-link svg {
+	position: relative;
+	left: 2px;
+	top: 1px;
+}
+
 /* Settings gear container is also an icon button, but holds dropdowns. */
 .settings {
 	position: relative;
