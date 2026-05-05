@@ -562,16 +562,6 @@ p.theme-title {
 	margin-left: 8px;
 }
 
-.perspective-option .slider,
-.sound-option .slider {
-	width: 100%;
-}
-
-.perspective-option .slider:hover,
-.sound-option .slider:hover {
-	cursor: pointer;
-}
-
 .perspective-option .value,
 .sound-option .value {
 	padding-left: 5px;
@@ -582,11 +572,11 @@ p.theme-title {
 
 .perspective-option.mouse-sensitivity .value,
 .sound-option.master-volume .value {
-	width: 50px;
+	width: 45px;
 }
 
 .perspective-option.fov .value {
-	width: 35px;
+	width: 33px;
 }
 
 /* Reset default buttons */
@@ -604,7 +594,7 @@ p.theme-title {
 	width: fit-content;
 	height: fit-content;
 	border-radius: 14px;
-	padding: 3px 10px;
+	padding: 1px 6px;
 	color: var(--c-text);
 }
 

@@ -212,3 +212,69 @@ body {
 		transform: translate(-50%, -50%) rotate(360deg);
 	}
 }
+
+/* ============================================================
+   Range slider (.slider)
+   ============================================================ */
+
+.slider {
+	appearance: none;
+	width: 100%;
+	background: none;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+.slider:focus {
+	outline: none;
+}
+
+/* Track */
+.slider::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 1em;
+	cursor: pointer;
+	background: var(--c-surface);
+	border-radius: 0.5em;
+}
+
+.slider::-moz-range-track {
+	width: 100%;
+	height: 1em;
+	cursor: pointer;
+	background: var(--c-surface);
+	border-radius: 0.5em;
+}
+
+/* Thumb */
+.slider::-webkit-slider-thumb {
+	appearance: none;
+	border: 1px solid var(--c-border-2);
+	height: 1em;
+	width: 1.5em;
+	border-radius: 12px;
+	background: var(--c-surface-2);
+	cursor: pointer;
+	margin-top: 0;
+}
+
+.slider::-moz-range-thumb {
+	border: 1px solid var(--c-border-2);
+	height: 1em;
+	width: 1.5em;
+	border-radius: 12px;
+	background: var(--c-surface-2);
+	cursor: pointer;
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+	outline: 2px solid var(--c-brand);
+	outline-offset: 1px;
+}
+
+.slider:focus-visible::-moz-range-thumb {
+	outline: 2px solid var(--c-brand);
+	outline-offset: 1px;
+}
