@@ -528,7 +528,7 @@ p.theme-title {
 
 .board-color-list img:hover,
 .board-color-list img.selected {
-	outline: 5px solid var(--c-text);
+	outline: 5px solid var(--c-text-emphasis);
 }
 
 /* Perspective & Sound dropdowns */
