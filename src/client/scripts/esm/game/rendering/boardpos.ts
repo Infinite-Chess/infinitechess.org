@@ -14,7 +14,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import camera from './camera.js';
-import timing from '../misc/timing.js';
+import deltatime from '../misc/deltatime.js';
 import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
 import frametracker from './frametracker.js';
@@ -197,7 +197,7 @@ function panBoard(): void {
 	const baseYChange = bd.divide(panVelBD[1], boardScale);
 
 	// Account for delta time
-	const deltaTimeBD: BigDecimal = bd.fromNumber(timing.getDeltaTime());
+	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
 	const actualXChange = bd.multiply(baseXChange, deltaTimeBD);
 	const actualYChange = bd.multiply(baseYChange, deltaTimeBD);
 
@@ -213,7 +213,7 @@ function recalcScale(): void {
 	if (scaleVel === 0) return; // Exit if we're not zooming
 
 	const scaleVelBD: BigDecimal = bd.fromNumber(scaleVel);
-	const deltaTimeBD: BigDecimal = bd.fromNumber(timing.getDeltaTime());
+	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
 
 	let product = bd.multiply(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
 	product = bd.clamp(product, bd.fromNumber(-0.5), bd.fromNumber(0.5)); // Prevent extreme zoom changes from low lps

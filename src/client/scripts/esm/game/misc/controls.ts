@@ -16,11 +16,11 @@ import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
-import timing from '../misc/timing.js';
 import docutil from '../../util/docutil.js';
 import guipause from '../gui/guipause.js';
 import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';
+import deltatime from '../misc/deltatime.js';
 import socketman from '../websocket/socketman.js';
 import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
@@ -156,8 +156,8 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
 	const XYComponents: DoubleCoords = vectors.getXYComponents_FromAngle(angleRad);
 	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
-	panVel[0] += timing.getDeltaTime() * accelToUse * XYComponents[0];
-	panVel[1] += timing.getDeltaTime() * accelToUse * XYComponents[1];
+	panVel[0] += deltatime.get() * accelToUse * XYComponents[0];
+	panVel[1] += deltatime.get() * accelToUse * XYComponents[1];
 	return panVel;
 }
 
@@ -168,7 +168,7 @@ function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 	const rateToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
 
 	const hyp = Math.hypot(...panVel);
-	const newHyp = hyp - timing.getDeltaTime() * rateToUse;
+	const newHyp = hyp - deltatime.get() * rateToUse;
 	if (newHyp < 0) return [0, 0]; // Stop completely before we start going in the opposite direction
 
 	const ratio = newHyp / hyp;
@@ -189,11 +189,11 @@ function detectZooming(): void {
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
-			scaleVel -= timing.getDeltaTime() * scaleAccel_Desktop;
+			scaleVel -= deltatime.get() * scaleAccel_Desktop;
 		}
 		if (listener_document.isKeyHeld('ShiftLeft')) {
 			scaling = true;
-			scaleVel += timing.getDeltaTime() * scaleAccel_Desktop;
+			scaleVel += deltatime.get() * scaleAccel_Desktop;
 		}
 		// Mouse wheel
 		const wheelDelta = mouse.getWheelDelta();
@@ -223,11 +223,11 @@ function deccelerateScaleVel(scaleVel: number): number {
 	const deccelerationToUse = docutil.isMouseSupported() ? scaleAccel_Desktop : scaleAccel_Mobile;
 
 	if (scaleVel > 0) {
-		scaleVel -= timing.getDeltaTime() * deccelerationToUse;
+		scaleVel -= deltatime.get() * deccelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
 	} else {
 		// scaleVel < 0
-		scaleVel += timing.getDeltaTime() * deccelerationToUse;
+		scaleVel += deltatime.get() * deccelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
 

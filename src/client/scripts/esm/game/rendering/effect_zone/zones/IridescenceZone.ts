@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import timing from '../../../misc/timing.js';
+import deltatime from '../../../misc/deltatime.js';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import IridescenceSoundscape from '../soundscapes/IridescenceSoundscape';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
@@ -59,7 +59,7 @@ export class IridescenceZone implements Zone {
 	}
 
 	public update(): void {
-		const deltaTime = timing.getDeltaTime(); // In seconds
+		const deltaTime = deltatime.get(); // In seconds
 
 		// Rotate the flow direction over time.
 		this.flowDirection += this.flowRotationSpeed * deltaTime;

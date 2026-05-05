@@ -32,9 +32,9 @@ import mouse from '../../../util/mouse.js';
 import camera from '../camera.js';
 import meshes from '../meshes.js';
 import arrows from '../arrows/arrows.js';
-import timing from '../../misc/timing.js';
 import gameslot from '../../chess/gameslot.js';
 import keybinds from '../../misc/keybinds.js';
+import deltatime from '../../misc/deltatime.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
 import maskedDraw from '../../../webgl/maskedDraw.js';
@@ -139,7 +139,7 @@ function update(): void {
 		if (isDragActive) {
 			// Update the phase of the slide zone gradient to create a moving effect
 			slideZonePhase =
-				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * timing.getDeltaTime()) %
+				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * deltatime.get()) %
 				(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
 			frametracker.onVisualChange(); // Render this frame (slide zone is being animated)
 		}

@@ -3,7 +3,7 @@
 import type { Zone } from '../EffectZoneManager';
 
 import camera from '../../camera';
-import timing from '../../../misc/timing.js';
+import deltatime from '../../../misc/deltatime.js';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
@@ -64,7 +64,7 @@ export class OceanZone implements Zone {
 	}
 
 	public update(): void {
-		const deltaTime = timing.getDeltaTime(); // Time in seconds since last frame.
+		const deltaTime = deltatime.get(); // Time in seconds since last frame.
 
 		// --- 1. Animate the rotation of the ripple circle ---
 		this.circleRotationAngle += this.ROTATION_SPEED * this.rotationDirection * deltaTime;

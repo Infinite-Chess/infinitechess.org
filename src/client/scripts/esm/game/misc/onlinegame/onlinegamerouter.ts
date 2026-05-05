@@ -16,7 +16,6 @@ import { players as p, Player } from '../../../../../../shared/chess/util/typeut
 
 import afk from './afk.js';
 import toast from '../../gui/toast.js';
-import board from '../../rendering/boardtiles.js';
 import guiplay from '../../gui/guiplay.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';

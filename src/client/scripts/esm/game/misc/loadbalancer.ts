@@ -7,9 +7,9 @@
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import stats from '../gui/stats.js';
-import timing from './timing.js';
 import config from '../config.js';
 import invites from './invites.js';
+import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
@@ -69,7 +69,7 @@ function isPageHidden(): boolean {
 function update(runtime: number): void {
 	// milliseconds
 	runTime = runtime;
-	timing.update(runtime);
+	deltatime.update(runtime);
 
 	frames.push(runTime);
 	trimFrames();

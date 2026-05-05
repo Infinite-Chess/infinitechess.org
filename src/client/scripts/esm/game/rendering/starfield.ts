@@ -12,9 +12,9 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import camera from './camera.js';
-import timing from '../misc/timing.js';
 import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
+import deltatime from '../misc/deltatime.js';
 import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
 import gameloader from '../chess/gameloader.js';
@@ -241,7 +241,7 @@ function update(): void {
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();
 
-	const deltaTimeSecs = timing.getDeltaTime();
+	const deltaTimeSecs = deltatime.get();
 	const now = performance.now(); // Get the current time once.
 
 	// 1. Update existing stars and handle deaths

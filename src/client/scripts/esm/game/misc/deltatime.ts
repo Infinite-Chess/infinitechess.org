@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/timing.ts
+// src/client/scripts/esm/game/misc/deltatime.ts
 
 /**
  * Owns frame delta-time calculation and storage.
@@ -11,7 +11,7 @@ let lastFrameTime: number = 0;
 let deltaTime: number = 0;
 
 /** Returns the amount of seconds that have passed since the last frame. */
-function getDeltaTime(): number {
+function get(): number {
 	return deltaTime;
 }
 
@@ -25,6 +25,6 @@ function update(timestamp: number): void {
 }
 
 export default {
-	getDeltaTime,
+	get,
 	update,
 };
