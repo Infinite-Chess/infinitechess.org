@@ -10,6 +10,11 @@
 
 :root {
 	--header-height: 56px;
+	--header-btn-width: 50px;
+	--dropdown-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+	--dropdown-clip: inset(0 -20px -20px -20px round 0 0 4px 4px);
+	--dropdown-border-radius: 0 0 4px 4px;
+	--switch-border-radius: 14px;
 }
 
 .site-header {
@@ -145,7 +150,7 @@ a.header-donate:hover {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 50px;
+	width: var(--header-btn-width);
 	height: 100%;
 	padding: 0 12px;
 	background: none;
@@ -207,7 +212,7 @@ a.header-donate:hover {
 	align-items: center;
 	justify-content: center;
 	gap: 4px;
-	width: 50px;
+	width: var(--header-btn-width);
 	height: 100%;
 	padding: 0;
 	background: none;
@@ -255,10 +260,10 @@ a.header-donate:hover {
 	min-width: 100%;
 	background-color: var(--c-surface-2);
 	border-left: 2px solid var(--c-tile);
-	border-radius: 0 0 4px 4px;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+	border-radius: var(--dropdown-border-radius);
+	box-shadow: var(--dropdown-shadow);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
-	clip-path: inset(0 -20px -20px -20px round 0 0 4px 4px);
+	clip-path: var(--dropdown-clip);
 	z-index: 1;
 	/* Kept rendered (not display: none) so the cursor can move from the
 	   parent into the dropdown without the dropdown collapsing first. */
@@ -321,13 +326,13 @@ a.header-donate:hover {
 	background-color: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-top: 0;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+	box-shadow: var(--dropdown-shadow);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
-	clip-path: inset(0 -20px -20px -20px round 0 0 4px 4px);
+	clip-path: var(--dropdown-clip);
 	z-index: 1;
 	font-size: 13px;
 	cursor: auto;
-	border-radius: 0 0 4px 4px;
+	border-radius: var(--dropdown-border-radius);
 	overflow: hidden;
 }
 
@@ -410,7 +415,7 @@ span.arrow-head-left {
 .switch > input + * {
 	position: absolute;
 	inset: 0;
-	border-radius: 14px;
+	border-radius: var(--switch-border-radius);
 	background-color: var(--c-text-muted);
 	border: 2px solid var(--c-text-muted);
 }
@@ -418,7 +423,7 @@ span.arrow-head-left {
 .switch > input + ::before {
 	content: '';
 	display: block;
-	border-radius: 14px;
+	border-radius: var(--switch-border-radius);
 	background-color: var(--c-surface);
 	width: 50%;
 	height: 100%;
@@ -537,7 +542,6 @@ p.theme-title {
 
 .perspective-option,
 .sound-option {
-	font-size: 13px;
 	padding: 5px 0 10px;
 	color: var(--c-text);
 }
@@ -587,7 +591,7 @@ p.theme-title {
 	align-items: center;
 	width: fit-content;
 	height: fit-content;
-	border-radius: 14px;
+	border-radius: var(--switch-border-radius);
 	padding: 1px 6px;
 	color: var(--c-text);
 }
@@ -769,7 +773,6 @@ p.theme-title {
 }
 
 .header-mobile-group-title {
-	color: var(--c-text-muted);
 	cursor: default;
 }
 
