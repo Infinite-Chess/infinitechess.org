@@ -42,6 +42,10 @@
 	color: var(--c-text-emphasis);
 }
 
+.header-home:hover .header-sitename {
+	color: var(--c-link);
+}
+
 .header-logo {
 	position: relative;
 	display: inline-flex;
