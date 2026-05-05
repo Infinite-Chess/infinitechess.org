@@ -13,7 +13,7 @@
 	--header-btn-width: 50px;
 	--dropdown-item-height: 34px;
 	--vh: 100vh;
-	--dropdown-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+	--dropdown-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
 	--dropdown-clip: inset(0 -20px -20px -20px round 0 0 4px 4px);
 	--dropdown-border-radius: 0 0 4px 4px;
 	--switch-border-radius: 14px;
@@ -689,7 +689,7 @@ p.theme-title {
 	max-width: min(80vw, 320px);
 	background-color: var(--c-surface);
 	border-right: 1px solid var(--c-border);
-	box-shadow: 4px 0 16px rgba(0, 0, 0, 0.35);
+	box-shadow: 0px 0 8px rgba(0, 0, 0, 0.3);
 	/* Clip the upward shadow bleed so it doesn't spill into the header bar. */
 	clip-path: inset(0 -20px -20px 0);
 	z-index: 300;
