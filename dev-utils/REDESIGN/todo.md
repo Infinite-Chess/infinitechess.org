@@ -4,8 +4,6 @@
 
 ## Shared Components
 
-- Build a **minimal functional header** (`src/client/components/header/`) — logo, auth state (logged-in vs logged-out), and nav links for the pages known to exist. CSS-only responsive layout, no JS measurement. Server passes auth state via `req.memberInfo`. Nav items can be updated later as the page set becomes clearer.
-
 - Build the **shared footer** — Nunjucks partial and CSS.
 
 - Implement logout-in-another-tab handling: on all socket-connected pages, call `window.location.reload()` when the socket logout event is received so the server re-renders the correct logged-out state.
