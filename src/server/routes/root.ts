@@ -22,6 +22,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 
 // Regular pages
 router.get('^/$|/index(.html)?', (_req: Request, res: Response) => res.render('index.njk'));
+router.get('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 router.get('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
 router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));
 router.get('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
@@ -30,6 +31,7 @@ router.get('/login(.html)?', (_req: Request, res: Response) => res.render('login
 router.get('/createaccount(.html)?', (_req: Request, res: Response) => res.render('createaccount.njk')); // prettier-ignore
 router.get('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
 router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.render('termsofservice.njk')); // prettier-ignore
+router.get('/privacypolicy(.html)?', (_req: Request, res: Response) => res.render('privacypolicy.njk')); // prettier-ignore
 router.get('/member(.html)?/:member', (_req: Request, res: Response) => res.render('member.njk'));
 router.get('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk'));
 router.get('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore

@@ -29,6 +29,7 @@ const ESMEntryPoints = [
 	// Stylesheets — bundled as content-hashed CSS entry points.
 	'src/client/css/global.css',
 	'src/client/components/header/header.css',
+	'src/client/components/footer/footer.css',
 	'src/client/css/index.css',
 
 	// Scripts
