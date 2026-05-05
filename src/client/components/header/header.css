@@ -773,12 +773,34 @@ p.theme-title {
 }
 
 /* ===================================================================
-   Responsive: a single breakpoint switches into the hamburger layout
+   Responsive: progressive breakpoints for header content
    =================================================================== */
 
-@media (max-width: 620px) {
-	.header-nav,
+/* T1: Full layout getting tight — hide the logo symbol, keep text + nav */
+@media (max-width: 850px) {
+	.header-logo {
+		display: none;
+	}
+}
+
+/* T2: Text + nav still too wide — restore symbol, hide text instead */
+@media (max-width: 800px) {
+	.header-logo {
+		display: inline-flex;
+	}
+
 	.header-sitename {
+		display: none;
+	}
+}
+
+/* T3: Symbol + nav still too wide — nav moves into hamburger, full logo returns */
+@media (max-width: 660px) {
+	.header-sitename {
+		display: block;
+	}
+
+	.header-nav {
 		display: none;
 	}
 
@@ -789,5 +811,12 @@ p.theme-title {
 	/* The home link sits to the right of the hamburger. */
 	.header-home {
 		padding: 0 8px;
+	}
+}
+
+/* T4: Logo + text doesn't have enough room — drop to symbol-only logo */
+@media (max-width: 470px) {
+	.header-sitename {
+		display: none;
 	}
 }
