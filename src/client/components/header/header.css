@@ -681,7 +681,7 @@ p.theme-title {
 
 .header-mobile-panel {
 	position: fixed;
-	top: var(--header-height);
+	top: calc(var(--header-height) - 1px);
 	left: 0;
 	bottom: 0;
 	width: fit-content;
