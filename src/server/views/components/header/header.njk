@@ -1,3 +1,22 @@
+{# Reusable boolean toggle row. #}
+{% macro boolean_option(cls, label) -%}
+<label class="boolean-option {{ cls }}">
+	<p class="text">{{ label }}</p>
+	<div class="switch">
+		<input type="checkbox">
+		<span></span>
+	</div>
+</label>
+{%- endmacro %}
+
+{# Settings sub-panel back-button/title bar. #}
+{% macro sub_dropdown_title(title) -%}
+<div class="dropdown-title">
+	<span class="arrow-head-left"></span>
+	<p class="text">{{ title }}</p>
+</div>
+{%- endmacro %}
+
 {# Site-wide header. Included by every page. #}
 <header class="site-header">
 	{# SVG defs — only the pawn is still used (ping meter loading indicator). #}
@@ -33,7 +52,7 @@
 			<button class="header-nav-link" type="button">Learn</button>
 			<div class="header-dropdown" role="menu">
 				<a class="header-dropdown-item" role="menuitem" href="/tutorial">Tutorial</a>
-				<a class="header-dropdown-item" role="menuitem" href="/checkmate-practice">Checkmate Practice</a>
+				<a class="header-dropdown-item" role="menuitem" href="/checkmatepractice">Checkmate Practice</a>
 			</div>
 		</div>
 
@@ -116,10 +135,10 @@
 						<span class="ms">ms</span>
 					</div>
 					<div class="ping-bars">
-						<div class="ping-bar" style="height: 6px;"></div>
-						<div class="ping-bar" style="height: 12px;"></div>
-						<div class="ping-bar" style="height: 18px;"></div>
-						<div class="ping-bar" style="height: 24px;"></div>
+						<div class="ping-bar"></div>
+						<div class="ping-bar"></div>
+						<div class="ping-bar"></div>
+						<div class="ping-bar"></div>
 						<div class="ping-glow"></div>
 					</div>
 					<svg class="svg-pawn spinny-pawn hidden"><use href="#svg-pawn"></use></svg>
@@ -128,10 +147,7 @@
 
 			{# Language #}
 			<div class="language-dropdown dropdown visibility-hidden">
-				<div class="dropdown-title">
-					<span class="arrow-head-left"></span>
-					<p class="text">Language</p>
-				</div>
+				{{ sub_dropdown_title("Language") }}
 				<div class="dropdown-scrollable">
 					<div class="language-dropdown-item selected" value="en-US">
 						<div class="language-names">
@@ -145,10 +161,7 @@
 
 			{# Appearance #}
 			<div class="appearance-dropdown dropdown visibility-hidden">
-				<div class="dropdown-title">
-					<span class="arrow-head-left"></span>
-					<p class="text">Appearance</p>
-				</div>
+				{{ sub_dropdown_title("Appearance") }}
 				<div class="dropdown-scrollable">
 					<div class="select-option ui-theme" data-theme-toggle>
 						<p class="text">Theme</p>
@@ -158,27 +171,9 @@
 						<p class="text">Legal Moves</p>
 						<span class="select-value"></span>
 					</div>
-					<label class="boolean-option coordinates">
-						<p class="text">Coordinates</p>
-						<div class="switch">
-							<input type="checkbox">
-							<span></span>
-						</div>
-					</label>
-					<label class="boolean-option starfield">
-						<p class="text">Starfield</p>
-						<div class="switch">
-							<input type="checkbox">
-							<span></span>
-						</div>
-					</label>
-					<label class="boolean-option advanced-effects">
-						<p class="text">Advanced Effects</p>
-						<div class="switch">
-							<input type="checkbox">
-							<span></span>
-						</div>
-					</label>
+					{{ boolean_option("coordinates", "Coordinates") }}
+					{{ boolean_option("starfield", "Starfield") }}
+					{{ boolean_option("advanced-effects", "Advanced Effects") }}
 					<p class="theme-title">Board Tiles</p>
 					<div class="board-color-list"></div>
 				</div>
@@ -186,53 +181,17 @@
 
 			{# Gameplay #}
 			<div class="gameplay-dropdown dropdown visibility-hidden">
-				<div class="dropdown-title">
-					<span class="arrow-head-left"></span>
-					<p class="text">Gameplay</p>
-				</div>
-				<label class="boolean-option drag">
-					<p class="text">Dragging pieces</p>
-					<div class="switch">
-						<input type="checkbox">
-						<span></span>
-					</div>
-				</label>
-				<label class="boolean-option premove">
-					<p class="text">Premoves</p>
-					<div class="switch">
-						<input type="checkbox">
-						<span></span>
-					</div>
-				</label>
-				<label class="boolean-option animations">
-					<p class="text">Animations</p>
-					<div class="switch">
-						<input type="checkbox">
-						<span></span>
-					</div>
-				</label>
-				<label class="boolean-option fast-transitions">
-					<p class="text">Fast Transitions</p>
-					<div class="switch">
-						<input type="checkbox">
-						<span></span>
-					</div>
-				</label>
-				<label class="boolean-option lingering-annotations">
-					<p class="text">Lingering Annotations</p>
-					<div class="switch">
-						<input type="checkbox">
-						<span></span>
-					</div>
-				</label>
+				{{ sub_dropdown_title("Gameplay") }}
+				{{ boolean_option("drag", "Dragging pieces") }}
+				{{ boolean_option("premove", "Premoves") }}
+				{{ boolean_option("animations", "Animations") }}
+				{{ boolean_option("fast-transitions", "Fast Transitions") }}
+				{{ boolean_option("lingering-annotations", "Lingering Annotations") }}
 			</div>
 
 			{# Perspective #}
 			<div class="perspective-dropdown dropdown visibility-hidden">
-				<div class="dropdown-title">
-					<span class="arrow-head-left"></span>
-					<p class="text">Perspective</p>
-				</div>
+				{{ sub_dropdown_title("Perspective") }}
 				<div class="perspective-options">
 					<div class="perspective-option mouse-sensitivity">
 						<div class="perspective-option-title">
@@ -263,10 +222,7 @@
 
 			{# Sound #}
 			<div class="sound-dropdown dropdown visibility-hidden">
-				<div class="dropdown-title">
-					<span class="arrow-head-left"></span>
-					<p class="text">Sound</p>
-				</div>
+				{{ sub_dropdown_title("Sound") }}
 				<div class="sound-options">
 					<div class="sound-option master-volume">
 						<div class="sound-option-title">
@@ -277,13 +233,7 @@
 							<span class="value"></span>
 						</div>
 					</div>
-					<label class="boolean-option ambience">
-						<p class="text">Ambience</p>
-						<div class="switch">
-							<input type="checkbox">
-							<span></span>
-						</div>
-					</label>
+					{{ boolean_option("ambience", "Ambience") }}
 				</div>
 			</div>
 		</div>
@@ -305,7 +255,7 @@
 		</div>
 		<a class="header-mobile-link" href="/leaderboard">Leaderboard</a>
 		<a class="header-mobile-link" href="/news">News</a>
-		<a class="header-mobile-link" href="/patron">Donate</a>
+		<a class="header-mobile-link header-donate" href="/patron">Donate</a>
 	</nav>
 </div>
 <div class="header-mobile-dim-content" aria-hidden="true"></div>
