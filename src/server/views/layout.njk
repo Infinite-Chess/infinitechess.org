@@ -3,8 +3,13 @@
 <head>
     {# Reads the saved UI color scheme from localStorage and applies it before CSS loads,
        preventing a flash of the wrong theme on initial page paint.
-       Falls back to the SSR default of "dark" when no preference is stored. #}
-    <script>(function(){var t=localStorage.getItem('color-scheme');if(t){document.documentElement.setAttribute('data-theme',t)}})()</script>
+       Falls back to the system theme on first visit, then "dark" if neither is available. #}
+    <script>
+        (function(){
+            var t=localStorage.getItem('color-scheme') || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark');
+            document.documentElement.setAttribute('data-theme',t)
+        })()
+    </script>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
