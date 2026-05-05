@@ -12,15 +12,10 @@ import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import config from '../config.js';
 import docutil from '../../util/docutil.js';
-import guipause from '../gui/guipause.js';
-import gameslot from '../chess/gameslot.js';
-import selection from '../chess/selection.js';
-import { Mouse } from '../input.js';
 import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
 import camera, { Mat4 } from './camera.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
 
 /** Whether perspective mode is enabled. */
 let enabled = false;
@@ -30,6 +25,12 @@ let rotZ = 0; // Positive z looks right
 // rotY = 0, // Y is tilt, we will not be using this
 
 let isViewingBlackPerspective = false;
+
+/**
+ * Whether we're currently in white's perspective.
+ * Affects rotation resets.
+ */
+let viewWhitePerspective: boolean = true;
 
 const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by our perspective_sensitivity in the preferences.
 
@@ -69,10 +70,6 @@ function enable(): void {
 		return console.error('Should not be enabling perspective when it is already enabled.');
 	enabled = true;
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.on}`;
-
-	guipause.callback_Resume();
-
 	lockMouse();
 
 	initCrosshairModel();
@@ -85,19 +82,16 @@ function disable(): void {
 	frametracker.onVisualChange();
 
 	enabled = false;
-	// document.exitPointerLock()
-	guipause.callback_Resume();
 
-	guipause.getelement_perspective().textContent = `${translations.rendering.perspective}: ${translations.rendering.off}`;
+	resetRotations();
+}
 
-	const viewWhitePerspective = gameslot.areInGame()
-		? gameslot.isLoadedGameViewingWhitePerspective()
-		: true;
-	resetRotations(viewWhitePerspective);
+function setViewSide(whitePerspective: boolean): void {
+	viewWhitePerspective = whitePerspective;
 }
 
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations(viewWhitePerspective = true): void {
+function resetRotations(): void {
 	rotX = 0;
 	rotZ = viewWhitePerspective ? 0 : 180;
 
@@ -110,8 +104,6 @@ function resetRotations(viewWhitePerspective = true): void {
 function relockMouse(): void {
 	if (!enabled) return;
 	if (isMouseLocked()) return;
-	if (guipause.areWePaused()) return;
-	if (selection.getSquarePawnIsCurrentlyPromotingOn()) return;
 
 	lockMouse();
 }
@@ -122,29 +114,19 @@ function lockMouse(): void {
 	// camera.canvas.requestPointerLock({ unadjustedMovement: true });
 }
 
-function update(): void {
-	if (!enabled) return;
-	// If they pushed escape, the mouse will no longer be locked
-	// If the mouse is unlocked, don't rotate view.
-	if (!isMouseLocked()) {
-		// Check if needs to relock
-		if (listener_overlay.isMouseClicked(Mouse.LEFT)) {
-			listener_overlay.claimMouseClick(Mouse.LEFT);
-			relockMouse();
-		} else if (listener_overlay.isMouseDown(Mouse.LEFT))
-			listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
-		return;
-	}
-
-	const mouseChange = listener_document.getPhysicalPointerDelta('mouse');
-	if (!mouseChange) throw Error('Mouse pointer not present!');
-
-	const thisSensitivity =
+/**
+ * Applies a rotation delta based on mouse movement. Call externally after
+ * reading the pointer delta from the input listener.
+ * @param mouseChangeX - Horizontal mouse delta.
+ * @param mouseChangeY - Vertical mouse delta.
+ */
+function addRotation(mouseChangeX: number, mouseChangeY: number): void {
+	const sensitivity =
 		mouseSensitivityMultiplier * (preferences.getPerspectiveSensitivity() / 100); // Divide by 100 to bring it to the range 0.25-2
 
-	// Change rotations based on mouse motion
-	rotX += mouseChange[1] * thisSensitivity;
-	rotZ += mouseChange[0] * thisSensitivity;
+	// Change rotations based on input
+	rotX += mouseChangeY * sensitivity;
+	rotZ += mouseChangeX * sensitivity;
 	capRotations();
 	updateIsViewingBlackPerspective();
 
@@ -270,9 +252,10 @@ export default {
 	getIsViewingBlackPerspective,
 	toggle,
 	disable,
+	setViewSide,
 	resetRotations,
 	relockMouse,
-	update,
+	addRotation,
 	applyRotations,
 	isMouseLocked,
 	renderCrosshair,

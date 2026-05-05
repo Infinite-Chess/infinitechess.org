@@ -249,7 +249,6 @@ function handleLogin(basegame: Game): void {
 	clock.endGame(basegame);
 	guiclock.stopClocks(basegame);
 	selection.unselectPiece();
-	board.darkenColor();
 }
 
 /**

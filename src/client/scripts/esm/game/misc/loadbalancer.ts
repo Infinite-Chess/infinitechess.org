@@ -7,6 +7,7 @@
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import stats from '../gui/stats.js';
+import timing from './timing.js';
 import config from '../config.js';
 import invites from './invites.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
@@ -16,9 +17,6 @@ import { listener_document, listener_overlay } from '../chess/game.js';
 
 /** In millis since the start of the program (updated at the beginning of each frame). */
 let runTime: number;
-/** Time in seconds since last animation frame */
-let deltaTime: number;
-let lastFrameTime: number = 0;
 
 /** Milliseconds to average the fps over */
 const fpsWindow = 1000;
@@ -52,11 +50,6 @@ function getRunTime(): number {
 	return runTime;
 }
 
-/** Returns the amount of seconds that have passed since last frame. */
-function getDeltaTime(): number {
-	return deltaTime;
-}
-
 function getTimeUntilAFK(): number {
 	return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
 }
@@ -75,7 +68,8 @@ function isPageHidden(): boolean {
 
 function update(runtime: number): void {
 	// milliseconds
-	updateDeltaTime(runtime);
+	runTime = runtime;
+	timing.update(runtime);
 
 	frames.push(runTime);
 	trimFrames();
@@ -85,12 +79,6 @@ function update(runtime: number): void {
 	updateMonitorRefreshRate();
 
 	updateAFK();
-}
-
-function updateDeltaTime(runtime: number): void {
-	runTime = runtime;
-	deltaTime = (runTime - lastFrameTime) / 1000;
-	lastFrameTime = runTime;
 }
 
 // Deletes frame timestamps from our list over 1 second ago
@@ -203,7 +191,6 @@ function cancelTimerToDeleteInviteAfterLeavingPage(): void {
 
 export default {
 	getRunTime,
-	getDeltaTime,
 	update,
 	areWeAFK,
 	areWeHibernating,

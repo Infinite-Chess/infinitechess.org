@@ -50,7 +50,12 @@ let showButtons = false;
 let usernamecontainer_white: UsernameContainer | undefined;
 let usernamecontainer_black: UsernameContainer | undefined;
 
-// Functions
+// Listeners -------------------------------------------------------------------
+
+// Re-align usernames when the canvas is resized
+document.addEventListener('canvas_resize', updateAlignmentUsernames);
+
+// Functions --------------------------------------------------------------
 
 /**
  *

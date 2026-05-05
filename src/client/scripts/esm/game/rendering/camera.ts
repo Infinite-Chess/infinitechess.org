@@ -20,13 +20,10 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
 import toast from '../gui/toast.js';
-import stats from '../gui/stats.js';
 import { gl } from './webgl.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import screenshake from './screenshake.js';
-import guidrawoffer from '../gui/guidrawoffer.js';
 import frametracker from './frametracker.js';
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
@@ -305,12 +302,9 @@ function initScreenBoundingBox(): void {
 
 function onScreenResize(): void {
 	updateCanvasDimensions(); // Also updates viewport
-	stats.updateStatsCSS();
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	perspective.initCrosshairModel();
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
-	guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
-	guigameinfo.updateAlignmentUsernames();
 	// console.log('Resized window.')
 }
 

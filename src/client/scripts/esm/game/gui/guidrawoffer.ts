@@ -23,6 +23,11 @@ const element_whosturn = document.getElementById('whosturn')!;
 /** Whether the player names and clocks have been hidden to give space for the draw offer UI */
 let drawOfferUICramped: boolean = false;
 
+// Listeners -------------------------------------------------------------------
+
+// Recheck visibility of names/clocks when the canvas is resized
+document.addEventListener('canvas_resize', updateVisibilityOfNamesAndClocksWithDrawOffer);
+
 // Functions -------------------------------------------------------------------
 
 /** Reveals the draw offer UI on the bottom navigation bar */

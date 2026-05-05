@@ -14,21 +14,14 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import style from '../gui/style.js';
 import camera from './camera.js';
-import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
-import imagecache from '../../chess/rendering/imagecache.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
-import piecemodels from './piecemodels.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
-import guipromotion from '../gui/guipromotion.js';
-import texturecache from '../../chess/rendering/texturecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import webgl, { gl } from './webgl.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
@@ -96,29 +89,9 @@ let darkTiles: Color;
 // Initialization --------------------------------------------------------------------------------
 
 // Add event listener for theme changes
-document.addEventListener('theme-change', (_event) => {
+document.addEventListener('theme-change', () => {
 	// Custom Event listener.
 	console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
-	updateTheme();
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-	imagecache.deleteImageCache();
-	// texturecache.deleteTextureCache(gl);
-	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
-		// Regenerate piece textures with the new tinted images
-		texturecache.initTexturesForGame(gl, gamefile.boardsim);
-		piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
-	});
-	// Reinit the promotion UI
-	guipromotion.resetUI();
-	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
-});
-
-GameBus.addEventListener('game-concluded', () => {
-	darkenColor();
-});
-GameBus.addEventListener('game-unloaded', () => {
-	// Resets the board color (the color changes when checkmate happens)
 	updateTheme();
 });
 
@@ -295,10 +268,7 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 
 /** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
 function updateTheme(): void {
-	const gamefile = gameslot.getGamefile();
-	if (gamefile && gamefileutility.isGameOver(gamefile.basegame))
-		darkenColor(); // Reset to slightly darkened board
-	else resetColor(); // Reset to defaults
+	resetColor();
 	updateSkyColor();
 	updateNavColor();
 }
@@ -365,21 +335,6 @@ function updateNavColor(): void {
             background: linear-gradient(to bottom, rgba(${navR}, ${navG}, ${navB}, 0.307), rgba(${navR}, ${navG}, ${navB}, 1), rgba(${navR}, ${navG}, ${navB}, 0.84));
         }
     `);
-}
-
-function darkenColor(): void {
-	const defaultLightTiles = preferences.getColorOfLightTiles();
-	const defaultDarkTiles = preferences.getColorOfDarkTiles();
-
-	const darkenBy = 0.09;
-	const darkWR = Math.max(defaultLightTiles[0] - darkenBy, 0);
-	const darkWG = Math.max(defaultLightTiles[1] - darkenBy, 0);
-	const darkWB = Math.max(defaultLightTiles[2] - darkenBy, 0);
-	const darkDR = Math.max(defaultDarkTiles[0] - darkenBy, 0);
-	const darkDG = Math.max(defaultDarkTiles[1] - darkenBy, 0);
-	const darkDB = Math.max(defaultDarkTiles[2] - darkenBy, 0);
-
-	resetColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
 }
 
 // Rendering -------------------------------------------------------------------------
@@ -558,8 +513,6 @@ export default {
 	getBoundingBoxOfBoard,
 	generatePerspectiveBoundingBox,
 	roundAwayBoundingBox,
-	resetColor,
-	darkenColor,
 	// Rendering
 	render,
 	renderSolidCover,

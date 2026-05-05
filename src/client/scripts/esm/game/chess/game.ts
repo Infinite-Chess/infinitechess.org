@@ -143,8 +143,6 @@ function update(): void {
 
 	controls.testInGameToggles(gamefile, mesh);
 
-	perspective.update(); // Update perspective camera according to mouse movement
-
 	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) {
 		// undefined if no clock has ran out

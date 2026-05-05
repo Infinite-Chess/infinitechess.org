@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import loadbalancer from '../../../misc/loadbalancer';
+import timing from '../../../misc/timing.js';
 import { SineWavePass } from '../../../../webgl/post_processing/passes/SineWavePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
@@ -35,7 +35,7 @@ export class ContortionFieldZone implements Zone {
 	}
 
 	public update(): void {
-		const deltaTime = loadbalancer.getDeltaTime(); // Seconds
+		const deltaTime = timing.getDeltaTime(); // Seconds
 
 		this.sineWavePass.time = (performance.now() / 1000) * this.oscillationSpeed;
 		this.sineWavePass.angle += this.rotationSpeed * deltaTime;

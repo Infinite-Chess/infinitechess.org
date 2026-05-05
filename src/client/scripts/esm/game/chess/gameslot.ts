@@ -25,7 +25,6 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../rendering/area.js';
-import board from '../rendering/boardtiles.js';
 import arrows from '../rendering/arrows/arrows.js';
 import meshes from '../rendering/meshes.js';
 import { gl } from '../rendering/webgl.js';
@@ -43,7 +42,6 @@ import gameloader from './gameloader.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
 import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -92,6 +90,24 @@ let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
  * move is animated, after rejoining a game.
  */
 const delayOfLatestMoveAnimationOnRejoinMillis = 150;
+
+// Listeners ---------------------------------------------------------------
+
+// Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
+document.addEventListener('theme-change', () => {
+	const gamefile = loadedGamefile;
+	if (!gamefile) return;
+	imagecache.deleteImageCache();
+	// texturecache.deleteTextureCache(gl);
+	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
+		// Regenerate piece textures with the new tinted images
+		texturecache.initTexturesForGame(gl, gamefile.boardsim);
+		piecemodels.regenAll(gamefile.boardsim, mesh!);
+	});
+	// Reinit the promotion UI
+	guipromotion.resetUI();
+	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
+});
 
 // Functions ---------------------------------------------------------------
 
@@ -188,7 +204,6 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
 	guiclock.set(loadedGamefile!.basegame);
-	perspective.resetRotations(loadOptions.viewWhitePerspective);
 
 	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
 	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
@@ -317,7 +332,6 @@ function concludeGame(): void {
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
 	gamefileutility.setConclusion(loadedGamefile!.basegame, undefined);
-	board.resetColor();
 }
 
 export default {

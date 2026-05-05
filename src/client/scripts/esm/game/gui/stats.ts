@@ -34,6 +34,11 @@ let visibilityWeight = 0;
 /** Whether FPS display is enabled. */
 let fps = false;
 
+// Listeners -------------------------------------------------------------
+
+// Reposition stats panel when the canvas is resized
+document.addEventListener('canvas_resize', updateStatsCSS);
+
 // Move Number -------------------------------------------------------------
 
 /**

@@ -16,6 +16,7 @@ import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
+import timing from '../misc/timing.js';
 import docutil from '../../util/docutil.js';
 import guipause from '../gui/guipause.js';
 import copygame from '../chess/copygame.js';
@@ -25,17 +26,17 @@ import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
 import miniimage from '../rendering/miniimage.js';
+import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import enginegame from './enginegame.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import loadbalancer from './loadbalancer.js';
 import guipromotion from '../gui/guipromotion.js';
 import guinavigation from '../gui/guinavigation.js';
-import { listener_document } from '../chess/game.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -70,6 +71,8 @@ const wheelMultiplier = 0.015; // Default: 0.015
 function updateNavControls(): void {
 	if (guipause.areWePaused()) return; // Exit if paused
 
+	updatePerspectiveRotation();
+
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
 	if (Transition.areTransitioning()) return; // Exit if teleporting
@@ -77,6 +80,29 @@ function updateNavControls(): void {
 	// Keyboard
 	detectPanning(); // Movement (WASD)
 	detectZooming(); // Zoom/Scale (Space shift, mouse wheel)
+}
+
+/** Updates the perspective camera rotation based on mouse input. */
+function updatePerspectiveRotation(): void {
+	if (!perspective.getEnabled()) return;
+
+	// If they pushed escape, the mouse will no longer be locked.
+	// If the mouse is unlocked, don't rotate view.
+	if (!perspective.isMouseLocked()) {
+		// Check if needs to relock
+		if (
+			selection.getSquarePawnIsCurrentlyPromotingOn() === undefined &&
+			listener_overlay.isMouseClicked(Mouse.LEFT)
+		) {
+			listener_overlay.claimMouseClick(Mouse.LEFT);
+			perspective.relockMouse();
+		} else if (listener_overlay.isMouseDown(Mouse.LEFT)) {
+			listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
+		}
+	} else {
+		const mouseChange = listener_document.getPhysicalPointerDelta('mouse');
+		if (mouseChange) perspective.addRotation(mouseChange[0], mouseChange[1]);
+	}
 }
 
 /** Detects WASD controls, updating board velocity accordingly. */
@@ -130,8 +156,8 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
 	const XYComponents: DoubleCoords = vectors.getXYComponents_FromAngle(angleRad);
 	const accelToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
-	panVel[0] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[0];
-	panVel[1] += loadbalancer.getDeltaTime() * accelToUse * XYComponents[1];
+	panVel[0] += timing.getDeltaTime() * accelToUse * XYComponents[0];
+	panVel[1] += timing.getDeltaTime() * accelToUse * XYComponents[1];
 	return panVel;
 }
 
@@ -142,7 +168,7 @@ function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
 	const rateToUse = perspective.getEnabled() ? panAccel3D : panAccel2D;
 
 	const hyp = Math.hypot(...panVel);
-	const newHyp = hyp - loadbalancer.getDeltaTime() * rateToUse;
+	const newHyp = hyp - timing.getDeltaTime() * rateToUse;
 	if (newHyp < 0) return [0, 0]; // Stop completely before we start going in the opposite direction
 
 	const ratio = newHyp / hyp;
@@ -163,11 +189,11 @@ function detectZooming(): void {
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
-			scaleVel -= loadbalancer.getDeltaTime() * scaleAccel_Desktop;
+			scaleVel -= timing.getDeltaTime() * scaleAccel_Desktop;
 		}
 		if (listener_document.isKeyHeld('ShiftLeft')) {
 			scaling = true;
-			scaleVel += loadbalancer.getDeltaTime() * scaleAccel_Desktop;
+			scaleVel += timing.getDeltaTime() * scaleAccel_Desktop;
 		}
 		// Mouse wheel
 		const wheelDelta = mouse.getWheelDelta();
@@ -197,11 +223,11 @@ function deccelerateScaleVel(scaleVel: number): number {
 	const deccelerationToUse = docutil.isMouseSupported() ? scaleAccel_Desktop : scaleAccel_Mobile;
 
 	if (scaleVel > 0) {
-		scaleVel -= loadbalancer.getDeltaTime() * deccelerationToUse;
+		scaleVel -= timing.getDeltaTime() * deccelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
 	} else {
 		// scaleVel < 0
-		scaleVel += loadbalancer.getDeltaTime() * deccelerationToUse;
+		scaleVel += timing.getDeltaTime() * deccelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
 

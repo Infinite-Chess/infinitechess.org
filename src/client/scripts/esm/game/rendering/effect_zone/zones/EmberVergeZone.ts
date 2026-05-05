@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import loadbalancer from '../../../misc/loadbalancer';
+import timing from '../../../misc/timing.js';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape';
@@ -51,7 +51,7 @@ export class EmberVergeZone implements Zone {
 	}
 
 	public update(): void {
-		const deltaTime = loadbalancer.getDeltaTime(); // In seconds
+		const deltaTime = timing.getDeltaTime(); // In seconds
 
 		// Rotate the flow direction over time.
 		this.flowDirection += this.flowRotationSpeed * deltaTime;

@@ -27,7 +27,6 @@ import coordutil, {
 import space from '../../misc/space.js';
 import meshes from '../meshes.js';
 import boardpos from '../boardpos.js';
-import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
@@ -219,8 +218,7 @@ function onTransitionStart(): void {
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
 
-	boardpos.eraseMomentum(); // Reset velocities to zero
-	boarddrag.cancelBoardDrag(); // We don't want to allow dragging during a transition.
+	document.dispatchEvent(new CustomEvent('transition-start'));
 }
 
 /** Starts a Zooming Transition. */

@@ -48,6 +48,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import frameratelimiter from '../rendering/frameratelimiter.js';
 import clientmetadatautil from './clientmetadatautil.js';
 import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
@@ -63,6 +64,15 @@ let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
  * If so, the spinny pawn loading animation will be open.
  */
 let gameLoading: boolean = false;
+
+// Constants ---------------------------------------------------------------------
+
+/**
+ * Target framerate when not in a game (title screen).
+ *
+ * I cannot actually tell a difference between 30fps and 240fps there.
+ */
+const TARGET_FPS_TITLE_SCREEN = 30;
 
 // Getters --------------------------------------------------------------------
 
@@ -145,15 +155,17 @@ async function startLocalGame(options: {
 	);
 	metadata.Variant = variantName;
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			metadata,
 			variant: options.variant,
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -198,16 +210,19 @@ async function startOnlineGame(options: {
 		options.metadata.UTCTime,
 	);
 
+	const viewWhitePerspective =
+		options.youAreColor === undefined || options.youAreColor === p.WHITE; // Spectators view from white perspective
+
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
 			variant: resolvedVariant,
 			dateTimestamp: resolvedTimestamp,
-			viewWhitePerspective: options.youAreColor === p.WHITE,
+			viewWhitePerspective,
 			allowEditCoords: false,
 			additional,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	onlinegame.initOnlineGame({
@@ -278,12 +293,14 @@ async function startEngineGame(options: {
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
 			: formattedEngineName;
 
+	const viewWhitePerspective = options.youAreColor === p.WHITE;
+
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
 		variant: options.variant,
 		dateTimestamp,
-		viewWhitePerspective: options.youAreColor === p.WHITE,
+		viewWhitePerspective,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.variantOptions,
@@ -301,7 +318,7 @@ async function startEngineGame(options: {
 	 * OR rejects immediately when one of them rejects!
 	 */
 	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading())
+		.then((_results: any[]) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -323,12 +340,14 @@ async function startBoardEditor(): Promise<void> {
 	const variantCode: VariantCode = 'Classical';
 	metadata.Variant = variant.getVariantName(variantCode);
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			metadata,
 			variant: variantCode,
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 			/**
 			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
@@ -339,7 +358,7 @@ async function startBoardEditor(): Promise<void> {
 			 */
 			additional: { editor: true },
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	await guipalette.initUI();
@@ -367,16 +386,18 @@ async function startCustomLocalGame(options: {
 		dateTimestamp,
 	);
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			...options,
 			metadata,
 			dateTimestamp,
 			variant: null, // Not specified for custom position
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -424,12 +445,14 @@ async function startCustomEngineGame(options: {
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
 			: formattedEngineName;
 
+	const viewWhitePerspective = options.youAreColor === p.WHITE;
+
 	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
 	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
 		metadata,
 		variant: null, // Not specified for custom position
 		dateTimestamp,
-		viewWhitePerspective: options.youAreColor === p.WHITE,
+		viewWhitePerspective,
 		allowEditCoords: false,
 		additional: {
 			variantOptions: options.additional.variantOptions,
@@ -447,7 +470,7 @@ async function startCustomEngineGame(options: {
 	 * OR rejects immediately when one of them rejects!
 	 */
 	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading())
+		.then((_results: any[]) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -485,18 +508,20 @@ async function startBoardEditorFromCustomPosition(
 	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
 	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			metadata,
 			variant: null, // Not specified for custom position
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed
 			additional: { ...options.additional, editor: true },
 			presetAnnotes: options.presetAnnotes,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -538,7 +563,7 @@ async function pasteGame(options: {
 			presetAnnotes: options.presetAnnotes,
 			additional: options.additional,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -551,9 +576,13 @@ async function pasteGame(options: {
  * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
  * This hides the spinny pawn loading animation that covers the board.
  */
-function onFinishedLoading(): void {
+function onFinishedLoading(viewWhitePerspective: boolean): void {
 	// console.log('COMPLETELY finished loading game!');
 	gameLoading = false;
+
+	perspective.setViewSide(viewWhitePerspective);
+
+	frameratelimiter.setFpsLimit(null); // Run at full speed while in a game
 
 	// We can now close the loading screen.
 
@@ -599,11 +628,13 @@ function unloadGame(): void {
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
 	else if (typeOfGameWeAreIn === 'editor') boardeditor.closeBoardEditor();
 
+	perspective.resetRotations();
 	guinavigation.close();
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
 	unloadLogicalAndRendering();
+	frameratelimiter.setFpsLimit(TARGET_FPS_TITLE_SCREEN); // Return to title-screen throttle on game exit
 	typeOfGameWeAreIn = undefined;
 
 	gui.prepareForOpen();
