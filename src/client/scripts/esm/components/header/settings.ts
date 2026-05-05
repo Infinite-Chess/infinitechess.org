@@ -74,7 +74,7 @@ function toggleSettingsDropdown(): void {
 function openSettingsDropdown(): void {
 	// Opens the initial settings dropdown
 	settings.classList.add('open');
-	settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	settingsDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initSettingsListeners();
 	settingsIsOpen = true;
 }
@@ -82,7 +82,7 @@ function closeAllSettingsDropdowns(): void {
 	// Closes all dropdowns that may be open
 	settings.classList.remove('open');
 
-	settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	settingsDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeSettingsListeners();
 	preferences.sendPrefsToServer();
 
@@ -96,10 +96,10 @@ function closeAllSettingsDropdowns(): void {
 }
 
 function hideMainSettingsPanel(): void {
-	settingsDropdown.classList.add('visibility-hidden');
+	settingsDropdown.classList.add('hidden');
 }
 function showMainSettingsPanel(): void {
-	settingsDropdown.classList.remove('visibility-hidden');
+	settingsDropdown.classList.remove('hidden');
 }
 
 function initSettingsListeners(): void {

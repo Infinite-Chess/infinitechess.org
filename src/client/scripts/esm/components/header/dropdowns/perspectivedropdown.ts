@@ -51,11 +51,11 @@ function setInitialValues(): void {
 }
 
 function open(): void {
-	perspectiveDropdown.classList.remove('visibility-hidden');
+	perspectiveDropdown.classList.remove('hidden');
 	initListeners();
 }
 function close(): void {
-	perspectiveDropdown.classList.add('visibility-hidden');
+	perspectiveDropdown.classList.add('hidden');
 	closeListeners();
 }
 

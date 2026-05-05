@@ -109,11 +109,11 @@ async function addBoardThemesToDropdown(): Promise<void> {
 }
 
 function open(): void {
-	appearanceDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	appearanceDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
 }
 function close(): void {
-	appearanceDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	appearanceDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
 }
 

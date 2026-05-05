@@ -36,11 +36,11 @@ function showCheckmarkOnSelectedOptions(): void {
 }
 
 function open(): void {
-	gameplayDropdown.classList.remove('visibility-hidden');
+	gameplayDropdown.classList.remove('hidden');
 	initListeners();
 }
 function close(): void {
-	gameplayDropdown.classList.add('visibility-hidden');
+	gameplayDropdown.classList.add('hidden');
 	closeListeners();
 }
 

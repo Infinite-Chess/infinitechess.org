@@ -266,7 +266,6 @@ a.header-donate:hover {
 	box-shadow: var(--dropdown-shadow);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
 	clip-path: var(--dropdown-clip);
-	z-index: 1;
 	/* Kept rendered (not display: none) so the cursor can move from the
 	   parent into the dropdown without the dropdown collapsing first. */
 	opacity: 0;
@@ -333,15 +332,10 @@ a.header-donate:hover {
 	box-shadow: var(--dropdown-shadow);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
 	clip-path: var(--dropdown-clip);
-	z-index: 1;
 	font-size: 13px;
 	cursor: auto;
 	border-radius: var(--dropdown-border-radius);
 	overflow: hidden;
-}
-
-.dropdown.visibility-hidden {
-	display: none;
 }
 
 .dropdown-title {
@@ -680,17 +674,6 @@ p.theme-title {
 	z-index: -1;
 	left: 10px;
 	overflow: hidden;
-}
-
-.currPage {
-	background-color: var(--c-surface-2);
-}
-
-.hidden {
-	display: none;
-}
-.visibility-hidden {
-	visibility: hidden;
 }
 
 /* ===================================================================

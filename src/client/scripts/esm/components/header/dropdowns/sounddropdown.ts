@@ -36,11 +36,11 @@ function setInitialValues(): void {
 }
 
 function open(): void {
-	soundDropdown.classList.remove('visibility-hidden');
+	soundDropdown.classList.remove('hidden');
 	initListeners();
 }
 function close(): void {
-	soundDropdown.classList.add('visibility-hidden');
+	soundDropdown.classList.add('hidden');
 	closeListeners();
 }
 

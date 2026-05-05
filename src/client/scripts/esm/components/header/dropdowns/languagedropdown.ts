@@ -61,11 +61,11 @@ function removeLngQueryParam(): void {
 }
 
 function open(): void {
-	languageDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	languageDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
 }
 function close(): void {
-	languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	languageDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
 }
 
