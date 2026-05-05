@@ -13,7 +13,7 @@
  * The target FPS limit, or `null` for unlimited.
  * Defaults to 30 fps (title-screen throttle) until game code explicitly sets it.
  */
-let limitedFps: number | null = 30;
+let limitedFps: number | null = null;
 
 /** Timestamp of the last frame that was actually rendered */
 let lastFrameTime = 0;
@@ -42,7 +42,7 @@ function setFpsLimit(fps: number | null): void {
 // Functions -------------------------------------------------
 
 /**
- * Request an animation frame, with throttling applied when on the title screen.
+ * Request an animation frame, with throttling applied according to {@link limitedFps}.
  * This is a wrapper for calls to requestAnimationFrame().
  * @param callback - The callback function to execute on the next frame
  */

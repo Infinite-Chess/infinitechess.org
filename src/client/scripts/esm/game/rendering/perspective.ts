@@ -8,10 +8,8 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 
 import mat4 from './gl-matrix.js';
-import toast from '../gui/toast.js';
 import webgl from './webgl.js';
 import config from '../config.js';
-import docutil from '../../util/docutil.js';
 import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
 import camera, { Mat4 } from './camera.js';
@@ -58,9 +56,6 @@ function getIsViewingBlackPerspective(): boolean {
 }
 
 function toggle(): void {
-	if (!docutil.isMouseSupported())
-		return toast.show(translations.rendering.perspective_mode_on_desktop);
-
 	if (!enabled) enable();
 	else disable();
 }
@@ -73,8 +68,6 @@ function enable(): void {
 	lockMouse();
 
 	initCrosshairModel();
-
-	toast.show(translations.rendering.movement_tutorial);
 }
 
 function disable(): void {
@@ -112,6 +105,16 @@ function lockMouse(): void {
 	camera.canvas.requestPointerLock();
 	// Disables OS-level mouse acceleration. This does NOT solve safari being more sensitive.
 	// camera.canvas.requestPointerLock({ unadjustedMovement: true });
+}
+
+function setRotation(newRotX: number, newRotZ: number): void {
+	if (!enabled) throw Error('Must enable perspective before manually setting rotation.');
+
+	rotX = newRotX;
+	rotZ = newRotZ;
+	capRotations();
+	updateIsViewingBlackPerspective();
+	camera.onPositionChange(); // Calculate new viewMatrix
 }
 
 /**
@@ -251,10 +254,12 @@ export default {
 	distToRenderBoard,
 	getIsViewingBlackPerspective,
 	toggle,
+	enable,
 	disable,
 	setViewSide,
 	resetRotations,
 	relockMouse,
+	setRotation,
 	addRotation,
 	applyRotations,
 	isMouseLocked,

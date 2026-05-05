@@ -61,7 +61,7 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
+import Renderable, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
@@ -93,7 +93,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 
 function init(): void {
 	programManager = new ProgramManager(gl);
-	buffermodel.init(gl, programManager);
+	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
 
 	pipeline = new PostProcessingPipeline(gl, programManager);

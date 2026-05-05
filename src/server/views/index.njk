@@ -2,15 +2,20 @@
 
 {% block title %}Infinite Chess{% endblock %}
 
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/index.css'] }}" />
+{% endblock %}
+
 {% block body %}
 {% include "components/header/header.njk" %}
 <main>
-    {# Delete when the page is redesigned. This is just proof the page is visitable. #}
-    <h1>Infinite Chess</h1>
+    <canvas id="game"></canvas>
+    <div id="page-overlay">
+        
+    </div>
 </main>
 {% endblock %}
 
 {% block script %}
-{# Delete when the page is redesigned. This is just proof the page can load a script entry point. #}
 <script type="module" src="{{ manifest['scripts/esm/views/index.ts'] }}"></script>
 {% endblock %}

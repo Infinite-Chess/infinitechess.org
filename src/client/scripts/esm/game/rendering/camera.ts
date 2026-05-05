@@ -19,7 +19,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
-import toast from '../gui/toast.js';
 import { gl } from './webgl.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
@@ -95,7 +94,8 @@ function toggleDebug(): void {
 	frametracker.onVisualChange(); // Visual change, render the screen this frame
 	onPositionChange();
 	perspective.initCrosshairModel();
-	toast.show(`Toggled camera debug: ${DEBUG}`);
+
+	console.log(`Toggled camera debug: ${DEBUG}`);
 }
 
 function getDebug(): boolean {
