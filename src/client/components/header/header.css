@@ -626,14 +626,14 @@ p.theme-title {
 }
 
 .ping-meter .ping {
-	font-size: 14px;
+	font-size: 13px;
 }
 .ping-meter .ping-value {
 	font-size: 14px;
 	padding: 0 3px 0 6px;
 }
 .ping-meter .ms {
-	font-size: 12px;
+	font-size: 11px;
 	color: var(--c-text-muted);
 }
 
@@ -827,4 +827,14 @@ p.theme-title {
 	.header-sitename {
 		display: none;
 	}
+}
+
+/* ============================================================
+   Utility classes
+   ============================================================ */
+
+/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
+   class from global.css. Without this, the ping meter is always visible. */
+.hidden {
+	display: none;
 }
