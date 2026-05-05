@@ -15,7 +15,6 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import camera from './camera.js';
 import deltatime from '../misc/deltatime.js';
-import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 
@@ -180,8 +179,6 @@ function isScaleSmallForInvisibleTiles(): boolean {
 
 // Called from game.updateBoard()
 function update(): void {
-	if (Transition.areTransitioning()) return; // Exit if we are teleporting
-
 	panBoard();
 	recalcScale();
 }

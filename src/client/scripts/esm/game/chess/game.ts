@@ -152,7 +152,7 @@ function update(): void {
 	guiclock.update(gamefile.basegame);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	boardpos.update(); // Updates the board's position and scale according to its velocity
+	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
 	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
