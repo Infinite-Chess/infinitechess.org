@@ -47,6 +47,8 @@
 
 ## Late-Stage Polish
 
+- Delete any unused theme-specific css variables in global.css
+
 - Delete any straggling unused files - scripts, stylesheets, templates, etc.
 
 - Add `<link rel="modulepreload">` for each page's JS entry points in its Nunjucks template. *(Do last, once every page's import graph is finalized)*
