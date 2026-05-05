@@ -125,6 +125,7 @@
 	height: 100%;
 	background: none;
 	border: 0;
+	border-left: 2px solid transparent;
 	color: var(--c-text);
 	font: inherit;
 	font-size: 13px;
@@ -141,6 +142,11 @@
 	background-color: var(--c-surface-2);
 	color: var(--c-link);
 	outline: none;
+}
+
+/* For dropdown parents, show the accent left border on the nav link when open */
+.header-dropdown-parent:hover .header-nav-link {
+	border-left-color: var(--switch-on-color);
 }
 
 /* ---------- Right-side action icons ---------- */
@@ -240,6 +246,7 @@
 	left: 0;
 	min-width: 100%;
 	background-color: var(--c-surface-2);
+	border-left: 2px solid var(--switch-on-color);
 	border-radius: 0 0 4px 4px;
 	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
 	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
