@@ -15,10 +15,10 @@
     <link rel="icon" href="/img/favicon/favicon-dark.png" media="(prefers-color-scheme: dark)" />
 
     {# Global stylesheet: CSS variables, font-face, and shared utility classes #}
-    <link rel="stylesheet" href="{{ manifest['css/global'] }}" />
+    <link rel="stylesheet" href="{{ manifest['css/global.css'] }}" />
 
     {# Site-wide header stylesheet #}
-    <link rel="stylesheet" href="{{ manifest['components/header/header'] }}" />
+    <link rel="stylesheet" href="{{ manifest['components/header/header.css'] }}" />
 
     {# Page-specific stylesheet #}
     {% block style %}{% endblock %}
@@ -31,7 +31,7 @@
     {% block body %}{% endblock %}
 
     {# Site-wide header script #}
-    <script type="module" src="{{ manifest['scripts/esm/components/header/header'] }}"></script>
+    <script type="module" src="{{ manifest['scripts/esm/components/header/header.ts'] }}"></script>
 
     {# Page entry-point script #}
     {% block script %}{% endblock %}

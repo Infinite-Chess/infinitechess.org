@@ -139,16 +139,14 @@ const ManifestPlugin: Plugin = {
 
 /**
  * Reads esbuild's metafile and writes dist/manifest.json — a flat map of
- * logical entry-point names (e.g. "scripts/esm/views/index") to their
+ * logical entry-point names (e.g. "scripts/esm/views/index.ts") to their
  * web-relative output paths (e.g. "/scripts/esm/views/index-ABCD1234.js").
  */
 function writeManifest(metafile: Metafile): void {
 	const manifest: Record<string, string> = {};
 	for (const [rawOutputPath, output] of Object.entries(metafile.outputs)) {
 		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
-		const key = output.entryPoint
-			.replace(/^src\/client\//, '') // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
-			.replace(/\.\w+$/, ''); // strip extension (.ts, .js, .css)
+		const key = output.entryPoint.replace(/^src\/client\//, ''); // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
 		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
 	}
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
