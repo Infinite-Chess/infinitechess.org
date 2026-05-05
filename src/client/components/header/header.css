@@ -208,6 +208,10 @@
 	transform: rotate(60deg);
 }
 
+.settings.open {
+	background-color: var(--c-surface-2);
+}
+
 /* ---------- Hamburger button (mobile only) ---------- */
 
 .header-hamburger {
@@ -313,10 +317,12 @@
 	right: 0;
 	min-width: 175px;
 	width: max-content;
-	background-color: var(--c-surface);
+	background-color: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-top: 0;
 	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
+	clip-path: inset(0 -20px -20px -20px round 0 0 4px 4px);
 	z-index: 1;
 	font-size: 13px;
 	cursor: auto;
@@ -343,7 +349,7 @@
 .settings-dropdown-item:hover,
 .language-dropdown-item:hover,
 .boolean-option:hover {
-	background-color: var(--c-surface-2);
+	background-color: var(--c-surface);
 }
 
 .settings-dropdown-item {
@@ -470,7 +476,7 @@ span.arrow-head-left {
 }
 
 .theme-option:hover {
-	background-color: var(--c-surface-2);
+	background-color: var(--c-surface);
 }
 
 .header-theme-indicator {
