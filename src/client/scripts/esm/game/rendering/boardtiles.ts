@@ -266,11 +266,10 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	return { left, right, bottom, top };
 }
 
-/** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
+/** Resets the board color and sky color. */
 function updateTheme(): void {
 	resetColor();
 	updateSkyColor();
-	updateNavColor();
 }
 
 function resetColor(
@@ -304,37 +303,6 @@ function updateSkyColor(): void {
 
 	webgl.setClearColor([skyR, skyG, skyB]);
 	// webgl.setClearColor([0,0,0]); // Solid Black
-}
-
-function updateNavColor(): void {
-	// Determine the new "white" color
-
-	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
-	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
-	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
-
-	// With the default theme, these should be max
-	let navR = 255;
-	let navG = 255;
-	let navB = 255;
-
-	if (preferences.getBoardColor() !== 'white') {
-		const brightAmount = 0.6; // 50% closer to white
-		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
-		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
-		navB = (1 - (1 - avgB) * (1 - brightAmount)) * 255;
-	}
-
-	style.setNavStyle(`
-
-        .navigation {
-            background: linear-gradient(to top, rgba(${navR}, ${navG}, ${navB}, 0.104), rgba(${navR}, ${navG}, ${navB}, 0.552), rgba(${navR}, ${navG}, ${navB}, 0.216));
-        }
-
-        .footer {
-            background: linear-gradient(to bottom, rgba(${navR}, ${navG}, ${navB}, 0.307), rgba(${navR}, ${navG}, ${navB}, 1), rgba(${navR}, ${navG}, ${navB}, 0.84));
-        }
-    `);
 }
 
 // Rendering -------------------------------------------------------------------------
