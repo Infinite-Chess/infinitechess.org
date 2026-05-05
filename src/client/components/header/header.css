@@ -302,8 +302,7 @@
 	bottom: 3px;
 	height: 65%;
 	aspect-ratio: 1;
-	stroke: var(--c-text-muted);
-	fill: var(--c-text-muted);
+	color: var(--c-text-muted);
 }
 
 .spinny-pawn {
@@ -602,8 +601,20 @@ p.theme-title {
 }
 
 .reset-default:hover {
-	background-color: var(--c-surface-2);
+	background-color: var(--c-surface);
 	cursor: pointer;
+}
+
+.reset-default span {
+	padding-right: 4px;
+}
+
+.reset-default-container .svg-undo {
+	width: 19px;
+	transform: scale(1.5);
+	transform-origin: 70% 60%;
+	aspect-ratio: 1;
+	color: var(--c-text-muted);
 }
 
 /* Ping Meter */
