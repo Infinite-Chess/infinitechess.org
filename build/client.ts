@@ -157,6 +157,7 @@ const ESMBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: ESMEntryPoints,
 	outdir: './dist/client',
+	chunkNames: 'scripts/esm/[name]-[hash]',
 	/**
 	 * Enable code splitting, which means if multiple entry points require the same module,
 	 * that dependancy will be separated out of both of them which means it isn't duplicated,
