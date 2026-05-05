@@ -12,10 +12,10 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 // =========================================== Quads ==================================================
 
 /** [TRIANGLES] Generates vertex data for a 2D quad with NO COLOR DATA. */
+// prettier-ignore
 function Quad(left: number, bottom: number, right: number, top: number): number[] {
-	// prettier-ignore
 	return [
-		//     Position
+		// Position
         left,  bottom,
         left,  top,
         right, bottom,
@@ -29,7 +29,7 @@ function Quad(left: number, bottom: number, right: number, top: number): number[
 // prettier-ignore
 function Quad_Color(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
-		//      Position           Color
+		// Position           Color
         left,  bottom,      r, g, b, a,
         left,  top,         r, g, b, a,
         right, bottom,      r, g, b, a,
@@ -44,7 +44,7 @@ function Quad_Color(left: number, bottom: number, right: number, top: number, [r
 // prettier-ignore
 function Quad_Color3D(left: number, bottom: number, right: number, top: number, z: number, [r,g,b,a]: Color): number[] {
 	return [
-		//      Position              Color
+		//  Position             Color
         left,  bottom, z,      r, g, b, a,
         left,  top,    z,      r, g, b, a,
         right, bottom, z,      r, g, b, a,
@@ -59,7 +59,7 @@ function Quad_Color3D(left: number, bottom: number, right: number, top: number, 
 // prettier-ignore
 function Quad_Texture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number): number[] {
 	return [
-		//     Position          Texture Coord
+		// Position          Texture Coord
         left,  bottom,    texleft,  texbottom,
         left,  top,       texleft,  textop,
         right, bottom,    texright, texbottom,
@@ -74,7 +74,7 @@ function Quad_Texture(left: number, bottom: number, right: number, top: number, 
 // prettier-ignore
 function Quad_ColorTexture(left: number, bottom: number, right: number, top: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
-		//     Position          Texture Coord           Color
+		// Position          Texture Coord          Color
         left,  bottom,    texleft,  texbottom,    r, g, b, a,
         left,  top,       texleft,  textop,       r, g, b, a,
         right, bottom,    texright, texbottom,    r, g, b, a,
@@ -89,7 +89,7 @@ function Quad_ColorTexture(left: number, bottom: number, right: number, top: num
 // prettier-ignore
 function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: number, z: number, texleft: number, texbottom: number, texright: number, textop: number, r: number, g: number, b: number, a: number): number[] {
 	return [
-		//       Position            Texture Coord           Color
+		// Position              Texture Coord          Color
         left,  bottom, z,     texleft,  texbottom,    r, g, b, a,
         left,  top,    z,     texleft,  textop,       r, g, b, a,
         right, bottom, z,     texright, texbottom,    r, g, b, a,
@@ -104,7 +104,7 @@ function Quad_ColorTexture3D(left: number, bottom: number, right: number, top: n
 // prettier-ignore
 function Rect(left: number, bottom: number, right: number, top: number, [r,g,b,a]: Color): number[] {
 	return [
-		//    x     y            color
+		// x     y          color
         left,  bottom,    r, g, b, a,
         left,  top,       r, g, b, a,
         right, top,       r, g, b, a,
