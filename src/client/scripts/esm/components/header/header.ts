@@ -12,7 +12,9 @@ import '../../util/tooltips.js'; // Should be imported on EVERY page
 
 const button = document.querySelector<HTMLButtonElement>('.header-hamburger')!;
 const panel = document.getElementById('header-mobile-panel')!;
-const overlay = document.querySelector<HTMLElement>('.header-mobile-overlay')!;
+
+const dimContent = document.querySelector<HTMLElement>('.header-mobile-dim-content')!;
+const dimHeader = document.querySelector<HTMLElement>('.header-mobile-dim-header')!;
 
 (function init() {
 	initHamburger();
@@ -22,13 +24,15 @@ const overlay = document.querySelector<HTMLElement>('.header-mobile-overlay')!;
 function initHamburger(): void {
 	const setOpen = (open: boolean): void => {
 		panel.classList.toggle('open', open);
-		overlay.classList.toggle('open', open);
+		dimContent.classList.toggle('open', open);
+		dimHeader.classList.toggle('open', open);
 		panel.setAttribute('aria-hidden', open ? 'false' : 'true');
 		button.setAttribute('aria-expanded', open ? 'true' : 'false');
 	};
 
 	button.addEventListener('click', () => setOpen(!panel.classList.contains('open')));
-	overlay.addEventListener('click', () => setOpen(false));
+	dimContent.addEventListener('click', () => setOpen(false));
+	dimHeader.addEventListener('click', () => setOpen(false));
 
 	document.addEventListener('keydown', (event) => {
 		if (event.key === 'Escape') setOpen(false);

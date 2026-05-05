@@ -720,6 +720,8 @@ p.theme-title {
 	background-color: var(--c-surface);
 	border-right: 1px solid var(--c-border);
 	box-shadow: 4px 0 16px rgba(0, 0, 0, 0.35);
+	/* Clip the upward shadow bleed so it doesn't spill into the header bar. */
+	clip-path: inset(0 -20px -20px 0);
 	z-index: 200;
 	transform: translateX(-100%);
 	visibility: hidden;
@@ -732,19 +734,32 @@ p.theme-title {
 	visibility: visible;
 }
 
-.header-mobile-overlay {
+.header-mobile-dim-content,
+.header-mobile-dim-header {
 	position: fixed;
-	top: var(--header-height);
-	left: 0;
 	right: 0;
-	bottom: 0;
 	background-color: rgba(0, 0, 0, 0.55);
 	z-index: 150;
 	visibility: hidden;
 	opacity: 0;
 }
 
-.header-mobile-overlay.open {
+/* Dims the page content area (below the header) when the mobile panel is open. */
+.header-mobile-dim-content {
+	top: var(--header-height);
+	left: 0;
+	bottom: 0;
+}
+
+/* Dims the header bar to the right of the X button when the mobile panel is open. */
+.header-mobile-dim-header {
+	top: 0;
+	left: 50px;
+	height: var(--header-height);
+}
+
+.header-mobile-dim-content.open,
+.header-mobile-dim-header.open {
 	visibility: visible;
 	opacity: 1;
 }
