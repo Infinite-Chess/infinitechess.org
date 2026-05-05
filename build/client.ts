@@ -281,16 +281,15 @@ async function minifyScriptDirectory(
 }
 
 /**
- * Minifies all CSS files from src/client/css/ directory
- * to the distribution directory, preserving the original structure.
+ * Minifies all CSS files under dist/client/ (esbuild output), preserving the original structure.
  * @returns Resolves when all CSS files are processed.
  */
 async function minifyCSSFiles(): Promise<void> {
 	// Bundle and compress all css files
-	const cssFiles = await glob('**/*.css', { cwd: './dist/client/css', nodir: true });
+	const cssFiles = await glob('**/*.css', { cwd: './dist/client', nodir: true });
 	for (const file of cssFiles) {
 		// Minify css files
-		const outputFilePath = `./dist/client/css/${file}`;
+		const outputFilePath = `./dist/client/${file}`;
 		const { code } = transform({
 			targets: cssTargets,
 			code: Buffer.from(await readFile(outputFilePath, 'utf8')),
