@@ -836,8 +836,19 @@ p.theme-title {
 	}
 }
 
-/* T4: Logo + text doesn't have enough room — drop to symbol-only logo */
+/* T4: Logo + text doesn't have enough room — drop to text-only logo */
 @media (max-width: 470px) {
+	.header-logo {
+		display: none;
+	}
+}
+
+/* T5: Text-only logo doesn't have enough room — drop to symbol-only logo */
+@media (max-width: 420px) {
+	.header-logo {
+		display: inline-flex;
+	}
+
 	.header-sitename {
 		display: none;
 	}
