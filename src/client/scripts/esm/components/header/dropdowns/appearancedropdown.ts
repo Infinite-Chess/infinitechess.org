@@ -11,12 +11,10 @@ import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerato
 const appearanceDropdownTitle = document.querySelector('.appearance-dropdown .dropdown-title')!;
 const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
 const themeToggleContainer = document.querySelector<HTMLElement>('[data-theme-toggle]')!;
-const themeIndicator = document.querySelector<HTMLElement>(
-	'[data-theme-toggle] .header-theme-indicator',
-)!;
+const themeIndicator = document.querySelector<HTMLElement>('[data-theme-toggle] .select-value')!;
 const legalMoveToggleContainer = document.querySelector<HTMLElement>('[data-legal-move-toggle]')!;
 const legalMoveIndicator = document.querySelector<HTMLElement>(
-	'[data-legal-move-toggle] .header-theme-indicator',
+	'[data-legal-move-toggle] .select-value',
 )!;
 const boardColorList = document.querySelector('.board-color-list')!; // Get the board color list div
 

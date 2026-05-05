@@ -433,6 +433,41 @@ span.arrow-head-left {
 	border-color: var(--c-tile);
 }
 
+/* The various types of options in the settings dropdowns */
+
+/* LIGHT/DARK */
+.select-option {
+	display: flex;
+	align-items: center;
+	min-height: var(--dropdown-item-height);
+	padding: 0 8px;
+	color: var(--c-text);
+	cursor: pointer;
+}
+
+.select-option:hover {
+	background-color: var(--c-surface);
+}
+
+.select-value {
+	margin-left: auto;
+	color: var(--c-text-muted);
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.boolean-option {
+	min-height: var(--dropdown-item-height);
+	padding: 0 8px;
+}
+
+.boolean-option .switch {
+	width: 34px;
+	height: 18px;
+	margin: 0 2px 0 4px;
+}
+
 /* Language nested dropdown */
 
 .language-dropdown-item,
@@ -466,27 +501,6 @@ span.arrow-head-left {
 
 /* Theme text-button toggle */
 
-.theme-option {
-	display: flex;
-	align-items: center;
-	min-height: var(--dropdown-item-height);
-	padding: 0 8px;
-	color: var(--c-text);
-	cursor: pointer;
-}
-
-.theme-option:hover {
-	background-color: var(--c-surface);
-}
-
-.header-theme-indicator {
-	margin-left: auto;
-	color: var(--c-text-muted);
-	font-size: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-}
-
 p.theme-title {
 	text-align: center;
 	padding-top: 8px;
@@ -516,17 +530,6 @@ p.theme-title {
 .board-color-list img:hover,
 .board-color-list img.selected {
 	outline: 5px solid var(--c-text);
-}
-
-.boolean-option {
-	min-height: var(--dropdown-item-height);
-	padding: 0 8px;
-}
-
-.boolean-option .switch {
-	width: 34px;
-	height: 18px;
-	margin: 0 2px 0 4px;
 }
 
 /* Perspective & Sound dropdowns */
