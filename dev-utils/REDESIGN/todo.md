@@ -2,12 +2,6 @@
 
 ---
 
-## Shared Components
-
-- Implement logout-in-another-tab handling: on all socket-connected pages, call `window.location.reload()` when the socket logout event is received so the server re-renders the correct logged-out state.
-
----
-
 ## Page Redesigns
 
 *Each page: new Nunjucks template extending `layout.njk`, new CSS file in `src/client/css/`, updated route handler with full SSR context, and updated/new TS where needed. Add shared CSS rules to `global.css` as you encounter the need for them.*

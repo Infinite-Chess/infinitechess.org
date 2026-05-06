@@ -60,8 +60,6 @@ let tokenInfo: {
 })();
 
 function initListeners(): void {
-	document.addEventListener('logout', resetMemberInfo);
-	document.addEventListener('logout', onLogout);
 	window.addEventListener('pageshow', readMemberInfoCookie); // Fired on initial page load AND when hitting the back button to return.
 }
 
@@ -129,9 +127,7 @@ async function refreshToken(): Promise<void> {
 		} else {
 			// 403 or 500 error   Likely not signed in! Our session token (refresh token cookie) was invalid or not present.
 			console.log(`Server: ${result.message}`);
-			deleteMemberInfoCookie();
-			// Dispatch a custom logout event so our header code knows to update the navigation links
-			document.dispatchEvent(new CustomEvent('logout'));
+			reloadAfterLogout();
 		}
 	} catch (error) {
 		console.error('Error occurred during token refresh:', error);
@@ -166,6 +162,18 @@ function readMemberInfoCookie(): void {
 	scheduleSessionLogout();
 }
 
+/**
+ * Cleans up local auth state, then reloads the page to reflect the logged-out state.
+ * Cleanup prevents stale tokens/cookies being used in the brief window before the
+ * navigation completes, and cancels the session-expiry timer so it can't fire again.
+ */
+function reloadAfterLogout(): void {
+	docutil.deleteCookie('memberInfo');
+	resetMemberInfo();
+	tokenInfo = {};
+	window.location.reload();
+}
+
 /** Resets our member info variables as if we were logged out. */
 function resetMemberInfo(): void {
 	clearTimeout(sessionExpiryTimer); // Prevent ghost logout events after we've manually reset
@@ -193,10 +201,10 @@ function checkSessionExpiry(): void {
 
 	// If cookie is gone, or we can't parse it, we are definitely logged out.
 	if (!encodedMemberInfo) {
-		// Only dispatch logout if we thought we were signed in
+		// Only reload if we thought we were signed in
 		if (memberInfo.signedIn) {
-			console.log('Detected session expired. Dispatching logout event. - 1');
-			document.dispatchEvent(new CustomEvent('logout'));
+			console.log('Detected session expired. Reloading. - 1');
+			reloadAfterLogout();
 		}
 		return;
 	}
@@ -208,20 +216,10 @@ function checkSessionExpiry(): void {
 		// It was renewed! Update our local state and reschedule.
 		readMemberInfoCookie();
 	} else {
-		// Still expired. Dispatch logout.
-		console.log('Detected session expired. Dispatching logout event. - 2');
-		document.dispatchEvent(new CustomEvent('logout'));
+		// Still expired. Reload.
+		console.log('Detected session expired. Reloading. - 2');
+		reloadAfterLogout();
 	}
-}
-
-function deleteMemberInfoCookie(): void {
-	docutil.deleteCookie('memberInfo');
-	resetMemberInfo();
-}
-
-function onLogout(): void {
-	deleteMemberInfoCookie();
-	tokenInfo = {};
 }
 
 /**
@@ -269,4 +267,5 @@ export default {
 	getOurUserId,
 	getAccessToken,
 	refreshToken,
+	reloadAfterLogout,
 };
