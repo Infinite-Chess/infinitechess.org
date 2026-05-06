@@ -2,10 +2,6 @@
 
 /*
  * Site header. Always visible at the top of every page.
- * Uses theme variables defined in global.css; defines no theme vars of its own.
- *
- * Strict rule: zero hover/active transitions anywhere in the header.
- * The only exceptions are the omega-one logo pulse and the gear rotation.
  */
 
 :root {
@@ -182,7 +178,7 @@ a.header-donate:hover {
 
 /* Nudge slightly for better centering. */
 #login-link svg,
-#createaccount-link svg {
+#register-link svg {
 	position: relative;
 	left: 2px;
 	top: 1px;

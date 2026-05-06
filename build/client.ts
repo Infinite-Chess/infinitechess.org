@@ -29,6 +29,7 @@ const ESMEntryPoints = [
 	// Stylesheets — bundled as content-hashed CSS entry points.
 	'src/client/css/global.css',
 	'src/client/components/header/header.css',
+	'src/client/components/footer/footer.css',
 	'src/client/css/index.css',
 
 	// Scripts
@@ -42,7 +43,7 @@ const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/leaderboard.ts',
 	// 'src/client/scripts/esm/views/login.ts',
 	// 'src/client/scripts/esm/views/news.ts',
-	// 'src/client/scripts/esm/views/createaccount.ts',
+	// 'src/client/scripts/esm/views/register.ts',
 	// 'src/client/scripts/esm/views/resetpassword.ts',
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',

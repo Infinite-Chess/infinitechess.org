@@ -1,0 +1,36 @@
+/* src/client/components/footer/footer.css */
+
+/*
+ * Site footer. Included on every page, except those with the board visible.
+ */
+
+.site-footer {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 0 3px;
+	padding: 18px 16px;
+	border-top: 1px solid var(--c-border);
+	color: var(--c-text-muted);
+}
+
+.site-footer a {
+	display: inline-block;
+	padding: 3px 6px;
+	color: var(--c-text-muted);
+	font-size: 10px;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.site-footer a:hover {
+	color: var(--c-link);
+	text-decoration: underline;
+}
+
+.site-footer .footer-sep {
+	color: var(--c-border-2);
+	font-size: 12px;
+	user-select: none;
+}
