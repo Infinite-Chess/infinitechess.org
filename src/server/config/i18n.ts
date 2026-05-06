@@ -8,8 +8,8 @@ import { loadComponentTranslations } from './componentTranslationLoader.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function initTranslations(): void {
+	// Load OLD translations
 	const translations = translationLoader.loadTranslations();
-	loadComponentTranslations();
 	const supportedLngs = Object.keys(translations);
 
 	i18next.use(LanguageDetector).init({
@@ -19,6 +19,9 @@ function initTranslations(): void {
 		// fallbackLng: DEFAULT_LANGUAGE, // Fallback is handled by deepMerge() in translationLoader
 		// debug: true, // Enable debug mode to see logs for missing keys and other details
 	});
+
+	// Load NEW translations
+	loadComponentTranslations();
 }
 
 export { initTranslations };
