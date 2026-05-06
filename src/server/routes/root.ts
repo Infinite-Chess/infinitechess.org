@@ -4,6 +4,7 @@ import express, { NextFunction, Request, Response } from 'express';
 
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
+import { getComponentTranslation } from '../config/componentTranslationLoader.js';
 
 const router = express.Router();
 
@@ -11,11 +12,14 @@ const router = express.Router();
 // verifyJWT does DB work, so it's only attached to the routers that need it.
 router.use(verifyJWT);
 
-// Resolve the user's language and expose auth state to every template.
+// Resolve the user's language, and load component translations
+// for that language, and expose auth state to every template.
 // Nunjucks automatically merges res.locals into every template's render context,
-// so {{ lang }} and {{ memberInfo }} are available in every template.
+// so {{ lang }}, {{ ct }}, {{ memberInfo }}, are available in every template.
 router.use((req: Request, res: Response, next: NextFunction) => {
-	res.locals['lang'] = getLanguageToServe(req);
+	const lang = getLanguageToServe(req);
+	res.locals['lang'] = lang;
+	res.locals['ct'] = (component: string) => getComponentTranslation(component, lang);
 	res.locals['memberInfo'] = req.memberInfo;
 	next();
 });

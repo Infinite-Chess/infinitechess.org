@@ -41,6 +41,8 @@
 
 - Delete any unused css rules in all stylesheets.
 
+- Delete everything related to old translations system - translationLoader (rename componentTranslationloader).
+
 - Delete any straggling unused files - scripts, stylesheets, templates, etc.
 
 - Add `<link rel="modulepreload">` for each page's JS entry points in its Nunjucks template. *(Do last, once every page's import graph is finalized)*

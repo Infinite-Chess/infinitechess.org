@@ -32,6 +32,7 @@ const DEFAULT_LANGUAGE = 'en-US';
  */
 function getLanguageToServe(req: Request): string {
 	const cookies = req.cookies;
+	if (!cookies) throw new Error('Request cookies were not set');
 
 	const supportedLngs = i18next.options.supportedLngs;
 	if (!(supportedLngs instanceof Array)) {

@@ -4,10 +4,12 @@ import i18next from 'i18next';
 import { LanguageDetector } from 'i18next-http-middleware';
 
 import translationLoader from './translationLoader.js';
+import { loadComponentTranslations } from './componentTranslationLoader.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function initTranslations(): void {
 	const translations = translationLoader.loadTranslations();
+	loadComponentTranslations();
 	const supportedLngs = Object.keys(translations);
 
 	i18next.use(LanguageDetector).init({
