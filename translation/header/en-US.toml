@@ -9,12 +9,12 @@ leaderboard = "Leaderboard"
 news = "News"
 donate = "Donate"
 
-[nav.learn]
+[nav.learn-dropdown]
 # Items in the "Learn" dropdown
 tutorial = "Tutorial"
 checkmate_practice = "Checkmate Practice"
 
-[nav.tools]
+[nav.tools-dropdown]
 # Items in the "Tools" dropdown
 analysis_board = "Analysis Board"
 board_editor = "Board Editor"
@@ -34,7 +34,7 @@ gameplay = "Gameplay"
 perspective = "Perspective"  # 3D perspective mode options
 sound = "Sound"
 
-[settings.appearance]
+[settings.appearance-dropdown]
 # "Appearance" sub-panel
 theme = "Theme"
 theme_light = "Light"
@@ -47,7 +47,7 @@ starfield = "Starfield" # The Starfield space animation underneath void
 advanced_effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 board_tiles = "Board Tiles" # Color of the board
 
-[settings.gameplay]
+[settings.gameplay-dropdown]
 # "Gameplay" sub-panel
 drag = "Dragging pieces"
 premove = "Premoves"
@@ -55,13 +55,13 @@ animations = "Animations" # Piece animations
 fast_transitions = "Fast Transitions"
 lingering_annotations = "Lingering Annotations" # Arrows stay more than one move
 
-[settings.perspective]
+[settings.perspective-dropdown]
 # 3D "Perspective" mode sub-panel
 mouse_sensitivity = "Mouse Sensitivity"
 field_of_view = "Field of View"
 reset = "Reset"  # Reset-to-default button
 
-[settings.sound]
+[settings.sound-dropdown]
 # "Sound" sub-panel
 master_volume = "Master Volume"
 ambience = "Ambience"
