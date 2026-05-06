@@ -41,6 +41,9 @@ router.get('/analysis(.html)?', (_req: Request, res: Response) => res.render('an
 router.get('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 router.get('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
+// Legacy URL redirects (permanent 301)
+router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.redirect(301, '/terms')); // prettier-ignore
+
 // Error pages
 router.get('/400(.html)?', (_req: Request, res: Response) => res.render('errors/400.njk'));
 router.get('/401(.html)?', (_req: Request, res: Response) => res.render('errors/401.njk'));
