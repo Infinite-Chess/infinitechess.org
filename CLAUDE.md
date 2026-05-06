@@ -4,6 +4,8 @@
 
 When you finish making any new changes, always ensure all workflow checks pass: `npm run lint --silent`, `npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
+Once we've completed one isolated addition/feature, please in your response to the user, always suggest a simple name they can use for the commit.
+
 ## Key Guidelines
 
 1. Follow industry standards and best code practices of today.
