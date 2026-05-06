@@ -1,6 +1,6 @@
-// src/client/scripts/esm/views/createaccount.ts
+// src/client/scripts/esm/views/register.ts
 
-// The script on the createaccount page
+// The script on the register page
 
 import validators from '../../../../shared/util/validators.js';
 
@@ -60,7 +60,7 @@ element_usernameInput.addEventListener('focusout', () => {
 	// Check username availability...
 	if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
-	fetch(`/createaccount/username/${element_usernameInput.value}`, fetchOptions)
+	fetch(`/register/username/${element_usernameInput.value}`, fetchOptions)
 		.then((response) => response.json())
 		.then((result) => {
 			// { allowed, reason }
@@ -118,9 +118,9 @@ element_emailInput.addEventListener('input', () => {
 });
 element_emailInput.addEventListener('focusout', () => {
 	// Check email availability and functionality...
-	// If it's blank, all the server would send back is the createaccount.html again..
+	// If it's blank, all the server would send back is the register.html again..
 	if (element_emailInput.value.length > 1 && !emailHasError) {
-		fetch(`/createaccount/email/${element_emailInput.value}`, fetchOptions)
+		fetch(`/register/email/${element_emailInput.value}`, fetchOptions)
 			.then((response) => response.json())
 			.then((result) => {
 				// We've got the result back from the server,
@@ -193,7 +193,7 @@ element_submitButton.addEventListener('click', (event) => {
 		);
 });
 
-/** Sends our form data to the createaccount route. */
+/** Sends our form data to the register route. */
 function sendForm(username: string, email: string, password: string): void {
 	// Disable the button and set its class to unavailable immediately.
 	element_submitButton.disabled = true;
@@ -209,7 +209,7 @@ function sendForm(username: string, email: string, password: string): void {
 		credentials: 'same-origin', // Allows cookie to be set from this request
 		body: JSON.stringify({ username, email, password }),
 	};
-	fetch('/createaccount', config)
+	fetch('/register', config)
 		.then((response) => {
 			if (response.ok) OK = true;
 			return response.json();

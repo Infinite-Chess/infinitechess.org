@@ -182,7 +182,7 @@ a.header-donate:hover {
 
 /* Nudge slightly for better centering. */
 #login-link svg,
-#createaccount-link svg {
+#register-link svg {
 	position: relative;
 	left: 2px;
 	top: 1px;

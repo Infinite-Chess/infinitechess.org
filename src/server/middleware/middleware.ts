@@ -197,9 +197,9 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.post('/createaccount', createAccountLimiter, createNewMember); // "/createaccount" POST request
-	app.get('/createaccount/username/:username', checkUsernameAvailable);
-	app.get('/createaccount/email/:email', checkEmailValidity);
+	app.post('/register', createAccountLimiter, createNewMember); // "register" POST request
+	app.get('/register/username/:username', checkUsernameAvailable);
+	app.get('/register/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
