@@ -1,0 +1,71 @@
+# Translation component: site-wide header
+# Source template: src/server/views/components/header/header.njk
+
+[nav]
+# Top-level navigation labels
+learn = "Learn"
+tools = "Tools"
+leaderboard = "Leaderboard"
+news = "News"
+donate = "Donate"
+
+[nav.learn]
+# Items in the "Learn" dropdown
+tutorial = "Tutorial"
+checkmate_practice = "Checkmate Practice"
+
+[nav.tools]
+# Items in the "Tools" dropdown
+analysis_board = "Analysis Board"
+board_editor = "Board Editor"
+
+[actions]
+# Icon button tooltip textures
+login = "Login"
+register = "Register"
+profile = "Profile"
+logout = "Logout"
+
+[settings]
+# Settings panel - top-level category labels
+language = "Language"
+appearance = "Appearance"
+gameplay = "Gameplay"
+perspective = "Perspective"  # 3D perspective mode options
+sound = "Sound"
+
+[settings.appearance]
+# "Appearance" sub-panel
+theme = "Theme"
+theme_light = "Light"
+theme_dark = "Dark"
+legal_moves = "Legal Moves" # Legal-move shape selector
+legal_moves_squares = "Squares"
+legal_moves_dots = "Dots"
+coordinates = "Coordinates" # Shows file/rank labels
+starfield = "Starfield" # The Starfield space animation underneath void
+advanced_effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
+board_tiles = "Board Tiles" # Color of the board
+
+[settings.gameplay]
+# "Gameplay" sub-panel
+drag = "Dragging pieces"
+premove = "Premoves"
+animations = "Animations" # Piece animations
+fast_transitions = "Fast Transitions"
+lingering_annotations = "Lingering Annotations" # Arrows stay more than one move
+
+[settings.perspective]
+# 3D "Perspective" mode sub-panel
+mouse_sensitivity = "Mouse Sensitivity"
+field_of_view = "Field of View"
+reset = "Reset"  # Reset-to-default button
+
+[settings.sound]
+# "Sound" sub-panel
+master_volume = "Master Volume"
+ambience = "Ambience"
+
+[ping]
+label = "Ping"
+unit = "ms" # Milliseconds abbreviation shown after the ping number
