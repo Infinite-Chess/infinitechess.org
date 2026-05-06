@@ -27,6 +27,17 @@ declare global {
 	 */
 	const translations: ClientTranslations;
 
+	/**
+	 * Client-side translation strings for the current language, injected by the server.
+	 * Keyed by component name (e.g. "header"). Each entry contains the [client] sub-table
+	 * of that component's TOML, with keys promoted one level up.
+	 * For typed access, cast to the generated interface from src/client/types/translations/<component>.ts.
+	 * @example
+	 * import type { HeaderClientT } from '../../types/translations/header.js';
+	 * const t = window.__t?.header as HeaderClientT;
+	 */
+	var __t: Record<string, Record<string, string>>;
+
 	/** htmlscript injected inline inside the game page. It handles the loading animation. */
 	var htmlscript: {
 		/** Called on failure to load a page asset. */

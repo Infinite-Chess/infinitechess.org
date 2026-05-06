@@ -39,6 +39,17 @@ export function configureNunjucks(app: Application): void {
 		throw new Error('Manifest file not found. Did we build first?');
 	nunjucksEnv.addGlobal('manifest', JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
 
+	// Safe JSON serialization for embedding in <script> tags.
+	// Escapes <, >, & and ' to their Unicode escapes so the output is safe
+	// in any HTML context, including inline <script> blocks.
+	nunjucksEnv.addFilter('tojson', (value: unknown): string => {
+		return JSON.stringify(value)
+			.replace(/</g, '\\u003c')
+			.replace(/>/g, '\\u003e')
+			.replace(/&/g, '\\u0026')
+			.replace(/'/g, '\\u0027');
+	});
+
 	// In dev, esbuild watch-mode rewrites manifest.json after every rebuild while the
 	// server keeps running. Watch the file and refresh the Nunjucks global only when
 	// it actually changes, so rendered HTML always references the current hashed filenames.

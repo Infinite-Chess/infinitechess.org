@@ -32,6 +32,7 @@ import { processCommand } from '../api/AdminPanel.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
+import { injectTranslations } from './injectTranslations.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { requestConfirmEmail } from '../controllers/emailController.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
@@ -138,6 +139,9 @@ export function configureMiddleware(app: Express): void {
 
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(handle(i18next, { removeLngFromUrl: false }));
+
+	/** Injects t.header, t.footer into res.locals for every Nunjucks render */
+	app.use(injectTranslations);
 
 	app.use(cors());
 

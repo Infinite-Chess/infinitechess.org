@@ -11,6 +11,13 @@
         })()
     </script>
 
+    {# Client-side translation strings for the current page language.
+       Access in any client script via window.__t.header.xxx etc.
+       See docs/COMPONENT_TRANSLATIONS.md for the client-side usage pattern. #}
+    {% if tClient %}
+    <script>window.__t = {{ tClient | tojson | safe }};</script>
+    {% endif %}
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 

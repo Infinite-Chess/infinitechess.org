@@ -69,3 +69,9 @@ ambience = "Ambience"
 [ping]
 label = "Ping"
 unit = "ms" # Milliseconds abbreviation shown after the ping number
+
+# TEMPORARY — remove once real client-side keys are added to this component.
+# These exist solely to verify the [client] injection pipeline and type system end-to-end.
+[client]
+_test_hello = "Hello from server-side translations!"
+_test_lang = "You are browsing in English."

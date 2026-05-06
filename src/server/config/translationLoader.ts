@@ -1,7 +1,11 @@
 // src/server/config/translationLoader.ts
 
 /**
- * Handles loading and sanitizing translation TOML files.
+ * LEGACY — loads the monolithic per-language TOML files from translation/*.toml
+ * into i18next for use by old server routes and socket message translations.
+ *
+ * This file will be deleted once all pages have been migrated to the new
+ * component-based system in componentTranslationLoader.ts.
  */
 
 import fs from 'fs';
@@ -10,10 +14,10 @@ import { parse } from 'smol-toml';
 import { marked } from 'marked';
 import { fileURLToPath } from 'node:url';
 import { format, parseISO } from 'date-fns';
-import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import { localeMap } from './dateLocales.js';
 import { DEFAULT_LANGUAGE } from '../utility/translate.js';
+import { deepMerge, html_escape } from './componentTranslationLoader.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -33,18 +37,6 @@ const translationsFolder = path.join(__dirname, '../../../translation');
 const newsFolder = path.join(translationsFolder, 'news');
 /** The folder path containing English markdown news posts. */
 const englishNewsFolder = path.join(newsFolder, DEFAULT_LANGUAGE);
-
-const xss_options: IFilterXSSOptions = {
-	// Allows using these html tags in translation key strings for formatting.
-	whiteList: {
-		em: [],
-		strong: [],
-		b: [],
-		i: [],
-		br: [],
-	},
-};
-const custom_xss = new FilterXSS(xss_options);
 
 // Functions -----------------------------------------------------------------
 
@@ -77,32 +69,6 @@ function loadTranslations(): Translations {
 	}
 
 	return translations;
-}
-
-/**
- * Deep-merges `source` into `target`, returning a new object.
- * Keys present in `source` but absent in `target` are copied from `source` (English fallback).
- * Keys present in both are recursively merged when both values are plain objects;
- * otherwise the `target` value takes precedence.
- */
-function deepMerge(source: Record<string, any>, target: Record<string, any>): Record<string, any> {
-	const result: Record<string, any> = { ...source };
-	for (const [key, targetValue] of Object.entries(target)) {
-		const sourceValue = result[key];
-		if (
-			targetValue !== null &&
-			typeof targetValue === 'object' &&
-			!Array.isArray(targetValue) &&
-			sourceValue !== null &&
-			typeof sourceValue === 'object' &&
-			!Array.isArray(sourceValue)
-		) {
-			result[key] = deepMerge(sourceValue, targetValue);
-		} else {
-			result[key] = targetValue;
-		}
-	}
-	return result;
 }
 
 /**
@@ -149,34 +115,6 @@ function loadNews(supportedLanguages: string[]): Record<string, string> {
 	});
 
 	return newsPosts;
-}
-
-/**
- * Recursively traverses a data structure (array or object) and sanitizes all contained
- * strings using an XSS filter. This prevents malicious content from translation files
- * from being rendered in a user's browser.
- * @param value - The input value (e.g., the parsed content of a TOML file).
- * @returns A deep copy of the input with all string values sanitized.
- */
-function html_escape(value: any): any {
-	if (Array.isArray(value)) {
-		const escaped = [];
-		for (const member of value) {
-			escaped.push(html_escape(member));
-		}
-		return escaped;
-	}
-	if (value !== null && typeof value === 'object') {
-		const escaped: Record<any, any> = {};
-		for (const [valueKey, valueValue] of Object.entries(value)) {
-			escaped[valueKey] = html_escape(valueValue);
-		}
-		return escaped;
-	}
-	if (typeof value === 'string') {
-		return custom_xss.process(value);
-	}
-	return value; // numbers, booleans, etc.
 }
 
 // Exports -------------------------------------------------------------------
