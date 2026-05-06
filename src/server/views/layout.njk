@@ -31,6 +31,9 @@
     {# Page-specific stylesheet #}
     {% block style %}{% endblock %}
 
+    {# Client translations for the header component, injected as a global `t` object. #}
+    <script>window.t = { header: {{ clientT('header') | json | safe }} };</script>
+
     {# Any extra head content (meta tags, preloads, etc.) #}
     {% block head %}{% endblock %}
 </head>

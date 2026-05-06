@@ -12,8 +12,10 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
+import tconfig from '../src/server/config/translationconfig';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const translationFile = path.join(__dirname, '../translation/en-US.toml');
+const translationFile = path.join(tconfig.TRANSLATION_FOLDER, `${tconfig.DEFAULT_LANGUAGE}.toml`);
 const relativeOutputFilePath = 'src/types/translations.ts';
 const outputFile = path.join(__dirname, `../${relativeOutputFilePath}`);
 

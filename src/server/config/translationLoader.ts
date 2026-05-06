@@ -12,7 +12,7 @@ import { parse } from 'smol-toml';
 import { fileURLToPath } from 'node:url';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
-import { DEFAULT_LANGUAGE } from '../utility/translate.js';
+import tconfig from './translationconfig.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -62,9 +62,9 @@ function loadTranslations(): Translations {
 	// missing nested keys are always present. i18next's fallbackLng only handles leaf-key
 	// lookups; when a Nunjucks template calls t('some.section', { returnObjects: true }) it
 	// receives the language's partial object with no further fallback for missing sub-trees.
-	const englishTranslations = translations[DEFAULT_LANGUAGE]!.default;
+	const englishTranslations = translations[tconfig.DEFAULT_LANGUAGE]!.default;
 	for (const [languageCode, languageTranslations] of Object.entries(translations)) {
-		if (languageCode === DEFAULT_LANGUAGE) continue;
+		if (languageCode === tconfig.DEFAULT_LANGUAGE) continue;
 		translations[languageCode] = {
 			default: deepMerge(englishTranslations, languageTranslations.default),
 		};

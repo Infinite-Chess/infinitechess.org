@@ -5,7 +5,7 @@
  *
  * Files live under translation/<component>/<lang>.toml.
  * All components are loaded once at startup by loadComponentTranslations().
- * Use getComponentTranslation() and getClientTranslation() to retrieve them per request.
+ * Use getServerTranslation() and getClientTranslation() to retrieve them per request.
  *
  * The [client] sub-table (if present) is excluded from the server-side object —
  * it is injected into the page separately via getClientTranslation().
@@ -14,10 +14,9 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'smol-toml';
-import { fileURLToPath } from 'node:url';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
-import { DEFAULT_LANGUAGE } from '../utility/translate.js';
+import tconfig from './translationconfig.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -38,13 +37,7 @@ type ComponentEntry = {
 
 // Constants -----------------------------------------------------------------
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/** The folder path containing translation TOML files. */
-export const TRANSLATION_FOLDER = path.join(__dirname, '../../../translation');
-
-/** Module-level store populated once by loadComponentTranslations(). */
-let componentStore: ComponentStore | null = null;
+const englishTOMLName = `${tconfig.DEFAULT_LANGUAGE}.toml`;
 
 const xss_options: IFilterXSSOptions = {
 	// Allows using these html tags in translation key strings for formatting.
@@ -58,6 +51,11 @@ const xss_options: IFilterXSSOptions = {
 };
 const custom_xss = new FilterXSS(xss_options);
 
+// State ---------------------------------------------------------------------
+
+/** Module-level store populated once by loadComponentTranslations(). */
+let componentStore: ComponentStore | null = null;
+
 // Loading Translations ------------------------------------------------------------
 
 /**
@@ -67,33 +65,33 @@ const custom_xss = new FilterXSS(xss_options);
  */
 export function loadComponentTranslations(): void {
 	const store: ComponentStore = new Map();
-	/** Helper to load and parse a TOML file with XSS sanitization. */
-	const parseToml = (filePath: string): Record<string, any> =>
-		html_escape(parse(fs.readFileSync(filePath, 'utf-8')));
 
 	const componentDirs = fs
-		.readdirSync(TRANSLATION_FOLDER, { withFileTypes: true })
-		.filter((e) => e.isDirectory() && e.name !== 'news')
+		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
+		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
 		.map((e) => e.name);
 
 	for (const componentName of componentDirs) {
-		const componentDir = path.join(TRANSLATION_FOLDER, componentName);
+		const componentDir = path.join(tconfig.TRANSLATION_FOLDER, componentName);
 		const tomlFiles = fs.readdirSync(componentDir).filter((f) => f.endsWith('.toml'));
 
 		// Throw error if English TOML missing
-		if (!tomlFiles.includes(`${DEFAULT_LANGUAGE}.toml`))
+		if (!tomlFiles.includes(englishTOMLName))
 			throw new Error(`Component "${componentName}" is missing the English source.`);
 
-		const englishRaw = parseToml(path.join(componentDir, `${DEFAULT_LANGUAGE}.toml`));
+		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
 		const englishServerObj = withoutClientTable(englishRaw);
 		const englishClientObj = englishRaw['client'] ?? {};
 
 		const langMap = new Map<string, ComponentEntry>();
-		langMap.set(DEFAULT_LANGUAGE, { server: englishServerObj, client: englishClientObj });
+		langMap.set(tconfig.DEFAULT_LANGUAGE, {
+			server: englishServerObj,
+			client: englishClientObj,
+		});
 
 		for (const file of tomlFiles) {
 			const langCode = file.replace('.toml', '');
-			if (langCode === DEFAULT_LANGUAGE) continue;
+			if (langCode === tconfig.DEFAULT_LANGUAGE) continue;
 			const raw = parseToml(path.join(componentDir, file));
 			const serverObj = withoutClientTable(raw);
 			const clientObj = (raw['client'] ?? {}) as Record<string, any>;
@@ -116,11 +114,11 @@ export function loadComponentTranslations(): void {
  * @param component - The component name, e.g. "header"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getComponentTranslation(component: string, lang: string): Record<string, any> {
+export function getServerTranslation(component: string, lang: string): Record<string, any> {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
-	return (langMap.get(lang) ?? langMap.get(DEFAULT_LANGUAGE))?.server ?? {};
+	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.server ?? {};
 }
 
 /**
@@ -130,39 +128,18 @@ export function getComponentTranslation(component: string, lang: string): Record
  * @param component - The component name, e.g. "leaderboard"
  * @param lang - The language code, e.g. "de-DE"
  */
-function getClientTranslation(component: string, lang: string): Record<string, any> {
+export function getClientTranslation(component: string, lang: string): Record<string, any> {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
-	return (langMap.get(lang) ?? langMap.get(DEFAULT_LANGUAGE))?.client ?? {};
+	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.client ?? {};
 }
 
 // Utility ---------------------------------------------------------------------
 
-/**
- * Deep-merges `source` into `target`, returning a new object.
- * Keys present in `source` but absent in `target` are copied from `source` (English fallback).
- * Keys present in both are recursively merged when both values are plain objects;
- * otherwise the `target` value takes precedence.
- */
-function deepMerge(source: Record<string, any>, target: Record<string, any>): Record<string, any> {
-	const result: Record<string, any> = { ...source };
-	for (const [key, targetValue] of Object.entries(target)) {
-		const sourceValue = result[key];
-		if (
-			targetValue !== null &&
-			typeof targetValue === 'object' &&
-			!Array.isArray(targetValue) &&
-			sourceValue !== null &&
-			typeof sourceValue === 'object' &&
-			!Array.isArray(sourceValue)
-		) {
-			result[key] = deepMerge(sourceValue, targetValue);
-		} else {
-			result[key] = targetValue;
-		}
-	}
-	return result;
+/** Helper to load and parse a TOML file with XSS sanitization. */
+function parseToml(filePath: string): Record<string, any> {
+	return html_escape(parse(fs.readFileSync(filePath, 'utf-8')));
 }
 
 /**
@@ -197,4 +174,30 @@ function html_escape(value: any): any {
 function withoutClientTable(parsed: Record<string, any>): Record<string, any> {
 	const { client: _omit, ...rest } = parsed;
 	return rest;
+}
+
+/**
+ * Deep-merges `source` into `target`, returning a new object.
+ * Keys present in `source` but absent in `target` are copied from `source` (English fallback).
+ * Keys present in both are recursively merged when both values are plain objects;
+ * otherwise the `target` value takes precedence.
+ */
+function deepMerge(source: Record<string, any>, target: Record<string, any>): Record<string, any> {
+	const result: Record<string, any> = { ...source };
+	for (const [key, targetValue] of Object.entries(target)) {
+		const sourceValue = result[key];
+		if (
+			targetValue !== null &&
+			typeof targetValue === 'object' &&
+			!Array.isArray(targetValue) &&
+			sourceValue !== null &&
+			typeof sourceValue === 'object' &&
+			!Array.isArray(sourceValue)
+		) {
+			result[key] = deepMerge(sourceValue, targetValue);
+		} else {
+			result[key] = targetValue;
+		}
+	}
+	return result;
 }

@@ -5,14 +5,11 @@ import path from 'path';
 import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
 
+import tconfig from './translationconfig.js';
 import { localeMap } from './dateLocales.js';
-import { DEFAULT_LANGUAGE } from '../utility/translate.js';
-import { TRANSLATION_FOLDER } from './componentTranslationLoader.js';
 
-/** The folder path containing news markdown files for various languages. */
-const newsFolder = path.join(TRANSLATION_FOLDER, 'news');
 /** The folder path containing English markdown news posts. */
-const englishNewsFolder = path.join(newsFolder, DEFAULT_LANGUAGE);
+const englishNewsFolder = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
 
 /**
  * Loads news posts from markdown files into an object.
@@ -36,7 +33,7 @@ export function loadNews(supportedLanguages: string[]): Record<string, string> {
 		// Generate News posts HTML for this language
 		newsPosts[languageCode] = englishNewsPosts
 			.map((fileName) => {
-				const fullPath = path.join(newsFolder, languageCode, fileName);
+				const fullPath = path.join(tconfig.NEWS_FOLDER, languageCode, fileName);
 
 				// Read news post (fallback to default language)
 				const content = fs.existsSync(fullPath)
