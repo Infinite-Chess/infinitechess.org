@@ -20,7 +20,7 @@
 {# Site-wide header. Included by every page. #}
 <header class="site-header">
 	{# SVG defs — only the pawn is still used (ping meter loading indicator). #}
-	<svg class="hidden" aria-hidden="true">
+	<svg class="hidden">
 		<symbol id="svg-undo" fill="none" viewBox="-200 0 1900 1900">
 			<path d="M910 1473c147-169 90-414-136-388 9 56 18 110 20 130 9 47-30 54-30 54l-438-310 423-378s43 0 35 64l-16 128C1142 724 1372 1230 940 1490l-30-17Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
 		</symbol>
@@ -33,21 +33,21 @@
 	</svg>
 
 	{# Hamburger toggle - only visible on narrow screens via CSS. #}
-	<button class="header-hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="header-mobile-panel">
+	<button class="header-hamburger" type="button">
 		<span class="header-hamburger-bar"></span>
 		<span class="header-hamburger-bar"></span>
 		<span class="header-hamburger-bar"></span>
 	</button>
 
-	<a class="header-home" href="/" aria-label="Infinite Chess home">
-		<span class="header-logo" aria-hidden="true">
+	<a class="header-home" href="/">
+		<span class="header-logo">
 			<svg class="header-logo-glyph" viewBox="0 0 1645 2048"><use href="#svg-omega"/></svg>
 			<svg class="header-logo-aura" viewBox="0 0 1645 2048"><use href="#svg-omega"/></svg>
 		</span>
 		<span class="header-sitename">Infinite&nbsp;Chess</span>
 	</a>
 
-	<nav class="header-nav" aria-label="Primary">
+	<nav class="header-nav">
 		<div class="header-nav-item header-dropdown-parent">
 			<button class="header-nav-link" type="button">Learn</button>
 			<div class="header-dropdown" role="menu">
@@ -79,31 +79,31 @@
 
 	<div class="header-actions">
 		{% if memberInfo and memberInfo.signedIn %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" aria-label="Profile" data-tooltip="Profile">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000" aria-hidden="true">
+			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="Profile">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000">
 					<path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="currentColor" fill-rule="evenodd" />
 				</svg>
 			</a>
-			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" aria-label="Logout" data-tooltip="Logout">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" data-tooltip="Logout">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
 		{% else %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/login" aria-label="Login" data-tooltip="Login">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+			<a id="login-link" class="header-icon-btn tooltip-d" href="/login" data-tooltip="Login">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
-			<a id="register-link" class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" aria-label="Register" data-tooltip="Register">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100" aria-hidden="true">
+			<a id="register-link" class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" data-tooltip="Register">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100">
 					<path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800" fill="currentColor" />
 				</svg>
 			</a>
 		{% endif %}
 
 		<div id="settings" class="settings header-icon-btn header-icon-btn-tight">
-			<svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240" aria-hidden="true">
+			<svg class="gear" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 				<path d="M128 4c10 0 20 8 21 18v4a30 30 0 00 40 22l4-2c10-3 21 0 26 10l8 13c5 9 3 20-4 26l-4 3a28 28 0 00 0 44l4 3c7 6 10 17 4 26l-8 13c-5 10-16 13-26 10l-4-2a30 30 0 00-40 22v4c-2 10-10 18-21 18h-16c-10 0-20-8-21-18v-4a30 30 0 00-40-22l-4 2c-10 3-21 0-26-10l-8-13a20 20 0 01 4-26l4-3a28 28 0 00 0-44l-4-3A20 20 0 01 13 70L20 56c5-10 16-13 26-10l4 2a30 30 0 00 40-22v-4c2-10 10-18 21-18h16ZM120 153a33 33 0 10 0-66 33 33 0 00 0 66Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"/>
 			</svg>
 
@@ -241,8 +241,8 @@
 </header>
 
 {# Slide-in mobile menu (visible only at narrow widths). #}
-<div id="header-mobile-panel" class="header-mobile-panel" aria-hidden="true">
-	<nav class="header-mobile-nav" aria-label="Mobile primary">
+<div id="header-mobile-panel" class="header-mobile-panel">
+	<nav class="header-mobile-nav">
 		<div class="header-mobile-group">
 			<span class="header-mobile-group-title">Learn</span>
 			<a class="header-mobile-child" href="/tutorial">Tutorial</a>
@@ -258,5 +258,5 @@
 		<a class="header-mobile-link header-donate" href="/patron">Donate</a>
 	</nav>
 </div>
-<div class="header-mobile-dim-content" aria-hidden="true"></div>
-<div class="header-mobile-dim-header" aria-hidden="true"></div>
+<div class="header-mobile-dim-content"></div>
+<div class="header-mobile-dim-header"></div>
