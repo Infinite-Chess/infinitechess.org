@@ -94,8 +94,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			onAuthenticationNeeded();
 			break;
 		case 'Logged out':
-			document.dispatchEvent(new CustomEvent('logout'));
-			socketman.resubAll();
+			window.location.reload();
 			break;
 		case 'Too Many Requests. Try again soon.':
 			toast.show(translations.websocket.too_many_requests, {
