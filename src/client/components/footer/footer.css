@@ -1,8 +1,7 @@
 /* src/client/components/footer/footer.css */
 
 /*
- * Site footer. Included on every page except /editor, /analysis, and /tutorial.
- * Uses theme variables defined in global.css; defines no theme vars of its own.
+ * Site footer. Included on every page, except those with the board visible.
  */
 
 .site-footer {
@@ -10,7 +9,7 @@
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
-	gap: 0 4px;
+	gap: 0 3px;
 	padding: 18px 16px;
 	border-top: 1px solid var(--c-border);
 	color: var(--c-text-muted);
@@ -18,9 +17,9 @@
 
 .site-footer a {
 	display: inline-block;
-	padding: 4px 8px;
+	padding: 3px 6px;
 	color: var(--c-text-muted);
-	font-size: 12px;
+	font-size: 10px;
 	text-decoration: none;
 	white-space: nowrap;
 }
