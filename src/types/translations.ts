@@ -17,37 +17,6 @@ export type TranslationKeys =
 	| 'direction'
 	| 'version'
 	| 'maintainer'
-	| 'header.home'
-	| 'header.play'
-	| 'header.news'
-	| 'header.login'
-	| 'header.profile'
-	| 'header.createaccount'
-	| 'header.logout'
-	| 'header.leaderboard'
-	| 'header.settings.language'
-	| 'header.settings.appearance'
-	| 'header.settings.appearance-theme'
-	| 'header.settings.appearance-coordinates'
-	| 'header.settings.appearance-starfield'
-	| 'header.settings.appearance-advanced-effects'
-	| 'header.settings.legalmoves'
-	| 'header.settings.legalmoves-squares'
-	| 'header.settings.legalmoves-dots'
-	| 'header.settings.gameplay'
-	| 'header.settings.gameplay-drag'
-	| 'header.settings.gameplay-premove'
-	| 'header.settings.gameplay-animations'
-	| 'header.settings.gameplay-fast_transitions'
-	| 'header.settings.gameplay-lingering_annotations'
-	| 'header.settings.perspective'
-	| 'header.settings.perspective-mouse-sensitivity'
-	| 'header.settings.perspective-fov'
-	| 'header.settings.sound'
-	| 'header.settings.sound-master-volume'
-	| 'header.settings.sound-ambience'
-	| 'header.settings.ping'
-	| 'header.settings.reset-to-default'
 	| 'footer.contact'
 	| 'footer.terms_of_service'
 	| 'footer.source_code'
@@ -606,41 +575,6 @@ export interface TranslationsObject {
 	direction: string;
 	version: string;
 	maintainer: string;
-	header: {
-		home: string;
-		play: string;
-		news: string;
-		login: string;
-		profile: string;
-		createaccount: string;
-		logout: string;
-		leaderboard: string;
-		settings: {
-			language: string;
-			appearance: string;
-			'appearance-theme': string;
-			'appearance-coordinates': string;
-			'appearance-starfield': string;
-			'appearance-advanced-effects': string;
-			legalmoves: string;
-			'legalmoves-squares': string;
-			'legalmoves-dots': string;
-			gameplay: string;
-			'gameplay-drag': string;
-			'gameplay-premove': string;
-			'gameplay-animations': string;
-			'gameplay-fast_transitions': string;
-			'gameplay-lingering_annotations': string;
-			perspective: string;
-			'perspective-mouse-sensitivity': string;
-			'perspective-fov': string;
-			sound: string;
-			'sound-master-volume': string;
-			'sound-ambience': string;
-			ping: string[];
-			'reset-to-default': string;
-		};
-	};
 	footer: {
 		contact: string;
 		terms_of_service: string;
