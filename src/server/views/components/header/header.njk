@@ -17,6 +17,9 @@
 </div>
 {%- endmacro %}
 
+{# Load header translations. #}
+{% set t = ct('header') %}
+
 {# Site-wide header. Included by every page. #}
 <header class="site-header">
 	{# SVG defs — only the pawn is still used (ping meter loading indicator). #}
@@ -49,53 +52,53 @@
 
 	<nav class="header-nav">
 		<div class="header-nav-item header-dropdown-parent">
-			<button class="header-nav-link" type="button">Learn</button>
+			<button class="header-nav-link" type="button">{{ t.nav.learn }}</button>
 			<div class="header-dropdown" role="menu">
-				<a class="header-dropdown-item" role="menuitem" href="/tutorial">Tutorial</a>
-				<a class="header-dropdown-item" role="menuitem" href="/checkmatepractice">Checkmate Practice</a>
+				<a class="header-dropdown-item" role="menuitem" href="/tutorial">{{ t.nav.learn_dropdown.tutorial }}</a>
+				<a class="header-dropdown-item" role="menuitem" href="/checkmatepractice">{{ t.nav.learn_dropdown.checkmate_practice }}</a>
 			</div>
 		</div>
 
 		<div class="header-nav-item header-dropdown-parent">
-			<button class="header-nav-link" type="button">Tools</button>
+			<button class="header-nav-link" type="button">{{ t.nav.tools }}</button>
 			<div class="header-dropdown" role="menu">
-				<a class="header-dropdown-item" role="menuitem" href="/analysis">Analysis Board</a>
-				<a class="header-dropdown-item" role="menuitem" href="/editor">Board Editor</a>
+				<a class="header-dropdown-item" role="menuitem" href="/analysis">{{ t.nav.tools_dropdown.analysis_board }}</a>
+				<a class="header-dropdown-item" role="menuitem" href="/editor">{{ t.nav.tools_dropdown.board_editor }}</a>
 			</div>
 		</div>
 
 		<div class="header-nav-item">
-			<a class="header-nav-link" href="/leaderboard">Leaderboard</a>
+			<a class="header-nav-link" href="/leaderboard">{{ t.nav.leaderboard }}</a>
 		</div>
 
 		<div class="header-nav-item">
-			<a class="header-nav-link" href="/news">News</a>
+			<a class="header-nav-link" href="/news">{{ t.nav.news }}</a>
 		</div>
 
 		<div class="header-nav-item">
-			<a class="header-nav-link header-donate" href="/patron">Donate</a>
+			<a class="header-nav-link header-donate" href="/patron">{{ t.nav.donate }}</a>
 		</div>
 	</nav>
 
 	<div class="header-actions">
 		{% if memberInfo and memberInfo.signedIn %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="Profile">
+			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000">
 					<path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="currentColor" fill-rule="evenodd" />
 				</svg>
 			</a>
-			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" data-tooltip="Logout">
+			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" data-tooltip="{{ t.actions.logout }}">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
 		{% else %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/login" data-tooltip="Login">
+			<a id="login-link" class="header-icon-btn tooltip-d" href="/login" data-tooltip="{{ t.actions.login }}">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
-			<a id="register-link" class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" data-tooltip="Register">
+			<a id="register-link" class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" data-tooltip="{{ t.actions.register }}">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100">
 					<path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800" fill="currentColor" />
 				</svg>
@@ -109,30 +112,30 @@
 
 			<div class="settings-dropdown dropdown hidden">
 				<div id="language-settings-dropdown-item" class="settings-dropdown-item">
-					<p class="text">Language</p>
+					<p class="text">{{ t.settings.language }}</p>
 					<span class="arrow-head-right"></span>
 				</div>
 				<div id="appearance-settings-dropdown-item" class="settings-dropdown-item">
-					<p class="text">Appearance</p>
+					<p class="text">{{ t.settings.appearance }}</p>
 					<span class="arrow-head-right"></span>
 				</div>
 				<div id="gameplay-settings-dropdown-item" class="settings-dropdown-item">
-					<p class="text">Gameplay</p>
+					<p class="text">{{ t.settings.gameplay }}</p>
 					<span class="arrow-head-right"></span>
 				</div>
 				<div id="perspective-settings-dropdown-item" class="settings-dropdown-item hidden">
-					<p class="text">Perspective</p>
+					<p class="text">{{ t.settings.perspective }}</p>
 					<span class="arrow-head-right"></span>
 				</div>
 				<div id="sound-settings-dropdown-item" class="settings-dropdown-item">
-					<p class="text">Sound</p>
+					<p class="text">{{ t.settings.sound }}</p>
 					<span class="arrow-head-right"></span>
 				</div>
 				<div class="ping-meter hidden">
 					<div>
-						<span class="ping">Ping:</span>
+						<span class="ping">{{ t.ping.label }}:</span>
 						<strong class="ping-value">-</strong>
-						<span class="ms">ms</span>
+						<span class="ms">{{ t.ping.unit }}</span>
 					</div>
 					<div class="ping-bars">
 						<div class="ping-bar"></div>
@@ -147,7 +150,7 @@
 
 			{# Language #}
 			<div class="language-dropdown dropdown hidden">
-				{{ sub_dropdown_title("Language") }}
+				{{ sub_dropdown_title(t.settings.language) }}
 				<div class="dropdown-scrollable">
 					<div class="language-dropdown-item selected" value="en-US">
 						<div class="language-names">
@@ -161,41 +164,41 @@
 
 			{# Appearance #}
 			<div class="appearance-dropdown dropdown hidden">
-				{{ sub_dropdown_title("Appearance") }}
+				{{ sub_dropdown_title(t.settings.appearance) }}
 				<div class="dropdown-scrollable">
 					<div class="select-option ui-theme" data-theme-toggle>
-						<p class="text">Theme</p>
+						<p class="text">{{ t.settings.appearance_dropdown.theme }}</p>
 						<span class="select-value"></span>
 					</div>
 					<div class="select-option" data-legal-move-toggle>
-						<p class="text">Legal Moves</p>
+						<p class="text">{{ t.settings.appearance_dropdown.legal_moves }}</p>
 						<span class="select-value"></span>
 					</div>
-					{{ boolean_option("coordinates", "Coordinates") }}
-					{{ boolean_option("starfield", "Starfield") }}
-					{{ boolean_option("advanced-effects", "Advanced Effects") }}
-					<p class="theme-title">Board Tiles</p>
+					{{ boolean_option("coordinates", t.settings.appearance_dropdown.coordinates) }}
+					{{ boolean_option("starfield", t.settings.appearance_dropdown.starfield) }}
+					{{ boolean_option("advanced-effects", t.settings.appearance_dropdown.advanced_effects) }}
+					<p class="theme-title">{{ t.settings.appearance_dropdown.board_tiles }}</p>
 					<div class="board-color-list"></div>
 				</div>
 			</div>
 
 			{# Gameplay #}
 			<div class="gameplay-dropdown dropdown hidden">
-				{{ sub_dropdown_title("Gameplay") }}
-				{{ boolean_option("drag", "Dragging pieces") }}
-				{{ boolean_option("premove", "Premoves") }}
-				{{ boolean_option("animations", "Animations") }}
-				{{ boolean_option("fast-transitions", "Fast Transitions") }}
-				{{ boolean_option("lingering-annotations", "Lingering Annotations") }}
+				{{ sub_dropdown_title(t.settings.gameplay) }}
+				{{ boolean_option("drag", t.settings.gameplay_dropdown.drag) }}
+				{{ boolean_option("premove", t.settings.gameplay_dropdown.premove) }}
+				{{ boolean_option("animations", t.settings.gameplay_dropdown.animations) }}
+				{{ boolean_option("fast-transitions", t.settings.gameplay_dropdown.fast_transitions) }}
+				{{ boolean_option("lingering-annotations", t.settings.gameplay_dropdown.lingering_annotations) }}
 			</div>
 
 			{# Perspective #}
 			<div class="perspective-dropdown dropdown hidden">
-				{{ sub_dropdown_title("Perspective") }}
+				{{ sub_dropdown_title(t.settings.perspective) }}
 				<div class="perspective-options">
 					<div class="perspective-option mouse-sensitivity">
 						<div class="perspective-option-title">
-							<p>Mouse Sensitivity</p>
+							<p>{{ t.settings.perspective_dropdown.mouse_sensitivity }}</p>
 						</div>
 						<div class="slider-container">
 							<input class="slider" type="range" min="25" max="200" value="100">
@@ -204,7 +207,7 @@
 					</div>
 					<div class="perspective-option fov">
 						<div class="perspective-option-title">
-							<p>Field of View</p>
+							<p>{{ t.settings.perspective_dropdown.field_of_view }}</p>
 						</div>
 						<div class="slider-container">
 							<input class="slider" type="range" min="60" max="150" value="90">
@@ -213,7 +216,7 @@
 						<div class="reset-default-container hidden">
 							<div class="reset-default">
 								<svg class="svg-undo"><use href="#svg-undo"></use></svg>
-								<span>Reset</span>
+								<span>{{ t.settings.perspective_dropdown.reset }}</span>
 							</div>
 						</div>
 					</div>
@@ -222,18 +225,18 @@
 
 			{# Sound #}
 			<div class="sound-dropdown dropdown hidden">
-				{{ sub_dropdown_title("Sound") }}
+				{{ sub_dropdown_title(t.settings.sound) }}
 				<div class="sound-options">
 					<div class="sound-option master-volume">
 						<div class="sound-option-title">
-							<p>Master Volume</p>
+							<p>{{ t.settings.sound_dropdown.master_volume }}</p>
 						</div>
 						<div class="slider-container">
 							<input class="slider" type="range" min="0" max="100" value="100">
 							<span class="value"></span>
 						</div>
 					</div>
-					{{ boolean_option("ambience", "Ambience") }}
+					{{ boolean_option("ambience", t.settings.sound_dropdown.ambience) }}
 				</div>
 			</div>
 		</div>
@@ -244,18 +247,18 @@
 <div id="header-mobile-panel" class="header-mobile-panel">
 	<nav class="header-mobile-nav">
 		<div class="header-mobile-group">
-			<span class="header-mobile-group-title">Learn</span>
-			<a class="header-mobile-child" href="/tutorial">Tutorial</a>
-			<a class="header-mobile-child" href="/checkmatepractice">Checkmate Practice</a>
+			<span class="header-mobile-group-title">{{ t.nav.learn }}</span>
+			<a class="header-mobile-child" href="/tutorial">{{ t.nav.learn_dropdown.tutorial }}</a>
+			<a class="header-mobile-child" href="/checkmatepractice">{{ t.nav.learn_dropdown.checkmate_practice }}</a>
 		</div>
 		<div class="header-mobile-group">
-			<span class="header-mobile-group-title">Tools</span>
-			<a class="header-mobile-child" href="/analysis">Analysis Board</a>
-			<a class="header-mobile-child" href="/editor">Board Editor</a>
+			<span class="header-mobile-group-title">{{ t.nav.tools }}</span>
+			<a class="header-mobile-child" href="/analysis">{{ t.nav.tools_dropdown.analysis_board }}</a>
+			<a class="header-mobile-child" href="/editor">{{ t.nav.tools_dropdown.board_editor }}</a>
 		</div>
-		<a class="header-mobile-link" href="/leaderboard">Leaderboard</a>
-		<a class="header-mobile-link" href="/news">News</a>
-		<a class="header-mobile-link header-donate" href="/patron">Donate</a>
+		<a class="header-mobile-link" href="/leaderboard">{{ t.nav.leaderboard }}</a>
+		<a class="header-mobile-link" href="/news">{{ t.nav.news }}</a>
+		<a class="header-mobile-link header-donate" href="/patron">{{ t.nav.donate }}</a>
 	</nav>
 </div>
 <div class="header-mobile-dim-content"></div>
