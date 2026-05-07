@@ -6,7 +6,7 @@ import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import {
 	getClientTranslation,
-	getServerTranslation,
+	getTemplateTranslation,
 } from '../config/componentTranslationLoader.js';
 
 const router = express.Router();
@@ -18,11 +18,11 @@ router.use(verifyJWT);
 // Resolve the user's language, and load component translations
 // for that language, and expose auth state to every template.
 // Nunjucks automatically merges res.locals into every template's render context,
-// so {{ lang }}, {{ serverT }}, {{ clientT }}, {{ memberInfo }}, are available in every template.
+// so {{ lang }}, {{ templateT }}, {{ clientT }}, {{ memberInfo }}, are available in every template.
 router.use((req: Request, res: Response, next: NextFunction) => {
 	const lang = getLanguageToServe(req);
 	res.locals['lang'] = lang;
-	res.locals['serverT'] = (component: string) => getServerTranslation(component, lang);
+	res.locals['templateT'] = (component: string) => getTemplateTranslation(component, lang);
 	res.locals['clientT'] = (component: string) => getClientTranslation(component, lang);
 	res.locals['memberInfo'] = req.memberInfo;
 	next();

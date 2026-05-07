@@ -38,7 +38,7 @@ type ComponentStore = Map<string, Map<string, ComponentEntry>>;
 /** A single component's translations for one language. */
 type ComponentEntry = {
 	/** The TOML object with [client] removed — used by SSR templates. */
-	server: Record<string, any>;
+	template: Record<string, any>;
 	/** The [client] sub-table of the TOML, or {} if not present — served to browser JS. */
 	client: Record<string, any>;
 };
@@ -71,7 +71,6 @@ let responsesStore: Map<string, Record<string, any>> | null = null;
 /**
  * Loads all component translation TOML files from translation/<component>/<lang>.toml
  * and stores them in the module-level componentStore.
- * Call once at server startup (from i18n.ts).
  */
 export function loadComponentTranslations(): void {
 	componentStore = new Map();
@@ -104,13 +103,13 @@ export function loadComponentTranslations(): void {
 
 			responsesStore = responses;
 		} else {
-			// Regular component -> store server and client parts separately
-			const englishServerObj = withoutClientTable(englishRaw);
+			// Regular component -> store template and client parts separately
+			const englishTemplateObj = withoutClientTable(englishRaw);
 			const englishClientObj: Record<string, any> = englishRaw['client'] ?? {};
 
 			const langMap = new Map<string, ComponentEntry>();
 			langMap.set(tconfig.DEFAULT_LANGUAGE, {
-				server: englishServerObj,
+				template: englishTemplateObj,
 				client: englishClientObj,
 			});
 
@@ -118,11 +117,11 @@ export function loadComponentTranslations(): void {
 				const langCode = file.replace('.toml', '');
 				if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
 				const raw = parseToml(path.join(componentDir, file));
-				const serverObj = withoutClientTable(raw);
+				const templateObj = withoutClientTable(raw);
 				const clientObj: Record<string, any> = raw['client'] ?? {};
 				// Deep-merge English fallback so missing keys are always present
 				langMap.set(langCode, {
-					server: deepMerge(englishServerObj, serverObj),
+					template: deepMerge(englishTemplateObj, templateObj),
 					client: deepMerge(englishClientObj, clientObj),
 				});
 			}
@@ -133,16 +132,16 @@ export function loadComponentTranslations(): void {
 }
 
 /**
- * Returns the server-side translation object for a component in the requested language.
+ * Returns the template translation object for a component in the requested language.
  * Falls back to English if the language is not available.
  * @param component - The component name, e.g. "header"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getServerTranslation(component: string, lang: string): Record<string, any> {
+export function getTemplateTranslation(component: string, lang: string): Record<string, any> {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
-	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.server ?? {};
+	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.template ?? {};
 }
 
 /**
