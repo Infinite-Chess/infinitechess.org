@@ -1,11 +1,11 @@
-// scripts/generate-component-translation-types.ts
+// scripts/generate-client-translation-types.ts
 
 /**
  * Generates a single ambient TypeScript declaration file containing
  * the ClientTranslations interface (one property per component that
  * has a [client] sub-table).
  *
- * Output: src/client/types/component-translations.d.ts
+ * Output: src/client/types/client-translations.d.ts
  */
 
 import fs from 'fs';
@@ -19,7 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Constants -----------------------------------------------------------------
 
-const OUTPUT_FILE = path.join(__dirname, '../src/client/types/component-translations.d.ts');
+const OUTPUT_FILE = path.join(__dirname, '../src/client/types/client-translations.d.ts');
 
 // Functions -----------------------------------------------------------------------
 

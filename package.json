@@ -95,7 +95,7 @@
     "dev:tsc": "tsc -b --noEmit --watch --preserveWatchOutput",
     "dev:server": "wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{png,jpg,webp,avif,svg,ico,gif,mp3,wav,opus,glsl,md,woff2,woff,njk}\" dist --watch",
-    "generate:types": "tsx scripts/generate-translation-types.ts && tsx scripts/generate-component-translation-types.ts",
+    "generate:types": "tsx scripts/generate-translation-types.ts && tsx scripts/generate-client-translation-types.ts",
     "optimize-images": "tsx scripts/optimize-images.ts",
     "generate-dependency-graph": "tsx src/server/utility/generateDependancyGraph.ts",
     "test": "vitest run",
