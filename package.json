@@ -92,7 +92,7 @@
     "prod:assets": "cpx \"src/**/*.{png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,md,woff2,woff,njk}\" dist",
     "dev": "npm run clean && concurrently -k \"npm:dev:*\" --prefix-colors \"green,blue,grey,white\"",
     "dev:build": "npm run generate:types && tsx build/index.ts --dev",
-    "dev:tsc": "tsc --noEmit --watch --preserveWatchOutput",
+    "dev:tsc": "tsc -b --noEmit --watch --preserveWatchOutput",
     "dev:server": "wait-on dist/server/server.js && nodemon",
     "dev:assets": "cpx \"src/**/*.{png,jpg,webp,avif,svg,ico,gif,json,mp3,wav,opus,glsl,md,woff2,woff,njk}\" dist --watch",
     "generate:types": "tsx scripts/generate-translation-types.ts && tsx scripts/generate-component-translation-types.ts",
@@ -103,6 +103,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
+    "type-check": "tsc -b --noEmit",
     "prepare": "husky || true"
   },
   "lint-staged": {

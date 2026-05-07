@@ -3,7 +3,6 @@
 import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { GamesRecord } from '../../../../../../server/database/gamesManager.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
 import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
@@ -35,9 +34,13 @@ import clientmetadatautil from '../../chess/clientmetadatautil.js';
 // Types -------------------------------------------------------------------------------------------------
 
 /** The game info of an ended game from the database, as sent by the server. */
-type LoggedGameInfo = Required<
-	Pick<GamesRecord, 'game_id' | 'rated' | 'private' | 'termination' | 'icn'>
->;
+type LoggedGameInfo = {
+	game_id: number;
+	rated: 0 | 1;
+	private: 0 | 1;
+	termination: string;
+	icn: string;
+};
 
 // Routers --------------------------------------------------------------------------------------
 

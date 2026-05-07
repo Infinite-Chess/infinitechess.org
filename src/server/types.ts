@@ -4,6 +4,14 @@ import type { Role } from './controllers/roles';
 
 import { Request } from 'express';
 
+declare global {
+	namespace Express {
+		export interface Request {
+			memberInfo?: MemberInfo;
+		}
+	}
+}
+
 /**
  * A req object, but with their memberInfo defined. This may include
  * information about their signed-in status, or their browser-id cookie.

@@ -1,7 +1,6 @@
-// src/types/globals.d.ts
+// src/client/types/globals.d.ts
 
-import type { MemberInfo } from '../server/types';
-import type { TranslationsObject } from './translations';
+import type { TranslationsObject } from '../../types/translations.js';
 
 /**
  * Client-side translations subset.
@@ -51,12 +50,5 @@ declare global {
 		'ambience-toggle': CustomEvent<boolean>;
 		'ray-count-change': CustomEvent<number>;
 		canvas_resize: CustomEvent<{ width: number; height: number }>;
-	}
-
-	// Add an optional 'memberInfo' to the global Express Request interface
-	namespace Express {
-		export interface Request {
-			memberInfo?: MemberInfo;
-		}
 	}
 }

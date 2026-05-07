@@ -4,7 +4,7 @@
 
 Each non-local session requires installing dependancies via `npm i --silent`. Check the working directory: if it contains Users, it's local; if it contains /home/runner/ or /github/, it's a GitHub Actions runner.
 
-BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `npm run lint --silent`, `npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
+BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `npm run lint --silent`, `npm run type-check`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
 If you are running locally, then once we've completed one isolated addition/feature, please in your response to the user, always suggest a simple name they can use for the commit.
 

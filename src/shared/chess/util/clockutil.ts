@@ -37,6 +37,7 @@ function isClockValueInfinite(clock: TimeControl): boolean {
 function getClockFromKey(key: TimeControl): string {
 	// ssss+ss  converted to  15m+15s
 	const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
+	// @ts-ignore - translations is a client-only global; this function must only be called from client-side entry points
 	if (minutesAndIncrement === null) return translations['no_clock'];
 	return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
 }

@@ -1,4 +1,4 @@
-// src/types/shaders.d.ts
+// src/client/types/shaders.d.ts
 
 /*
  * This tells TypeScript all .glsl imports are strings.
