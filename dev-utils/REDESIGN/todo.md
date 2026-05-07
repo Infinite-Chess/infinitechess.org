@@ -43,6 +43,8 @@
 
 - Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (rename generate-component-translation-types). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
 
+- Drop `i18next` package entirely. Write our own Accept-Language header parser middleware.
+
 - Delete any straggling unused files - scripts, stylesheets, templates, etc.
 
 - Add `<link rel="modulepreload">` for each page's JS entry points in its Nunjucks template. *(Do last, once every page's import graph is finalized)*
