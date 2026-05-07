@@ -2,34 +2,8 @@
 
 # Components
 
-## Header
-
-- Site name + logo -> Home page
-- Learn: Tutorial, Checkmate Practice
-- Tools: Analysis Board, Editor
-- Leaderboard
-- News
-- Donate
-- Profile/Login
-- Register/Logout
-- Settings
-
-### Site omega_one logo: displays a cool animation where two transparent shadows of the omega_one image quickly expand larger then the main image (one shortly following the other), then shrink to be smaller than the main image, remaining permanently there until the user re-hovers and the animation restarts. Both are centered on the main image.
-
 ### Settings:
-- Add Appearance > Light/Dark theme toggle.
 - Add a way to change keybinds.
-
-## Footer
-
-- About Infinite Chess
-- Contact
-- Terms of Service
-- Privacy
-- Credits
-- GitHub
-- Discord
-- Youtube
 
 
 # Pages
@@ -44,7 +18,7 @@
 
 ## Homepage
 - Slowly-panning perspective mode board, with a very opaque black overlay. And a toggle for disabling the animation (panning) of the background.
-- Splash text at the top. Examples: "Chess on an infinite plane!", "Open world Chess!", "Chess 2.0!", "Finite Chess!", "Games on an integer lattice!", "Mate in omega!", "Checkmate in w^3 * 27 + w^2 * 3006 + w * 4 + 78,350,543!", "Mate in Omega_one - 1!", "You will die before it ends.", "Don't mind the checks!", "Check! Check! Check! Check!" "Draw by indefinite play!", "I resign.", "How do pawns promote?", "Never-ending infinite sandbox game!". This text is animated, growing & shrinking infinitely, so long as the background animation toggle is on. The text should be attention-grabbing. Below that is a link "About Infinite Chess".
+- Splash text at the top, randomly chosen from this list each page refresh: "Chess on an infinite plane!", "Open world Chess!", "Chess 2.0!", "Finite Chess!", "Games on an integer lattice!", "Mate in omega!", "Checkmate in w^3 * 27 + w^2 * 3006 + w * 4 + 78,350,543!", "Mate in Omega_one - 1!", "You will die before it ends.", "Don't mind the checks!", "Check! Check! Check! Check!" "Draw by indefinite play!", "I resign.", "How do pawns promote?", "Never-ending infinite sandbox game!". This text is animated, growing & shrinking infinitely, so long as the background animation toggle is on. The text should be attention-grabbing. Below that is a link "About Infinite Chess".
 - A field that, if it detects the user is new (not logged in, and browser has never played a game), displays text and a link "New? Follow the tutorial.".
 - Below that: Lobby.
 - Adjacent Buttons: "Create lobby game", "Challenge a friend" (online/local), "Play against computer".
