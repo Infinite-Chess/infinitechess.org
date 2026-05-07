@@ -1,0 +1,4 @@
+# Translation component: server response strings
+# These are the ONLY translations the server sends directly in HTTP/WebSocket responses.
+
+placeholder = "Delete after adding first real key. This is to prevent an error."

@@ -5,18 +5,26 @@
  *
  * Files live under translation/<component>/<lang>.toml.
  * All components are loaded once at startup by loadComponentTranslations().
- * Use getServerTranslation() and getClientTranslation() to retrieve them per request.
+ * Retrieve them per request.
  *
  * The [client] sub-table (if present) is excluded from the server-side object —
  * it is injected into the page separately via getClientTranslation().
+ * The responses component (tconfig.RESPONSES_COMPONENT) is stored separately.
  */
+
+import type { Request } from 'express';
+import type { CustomWebSocket } from '../socket/socketUtility.js';
+import type { ResponseTranslationKeys } from '../types/response-translations.js';
 
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'smol-toml';
+import { WebSocket } from 'ws';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
+import { logEvents } from '../middleware/logEvents.js';
+import { getLanguageToServe } from '../utility/translate.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -53,8 +61,10 @@ const custom_xss = new FilterXSS(xss_options);
 
 // State ---------------------------------------------------------------------
 
-/** Module-level store populated once by loadComponentTranslations(). */
+/** Module-level store. */
 let componentStore: ComponentStore | null = null;
+/** Response translations by language. */
+let responsesStore: Map<string, Record<string, any>> | null = null;
 
 // Loading Translations ------------------------------------------------------------
 
@@ -64,7 +74,7 @@ let componentStore: ComponentStore | null = null;
  * Call once at server startup (from i18n.ts).
  */
 export function loadComponentTranslations(): void {
-	const store: ComponentStore = new Map();
+	componentStore = new Map();
 
 	const componentDirs = getComponentNames();
 
@@ -77,32 +87,49 @@ export function loadComponentTranslations(): void {
 			throw new Error(`Component "${componentName}" is missing the English source.`);
 
 		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
-		const englishServerObj = withoutClientTable(englishRaw);
-		const englishClientObj = englishRaw['client'] ?? {};
 
-		const langMap = new Map<string, ComponentEntry>();
-		langMap.set(tconfig.DEFAULT_LANGUAGE, {
-			server: englishServerObj,
-			client: englishClientObj,
-		});
+		if (componentName === tconfig.RESPONSES_COMPONENT) {
+			// Responses component -> store separately
+			const responses: Map<string, Record<string, any>> = new Map();
 
-		for (const file of tomlFiles) {
-			const langCode = file.replace('.toml', '');
-			if (langCode === tconfig.DEFAULT_LANGUAGE) continue;
-			const raw = parseToml(path.join(componentDir, file));
-			const serverObj = withoutClientTable(raw);
-			const clientObj = (raw['client'] ?? {}) as Record<string, any>;
-			// Deep-merge English fallback so missing keys are always present
-			langMap.set(langCode, {
-				server: deepMerge(englishServerObj, serverObj),
-				client: deepMerge(englishClientObj, clientObj),
+			responses.set(tconfig.DEFAULT_LANGUAGE, englishRaw);
+			for (const file of tomlFiles) {
+				const langCode = file.replace('.toml', '');
+				if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
+				responses.set(
+					langCode,
+					deepMerge(englishRaw, parseToml(path.join(componentDir, file))),
+				);
+			}
+
+			responsesStore = responses;
+		} else {
+			// Regular component -> store server and client parts separately
+			const englishServerObj = withoutClientTable(englishRaw);
+			const englishClientObj: Record<string, any> = englishRaw['client'] ?? {};
+
+			const langMap = new Map<string, ComponentEntry>();
+			langMap.set(tconfig.DEFAULT_LANGUAGE, {
+				server: englishServerObj,
+				client: englishClientObj,
 			});
+
+			for (const file of tomlFiles) {
+				const langCode = file.replace('.toml', '');
+				if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
+				const raw = parseToml(path.join(componentDir, file));
+				const serverObj = withoutClientTable(raw);
+				const clientObj: Record<string, any> = raw['client'] ?? {};
+				// Deep-merge English fallback so missing keys are always present
+				langMap.set(langCode, {
+					server: deepMerge(englishServerObj, serverObj),
+					client: deepMerge(englishClientObj, clientObj),
+				});
+			}
+
+			componentStore.set(componentName, langMap);
 		}
-
-		store.set(componentName, langMap);
 	}
-
-	componentStore = store;
 }
 
 /**
@@ -130,6 +157,37 @@ export function getClientTranslation(component: string, lang: string): Record<st
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
 	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.client ?? {};
+}
+
+/**
+ * Retrieves a translated server response string for the given key.
+ * @param key - Dot-notation key from translation/responses/en-US.toml
+ * @param reqOrWs - The Express request or WebSocket connection. Language is determined automatically.
+ */
+export function getResponseTranslation(
+	key: ResponseTranslationKeys,
+	reqOrWs: Request | CustomWebSocket,
+): string {
+	if (!responsesStore) throw new Error('loadComponentTranslations() has not been called yet.');
+
+	const lang =
+		(reqOrWs instanceof WebSocket
+			? reqOrWs.metadata.cookies.i18next
+			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
+	const translations = responsesStore.get(lang) ?? responsesStore.get(tconfig.DEFAULT_LANGUAGE)!;
+	const parts = key.split('.');
+	let value: any = translations;
+	for (const part of parts) {
+		value = value?.[part];
+	}
+	if (typeof value !== 'string') {
+		logEvents(
+			`Missing response translation for key "${key}" in language "${lang}"`,
+			'errLog.txt',
+		);
+		return key;
+	}
+	return value;
 }
 
 // Utility ---------------------------------------------------------------------
