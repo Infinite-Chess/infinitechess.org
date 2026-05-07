@@ -66,10 +66,7 @@ let componentStore: ComponentStore | null = null;
 export function loadComponentTranslations(): void {
 	const store: ComponentStore = new Map();
 
-	const componentDirs = fs
-		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
-		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
-		.map((e) => e.name);
+	const componentDirs = getComponentNames();
 
 	for (const componentName of componentDirs) {
 		const componentDir = path.join(tconfig.TRANSLATION_FOLDER, componentName);
@@ -136,6 +133,15 @@ export function getClientTranslation(component: string, lang: string): Record<st
 }
 
 // Utility ---------------------------------------------------------------------
+
+/** Returns the filtered list of component names from the translation folder. */
+export function getComponentNames(): string[] {
+	return fs
+		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
+		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
+		.map((e) => e.name)
+		.sort();
+}
 
 /** Helper to load and parse a TOML file with XSS sanitization. */
 function parseToml(filePath: string): Record<string, any> {

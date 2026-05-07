@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { parse, TomlTable } from 'smol-toml';
 
 import tconfig from '../src/server/config/translationconfig';
+import { getComponentNames } from '../src/server/config/componentTranslationLoader';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,11 +26,7 @@ const OUTPUT_FILE = path.join(__dirname, '../src/client/types/client-translation
 
 /** Main function to generate the ClientTranslations declaration file. */
 function generateTypes(): void {
-	const componentDirs = fs
-		.readdirSync(tconfig.TRANSLATION_FOLDER, { withFileTypes: true })
-		.filter((e) => e.isDirectory() && !tconfig.EXCLUDED_DIRS.includes(e.name))
-		.map((e) => e.name)
-		.sort();
+	const componentDirs = getComponentNames();
 
 	const properties: string[] = [];
 
