@@ -78,8 +78,6 @@ function toggleLingeringAnnotations(): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	close,
 	open,
 };

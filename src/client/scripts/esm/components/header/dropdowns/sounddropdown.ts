@@ -71,8 +71,6 @@ function updateMasterVolumeOutput(): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	close,
 	open,
 };

@@ -99,8 +99,6 @@ function onLanguageClicked(event: Event): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	addLngQueryParamToLink,
 	open,
 	close,

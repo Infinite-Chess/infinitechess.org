@@ -113,8 +113,6 @@ function resetFOVDefault(): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	close,
 	open,
 };

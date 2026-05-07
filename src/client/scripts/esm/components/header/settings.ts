@@ -21,25 +21,33 @@ import './pingmeter.js'; // Only imported so its code runs
 const settings = document.getElementById('settings')!;
 const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
-// All buttons to open nested dropdowns
-const languageDropdownSelection = document.getElementById('language-settings-dropdown-item')!;
-const appearanceDropdownSelection = document.getElementById('appearance-settings-dropdown-item')!;
-const mouseDropdownSelection = document.getElementById('perspective-settings-dropdown-item')!;
-const gameplayDropdownSelection = document.getElementById('gameplay-settings-dropdown-item')!;
-const soundDropdownSelection = document.getElementById('sound-settings-dropdown-item')!;
+// Each sub-dropdown's navigation item paired with its module, for listener registration
+const subDropdowns: { selection: Element; module: { open(): void; close(): void } }[] = [
+	{
+		selection: document.getElementById('language-settings-dropdown-item')!,
+		module: languagedropdown,
+	},
+	{
+		selection: document.getElementById('appearance-settings-dropdown-item')!,
+		module: appearancedropdown,
+	},
+	{
+		selection: document.getElementById('perspective-settings-dropdown-item')!,
+		module: perspectivedropdown,
+	},
+	{
+		selection: document.getElementById('gameplay-settings-dropdown-item')!,
+		module: gameplaydropdown,
+	},
+	{ selection: document.getElementById('sound-settings-dropdown-item')!, module: sounddropdown },
+];
 
-// All nested dropdowns
-const languageDropdown = document.querySelector('.language-dropdown')!;
-const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
-const perspectiveDropdown = document.querySelector('.perspective-dropdown')!;
-const gameplayDropdown = document.querySelector('.gameplay-dropdown')!;
-const soundDropdown = document.querySelector('.sound-dropdown')!;
 const allSettingsDropdownsExceptMainOne = [
-	languageDropdown,
-	appearanceDropdown,
-	perspectiveDropdown,
-	gameplayDropdown,
-	soundDropdown,
+	document.querySelector('.language-dropdown')!,
+	document.querySelector('.appearance-dropdown')!,
+	document.querySelector('.perspective-dropdown')!,
+	document.querySelector('.gameplay-dropdown')!,
+	document.querySelector('.sound-dropdown')!,
 ];
 
 // Variables ---------------------------------------------------------------------------------
@@ -47,6 +55,12 @@ const allSettingsDropdownsExceptMainOne = [
 const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
 const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
 let settingsIsOpen = settings.classList.contains('open');
+
+/** Pre-built handlers for opening each sub-dropdown and hiding the main settings panel. */
+const openHandlers = subDropdowns.map(({ module }) => () => {
+	module.open();
+	hideMainSettingsPanel();
+});
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -86,11 +100,7 @@ function closeAllSettingsDropdowns(): void {
 	closeSettingsListeners();
 	preferences.sendPrefsToServer();
 
-	languagedropdown.close();
-	appearancedropdown.close();
-	gameplaydropdown.close();
-	perspectivedropdown.close();
-	sounddropdown.close();
+	subDropdowns.forEach(({ module }) => module.close());
 
 	settingsIsOpen = false;
 }
@@ -103,29 +113,15 @@ function showMainSettingsPanel(): void {
 }
 
 function initSettingsListeners(): void {
-	languageDropdownSelection.addEventListener('click', languagedropdown.open);
-	languageDropdownSelection.addEventListener('click', hideMainSettingsPanel);
-	appearanceDropdownSelection.addEventListener('click', appearancedropdown.open);
-	appearanceDropdownSelection.addEventListener('click', hideMainSettingsPanel);
-	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
-	mouseDropdownSelection.addEventListener('click', hideMainSettingsPanel);
-	gameplayDropdownSelection.addEventListener('click', gameplaydropdown.open);
-	gameplayDropdownSelection.addEventListener('click', hideMainSettingsPanel);
-	soundDropdownSelection.addEventListener('click', sounddropdown.open);
-	soundDropdownSelection.addEventListener('click', hideMainSettingsPanel);
+	subDropdowns.forEach(({ selection }, i) =>
+		selection.addEventListener('click', openHandlers[i]!),
+	);
 	allBackButtons.forEach((btn) => btn.addEventListener('click', showMainSettingsPanel));
 }
 function closeSettingsListeners(): void {
-	languageDropdownSelection.removeEventListener('click', languagedropdown.open);
-	languageDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
-	appearanceDropdownSelection.removeEventListener('click', appearancedropdown.open);
-	appearanceDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
-	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	mouseDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
-	gameplayDropdownSelection.removeEventListener('click', gameplaydropdown.open);
-	gameplayDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
-	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
-	soundDropdownSelection.removeEventListener('click', hideMainSettingsPanel);
+	subDropdowns.forEach(({ selection }, i) =>
+		selection.removeEventListener('click', openHandlers[i]!),
+	);
 	allBackButtons.forEach((btn) => btn.removeEventListener('click', showMainSettingsPanel));
 }
 
