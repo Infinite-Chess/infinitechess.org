@@ -21,6 +21,15 @@ import './pingmeter.js'; // Only imported so its code runs
 const settings = document.getElementById('settings')!;
 const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
+/** The buttons in the settings dropdown that open the sub-dropdowns */
+const allSettingsDropdownsExceptMainOne = [
+	document.querySelector('.language-dropdown')!,
+	document.querySelector('.appearance-dropdown')!,
+	document.querySelector('.perspective-dropdown')!,
+	document.querySelector('.gameplay-dropdown')!,
+	document.querySelector('.sound-dropdown')!,
+];
+
 // Each sub-dropdown's navigation item paired with its module, for listener registration
 const subDropdowns: { selection: Element; module: { open(): void; close(): void } }[] = [
 	{
@@ -40,14 +49,6 @@ const subDropdowns: { selection: Element; module: { open(): void; close(): void 
 		module: gameplaydropdown,
 	},
 	{ selection: document.getElementById('sound-settings-dropdown-item')!, module: sounddropdown },
-];
-
-const allSettingsDropdownsExceptMainOne = [
-	document.querySelector('.language-dropdown')!,
-	document.querySelector('.appearance-dropdown')!,
-	document.querySelector('.perspective-dropdown')!,
-	document.querySelector('.gameplay-dropdown')!,
-	document.querySelector('.sound-dropdown')!,
 ];
 
 // Variables ---------------------------------------------------------------------------------
