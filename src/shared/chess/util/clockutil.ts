@@ -30,19 +30,6 @@ function isClockValueInfinite(clock: TimeControl): boolean {
 }
 
 /**
- * Returns the clock in a slightly more human-readable format: `10m+5s`
- * @param key - The clock string: `600+5`, where the left is the start time in seconds, right is increment in seconds.
- * @returns
- */
-function getClockFromKey(key: TimeControl): string {
-	// ssss+ss  converted to  15m+15s
-	const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
-	// @ts-ignore - translations is a client-only global; this function must only be called from client-side entry points
-	if (minutesAndIncrement === null) return translations['no_clock'];
-	return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
-}
-
-/**
  * Splits the clock from the form `10+5` into the `minutes` and `increment` properties.
  * If it is an untimed game (represented by `-`), then this will return null.
  * @param clock - The string representing the clock value: `10+5`
@@ -87,7 +74,6 @@ function splitTimeControl(time_control: TimeControl): {
 export default {
 	getTextContentFromTimeRemain,
 	isClockValueInfinite,
-	getClockFromKey,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
 };

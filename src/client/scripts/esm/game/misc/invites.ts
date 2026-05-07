@@ -224,7 +224,11 @@ function updateInviteList(list: Invite[]): void {
 		const variant = createDiv(['invite-child'], translations[invite.variant]);
 		newInvite.appendChild(variant);
 
-		const time = clockutil.getClockFromKey(invite.clock);
+		const minutesAndIncrement = clockutil.getMinutesAndIncrementFromClock(invite.clock);
+		const time =
+			minutesAndIncrement === null
+				? translations['no_clock']
+				: `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
 		const cloc = createDiv(['invite-child'], time);
 		newInvite.appendChild(cloc);
 
