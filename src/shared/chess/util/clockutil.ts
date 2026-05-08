@@ -71,9 +71,29 @@ function splitTimeControl(time_control: TimeControl): {
 	return { base_time_seconds, increment_seconds };
 }
 
+/**
+ * Returns the SVG symbol ID of the speed icon for the
+ * given time control, or `undefined` if the game is untimed.
+ * Estimates total game seconds as `base_time + 40 × increment` to determine
+ * the speed category, matching lichess's classification ranges.
+ */
+function getSpeedIconId(time_control: TimeControl): string | undefined {
+	if (isClockValueInfinite(time_control)) return undefined;
+	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
+	const estimate = base_time_seconds! + 40 * increment_seconds!;
+	// if (estimate < 30) return 'svg-speed-ultra-bullet'; // For now we don't have time controls < 1m
+	if (estimate < 180) return 'svg-speed-bullet';
+	if (estimate < 480) return 'svg-speed-blitz';
+	if (estimate < 1500) return 'svg-speed-rapid';
+	if (estimate < 21600) return 'svg-speed-classical';
+	// return 'svg-speed-correspondence';
+	return 'svg-speed-classical'; // This is the max for now
+}
+
 export default {
 	getTextContentFromTimeRemain,
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
+	getSpeedIconId,
 };
