@@ -26,11 +26,11 @@
 
 ### Lobby
 - [ ] Determine the thresholds for what considers a game to be bullet, blitz, rapid, or classical (probably a combination of start time, increment, and average number of moves per (rated?) game, to estimate total game length).
-- Each invite is one row and has columns for username container (whoever owns the invite, their patron badge + rating), game mode (group of variant, with the respective svg preceding its name), Time [control], Casual/Rated (with an svg of the speed of the game preceeding it - bullet for short time controls, then there's a flame, bunny, and a turtle).
+- Each invite is one row and has columns for username container (whoever owns the invite, their patron badge + rating), game mode (group of variant, with the respective svg preceding its name, custom gamerule variants receive the wrench), Time [control], Casual/Rated (with an svg of the speed of the game preceeding it - bullet for short time controls, then there's a flame, bunny, and a turtle).
 - No columns are sortable.
 - The background of the lobby container has a faint omega_one image (that of the logo), similar to the faint Lichess's knight logo in the background of their lobby.
 - Clicking anywhere in an invite auto-accepts it (no accept/cancel button). Clicking your own invite cancels it. The title attribute of the invite shows "Accept invite" or "Cancel" accordingly.
-- Hovering over invites renders a small tooltip-popup window that previews the board. Non-interactible, zoom is fixed on the starting position location, moving the mouse off the live game hides the tooltip.
+- Hovering over invites renders a small tooltip-popup window that previews the board, and displays any gamerule modifications. Non-interactible, zoom is fixed on the starting position location, moving the mouse off the live game hides the tooltip.
 
 #### Create lobby game modal
 
