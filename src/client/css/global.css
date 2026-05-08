@@ -67,6 +67,7 @@ body {
 [data-theme='dark'] {
 	--c-bg: rgb(33, 33, 33);
 	--c-surface: rgb(35, 35, 35);
+	--c-surface-transparent: rgba(35, 35, 35, 0.4);
 	--c-surface-2: rgb(55, 55, 55);
 	--c-text: rgb(170, 170, 170);
 	--c-text-emphasis: rgb(220, 220, 220);
@@ -74,10 +75,13 @@ body {
 	--c-brand: rgb(97, 169, 255);
 	--c-border: rgb(60, 60, 60);
 	--c-border-2: rgb(100, 100, 100);
+	--c-border-muted: rgb(55 55 55);
+
 	--c-link: rgb(97, 169, 255);
 	--c-donate: hsl(37, 74%, 58%);
 	--c-donate-hover: hsl(37, 74%, 68%);
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.14);
+	--c-bg-overlay: rgba(0, 0, 0, 0.88);
 }
 
 /* ============================================================
@@ -87,6 +91,7 @@ body {
 [data-theme='light'] {
 	--c-bg: rgb(245, 245, 245);
 	--c-surface: rgb(255, 255, 255);
+	--c-surface-transparent: rgb(255, 255, 255, 0.4);
 	--c-surface-2: rgb(235, 235, 235);
 	--c-text: rgb(30, 30, 30);
 	--c-text-emphasis: rgb(0, 0, 0);
@@ -94,10 +99,13 @@ body {
 	--c-brand: rgb(0, 102, 204);
 	--c-border: rgb(200, 200, 200);
 	--c-border-2: rgb(150, 150, 150);
+	--c-border-muted: rgb(215 215 215);
+
 	--c-link: rgb(0, 102, 204);
 	--c-donate: hsl(37, 74%, 38%);
 	--c-donate-hover: hsl(37, 74%, 30%);
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.12);
+	--c-bg-overlay: rgba(255, 255, 255, 0.68);
 }
 
 /* ============================================================
@@ -140,10 +148,10 @@ body {
 }
 
 .username-embed .svg-profile,
-.svg-engine {
-	width: 1em;
-	height: 1em;
-	aspect-ratio: 1;
+.svg-engine,
+.svg-globe,
+.svg-infinite {
+	transform: scale(1.2);
 }
 
 .username-embed .username {

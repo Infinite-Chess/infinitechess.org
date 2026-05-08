@@ -8,13 +8,246 @@
 
 {% block body %}
 {% include "components/header/header.njk" %}
-<main>
-    <canvas id="game"></canvas>
-    <div id="page-overlay">
-        
-    </div>
+
+<main class="bg-checkerboard">
+	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
+	<div id="bg-overlay"></div>
+	<div class="main-inner">
+
+		{# -- Lobby home: buttons + open challenges ------------------------------- #}
+		<div class="lobby-home">
+			<div class="lobby-actions">
+				<button class="lobby-btn" id="btn-create-game">
+					<svg class="btn-icon svg-globe"><use href="#svg-globe"></use></svg>
+					Create online game
+				</button>
+				<button class="lobby-btn" id="btn-challenge-friend">
+					<svg class="btn-icon"><use href="#svg-profile"></use></svg>
+					Challenge a friend
+				</button>
+				<button class="lobby-btn" id="btn-play-ai">
+					<svg class="btn-icon svg-engine"><use href="#svg-engine"></use></svg>
+					Play against computer
+				</button>
+			</div>
+
+			{# -- Open challenges (lobby) ----------------------------------------- #}
+			<section id="lobby">
+				<div class="section-header">
+					<h2>Lobby</h2>
+					<span class="section-count" id="lobby-count"></span>
+				</div>
+				<div class="lobby-table-wrap" id="lobby-wrap">
+					{# Faint omega background — references symbol already defined in header.njk #}
+					<div class="section-bg-omega">
+						<svg viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
+					</div>
+					<table class="lobby-table" id="lobby-table">
+						<thead>
+							<tr>
+								<th>Player</th>
+								<th>Variant</th>
+								<th class="col-time">Time</th>
+								<th>Mode</th>
+							</tr>
+						</thead>
+						<tbody id="lobby-tbody">
+							{# ╔══════════════════════════════════════════════════════╗
+							║  TEMPORARY PLACEHOLDER ROWS                          ║
+							║  Remove this entire tbody content and replace with   ║
+							║  dynamically rendered rows from the lobby WebSocket  ║
+							╚══════════════════════════════════════════════════════╝ #}
+							<tr class="invite-row" title="Accept invite">
+								<td>
+									<span class="username-embed">
+										<a class="username" href="#">Naviary</a>
+										<span class="elo">1854</span>
+									</span>
+								</td>
+								<td>
+									<span class="game-mode">
+										<svg class="mode-group-icon"><use href="#svg-pawn"></use></svg>
+										Classical
+									</span>
+								</td>
+								<td class="col-time">
+									<svg class="speed-icon" aria-label="Rapid" role="img"><use href="#svg-speed-rapid"></use></svg>
+									10+4
+								</td>
+								<td class="speed-cell">Rated</td>
+							</tr>
+							<tr class="invite-row" title="Accept invite">
+								<td>
+									<span class="username-embed">
+										<a class="username" href="#">Hyperion42</a>
+										<span class="elo">2071</span>
+									</span>
+								</td>
+								<td>
+									<span class="game-mode">
+										<svg class="mode-group-icon"><use href="#svg-tesseract"></use></svg>
+										5D Chess
+									</span>
+								</td>
+								<td class="col-time">
+									<svg class="speed-icon svg-infinite" aria-label="Blitz" role="img"><use href="#svg-speed-infinite"></use></svg>
+								</td>
+								<td class="speed-cell">Casual</td>
+							</tr>
+							{# ═══════════════ END PLACEHOLDER ROWS ═══════════════ #}
+						</tbody>
+					</table>
+					<p class="table-empty hidden" id="lobby-empty">No open challenges. Be the first!</p>
+				</div>
+			</section>
+		</div>{# .lobby-home #}
+
+	</div>{# .main-inner #}
 </main>
+
 {% include "components/footer/footer.njk" %}
+
+{# ════════════════════════════════════════════════════════════════════════
+   Game Options Modal — shared by all three lobby action buttons.
+   Fields are shown/hidden by JS depending on which button was pressed:
+     Create online game   → hides #row-side, shows #row-game-mode, hides #row-strength
+     Challenge a friend  → shows #row-side, shows #row-game-mode, hides #row-strength
+     Play against computer → shows #row-side, hides #row-game-mode, shows #row-strength
+   ════════════════════════════════════════════════════════════════════════ #}
+<div id="modal-overlay" class="modal-overlay hidden">
+	<div class="modal" id="game-setup-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+		<div class="modal-header">
+			<h2 class="modal-title" id="modal-title">Game options</h2>
+			<button class="modal-close" id="modal-close" type="button" aria-label="Close">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+				     stroke-linecap="round">
+					<line x1="18" y1="6" x2="6" y2="18"/>
+					<line x1="6" y1="6" x2="18" y2="18"/>
+				</svg>
+			</button>
+		</div>
+
+		<div class="modal-body">
+
+			{# ── Variant ─────────────────────────────────────────────────── #}
+			<div class="form-row">
+				<span class="form-label">Variant</span>
+				<div class="toggle-group">
+					<button class="toggle-btn active" data-type="preset" type="button">Preset variant</button>
+					<button class="toggle-btn" data-type="custom" type="button">Custom (ICN)</button>
+				</div>
+				{# Preset variant selector — clicking opens the variant picker popup (TODO) #}
+				<div id="variant-preset-section">
+					<button class="variant-display-btn" id="variant-display" type="button"
+					        title="Click to choose a variant (coming soon)">
+						<span class="variant-icon">♾️</span>
+						<span id="variant-name">Infinite Chess</span>
+						<svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+						     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6 9 12 15 18 9"/>
+						</svg>
+					</button>
+				</div>
+				{# Custom ICN — shown when "Custom (ICN)" tab is active #}
+				<div id="variant-custom-section" class="hidden">
+					<div class="icn-input-row">
+						<textarea class="icn-input" id="icn-input"
+						          placeholder="Paste ICN notation here…" rows="4"></textarea>
+						<div class="icn-buttons">
+							<button class="icon-btn" id="btn-paste-icn" type="button" title="Paste from clipboard">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								     stroke-linecap="round" stroke-linejoin="round">
+									<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+									<rect x="8" y="2" width="8" height="4" rx="1"/>
+								</svg>
+							</button>
+							<button class="icon-btn" id="btn-edit-icn" type="button" title="Open in board editor">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+								     stroke-linecap="round" stroke-linejoin="round">
+									<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+									<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{# Time sliders — revealed when "Finite" is selected #}
+			<div class="form-rows-group hidden" id="time-sliders">
+				<div class="slider-row">
+					<div class="slider-labels">
+						<label class="form-label" for="slider-minutes">Minutes per side</label>
+						<span class="slider-value" id="minutes-display">10m</span>
+					</div>
+					<input type="range" class="slider" id="slider-minutes" min="0" max="60" value="10" step="1">
+					<div class="slider-pips">
+						<span>0</span><span>15m</span><span>30m</span><span>45m</span><span>60m</span>
+					</div>
+				</div>
+				<div class="slider-row">
+					<div class="slider-labels">
+						<label class="form-label" for="slider-increment">Increment</label>
+						<span class="slider-value" id="increment-display">4s</span>
+					</div>
+					<input type="range" class="slider" id="slider-increment" min="0" max="60" value="4" step="1">
+					<div class="slider-pips">
+						<span>0</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span>
+					</div>
+				</div>
+			</div>
+
+			{# ── Game mode (hidden for "Play against computer") ──────────── #}
+			<div class="form-row" id="row-game-mode">
+				<span class="form-label">Game mode</span>
+				<div class="toggle-group">
+					<button class="toggle-btn active" data-mode="casual" type="button">Casual</button>
+					<button class="toggle-btn" data-mode="rated" type="button">Rated</button>
+				</div>
+			</div>
+
+			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
+			<div class="form-row hidden" id="row-side">
+				<span class="form-label">Side</span>
+				<div class="side-selector">
+					<button class="side-btn" data-side="white" type="button" title="Play as White">
+						<span class="side-piece">♔</span>
+						<span class="side-label">White</span>
+					</button>
+					<button class="side-btn active" data-side="random" type="button" title="Random side">
+						<span class="side-piece">?</span>
+						<span class="side-label">Random</span>
+					</button>
+					<button class="side-btn" data-side="black" type="button" title="Play as Black">
+						<span class="side-piece">♚</span>
+						<span class="side-label">Black</span>
+					</button>
+				</div>
+			</div>
+
+			{# ── Strength (only for "Play against computer") ─────────────── #}
+			<div class="form-row hidden" id="row-strength">
+				<div class="slider-labels">
+					<label class="form-label" for="slider-strength">Strength</label>
+					<span class="slider-value" id="strength-display">Level 4</span>
+				</div>
+				<input type="range" class="slider" id="slider-strength" min="1" max="8" value="4" step="1">
+				<div class="slider-pips">
+					<span>1</span><span>2</span><span>3</span><span>4</span>
+					<span>5</span><span>6</span><span>7</span><span>8</span>
+				</div>
+			</div>
+
+		</div>{# .modal-body #}
+
+		<div class="modal-footer">
+			<button class="submit-btn" id="modal-submit" type="button">Create Game</button>
+		</div>
+
+	</div>{# .modal #}
+</div>{# #modal-overlay #}
+
 {% endblock %}
 
 {% block script %}

@@ -77,8 +77,8 @@ function splitTimeControl(time_control: TimeControl): {
  * Estimates total game seconds as `base_time + 40 × increment` to determine
  * the speed category, matching lichess's classification ranges.
  */
-function getSpeedIconId(time_control: TimeControl): string | undefined {
-	if (isClockValueInfinite(time_control)) return undefined;
+function getSpeedIconId(time_control: TimeControl): string {
+	if (isClockValueInfinite(time_control)) return 'svg-speed-infinite';
 	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
 	const estimate = base_time_seconds! + 40 * increment_seconds!;
 	// if (estimate < 30) return 'svg-speed-ultra-bullet'; // For now we don't have time controls < 1m

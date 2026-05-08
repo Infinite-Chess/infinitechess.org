@@ -1,69 +1,124 @@
 // src/client/scripts/esm/views/index.ts
 
-import bigdecimal from '@naviary/bigdecimal';
+// ── Animation toggle ─────────────────────────────────────────────────────────
 
-import camera from '../game/rendering/camera.js';
-import boardpos from '../game/rendering/boardpos.js';
-import deltatime from '../game/misc/deltatime.js';
-import boardtiles from '../game/rendering/boardtiles.js';
-import Renderable from '../webgl/Renderable.js';
-import frametracker from '../game/rendering/frametracker.js';
-import webgl, { gl } from '../game/rendering/webgl.js';
-import frameratelimiter from '../game/rendering/frameratelimiter.js';
-import { ProgramManager } from '../webgl/ProgramManager.js';
+// ── Modal ────────────────────────────────────────────────────────────────────
 
-// Constants -------------------------------------------------------------
+type ModalMode = 'create' | 'friend' | 'ai';
 
-/** Slow diagonal pan speed in board-relative units per second. */
-const PAN_SPEED = 0.7;
-const BOARD_SCALE = bigdecimal.fromNumber(1.3);
-/**
- * The framerate of the perspective board scrolling animation.
- * Lower = less cpu resources, but choppier.
- */
-const ANIMATION_FPS = 30;
+const SUBMIT_LABELS: Record<ModalMode, string> = {
+	create: 'Create Game',
+	friend: 'Send Challenge',
+	ai: 'Play',
+};
 
-// Functions -------------------------------------------------------------
+function initModal(): void {
+	document
+		.getElementById('btn-create-game')
+		?.addEventListener('click', () => openModal('create'));
+	document
+		.getElementById('btn-challenge-friend')
+		?.addEventListener('click', () => openModal('friend'));
+	document.getElementById('btn-play-ai')?.addEventListener('click', () => openModal('ai'));
 
-function initCanvasAnimation(): void {
-	webgl.init();
-	camera.init();
-	const programManager = new ProgramManager(gl);
-	Renderable.init(gl, programManager);
+	document.getElementById('modal-close')?.addEventListener('click', closeModal);
+	document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
+		if (e.target === e.currentTarget) closeModal();
+	});
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') closeModal();
+	});
 
-	initBoard();
-
-	frameratelimiter.setFpsLimit(ANIMATION_FPS); // Title screen throttle
-	frameratelimiter.requestFrame(animationLoop);
-}
-initCanvasAnimation();
-
-function initBoard(): void {
-	boardtiles.init();
-	boardpos.setBoardScale(BOARD_SCALE);
-	boardpos.setPanVel([0, PAN_SPEED]);
-	camera.setPerspectiveRotation(-45, 0); // Minimum angle to hide all sky
+	initModalSliders();
+	initToggleGroups();
+	initPasteButton();
 }
 
-function animationLoop(runtime: number): void {
-	deltatime.update(runtime);
+function openModal(mode: ModalMode): void {
+	const submit = document.getElementById('modal-submit');
+	const rowSide = document.getElementById('row-side');
+	const rowGameMode = document.getElementById('row-game-mode');
+	const rowStrength = document.getElementById('row-strength');
 
-	updateBoard();
+	if (submit) submit.textContent = SUBMIT_LABELS[mode];
 
-	if (frametracker.doWeRenderNextFrame()) {
-		webgl.clearScreen();
-		renderBoard();
-		frametracker.onFrameRender();
+	rowSide?.classList.toggle('hidden', mode === 'create');
+	rowGameMode?.classList.toggle('hidden', mode === 'ai');
+	rowStrength?.classList.toggle('hidden', mode !== 'ai');
+
+	const overlay = document.getElementById('modal-overlay');
+	overlay?.classList.remove('hidden');
+
+	document.getElementById('modal-close')?.focus();
+}
+
+function closeModal(): void {
+	const overlay = document.getElementById('modal-overlay');
+	overlay?.classList.add('hidden');
+}
+
+function initModalSliders(): void {
+	linkSlider('slider-minutes', 'minutes-display', (v) => `${v}m`);
+	linkSlider('slider-increment', 'increment-display', (v) => `${v}s`);
+	linkSlider('slider-strength', 'strength-display', (v) => `Level ${v}`);
+}
+
+function linkSlider(sliderId: string, displayId: string, format: (v: string) => string): void {
+	const slider = document.getElementById(sliderId) as HTMLInputElement | null;
+	const display = document.getElementById(displayId);
+	if (!slider || !display) return;
+	slider.addEventListener('input', () => {
+		display.textContent = format(slider.value);
+	});
+}
+
+function initToggleGroups(): void {
+	// Each [data-time], [data-mode], [data-side], [data-type] button is an exclusive-select group.
+	// Buttons sharing the same data-* attribute key form one group.
+	const groups: [string, (() => void)?][] = [
+		['data-time', onTimeToggle],
+		['data-mode'],
+		['data-side'],
+		['data-type', onVariantTypeToggle],
+	];
+	for (const [attr, callback] of groups) {
+		document.querySelectorAll<HTMLElement>(`[${attr}]`).forEach((btn) => {
+			btn.addEventListener('click', () => {
+				document
+					.querySelectorAll<HTMLElement>(`[${attr}]`)
+					.forEach((b) => b.classList.remove('active'));
+				btn.classList.add('active');
+				callback?.();
+			});
+		});
 	}
-
-	frameratelimiter.requestFrame(animationLoop);
 }
 
-function updateBoard(): void {
-	boardpos.update();
-	boardtiles.recalcVariables();
+function onTimeToggle(): void {
+	const activeBtn = document.querySelector<HTMLElement>('[data-time].active');
+	const isFinite = activeBtn?.getAttribute('data-time') === 'finite';
+	document.getElementById('time-sliders')?.classList.toggle('hidden', !isFinite);
 }
 
-function renderBoard(): void {
-	boardtiles.render();
+function onVariantTypeToggle(): void {
+	const activeBtn = document.querySelector<HTMLElement>('[data-type].active');
+	const isCustom = activeBtn?.getAttribute('data-type') === 'custom';
+	document.getElementById('variant-preset-section')?.classList.toggle('hidden', isCustom);
+	document.getElementById('variant-custom-section')?.classList.toggle('hidden', !isCustom);
 }
+
+function initPasteButton(): void {
+	document.getElementById('btn-paste-icn')?.addEventListener('click', async () => {
+		const input = document.getElementById('icn-input') as HTMLTextAreaElement | null;
+		if (!input) return;
+		try {
+			input.value = await navigator.clipboard.readText();
+		} catch {
+			// Clipboard access denied — silently ignore.
+		}
+	});
+}
+
+// ── Bootstrap ────────────────────────────────────────────────────────────────
+
+initModal();

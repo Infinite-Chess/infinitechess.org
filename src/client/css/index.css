@@ -1,18 +1,654 @@
-main {
-	position: absolute;
-	top: var(--header-height);
-	left: 0;
-	right: 0;
-	bottom: 0;
-}
+/* src/client/css/index.css */
 
-#game,
-#page-overlay {
-	position: absolute;
-	height: 100%;
+/* ============================================================
+   Fixed background layers
+   ============================================================ */
+
+/* Perspective board canvas — fixed behind all content */
+/* #game {
+	position: fixed;
+	inset: 0;
 	width: 100%;
+	height: 100%;
+	z-index: 0;
+} */
+.bg-checkerboard {
+	width: 100vw;
+	height: 100svh;
+	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
+		200px 200px;
 }
 
-#page-overlay {
-	background-color: rgba(0, 0, 0, 0.9);
+/* Very-opaque overlay — sits above the canvas, below page content.
+   Color respects the active theme so the canvas peek-through stays readable. */
+#bg-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: -100;
+	pointer-events: none;
+	background-color: var(--c-bg-overlay);
+}
+
+/* ============================================================
+   Page layout
+   ============================================================ */
+
+/* Sticky-footer: body fills the viewport; main grows to push footer down */
+body {
+	display: flex;
+	flex-direction: column;
+}
+
+main,
+footer {
+	position: relative;
+	z-index: 2;
+}
+
+footer {
+	background: var(--c-bg);
+	border-top: 1px solid var(--c-border);
+}
+
+main {
+	flex: 1;
+	padding: 0 1rem 4rem;
+}
+
+/* Centered content column */
+.main-inner {
+	max-width: 1200px;
+	margin: 20px auto;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+/* ============================================================
+   Lobby layout: buttons + open-challenges section
+   Default: buttons in a row above the table.
+   Wide (≥ 900px): buttons as left sidebar (flex: 1), table on the right (flex: 2).
+   ============================================================ */
+
+.lobby-home {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+/* ── Narrow: buttons in a row (stacks to column below 450px) ── */
+.lobby-actions {
+	display: flex;
+	gap: 10px;
+}
+
+.lobby-btn {
+	flex: 1;
+	min-width: 0;
+	min-height: 60px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 0.85rem 1rem;
+	border-radius: 7px;
+	font-size: 15px;
+	font-weight: 600;
+	cursor: pointer;
+	color: var(--c-text-emphasis);
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+}
+
+.lobby-btn:hover {
+	background: rgb(255 88 0 / 45%);
+	color: var(--c-text-emphasis);
+}
+
+.btn-icon {
+	width: 1.875em;
+	height: 1.875em;
+}
+
+/* ============================================================
+   Home sections
+   ============================================================ */
+
+.section-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.65rem 1rem;
+	border-bottom: 1px solid var(--c-border);
+	background: var(--c-surface-2);
+}
+
+#lobby .section-header {
+	justify-content: center;
+	background: transparent;
+	border-bottom: none;
+}
+
+.section-header h2 {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--c-text-muted);
+	letter-spacing: 0.07em;
+}
+
+.section-count {
+	font-size: 0.8rem;
+	color: var(--c-text-muted);
+}
+
+/* Shared shadow for lobby surface elements */
+.lobby-table-wrap,
+.lobby-btn {
+	box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Table wrapper — fixed height with scroll; rows size naturally to their content */
+.lobby-table-wrap {
+	position: relative;
+	overflow: auto;
+	height: 400px;
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 8px;
+}
+
+/* Faint omega logo watermark — references the sprite defined in header.njk */
+.section-bg-omega {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	opacity: 0.08;
+	z-index: 0;
+}
+
+.section-bg-omega svg {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -51%);
+	height: 94%;
+	width: auto;
+	color: var(--c-text-emphasis);
+}
+
+/* ============================================================
+   Lobby table
+   ============================================================ */
+
+.lobby-table {
+	width: 100%;
+	border-collapse: collapse;
+	position: relative;
+	z-index: 1; /* above .section-bg-omega */
+}
+
+.lobby-table th {
+	position: sticky;
+	top: 0;
+	text-align: left;
+	padding: 0.5rem 1rem;
+	font-size: 0.75rem;
+	font-weight: normal;
+	color: var(--c-text-muted);
+	letter-spacing: 0.06em;
+	white-space: nowrap;
+	background-color: var(--c-surface-transparent);
+}
+
+.lobby-table tr {
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+.lobby-table td {
+	padding: 0.6rem 1rem;
+	font-size: 0.9rem;
+	color: var(--c-text);
+	white-space: nowrap;
+}
+
+.invite-row {
+	cursor: pointer;
+	background-color: var(--c-surface-transparent);
+}
+
+.invite-row:hover {
+	background: rgb(255 88 0 / 37%);
+}
+
+.invite-row:hover td {
+	color: var(--c-text-emphasis);
+}
+
+.game-mode {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+}
+
+.mode-group-icon {
+	width: 1.4em;
+	aspect-ratio: 1;
+	flex-shrink: 0;
+}
+
+.col-time {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+}
+
+.speed-icon {
+	width: 1.4em;
+	aspect-ratio: 1;
+}
+
+.table-empty {
+	padding: 2.5rem;
+	text-align: center;
+	color: var(--c-text-muted);
+	font-size: 0.9rem;
+}
+
+/* Reserve scrollbar gutter at all times so the modal overlay never causes layout shift */
+html {
+	scrollbar-gutter: stable;
+}
+
+/* ============================================================
+   Modal overlay
+   ============================================================ */
+
+.modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.modal-overlay.hidden {
+	display: none;
+}
+
+/* ============================================================
+   Modal container
+   ============================================================ */
+
+.modal {
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 10px;
+	width: 100%;
+	max-width: 480px;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+	display: flex;
+	flex-direction: column;
+}
+
+.modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid var(--c-border);
+	flex-shrink: 0;
+}
+
+.modal-title {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+}
+
+.modal-close {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: none;
+	color: var(--c-text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		background 0.1s,
+		color 0.1s;
+	flex-shrink: 0;
+}
+
+.modal-close:hover {
+	background: var(--c-surface-2);
+	color: var(--c-text-emphasis);
+}
+
+.modal-close svg {
+	width: 1rem;
+	height: 1rem;
+}
+
+.modal-body {
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.modal-footer {
+	padding: 1rem 1.25rem;
+	border-top: 1px solid var(--c-border);
+	flex-shrink: 0;
+}
+
+/* ============================================================
+   Form rows
+   ============================================================ */
+
+.form-row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+
+.form-rows-group {
+	display: flex;
+	flex-direction: column;
+	gap: 1.1rem;
+}
+
+.form-label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: var(--c-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.07em;
+}
+
+/* ============================================================
+   Toggle button groups  (Infinite/Finite, Casual/Rated, Preset/Custom)
+   ============================================================ */
+
+.toggle-group {
+	display: flex;
+	border-radius: 6px;
+	border: 1px solid var(--c-border);
+	overflow: hidden;
+}
+
+.toggle-btn {
+	flex: 1;
+	padding: 0.55rem 0.75rem;
+	font-size: 0.9rem;
+	font-weight: 500;
+	background: var(--c-surface-2);
+	color: var(--c-text-muted);
+	cursor: pointer;
+	border-right: 1px solid var(--c-border);
+	transition:
+		background 0.12s,
+		color 0.12s;
+}
+
+.toggle-btn:last-child {
+	border-right: none;
+}
+
+.toggle-btn.active {
+	background: var(--c-brand);
+	color: #fff;
+}
+
+.toggle-btn:not(.active):hover {
+	background: var(--c-surface);
+	color: var(--c-text);
+}
+
+/* ============================================================
+   Variant selector
+   ============================================================ */
+
+.variant-display-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	width: 100%;
+	padding: 0.65rem 0.9rem;
+	margin-top: 0.5rem;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text-emphasis);
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		background 0.15s;
+}
+
+.variant-display-btn:hover {
+	border-color: var(--c-border-2);
+}
+
+.chevron-icon {
+	width: 1em;
+	height: 1em;
+	margin-left: auto;
+	color: var(--c-text-muted);
+}
+
+/* ============================================================
+   Custom ICN input
+   ============================================================ */
+
+.icn-input-row {
+	display: flex;
+	gap: 0.5rem;
+	align-items: flex-start;
+	margin-top: 0.5rem;
+}
+
+.icn-input {
+	flex: 1;
+	padding: 0.6rem 0.75rem;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font-size: 0.82rem;
+	font-family: monospace;
+	resize: vertical;
+	min-height: 5rem;
+	transition: border-color 0.15s;
+}
+
+.icn-input:focus {
+	outline: none;
+	border-color: var(--c-brand);
+}
+
+.icn-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.icon-btn {
+	width: 2.1rem;
+	height: 2.1rem;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		background 0.12s,
+		color 0.12s;
+}
+
+.icon-btn:hover {
+	background: var(--c-surface);
+	color: var(--c-text-emphasis);
+}
+
+.icon-btn svg {
+	width: 0.95rem;
+	height: 0.95rem;
+}
+
+/* ============================================================
+   Sliders
+   ============================================================ */
+
+.slider-row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.slider-labels {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+}
+
+.slider-value {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+	min-width: 3em;
+	text-align: right;
+}
+
+.slider-pips {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.7rem;
+	color: var(--c-text-muted);
+	padding: 0 0.1em;
+	pointer-events: none;
+}
+
+/* ============================================================
+   Side selector
+   ============================================================ */
+
+.side-selector {
+	display: flex;
+	gap: 0.6rem;
+}
+
+.side-btn {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.75rem 0.5rem;
+	background: var(--c-surface-2);
+	border: 2px solid var(--c-border);
+	border-radius: 8px;
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		background 0.15s;
+}
+
+.side-btn:hover {
+	border-color: var(--c-border-2);
+}
+
+.side-btn.active {
+	border-color: var(--c-brand);
+}
+
+.side-piece {
+	font-size: 1.8rem;
+	line-height: 1;
+}
+
+.side-label {
+	font-size: 0.75rem;
+	color: var(--c-text-muted);
+	font-weight: 600;
+}
+
+/* ============================================================
+   Submit button
+   ============================================================ */
+
+.submit-btn {
+	width: 100%;
+	padding: 0.85rem;
+	background: var(--c-brand);
+	color: #fff;
+	font-size: 1rem;
+	font-weight: 700;
+	border-radius: 6px;
+	cursor: pointer;
+	transition:
+		filter 0.15s,
+		transform 0.1s;
+}
+
+.submit-btn:hover {
+	filter: brightness(1.1);
+}
+
+.submit-btn:active {
+	transform: scale(0.99);
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (min-width: 900px) {
+	/* Switch lobby layout to a side-by-side row */
+	.lobby-home {
+		flex-direction: row;
+		gap: 1rem;
+	}
+
+	/* Buttons column: ~1/3 of available width, stacked vertically, centered */
+	.lobby-actions {
+		flex: 1;
+		flex-direction: column;
+		justify-content: center;
+	}
+
+	.lobby-btn {
+		flex: none;
+	}
+
+	/* Lobby table: ~2/3 of available width */
+	#lobby {
+		flex: 2;
+	}
+}
+
+/* Hide less-critical table columns on narrow screens */
+@media (max-width: 652px) {
+	/* Stack the three lobby buttons vertically instead of wrapping unevenly */
+	.lobby-actions {
+		flex-direction: column;
+	}
+	.lobby-btn {
+		min-height: 54px;
+	}
 }
