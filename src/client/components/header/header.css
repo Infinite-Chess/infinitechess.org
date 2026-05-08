@@ -64,14 +64,14 @@
 .header-logo-glyph,
 .header-logo-aura {
 	position: absolute;
-	height: 48px;
+	height: 38px;
 	bottom: 17%;
 }
 
 .header-logo-aura {
 	opacity: 0.25;
 	transform: scale(1);
-	transform-origin: 50% 61%;
+	transform-origin: 50% 53%;
 }
 
 .header-sitename {
@@ -681,6 +681,7 @@ p.theme-title {
 	top: calc(var(--header-height) - 1px);
 	left: 0;
 	bottom: 0;
+	padding: 10px 0;
 	width: fit-content;
 	max-width: min(80vw, 320px);
 	background-color: var(--c-surface);
