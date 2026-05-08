@@ -10,7 +10,7 @@
 	justify-content: center;
 	align-items: center;
 	gap: 0 0px;
-	padding: 18px 16px;
+	padding: 16px 16px;
 	border-top: 1px solid var(--c-border);
 	color: var(--c-text-muted);
 }
