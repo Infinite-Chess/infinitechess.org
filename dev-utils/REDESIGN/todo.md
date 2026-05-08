@@ -19,11 +19,19 @@
 
 - Add the **Privacy Policy** page — English only, same approach as ToS.
 
+- Delete all old ejs documents, stylesheets, and scripts related to the old pages.
+
 ---
 
 ## Translation System Refactor
 
-*Do this incrementally alongside page redesigns — add new keys in the right component as each page is built; don't migrate old keys upfront.*
+- Localize each page. All keys should be well organized in their respective components. Keys needing to be accessible by the js should be put in the `[client]` object of the TOML, and can be accessed via the global `t` variable. Server-side keys needed for sending translated responses should be placed into the `responses` TOML, and can be accessed via `getResponseTranslation()`. As we create each new component TOML, delete related keys out of the old monolith English TOML.
+
+- Analyze the remaining keys in the old monolith English TOML determine whether the stragglers should be deleted or migrated into new components. Delete all old monolith TOMLs.
+
+- Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (remove that from `generate:types` script, too). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
+
+- Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
 
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
 
@@ -41,14 +49,10 @@
 
 - Delete any unused css rules in all stylesheets.
 
-- Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (remove that from `generate:types` script, too). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
-
-- Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
-
-- Delete any straggling unused files - scripts, stylesheets, templates, etc.
+- Double check sure any straggling unused files - scripts, stylesheets, templates, etc. related to the old system are deleted.
 
 - Add `<link rel="modulepreload">` for each page's JS entry points in its Nunjucks template. *(Do last, once every page's import graph is finalized)*
 
 - Consider `@view-transition` if there's white flashes between page loads.
 
-- Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
+- Optional: Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
