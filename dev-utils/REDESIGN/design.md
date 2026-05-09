@@ -38,8 +38,9 @@
 - [ ] Determine the maximum piece count where images are barely below recognizable. Convert that to characters
 - A way to choose what kind of game (existing variant, or custom).
 - Choosing a variant has a nested popup of some kind, with variants grouped by "Infinite" (variants that support the Infinity leaderboard), "4 Dimensional" variants, "Unique" variants (remaining other than Showcases), and "Showcase" variants (non-competitive, mate in omega variants). Each group type has its own svg associated with that type, this is so that at a glance, open invites in the lobby show what group the game belongs to. Hovering over variant names displays a new small canvas tooltip which renders a preview of the variant's starting position. After selecting a variant, an edit button is visible which opens the ICN text field below, pre-filled with the selected variant's ICN.
-- Selecting the custom variant shows an empty text field that can accept any ICN. Next to this ICN text field are two buttons, a paste clipboard button, and an edit button which will end up taking you to the board editor. Maximum piece count prevents dirty images.
-- Choose between "Finite Time" and "Infinite Time". Selecting finite time shows sliders, inspired from Lichess's UI, for setting "Minutes per side" (start time), and "Increment" in seconds (increment). The default is 10m and 4s increment.
+- Selecting the custom variant shows an empty text field that can accept any ICN. Next to this ICN text field are two buttons, a paste clipboard button, and an edit button which will end up taking you to the board editor. Maximum piece count prevents dirty images. Also, perhaps this should show a list of your saved board editor positions so you can quickly play a pre-built position?
+- FUTURE: A way to add special rule modifications to the selected variant: Antichess, Atomic, KoTH, Obstocean (infinite obstacles). None are mutually-exclusive, add as many as desired. Adding a modification shows that respective symbol in the Variant column of the seek.
+- Time sliders, inspired from Lichess's UI, for setting "Minutes per side" (start time), and "Increment in seconds" (increment). The default is 8m and 4s increment. Dragging the minute slider to max makes the game untimed/infinite time.
 - Choose between "Game mode" "Casual" and "Rated".
 
 #### Challenge a friend modal
