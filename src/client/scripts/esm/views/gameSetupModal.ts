@@ -60,13 +60,11 @@ function initModal(): void {
 
 function openModal(mode: ModalMode): void {
 	const submit = document.getElementById('modal-submit');
-	const rowSide = document.getElementById('row-side');
 	const rowGameMode = document.getElementById('row-game-mode');
 	const rowStrength = document.getElementById('row-strength');
 
 	if (submit) submit.textContent = SUBMIT_LABELS[mode];
 
-	rowSide?.classList.toggle('hidden', mode === 'create');
 	rowGameMode?.classList.toggle('hidden', mode === 'ai');
 	rowStrength?.classList.toggle('hidden', mode !== 'ai');
 

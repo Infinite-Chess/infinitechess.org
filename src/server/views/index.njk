@@ -84,11 +84,7 @@
 {% include "components/footer/footer.njk" %}
 
 {# ════════════════════════════════════════════════════════════════════════
-   Game Options Modal - shared by all three lobby action buttons.
-   Fields are shown/hidden by JS depending on which button was pressed:
-     Create online game   → hides #row-side, shows #row-game-mode, hides #row-strength
-     Challenge a friend  → shows #row-side, shows #row-game-mode, hides #row-strength
-     Play against computer → shows #row-side, hides #row-game-mode, shows #row-strength
+   Game Options Modal
    ════════════════════════════════════════════════════════════════════════ #}
 <div id="modal-overlay" class="modal-overlay hidden">
 	<div class="modal" role="dialog">
@@ -98,10 +94,7 @@
 			<h2 class="modal-title">Game options</h2>
 			<button class="modal-close" id="modal-close" type="button">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-				     stroke-linecap="round">
-					<line x1="18" y1="6" x2="6" y2="18"/>
-					<line x1="6" y1="6" x2="18" y2="18"/>
-				</svg>
+				     stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 			</button>
 		</div>
 
@@ -200,7 +193,7 @@
 			</div>
 
 			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
-			<div class="form-row hidden" id="row-side">
+			<div class="form-row hidden">
 				<span class="form-label">Side</span>
 				<div class="option-group option-group--icons">
 					<button class="option-btn" data-side="white" type="button">
