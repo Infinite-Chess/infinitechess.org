@@ -1,10 +1,6 @@
 # Claude Instructions for infinitechess.org
 
-### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/GUIDELINES.md`!
-
-When you finish making any new changes, always ensure all workflow checks pass: `npm run lint --silent`, `npm run type-check`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
-
-Once we've completed one isolated addition/feature, please in your response to the user, always suggest a simple name they can use for the commit.
+When you finish making any new changes, always ensure these checks pass: `npm run type-check --silent`, `npm run lint --silent`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
 ## Key Guidelines
 
@@ -12,8 +8,7 @@ Once we've completed one isolated addition/feature, please in your response to t
 2. Maintain existing code structure, organization, and consistency.
 3. Perform testing for new complex functions to ensure their output is as expected.
 4. Actual unit/integration tests are not required, unless explicitly asked for.
-5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/GUIDELINES.md`.
-6. No types should ever be re-exported inside scripts. All imports of a type should reference the source.
+5. No types should ever be re-exported inside scripts. All imports of a type should reference the source.
 
 ## Project Architecture
 
