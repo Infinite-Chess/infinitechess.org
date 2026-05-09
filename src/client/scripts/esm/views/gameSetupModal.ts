@@ -53,6 +53,7 @@ function initModal(): void {
 
 	initModalSliders();
 	initToggleGroups();
+	onTimeToggle();
 	initPresets();
 	initPasteButton();
 }
