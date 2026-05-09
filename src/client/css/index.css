@@ -99,7 +99,6 @@ main {
    ============================================================ */
 
 .lobby h2 {
-	justify-content: space-between;
 	padding: 0.65rem 1rem;
 	justify-content: center;
 	font-size: 15px;
@@ -196,7 +195,7 @@ svg.bg-omega {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 1rem;
+	padding: 8px;
 }
 
 .modal-overlay.hidden {
@@ -212,7 +211,7 @@ svg.bg-omega {
 	border: 1px solid var(--c-border);
 	border-radius: 10px;
 	width: 100%;
-	max-width: 480px;
+	max-width: 540px;
 	max-height: 90vh;
 	overflow-y: auto;
 	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
@@ -224,52 +223,54 @@ svg.bg-omega {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 1rem 1.25rem;
+	padding: 16px 20px;
 	border-bottom: 1px solid var(--c-border);
 	flex-shrink: 0;
 }
 
+.modal-header-gap {
+	width: 32px;
+	flex-shrink: 0;
+}
+
 .modal-title {
-	font-size: 1.05rem;
+	flex: 1;
+	text-align: center;
+	font-size: 17px;
 	font-weight: 700;
 	color: var(--c-text-emphasis);
 }
 
 .modal-close {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
+	width: 32px;
+	height: 32px;
 	background: none;
 	color: var(--c-text-muted);
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition:
-		background 0.1s,
-		color 0.1s;
 	flex-shrink: 0;
 }
 
 .modal-close:hover {
-	background: var(--c-surface-2);
-	color: var(--c-text-emphasis);
+	color: red;
 }
 
 .modal-close svg {
-	width: 1rem;
-	height: 1rem;
+	width: 20px;
+	height: 20px;
 }
 
 .modal-body {
-	padding: 1.25rem;
+	padding: 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
+	gap: 20px;
 }
 
 .modal-footer {
-	padding: 1rem 1.25rem;
+	padding: 16px 20px;
 	border-top: 1px solid var(--c-border);
 	flex-shrink: 0;
 }
@@ -281,60 +282,20 @@ svg.bg-omega {
 .form-row {
 	display: flex;
 	flex-direction: column;
-	gap: 0.55rem;
+	gap: 9px;
 }
 
-.form-rows-group {
+.time-control {
 	display: flex;
 	flex-direction: column;
-	gap: 1.1rem;
+	gap: 18px;
 }
 
 .form-label {
-	font-size: 0.75rem;
-	font-weight: 700;
+	font-size: 14px;
 	color: var(--c-text-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.07em;
-}
-
-/* ============================================================
-   Toggle button groups  (Infinite/Finite, Casual/Rated, Preset/Custom)
-   ============================================================ */
-
-.toggle-group {
-	display: flex;
-	border-radius: 6px;
-	border: 1px solid var(--c-border);
-	overflow: hidden;
-}
-
-.toggle-btn {
-	flex: 1;
-	padding: 0.55rem 0.75rem;
-	font-size: 0.9rem;
-	font-weight: 500;
-	background: var(--c-surface-2);
-	color: var(--c-text-muted);
-	cursor: pointer;
-	border-right: 1px solid var(--c-border);
-	transition:
-		background 0.12s,
-		color 0.12s;
-}
-
-.toggle-btn:last-child {
-	border-right: none;
-}
-
-.toggle-btn.active {
-	background: var(--c-brand);
-	color: #fff;
-}
-
-.toggle-btn:not(.active):hover {
-	background: var(--c-surface);
-	color: var(--c-text);
+	letter-spacing: 0.04em;
+	text-align: center;
 }
 
 /* ============================================================
@@ -344,19 +305,16 @@ svg.bg-omega {
 .variant-display-btn {
 	display: flex;
 	align-items: center;
-	gap: 0.6rem;
+	gap: 10px;
 	width: 100%;
-	padding: 0.65rem 0.9rem;
-	margin-top: 0.5rem;
+	padding: 10px 14px;
+	margin-top: 8px;
 	background: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
 	color: var(--c-text-emphasis);
-	font-size: 0.95rem;
+	font-size: 15px;
 	cursor: pointer;
-	transition:
-		border-color 0.15s,
-		background 0.15s;
 }
 
 .variant-display-btn:hover {
@@ -376,39 +334,54 @@ svg.bg-omega {
 
 .icn-input-row {
 	display: flex;
-	gap: 0.5rem;
-	align-items: flex-start;
-	margin-top: 0.5rem;
+	gap: 8px;
+	align-items: stretch;
+	margin-top: 8px;
 }
 
-.icn-input {
+.icn-input-wrap {
 	flex: 1;
-	padding: 0.6rem 0.75rem;
+	padding: 0 10px;
 	background: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
-	color: var(--c-text);
-	font-size: 0.82rem;
-	font-family: monospace;
-	resize: vertical;
-	min-height: 5rem;
+	overflow: hidden;
 	transition: border-color 0.15s;
 }
 
-.icn-input:focus {
+.icn-input-wrap:focus-within {
+	border-color: var(--c-border-2);
+}
+
+.icn-input {
+	display: block;
+	width: 100%;
+	padding: 8px 0;
+	background: none;
+	border: none;
+	color: var(--c-text);
+	font-size: 13px;
+	font-family: monospace;
+	resize: none;
+	white-space: nowrap;
+	overflow-x: auto;
+	scrollbar-width: none;
 	outline: none;
-	border-color: var(--c-brand);
+}
+
+.icn-input::-webkit-scrollbar {
+	display: none;
 }
 
 .icn-buttons {
 	display: flex;
-	flex-direction: column;
-	gap: 0.4rem;
+	flex-direction: row;
+	align-items: stretch;
+	gap: 6px;
 }
 
 .icon-btn {
-	width: 2.1rem;
-	height: 2.1rem;
+	width: 34px;
 	background: var(--c-surface-2);
 	border: 1px solid var(--c-border);
 	border-radius: 6px;
@@ -417,9 +390,6 @@ svg.bg-omega {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition:
-		background 0.12s,
-		color 0.12s;
 }
 
 .icon-btn:hover {
@@ -428,85 +398,128 @@ svg.bg-omega {
 }
 
 .icon-btn svg {
-	width: 0.95rem;
-	height: 0.95rem;
+	width: 15px;
+	height: 15px;
 }
 
 /* ============================================================
-   Sliders
+   Time control sliders (Lichess-style side-by-side grid)
    ============================================================ */
 
-.slider-row {
-	display: flex;
-	flex-direction: column;
-	gap: 0.4rem;
+.time-sliders-grid {
+	display: grid;
+	grid-template-columns: 1fr 2ch 1fr;
+	gap: 2px 8px;
 }
 
-.slider-labels {
+.slider-header {
 	display: flex;
 	justify-content: space-between;
-	align-items: baseline;
+	align-items: flex-start;
+	gap: 6px;
+}
+
+.slider-label {
+	flex: 1;
+	font-size: 12px;
+	color: var(--c-text-muted);
+	font-weight: 600;
+	text-align: center;
 }
 
 .slider-value {
-	font-size: 0.9rem;
-	font-weight: 700;
-	color: var(--c-text-emphasis);
-	min-width: 3em;
-	text-align: right;
+	background: var(--c-text-muted);
+	color: var(--c-surface);
+	padding: 1px 6px;
+	border-radius: 3px;
+	font-weight: bold;
+	font-size: 12px;
+	flex-shrink: 0;
 }
 
-.slider-pips {
+.slider-separator {
 	display: flex;
-	justify-content: space-between;
-	font-size: 0.7rem;
+	align-items: flex-start;
+	justify-content: center;
 	color: var(--c-text-muted);
-	padding: 0 0.1em;
-	pointer-events: none;
 }
 
-/* ============================================================
-   Side selector
-   ============================================================ */
-
-.side-selector {
+.time-presets {
 	display: flex;
-	gap: 0.6rem;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 5px;
 }
 
-.side-btn {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 0.75rem 0.5rem;
+.preset-btn {
+	color: var(--c-text-muted);
+	padding: 2px 6px;
+	font-size: 12px;
 	background: var(--c-surface-2);
-	border: 2px solid var(--c-border);
-	border-radius: 8px;
+	border: 1px solid var(--c-border);
+	border-radius: 4px;
 	cursor: pointer;
-	transition:
-		border-color 0.15s,
-		background 0.15s;
 }
 
-.side-btn:hover {
-	border-color: var(--c-border-2);
+.preset-btn:hover {
+	background: var(--c-surface);
+	color: var(--c-text);
 }
 
-.side-btn.active {
+.preset-btn.active {
+	background: var(--c-brand);
+	color: #fff;
 	border-color: var(--c-brand);
 }
 
-.side-piece {
-	font-size: 1.8rem;
-	line-height: 1;
+/* ============================================================
+   Option button group  (shared by all exclusive-select rows)
+   ============================================================ */
+
+.option-group {
+	display: flex;
+	border-radius: 6px;
+	border: 1px solid var(--c-border);
+	overflow: hidden;
 }
 
-.side-label {
-	font-size: 0.75rem;
+.option-btn {
+	flex: 1;
+	padding: 9px 12px;
+	font-size: 14px;
+	font-weight: 500;
+	background: var(--c-surface-2);
 	color: var(--c-text-muted);
-	font-weight: 600;
+	cursor: pointer;
+	border-right: 1px solid var(--c-border);
+}
+
+.option-btn:last-child {
+	border-right: none;
+}
+
+.option-btn.active {
+	background: var(--c-brand);
+	color: #fff;
+}
+
+.option-btn:not(.active):hover {
+	background: var(--c-surface);
+	color: var(--c-text);
+}
+
+/* Side-group buttons stack icon + label vertically */
+.option-group--icons .option-btn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+	padding: 10px 12px;
+}
+
+.side-icon {
+	width: 37.5px;
+	height: 37.5px;
 }
 
 /* ============================================================
@@ -515,16 +528,13 @@ svg.bg-omega {
 
 .submit-btn {
 	width: 100%;
-	padding: 0.85rem;
+	padding: 14px;
 	background: var(--c-brand);
 	color: #fff;
-	font-size: 1rem;
+	font-size: 16px;
 	font-weight: 700;
 	border-radius: 6px;
 	cursor: pointer;
-	transition:
-		filter 0.15s,
-		transform 0.1s;
 }
 
 .submit-btn:hover {

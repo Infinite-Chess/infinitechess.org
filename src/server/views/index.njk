@@ -88,12 +88,13 @@
      Play against computer → shows #row-side, hides #row-game-mode, shows #row-strength
    ════════════════════════════════════════════════════════════════════════ #}
 <div id="modal-overlay" class="modal-overlay hidden">
-	<div class="modal" id="game-setup-modal" role="dialog">
+	<div class="modal" role="dialog">
 
 		<div class="modal-header">
-			<h2 class="modal-title" id="modal-title">Game options</h2>
+			<div class="modal-header-gap"></div>
+			<h2 class="modal-title">Game options</h2>
 			<button class="modal-close" id="modal-close" type="button">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
 				     stroke-linecap="round">
 					<line x1="18" y1="6" x2="6" y2="18"/>
 					<line x1="6" y1="6" x2="18" y2="18"/>
@@ -106,9 +107,9 @@
 			{# ── Variant ─────────────────────────────────────────────────── #}
 			<div class="form-row">
 				<span class="form-label">Variant</span>
-				<div class="toggle-group">
-					<button class="toggle-btn active" data-type="preset" type="button">Preset variant</button>
-					<button class="toggle-btn" data-type="custom" type="button">Custom (ICN)</button>
+				<div class="option-group">
+					<button class="option-btn active" data-type="preset" type="button">Preset variant</button>
+					<button class="option-btn" data-type="custom" type="button">Custom (ICN)</button>
 				</div>
 				{# Preset variant selector - clicking opens the variant picker popup (TODO) #}
 				<div id="variant-preset-section">
@@ -125,8 +126,10 @@
 				{# Custom ICN - shown when "Custom (ICN)" tab is active #}
 				<div id="variant-custom-section" class="hidden">
 					<div class="icn-input-row">
-						<textarea class="icn-input" id="icn-input"
-						          placeholder="Paste ICN notation here…" rows="4"></textarea>
+						<div class="icn-input-wrap">
+							<textarea class="icn-input" id="icn-input"
+							          placeholder="Paste ICN notation here…" rows="1"></textarea>
+						</div>
 						<div class="icn-buttons">
 							<button class="icon-btn" id="btn-paste-icn" type="button" title="Paste from clipboard">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -148,67 +151,73 @@
 			</div>
 
 			{# Time sliders - revealed when "Finite" is selected #}
-			<div class="form-rows-group hidden" id="time-sliders">
-				<div class="slider-row">
-					<div class="slider-labels">
-						<label class="form-label" for="slider-minutes">Minutes per side</label>
-						<span class="slider-value" id="minutes-display">10m</span>
+			<div class="time-control hidden" id="time-control">
+				<div class="time-sliders-grid">
+					<div class="slider-header">
+						<label class="slider-label" for="slider-minutes">Minutes per side</label>
+						<span class="slider-value" id="minutes-display">10</span>
 					</div>
-					<input type="range" class="slider" id="slider-minutes" min="0" max="60" value="10" step="1">
-					<div class="slider-pips">
-						<span>0</span><span>15m</span><span>30m</span><span>45m</span><span>60m</span>
+					<div class="slider-separator">+</div>
+					<div class="slider-header">
+						<span class="slider-value" id="increment-display">4</span>
+						<label class="slider-label" for="slider-increment">Increment in seconds</label>
 					</div>
+					<input type="range" class="slider" id="slider-minutes" min="0" max="25" value="9" step="1">
+					<div></div>
+					<input type="range" class="slider" id="slider-increment" min="0" max="26" value="4" step="1">
 				</div>
-				<div class="slider-row">
-					<div class="slider-labels">
-						<label class="form-label" for="slider-increment">Increment</label>
-						<span class="slider-value" id="increment-display">4s</span>
-					</div>
-					<input type="range" class="slider" id="slider-increment" min="0" max="60" value="4" step="1">
-					<div class="slider-pips">
-						<span>0</span><span>15s</span><span>30s</span><span>45s</span><span>60s</span>
-					</div>
+				<div class="time-presets">
+					<button class="preset-btn" data-minutes="1" data-increment="2" type="button">1+2</button>
+					<button class="preset-btn" data-minutes="2" data-increment="2" type="button">2+2</button>
+					<button class="preset-btn" data-minutes="3" data-increment="2" type="button">3+2</button>
+					<button class="preset-btn" data-minutes="5" data-increment="2" type="button">5+2</button>
+					<button class="preset-btn" data-minutes="8" data-increment="3" type="button">8+3</button>
+					<button class="preset-btn active" data-minutes="10" data-increment="4" type="button">10+4</button>
+					<button class="preset-btn" data-minutes="15" data-increment="5" type="button">15+5</button>
+					<button class="preset-btn" data-minutes="20" data-increment="6" type="button">20+6</button>
 				</div>
 			</div>
 
 			{# ── Game mode (hidden for "Play against computer") ──────────── #}
 			<div class="form-row" id="row-game-mode">
 				<span class="form-label">Game mode</span>
-				<div class="toggle-group">
-					<button class="toggle-btn active" data-mode="casual" type="button">Casual</button>
-					<button class="toggle-btn" data-mode="rated" type="button">Rated</button>
+				<div class="option-group">
+					<button class="option-btn active" data-mode="casual" type="button">Casual</button>
+					<button class="option-btn" data-mode="rated" type="button">Rated</button>
 				</div>
 			</div>
 
 			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
 			<div class="form-row hidden" id="row-side">
 				<span class="form-label">Side</span>
-				<div class="side-selector">
-					<button class="side-btn" data-side="white" type="button" title="Play as White">
-						<span class="side-piece">♔</span>
-						<span class="side-label">White</span>
+				<div class="option-group option-group--icons">
+					<button class="option-btn" data-side="white" type="button">
+						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></svg>
+						White
 					</button>
-					<button class="side-btn active" data-side="random" type="button" title="Random side">
-						<span class="side-piece">?</span>
-						<span class="side-label">Random</span>
+					<button class="option-btn active" data-side="random" type="button">
+						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></svg>
+						Random
 					</button>
-					<button class="side-btn" data-side="black" type="button" title="Play as Black">
-						<span class="side-piece">♚</span>
-						<span class="side-label">Black</span>
+					<button class="option-btn" data-side="black" type="button">
+						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-opacity="1" fill-rule="evenodd" stroke="#000" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5"><path d="M22.5 11.63V6" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#000" fill-opacity="1" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#000" stroke="#000"/><path d="M20 8h5" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M32 29.5s8.5-4 6.03-9.65C34.15 14 25 18 22.5 24.5v2.1-2.1C20 18 10.85 14 6.97 19.85 4.5 25.5 13 29.5 13 29.5" fill="none" stroke="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0" fill="none" stroke="#fff"/></g></svg>
+						Black
 					</button>
 				</div>
 			</div>
 
 			{# ── Strength (only for "Play against computer") ─────────────── #}
 			<div class="form-row hidden" id="row-strength">
-				<div class="slider-labels">
-					<label class="form-label" for="slider-strength">Strength</label>
-					<span class="slider-value" id="strength-display">Level 4</span>
-				</div>
-				<input type="range" class="slider" id="slider-strength" min="1" max="8" value="4" step="1">
-				<div class="slider-pips">
-					<span>1</span><span>2</span><span>3</span><span>4</span>
-					<span>5</span><span>6</span><span>7</span><span>8</span>
+				<span class="form-label">Strength</span>
+				<div class="option-group">
+					<button class="option-btn" data-level="1" type="button">1</button>
+					<button class="option-btn" data-level="2" type="button">2</button>
+					<button class="option-btn" data-level="3" type="button">3</button>
+					<button class="option-btn active" data-level="4" type="button">4</button>
+					<button class="option-btn" data-level="5" type="button">5</button>
+					<button class="option-btn" data-level="6" type="button">6</button>
+					<button class="option-btn" data-level="7" type="button">7</button>
+					<button class="option-btn" data-level="8" type="button">8</button>
 				</div>
 			</div>
 

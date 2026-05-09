@@ -72,7 +72,7 @@ body {
 	--c-text: rgb(170, 170, 170);
 	--c-text-emphasis: rgb(220, 220, 220);
 	--c-text-muted: rgb(135, 135, 135);
-	--c-brand: rgb(97, 169, 255);
+	--c-brand: rgb(190 56 0);
 	--c-border: rgb(60, 60, 60);
 	--c-border-2: rgb(100, 100, 100);
 	--c-border-muted: rgb(55 55 55);
@@ -96,7 +96,7 @@ body {
 	--c-text: rgb(30, 30, 30);
 	--c-text-emphasis: rgb(0, 0, 0);
 	--c-text-muted: rgb(100, 100, 100);
-	--c-brand: rgb(0, 102, 204);
+	--c-brand: rgb(224 49 0);
 	--c-border: rgb(200, 200, 200);
 	--c-border-2: rgb(150, 150, 150);
 	--c-border-muted: rgb(215 215 215);
