@@ -166,7 +166,7 @@ function syncPresetHighlight(): void {
 function onTimeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-time].active');
 	const isFinite = activeBtn?.getAttribute('data-time') === 'finite';
-	document.getElementById('time-control')?.classList.toggle('hidden', !isFinite);
+	document.getElementById('time-sliders')?.classList.toggle('hidden', !isFinite);
 }
 
 function onVariantTypeToggle(): void {

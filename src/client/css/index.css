@@ -334,7 +334,7 @@ svg.bg-omega {
 	gap: 9px;
 }
 
-.time-control {
+.time-sliders {
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
