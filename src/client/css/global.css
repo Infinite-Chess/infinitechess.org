@@ -185,6 +185,7 @@ body {
 	width: max-content;
 	max-width: 150px;
 	padding: 5px;
+	box-shadow: var(--dropdown-shadow);
 	opacity: 0;
 	transition: opacity 0.1s ease-in-out;
 	pointer-events: none;
