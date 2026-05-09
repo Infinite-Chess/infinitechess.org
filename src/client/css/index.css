@@ -1,37 +1,6 @@
 /* src/client/css/index.css */
 
-/* ============================================================
-   Fixed background layers
-   ============================================================ */
-
-/* Perspective board canvas — fixed behind all content */
-/* #game {
-	position: fixed;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 0;
-} */
-.bg-checkerboard {
-	width: 100vw;
-	height: 100svh;
-	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
-		200px 200px;
-}
-
-/* Very-opaque overlay — sits above the canvas, below page content.
-   Color respects the active theme so the canvas peek-through stays readable. */
-#bg-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: -100;
-	pointer-events: none;
-	background-color: var(--c-bg-overlay);
-}
-
-/* ============================================================
-   Page layout
-   ============================================================ */
+/* The home page, containing the lobby and spectating sections. */
 
 /* Sticky-footer: body fills the viewport; main grows to push footer down */
 body {
@@ -39,44 +8,59 @@ body {
 	flex-direction: column;
 }
 
-main,
-footer {
-	position: relative;
-	z-index: 2;
+/* ============================================================
+   Fixed background layers
+   ============================================================ */
+
+.bg-checkerboard {
+	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
+		200px 200px;
 }
 
-footer {
-	background: var(--c-bg);
-	border-top: 1px solid var(--c-border);
+/* Very-opaque overlay */
+#bg-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: -100;
+	background-color: var(--c-bg-overlay);
 }
+
+/* ============================================================
+   Page layout
+   ============================================================ */
 
 main {
+	position: relative;
 	flex: 1;
-	padding: 0 1rem 4rem;
+	padding: 0 16px 64px;
+	z-index: 1;
 }
 
 /* Centered content column */
 .main-inner {
 	max-width: 1200px;
 	margin: 20px auto;
-	display: flex;
 	flex-direction: column;
 	gap: 2rem;
 }
 
 /* ============================================================
    Lobby layout: buttons + open-challenges section
-   Default: buttons in a row above the table.
-   Wide (≥ 900px): buttons as left sidebar (flex: 1), table on the right (flex: 2).
    ============================================================ */
 
+/* Shared shadow for lobby surface elements */
+.lobby-wrap,
+.lobby-btn {
+	box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Contains lobby and create game action buttons */
 .lobby-home {
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
 }
 
-/* ── Narrow: buttons in a row (stacks to column below 450px) ── */
 .lobby-actions {
 	display: flex;
 	gap: 10px;
@@ -84,17 +68,15 @@ main {
 
 .lobby-btn {
 	flex: 1;
-	min-width: 0;
 	min-height: 60px;
 	display: flex;
-	flex-direction: row;
 	align-items: center;
 	justify-content: center;
 	gap: 12px;
-	padding: 0.85rem 1rem;
+	padding: 16px;
 	border-radius: 7px;
 	font-size: 15px;
-	font-weight: 600;
+	font-weight: 700;
 	cursor: pointer;
 	color: var(--c-text-emphasis);
 	background: var(--c-surface);
@@ -109,47 +91,25 @@ main {
 .btn-icon {
 	width: 1.875em;
 	height: 1.875em;
+	flex-shrink: 0;
 }
 
 /* ============================================================
-   Home sections
+   Lobby
    ============================================================ */
 
-.section-header {
-	display: flex;
-	align-items: center;
+.lobby h2 {
 	justify-content: space-between;
 	padding: 0.65rem 1rem;
-	border-bottom: 1px solid var(--c-border);
-	background: var(--c-surface-2);
-}
-
-#lobby .section-header {
 	justify-content: center;
-	background: transparent;
-	border-bottom: none;
-}
-
-.section-header h2 {
 	font-size: 15px;
-	font-weight: 700;
 	color: var(--c-text-muted);
 	letter-spacing: 0.07em;
-}
-
-.section-count {
-	font-size: 0.8rem;
-	color: var(--c-text-muted);
-}
-
-/* Shared shadow for lobby surface elements */
-.lobby-table-wrap,
-.lobby-btn {
-	box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+	text-align: center;
 }
 
 /* Table wrapper — fixed height with scroll; rows size naturally to their content */
-.lobby-table-wrap {
+.lobby-wrap {
 	position: relative;
 	overflow: auto;
 	height: 400px;
@@ -159,18 +119,7 @@ main {
 }
 
 /* Faint omega logo watermark — references the sprite defined in header.njk */
-.section-bg-omega {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	pointer-events: none;
-	opacity: 0.08;
-	z-index: 0;
-}
-
-.section-bg-omega svg {
+svg.bg-omega {
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -178,6 +127,7 @@ main {
 	height: 94%;
 	width: auto;
 	color: var(--c-text-emphasis);
+	opacity: 0.08;
 }
 
 /* ============================================================
@@ -188,79 +138,50 @@ main {
 	width: 100%;
 	border-collapse: collapse;
 	position: relative;
-	z-index: 1; /* above .section-bg-omega */
 }
 
-.lobby-table th {
-	position: sticky;
-	top: 0;
+.lobby-table thead {
 	text-align: left;
 	padding: 0.5rem 1rem;
 	font-size: 0.75rem;
-	font-weight: normal;
 	color: var(--c-text-muted);
 	letter-spacing: 0.06em;
-	white-space: nowrap;
 	background-color: var(--c-surface-transparent);
 }
 
-.lobby-table tr {
-	border-bottom: 1px solid var(--c-border-muted);
+.lobby-table th {
+	padding: 8px 16px;
+	font-weight: normal;
 }
 
-.lobby-table td {
-	padding: 0.6rem 1rem;
-	font-size: 0.9rem;
+.lobby-table tr {
 	color: var(--c-text);
-	white-space: nowrap;
+	background-color: var(--c-surface-transparent);
+	border-bottom: 1px solid var(--c-border-muted);
 }
 
 .invite-row {
 	cursor: pointer;
-	background-color: var(--c-surface-transparent);
-}
-
-.invite-row:hover {
-	background: rgb(255 88 0 / 37%);
-}
-
-.invite-row:hover td {
-	color: var(--c-text-emphasis);
-}
-
-.game-mode {
-	display: flex;
-	align-items: center;
-	gap: 0.4em;
-}
-
-.mode-group-icon {
-	width: 1.4em;
-	aspect-ratio: 1;
-	flex-shrink: 0;
-}
-
-.col-time {
-	display: flex;
-	align-items: center;
-	gap: 0.4em;
-}
-
-.speed-icon {
-	width: 1.4em;
-	aspect-ratio: 1;
-}
-
-.table-empty {
-	padding: 2.5rem;
-	text-align: center;
-	color: var(--c-text-muted);
 	font-size: 0.9rem;
 }
 
-/* Reserve scrollbar gutter at all times so the modal overlay never causes layout shift */
-html {
-	scrollbar-gutter: stable;
+.invite-row:hover {
+	color: var(--c-text-emphasis);
+	background: rgb(255 88 0 / 37%);
+}
+
+.lobby-table td {
+	padding: 0.6rem 1rem;
+}
+
+.cell-flex {
+	display: flex;
+	gap: 0.4em;
+}
+
+.cell-icon {
+	width: 20px;
+	aspect-ratio: 1;
 }
 
 /* ============================================================
@@ -637,7 +558,7 @@ html {
 	}
 
 	/* Lobby table: ~2/3 of available width */
-	#lobby {
+	.lobby {
 		flex: 2;
 	}
 }

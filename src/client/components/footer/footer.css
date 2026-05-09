@@ -4,18 +4,20 @@
  * Site footer. Included on every page, except those with the board visible.
  */
 
-.site-footer {
+footer {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
+	background: var(--c-bg);
+	z-index: 1;
 	gap: 0 0px;
 	padding: 16px 16px;
 	border-top: 1px solid var(--c-border);
 	color: var(--c-text-muted);
 }
 
-.site-footer a {
+footer a {
 	display: inline-block;
 	padding: 4px 8px;
 	color: var(--c-text-muted);
@@ -24,11 +26,11 @@
 	white-space: nowrap;
 }
 
-.site-footer a:hover {
+footer a:hover {
 	color: var(--c-link);
 }
 
-.site-footer .footer-sep {
+footer .footer-sep {
 	color: var(--c-border-2);
 	font-size: 12px;
 	user-select: none;

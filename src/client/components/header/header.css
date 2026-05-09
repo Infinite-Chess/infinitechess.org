@@ -36,6 +36,14 @@
 	text-decoration: none;
 }
 
+/* svg resizing */
+.svg-profile,
+.svg-engine,
+.svg-globe,
+.svg-infinite {
+	transform: scale(1.2);
+}
+
 /* ---------- Logo + sitename ---------- */
 
 .header-home {

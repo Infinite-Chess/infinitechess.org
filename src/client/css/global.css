@@ -147,13 +147,6 @@ body {
 	width: fit-content;
 }
 
-.username-embed .svg-profile,
-.svg-engine,
-.svg-globe,
-.svg-infinite {
-	transform: scale(1.2);
-}
-
 .username-embed .username {
 	font-size: 1em;
 	font-weight: bold;
