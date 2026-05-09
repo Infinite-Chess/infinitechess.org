@@ -108,7 +108,7 @@ main {
 	text-align: center;
 }
 
-/* Table wrapper — fixed height with scroll; rows size naturally to their content */
+/* Table wrapper - fixed height with scroll; rows size naturally to their content */
 .lobby-wrap {
 	position: relative;
 	overflow: auto;
@@ -118,7 +118,7 @@ main {
 	border-radius: 8px;
 }
 
-/* Faint omega logo watermark — references the sprite defined in header.njk */
+/* Faint omega logo watermark - references the sprite defined in header.njk */
 svg.bg-omega {
 	position: absolute;
 	top: 50%;

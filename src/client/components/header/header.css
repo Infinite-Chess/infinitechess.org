@@ -133,7 +133,7 @@
 	border-left-color: var(--c-tile);
 }
 
-/* Donate link — golden accent */
+/* Donate link - golden accent */
 a.header-donate {
 	color: var(--c-donate);
 }
@@ -778,14 +778,14 @@ p.theme-title {
    Responsive: progressive breakpoints for header content
    =================================================================== */
 
-/* T1: Full layout getting tight — hide the logo symbol, keep text + nav */
+/* T1: Full layout getting tight - hide the logo symbol, keep text + nav */
 @media (max-width: 850px) {
 	.header-logo {
 		display: none;
 	}
 }
 
-/* T2: Text + nav still too wide — restore symbol, hide text instead */
+/* T2: Text + nav still too wide - restore symbol, hide text instead */
 @media (max-width: 800px) {
 	.header-logo {
 		display: inline-flex;
@@ -796,7 +796,7 @@ p.theme-title {
 	}
 }
 
-/* T3: Symbol + nav still too wide — nav moves into hamburger, full logo returns */
+/* T3: Symbol + nav still too wide - nav moves into hamburger, full logo returns */
 @media (max-width: 670px) {
 	.header-sitename {
 		display: block;
@@ -816,14 +816,14 @@ p.theme-title {
 	}
 }
 
-/* T4: Logo + text doesn't have enough room — drop to text-only logo */
+/* T4: Logo + text doesn't have enough room - drop to text-only logo */
 @media (max-width: 470px) {
 	.header-logo {
 		display: none;
 	}
 }
 
-/* T5: Text-only logo doesn't have enough room — drop to symbol-only logo */
+/* T5: Text-only logo doesn't have enough room - drop to symbol-only logo */
 @media (max-width: 420px) {
 	.header-logo {
 		display: inline-flex;

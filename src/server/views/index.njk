@@ -35,7 +35,7 @@
 			<section class="lobby">
 				<h2>Lobby</h2>
 				<div class="lobby-wrap">
-					{# Faint omega background — references symbol already defined in header.njk #}
+					{# Faint omega background - references symbol already defined in header.njk #}
 					<svg class="bg-omega" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
 					<table class="lobby-table">
 						<thead>
@@ -81,7 +81,7 @@
 {% include "components/footer/footer.njk" %}
 
 {# ════════════════════════════════════════════════════════════════════════
-   Game Options Modal — shared by all three lobby action buttons.
+   Game Options Modal - shared by all three lobby action buttons.
    Fields are shown/hidden by JS depending on which button was pressed:
      Create online game   → hides #row-side, shows #row-game-mode, hides #row-strength
      Challenge a friend  → shows #row-side, shows #row-game-mode, hides #row-strength
@@ -110,7 +110,7 @@
 					<button class="toggle-btn active" data-type="preset" type="button">Preset variant</button>
 					<button class="toggle-btn" data-type="custom" type="button">Custom (ICN)</button>
 				</div>
-				{# Preset variant selector — clicking opens the variant picker popup (TODO) #}
+				{# Preset variant selector - clicking opens the variant picker popup (TODO) #}
 				<div id="variant-preset-section">
 					<button class="variant-display-btn" id="variant-display" type="button"
 					        title="Click to choose a variant (coming soon)">
@@ -122,7 +122,7 @@
 						</svg>
 					</button>
 				</div>
-				{# Custom ICN — shown when "Custom (ICN)" tab is active #}
+				{# Custom ICN - shown when "Custom (ICN)" tab is active #}
 				<div id="variant-custom-section" class="hidden">
 					<div class="icn-input-row">
 						<textarea class="icn-input" id="icn-input"
@@ -147,7 +147,7 @@
 				</div>
 			</div>
 
-			{# Time sliders — revealed when "Finite" is selected #}
+			{# Time sliders - revealed when "Finite" is selected #}
 			<div class="form-rows-group hidden" id="time-sliders">
 				<div class="slider-row">
 					<div class="slider-labels">
