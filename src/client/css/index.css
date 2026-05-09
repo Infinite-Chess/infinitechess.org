@@ -176,11 +176,60 @@ svg.bg-omega {
 .cell-flex {
 	display: flex;
 	gap: 0.4em;
+	align-items: center;
 }
 
 .cell-icon {
 	width: 20px;
 	aspect-ratio: 1;
+}
+
+/* ============================================================
+   Side color dot
+   ============================================================ */
+
+.side-dot {
+	width: 13px;
+	height: 13px;
+	margin-left: 6px;
+	border-radius: 50%;
+	background: var(--c-text);
+	border-width: 2px;
+	border-style: solid;
+}
+
+.invite-row:hover .side-dot {
+	background: var(--c-text-emphasis);
+}
+
+.side-dot.black {
+	background: transparent;
+	border-color: var(--c-text);
+}
+
+.invite-row:hover .side-dot.black {
+	background: transparent;
+	border-color: var(--c-text-emphasis);
+}
+
+[data-theme='light'] {
+	.side-dot {
+		background: transparent;
+		border-color: var(--c-text);
+	}
+
+	.invite-row:hover .side-dot {
+		background: transparent;
+		border-color: var(--c-text-emphasis);
+	}
+
+	.side-dot.black {
+		background: var(--c-text);
+	}
+
+	.invite-row:hover .side-dot.black {
+		background: var(--c-text-emphasis);
+	}
 }
 
 /* ============================================================
