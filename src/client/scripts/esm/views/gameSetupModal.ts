@@ -44,7 +44,7 @@ function initModal(): void {
 	document.getElementById('btn-play-ai')?.addEventListener('click', () => openModal('ai'));
 
 	document.getElementById('modal-close')?.addEventListener('click', closeModal);
-	document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
+	document.getElementById('modal-overlay')?.addEventListener('pointerdown', (e) => {
 		if (e.target === e.currentTarget) closeModal();
 	});
 	document.addEventListener('keydown', (e) => {
