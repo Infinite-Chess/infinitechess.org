@@ -198,6 +198,14 @@ a.header-donate:hover {
 	cursor: pointer;
 }
 
+/* Input slider style overrides - the settings background is brighter */
+.settings .slider::-webkit-slider-runnable-track {
+	background: var(--c-surface);
+}
+.settings .slider::-webkit-slider-thumb {
+	background: var(--c-surface-2);
+}
+
 .gear {
 	transition: transform 0.25s cubic-bezier(0.22, 0.85, 0.4, 1);
 }
