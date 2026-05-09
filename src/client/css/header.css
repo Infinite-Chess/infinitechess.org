@@ -277,7 +277,6 @@ a.header-donate:hover {
 }
 
 .header-dropdown-parent:hover > .header-dropdown,
-.header-dropdown-parent:focus-within > .header-dropdown,
 .header-dropdown-parent > .header-dropdown:hover {
 	opacity: 1;
 	pointer-events: auto;
