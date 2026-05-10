@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/gameSetupModal.ts
+// src/client/scripts/esm/views/index/gameSetupModal.ts
 
 /**
  * This script manages the game setup invite/seek creation modal.

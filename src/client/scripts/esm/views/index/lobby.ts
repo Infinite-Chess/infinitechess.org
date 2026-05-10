@@ -10,7 +10,7 @@ import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 
-import { VariantGroup } from '../gameSetupModal.js';
+import { VariantGroup } from './gameSetupModal.js';
 
 const patch = init([attributesModule]);
 

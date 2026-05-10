@@ -1,8 +1,8 @@
-// src/client/scripts/esm/views/index.ts
+// src/client/scripts/esm/views/index/index.ts
 
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import lobby, { LobbySeek } from './index/lobby.js';
+import lobby, { LobbySeek } from './lobby.js';
 
 import './gameSetupModal.js';
 
