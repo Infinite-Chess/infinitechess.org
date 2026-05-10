@@ -104,7 +104,7 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 					h('svg.cell-icon', [
 						h('use', { attrs: { href: getVariantIconId(seek.variant.group) } }),
 					]),
-					seek.variant,
+					seek.variant.name,
 				]),
 			]),
 			h('td', [
