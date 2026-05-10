@@ -1,8 +1,12 @@
 // src/client/scripts/esm/views/gameSetupModal.ts
 
-export {};
+// Types ----------------------------------------------
 
 type ModalMode = 'create' | 'friend' | 'ai';
+
+type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level' | 'data-type';
+
+// Constants ------------------------------------------
 
 const SUBMIT_LABELS: Record<ModalMode, string> = {
 	create: 'Create Game',
@@ -25,6 +29,40 @@ const INCREMENT_VALUES: number[] = [
 	60,
 ];
 
+// Elements ----------------------------------------------
+
+const element_btnCreateGame = document.getElementById('btn-create-game')!;
+const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
+const element_btnPlayAi = document.getElementById('btn-play-ai')!;
+const element_modalClose = document.getElementById('modal-close')!;
+const element_modalOverlay = document.getElementById('modal-overlay')!;
+const element_modalSubmit = document.getElementById('modal-submit')!;
+const element_rowGameMode = document.getElementById('row-game-mode')!;
+const element_rowStrength = document.getElementById('row-strength')!;
+const element_sliderMinutes = document.getElementById('slider-minutes')! as HTMLInputElement;
+const element_minutesDisplay = document.getElementById('minutes-display')!;
+const element_sliderIncrement = document.getElementById('slider-increment')! as HTMLInputElement;
+const element_incrementDisplay = document.getElementById('increment-display')!;
+const element_timeSliders = document.getElementById('time-sliders')!;
+const element_variantPresetSection = document.getElementById('variant-preset-section')!;
+const element_variantCustomSection = document.getElementById('variant-custom-section')!;
+const element_btnPasteIcn = document.getElementById('btn-paste-icn')!;
+const element_icnInput = document.getElementById('icn-input')! as HTMLTextAreaElement;
+const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
+const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTMLElement>> = {
+	'data-time': document.querySelectorAll<HTMLElement>('[data-time]'),
+	'data-mode': document.querySelectorAll<HTMLElement>('[data-mode]'),
+	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
+	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
+	'data-type': document.querySelectorAll<HTMLElement>('[data-type]'),
+};
+
+// Initialization ----------------------------------------------
+
+initModal();
+
+// Functions ----------------------------------------------
+
 function sliderToValue(index: number, values: number[]): number {
 	return values[Math.max(0, Math.min(values.length - 1, index))] ?? values[0]!;
 }
@@ -35,16 +73,12 @@ function valueToSliderIndex(value: number, values: number[]): number {
 }
 
 function initModal(): void {
-	document
-		.getElementById('btn-create-game')
-		?.addEventListener('click', () => openModal('create'));
-	document
-		.getElementById('btn-challenge-friend')
-		?.addEventListener('click', () => openModal('friend'));
-	document.getElementById('btn-play-ai')?.addEventListener('click', () => openModal('ai'));
+	element_btnCreateGame.addEventListener('click', () => openModal('create'));
+	element_btnChallengeFriend.addEventListener('click', () => openModal('friend'));
+	element_btnPlayAi.addEventListener('click', () => openModal('ai'));
 
-	document.getElementById('modal-close')?.addEventListener('click', closeModal);
-	document.getElementById('modal-overlay')?.addEventListener('pointerdown', (e) => {
+	element_modalClose.addEventListener('click', closeModal);
+	element_modalOverlay.addEventListener('pointerdown', (e) => {
 		if (e.target === e.currentTarget) closeModal();
 	});
 	document.addEventListener('keydown', (e) => {
@@ -59,39 +93,34 @@ function initModal(): void {
 }
 
 function openModal(mode: ModalMode): void {
-	const submit = document.getElementById('modal-submit');
-	const rowGameMode = document.getElementById('row-game-mode');
-	const rowStrength = document.getElementById('row-strength');
+	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
 
-	if (submit) submit.textContent = SUBMIT_LABELS[mode];
+	element_rowGameMode.classList.toggle('hidden', mode === 'ai');
+	element_rowStrength.classList.toggle('hidden', mode !== 'ai');
 
-	rowGameMode?.classList.toggle('hidden', mode === 'ai');
-	rowStrength?.classList.toggle('hidden', mode !== 'ai');
+	element_modalOverlay.classList.remove('hidden');
 
-	const overlay = document.getElementById('modal-overlay');
-	overlay?.classList.remove('hidden');
-
-	document.getElementById('modal-close')?.focus();
+	element_modalClose.focus();
 }
 
 function closeModal(): void {
-	const overlay = document.getElementById('modal-overlay');
-	overlay?.classList.add('hidden');
+	element_modalOverlay.classList.add('hidden');
 }
 
 function initModalSliders(): void {
-	linkSlider('slider-minutes', 'minutes-display', (v) =>
+	linkSlider(element_sliderMinutes, element_minutesDisplay, (v) =>
 		String(sliderToValue(parseInt(v), MINUTE_VALUES)),
 	);
-	linkSlider('slider-increment', 'increment-display', (v) =>
+	linkSlider(element_sliderIncrement, element_incrementDisplay, (v) =>
 		String(sliderToValue(parseInt(v), INCREMENT_VALUES)),
 	);
 }
 
-function linkSlider(sliderId: string, displayId: string, format: (v: string) => string): void {
-	const slider = document.getElementById(sliderId) as HTMLInputElement | null;
-	const display = document.getElementById(displayId);
-	if (!slider || !display) return;
+function linkSlider(
+	slider: HTMLInputElement,
+	display: HTMLElement,
+	format: (v: string) => string,
+): void {
 	slider.addEventListener('input', () => {
 		display.textContent = format(slider.value);
 		syncPresetHighlight();
@@ -101,7 +130,7 @@ function linkSlider(sliderId: string, displayId: string, format: (v: string) => 
 function initToggleGroups(): void {
 	// Each [data-time], [data-mode], [data-side], [data-level], [data-type] button is an exclusive-select group.
 	// Buttons sharing the same data-* attribute key form one group.
-	const groups: [string, (() => void)?][] = [
+	const groups: [ToggleGroupAttribute, (() => void)?][] = [
 		['data-time', onTimeToggle],
 		['data-mode'],
 		['data-side'],
@@ -109,11 +138,11 @@ function initToggleGroups(): void {
 		['data-type', onVariantTypeToggle],
 	];
 	for (const [attr, callback] of groups) {
-		document.querySelectorAll<HTMLElement>(`[${attr}]`).forEach((btn) => {
+		element_buttonsByToggleGroup[attr].forEach((btn) => {
 			btn.addEventListener('click', () => {
-				document
-					.querySelectorAll<HTMLElement>(`[${attr}]`)
-					.forEach((b) => b.classList.remove('active'));
+				element_buttonsByToggleGroup[attr].forEach((groupButton) =>
+					groupButton.classList.remove('active'),
+				);
 				btn.classList.add('active');
 				callback?.();
 			});
@@ -122,38 +151,26 @@ function initToggleGroups(): void {
 }
 
 function initPresets(): void {
-	document.querySelectorAll<HTMLElement>('.preset-btn').forEach((btn) => {
+	element_presetButtons.forEach((btn) => {
 		btn.addEventListener('click', () => {
-			const minutes = parseInt(btn.getAttribute('data-minutes') ?? '');
-			const increment = parseInt(btn.getAttribute('data-increment') ?? '');
-			const minutesSlider = document.getElementById(
-				'slider-minutes',
-			) as HTMLInputElement | null;
-			const incrementSlider = document.getElementById(
-				'slider-increment',
-			) as HTMLInputElement | null;
-			const minutesDisplay = document.getElementById('minutes-display');
-			const incrementDisplay = document.getElementById('increment-display');
-			if (minutesSlider && !isNaN(minutes)) {
-				minutesSlider.value = String(valueToSliderIndex(minutes, MINUTE_VALUES));
-				if (minutesDisplay) minutesDisplay.textContent = String(minutes);
-			}
-			if (incrementSlider && !isNaN(increment)) {
-				incrementSlider.value = String(valueToSliderIndex(increment, INCREMENT_VALUES));
-				if (incrementDisplay) incrementDisplay.textContent = String(increment);
-			}
+			const minutes = Number(btn.getAttribute('data-minutes'));
+			const increment = Number(btn.getAttribute('data-increment'));
+			element_sliderMinutes.value = String(valueToSliderIndex(minutes, MINUTE_VALUES));
+			element_minutesDisplay.textContent = String(minutes);
+			element_sliderIncrement.value = String(valueToSliderIndex(increment, INCREMENT_VALUES));
+			element_incrementDisplay.textContent = String(increment);
 			syncPresetHighlight();
 		});
 	});
 }
 
 function syncPresetHighlight(): void {
-	const minutesSlider = document.getElementById('slider-minutes') as HTMLInputElement | null;
-	const incrementSlider = document.getElementById('slider-increment') as HTMLInputElement | null;
-	if (!minutesSlider || !incrementSlider) return;
-	const currentMinutes = sliderToValue(parseInt(minutesSlider.value), MINUTE_VALUES);
-	const currentIncrement = sliderToValue(parseInt(incrementSlider.value), INCREMENT_VALUES);
-	document.querySelectorAll<HTMLElement>('.preset-btn').forEach((btn) => {
+	const currentMinutes = sliderToValue(parseInt(element_sliderMinutes.value), MINUTE_VALUES);
+	const currentIncrement = sliderToValue(
+		parseInt(element_sliderIncrement.value),
+		INCREMENT_VALUES,
+	);
+	element_presetButtons.forEach((btn) => {
 		const match =
 			parseInt(btn.getAttribute('data-minutes') ?? '') === currentMinutes &&
 			parseInt(btn.getAttribute('data-increment') ?? '') === currentIncrement;
@@ -164,28 +181,26 @@ function syncPresetHighlight(): void {
 function onTimeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-time].active');
 	const isFinite = activeBtn?.getAttribute('data-time') === 'finite';
-	document.getElementById('time-sliders')?.classList.toggle('hidden', !isFinite);
+	element_timeSliders.classList.toggle('hidden', !isFinite);
 }
 
 function onVariantTypeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-type].active');
 	const isCustom = activeBtn?.getAttribute('data-type') === 'custom';
-	document.getElementById('variant-preset-section')?.classList.toggle('hidden', isCustom);
-	document.getElementById('variant-custom-section')?.classList.toggle('hidden', !isCustom);
+	element_variantPresetSection.classList.toggle('hidden', isCustom);
+	element_variantCustomSection.classList.toggle('hidden', !isCustom);
 }
 
 function initPasteButton(): void {
-	document.getElementById('btn-paste-icn')?.addEventListener('click', async () => {
-		const input = document.getElementById('icn-input') as HTMLTextAreaElement | null;
-		if (!input) return;
+	element_btnPasteIcn.addEventListener('click', async () => {
 		try {
-			input.value = await navigator.clipboard.readText();
+			element_icnInput.value = await navigator.clipboard.readText();
 		} catch {
 			// Clipboard access denied — silently ignore.
 		}
 	});
 }
 
-// ── Bootstrap ────────────────────────────────────────────────────────────────
+// Exports ----------------------------------------------
 
-initModal();
+export {};
