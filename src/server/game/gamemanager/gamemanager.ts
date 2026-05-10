@@ -4,8 +4,8 @@
  * The script keeps track of all our active online games.
  */
 
-import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { Rating } from '../../../shared/types.js';
+import type { AuthSeek } from '../invitesmanager/inviteutility.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
@@ -79,7 +79,7 @@ const activeGames: Record<number, ServerGame> = {};
  * @param replyto - The ID of the incoming socket message of the player that started the game. This is used for the `replyto` property on our response.
  */
 function createGame(
-	invite: Invite,
+	invite: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 	actingPlayer: Player,
 	replyto?: number,
@@ -101,9 +101,9 @@ function createGame(
 	const gameID = issueUniqueGameId();
 	const now = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
-		invite.rated === 'rated',
+		invite.mode === 'rated',
 		invite.variant,
-		invite.clock,
+		invite.time,
 		now,
 		ratinginfo,
 	);

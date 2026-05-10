@@ -71,7 +71,7 @@ function acceptInvite(
 	}
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
-	if (invite.rated === 'rated' && !(user.signedIn && ws.metadata.verified)) {
+	if (invite.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
 		return sendSocketMessage(
 			ws,
 			'general',

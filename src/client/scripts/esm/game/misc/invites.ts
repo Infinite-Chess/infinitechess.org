@@ -238,7 +238,7 @@ function updateInviteList(list: Invite[]): void {
 		const color = createDiv(['invite-child'], uColor);
 		newInvite.appendChild(color);
 
-		const rated = createDiv(['invite-child'], translations[invite.rated]);
+		const rated = createDiv(['invite-child'], translations[invite.mode]);
 		newInvite.appendChild(rated);
 
 		const a: string = ours ? translations.invites.cancel : translations.invites.accept;
@@ -356,7 +356,7 @@ function getInviteFromElement(inviteElement: HTMLElement): Invite {
 		clock: inviteElement.children[2]!.textContent as TimeControl,
 		color: Number(inviteElement.children[3]!.textContent) as Player,
 		publicity: inviteElement.children[4]!.textContent as 'public' | 'private',
-		rated: inviteElement.children[5]!.textContent as 'casual' | 'rated',
+		mode: inviteElement.children[5]!.textContent as 'casual' | 'rated',
 		id,
 	};
 }

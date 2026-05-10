@@ -9,6 +9,7 @@
 import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';
+import { Player } from './chess/util/typeutil.js';
 import typeschemas from './chess/util/typeschemas.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
@@ -174,3 +175,23 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 	newRating: RatingSchema,
 	change: z.number(),
 });
+
+/**
+ * A variant group categorizes variants by alike gamerules.
+ * This can be win conditions, player to move, piece movement, etc.
+ */
+export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase' | 'custom';
+
+/** The structure for a single seek in the lobby. */
+export type LobbySeek = {
+	id: string;
+	tag: string;
+	player: ServerUsernameContainer;
+	color: Player | null;
+	variant: {
+		group: VariantGroup;
+		name: string;
+	};
+	time: TimeControl;
+	mode: 'casual' | 'rated';
+};

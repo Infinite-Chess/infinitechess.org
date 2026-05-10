@@ -1,8 +1,7 @@
 // src/client/scripts/esm/views/index/lobby.ts
 
 import type { VNode } from 'snabbdom';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { TimeControl, ServerUsernameContainer, Rating } from '../../../../../shared/types.js';
+import type { TimeControl, Rating, VariantGroup, LobbySeek } from '../../../../../shared/types.js';
 
 import { attributesModule, h, init } from 'snabbdom';
 
@@ -10,25 +9,9 @@ import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 
-import { VariantGroup } from './gameSetupModal.js';
-
 const patch = init([attributesModule]);
 
 // Types ----------------------------------------------
-
-/** The structure for a single seek in the lobby. */
-export type LobbySeek = {
-	id: string;
-	tag?: string;
-	player: ServerUsernameContainer;
-	color: Player | null;
-	variant: {
-		group: VariantGroup;
-		name: string;
-	};
-	time: TimeControl;
-	mode: 'casual' | 'rated';
-};
 
 // Constants ------------------------------------------
 

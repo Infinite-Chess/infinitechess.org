@@ -8,12 +8,6 @@
 
 type ModalMode = 'online' | 'friend' | 'computer';
 
-/**
- * A variant group categorizes variants by alike gamerules.
- * This can be win conditions, player to move, piece movement, etc.
- */
-export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase' | 'custom';
-
 type ToggleGroupAttribute = 'data-type' | 'data-time' | 'data-mode' | 'data-side' | 'data-level';
 
 // Constants ------------------------------------------

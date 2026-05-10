@@ -9,18 +9,13 @@
 
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { SafeInvite, Invite } from './inviteutility.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
+import { LobbySeek } from '../../../shared/types.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import {
-	isInvitePrivate,
-	safelyCopyInvite,
-	isInvitePublic,
-	memberInfoEq,
-} from './inviteutility.js';
+import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
 	getInviteSubscribers,
 	addSocketToInvitesSubs,
@@ -37,7 +32,7 @@ const printNewInviteCreationsAndDeletions = false;
 const IDLengthOfInvites = 5;
 
 /** The list of all active invites, including private ones. */
-const invites: Invite[] = [];
+const invites: AuthSeek[] = [];
 
 /**
  * Time to allow the client to reconnect after an UNEXPECTED (not purposeful)
@@ -64,11 +59,10 @@ const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
  * Gets the list of public invites with sensitive information REMOVED (such as browser-ids)
  * DOES NOT include private invites, not even your own, ADD THOSE SEPARATELY.
  */
-function getPublicInvitesListSafe(): SafeInvite[] {
-	const deepCopiedInvites: SafeInvite[] = [];
+function getPublicInvitesListSafe(): LobbySeek[] {
+	const deepCopiedInvites: LobbySeek[] = [];
 
 	for (const invite of invites) {
-		if (isInvitePrivate(invite)) continue; // Remove private invites
 		deepCopiedInvites.push(safelyCopyInvite(invite)); // Remove sensitive information
 	}
 
@@ -82,8 +76,8 @@ function getPublicInvitesListSafe(): SafeInvite[] {
  */
 function addMyPrivateInviteToList(
 	ws: CustomWebSocket,
-	copyOfInvitesList: SafeInvite[],
-): SafeInvite[] {
+	copyOfInvitesList: LobbySeek[],
+): LobbySeek[] {
 	for (const invite of invites) {
 		if (isInvitePublic(invite)) continue; // Next invite, this one isn't private
 		if (!memberInfoEq(ws.metadata.memberInfo, invite.owner)) continue; // Doesn't belong to us
@@ -142,7 +136,7 @@ function sendClientInvitesList(
 		invitesList = getPublicInvitesListSafe(),
 		currentGameCount = getActiveGameCount(),
 		replyto = undefined,
-	}: { replyto?: number; invitesList?: SafeInvite[]; currentGameCount?: number } = {},
+	}: { replyto?: number; invitesList?: LobbySeek[]; currentGameCount?: number } = {},
 ): void {
 	invitesList = addMyPrivateInviteToList(ws, invitesList);
 	const message = { invitesList, currentGameCount };

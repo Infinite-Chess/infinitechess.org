@@ -36,7 +36,7 @@ import {
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { memberInfoEq, Invite } from '../invitesmanager/inviteutility.js';
+import { memberInfoEq, AuthSeek } from '../invitesmanager/inviteutility.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -178,7 +178,7 @@ type ServerGame = {
  * Construct the match bject based on the invite options and how players have been assigned
  */
 function initMatch(
-	invite: Invite,
+	invite: AuthSeek,
 	id: number,
 	assignedPlayers: PlayerGroup<{ identifier: AuthMemberInfo }>,
 ): MatchInfo {
@@ -197,12 +197,11 @@ function initMatch(
 
 	return {
 		id,
-		variant: invite.variant,
+		variant: invite.variant.name,
 		playerData,
 		timeCreated: Date.now(),
-		publicity: invite.publicity,
-		rated: invite.rated === 'rated',
-		clock: invite.clock,
+		rated: invite.mode === 'rated',
+		clock: invite.time,
 		positionPasted: false,
 	};
 }

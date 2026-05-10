@@ -49,7 +49,7 @@ const InviteSchema = z.strictObject({
 	/** Whether the game is public or private. */
 	publicity: PublicitySchema,
 	/** Whether the game is rated or casual. */
-	rated: z.enum(['casual', 'rated']),
+	mode: z.enum(['casual', 'rated']),
 });
 
 // Game Helper Schemas ---------------------------------------------------------------

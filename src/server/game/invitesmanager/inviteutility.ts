@@ -5,66 +5,34 @@
  * with single invites, not multiple
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
+import type { LobbySeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
-import type { ServerUsernameContainer, TimeControl } from '../../../shared/types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
 // Type Definitions
 
 /** A lobby game invite. */
-interface Invite extends SafeInvite {
+export interface AuthSeek extends LobbySeek {
 	/** Contains the identifier of the owner of the invite, whether a member or browser. */
 	owner: AuthMemberInfo;
-}
-
-/**
- * All properties of an invite that is safe to send to clients.
- * Doesn't contain sensitive information such as browser-id cookies.
- */
-interface SafeInvite {
-	id: string; // A unique identifier, containing lowercase letters a-z and numbers 0-9.
-	usernamecontainer: ServerUsernameContainer; // The type of the owner (guest/player), their username, and elo if applicable.
-	tag: string; // Used to verify if an invite is your own.
-	variant: VariantCode;
-	clock: TimeControl;
-	color: Player | null;
-	rated: 'casual' | 'rated';
-	publicity: 'public' | 'private';
 }
 
 //-------------------------------------------------------------------------------------------
 
 /**
- * Returns true if the invite is private
- */
-function isInvitePrivate(invite: Invite): boolean {
-	return invite.publicity === 'private';
-}
-
-/**
- * Returns true if the invite is public
- */
-function isInvitePublic(invite: Invite): boolean {
-	return invite.publicity === 'public';
-}
-
-/**
  * Removes sensitive data such as their browser-id.
  * Returns a deep copy of the original invite.
  */
-function makeInviteSafe(invite: Invite): SafeInvite {
+function makeInviteSafe(invite: AuthSeek): LobbySeek {
 	return {
 		id: invite.id,
-		usernamecontainer: jsutil.deepCopyObject(invite.usernamecontainer),
+		player: jsutil.deepCopyObject(invite.player),
 		tag: invite.tag,
-		variant: invite.variant,
-		clock: invite.clock,
+		variant: jsutil.deepCopyObject(invite.variant),
+		time: invite.time,
 		color: invite.color,
-		rated: invite.rated,
-		publicity: invite.publicity,
+		mode: invite.mode,
 	};
 }
 
@@ -72,7 +40,7 @@ function makeInviteSafe(invite: Invite): SafeInvite {
  * Makes a deep copy of provided invite, and
  * removes sensitive data such as their browser-id.
  */
-function safelyCopyInvite(invite: Invite): SafeInvite {
+function safelyCopyInvite(invite: AuthSeek): LobbySeek {
 	const inviteDeepCopy = jsutil.deepCopyObject(invite);
 	return makeInviteSafe(inviteDeepCopy);
 }
@@ -89,6 +57,4 @@ function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 
 //-------------------------------------------------------------------------------------------
 
-export type { Invite, SafeInvite };
-
-export { isInvitePrivate, isInvitePublic, safelyCopyInvite, memberInfoEq };
+export { safelyCopyInvite, memberInfoEq };

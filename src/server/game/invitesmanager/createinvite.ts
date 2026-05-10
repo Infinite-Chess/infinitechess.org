@@ -4,7 +4,6 @@
  * This script handles invite creation, making sure that the invites have valid properties.
  */
 
-import type { Invite } from './inviteutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Rating, ServerUsernameContainer } from '../../../shared/types.js';
 
@@ -20,6 +19,7 @@ import {
 } from '../../../shared/chess/variants/validleaderboard.js';
 
 import timecontrol from '../timecontrol.js';
+import { AuthSeek } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
@@ -94,7 +94,7 @@ function createInvite(
 	// Invite has all legal parameters!
 
 	// Check if user tries creating a rated game despite not being allowed to
-	if (invite.rated === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
+	if (invite.mode === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
 		const message = getTranslation(
 			'server.javascript.ws-rated_invite_verification_needed',
 			ws.metadata.cookies?.i18next,
@@ -119,7 +119,7 @@ function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
 	replyto?: number,
-): Invite | void {
+): AuthSeek | void {
 	// Verify their invite contains the required properties...
 
 	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
