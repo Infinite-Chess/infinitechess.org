@@ -16,6 +16,7 @@ const patch = init([attributesModule]);
 
 // Types ----------------------------------------------
 
+/** The structure for a single seek in the lobby. */
 export type LobbySeek = {
 	id: string;
 	tag?: string;
@@ -36,6 +37,7 @@ let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 // Functions ----------------------------------------------
 
+/**Formats a time control into a human-readable string. */
 function getClockLabel(clock: TimeControl): string | undefined {
 	const minutesAndIncrement = clockutil.getMinutesAndIncrementFromClock(clock);
 	if (minutesAndIncrement === null) return;
@@ -60,10 +62,12 @@ function getVariantIconId(group: VariantGroup): string {
 
 // Snabbdom Rendering ----------------------------------------------
 
+/** Patches the lobby table body with the latest seek rows. */
 function renderSeekList(seeks: LobbySeek[]): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks));
 }
 
+/** Creates the keyed snabbdom tbody vnode for the current seek list. */
 function createSeekListVNode(seeks: LobbySeek[]): VNode {
 	return h(
 		'tbody#lobby-tbody',
@@ -71,6 +75,7 @@ function createSeekListVNode(seeks: LobbySeek[]): VNode {
 	);
 }
 
+/** Builds one lobby table row vnode from a seek object. */
 function createSeekRowVNode(seek: LobbySeek): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
@@ -117,11 +122,13 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 	);
 }
 
+/** Creates the optional rating vnode shown beside usernames. */
 function createPlayerRatingVNode(rating: Rating | undefined): VNode | null {
 	if (rating === undefined) return null;
 	return h('span.elo', metadatautil.getFormattedElo(rating));
 }
 
+/** Creates the optional side (color choice) indicator dot vnode for fixed-color seeks. */
 function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 	if (color === null) return null;
 	const selector = color === players.BLACK ? 'div.side-dot.black' : 'div.side-dot';
