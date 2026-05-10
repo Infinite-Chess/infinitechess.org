@@ -1,60 +1,62 @@
 // src/client/scripts/esm/views/gameSetupModal.ts
 
+/**
+ * This script manages the game setup invite/seek creation modal.
+ */
+
 // Types ----------------------------------------------
 
-type ModalMode = 'create' | 'friend' | 'ai';
+type ModalMode = 'online' | 'friend' | 'computer';
 
 type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level' | 'data-type';
 
 // Constants ------------------------------------------
 
-const SUBMIT_LABELS: Record<ModalMode, string> = {
-	create: 'Create Game',
-	friend: 'Send Challenge',
-	ai: 'Play',
+/** Mappings from slider index to actual time control values for both time control sliders. */
+const TIME_CONTROL_SLIDER_MAPPINGS = {
+	BASE: [
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45,
+		60,
+	],
+	INCREMENT: [
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40,
+		45, 60,
+	],
 };
 
-// Non-linear slider value tables: index → actual value
-// prettier-ignore
-const MINUTE_VALUES: number[] = [
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	25, 30, 35, 40, 45,
-	60,
-];
-
-// prettier-ignore
-const INCREMENT_VALUES: number[] = [
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	25, 30, 35, 40, 45,
-	60,
-];
+/** Labels for the modal submit button based on the active mode. */
+const SUBMIT_LABELS: Record<ModalMode, string> = {
+	online: 'Create online game',
+	friend: 'Challenge a friend',
+	computer: 'Play against computer',
+};
 
 // Elements ----------------------------------------------
 
-const element_btnCreateGame = document.getElementById('btn-create-game')!;
-const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
-const element_btnPlayAi = document.getElementById('btn-play-ai')!;
-const element_modalClose = document.getElementById('modal-close')!;
 const element_modalOverlay = document.getElementById('modal-overlay')!;
+const element_modalClose = document.getElementById('modal-close')!;
 const element_modalSubmit = document.getElementById('modal-submit')!;
-const element_rowGameMode = document.getElementById('row-game-mode')!;
-const element_rowStrength = document.getElementById('row-strength')!;
-const element_sliderMinutes = document.getElementById('slider-minutes')! as HTMLInputElement;
-const element_minutesDisplay = document.getElementById('minutes-display')!;
-const element_sliderIncrement = document.getElementById('slider-increment')! as HTMLInputElement;
-const element_incrementDisplay = document.getElementById('increment-display')!;
-const element_timeSliders = document.getElementById('time-sliders')!;
+const element_btnCreateOnline = document.getElementById('btn-create-game')!;
+const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
+const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
 const element_variantPresetSection = document.getElementById('variant-preset-section')!;
 const element_variantCustomSection = document.getElementById('variant-custom-section')!;
+const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
 const element_btnPasteIcn = document.getElementById('btn-paste-icn')!;
-const element_icnInput = document.getElementById('icn-input')! as HTMLTextAreaElement;
+const element_timeSliders = document.getElementById('time-sliders')!;
+const element_sliderMinutes = document.getElementById('slider-minutes') as HTMLInputElement;
+const element_minutesDisplay = document.getElementById('minutes-display')!;
+const element_sliderIncrement = document.getElementById('slider-increment') as HTMLInputElement;
+const element_incrementDisplay = document.getElementById('increment-display')!;
 const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
+const element_rowGameMode = document.getElementById('row-game-mode')!;
+const element_rowStrength = document.getElementById('row-strength')!;
 const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTMLElement>> = {
+	'data-type': document.querySelectorAll<HTMLElement>('[data-type]'),
 	'data-time': document.querySelectorAll<HTMLElement>('[data-time]'),
 	'data-mode': document.querySelectorAll<HTMLElement>('[data-mode]'),
 	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
 	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
-	'data-type': document.querySelectorAll<HTMLElement>('[data-type]'),
 };
 
 // Initialization ----------------------------------------------
@@ -63,19 +65,11 @@ initModal();
 
 // Functions ----------------------------------------------
 
-function sliderToValue(index: number, values: number[]): number {
-	return values[Math.max(0, Math.min(values.length - 1, index))] ?? values[0]!;
-}
-
-function valueToSliderIndex(value: number, values: number[]): number {
-	const i = values.indexOf(value);
-	return i >= 0 ? i : 0;
-}
-
+/** Wires modal open/close controls and initializes all interactive sections. */
 function initModal(): void {
-	element_btnCreateGame.addEventListener('click', () => openModal('create'));
+	element_btnCreateOnline.addEventListener('click', () => openModal('online'));
 	element_btnChallengeFriend.addEventListener('click', () => openModal('friend'));
-	element_btnPlayAi.addEventListener('click', () => openModal('ai'));
+	element_btnPlayComputer.addEventListener('click', () => openModal('computer'));
 
 	element_modalClose.addEventListener('click', closeModal);
 	element_modalOverlay.addEventListener('pointerdown', (e) => {
@@ -92,30 +86,34 @@ function initModal(): void {
 	initPasteButton();
 }
 
+/** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
 	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
 
-	element_rowGameMode.classList.toggle('hidden', mode === 'ai');
-	element_rowStrength.classList.toggle('hidden', mode !== 'ai');
+	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
+	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
 
 	element_modalOverlay.classList.remove('hidden');
 
 	element_modalClose.focus();
 }
 
+/** Hides the modal. */
 function closeModal(): void {
 	element_modalOverlay.classList.add('hidden');
 }
 
+/** Connects both time sliders to their value displays. */
 function initModalSliders(): void {
 	linkSlider(element_sliderMinutes, element_minutesDisplay, (v) =>
-		String(sliderToValue(parseInt(v), MINUTE_VALUES)),
+		String(TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(v)]!),
 	);
 	linkSlider(element_sliderIncrement, element_incrementDisplay, (v) =>
-		String(sliderToValue(parseInt(v), INCREMENT_VALUES)),
+		String(TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(v)]!),
 	);
 }
 
+/** Binds slider input updates to a display formatter callback. */
 function linkSlider(
 	slider: HTMLInputElement,
 	display: HTMLElement,
@@ -127,6 +125,7 @@ function linkSlider(
 	});
 }
 
+/** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
 function initToggleGroups(): void {
 	// Each [data-time], [data-mode], [data-side], [data-level], [data-type] button is an exclusive-select group.
 	// Buttons sharing the same data-* attribute key form one group.
@@ -140,6 +139,7 @@ function initToggleGroups(): void {
 	for (const [attr, callback] of groups) {
 		element_buttonsByToggleGroup[attr].forEach((btn) => {
 			btn.addEventListener('click', () => {
+				// Keep exactly one active option per group.
 				element_buttonsByToggleGroup[attr].forEach((groupButton) =>
 					groupButton.classList.remove('active'),
 				);
@@ -150,40 +150,47 @@ function initToggleGroups(): void {
 	}
 }
 
+/** Applies a selected preset to both sliders and display labels. */
 function initPresets(): void {
 	element_presetButtons.forEach((btn) => {
 		btn.addEventListener('click', () => {
+			// Presets store literal minute/increment values, not slider indices.
 			const minutes = Number(btn.getAttribute('data-minutes'));
 			const increment = Number(btn.getAttribute('data-increment'));
-			element_sliderMinutes.value = String(valueToSliderIndex(minutes, MINUTE_VALUES));
+			element_sliderMinutes.value = String(
+				TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes),
+			);
 			element_minutesDisplay.textContent = String(minutes);
-			element_sliderIncrement.value = String(valueToSliderIndex(increment, INCREMENT_VALUES));
+			element_sliderIncrement.value = String(
+				TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT.indexOf(increment),
+			);
 			element_incrementDisplay.textContent = String(increment);
 			syncPresetHighlight();
 		});
 	});
 }
 
+/** Highlights the preset button that matches the current slider values. */
 function syncPresetHighlight(): void {
-	const currentMinutes = sliderToValue(parseInt(element_sliderMinutes.value), MINUTE_VALUES);
-	const currentIncrement = sliderToValue(
-		parseInt(element_sliderIncrement.value),
-		INCREMENT_VALUES,
-	);
+	const currentMinutes = TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!;
+	const currentIncrement =
+		TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!;
 	element_presetButtons.forEach((btn) => {
 		const match =
-			parseInt(btn.getAttribute('data-minutes') ?? '') === currentMinutes &&
-			parseInt(btn.getAttribute('data-increment') ?? '') === currentIncrement;
+			Number(btn.getAttribute('data-minutes')) === currentMinutes &&
+			Number(btn.getAttribute('data-increment')) === currentIncrement;
 		btn.classList.toggle('active', match);
 	});
 }
 
+/** Shows or hides the time slider section based on the active time mode. */
 function onTimeToggle(): void {
-	const activeBtn = document.querySelector<HTMLElement>('[data-time].active');
-	const isFinite = activeBtn?.getAttribute('data-time') === 'finite';
-	element_timeSliders.classList.toggle('hidden', !isFinite);
+	const activeBtn = document.querySelector<HTMLElement>('[data-time].active')!;
+	const isTimed = activeBtn.getAttribute('data-time') === 'timed';
+	element_timeSliders.classList.toggle('hidden', !isTimed);
 }
 
+/** Switches between preset-variant and custom-ICN inputs based on active type. */
 function onVariantTypeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-type].active');
 	const isCustom = activeBtn?.getAttribute('data-type') === 'custom';
@@ -191,6 +198,7 @@ function onVariantTypeToggle(): void {
 	element_variantCustomSection.classList.toggle('hidden', !isCustom);
 }
 
+/** Adds clipboard paste behavior for the custom ICN textarea. */
 function initPasteButton(): void {
 	element_btnPasteIcn.addEventListener('click', async () => {
 		try {
