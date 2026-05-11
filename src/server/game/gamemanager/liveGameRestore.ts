@@ -12,7 +12,7 @@
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
@@ -366,7 +366,6 @@ function reconstructMatchInfo(
 		variant: gameRow.variant as VariantCode,
 		timeCreated: gameRow.time_created,
 		timeEnded: gameRow.time_ended ?? undefined,
-		publicity: gameRow.private === 1 ? 'private' : 'public',
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,

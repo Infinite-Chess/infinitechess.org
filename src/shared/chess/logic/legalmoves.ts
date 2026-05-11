@@ -5,7 +5,7 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { VariantCode } from '../variants/variantdictionary.js';
+import type { VariantCode } from '../variants/variantregistry.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';

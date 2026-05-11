@@ -33,15 +33,15 @@ function cancelInvite(
 	// Value should be the ID of the invite to cancel!
 	const id = messageContents; // id of invite to delete
 
-	const inviteAndIndex = getInviteAndIndexByID(id); // { invite, index } | undefined
+	const inviteAndIndex = getInviteAndIndexByID(id); // { seek, index } | undefined
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
 	// The client is expecting a response from us, even if empty, so it knows to unlock the create invite button again!
 	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined, replyto);
 
-	const { invite, index } = inviteAndIndex;
+	const { seek, index } = inviteAndIndex;
 
 	// Make sure they are the owner.
-	if (!memberInfoEq(ws.metadata.memberInfo, invite.owner)) {
+	if (!memberInfoEq(ws.metadata.memberInfo, seek.owner)) {
 		console.error(
 			`Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
 		);
@@ -54,7 +54,7 @@ function cancelInvite(
 		);
 	}
 
-	deleteInviteByIndex(ws, invite, index, { replyto });
+	deleteInviteByIndex(ws, seek, index, { replyto });
 }
 
 export { cancelInvite, cancelinviteschem };

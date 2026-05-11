@@ -22,8 +22,6 @@ export interface LiveGameData {
 	clock: string;
 	/** 0 = casual, 1 = rated */
 	rated: 0 | 1;
-	/** 0 = public, 1 = private */
-	private: 0 | 1;
 	moves: string;
 	color_ticking: number | null;
 	clock_snapshot_time: number | null;
@@ -43,13 +41,13 @@ export interface LiveGameData {
 
 const INSERT_QUERY = `
 	INSERT INTO live_games (
-		game_id, time_created, variant, clock, rated, private,
+		game_id, time_created, variant, clock, rated,
 		moves, color_ticking, clock_snapshot_time,
 		draw_offer_state,
 		conclusion_condition, conclusion_victor, time_ended,
 		afk_resign_time, delete_time,
 		position_pasted, validate_moves
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
 const DELETE_QUERY = `DELETE FROM live_games WHERE game_id = ?`;
@@ -70,7 +68,6 @@ function insertLiveGame(record: LiveGamesRecord): void {
 			record.variant,
 			record.clock,
 			record.rated,
-			record.private,
 			record.moves,
 			record.color_ticking,
 			record.clock_snapshot_time,

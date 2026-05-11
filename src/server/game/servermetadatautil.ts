@@ -4,7 +4,7 @@
  * Server-side helpers for building ICN game metadata.
  */
 
-import type { VariantCode } from '../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../shared/chess/variants/variantregistry.js';
 import type { MetaData, TimeControl } from '../../shared/types.js';
 
 import uuid from '../../shared/util/uuid.js';

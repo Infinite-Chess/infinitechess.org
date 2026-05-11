@@ -8,7 +8,7 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { VariantCode } from './variantdictionary.js';
+import type { VariantCode } from './variantregistry.js';
 
 import variant from './variant.js';
 

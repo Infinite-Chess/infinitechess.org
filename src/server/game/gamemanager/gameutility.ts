@@ -9,7 +9,7 @@
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
-import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { Board, Game } from '../../../shared/chess/logic/gamefile.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -123,8 +123,6 @@ interface MatchInfo {
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. The number of milliseconds that have elapsed since the Unix epoch. @type {number | undefined} */
 	timeEnded?: number;
-	/** Whether this match is "public" or "private". */
-	publicity: 'public' | 'private';
 	/** Whether the match is rated. */
 	rated: boolean;
 	/**
@@ -197,7 +195,7 @@ function initMatch(
 
 	return {
 		id,
-		variant: invite.variant.name,
+		variant: invite.variant,
 		playerData,
 		timeCreated: Date.now(),
 		rated: invite.mode === 'rated',
@@ -327,7 +325,6 @@ function sendGameInfoToPlayer(
 		gameInfo: {
 			id: servergame.match.id,
 			rated: servergame.match.rated,
-			publicity: servergame.match.publicity,
 			playerRatings: ratings,
 		},
 		metadata: servergame.basegame.metadata,

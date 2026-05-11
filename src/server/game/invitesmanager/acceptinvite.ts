@@ -53,16 +53,16 @@ function acceptInvite(
 		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto });
 
 	// Does the invite still exist?
-	const inviteAndIndex = getInviteAndIndexByID(messageContents.id); // { invite, index }
+	const inviteAndIndex = getInviteAndIndexByID(messageContents.id); // { seek, index }
 	if (!inviteAndIndex)
 		return informThemGameAborted(ws, messageContents.isPrivate, messageContents.id, replyto);
 
-	const { invite, index } = inviteAndIndex;
+	const { seek, index } = inviteAndIndex;
 
 	const user = ws.metadata.memberInfo;
 
 	// Make sure they are not accepting their own.
-	if (memberInfoEq(user, invite.owner)) {
+	if (memberInfoEq(user, seek.owner)) {
 		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own invite!', replyto);
 		console.error(
 			`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
@@ -71,7 +71,7 @@ function acceptInvite(
 	}
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
-	if (invite.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
+	if (seek.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
 		return sendSocketMessage(
 			ws,
 			'general',
@@ -88,13 +88,13 @@ function acceptInvite(
 
 	let hadPublicInvite = false;
 	// Delete the invite accepted.
-	if (deleteInviteByIndex(ws, invite, index, { dontBroadcast: true })) hadPublicInvite = true;
+	if (deleteInviteByIndex(ws, seek, index, { dontBroadcast: true })) hadPublicInvite = true;
 	// Delete their existing invites
 	if (deleteUsersExistingInvite(user, { broadCastNewInvites: false })) hadPublicInvite = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
-	const player1Socket = findSocketFromOwner(invite.owner); // Could be undefined occasionally
+	const player1Socket = findSocketFromOwner(seek.owner); // Could be undefined occasionally
 	const player2Socket = ws;
 
 	// Assign each player a color based on their invite info. Add their socket just encase
@@ -102,8 +102,8 @@ function acceptInvite(
 	let invite_accepter: Player | undefined;
 	for (const [strcolor, identifier] of Object.entries(
 		gameutility.assignWhiteBlackPlayersFromInvite(
-			invite.color,
-			invite.owner,
+			seek.color,
+			seek.owner,
 			ws.metadata.memberInfo,
 		),
 	)) {
@@ -119,7 +119,7 @@ function acceptInvite(
 	if (invite_accepter === undefined)
 		throw Error("Invite accepter doesn't exist on accepted 2 player invite");
 
-	createGame(invite, assignments, invite_accepter, replyto);
+	createGame(seek, assignments, invite_accepter, replyto);
 
 	// Unsubscribe them both from the invites subscription list.
 	if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally
