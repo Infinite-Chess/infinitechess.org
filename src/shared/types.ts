@@ -178,13 +178,6 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 	change: z.number(),
 });
 
-/**
- * A variant group categorizes variants by alike gamerules.
- * This can be win conditions, player to move, piece movement, etc.
- */
-export type VariantGroup = z.infer<typeof VariantGroupSchema>;
-export const VariantGroupSchema = z.enum(['standard', 'horde', '4D', 'showcase', 'custom']);
-
 /** The structure for a single seek in the lobby. */
 export type LobbySeek = {
 	id: string;

@@ -1,21 +1,20 @@
-// src/shared/chess/variantgroups/group4d/fourdimensionalgenerator.ts
+// src/shared/chess/load_variants/fourdimensionalloader.ts
 
 /**
- * This script dynamically generates the positions of 4 dimensional variants
- * with varying number of boards, board sizes, and positions on each board.
- *
- * Also generates their moveset, and specialVicinity, overrides.
+ * This script dynamically generates the moveset and specialVicinity
+ * overrides of 4 dimensional variants with varying number of boards,
+ * board sizes, and positions on each board.
  */
 
-import type { Coords } from '../../util/coordutil.js';
-import type { Movesets, RawMovesets } from '../../logic/movesets.js';
+import type { Coords } from '../util/coordutil.js';
+import type { Movesets, RawMovesets } from '../logic/movesets.js';
 
-import bimath from '../../../util/math/bimath.js';
-import movesets from '../../logic/movesets.js';
-import coordutil from '../../util/coordutil.js';
-import { rawTypes as r } from '../../util/typeutil.js';
-import fourdimensionalmoves from '../../logic/fourdimensionalmoves.js';
-import gen4DPosition, { Dimensions } from '../../preview_variants/gen4DPosition.js';
+import bimath from '../../util/math/bimath.js';
+import movesets from '../logic/movesets.js';
+import coordutil from '../util/coordutil.js';
+import { rawTypes as r } from '../util/typeutil.js';
+import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
+import gen4DPosition, { Dimensions } from '../preview_variants/gen4DPosition.js';
 
 // Variables ------------------------------------------------------------------------------------------------
 
@@ -83,26 +82,14 @@ function gen4DMoveset(
 		[r.QUEEN]: {
 			individual: [],
 			sliding: {},
-			// Not needed if a worldBorder of 0n is added.
-			// ignore: (startCoords: Coords, endCoords: Coords) => {
-			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			// }
 		},
 		[r.BISHOP]: {
 			individual: [],
 			sliding: {},
-			// Not needed if a worldBorder of 0n is added.
-			// ignore: (startCoords: Coords, endCoords: Coords) => {
-			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			// }
 		},
 		[r.ROOK]: {
 			individual: [],
 			sliding: {},
-			// Not needed if a worldBorder of 0n is added.
-			// ignore: (startCoords: Coords, endCoords: Coords) => {
-			// 	return (endCoords[0] > dim!.MIN_X && endCoords[0] < dim!.MAX_X && endCoords[1] > dim!.MIN_Y && endCoords[1] < dim!.MAX_Y);
-			// }
 		},
 		[r.KING]: {
 			individual: [],

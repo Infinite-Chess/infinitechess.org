@@ -13,19 +13,14 @@ import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 import type {
 	GameRuleModifications,
-	TimeVariantProperty,
-	Variant,
-	VariantInfo,
+	VariantCode,
+	VariantRegistryEntry,
 } from '../variantgroups/variantgroups.js';
 
 import jsutil from '../../util/jsutil.js';
-import group4d from '../variantgroups/group4d/group4d.js';
 import movesets from '../logic/movesets.js';
-import grouphorde from '../variantgroups/grouphorde.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
-import groupstandard from '../variantgroups/groupstandard.js';
-import groupshowcase from '../variantgroups/groupshowcase.js';
 import variantgroups from '../variantgroups/variantgroups.js';
 import { players as p } from '../util/typeutil.js';
 import { DEFAULT_PROMOTIONS } from '../preview_variants/defaultPromotions.js';
@@ -46,28 +41,17 @@ const defaultTurnOrder = [p.WHITE, p.BLACK];
  * @param variantName - The variant string from metadata (may be an English name, code, or undefined).
  * @returns The corresponding {@link VariantCode}, or `null` if the input is not recognized.
  */
-function resolveVariantCode(variantName: string | undefined): VariantInfo | null {
+function resolveVariantCode(variantName: string | undefined): VariantCode | null {
 	if (variantName === undefined) return null;
-
-	const groups: Array<[VariantInfo['group'], Record<string, Variant>]> = [
-		['standard', groupstandard.variantDictionary],
-		['horde', grouphorde.variantDictionary],
-		['4D', group4d.variantDictionary],
-		['showcase', groupshowcase.variantDictionary],
-	];
-
 	// Direct code match
-	for (const [group, dict] of groups) {
-		if (variantName in dict) return { group, name: variantName } as VariantInfo;
-	}
-
+	if (variantName in variantgroups.VARIANT_REGISTRY) return variantName as VariantCode;
 	// Search by English display name
-	for (const [group, dict] of groups) {
-		for (const [code, variantEntry] of Object.entries(dict)) {
-			if (variantEntry.name === variantName) return { group, name: code } as VariantInfo;
-		}
+	for (const [code, variantEntry] of Object.entries(variantgroups.VARIANT_REGISTRY) as [
+		VariantCode,
+		VariantRegistryEntry,
+	][]) {
+		if (variantEntry.name === variantName) return code;
 	}
-
 	console.warn(`Variant "${variantName}" is not recognized. Treating as no variant.`);
 	return null;
 }
@@ -81,7 +65,7 @@ function resolveVariantCode(variantName: string | undefined): VariantInfo | null
  */
 function resolveAndNormalizeVariantFromMetadata(metadata: {
 	Variant?: string;
-}): VariantInfo | null {
+}): VariantCode | null {
 	if (!metadata.Variant) return null;
 	const resolved = resolveVariantCode(metadata.Variant);
 	if (resolved !== null) {
@@ -186,34 +170,6 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
  */
 function getBareMinimumGameRules(): GameRules {
 	return getGameRules({ promotionsAllowed: null, moveRule: null }); // Erase the defaults to end up with only the required's
-}
-
-/**
- * Accepts a time-variant property and a timestamp, returns the value that should be used for that point in time.
- * @param object - A time-variant property (positionString, gameruleModifications, etc.)
- * @param timestamp - The timestamp in ms since epoch to select the appropriate value.
- */
-function getApplicableTimestampEntry<Inner>(
-	object: TimeVariantProperty<Inner>,
-	timestamp: number,
-): Inner {
-	// Each of these checks are needed to determine whether ANY TimeVariantProperty has timestamp entries
-	if (typeof object !== 'object' || object === null || !object.hasOwnProperty(0)) {
-		return object as Inner;
-	}
-
-	let timeStampKeys = Object.keys(object as Object);
-
-	timeStampKeys = timeStampKeys.sort().reverse(); // [1709017200000, 0]
-	let timestampToUse: number;
-	for (const ts of timeStampKeys) {
-		const thisTimestamp = Number.parseInt(ts);
-		if (thisTimestamp <= timestamp) {
-			timestampToUse = thisTimestamp;
-			break;
-		}
-	}
-	return (object as { [timestamp: number]: Inner })[timestampToUse!]!;
 }
 
 /**
