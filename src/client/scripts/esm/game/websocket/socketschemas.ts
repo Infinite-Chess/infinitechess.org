@@ -24,11 +24,6 @@ import {
 	TimeControlSchema,
 } from '../../../../../shared/types.js';
 
-// Common Helper Schemas ---------------------------------------------------------------
-
-/** The publicity of a game/invite. */
-const PublicitySchema = z.enum(['public', 'private']);
-
 // Invite Helper Schemas ---------------------------------------------------------------
 
 /** The invite object. NOT an HTML object. */
@@ -46,8 +41,6 @@ const InviteSchema = z.strictObject({
 	clock: TimeControlSchema,
 	/** The player color (null = Random). */
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
-	/** Whether the game is public or private. */
-	publicity: PublicitySchema,
 	/** Whether the game is rated or casual. */
 	mode: z.enum(['casual', 'rated']),
 });
@@ -66,7 +59,6 @@ const ServerGameInfoSchema = z.strictObject({
 	/** The id of the online game. */
 	id: GameIDSchema,
 	rated: z.boolean(),
-	publicity: PublicitySchema,
 	playerRatings: typeschemas.GenPlayerGroupSchema(RatingSchema),
 });
 

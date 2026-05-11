@@ -21,7 +21,6 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
-import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
@@ -128,7 +127,6 @@ function handleOpponentsMove(
 		if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
 
 		onlinegame.onMovePlayed({ isOpponents: true });
-		guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
 		return true; // Good to physically play next premove
 	});
@@ -155,13 +153,7 @@ function checkAndReportIllegalOpponentMove(
 		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
 	);
 
-	if (
-		!isGameInstantlyDeleted(
-			gamefile.boardsim.variant,
-			gamefile.basegame.dateTimestamp,
-			onlinegame.getIsPrivate(),
-		)
-	) {
+	if (!isGameInstantlyDeleted(gamefile.boardsim.variant, gamefile.basegame.dateTimestamp)) {
 		onlinegame.reportOpponentsMove(moveValidationResult.reason);
 		return true;
 	}

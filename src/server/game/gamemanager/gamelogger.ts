@@ -211,7 +211,7 @@ function addGameRecordsInTransaction(
 		match.variant,
 		match.rated ? 1 : 0,
 		VariantLeaderboards[match.variant] ?? null,
-		match.publicity === 'private' ? 1 : 0,
+		0, // All matches are considered public for now, even "Challenge a friend" games.
 		basegame.metadata.Result!,
 		termination,
 		basegame.moves.length,
@@ -272,7 +272,6 @@ function updateAllPlayerStatsInTransaction(
 			moves_played_increment: playerMoveCounts[player]!,
 			outcome: victor === undefined ? 'aborted' : victor === player ? "wins" : victor === null ? "draws" : "losses",
 			is_rated: match.rated,
-			publicity: match.publicity,
 		});
 	}
 }
@@ -290,7 +289,6 @@ function updateSinglePlayerStatsInTransaction(
 		moves_played_increment: number;
 		outcome: 'wins' | 'losses' | 'draws' | 'aborted';
 		is_rated: boolean;
-		publicity: 'public' | 'private';
 	},
 ): void {
 	// Start building the list of columns to update and the values for them.
@@ -306,10 +304,8 @@ function updateSinglePlayerStatsInTransaction(
 		setClauses.push(`game_count_${ratedString} = game_count_${ratedString} + 1`);
 
 		// Increment the correct public/private counter.
-		// This is safe because `statsToUpdate.publicity` can only be 'public' or 'private'.
-		setClauses.push(
-			`game_count_${statsToUpdate.publicity} = game_count_${statsToUpdate.publicity} + 1`,
-		);
+		const publicity: 'public' | 'private' = 'public'; // All games are considered public for now, even "Challenge a friend" games.
+		setClauses.push(`game_count_${publicity} = game_count_${publicity} + 1`);
 
 		// Increment the correct win/loss/draw counter.
 		setClauses.push(

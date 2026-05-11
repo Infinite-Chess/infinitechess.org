@@ -77,13 +77,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 
 /** Sends a client a game from the database. */
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
-	const logged_game_info = getGameData(gameID, [
-		'game_id',
-		'rated',
-		'private',
-		'termination',
-		'icn',
-	]);
+	const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'termination', 'icn']);
 	if (!logged_game_info) {
 		// This happens if the user requests a game that was aborted before
 		// any moves were made, as those games are not stored in the database.

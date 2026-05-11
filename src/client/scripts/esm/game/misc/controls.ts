@@ -16,8 +16,8 @@ import toast from '../gui/toast.js';
 import stats from '../gui/stats.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
+import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
-import guipause from '../gui/guipause.js';
 import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
@@ -69,8 +69,6 @@ const wheelMultiplier = 0.015; // Default: 0.015
 
 // Called from game.updateBoard()
 function updateNavControls(): void {
-	if (guipause.areWePaused()) return; // Exit if paused
-
 	updatePerspectiveRotation();
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
@@ -246,9 +244,6 @@ function testOutGameToggles(): void {
 
 /** Debug toggles that are only for in a game. */
 function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
-	if (listener_document.isKeyDown('Escape')) guipause.toggle();
-
-	if (listener_document.isKeyDown('Digit1')) selection.toggleEditMode(); // EDIT MODE TOGGLE
 	if (listener_document.isKeyDown('Digit2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
@@ -257,7 +252,7 @@ function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit5')) copygame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
 	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
-	if (listener_document.isKeyDown('Tab')) guipause.callback_ToggleArrows();
+	if (listener_document.isKeyDown('Tab')) arrows.toggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile.boardsim, mesh);
 		toast.show('Regenerated piece models.', { durationMultiplier: 0.5 });

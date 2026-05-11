@@ -68,7 +68,6 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 
 | Column            | Type                                                         | Notes                                                                                                            |
 | ----------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `position_pasted` | BOOLEAN NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)) | Whether a custom position was pasted. Pasted games are never logged to the permanent `games` table.              |
 | `validate_moves`  | BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))  | Whether server-side move validation is active (`boardsim` is defined). Set to 0 when a position is pasted.       |
 
 ---
@@ -115,5 +114,4 @@ One row per player per live game.
 | **Player goes AFK**         | `afk_resign_time`                                                                                                | —                                                                                                    |
 | **Player returns from AFK** | `afk_resign_time` → NULL                                                                                         | —                                                                                                    |
 | **AFK auto-resign**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `afk_resign_time` → NULL, `delete_time`               | —                                                                                                    |
-| **Position pasted**         | `position_pasted`, `validate_moves` → 0                                                                         | —                                                                                                    |
 | **Game deleted/logged**     | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                    |

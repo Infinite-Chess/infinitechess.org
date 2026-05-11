@@ -14,7 +14,6 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
-import IndexedDB from '../../../util/IndexedDB.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
@@ -30,11 +29,6 @@ let inOnlineGame: boolean = false;
 
 /** The id of the online game we are in, if we are in one. */
 let id: number | undefined;
-
-/**
- * Whether the game is a private one (joined from an invite code).
- */
-let isPrivate: boolean | undefined;
 
 /**
  * Whether the game is rated.
@@ -82,7 +76,6 @@ GameBus.addEventListener('game-concluded', () => {
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
 	afk.onGameClose();
 	tabnameflash.onGameClose();
-	deleteCustomVariantOptions();
 	drawoffers.onGameClose();
 	requestRemovalFromPlayersInActiveGames();
 });
@@ -98,12 +91,6 @@ function getGameID(): number {
 	if (!inOnlineGame)
 		throw Error("Cannot get id of online game when we're not in an online game.");
 	return id!;
-}
-
-function getIsPrivate(): boolean {
-	if (!inOnlineGame)
-		throw Error("Cannot get isPrivate of online game when we're not in an online game.");
-	return isPrivate!;
 }
 
 function isRated(): boolean {
@@ -193,7 +180,6 @@ function initOnlineGame(options: {
 	// Set static game properties that never change
 	id = options.gameInfo.id;
 	rated = options.gameInfo.rated;
-	isPrivate = options.gameInfo.publicity === 'private';
 	playerRatings = options.gameInfo.playerRatings;
 
 	ourColor = options.youAreColor;
@@ -230,7 +216,6 @@ function set_DrawOffers_DisconnectInfo_AutoAFKResign(participantState?: Particip
 function closeOnlineGame(): void {
 	inOnlineGame = false;
 	id = undefined;
-	isPrivate = undefined;
 	rated = undefined;
 	ourColor = undefined;
 	inSync = undefined;
@@ -358,14 +343,6 @@ function onMainMenuButtonPress(): void {
 	socketsubs.unsubFromSub('game');
 }
 
-function deleteCustomVariantOptions(): void {
-	// Delete any custom pasted position in a private game.
-	if (isPrivate) {
-		const storageKey = getKeyForOnlineGameVariantOptions(id!);
-		IndexedDB.deleteItem(storageKey);
-	}
-}
-
 /**
  * Lets the server know we have seen the game conclusion, and would
  * like to be allowed to join a new game if we leave quickly.
@@ -384,7 +361,7 @@ function requestRemovalFromPlayersInActiveGames(): void {
 
 	// Don't send this request if the server will have deleted this game instantly.
 	const { basegame, boardsim } = gameslot.getGamefile()!;
-	if (isGameInstantlyDeleted(boardsim.variant, basegame.dateTimestamp, isPrivate!)) return;
+	if (isGameInstantlyDeleted(boardsim.variant, basegame.dateTimestamp)) return;
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
@@ -419,20 +396,11 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	return clockValues;
 }
 
-/**
- * Returns the key that's put in local storage to store the variant options
- * of the current online game, if we have pasted a position in a private match.
- */
-function getKeyForOnlineGameVariantOptions(gameID: number): string {
-	return `online-game-variant-options${gameID}`;
-}
-
 // Exports -------------------------------------------------------------------------
 
 export default {
 	onmessage,
 	getGameID,
-	getIsPrivate,
 	isRated,
 	doWeHaveRole,
 	getOurColor,
@@ -454,5 +422,4 @@ export default {
 	areInOnlineGame,
 	areWeColorInOnlineGame,
 	adjustClockValuesForPing,
-	getKeyForOnlineGameVariantOptions,
 };

@@ -19,7 +19,6 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 
 import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
-import guipause from '../../gui/guipause.js';
 import snapping from './snapping.js';
 import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
@@ -95,7 +94,7 @@ function getSquares(): Coords[] {
 
 /** [Zoomed out] Renders the individual legal move hint squares as green entity squares. */
 function render(): void {
-	if (individualMoves.length === 0 || !boardpos.areZoomedOut() || guipause.areWePaused()) return;
+	if (individualMoves.length === 0 || !boardpos.areZoomedOut()) return;
 
 	const color: Color = preferences.getLegalMoveHighlightColor({
 		isOpponentPiece: false,

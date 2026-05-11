@@ -13,7 +13,6 @@ import type { DrawOfferInfo } from '../../../../../../shared/types.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import toast from '../../gui/toast.js';
-import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
@@ -76,7 +75,6 @@ function onOpponentExtendedOffer(): void {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
 	gamesound.playBase();
-	guipause.updateDrawOfferButton();
 }
 
 /** Is called when our opponent declines our draw offer */
@@ -93,7 +91,6 @@ function extendOffer(): void {
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
 	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
-	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -104,7 +101,6 @@ function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
 	socketmessages.send('game', 'acceptdraw');
 	guidrawoffer.close();
-	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -159,7 +155,6 @@ function onGameClose(): void {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
 	guidrawoffer.close();
-	guipause.updateDrawOfferButton();
 }
 
 export default {

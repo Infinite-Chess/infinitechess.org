@@ -194,8 +194,6 @@ function changePlayMode(mode: typeof modeSelected): void {
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.remove('hidden');
 		element_optionCardPrivate.classList.remove('hidden');
-		// Patches bugs on some browsers where invite creations are sometimes sent with a blank "" private field.
-		if (!element_optionPrivate.value) element_optionPrivate.value = 'public';
 		const localStorageClock = LocalStorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex =
@@ -336,7 +334,6 @@ function getInviteOptions(): InviteOptions {
 		variant: selectedVariant,
 		clock: element_optionClock.value as TimeControl,
 		color,
-		private: element_optionPrivate.value as 'public' | 'private',
 		rated: element_optionRated.value as 'casual' | 'rated',
 	};
 }
@@ -368,13 +365,8 @@ function callback_updateOptions(): void {
 	const variantValue = element_optionVariant.value;
 	const clockValue = element_optionClock.value;
 	const colorValue = element_optionColor.value;
-	const privateValue = element_optionPrivate.value;
 	// conditions for enabling Rated games:
-	if (
-		variantValue in VariantLeaderboards &&
-		clockValue !== '-' &&
-		(colorValue === 'Random' || privateValue === 'private')
-	) {
+	if (variantValue in VariantLeaderboards && clockValue !== '-' && colorValue === 'Random') {
 		element_optionRatedYes.disabled = false;
 	} else {
 		element_optionRated.value = 'casual';

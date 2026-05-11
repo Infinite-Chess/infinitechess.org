@@ -69,7 +69,7 @@ function createInvite(
 	messageContents: CreateInviteMessage,
 	replyto?: number,
 ): void {
-	// invite: { id, owner, variant, clock, color, rated, publicity }
+	// invite: { id, owner, variant, clock, color, rated }
 	if (isSocketInAnActiveGame(ws))
 		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
 
@@ -137,7 +137,6 @@ function getInviteFromWebsocketMessageContents(
 	 * clock
 	 * color
 	 * rated
-	 * publicity
 	 * tag
 	 *
 	 * We further need to manually add the properties:

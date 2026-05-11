@@ -6,8 +6,6 @@
  * Centralized here to avoid circular dependency issues.
  */
 
-import type { VariantInfo } from './chess/variants/variantregistry.js';
-
 import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';

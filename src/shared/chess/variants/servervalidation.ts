@@ -42,6 +42,8 @@ function doesVariantSupportServerValidation(
 }
 
 /**
+ * DELETE UNNECESSARY WRAPPER once the `private` game flag has been unused for a while.
+ *
  * Returns `true` if the game is deleted instantly on conclusion — meaning the server
  * either validated every move (cheating is impossible) or it's a private game (cheat
  * reports are not allowed). In both cases:
@@ -52,12 +54,8 @@ function doesVariantSupportServerValidation(
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param isPrivate - Whether the game is a private match.
  */
-function isGameInstantlyDeleted(
-	variantCode: VariantCode | null,
-	timestamp: number,
-	isPrivate: boolean,
-): boolean {
-	return isPrivate || doesVariantSupportServerValidation(variantCode, timestamp);
+function isGameInstantlyDeleted(variantCode: VariantCode | null, timestamp: number): boolean {
+	return doesVariantSupportServerValidation(variantCode, timestamp);
 }
 
 export { doesVariantSupportServerValidation, isGameInstantlyDeleted };

@@ -365,7 +365,7 @@ function premoveIsLegal(
 		color,
 	);
 
-	if (isLegal || selection.getEditMode()) return { legal: true, endCoordsTagged };
+	if (isLegal) return { legal: true, endCoordsTagged };
 	else return { legal: false };
 }
 

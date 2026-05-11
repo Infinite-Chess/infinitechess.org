@@ -31,7 +31,6 @@ export interface InviteOptions {
 	variant: VariantCode;
 	clock: TimeControl;
 	color: Player | null;
-	private: 'public' | 'private';
 	rated: 'casual' | 'rated';
 }
 
@@ -110,7 +109,6 @@ function create(variantOptions: InviteOptions): void {
 		variant: variantOptions.variant,
 		clock: variantOptions.clock,
 		color: variantOptions.color,
-		publicity: variantOptions.private, // Only the `private` property is changed to `publicity`
 		rated: variantOptions.rated,
 	};
 
@@ -149,7 +147,6 @@ function generateTagForInvite(inviteOptions: {
 	variant: string;
 	clock: TimeControl;
 	color: Player | null;
-	publicity: 'public' | 'private';
 	rated: 'casual' | 'rated';
 	tag?: string;
 }): void {
@@ -175,10 +172,9 @@ function updateInviteList(list: Invite[]): void {
 
 	// Append latest invites to the document and re-init event listeners.
 	let foundOurs = false;
-	let privateInviteID: string | undefined = undefined;
 	ourInviteID = undefined;
 	for (let i = 0; i < list.length; i++) {
-		// { usernamecontainer, variant, clock, color, publicity }
+		// { usernamecontainer, variant, clock, color }
 		const invite = list[i]!;
 
 		// Is this our own invite?
@@ -193,10 +189,7 @@ function updateInviteList(list: Invite[]): void {
 		}
 
 		const classes = ['invite', 'button', 'unselectable'];
-		const isPrivate = invite.publicity === 'private';
-		if (isPrivate) privateInviteID = invite.id;
-		if (ours && !isPrivate) classes.push('ours');
-		else if (ours && isPrivate) classes.push('private');
+		if (ours) classes.push('ours');
 
 		const newInvite = createDiv(classes, undefined, invite.id);
 
@@ -253,7 +246,6 @@ function updateInviteList(list: Invite[]): void {
 
 	weHaveInvite = foundOurs;
 	updateCreateInviteButton();
-	updatePrivateInviteCode(privateInviteID);
 
 	guiplay.initListeners_Invites();
 
@@ -355,7 +347,6 @@ function getInviteFromElement(inviteElement: HTMLElement): Invite {
 		variant: inviteElement.children[1]!.textContent,
 		clock: inviteElement.children[2]!.textContent as TimeControl,
 		color: Number(inviteElement.children[3]!.textContent) as Player,
-		publicity: inviteElement.children[4]!.textContent as 'public' | 'private',
 		mode: inviteElement.children[5]!.textContent as 'casual' | 'rated',
 		id,
 	};
@@ -403,34 +394,6 @@ function updateCreateInviteButton(): void {
 	if (weHaveInvite)
 		guiplay.setElement_CreateInviteTextContent(translations.invites.cancel_invite);
 	else guiplay.setElement_CreateInviteTextContent(translations.invites.create_invite);
-}
-
-function updatePrivateInviteCode(privateInviteID: string | undefined): void {
-	// If undefined, we know we don't have a "private" invite
-	if (guiplay.getModeSelected() === 'local') return;
-
-	if (!weHaveInvite) {
-		guiplay.showElement_joinPrivate();
-		guiplay.hideElement_inviteCode();
-		return;
-	}
-
-	// We have an invite...
-
-	// If the classlist of our private invite contains a "private" property of "private",
-	// then display our invite code text!
-
-	if (privateInviteID) {
-		guiplay.hideElement_joinPrivate();
-		guiplay.showElement_inviteCode();
-		element_inviteCodeCode.textContent = privateInviteID.toUpperCase();
-		return;
-	}
-
-	// Else our invite is NOT private, only show the "Private Invite:" display.
-
-	guiplay.showElement_joinPrivate();
-	guiplay.hideElement_inviteCode();
 }
 
 function updateActiveGameCount(newCount: number): void {

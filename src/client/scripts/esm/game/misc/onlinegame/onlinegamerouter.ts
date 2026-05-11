@@ -37,7 +37,6 @@ import clientmetadatautil from '../../chess/clientmetadatautil.js';
 type LoggedGameInfo = {
 	game_id: number;
 	rated: 0 | 1;
-	private: 0 | 1;
 	termination: string;
 	icn: string;
 };
@@ -203,7 +202,6 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 		gameInfo: {
 			id: message.game_id,
 			rated: Boolean(message.rated),
-			publicity: message.private ? 'private' : 'public',
 			playerRatings,
 		},
 		metadata: parsedGame.metadata,

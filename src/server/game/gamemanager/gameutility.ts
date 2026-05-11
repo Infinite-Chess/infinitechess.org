@@ -150,13 +150,6 @@ interface MatchInfo {
 	/** The ID of the timer to delete the match after it has ended.
 	 * This can be used to cancel it in case a hacking was reported. */
 	deleteTimeoutID?: ReturnType<typeof setTimeout>;
-
-	/**
-	 * Whether a custom position was pasted in by either player.
-	 * The game will NOT be logged, because it will crash if we try
-	 * to paste it since we don't know the starting position.
-	 */
-	positionPasted: boolean;
 }
 
 /** The game stored in the server */
@@ -200,7 +193,6 @@ function initMatch(
 		timeCreated: Date.now(),
 		rated: invite.mode === 'rated',
 		clock: invite.time,
-		positionPasted: false,
 	};
 }
 
@@ -221,7 +213,7 @@ function assignWhiteBlackPlayersFromInvite(
 	player1: AuthMemberInfo,
 	player2: AuthMemberInfo,
 ): PlayerGroup<AuthMemberInfo> {
-	// { id, owner, variant, clock, color, rated, publicity }
+	// { id, owner, variant, clock, color, rated }
 	const colorData: PlayerGroup<AuthMemberInfo> = {};
 	if (inviteColor === p.WHITE) {
 		colorData[p.WHITE] = player1;

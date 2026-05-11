@@ -121,7 +121,7 @@ function onGameCreated(servergame: ServerGame): void {
 		variant: match.variant,
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
-		private: match.publicity === 'private' ? 1 : 0,
+		private: 0, // All games are public for now, even "Challenge a friend" games.
 		moves: '',
 		color_ticking: null,
 		clock_snapshot_time: null,
@@ -131,7 +131,6 @@ function onGameCreated(servergame: ServerGame): void {
 		time_ended: null,
 		afk_resign_time: null,
 		delete_time: null,
-		position_pasted: 0,
 		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
 	};
 
@@ -257,16 +256,6 @@ function onPlayerAFKReturn(servergame: ServerGame): void {
 }
 
 /**
- * Called when a position is pasted. Sets position_pasted and clears validate_moves.
- */
-function onPositionPasted(servergame: ServerGame): void {
-	updateLiveGame(servergame.match.id, {
-		position_pasted: 1,
-		validate_moves: 0,
-	});
-}
-
-/**
  * Called when a game is fully deleted/logged. Removes the live game from the database.
  */
 function onGameDeleted(game_id: number): void {
@@ -286,6 +275,5 @@ export default {
 	onPlayerReconnected,
 	onPlayerAFK,
 	onPlayerAFKReturn,
-	onPositionPasted,
 	onGameDeleted,
 };

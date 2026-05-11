@@ -13,7 +13,6 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
 import variant from '../../../../../shared/chess/variants/variant.js';
-import timeutil from '../../../../../shared/util/timeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
@@ -22,12 +21,8 @@ import icnconverter, {
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
-import IndexedDB from '../../util/IndexedDB.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import enginegame from '../misc/enginegame.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import socketmessages from '../websocket/socketmessages.js';
 import clientmetadatautil from './clientmetadatautil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
@@ -61,27 +56,10 @@ const retainIfNotOverridden: MetadataKey[] = ['UTCDate', 'UTCTime'];
 async function callbackPaste(_event: Event): Promise<void> {
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
-	if (document.activeElement instanceof HTMLInputElement) return; // Don't paste if the user is typing in an input field
-
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
 	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
 
-	// Make sure we're not in a public match
-	if (onlinegame.areInOnlineGame()) {
-		if (!onlinegame.getIsPrivate())
-			return toast.show(translations.copypaste.cannot_paste_in_public);
-		if (onlinegame.isRated()) return toast.show(translations.copypaste.cannot_paste_in_rated);
-	}
-	// Make sure we're not in an engine match
-	if (enginegame.areInEngineGame())
-		return toast.show(translations.copypaste.cannot_paste_in_engine);
-	// Make sure it's legal in a private match
-	if (
-		onlinegame.areInOnlineGame() &&
-		onlinegame.getIsPrivate() &&
-		gameslot.getGamefile()!.boardsim.moves.length > 0
-	)
-		return toast.show(translations.copypaste.cannot_paste_after_moves);
+	console.error('Pasting games is no longer supported');
 
 	// Do we have clipboard permission?
 	let clipboard: string;
@@ -105,10 +83,6 @@ async function callbackPaste(_event: Event): Promise<void> {
 	// console.log(jsutil.deepCopyObject(longformOut));
 
 	pasteGame(longformOut);
-
-	// Let the server know if we pasted a custom position in a private match
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate())
-		socketmessages.send('game', 'paste');
 }
 
 /**
@@ -174,21 +148,6 @@ function pasteGame(longformOut: LongFormatOut): void {
 		},
 	};
 
-	if (onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()) {
-		// Playing a custom private game! Save the pasted position in browser
-		// storage so that we can remember it upon refreshing.
-		const gameID = onlinegame.getGameID();
-		const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(gameID);
-		const expiryMillis = timeutil.getTotalMilliseconds({ days: 3 });
-		IndexedDB.saveItem(storageKey, variantOptions, expiryMillis);
-	}
-
-	// What is the warning message if pasting in a private match?
-	const privateMatchWarning: string =
-		onlinegame.areInOnlineGame() && onlinegame.getIsPrivate()
-			? ` ${translations.copypaste.pasting_in_private}`
-			: '';
-
 	const additional: Additional = { variantOptions };
 	if (longformOut.moves) {
 		// Trim the excess properties from the MoveParsed type, including the comment.
@@ -224,12 +183,12 @@ function pasteGame(longformOut: LongFormatOut): void {
 		if (pieceCount >= pieceCountToDisableCheckmate) {
 			// TOO MANY pieces!
 			toast.show(
-				`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}${privateMatchWarning}`,
+				`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}`,
 				{ durationMultiplier: 1.5 },
 			);
 		} else {
 			// Only print "Loaded game from clipboard." if we haven't already shown a different toast cause of too many pieces
-			toast.show(`${translations.copypaste.loaded_from_clipboard}${privateMatchWarning}`);
+			toast.show(`${translations.copypaste.loaded_from_clipboard}`);
 		}
 	});
 

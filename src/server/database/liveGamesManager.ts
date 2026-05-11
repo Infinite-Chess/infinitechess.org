@@ -22,6 +22,8 @@ export interface LiveGameData {
 	clock: string;
 	/** 0 = casual, 1 = rated */
 	rated: 0 | 1;
+	/** 0 = public, 1 = private */
+	private: 0 | 1;
 	moves: string;
 	color_ticking: number | null;
 	clock_snapshot_time: number | null;
@@ -32,8 +34,6 @@ export interface LiveGameData {
 	afk_resign_time: number | null;
 	delete_time: number | null;
 	/** 0 = false, 1 = true */
-	position_pasted: 0 | 1;
-	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
 }
 
@@ -41,12 +41,12 @@ export interface LiveGameData {
 
 const INSERT_QUERY = `
 	INSERT INTO live_games (
-		game_id, time_created, variant, clock, rated,
+		game_id, time_created, variant, clock, rated, private,
 		moves, color_ticking, clock_snapshot_time,
 		draw_offer_state,
 		conclusion_condition, conclusion_victor, time_ended,
 		afk_resign_time, delete_time,
-		position_pasted, validate_moves
+		validate_moves
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
@@ -68,6 +68,7 @@ function insertLiveGame(record: LiveGamesRecord): void {
 			record.variant,
 			record.clock,
 			record.rated,
+			record.private,
 			record.moves,
 			record.color_ticking,
 			record.clock_snapshot_time,
@@ -77,7 +78,6 @@ function insertLiveGame(record: LiveGamesRecord): void {
 			record.time_ended,
 			record.afk_resign_time,
 			record.delete_time,
-			record.position_pasted,
 			record.validate_moves,
 		]);
 	} catch (error: unknown) {

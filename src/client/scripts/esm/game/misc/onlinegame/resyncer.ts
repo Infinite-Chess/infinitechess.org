@@ -25,7 +25,6 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 
 import gameslot from '../../chess/gameslot.js';
 import premoves from '../../chess/premoves.js';
-import guipause from '../../gui/guipause.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import movesequence from '../../chess/movesequence.js';
@@ -185,7 +184,6 @@ function synchronizeMovesList(
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
 			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
-			if (isOpponentMove) guipause.onReceiveOpponentsMove(); // Update the pause screen buttons
 
 			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;

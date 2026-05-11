@@ -22,12 +22,10 @@ import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil.js
 import { rawTypes as r, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import mouse from '../../util/mouse.js';
-import toast from '../gui/toast.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import config from '../config.js';
 import camera from '../rendering/camera.js';
-import guipause from '../gui/guipause.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
@@ -35,8 +33,6 @@ import keybinds from '../misc/keybinds.js';
 import { Mouse } from '../input.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import gameloader from './gameloader.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
-import enginegame from '../misc/enginegame.js';
 import Transition from '../rendering/transitions/Transition.js';
 import normaltool from '../boardeditor/tools/normaltool.js';
 import preferences from '../../components/header/preferences.js';
@@ -48,7 +44,7 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
-import { listener_document, listener_overlay } from './game.js';
+import { listener_overlay } from './game.js';
 
 // Variables -----------------------------------------------------------------------------
 
@@ -74,19 +70,12 @@ let pawnIsPromotingOn: CoordsTagged | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
 let promoteTo: number | undefined;
 
-/**
- * When enabled, allows moving pieces anywhere else on the board, disregarding whether it's legal.
- * Special tags however will still only be transferred if the destination is legal.
- */
-let editMode = false; // editMode, allows moving pieces anywhere else on the board!
-
 // Events ----------------------------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
 	unselectPiece();
 });
 GameBus.addEventListener('game-unloaded', () => {
-	disableEditMode();
 	unselectPiece();
 });
 
@@ -130,34 +119,6 @@ function promoteToType(type: number): void {
 	promoteTo = type;
 }
 
-function getEditMode(): boolean {
-	return editMode;
-}
-
-// Toggles EDIT MODE! editMode
-// Called when '1' is pressed!
-function toggleEditMode(): void {
-	// Make sure it's legal
-	const legalInPrivate =
-		onlinegame.areInOnlineGame() &&
-		onlinegame.getIsPrivate() &&
-		listener_document.isKeyHeld('Digit0');
-	if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
-	if (enginegame.areInEngineGame()) return; // Don't toggle if in an engine game
-	if (boardeditor.areInBoardEditor()) return; // Don't toggle if in board editor
-
-	editMode = !editMode;
-	toast.show(`Toggled Edit Mode: ${editMode}`);
-}
-
-function disableEditMode(): void {
-	editMode = false;
-}
-
-function enableEditMode(): void {
-	editMode = true;
-}
-
 // Updating ---------------------------------------------------------------------------------------------
 
 /** Tests if we have selected a piece, or moved the currently selected piece. */
@@ -176,7 +137,6 @@ function update(): void {
 	if (
 		boardpos.areZoomedOut() ||
 		gamefileutility.isGameOver(gamefile.basegame) ||
-		guipause.areWePaused() ||
 		camera.isLookingUp()
 	) {
 		// We might be zoomed way out.
@@ -241,15 +201,6 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 	);
 	hoverSquareLegal =
 		(legal && canMovePieceType(pieceSelected!.type)) ||
-		(editMode &&
-			legalmoves.testSquareValidity(
-				gamefile.boardsim,
-				gamefile.basegame.gameRules.worldBorder,
-				hoverSquare,
-				colorOfSelectedPiece,
-				false,
-				false,
-			) <= 1) ||
 		(boardeditor.areInBoardEditor() &&
 			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
 			(gamefile.basegame.gameRules.worldBorder === undefined ||
@@ -373,7 +324,6 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (boardeditor.areInBoardEditor()) return dragEnabled ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
 	const [raw, player] = typeutil.splitType(type);
 	if (raw === r.VOID) return 0; // Can't select voids
-	if (editMode && gameloader.areInLocalGame()) return dragEnabled ? 2 : 1; // Edit mode allows any piece besides voids to be selected and dragged in local games.
 	if (player === p.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	// It is our piece type...
@@ -386,7 +336,6 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  */
 function canMovePieceType(pieceType: number): boolean {
-	if (editMode) return true; // Edit mode allows pieces to be moved on any turn.
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	// It is our piece type...
@@ -634,10 +583,6 @@ export default {
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,
 	getSquarePawnIsCurrentlyPromotingOn,
-	getEditMode,
-	toggleEditMode,
-	disableEditMode,
-	enableEditMode,
 	promoteToType,
 	update,
 	renderGhostPiece,

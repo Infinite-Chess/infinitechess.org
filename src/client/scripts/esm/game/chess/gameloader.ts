@@ -37,7 +37,6 @@ import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
-import IndexedDB from '../../util/IndexedDB.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
@@ -195,10 +194,8 @@ async function startOnlineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: await IndexedDB.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,

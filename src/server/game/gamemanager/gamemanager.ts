@@ -73,7 +73,7 @@ const activeGames: Record<number, ServerGame> = {};
 /**
  * Creates the `ServerGame` object and subscibes each player to the game
  * Auto-subscribes the players to receive game updates.
- * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
+ * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
  * @param actingPlayer - The color of the player that started the game and sent the socket message
  * @param replyto - The ID of the incoming socket message of the player that started the game. This is used for the `replyto` property on our response.
@@ -408,15 +408,8 @@ function teardownGame(servergame: ServerGame): void {
 		gameutility.broadcastGameUpdate(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (
-		isGameInstantlyDeleted(
-			servergame.match.variant,
-			servergame.basegame.dateTimestamp,
-			servergame.match.publicity === 'private',
-		)
-	) {
-		// Server validated every move — cheating is impossible,
-		// OR we disallow cheat reports (private game).
+	if (isGameInstantlyDeleted(servergame.match.variant, servergame.basegame.dateTimestamp)) {
+		// Server validated every move — cheating is impossible.
 		// We can log and unsubscribe clients immediately.
 		deleteGame(servergame);
 	} else {
@@ -505,26 +498,20 @@ function deleteGame(servergame: ServerGame): void {
 	// Remove the live game from the persistence database.
 	liveGameValues.onGameDeleted(servergame.match.id);
 
-	// If the pastedGame flag is present, skip logging to the database.
-	// We don't know the starting position.
-	if (servergame.match.positionPasted) {
-		// console.log('Skipping logging custom game.');
-	} else {
-		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-		// The ratings are calculated during the logging of the game into the database
-		const ratingdata = gamelogger.logGame(servergame);
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The ratings are calculated during the logging of the game into the database
+	const ratingdata = gamelogger.logGame(servergame);
 
-		// Mostly deprecated:
-		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-		executeSafely(
-			() => statlogger.logGame(servergame),
-			`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
-		);
+	// Mostly deprecated:
+	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+	executeSafely(
+		() => statlogger.logGame(servergame),
+		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
+	);
 
-		// Send rating changes to all players of game, if relevant
-		if (ratingdata !== undefined)
-			gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
-	}
+	// Send rating changes to all players of game, if relevant
+	if (ratingdata !== undefined)
+		gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.

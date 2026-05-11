@@ -28,7 +28,6 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
 import meshes from '../meshes.js';
-import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
@@ -171,7 +170,6 @@ function teleportToEntitiesIfClicked(): void {
 /** We do not snap when zoomed in. */
 function isSnappingEnabledThisFrame(): boolean {
 	if (!boardpos.areZoomedOut()) return false;
-	if (guipause.areWePaused()) return false;
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return false;
 
 	return true;

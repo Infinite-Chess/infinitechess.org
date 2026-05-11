@@ -104,12 +104,7 @@ function updateAFK(): void {
 function rescheduleAlertServerWeAFK(): void {
 	clearTimeout(timeoutID);
 	const { basegame } = gameslot.getGamefile()!;
-	if (
-		!onlinegame.isItOurTurn() ||
-		gamefileutility.isGameOver(basegame) ||
-		(onlinegame.getIsPrivate() && basegame.untimed)
-	)
-		return;
+	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(basegame)) return;
 	// Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
 	if (!basegame.untimed && moveutil.isGameResignable(basegame)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer

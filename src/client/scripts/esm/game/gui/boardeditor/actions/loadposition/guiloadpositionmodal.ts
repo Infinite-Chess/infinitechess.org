@@ -5,7 +5,6 @@
  * Accepts a generic onConfirm callback so it stays decoupled from the list and save-form modules.
  */
 
-import guipause from '../../../guipause';
 import { listener_document } from '../../../../chess/game';
 
 // Types -------------------------------------------------------------------------
@@ -101,8 +100,6 @@ function onModalKeyDown(e: KeyboardEvent): void {
 		e.preventDefault(); // Prevent browser from firing a synthetic click on the focused "Save" button
 		onModalYesButtonPress();
 	} else if (e.key === 'Escape') {
-		// Ensure priority when deciding who gets the escape key event
-		if (guipause.areWePaused()) return;
 		listener_document.claimKey('Escape');
 		closeModal();
 	}

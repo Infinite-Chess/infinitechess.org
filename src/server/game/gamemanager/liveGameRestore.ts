@@ -372,7 +372,6 @@ function reconstructMatchInfo(
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
 		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
-		positionPasted: gameRow.position_pasted === 1,
 	};
 }
 

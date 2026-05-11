@@ -308,7 +308,6 @@ function generateTables(): void {
 			time_ended            INTEGER,
 			afk_resign_time       INTEGER,
 			delete_time           INTEGER,
-			position_pasted       BOOLEAN NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
 		);
 	`);

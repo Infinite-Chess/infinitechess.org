@@ -104,7 +104,6 @@ type RatingAbuseRelevantGamesRecord = Pick<
 	| 'date'
 	| 'base_time_seconds'
 	| 'increment_seconds'
-	| 'private'
 	| 'termination'
 	| 'move_count'
 	| 'time_duration_millis'
@@ -243,7 +242,6 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		'date',
 		'base_time_seconds',
 		'increment_seconds',
-		'private',
 		'termination',
 		'move_count',
 		'time_duration_millis',

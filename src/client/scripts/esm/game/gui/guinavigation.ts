@@ -15,7 +15,6 @@ import toast from './toast.js';
 import stats from './stats.js';
 import mouse from '../../util/mouse.js';
 import space from '../misc/space.js';
-import guipause from './guipause.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -58,7 +57,6 @@ const element_moveRewind = document.getElementById('move-left')!;
 const element_moveForward = document.getElementById('move-right')!;
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
-const element_pause = document.getElementById('pause')!;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -270,7 +268,6 @@ function initListeners_Navigation(): void {
 	element_Annotations.addEventListener('click', callback_Annotations);
 	element_Erase.addEventListener('click', callback__Collapse);
 	element_Collapse.addEventListener('click', callback__Collapse);
-	element_pause.addEventListener('click', callback_Pause);
 
 	element_CoordsX.addEventListener('change', callback_CoordsXChange);
 	element_CoordsY.addEventListener('change', callback_CoordsYChange);
@@ -319,7 +316,6 @@ function closeListeners_Navigation(): void {
 	element_Annotations.removeEventListener('click', callback_Annotations);
 	element_Erase.removeEventListener('click', callback__Collapse);
 	element_Collapse.removeEventListener('click', callback__Collapse);
-	element_Back.removeEventListener('click', callback_Pause);
 
 	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
 	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
@@ -489,10 +485,6 @@ function areCoordsAllowedToBeEdited(): boolean {
 /** Returns the height of the navigation bar in the document, in virtual pixels. */
 function getHeightOfNavBar(): number {
 	return element_Navigation.getBoundingClientRect().height;
-}
-
-function callback_Pause(): void {
-	guipause.open();
 }
 
 /** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
@@ -867,7 +859,6 @@ export default {
 	updateElement_Coords,
 	update_MoveButtons,
 	update_EditButtons,
-	callback_Pause,
 	callback_Expand,
 	lockRewind,
 	update,

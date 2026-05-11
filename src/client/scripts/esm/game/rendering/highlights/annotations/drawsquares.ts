@@ -20,7 +20,6 @@ import mouse from '../../../../util/mouse.js';
 import snapping from '../snapping.js';
 import boardpos from '../../boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
-import guipause from '../../../gui/guipause.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import squarerendering from '../squarerendering.js';
@@ -192,7 +191,7 @@ function render(highlights: Square[]): void {
 
 	// Render hovered highlights
 
-	if (!boardpos.areZoomedOut() || guipause.areWePaused()) return; // Don't increase opacity of highlighgts when zoomed in
+	if (!boardpos.areZoomedOut()) return; // Don't increase opacity of highlighgts when zoomed in
 
 	const allHovered = getAllSquaresHovered(highlights);
 	if (allHovered.length > 0) {
