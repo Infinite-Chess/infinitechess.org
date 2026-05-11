@@ -125,30 +125,9 @@ export type VariantInfo =
 			name: VariantCode_Showcase;
 	  };
 
-// Constants -------------------------------------------------------------------------------
+// ====================================== VARIANT DICTIONARY ======================================
 
-const ALL_DICTIONARIES = [
-	groupstandard.variantDictionary,
-	grouphorde.variantDictionary,
-	group4d.variantDictionary,
-	groupshowcase.variantDictionary,
-];
-
-// Runtime --------------------------------------------------------------------------------
-
-// Ensure no variant dictionaries have duplicate variant names.
-// All variants, no matter the group, must have unique names, so the Variant metadata in ICN isn't ambiguous.
-(() => {
-	const allVariantNames = new Set<string>();
-	for (const dict of ALL_DICTIONARIES) {
-		for (const variantName in dict) {
-			if (allVariantNames.has(variantName)) {
-				throw new Error(`Duplicate variant name found: ${variantName}`);
-			}
-			allVariantNames.add(variantName);
-		}
-	}
-})();
+// Claude: place new dictionary here!
 
 // Functions ---------------------------------------------------------------------------------
 
