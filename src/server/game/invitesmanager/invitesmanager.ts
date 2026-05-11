@@ -11,11 +11,10 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
-import { LobbySeek } from '../../../shared/types.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
+import { safelyCopyInvite, memberInfoEq, AuthSeek, OutSeek } from './inviteutility.js';
 import {
 	getInviteSubscribers,
 	addSocketToInvitesSubs,
@@ -59,8 +58,8 @@ const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
  * Gets the list of public invites with sensitive information REMOVED (such as browser-ids)
  * DOES NOT include private invites, not even your own, ADD THOSE SEPARATELY.
  */
-function getPublicInvitesListSafe(): LobbySeek[] {
-	const deepCopiedInvites: LobbySeek[] = [];
+function getPublicInvitesListSafe(): OutSeek[] {
+	const deepCopiedInvites: OutSeek[] = [];
 
 	for (const invite of invites) {
 		deepCopiedInvites.push(safelyCopyInvite(invite)); // Remove sensitive information
@@ -118,7 +117,7 @@ function sendClientInvitesList(
 		invitesList = getPublicInvitesListSafe(),
 		currentGameCount = getActiveGameCount(),
 		replyto = undefined,
-	}: { replyto?: number; invitesList?: LobbySeek[]; currentGameCount?: number } = {},
+	}: { replyto?: number; invitesList?: OutSeek[]; currentGameCount?: number } = {},
 ): void {
 	const message = { invitesList, currentGameCount };
 	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value

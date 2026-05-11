@@ -11,7 +11,7 @@
 // Types -------------------------------------------------------------------------------
 
 /** All valid variant group names. */
-export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
+export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase' | 'custom';
 
 /** Union of all valid variant codes, derived from the keys of {@link VARIANT_REGISTRY}. */
 export type VariantCode = (typeof VARIANT_CODES)[number];

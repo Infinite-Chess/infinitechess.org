@@ -178,13 +178,12 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 	change: z.number(),
 });
 
-/** The structure for a single seek in the lobby. */
-export type LobbySeek = {
+/** Shared info for all lobby game invite seek types. (excludes variant) */
+export interface BaseSeek {
 	id: string;
 	tag: string;
 	player: ServerUsernameContainer;
 	color: Player | null;
-	variant: VariantInfo;
 	time: TimeControl;
 	mode: 'casual' | 'rated';
-};
+}

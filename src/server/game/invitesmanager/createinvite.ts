@@ -5,21 +5,18 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Rating, ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
-import {
-	VariantGroupSchema,
-	type Rating,
-	type ServerUsernameContainer,
-} from '../../../shared/types.js';
 
 import timecontrol from '../timecontrol.js';
 import { AuthSeek } from './inviteutility.js';
@@ -39,10 +36,7 @@ export type CreateInviteMessage = z.infer<typeof createinviteschem>;
 const createinviteschem = z
 	.strictObject({
 		tag: z.string().length(8),
-		variant: z.strictObject({
-			group: VariantGroupSchema,
-			name: z.string(),
-		}),
+		variant: z.enum(variantregistry.VARIANT_CODES),
 		// `${number}+${number}` | '-'
 		time: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
@@ -55,7 +49,7 @@ const createinviteschem = z
 			// Additional refinements for cross-property validation
 			if (val.mode === 'rated') {
 				// Rated game validation...
-				if (!(val.variant.name in VariantLeaderboards)) return false; // Invalid group & variant name for a rated game.
+				if (!(val.variant in VariantLeaderboards)) return false; // Invalid group & variant name for a rated game.
 				if (val.time === '-') return false; // Invalid clock for a rated game.
 				if (val.color !== null) return false; // Specific colors aren't allowed for *public* rated games
 			}
@@ -162,8 +156,7 @@ function getInviteFromWebsocketMessageContents(
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
-		const leaderboardId =
-			VariantLeaderboards[messageContents.variant.name] ?? Leaderboards.INFINITY;
+		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 

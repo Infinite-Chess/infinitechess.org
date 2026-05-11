@@ -5,17 +5,23 @@
  * with single invites, not multiple
  */
 
-import type { LobbySeek } from '../../../shared/types.js';
+import type { BaseSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
+import { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 
 // Type Definitions
 
-/** A lobby game invite. */
-export interface AuthSeek extends LobbySeek {
+/** A lobby game invite, WITH the owner's sensitive information. */
+export interface AuthSeek extends OutSeek {
 	/** Contains the identifier of the owner of the invite, whether a member or browser. */
 	owner: AuthMemberInfo;
+}
+
+/** The version of invite seeks sent to the client. (excludes variant group) */
+export interface OutSeek extends BaseSeek {
+	variant: VariantCode;
 }
 
 //-------------------------------------------------------------------------------------------
@@ -24,12 +30,12 @@ export interface AuthSeek extends LobbySeek {
  * Removes sensitive data such as their browser-id.
  * Returns a deep copy of the original invite.
  */
-function makeInviteSafe(invite: AuthSeek): LobbySeek {
+function makeInviteSafe(invite: AuthSeek): OutSeek {
 	return {
 		id: invite.id,
 		player: jsutil.deepCopyObject(invite.player),
 		tag: invite.tag,
-		variant: jsutil.deepCopyObject(invite.variant),
+		variant: invite.variant,
 		time: invite.time,
 		color: invite.color,
 		mode: invite.mode,
@@ -40,7 +46,7 @@ function makeInviteSafe(invite: AuthSeek): LobbySeek {
  * Makes a deep copy of provided invite, and
  * removes sensitive data such as their browser-id.
  */
-function safelyCopyInvite(invite: AuthSeek): LobbySeek {
+function safelyCopyInvite(invite: AuthSeek): OutSeek {
 	const inviteDeepCopy = jsutil.deepCopyObject(invite);
 	return makeInviteSafe(inviteDeepCopy);
 }

@@ -1,7 +1,11 @@
 // src/client/scripts/esm/views/index/lobby.ts
 
 import type { VNode } from 'snabbdom';
-import type { TimeControl, Rating, VariantGroup, LobbySeek } from '../../../../../shared/types.js';
+import type { TimeControl, Rating, BaseSeek } from '../../../../../shared/types.js';
+import type {
+	VariantGroup,
+	VariantInfo,
+} from '../../../../../shared/chess/variants/variantregistry.js';
 
 import { attributesModule, h, init } from 'snabbdom';
 
@@ -12,6 +16,11 @@ import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 const patch = init([attributesModule]);
 
 // Types ----------------------------------------------
+
+/** [CLIENT] The structure for a single seek in the lobby. */
+export interface LobbySeek extends BaseSeek {
+	variant: VariantInfo;
+}
 
 // Constants ------------------------------------------
 
