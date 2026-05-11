@@ -24,7 +24,7 @@ interface GameRules {
 	 * black can promote to, if it's legal for them to promote.
 	 * If one color can't promote, their list should be left undefined.
 	 */
-	promotionsAllowed?: PlayerGroup<RawType[]>;
+	promotionsAllowed?: RawType[];
 	/**
 	 * How many plies (half-moves) can pass with no
 	 * captures or pawn pushes until a draw is declared.

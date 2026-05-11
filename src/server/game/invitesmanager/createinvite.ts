@@ -5,18 +5,21 @@
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Rating, ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import { variantCodes } from '../../../shared/chess/variants/variant.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
+import {
+	VariantGroupSchema,
+	type Rating,
+	type ServerUsernameContainer,
+} from '../../../shared/types.js';
 
 import timecontrol from '../timecontrol.js';
 import { AuthSeek } from './inviteutility.js';
@@ -31,34 +34,35 @@ import {
 	IDLengthOfInvites,
 } from './invitesmanager.js';
 
+export type CreateInviteMessage = z.infer<typeof createinviteschem>;
 /** The zod schema for validating the contents of the createinvite message. */
 const createinviteschem = z
 	.strictObject({
-		variant: z.enum(variantCodes),
+		tag: z.string().length(8),
+		variant: z.strictObject({
+			group: VariantGroupSchema,
+			name: z.string(),
+		}),
 		// `${number}+${number}` | '-'
-		clock: z
+		time: z
 			.union([z.templateLiteral([z.number(), '+', z.number()]), z.literal('-')])
 			.refine((c) => timecontrol.isValid(c), { error: 'Invalid clock value.' }),
 		color: z.literal([p.WHITE, p.BLACK, null]),
-		publicity: z.enum(['public', 'private']),
-		rated: z.enum(['casual', 'rated']),
-		tag: z.string().length(8),
+		mode: z.enum(['casual', 'rated']),
 	})
 	.refine(
 		(val) => {
 			// Additional refinements for cross-property validation
-			if (val.rated === 'rated') {
+			if (val.mode === 'rated') {
 				// Rated game validation...
-				if (!(val.variant in VariantLeaderboards)) return false; // Invalid variant for a rated game.
-				if (val.clock === '-') return false; // Invalid clock for a rated game.
-				if (val.color !== null && val.publicity !== 'private') return false; // Specific colors are only allowed if the rated game is also private.
+				if (!(val.variant.name in VariantLeaderboards)) return false; // Invalid group & variant name for a rated game.
+				if (val.time === '-') return false; // Invalid clock for a rated game.
+				if (val.color !== null) return false; // Specific colors aren't allowed for *public* rated games
 			}
 			return true; // Casual games can have any properties.
 		},
 		{ error: 'Invalid invite parameters for a rated game.' },
 	);
-
-type CreateInviteMessage = z.infer<typeof createinviteschem>;
 
 /**
  * Creates a new invite from their websocket message.
@@ -158,11 +162,12 @@ function getInviteFromWebsocketMessageContents(
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
 		// Fallback to the elo on the INFINITY leaderboard, if the variant does not have a leaderboard.
-		const leaderboardId = VariantLeaderboards[messageContents.variant] ?? Leaderboards.INFINITY;
+		const leaderboardId =
+			VariantLeaderboards[messageContents.variant.name] ?? Leaderboards.INFINITY;
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	const usernamecontainer: ServerUsernameContainer = {
+	const player: ServerUsernameContainer = {
 		type: owner.signedIn ? 'player' : 'guest',
 		username: owner.signedIn ? owner.username : metadatautil.GUEST_NAME_ICN_METADATA,
 		rating,
@@ -171,13 +176,12 @@ function getInviteFromWebsocketMessageContents(
 	return {
 		id,
 		owner,
-		usernamecontainer,
+		player,
 		variant: messageContents.variant,
-		clock: messageContents.clock,
-		rated: messageContents.rated,
+		time: messageContents.time,
+		mode: messageContents.mode,
 		color: messageContents.color,
 		tag: messageContents.tag,
-		publicity: messageContents.publicity,
 	};
 }
 

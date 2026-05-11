@@ -168,12 +168,8 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 		if (!basegame.gameRules.promotionsAllowed)
 			return { valid: false, reason: 'Game has no promotions allowed.' };
 
-		const promotionsAllowed: RawType[] | undefined =
-			basegame.gameRules.promotionsAllowed[colorOfPieceMoved];
-		if (!promotionsAllowed) return { valid: false, reason: 'Color has no promotions allowed.' };
-
 		const rawPromotion: RawType = typeutil.getRawType(moveCoords.promotion);
-		if (!promotionsAllowed.includes(rawPromotion))
+		if (!basegame.gameRules.promotionsAllowed.includes(rawPromotion))
 			return { valid: false, reason: 'Illegal promotion type.' };
 	} else {
 		// User is NOT promoting

@@ -1,11 +1,28 @@
-// src/shared/chess/variants/omega4generator.ts
+// src/shared/chess/preview_variants/variants/prev_omegafourth.ts
 
 /**
- * Here lies the position generator for the Omega^4 Showcase variant.
+ * "Omega^4" showcase variant.
  */
 
-import { rawTypes as r, ext as e } from '../util/typeutil.js';
-import coordutil, { CoordsKey, Coords } from '../util/coordutil.js';
+import type { VariantPreview } from '../previewutil';
+
+import coordutil, { Coords, CoordsKey } from '../../util/coordutil';
+import { ext as e, players as p, rawTypes as r } from '../../util/typeutil';
+
+export function getPreview(): VariantPreview {
+	return {
+		getPosition: () => genPositionOfOmegaFourth(),
+		gameruleModifications: {
+			turnOrder: [p.BLACK, p.WHITE],
+			promotionsAllowed: null,
+			moveRule: null,
+			// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
+			winConditions: { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] },
+		},
+	};
+}
+
+// ================================== GENERATOR ===================================
 
 /**
  * Generates the Omega^4 position example
@@ -465,7 +482,3 @@ function genPositionOfOmegaFourth(): Map<CoordsKey, number> {
 		startingPos.set(coordutil.getKeyFromCoords([492n, 493n]), r.VOID + e.N);
 	}
 }
-
-export default {
-	genPositionOfOmegaFourth,
-};

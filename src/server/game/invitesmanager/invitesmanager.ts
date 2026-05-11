@@ -69,24 +69,6 @@ function getPublicInvitesListSafe(): LobbySeek[] {
 	return deepCopiedInvites;
 }
 
-/**
- * Adds any private invite that belongs to the socket to the provided invites list.
- * @param ws
- * @param copyOfInvitesList - A copy of the invites list, so we don't modify the original
- */
-function addMyPrivateInviteToList(
-	ws: CustomWebSocket,
-	copyOfInvitesList: LobbySeek[],
-): LobbySeek[] {
-	for (const invite of invites) {
-		if (isInvitePublic(invite)) continue; // Next invite, this one isn't private
-		if (!memberInfoEq(ws.metadata.memberInfo, invite.owner)) continue; // Doesn't belong to us
-		const inviteSafeCopy = safelyCopyInvite(invite); // Makes a deep copy and removes sensitive information
-		copyOfInvitesList.push(inviteSafeCopy);
-	}
-	return copyOfInvitesList;
-}
-
 // When a PUBLIC invite is added or removed..
 
 /**
@@ -138,7 +120,6 @@ function sendClientInvitesList(
 		replyto = undefined,
 	}: { replyto?: number; invitesList?: LobbySeek[]; currentGameCount?: number } = {},
 ): void {
-	invitesList = addMyPrivateInviteToList(ws, invitesList);
 	const message = { invitesList, currentGameCount };
 	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
@@ -150,24 +131,20 @@ function sendClientInvitesList(
  * @param invite - The invite to sdd
  * @param replyto - The incoming websocket message ID, to include in the reply, if applicable
  */
-function addInvite(ws: CustomWebSocket, invite: Invite, replyto?: number): void {
+function addInvite(ws: CustomWebSocket, invite: AuthSeek, replyto?: number): void {
 	invites.push(invite);
 
-	if (isInvitePublic(invite)) onPublicInvitesChange(ws, replyto);
-	else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite creation!
+	onPublicInvitesChange(ws, replyto);
 
-	if (printNewInviteCreationsAndDeletions) {
-		if (isInvitePrivate(invite))
-			console.log(`Created PRIVATE invite for user ${JSON.stringify(invite.owner)}`);
-		else console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
-	}
+	if (printNewInviteCreationsAndDeletions)
+		console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
 }
 
 /**
  * Deletes an invite from the list of active invites.
  * Typically called when an invite is canceled. Sends the updated invites list to the socket.
  * @param ws - The socket of the player that canceled this invite. Used to send them the updated invites list.
- * @param invite - The invite object to cancel. Contains details about the invite and its owner.
+ * @param seek - The invite object to cancel. Contains details about the invite and its owner.
  * @param index - The index of the invite in the invites array. This is found using {@link getInviteAndIndexByID}.
  * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
@@ -175,7 +152,7 @@ function addInvite(ws: CustomWebSocket, invite: Invite, replyto?: number): void 
  */
 function deleteInviteByIndex(
 	ws: CustomWebSocket,
-	invite: Invite,
+	seek: AuthSeek,
 	index: number,
 	{
 		dontBroadcast = false,
@@ -190,15 +167,12 @@ function deleteInviteByIndex(
 	}
 	invites.splice(index, 1); // Delete the invite
 
-	if (!dontBroadcast) {
-		if (isInvitePublic(invite)) onPublicInvitesChange(ws, replyto);
-		else sendClientInvitesList(ws, { replyto }); // Send them the new list after their invite cancellation!
-	}
+	if (!dontBroadcast) onPublicInvitesChange(ws, replyto);
 
 	if (printNewInviteCreationsAndDeletions)
-		console.log(`Deleted invite for user ${JSON.stringify(invite.owner)}`);
+		console.log(`Deleted invite for user ${JSON.stringify(seek.owner)}`);
 
-	return isInvitePublic(invite); // true if a public invite changed
+	return true;
 }
 
 /**
@@ -226,9 +200,9 @@ function existingInviteHasID(id: string): boolean {
  * @param id - The invite ID
  * @returns An object: `{ invite, index }`, or undefined if the invite wasn't found.
  */
-function getInviteAndIndexByID(id: string): { invite: Invite; index: number } | undefined {
+function getInviteAndIndexByID(id: string): { seek: AuthSeek; index: number } | undefined {
 	for (let i = 0; i < invites.length; i++) {
-		if (id === invites[i]!.id) return { invite: invites[i]!, index: i };
+		if (id === invites[i]!.id) return { seek: invites[i]!, index: i };
 	}
 	return undefined;
 }
@@ -332,21 +306,21 @@ function deleteUsersExistingInvite(
 	info: AuthMemberInfo,
 	{ broadCastNewInvites = true } = {},
 ): boolean {
-	let deletedPublicInvite = false;
+	let deletedInvite = false;
 	for (let i = invites.length - 1; i >= 0; i--) {
 		const invite = invites[i]!;
 		if (!memberInfoEq(info, invite.owner)) continue;
 		// Match! Delete
 		invites.splice(i, 1); // Delete the invite
-		if (isInvitePublic(invite)) deletedPublicInvite = true;
+		deletedInvite = true;
 		if (printNewInviteCreationsAndDeletions)
 			console.log(
 				`${info.signedIn ? `Deleted member's invite. Username: ${info.username}` : `Deleted browser's invite. Browser: ${info.browser_id}`}`,
 			);
 	}
 
-	if (deletedPublicInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted
-	return deletedPublicInvite;
+	if (deletedInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted
+	return deletedInvite;
 }
 
 //-------------------------------------------------------------------------------------------

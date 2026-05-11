@@ -6,6 +6,8 @@
  * Centralized here to avoid circular dependency issues.
  */
 
+import type { VariantInfo } from './chess/variantgroups/variantgroups.js';
+
 import * as z from 'zod';
 
 import winconutil from './chess/util/winconutil.js';
@@ -180,7 +182,8 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
  * A variant group categorizes variants by alike gamerules.
  * This can be win conditions, player to move, piece movement, etc.
  */
-export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase' | 'custom';
+export type VariantGroup = z.infer<typeof VariantGroupSchema>;
+export const VariantGroupSchema = z.enum(['standard', 'horde', '4D', 'showcase', 'custom']);
 
 /** The structure for a single seek in the lobby. */
 export type LobbySeek = {
@@ -188,10 +191,7 @@ export type LobbySeek = {
 	tag: string;
 	player: ServerUsernameContainer;
 	color: Player | null;
-	variant: {
-		group: VariantGroup;
-		name: string;
-	};
+	variant: VariantInfo;
 	time: TimeControl;
 	mode: 'casual' | 'rated';
 };

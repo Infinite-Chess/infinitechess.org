@@ -424,7 +424,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		const [rawType, player] = typeutil.splitType(piece.type);
 		if (rawType !== r.PAWN) continue; // Not a pawn
 		if (player === p.NEUTRAL) continue; // Player neutral can't even move pieces let alone promote pawns
-		if ((gameRules.promotionsAllowed?.[player]?.length ?? 0) === 0) continue; // None of them are promotable (this player can't promote to anything)
+		if ((gameRules.promotionsAllowed?.length ?? 0) === 0) continue; // None of them are promotable (no promotions exist in this game)
 		if ((gameRules.promotionRanks?.[player]?.length ?? 0) === 0) continue; // Player has no promotion ranks to promote at
 		// ASSUME the pawn is behind a promotion rank.
 		// Worst case if it isn't: insuffmat isn't triggered when it could be.
@@ -450,7 +450,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 	/** Returns every possible outcome for a pawn: staying unpromoted, or each promotion piece. */
 	function getPawnOutcomes(pawn: { player: Player; pawnType: number }): PawnOutcome[] {
 		const outcomes: PawnOutcome[] = [{ pieceType: pawn.pawnType }]; // stays as pawn
-		for (const promotionRawType of gameRules.promotionsAllowed![pawn.player]!) {
+		for (const promotionRawType of gameRules.promotionsAllowed!) {
 			const pieceType = typeutil.buildType(promotionRawType, pawn.player);
 			if (promotionRawType === r.BISHOP) {
 				outcomes.push({ pieceType, bishopParity: 0 });

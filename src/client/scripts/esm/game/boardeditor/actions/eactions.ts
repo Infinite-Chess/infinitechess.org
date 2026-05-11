@@ -397,7 +397,9 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantFromMetadata(
+		longformOut.metadata,
+	);
 	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,

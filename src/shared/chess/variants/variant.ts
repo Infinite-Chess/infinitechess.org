@@ -12,18 +12,23 @@ import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 import type {
-	VariantCode,
 	GameRuleModifications,
 	TimeVariantProperty,
 	Variant,
-} from './variantdictionary.js';
+	VariantInfo,
+} from '../variantgroups/variantgroups.js';
 
 import jsutil from '../../util/jsutil.js';
+import group4d from '../variantgroups/group4d/group4d.js';
 import movesets from '../logic/movesets.js';
+import grouphorde from '../variantgroups/grouphorde.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
+import groupstandard from '../variantgroups/groupstandard.js';
+import groupshowcase from '../variantgroups/groupshowcase.js';
+import variantgroups from '../variantgroups/variantgroups.js';
 import { players as p } from '../util/typeutil.js';
-import variantDictionary from './variantdictionary.js';
+import { DEFAULT_PROMOTIONS } from '../preview_variants/defaultPromotions.js';
 
 // Constants -------------------------------------------------------------------------------
 
@@ -33,21 +38,7 @@ const defaultWinConditions: PlayerGroup<GameruleWinCondition[]> = {
 };
 const defaultTurnOrder = [p.WHITE, p.BLACK];
 
-/** Tuple of all valid variant code strings, for use in runtime validation (e.g. Zod schemas). */
-export const variantCodes = Object.keys(variantDictionary) as VariantCode[];
-
 // Functions ---------------------------------------------------------------------------------
-
-/**
- * Tests if the provided variant is a valid variant.
- * Acts as a type guard, narrowing the input to {@link VariantCode}.
- * @param variantName - The name of the variant
- * @returns Whether the variant is a valid variant
- */
-function isVariantValid(variantName: string | undefined): variantName is VariantCode {
-	if (variantName === undefined) return false;
-	return variantName in variantDictionary;
-}
 
 /**
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
@@ -55,17 +46,28 @@ function isVariantValid(variantName: string | undefined): variantName is Variant
  * @param variantName - The variant string from metadata (may be an English name, code, or undefined).
  * @returns The corresponding {@link VariantCode}, or `null` if the input is not recognized.
  */
-function resolveVariantCode(variantName: string | undefined): VariantCode | null {
+function resolveVariantCode(variantName: string | undefined): VariantInfo | null {
 	if (variantName === undefined) return null;
+
+	const groups: Array<[VariantInfo['group'], Record<string, Variant>]> = [
+		['standard', groupstandard.variantDictionary],
+		['horde', grouphorde.variantDictionary],
+		['4D', group4d.variantDictionary],
+		['showcase', groupshowcase.variantDictionary],
+	];
+
 	// Direct code match
-	if (variantName in variantDictionary) return variantName as VariantCode;
-	// Search by English display name
-	for (const [code, variantEntry] of Object.entries(variantDictionary) as [
-		VariantCode,
-		Variant,
-	][]) {
-		if (variantEntry.name === variantName) return code;
+	for (const [group, dict] of groups) {
+		if (variantName in dict) return { group, name: variantName } as VariantInfo;
 	}
+
+	// Search by English display name
+	for (const [group, dict] of groups) {
+		for (const [code, variantEntry] of Object.entries(dict)) {
+			if (variantEntry.name === variantName) return { group, name: code } as VariantInfo;
+		}
+	}
+
 	console.warn(`Variant "${variantName}" is not recognized. Treating as no variant.`);
 	return null;
 }
@@ -77,12 +79,14 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | null
  * @param metadata - The metadata of the game with the optional `Variant` property. MUST BE A DIRECT REFERENCE (not a copy)
  * @returns The resolved {@link VariantCode}, or `null` if no valid variant was found.
  */
-function resolveAndNormalizeVariantInMetadata(metadata: { Variant?: string }): VariantCode | null {
+function resolveAndNormalizeVariantFromMetadata(metadata: {
+	Variant?: string;
+}): VariantInfo | null {
 	if (!metadata.Variant) return null;
 	const resolved = resolveVariantCode(metadata.Variant);
 	if (resolved !== null) {
 		// Normalize to English display name
-		metadata.Variant = variantDictionary[resolved].name;
+		metadata.Variant = variantgroups.getVariantName(resolved);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
@@ -164,22 +168,14 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
 	};
 
 	// GameRules that have a dedicated ICN spot...
-	if (modifications.promotionRanks !== null) {
-		// Either undefined (use default), or custom
+	if (modifications.promotionsAllowed !== null) {
 		gameRules.promotionRanks = modifications.promotionRanks || {
 			[p.WHITE]: [8n],
 			[p.BLACK]: [1n],
 		};
-		if (!modifications.promotionsAllowed)
-			throw new Error(
-				'When overriding promotionRanks, you must also override promotionsAllowed!',
-			);
-		gameRules.promotionsAllowed = modifications.promotionsAllowed;
+		gameRules.promotionsAllowed = modifications.promotionsAllowed ?? DEFAULT_PROMOTIONS;
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
-
-	// GameRules that DON'T have a dedicated ICN spot...
-	if (modifications.slideLimit !== undefined) gameRules.slideLimit = modifications.slideLimit;
 
 	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
 }
@@ -189,7 +185,7 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
  * @returns {GameRules} The gameRules object
  */
 function getBareMinimumGameRules(): GameRules {
-	return getGameRules({ promotionRanks: null, moveRule: null }); // Erase the defaults to end up with only the required's
+	return getGameRules({ promotionsAllowed: null, moveRule: null }); // Erase the defaults to end up with only the required's
 }
 
 /**
@@ -356,9 +352,8 @@ function getVariantName(variantCode: VariantCode): string {
 // Exports ------------------------------------------------------------------
 
 export default {
-	isVariantValid,
 	resolveVariantCode,
-	resolveAndNormalizeVariantInMetadata,
+	resolveAndNormalizeVariantFromMetadata,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getMovesetsOfVariant,

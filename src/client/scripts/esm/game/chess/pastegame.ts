@@ -8,7 +8,6 @@ import type { MetaData } from '../../../../../shared/types.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/types.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 
@@ -148,7 +147,9 @@ function pasteGame(longformOut: LongFormatOut): void {
 	}
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = variant.resolveAndNormalizeVariantInMetadata(longformOut.metadata);
+	const resolvedVariantCode = variant.resolveAndNormalizeVariantFromMetadata(
+		longformOut.metadata,
+	);
 
 	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,

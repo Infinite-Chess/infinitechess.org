@@ -69,10 +69,13 @@ function close(): void {
 
 /**
  * Inits the promotion UI. Hides promotions not allowed, reveals promotions allowed.
- * @param promotionsAllowed - An object that contains the information about what promotions are allowed.
- * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
+ * @param promotionsAllowed - The shared list of raw piece types any player can promote to.
+ * @param uniquePlayers - The set of all players in the game.
  */
-async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Promise<void> {
+async function initUI(
+	promotionsAllowed: RawType[] | undefined,
+	uniquePlayers: Set<Player>,
+): Promise<void> {
 	if (promotionsAllowed === undefined) return;
 
 	if (Object.values(PromotionGUI.players).some((element) => element.childElementCount > 0)) {
@@ -81,14 +84,13 @@ async function initUI(promotionsAllowed: PlayerGroup<RawType[]> | undefined): Pr
 		);
 	}
 
-	for (const [playerString, rawtypes] of Object.entries(promotionsAllowed)) {
-		const player = Number(playerString) as Player;
+	for (const player of uniquePlayers) {
 		if (!(player in PromotionGUI.players)) {
 			console.error(`Player ${player} has a promotion but not promotion UI`);
 			continue;
 		}
 		const svgs = await svgcache.getSVGElements(
-			rawtypes.map((rawPromotion) => typeutil.buildType(rawPromotion, player)),
+			promotionsAllowed.map((rawPromotion) => typeutil.buildType(rawPromotion, player)),
 		);
 		svgs.forEach((svg) => {
 			svg.classList.add('promotepiece');

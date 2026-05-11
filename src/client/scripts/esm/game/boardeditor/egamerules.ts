@@ -86,27 +86,25 @@ function getCurrentGamerulesAndState(): {
 		[p.BLACK]: gamerulesGUIinfo.winConditions,
 	};
 	let promotionRanks: PlayerGroup<bigint[]> | undefined = undefined;
-	let promotionsAllowed: PlayerGroup<RawType[]> | undefined = undefined;
+	let promotionsAllowed: RawType[] | undefined = undefined;
 	if (
 		gamerulesGUIinfo.promotionsAllowed !== undefined &&
 		gamerulesGUIinfo.promotionRanks !== undefined
 	) {
-		promotionsAllowed = {};
 		promotionRanks = {};
 		if (
 			gamerulesGUIinfo.promotionRanks.white !== undefined &&
 			gamerulesGUIinfo.promotionRanks.white.length !== 0
 		) {
 			promotionRanks[p.WHITE] = gamerulesGUIinfo.promotionRanks.white;
-			promotionsAllowed[p.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
 		if (
 			gamerulesGUIinfo.promotionRanks.black !== undefined &&
 			gamerulesGUIinfo.promotionRanks.black.length !== 0
 		) {
 			promotionRanks[p.BLACK] = gamerulesGUIinfo.promotionRanks.black;
-			promotionsAllowed[p.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}
+		promotionsAllowed = gamerulesGUIinfo.promotionsAllowed;
 	}
 
 	const gameRules: GameRules = {
@@ -173,14 +171,7 @@ function setGamerulesGUIinfo(
 	}
 
 	if (gameRules.promotionsAllowed !== undefined) {
-		gamerulesGUIinfo.promotionsAllowed = [
-			...new Set([
-				...(gameRules.promotionsAllowed[p.WHITE] || []),
-				...(gameRules.promotionsAllowed[p.BLACK] || []),
-			]),
-		];
-		if (gamerulesGUIinfo.promotionsAllowed.length === 0)
-			gamerulesGUIinfo.promotionsAllowed = undefined;
+		gamerulesGUIinfo.promotionsAllowed = gameRules.promotionsAllowed;
 	} else {
 		gamerulesGUIinfo.promotionsAllowed = undefined;
 	}

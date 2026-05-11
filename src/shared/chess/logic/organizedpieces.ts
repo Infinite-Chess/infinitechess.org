@@ -13,7 +13,7 @@
 
 import type { PieceMoveset } from './movesets.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
-import type { Player, PlayerGroup, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
+import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
@@ -107,7 +107,7 @@ function processInitialPosition(
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
 	turnOrder: Player[],
 	editor: boolean,
-	promotionsAllowed?: PlayerGroup<RawType[]>,
+	promotionsAllowed?: RawType[],
 ): {
 	pieces: OrganizedPieces;
 	/**
@@ -256,11 +256,7 @@ function processInitialPosition(
  * Afterward, flags the pieces as newly regenerated. movesequence may
  * watch for that to know when to regenerate the piece models.
  */
-function regenerateLists(
-	o: OrganizedPieces,
-	editor: boolean,
-	promotionsAllowed?: PlayerGroup<RawType[]>,
-): void {
+function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?: RawType[]): void {
 	const additionalUndefinedsNeeded: Map<number, number> = new Map();
 	const typeOffsets: Map<number, number> = new Map();
 	const modifiedTypes: number[] = []; // A list of all type ranges that changed in size.
@@ -499,7 +495,7 @@ function calcRemainingExistingTypes(
 	positionExistingTypes: Set<number>,
 	turnOrder: Player[],
 	editor: boolean,
-	promotionsAllowed?: PlayerGroup<RawType[]>,
+	promotionsAllowed?: RawType[],
 ): {
 	existingTypes: number[];
 	existingRawTypes: RawType[];
@@ -517,10 +513,9 @@ function calcRemainingExistingTypes(
 	} else {
 		if (promotionsAllowed) {
 			// Makes sure pieces that are possible to promote to are accounted for.
-			for (const playerString in promotionsAllowed) {
-				const player = Number(playerString) as Player;
-				const rawPromotions = promotionsAllowed[player]!;
-				for (const rawType of rawPromotions) {
+			const uniquePlayers = [...new Set(turnOrder)];
+			for (const player of uniquePlayers) {
+				for (const rawType of promotionsAllowed) {
 					positionExistingTypes.add(typeutil.buildType(rawType, player));
 				}
 			}
@@ -552,7 +547,7 @@ function getListExtrasOfType(
 	type: number,
 	numOfPieces: number,
 	editor: boolean,
-	promotionsAllowed?: PlayerGroup<RawType[]>,
+	promotionsAllowed?: RawType[],
 ): number {
 	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotionsAllowed);
 
@@ -573,13 +568,13 @@ function getListExtrasOfType(
 function getTypeUndefinedsBehavior(
 	type: number,
 	editor: boolean,
-	promotionsAllowed?: PlayerGroup<RawType[]>,
+	promotionsAllowed?: RawType[],
 ): 0 | 1 | 2 {
 	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
 	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);
-	if (!promotionsAllowed[player]) return 0; // This player color cannot promote (neutral).
-	if (promotionsAllowed[player].includes(rawType)) return 1; // Can be promoted to
+	if (player === p.NEUTRAL) return 0; // Neutral pieces cannot promote.
+	if (promotionsAllowed.includes(rawType)) return 1; // Can be promoted to
 	return 0; // This piece cannot be promoted to anything.
 }
 
