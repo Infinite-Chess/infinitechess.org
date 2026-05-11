@@ -1,6 +1,7 @@
 // src/shared/chess/preview_variants/previewutil.ts
 
-import type { GameRuleModifications } from '../variantgroups/variantgroups';
+import type { GameruleWinCondition } from '../util/winconutil';
+import type { Player, PlayerGroup, RawType } from '../util/typeutil';
 
 /**
  * Returns the minimum information needed to generate the variant
@@ -12,6 +13,16 @@ export interface VariantPreview {
 	/** If present, it's how many squares of padding exist between the furthest piece on each side to the world border. */
 	worldBorderDist?: bigint;
 }
+
+/** An object that describes what modifications to make to default gamerules in a variant. */
+export type GameRuleModifications = {
+	moveRule?: number | null;
+	turnOrder?: Player[];
+	winConditions?: PlayerGroup<GameruleWinCondition[]>;
+} & (
+	| { promotionsAllowed?: RawType[]; promotionRanks?: PlayerGroup<bigint[]> }
+	| { promotionsAllowed: null; promotionRanks?: never }
+);
 
 /**
  * Selects the value from a time-versioned record whose key is the highest timestamp

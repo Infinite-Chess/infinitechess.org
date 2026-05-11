@@ -4,8 +4,7 @@
  * "Space Classic" standard variant.
  */
 
-import type { VariantPreview } from '../previewutil';
-import type { GameRuleModifications } from '../../variantgroups/variantgroups';
+import type { GameRuleModifications, VariantPreview } from '../previewutil';
 
 import previewutil from '../previewutil';
 import icnconverter from '../../logic/icn/icnconverter';

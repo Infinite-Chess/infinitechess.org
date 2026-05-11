@@ -6,7 +6,7 @@
  * Centralized here to avoid circular dependency issues.
  */
 
-import type { VariantInfo } from './chess/variantgroups/variantgroups.js';
+import type { VariantInfo } from './chess/variants/variantregistry.js';
 
 import * as z from 'zod';
 

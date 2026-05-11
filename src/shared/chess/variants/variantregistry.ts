@@ -1,4 +1,4 @@
-// src/shared/chess/variantgroups/variantgroups.ts
+// src/shared/chess/variants/variantregistry.ts
 
 /**
  * Master registry of all variants.
@@ -8,20 +8,7 @@
  * Existing groups are: Standard, Horde, 4D, and Showcase.
  */
 
-import type { GameruleWinCondition } from '../util/winconutil.js';
-import type { RawType, Player, PlayerGroup } from '../util/typeutil.js';
-
 // Types -------------------------------------------------------------------------------
-
-/** An object that describes what modifications to make to default gamerules in a variant. */
-export type GameRuleModifications = {
-	moveRule?: number | null;
-	turnOrder?: Player[];
-	winConditions?: PlayerGroup<GameruleWinCondition[]>;
-} & (
-	| { promotionsAllowed?: RawType[]; promotionRanks?: PlayerGroup<bigint[]> }
-	| { promotionsAllowed: null; promotionRanks?: never }
-);
 
 /** All valid variant group names. */
 export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';

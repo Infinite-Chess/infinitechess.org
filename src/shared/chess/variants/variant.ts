@@ -9,21 +9,18 @@ import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
+import type { VariantCode, VariantRegistryEntry } from './variantregistry.js';
 import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
-import type {
-	GameRuleModifications,
-	VariantCode,
-	VariantRegistryEntry,
-} from '../variantgroups/variantgroups.js';
 
 import jsutil from '../../util/jsutil.js';
 import movesets from '../logic/movesets.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
-import variantgroups from '../variantgroups/variantgroups.js';
+import variantregistry from './variantregistry.js';
 import { players as p } from '../util/typeutil.js';
 import { DEFAULT_PROMOTIONS } from '../preview_variants/defaultPromotions.js';
+import { GameRuleModifications } from '../preview_variants/previewutil.js';
 
 // Constants -------------------------------------------------------------------------------
 
@@ -44,9 +41,9 @@ const defaultTurnOrder = [p.WHITE, p.BLACK];
 function resolveVariantCode(variantName: string | undefined): VariantCode | null {
 	if (variantName === undefined) return null;
 	// Direct code match
-	if (variantName in variantgroups.VARIANT_REGISTRY) return variantName as VariantCode;
+	if (variantName in variantregistry.VARIANT_REGISTRY) return variantName as VariantCode;
 	// Search by English display name
-	for (const [code, variantEntry] of Object.entries(variantgroups.VARIANT_REGISTRY) as [
+	for (const [code, variantEntry] of Object.entries(variantregistry.VARIANT_REGISTRY) as [
 		VariantCode,
 		VariantRegistryEntry,
 	][]) {
@@ -70,7 +67,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	const resolved = resolveVariantCode(metadata.Variant);
 	if (resolved !== null) {
 		// Normalize to English display name
-		metadata.Variant = variantgroups.getVariantName(resolved);
+		metadata.Variant = variantregistry.getVariantName(resolved);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
