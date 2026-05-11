@@ -67,7 +67,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	const resolved = resolveVariantCode(metadata.Variant);
 	if (resolved !== null) {
 		// Normalize to English display name
-		metadata.Variant = variantregistry.getVariantName(resolved);
+		metadata.Variant = getVariantName(resolved);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
@@ -299,7 +299,15 @@ function getVariantPositionString(variantCode: VariantCode, timestamp: number): 
 
 /** Returns the English display name of the given variant, as stored in the variant dictionary. */
 function getVariantName(variantCode: VariantCode): string {
-	return variantDictionary[variantCode].name;
+	return variantregistry.VARIANT_REGISTRY[variantCode].name;
+}
+
+/**
+ * Tests if the provided variant is a valid variant.
+ * Acts as a type guard, narrowing the input to {@link VariantInfo}.
+ */
+function isVariantValid(variant: string): variant is VariantCode {
+	return variant in variantregistry.VARIANT_REGISTRY;
 }
 
 // Exports ------------------------------------------------------------------
@@ -318,4 +326,5 @@ export default {
 	getVariantWorldBorder,
 	getVariantPositionString,
 	getVariantName,
+	isVariantValid,
 };

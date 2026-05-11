@@ -5,7 +5,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
-import type { VariantCode } from '../variants/variantdictionary.js';
+import type { VariantCode } from '../variants/variantregistry.js';
 import type { PieceMoveset } from './movesets.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { VariantOptions } from './initvariant.js';

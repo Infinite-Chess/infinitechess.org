@@ -6,10 +6,10 @@
  */
 
 import type { BaseSeek } from '../../../shared/types.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
-import { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 
 // Type Definitions
 

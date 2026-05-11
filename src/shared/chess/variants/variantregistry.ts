@@ -192,28 +192,10 @@ const VARIANT_REGISTRY = {
 /** An array of all valid variant codes. */
 const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REGISTRY)[];
 
-// Functions ---------------------------------------------------------------------------------
-
-/**
- * Tests if the provided variant is a valid variant.
- * Acts as a type guard, narrowing the input to {@link VariantInfo}.
- */
-function isVariantValid(variant: string): variant is VariantCode {
-	return variant in VARIANT_REGISTRY;
-}
-
-/** Takes a variant code and returns its English display name. */
-function getVariantName(variant: VariantCode): string {
-	return VARIANT_REGISTRY[variant].name;
-}
-
 // Exports ----------------------------------------------------------
 
 export default {
 	// Constants
 	VARIANT_REGISTRY,
 	VARIANT_CODES,
-	// Functions
-	isVariantValid,
-	getVariantName,
 };

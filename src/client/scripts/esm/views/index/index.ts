@@ -1,9 +1,8 @@
 // src/client/scripts/esm/views/index/index.ts
 
-import { LobbySeek } from '../../../../../shared/types.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import lobby from './lobby.js';
+import lobby, { LobbySeek } from './lobby.js';
 
 import './gameSetupModal.js';
 
@@ -29,7 +28,7 @@ const EXAMPLE_SEEKS: LobbySeek[] = [
 		tag: 'tag2',
 		player: { type: 'guest', username: '(Guest)' },
 		color: p.WHITE,
-		variant: { group: 'horde', name: 'Horde Chess' },
+		variant: { group: 'horde', name: 'Pawn_Horde' },
 		time: '-',
 		mode: 'casual',
 	},

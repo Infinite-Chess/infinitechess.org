@@ -14,7 +14,7 @@
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from './engines/engine.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';

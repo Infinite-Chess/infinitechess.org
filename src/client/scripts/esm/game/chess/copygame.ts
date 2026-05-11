@@ -4,7 +4,7 @@
  * This script handles copying games
  */
 
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
