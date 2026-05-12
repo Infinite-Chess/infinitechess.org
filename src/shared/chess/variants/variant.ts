@@ -6,14 +6,13 @@
 
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
-import type { LoadModule } from '../load_variants/loadutil.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { VariantCode, VariantRegistryEntry } from './variantregistry.js';
 import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
-import type { PreviewModule, GameRuleModifications } from '../preview_variants/previewutil.js';
+import type { VariantModule, GameRuleModifications } from '../variant_scripts/variantutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import movesets from '../logic/movesets.js';
@@ -21,7 +20,7 @@ import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
 import variantregistry from './variantregistry.js';
 import { players as p } from '../util/typeutil.js';
-import { DEFAULT_PROMOTIONS } from '../preview_variants/defaultPromotions.js';
+import { DEFAULT_PROMOTIONS } from '../variant_scripts/defaultPromotions.js';
 
 // Constants -------------------------------------------------------------------------------
 
@@ -33,24 +32,19 @@ const defaultTurnOrder = [p.WHITE, p.BLACK];
 
 // Module caches -------------------------------------------------------------------------------
 
-const previewModuleCache = new Map<VariantCode, PreviewModule>();
-const loadModuleCache = new Map<VariantCode, LoadModule>();
+const moduleCache = new Map<VariantCode, VariantModule>();
 
 /**
- * Ensures the preview and load module for the given variant are cached.
- * Only returns a `Promise<void>` when the modules must be dynamically imported,
+ * Ensures the module for the given variant is cached.
+ * Only returns a `Promise<void>` when the module must be dynamically imported,
  * otherwise this is synchronious.
  */
 function ensureVariantLoaded(variantCode: VariantCode): void | Promise<void> {
-	if (previewModuleCache.has(variantCode)) return; // Already loaded — synchronous fast path
+	if (moduleCache.has(variantCode)) return; // Already loaded — synchronous fast path
 	const entry = variantregistry.VARIANT_REGISTRY[variantCode] as VariantRegistryEntry;
-	return Promise.all([
-		entry.loadPreview(),
-		entry.loadModule ? entry.loadModule() : Promise.resolve(undefined),
-	]).then(([previewMod, loadMod]) => {
+	return entry.loadVariant().then((mod) => {
 		console.log(`Variant "${entry.name}" loaded!`);
-		previewModuleCache.set(variantCode, previewMod);
-		if (loadMod !== undefined) loadModuleCache.set(variantCode, loadMod);
+		moduleCache.set(variantCode, mod);
 	});
 }
 
@@ -61,14 +55,10 @@ async function loadAllVariants(): Promise<void> {
 }
 
 /** Guards against accessing a variant that hasn't been loaded yet. */
-function getPreviewModule(code: VariantCode): PreviewModule {
-	const mod = previewModuleCache.get(code);
+function getModule(code: VariantCode): VariantModule {
+	const mod = moduleCache.get(code);
 	if (!mod) throw new Error(`Variant "${code}" not loaded. Call ensureVariantLoaded() first.`);
 	return mod;
-}
-
-function getLoadModule(code: VariantCode): LoadModule | undefined {
-	return loadModuleCache.get(code);
 }
 
 // Functions ---------------------------------------------------------------------------------
@@ -129,13 +119,13 @@ function getStartingPositionOfVariant(
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
+	const mod = getModule(variantCode);
 	// eslint-disable-next-line prefer-const
-	let { position, specialRights } = getPreviewModule(variantCode).getPosition(timestamp);
+	let { position, specialRights } = mod.getPosition(timestamp);
 
-	const loadMod = getLoadModule(variantCode);
-	if (loadMod?.getGeneratorRules) {
-		// Generator-based: derive specialRights from the load module's rules
-		const rules = loadMod.getGeneratorRules();
+	if (mod.getGeneratorRules) {
+		// Generator-based: derive specialRights from the module's rules
+		const rules = mod.getGeneratorRules();
 		specialRights = icnconverter.generateSpecialRights(
 			position,
 			rules.pawnDoublePush,
@@ -170,7 +160,7 @@ function getVariantGameRuleModifications(
 	variantCode: VariantCode,
 	timestamp: number,
 ): GameRuleModifications {
-	return getPreviewModule(variantCode).gameruleModifications?.(timestamp) ?? {};
+	return getModule(variantCode).gameruleModifications?.(timestamp) ?? {};
 }
 
 /**
@@ -221,9 +211,9 @@ function getMovesetsOfVariant(
 	// Pasted games with no variant specified use the default movesets
 	if (variantCode === null) return getMovesets(undefined, slideLimit);
 
-	const loadMod = getLoadModule(variantCode);
+	const loadMod = getModule(variantCode);
 
-	if (loadMod?.genMovesetModifications) {
+	if (loadMod.genMovesetModifications) {
 		const movesetModifications = loadMod.genMovesetModifications();
 		return getMovesets(movesetModifications, slideLimit);
 	} else {
@@ -266,7 +256,7 @@ function getSpecialMovesOfVariant(
 	// Pasted games with no variant specified use the default
 	if (variantCode === null) return defaultSpecialMoves;
 
-	const overrides = getLoadModule(variantCode)?.getSpecialMoves?.();
+	const overrides = getModule(variantCode).getSpecialMoves?.();
 	if (overrides === undefined) return defaultSpecialMoves;
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
@@ -277,7 +267,7 @@ function getSpecialVicinityOfVariant(variantCode: VariantCode | null): SpecialVi
 	// Pasted games with no variant specified use the default
 	if (variantCode === null) return defaultSpecialVicinityByPiece;
 
-	const overrides = getLoadModule(variantCode)?.getSpecialVicinity?.();
+	const overrides = getModule(variantCode).getSpecialVicinity?.();
 	if (overrides === undefined) return defaultSpecialVicinityByPiece;
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
 	return defaultSpecialVicinityByPiece;
@@ -286,21 +276,21 @@ function getSpecialVicinityOfVariant(variantCode: VariantCode | null): SpecialVi
 /** Returns the preset square annotations for the given variant, if they have any. */
 function getSquarePresets(variantCode: VariantCode | null): Coords[] {
 	if (variantCode === null) return [];
-	const squarePresets = getLoadModule(variantCode)?.getAnnotePresets?.()?.squares;
+	const squarePresets = getModule(variantCode).getAnnotePresets?.()?.squares;
 	return squarePresets ? icnconverter.parsePresetSquares(squarePresets) : [];
 }
 
 /** Returns the preset ray annotations for the given variant, if they have any. */
 function getRayPresets(variantCode: VariantCode | null): BaseRay[] {
 	if (variantCode === null) return [];
-	const rayPresets = getLoadModule(variantCode)?.getAnnotePresets?.()?.rays;
+	const rayPresets = getModule(variantCode).getAnnotePresets?.()?.rays;
 	return rayPresets ? icnconverter.parsePresetRays(rayPresets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
 function getVariantWorldBorder(variantCode: VariantCode | null): bigint | undefined {
 	if (variantCode === null) return undefined;
-	return getPreviewModule(variantCode).worldBorderDist;
+	return getModule(variantCode).worldBorderDist;
 }
 
 /**
@@ -313,7 +303,7 @@ function getVariantPositionStringLength(
 	variantCode: VariantCode,
 	timestamp: number,
 ): number | undefined {
-	return getPreviewModule(variantCode).getPositionStringLength?.(timestamp);
+	return getModule(variantCode).getPositionStringLength?.(timestamp);
 }
 
 /** Returns the English display name of the given variant, as stored in the variant dictionary. */

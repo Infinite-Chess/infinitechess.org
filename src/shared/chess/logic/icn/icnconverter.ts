@@ -21,7 +21,7 @@ import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import winconutil from '../../util/winconutil.js';
-import { DEFAULT_PROMOTIONS } from '../../preview_variants/defaultPromotions.js';
+import { DEFAULT_PROMOTIONS } from '../../variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
 import {

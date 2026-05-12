@@ -25,7 +25,7 @@ import legalmoves from './legalmoves.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import { players as p } from '../util/typeutil.js';
-import fourdimensionalloader from '../load_variants/fourdimensionalloader.js';
+import fourdimensionalloader from '../variant_scripts/fourdimensionalloader.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
