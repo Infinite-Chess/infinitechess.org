@@ -12,53 +12,11 @@ import type { Movesets, RawMovesets } from '../logic/movesets.js';
 import bimath from '../../util/math/bimath.js';
 import movesets from '../logic/movesets.js';
 import coordutil from '../util/coordutil.js';
+import gen4DPosition from './gen4DPosition.js';
 import { rawTypes as r } from '../util/typeutil.js';
 import fourdimensionalmoves from '../logic/fourdimensionalmoves.js';
-import gen4DPosition, { Dimensions } from './gen4DPosition.js';
-
-// Variables ------------------------------------------------------------------------------------------------
-
-/** Contains all relevant quantities for the size of the 4D chess board. */
-let dim: Dimensions | undefined;
-
-/**
- * mov: Contains all relevant parameters for movement logic on the 4D board
- */
-const mov = {
-	/** true: allow quadragonal and triagonal king and queen movement. false: do not allow it. */
-	STRONG_KINGS_AND_QUEENS: false,
-	/**
-	 * true: pawns can capture along any forward-sideways diagonal, like brawns in  5D chess.
-	 * false: pawns can only capture along strictly spacelike or timelike diagonals, like pawns in 5D chess.
-	 */
-	STRONG_PAWNS: true,
-};
-
-// Utility ---------------------------------------------------------------------------------------------------------
-
-function set4DBoardDimensions(boards_x: bigint, boards_y: bigint, board_spacing: bigint): void {
-	dim = gen4DPosition.getDimensions(boards_x, boards_y, board_spacing);
-}
-
-function get4DBoardDimensions(): Dimensions {
-	return dim!;
-}
-
-function setMovementType(strong_kings_and_queens: boolean, strong_pawns: boolean): void {
-	mov.STRONG_KINGS_AND_QUEENS = strong_kings_and_queens;
-	mov.STRONG_PAWNS = strong_pawns;
-}
-
-/**
- * Returns the type of queen, king, and pawn movements in the last loaded 4 dimension variant.
- * Triagonal? Quadragonal? Brawn?
- */
-function getMovementType(): { STRONG_KINGS_AND_QUEENS: boolean; STRONG_PAWNS: boolean } {
-	return mov;
-}
 
 // Moveset Overrides --------------------------------------------------------------------------------------------------
-
 /**
  * Generates the moveset for the sliding pieces
  * @param boards_x - Number of 2D boards in x direction
@@ -75,8 +33,7 @@ function gen4DMoveset(
 	strong_kings_and_queens: boolean,
 	strong_pawns: boolean,
 ): Movesets {
-	set4DBoardDimensions(boards_x, boards_y, board_spacing);
-	setMovementType(strong_kings_and_queens, strong_pawns);
+	const dim = gen4DPosition.getDimensions(boards_x, boards_y, board_spacing);
 
 	const rawMovesets: RawMovesets = {
 		[r.QUEEN]: {
@@ -93,15 +50,18 @@ function gen4DMoveset(
 		},
 		[r.KING]: {
 			individual: [],
-			special: fourdimensionalmoves.fourDimensionalKingMove,
+			special: (gamefile, coords, color, premove) =>
+				fourdimensionalmoves.fourDimensionalKingMove(gamefile, coords, color, premove, dim, strong_kings_and_queens), // prettier-ignore
 		},
 		[r.KNIGHT]: {
 			individual: [],
-			special: fourdimensionalmoves.fourDimensionalKnightMove,
+			special: (gamefile, coords, color, premove) =>
+				fourdimensionalmoves.fourDimensionalKnightMove(gamefile, coords, color, premove, dim), // prettier-ignore
 		},
 		[r.PAWN]: {
 			individual: [],
-			special: fourdimensionalmoves.fourDimensionalPawnMove,
+			special: (gamefile, coords, color, premove) =>
+				fourdimensionalmoves.fourDimensionalPawnMove(gamefile, coords, color, premove, dim, strong_pawns), // prettier-ignore
 		},
 	};
 
@@ -109,15 +69,15 @@ function gen4DMoveset(
 		for (let baseV = 1n; baseV >= -1n; baseV--) {
 			for (let offsetH = 1n; offsetH >= -1n; offsetH--) {
 				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
-					const x = dim!.BOARD_SPACING * baseH + offsetH;
-					const y = dim!.BOARD_SPACING * baseV + offsetV;
+					const x = dim.BOARD_SPACING * baseH + offsetH;
+					const y = dim.BOARD_SPACING * baseV + offsetV;
 
 					if (x < 0n) continue; // If the x coordinate is negative, skip this iteration
 					if (x === 0n && y <= 0n) continue; // Skip if x is 0 and y is negative
 					// Add the moves
 
 					// allow any queen move if STRONG_KINGS_AND_QUEENS, else group her with bishops and rooks
-					if (mov.STRONG_KINGS_AND_QUEENS)
+					if (strong_kings_and_queens)
 						rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 							null,
 							null,
@@ -132,7 +92,7 @@ function gen4DMoveset(
 							null,
 							null,
 						];
-						if (!mov.STRONG_KINGS_AND_QUEENS)
+						if (!strong_kings_and_queens)
 							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 								null,
 								null,
@@ -147,7 +107,7 @@ function gen4DMoveset(
 							null,
 							null,
 						];
-						if (!mov.STRONG_KINGS_AND_QUEENS)
+						if (!strong_kings_and_queens)
 							rawMovesets[r.QUEEN]!.sliding![coordutil.getKeyFromCoords([x, y])] = [
 								null,
 								null,
@@ -275,8 +235,6 @@ function getKingVicinity(board_spacing: bigint, strong_kings_and_queens: boolean
 // Exports ------------------------------------------------------------------------------------------------------------
 
 export default {
-	get4DBoardDimensions,
-	getMovementType,
 	gen4DMoveset,
 	getPawnVicinity,
 	getKnightVicinity,

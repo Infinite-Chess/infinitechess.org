@@ -11,6 +11,7 @@
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
+import type { Dimensions } from '../variant_scripts/gen4DPosition.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
@@ -25,7 +26,6 @@ import legalmoves from './legalmoves.js';
 import boardchanges from './boardchanges.js';
 import specialdetect from './specialdetect.js';
 import { players as p } from '../util/typeutil.js';
-import fourdimensionalloader from '../variant_scripts/fourdimensionalloader.js';
 
 // Pawn Legal Move Calculation and Execution -----------------------------------------------------------------
 
@@ -35,10 +35,16 @@ function fourDimensionalPawnMove(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
+	dim: Dimensions,
+	strong_pawns: boolean,
 ): CoordsTagged[] {
 	const legalMoves: CoordsTagged[] = [];
-	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'spacelike', premove)); // Spacelike
-	legalMoves.push(...pawnLegalMoves(gamefile, coords, color, 'timelike', premove)); // Timelike
+	legalMoves.push(
+		...pawnLegalMoves(gamefile, coords, color, 'spacelike', premove, dim, strong_pawns),
+	); // Spacelike
+	legalMoves.push(
+		...pawnLegalMoves(gamefile, coords, color, 'timelike', premove, dim, strong_pawns),
+	); // Timelike
 	return legalMoves;
 }
 
@@ -55,9 +61,10 @@ function pawnLegalMoves(
 	color: Player,
 	movetype: 'spacelike' | 'timelike',
 	premove: boolean,
+	dim: Dimensions,
+	strong_pawns: boolean,
 ): CoordsTagged[] {
 	const { basegame, boardsim } = gamefile;
-	const dim = fourdimensionalloader.get4DBoardDimensions();
 	const distance = movetype === 'spacelike' ? 1n : dim.BOARD_SPACING;
 	const distance_complement = movetype === 'spacelike' ? dim.BOARD_SPACING : 1n;
 
@@ -120,8 +127,6 @@ function pawnLegalMoves(
 	}
 
 	// 2. It can capture diagonally if there are opponent pieces there
-	const strong_pawns = fourdimensionalloader.getMovementType().STRONG_PAWNS;
-
 	const coordsToCapture: CoordsTagged[] = [
 		[coords[0] - distance, coords[1] + yDistanceParity],
 		[coords[0] + distance, coords[1] + yDistanceParity],
@@ -278,9 +283,9 @@ function fourDimensionalKnightMove(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
+	dim: Dimensions,
 ): Coords[] {
 	const individualMoves: Coords[] = [];
-	const dim = fourdimensionalloader.get4DBoardDimensions();
 
 	for (let baseH = 2n; baseH >= -2n; baseH--) {
 		for (let baseV = 2n; baseV >= -2n; baseV--) {
@@ -345,6 +350,8 @@ function fourDimensionalKingMove(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
+	dim: Dimensions,
+	strong_kings_and_queens: boolean,
 ): Coords[] {
 	const legalMoves: Coords[] = kingLegalMoves(
 		gamefile.boardsim,
@@ -352,6 +359,8 @@ function fourDimensionalKingMove(
 		coords,
 		color,
 		premove,
+		dim,
+		strong_kings_and_queens,
 	);
 	legalMoves.push(...specialdetect.kings(gamefile, coords, color, premove)); // Adds legal castling
 	return legalMoves;
@@ -369,9 +378,10 @@ function kingLegalMoves(
 	coords: Coords,
 	color: Player,
 	premove: boolean,
+	dim: Dimensions,
+	strong_kings_and_queens: boolean,
 ): Coords[] {
 	const individualMoves: Coords[] = [];
-	const dim = fourdimensionalloader.get4DBoardDimensions();
 
 	for (let baseH = 1n; baseH >= -1n; baseH--) {
 		for (let baseV = 1n; baseV >= -1n; baseV--) {
@@ -379,7 +389,7 @@ function kingLegalMoves(
 				for (let offsetV = 1n; offsetV >= -1n; offsetV--) {
 					// only allow moves that change one or two dimensions if triagonals and diagonals are disabled
 					if (
-						!fourdimensionalloader.getMovementType().STRONG_KINGS_AND_QUEENS &&
+						!strong_kings_and_queens &&
 						baseH * baseH + baseV * baseV + offsetH * offsetH + offsetV * offsetV > 2
 					)
 						continue;
