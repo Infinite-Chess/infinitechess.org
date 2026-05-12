@@ -351,9 +351,26 @@ function generateTables(): void {
 
 function initDatabase(): void {
 	generateTables();
+	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
+}
+
+/**
+ * TEMPORARY MIGRATION: Remove this function (and its call in initDatabase) once it has run in production.
+ *
+ * The `position_pasted` column used to exist on `live_games` and needs to be removed from old DBs.
+ * This only logs when the column is found and deleted.
+ */
+function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
+	const liveGamesColumns = db.all<{ name: string }>("PRAGMA table_info('live_games')");
+	const hasPosPastedColumn = liveGamesColumns.some((column) => column.name === 'position_pasted');
+
+	if (!hasPosPastedColumn) return;
+
+	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
+	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
