@@ -11,9 +11,9 @@ import type { Square } from './annotations.js';
 import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/util/coordutil.js';
 
 import vectors from '../../../../../../../shared/util/math/vectors.js';
-import variant from '../../../../../../../shared/chess/variants/variant.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
+import variantreader from '../../../../../../../shared/chess/variants/variantreader.js';
 
 import space from '../../../misc/space.js';
 import mouse from '../../../../util/mouse.js';
@@ -167,7 +167,8 @@ function clearPresetOverrides(): void {
 
 function render(highlights: Square[]): void {
 	const presetSquares =
-		preset_squares ?? variant.getSquarePresets(gameslot.getGamefile()!.boardsim.variant);
+		preset_squares ??
+		variantreader.getSquarePresets(gameslot.getGamefile()!.boardsim.variantModule);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const u_size = boardpos.areZoomedOut()

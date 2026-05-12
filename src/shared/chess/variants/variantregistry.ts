@@ -33,7 +33,7 @@ export type VariantRegistryEntry = {
 	loadVariant: () => Promise<VariantModule>;
 };
 
-// ====================================== VARIANT REGISTRY ======================================
+// ================================ VARIANT REGISTRY ================================
 
 const VARIANT_REGISTRY = {
 	// ---- Standard ----
@@ -181,10 +181,53 @@ const VARIANT_REGISTRY = {
 /** An array of all valid variant codes. */
 const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REGISTRY)[];
 
+// Functions ------------------------------------------------------------------
+
+/**
+ * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
+ * Warns if the variant is not recognized.
+ */
+function resolveVariantCode(variantName: string | undefined): VariantCode | null {
+	if (variantName === undefined) return null;
+	// Direct code match
+	if (variantName in VARIANT_REGISTRY) return variantName as VariantCode;
+	// Search by English display name
+	for (const [code, variantEntry] of Object.entries(VARIANT_REGISTRY) as [
+		VariantCode,
+		VariantRegistryEntry,
+	][]) {
+		if (variantEntry.name === variantName) return code;
+	}
+	console.warn(`Variant "${variantName}" is not recognized.`);
+	return null;
+}
+
+/** Returns the English display name of the given variant code. */
+function getVariantName(variantCode: VariantCode): string {
+	return VARIANT_REGISTRY[variantCode].name;
+}
+
+/**
+ * Tests if the provided variant is a valid variant.
+ * Acts as a type guard, narrowing the input to {@link VariantCode}.
+ */
+function isVariantValid(variant: string): variant is VariantCode {
+	return variant in VARIANT_REGISTRY;
+}
+
+/** Returns the dynamic import function for the given variant code. */
+function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule> {
+	return VARIANT_REGISTRY[variantCode].loadVariant;
+}
+
 // Exports ----------------------------------------------------------
 
 export default {
 	// Constants
-	VARIANT_REGISTRY,
 	VARIANT_CODES,
+	// Functions
+	resolveVariantCode,
+	getVariantName,
+	isVariantValid,
+	getVariantLoader,
 };

@@ -4,16 +4,15 @@
  * This script takes an ICN, or a compressed abridged gamefile, and constructs a full gamefile from them.
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/types.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { FullGame, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	MovePreprint,
 	LongFormatIn,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
 
@@ -52,7 +51,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 		longformIn.metadata.UTCDate,
 		longformIn.metadata.UTCTime,
 	);
-	const resolvedVariant = variant.resolveVariantCode(longformIn.metadata.Variant);
+	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
 	return gamefile.initFullGame(
 		longformIn.metadata,

@@ -12,14 +12,13 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from './engines/engine.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { ServerGameInfo } from '../websocket/socketschemas.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ClockValues,
 	MetaData,
@@ -29,8 +28,8 @@ import type {
 } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gui from '../gui/gui.js';
@@ -145,7 +144,7 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const variantName = variant.getVariantName(options.variant);
+	const variantName = variantregistry.getVariantName(options.variant);
 	const dateTimestamp = Date.now();
 	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		`Casual local ${variantName} infinite chess game`,
@@ -202,7 +201,7 @@ async function startOnlineGame(options: {
 		clockValues: options.clockValues,
 	};
 
-	const resolvedVariant = variant.resolveVariantCode(options.metadata.Variant);
+	const resolvedVariant = variantregistry.resolveVariantCode(options.metadata.Variant);
 	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		options.metadata.UTCDate,
 		options.metadata.UTCTime,
@@ -286,7 +285,7 @@ async function startEngineGame(options: {
 		options.timeControl,
 		dateTimestamp,
 	);
-	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
+	if (options.variant) metadata.Variant = variantregistry.getVariantName(options.variant);
 	metadata.White =
 		options.youAreColor === p.WHITE
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
@@ -338,7 +337,7 @@ async function startBoardEditor(): Promise<void> {
 		dateTimestamp,
 	);
 	const variantCode: VariantCode = 'Classical';
-	metadata.Variant = variant.getVariantName(variantCode);
+	metadata.Variant = variantregistry.getVariantName(variantCode);
 
 	const viewWhitePerspective = true;
 

@@ -31,6 +31,7 @@ import gamefile from '../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
 import servermetadatautil from '../servermetadatautil.js';
@@ -144,10 +145,11 @@ function restoreSingleGame(
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
 	// 5. Create the basegame
+	const mod = matchInfo.variant !== null ? variantcache.getModule(matchInfo.variant) : undefined;
 	const basegame = gamefile.initGame(
 		gameMetadata,
 		gameRow.time_created,
-		matchInfo.variant,
+		mod,
 		gameConclusion,
 		clockValues,
 	);
@@ -164,6 +166,7 @@ function restoreSingleGame(
 		const boardsim = gamefile.initBoard(
 			basegame.gameRules,
 			matchInfo.variant,
+			mod,
 			basegame.dateTimestamp,
 		);
 		servergame.boardsim = boardsim;

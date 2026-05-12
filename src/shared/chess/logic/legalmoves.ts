@@ -5,8 +5,8 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
-import type { VariantCode } from '../variants/variantregistry.js';
 import type { PieceMoveset } from './movesets.js';
+import type { VariantModule } from '../variant_scripts/variantutil.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
@@ -16,10 +16,10 @@ import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
 import bimath from '../../util/math/bimath.js';
-import variant from '../variants/variant.js';
 import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
+import variantreader from '../variants/variantreader.js';
 import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';
 import organizedpieces from './organizedpieces.js';
@@ -102,18 +102,13 @@ function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity 
  * to see if they would check you or not.
  * This saves us from having to iterate through every single
  * special piece in the game to see if they would check you.
- * @param variantCode - The variant code, or null for custom/pasted positions.
- * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param mod - The loaded variant module, or `undefined` for custom/pasted positions.
  * @param existingRawTypes
  * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
  */
-function genSpecialVicinity(
-	variantCode: VariantCode | null,
-	timestamp: number,
-	existingRawTypes: RawType[],
-): Vicinity {
-	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(variantCode);
-	const vicinity = {} as Vicinity;
+function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: RawType[]): Vicinity {
+	const specialVicinityByPiece = variantreader.getSpecialVicinityOfVariant(mod);
+	const vicinity: Vicinity = {};
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
 		const rawType = Number(rawTypeString) as RawType;

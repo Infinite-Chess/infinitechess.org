@@ -10,7 +10,8 @@
 
 import type { VariantCode } from './variantregistry.js';
 
-import variant from './variant.js';
+import variantcache from './variantcache.js';
+import variantreader from './variantreader.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -36,7 +37,8 @@ function doesVariantSupportServerValidation(
 	timestamp: number,
 ): boolean {
 	if (variantCode === null) return false;
-	const positionStringLength = variant.getVariantPositionStringLength(variantCode, timestamp);
+	const mod = variantcache.getModule(variantCode);
+	const positionStringLength = variantreader.getVariantPositionStringLength(mod, timestamp);
 	if (positionStringLength === undefined) return false; // Generator-based variant
 	return positionStringLength <= POSITION_STRING_THRESHOLD;
 }

@@ -7,8 +7,8 @@ import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { PieceMoveset } from './movesets.js';
+import type { VariantModule } from '../variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { VariantOptions } from './initvariant.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { MoveFull, MoveRecord } from './movepiece.js';
@@ -18,14 +18,14 @@ import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 import clock from './clock.js';
 import jsutil from '../../util/jsutil.js';
-import variant from '../variants/variant.js';
 import typeutil from '../util/typeutil.js';
 import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import legalmoves from './legalmoves.js';
-import initvariant from './initvariant.js';
 import wincondition from './wincondition.js';
+import variantcache from '../variants/variantcache.js';
+import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
 import organizedpieces from './organizedpieces.js';
 import gamefileutility from '../util/gamefileutility.js';
@@ -39,6 +39,27 @@ interface Snapshot {
 	fullMove: number;
 	/** The bounding box surrounding the starting position, without padding. INTEGER coords, not floating. */
 	box: BoundingBox;
+}
+
+/**
+ * Variant options that can be used to load a custom game,
+ * whether local or online, instead of one of the default variants.
+ */
+export interface VariantOptions {
+	/**
+	 * The full move number of the turn at the provided position. Default: 1.
+	 * Can be higher if you copy just the positional information in a game with some moves played already.
+	 */
+	fullMove: number;
+	gameRules: GameRules;
+	/**
+	 * The starting position object, containing the pieces organized by key.
+	 * The key of the object is the coordinates of the piece as a string,
+	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
+	 */
+	position: Map<CoordsKey, number>;
+	/** The 3 global game states */
+	state_global: GlobalGameState;
 }
 
 /**
@@ -97,6 +118,8 @@ type Board = {
 	 * Is used to infer variant-specific game rules, such as piece movesets.
 	 */
 	variant: VariantCode | null;
+	/** The loaded variant module. Undefined if the variant is unknown. */
+	variantModule: VariantModule | undefined;
 
 	/**
 	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
@@ -140,12 +163,14 @@ interface Additional {
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode: VariantCode | null,
+	mod: VariantModule | undefined,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
 ): Game {
-	const gameRules = initvariant.getVariantGamerules(variantCode, dateTimestamp, variantOptions);
+	const gameRules =
+		variantOptions?.gameRules ?? variantreader.getGameRulesOfVariant(mod, dateTimestamp);
+
 	const clockDependantVars: ClockDependant = clock.init(
 		new Set(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
@@ -176,18 +201,42 @@ function initGame(
 function initBoard(
 	gameRules: GameRules,
 	variantCode: VariantCode | null,
+	mod: VariantModule | undefined,
 	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
 ): Board {
-	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
-		gameRules,
-		variantCode,
-		dateTimestamp,
-		variantOptions,
-	);
+	// Construct board state
+	if (
+		variantOptions?.gameRules.moveRule !== undefined &&
+		variantOptions?.state_global.moveRuleState === undefined
+	)
+		throw new Error('If moveRule is specified, moveRuleState must also be specified.');
+
+	const fullMove = variantOptions?.fullMove ?? 1;
+	const enpassant = variantOptions?.state_global.enpassant;
+	const moveRuleState =
+		variantOptions?.state_global.moveRuleState ??
+		(gameRules.moveRule !== undefined ? 0 : undefined);
+
+	let position: Map<CoordsKey, number>;
+	let specialRights: Set<CoordsKey>;
+
+	if (variantOptions) {
+		position = variantOptions.position;
+		specialRights = variantOptions.state_global.specialRights;
+	} else if (mod !== undefined) {
+		({ position, specialRights } = variantreader.getStartingPositionOfVariant(
+			mod,
+			dateTimestamp,
+		));
+	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
+
+	const state_global: GlobalGameState = { specialRights };
+	if (enpassant !== undefined) state_global.enpassant = enpassant;
+	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
 
 	const state: GameState = {
 		local: {
@@ -198,19 +247,11 @@ function initBoard(
 		global: jsutil.deepCopyObject(state_global),
 	};
 
-	const { pieceMovesets, specialMoves } = initvariant.getPieceMovesets(
-		variantCode,
-		dateTimestamp,
-		gameRules.slideLimit,
-	);
+	// Calculate movesets
+	const pieceMovesets = variantreader.getMovesetsOfVariant(mod, gameRules.slideLimit);
+	const specialMoves = variantreader.getSpecialMovesOfVariant(mod);
 
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
-		position,
-		pieceMovesets,
-		gameRules.turnOrder,
-		editor,
-		gameRules.promotionsAllowed,
-	);
+	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotionsAllowed); // prettier-ignore
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 
@@ -220,7 +261,7 @@ function initBoard(
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(variantCode);
+	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(mod);
 	if (worldBorderDist !== undefined) {
 		if (worldBorderProperty === undefined)
 			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
@@ -245,11 +286,7 @@ function initBoard(
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(
-		variantCode,
-		dateTimestamp,
-		existingRawTypes,
-	);
+	const specialVicinity = legalmoves.genSpecialVicinity(mod, existingRawTypes);
 
 	const moves: MoveFull[] = [];
 
@@ -265,6 +302,7 @@ function initBoard(
 		specialMoves,
 		editor,
 		variant: variantCode,
+		variantModule: mod,
 		startSnapshot,
 	};
 }
@@ -315,12 +353,16 @@ async function initFullGame(
 	additional: Additional = {},
 	validateMoves?: true,
 ): Promise<FullGame> {
-	if (variantCode !== null) await variant.ensureVariantLoaded(variantCode);
+	let mod: VariantModule | undefined;
+	if (variantCode !== null) {
+		await variantcache.ensureVariantLoaded(variantCode!);
+		mod = variantcache.getModule(variantCode);
+	}
 
 	const basegame = initGame(
 		metadata,
 		dateTimestamp,
-		variantCode,
+		mod,
 		additional.gameConclusion,
 		additional.clockValues,
 		additional.variantOptions,
@@ -328,6 +370,7 @@ async function initFullGame(
 	const boardsim = initBoard(
 		basegame.gameRules,
 		variantCode,
+		mod,
 		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,

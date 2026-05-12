@@ -6,14 +6,15 @@
 
 import type { MetaData } from '../../../../../shared/types.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import variant from '../../../../../shared/chess/variants/variant.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import variantreader from '../../../../../shared/chess/variants/variantreader.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
 import icnconverter, {
 	MoveParsed,
@@ -122,9 +123,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 	}
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = variant.resolveAndNormalizeVariantFromMetadata(
-		longformOut.metadata,
-	);
+	const resolvedVariantCode = resolveAndNormalizeVariantFromMetadata(longformOut.metadata);
 
 	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
@@ -217,14 +216,39 @@ function getPositionAndSpecialRightsFromLongFormat(
 		};
 	} else if (variantCode !== null) {
 		// No position specified in the ICN, extract from the variant
-		return variant.getStartingPositionOfVariant(variantCode, timestamp);
+		return variantreader.getStartingPositionOfVariant(
+			variantcache.getModule(variantCode),
+			timestamp,
+		);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };
 	}
 }
 
+/**
+ * Resolves the variant from the metadata, normalizes the metadata's
+ * `Variant` property to the English display name (if recognized),
+ * or deletes it (if not recognized), then returns the resolved {@link VariantCode}.
+ * MUTATES the input metadata object.
+ */
+function resolveAndNormalizeVariantFromMetadata(metadata: {
+	Variant?: string;
+}): VariantCode | null {
+	if (!metadata.Variant) return null;
+	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
+	if (resolved !== null) {
+		// Normalize to English display name
+		metadata.Variant = variantregistry.getVariantName(resolved);
+	} else {
+		// Unrecognized Variant: Treat as if no variant was specified
+		delete metadata.Variant;
+	}
+	return resolved;
+}
+
 export default {
 	callbackPaste,
 	getPositionAndSpecialRightsFromLongFormat,
+	resolveAndNormalizeVariantFromMetadata,
 };

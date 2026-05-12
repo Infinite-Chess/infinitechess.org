@@ -4,15 +4,15 @@
  * This script handles checkmate practice logic
  */
 
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
 import {
@@ -98,7 +98,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		fullMove: 1,
 		position,
 		state_global: { specialRights },
-		gameRules: variant.getBareMinimumGameRules(),
+		gameRules: variantreader.getBareMinimumGameRules(),
 	};
 	const currentEngine = 'engineCheckmatePractice' as const;
 

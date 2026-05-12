@@ -15,7 +15,6 @@
  */
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
-import type { VariantOptions } from '../../../../../../shared/chess/logic/initvariant';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
 import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
@@ -23,25 +22,26 @@ import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/
 import type { ActivePosition, StorageType } from '../boardeditor';
 
 import bimath from '../../../../../../shared/util/math/bimath';
-import variant from '../../../../../../shared/chess/variants/variant';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import variantreader from '../../../../../../shared/chess/variants/variantreader';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces';
-import gamefile, {
-	Additional,
-	Board,
-	FullGame,
-} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
+import gamefile, {
+	Additional,
+	Board,
+	FullGame,
+	VariantOptions,
+} from '../../../../../../shared/chess/logic/gamefile';
 
 import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';
@@ -91,7 +91,7 @@ async function clearAll(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
-	const gameRules = variant.getBareMinimumGameRules();
+	const gameRules = variantreader.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
 	const state_global: GlobalGameState = { specialRights };
@@ -397,7 +397,7 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = variant.resolveAndNormalizeVariantFromMetadata(
+	const resolvedVariantCode = pastegame.resolveAndNormalizeVariantFromMetadata(
 		longformOut.metadata,
 	);
 	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(

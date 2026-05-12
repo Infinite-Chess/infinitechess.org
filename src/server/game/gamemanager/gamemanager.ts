@@ -18,6 +18,7 @@ import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import {
@@ -107,12 +108,13 @@ function createGame(
 		now,
 		ratinginfo,
 	);
-	const basegame = gamefile.initGame(metadata, now, invite.variant);
+	const mod = invite.variant !== null ? variantcache.getModule(invite.variant) : undefined;
+	const basegame = gamefile.initGame(metadata, now, mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(match.variant, basegame.dateTimestamp)
-		? gamefile.initBoard(basegame.gameRules, match.variant, basegame.dateTimestamp)
+		? gamefile.initBoard(basegame.gameRules, match.variant, mod, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };
