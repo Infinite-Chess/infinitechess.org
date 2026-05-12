@@ -145,13 +145,7 @@ function restoreSingleGame(
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
 	// 5. Create the basegame
-	const variant =
-		matchInfo.variant !== null
-			? {
-					code: matchInfo.variant,
-					mod: variantcache.getModule(matchInfo.variant),
-				}
-			: undefined;
+	const variant = { code: matchInfo.variant, mod: variantcache.getModule(matchInfo.variant) };
 	const basegame = gamefile.initGame(
 		gameMetadata,
 		gameRow.time_created,

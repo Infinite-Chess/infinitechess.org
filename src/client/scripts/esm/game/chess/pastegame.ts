@@ -217,6 +217,7 @@ async function getPositionAndSpecialRightsFromLongFormat(
 	} else if (variantCode !== undefined) {
 		// No position specified in the ICN, extract from the variant
 		// Before pasting a game, we must ensure the variant has been loaded
+		await variantcache.ensureVariantLoaded(variantCode);
 		const mod = variantcache.getModule(variantCode);
 		return variantreader.getStartingPositionOfVariant(mod, timestamp);
 	} else {

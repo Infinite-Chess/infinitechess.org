@@ -108,13 +108,7 @@ function createGame(
 		now,
 		ratinginfo,
 	);
-	const variant =
-		invite.variant !== undefined
-			? {
-					code: invite.variant,
-					mod: variantcache.getModule(invite.variant),
-				}
-			: undefined;
+	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
 	const basegame = gamefile.initGame(metadata, now, variant?.mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
