@@ -145,11 +145,17 @@ function restoreSingleGame(
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
 	// 5. Create the basegame
-	const mod = matchInfo.variant !== null ? variantcache.getModule(matchInfo.variant) : undefined;
+	const variant =
+		matchInfo.variant !== null
+			? {
+					code: matchInfo.variant,
+					mod: variantcache.getModule(matchInfo.variant),
+				}
+			: undefined;
 	const basegame = gamefile.initGame(
 		gameMetadata,
 		gameRow.time_created,
-		mod,
+		variant?.mod,
 		gameConclusion,
 		clockValues,
 	);
@@ -163,12 +169,7 @@ function restoreSingleGame(
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
-		const boardsim = gamefile.initBoard(
-			basegame.gameRules,
-			matchInfo.variant,
-			mod,
-			basegame.dateTimestamp,
-		);
+		const boardsim = gamefile.initBoard(basegame.gameRules, variant, basegame.dateTimestamp);
 		servergame.boardsim = boardsim;
 		// Pushes moves to BOTH the basegame and boardsim
 		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);

@@ -108,13 +108,19 @@ function createGame(
 		now,
 		ratinginfo,
 	);
-	const mod = invite.variant !== null ? variantcache.getModule(invite.variant) : undefined;
-	const basegame = gamefile.initGame(metadata, now, mod);
+	const variant =
+		invite.variant !== undefined
+			? {
+					code: invite.variant,
+					mod: variantcache.getModule(invite.variant),
+				}
+			: undefined;
+	const basegame = gamefile.initGame(metadata, now, variant?.mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(match.variant, basegame.dateTimestamp)
-		? gamefile.initBoard(basegame.gameRules, match.variant, mod, basegame.dateTimestamp)
+		? gamefile.initBoard(basegame.gameRules, variant, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };

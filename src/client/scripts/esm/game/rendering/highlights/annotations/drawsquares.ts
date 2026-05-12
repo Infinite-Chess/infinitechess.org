@@ -168,7 +168,7 @@ function clearPresetOverrides(): void {
 function render(highlights: Square[]): void {
 	const presetSquares =
 		preset_squares ??
-		variantreader.getSquarePresets(gameslot.getGamefile()!.boardsim.variantModule);
+		variantreader.getSquarePresets(gameslot.getGamefile()!.boardsim.variant?.mod);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const u_size = boardpos.areZoomedOut()

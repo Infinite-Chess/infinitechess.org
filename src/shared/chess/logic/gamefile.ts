@@ -30,7 +30,12 @@ import checkdetection from './checkdetection.js';
 import organizedpieces from './organizedpieces.js';
 import gamefileutility from '../util/gamefileutility.js';
 
-interface Snapshot {
+// Types ----------------------------------------------------
+
+/** A variant code paired with its loaded module. */
+export type LoadedVariant = { code: VariantCode; mod: VariantModule };
+
+export interface Snapshot {
 	/** In key format 'x,y':'type' */
 	position: Map<CoordsKey, number>;
 	/** The global state of the game beginning */
@@ -66,7 +71,7 @@ export interface VariantOptions {
  * Purely game data
  * Used on both sides
  */
-type Game = {
+export type Game = {
 	/** Information about the game */
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
@@ -80,7 +85,7 @@ type Game = {
 /**
  * The Game variables that depend on the clock.
  */
-type ClockDependant =
+export type ClockDependant =
 	| {
 			untimed: true;
 			clocks: undefined;
@@ -94,7 +99,7 @@ type ClockDependant =
  * Game data used for simulating game logic and board state
  * Use by client always, may not be used by the server.
  */
-type Board = {
+export type Board = {
 	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
 	existingTypes: number[];
 	/** An array of all RAW piece types that are in this game. */
@@ -114,12 +119,10 @@ type Board = {
 	editor: boolean;
 
 	/**
-	 * The variant code. Null for custom/pasted positions without a known variant.
-	 * Is used to infer variant-specific game rules, such as piece movesets.
+	 * The variant code and its loaded module.
+	 * Undefined for custom/pasted positions without a known variant.
 	 */
-	variant: VariantCode | null;
-	/** The loaded variant module. Undefined if the variant is unknown. */
-	variantModule: VariantModule | undefined;
+	variant?: LoadedVariant;
 
 	/**
 	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
@@ -132,14 +135,14 @@ type Board = {
  * and in the future *sometimes* used on the server-side,
  * when the server starts doing legal move validation.
  */
-type FullGame = {
+export type FullGame = {
 	basegame: Game;
 	boardsim: Board;
 };
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
-interface Additional {
+export interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. */
 	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
@@ -155,6 +158,8 @@ interface Additional {
 	/** Exact dimensions of the world border. OVERRIDES {@link worldBorderDist} if both are specified. */
 	worldBorder?: BoundingBox;
 }
+
+// Functions -------------------------------------------------------------
 
 /**
  * Creates a new {@link Game} object from provided arguments.
@@ -200,8 +205,7 @@ function initGame(
 /** Creates a new {@link Board} object from provided arguments */
 function initBoard(
 	gameRules: GameRules,
-	variantCode: VariantCode | null,
-	mod: VariantModule | undefined,
+	variant: LoadedVariant | undefined,
 	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
@@ -227,9 +231,9 @@ function initBoard(
 	if (variantOptions) {
 		position = variantOptions.position;
 		specialRights = variantOptions.state_global.specialRights;
-	} else if (mod !== undefined) {
+	} else if (variant !== undefined) {
 		({ position, specialRights } = variantreader.getStartingPositionOfVariant(
-			mod,
+			variant.mod,
 			dateTimestamp,
 		));
 	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
@@ -248,8 +252,8 @@ function initBoard(
 	};
 
 	// Calculate movesets
-	const pieceMovesets = variantreader.getMovesetsOfVariant(mod, gameRules.slideLimit);
-	const specialMoves = variantreader.getSpecialMovesOfVariant(mod);
+	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
+	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
 
 	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotionsAllowed); // prettier-ignore
 
@@ -261,7 +265,7 @@ function initBoard(
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
 
 	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(mod);
+	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(variant?.mod);
 	if (worldBorderDist !== undefined) {
 		if (worldBorderProperty === undefined)
 			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
@@ -286,7 +290,7 @@ function initBoard(
 	};
 
 	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(mod, existingRawTypes);
+	const specialVicinity = legalmoves.genSpecialVicinity(variant?.mod, existingRawTypes);
 
 	const moves: MoveFull[] = [];
 
@@ -301,8 +305,7 @@ function initBoard(
 		pieceMovesets,
 		specialMoves,
 		editor,
-		variant: variantCode,
-		variantModule: mod,
+		variant,
 		startSnapshot,
 	};
 }
@@ -353,24 +356,23 @@ async function initFullGame(
 	additional: Additional = {},
 	validateMoves?: true,
 ): Promise<FullGame> {
-	let mod: VariantModule | undefined;
+	let variant: LoadedVariant | undefined;
 	if (variantCode !== null) {
-		await variantcache.ensureVariantLoaded(variantCode!);
-		mod = variantcache.getModule(variantCode);
+		await variantcache.ensureVariantLoaded(variantCode);
+		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
 	const basegame = initGame(
 		metadata,
 		dateTimestamp,
-		mod,
+		variant?.mod,
 		additional.gameConclusion,
 		additional.clockValues,
 		additional.variantOptions,
 	);
 	const boardsim = initBoard(
 		basegame.gameRules,
-		variantCode,
-		mod,
+		variant,
 		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
@@ -378,8 +380,6 @@ async function initFullGame(
 	);
 	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
 }
-
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,

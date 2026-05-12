@@ -32,7 +32,7 @@ function copyGame(copySinglePosition: boolean): void {
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
-	const variantCode = gamefile.boardsim.variant;
+	const variantCode = gamefile.boardsim.variant?.code;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
@@ -51,7 +51,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 
 	const largeGame: boolean =
-		variantCode !== null && variantsTooBigToCopyPositionToICN.includes(variantCode);
+		variantCode !== undefined && variantsTooBigToCopyPositionToICN.includes(variantCode);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {
