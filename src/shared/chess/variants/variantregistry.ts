@@ -187,8 +187,8 @@ const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REG
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
  * Warns if the variant is not recognized.
  */
-function resolveVariantCode(variantName: string | undefined): VariantCode | null {
-	if (variantName === undefined) return null;
+function resolveVariantCode(variantName: string | undefined): VariantCode | undefined {
+	if (variantName === undefined) return undefined;
 	// Direct code match
 	if (variantName in VARIANT_REGISTRY) return variantName as VariantCode;
 	// Search by English display name
@@ -199,7 +199,7 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | null
 		if (variantEntry.name === variantName) return code;
 	}
 	console.warn(`Variant "${variantName}" is not recognized.`);
-	return null;
+	return undefined;
 }
 
 /** Returns the English display name of the given variant code. */

@@ -95,7 +95,7 @@ async function callbackPaste(_event: Event): Promise<void> {
  * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
  * @returns Whether the paste was successful
  */
-function pasteGame(longformOut: LongFormatOut): void {
+async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 	console.log('Pasting game...');
 
 	// Create a new gamefile from the longformat...
@@ -129,7 +129,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);
-	const { position, specialRights } = getPositionAndSpecialRightsFromLongFormat(
+	const { position, specialRights } = await getPositionAndSpecialRightsFromLongFormat(
 		longformOut,
 		resolvedVariantCode,
 		timestamp,
@@ -161,7 +161,7 @@ function pasteGame(longformOut: LongFormatOut): void {
 
 	const options: {
 		metadata: MetaData;
-		variant: VariantCode | null;
+		variant: VariantCode | undefined;
 		dateTimestamp: number;
 		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
@@ -200,26 +200,25 @@ function pasteGame(longformOut: LongFormatOut): void {
  * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getPositionAndSpecialRightsFromLongFormat(
+async function getPositionAndSpecialRightsFromLongFormat(
 	longFormat: LongFormatOut,
-	variantCode: VariantCode | null,
+	variantCode: VariantCode | undefined,
 	timestamp: number,
-): {
+): Promise<{
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
-} {
+}> {
 	// Get relevant position and specialRights information from longformat
 	if (longFormat.position && longFormat.state_global.specialRights) {
 		return {
 			position: longFormat.position,
 			specialRights: longFormat.state_global.specialRights,
 		};
-	} else if (variantCode !== null) {
+	} else if (variantCode !== undefined) {
 		// No position specified in the ICN, extract from the variant
-		return variantreader.getStartingPositionOfVariant(
-			variantcache.getModule(variantCode),
-			timestamp,
-		);
+		// Before pasting a game, we must ensure the variant has been loaded
+		const mod = variantcache.getModule(variantCode);
+		return variantreader.getStartingPositionOfVariant(mod, timestamp);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };
@@ -234,10 +233,10 @@ function getPositionAndSpecialRightsFromLongFormat(
  */
 function resolveAndNormalizeVariantFromMetadata(metadata: {
 	Variant?: string;
-}): VariantCode | null {
-	if (!metadata.Variant) return null;
+}): VariantCode | undefined {
+	if (!metadata.Variant) return undefined;
 	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
-	if (resolved !== null) {
+	if (resolved !== undefined) {
 		// Normalize to English display name
 		metadata.Variant = variantregistry.getVariantName(resolved);
 	} else {

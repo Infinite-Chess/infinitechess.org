@@ -405,7 +405,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		longformOut.metadata.UTCTime,
 	);
 
-	let { position, specialRights } = pastegame.getPositionAndSpecialRightsFromLongFormat(
+	let { position, specialRights } = await pastegame.getPositionAndSpecialRightsFromLongFormat(
 		longformOut,
 		resolvedVariantCode,
 		timestamp,

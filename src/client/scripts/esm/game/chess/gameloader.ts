@@ -253,7 +253,7 @@ async function startEngineGame(options: {
 	timeControl: TimeControl;
 	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
-	variant: VariantCode | null;
+	variant: VariantCode | undefined;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	youAreColor: Player;
@@ -393,7 +393,7 @@ async function startCustomLocalGame(options: {
 			...options,
 			metadata,
 			dateTimestamp,
-			variant: null, // Not specified for custom position
+			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
 			allowEditCoords: true,
 		})
@@ -451,7 +451,7 @@ async function startCustomEngineGame(options: {
 	gameslot
 		.loadGamefile({
 			metadata,
-			variant: null, // Not specified for custom position
+			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
 			allowEditCoords: false,
@@ -511,7 +511,7 @@ async function startBoardEditorFromCustomPosition(
 	gameslot
 		.loadGamefile({
 			metadata,
-			variant: null, // Not specified for custom position
+			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
 			allowEditCoords: true,
@@ -535,7 +535,7 @@ async function startBoardEditorFromCustomPosition(
  */
 async function pasteGame(options: {
 	metadata: MetaData;
-	variant: VariantCode | null;
+	variant: VariantCode | undefined;
 	dateTimestamp: number;
 	additional: Additional;
 	presetAnnotes?: PresetAnnotes;

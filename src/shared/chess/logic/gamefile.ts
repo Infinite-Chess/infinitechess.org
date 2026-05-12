@@ -352,12 +352,12 @@ function loadGameWithBoard(
 async function initFullGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode: VariantCode | null,
+	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
 ): Promise<FullGame> {
 	let variant: LoadedVariant | undefined;
-	if (variantCode !== null) {
+	if (variantCode !== undefined) {
 		await variantcache.ensureVariantLoaded(variantCode);
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
