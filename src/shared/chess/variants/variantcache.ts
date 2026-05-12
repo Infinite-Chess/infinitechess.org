@@ -2,6 +2,9 @@
 
 /**
  * Loads and manages cached variant modules.
+ *
+ * Variant info is only requested when needed, such as when previewing
+ * them in a tooltip, or actually loading the variant in a game.
  */
 
 import type { VariantCode } from './variantregistry.js';
