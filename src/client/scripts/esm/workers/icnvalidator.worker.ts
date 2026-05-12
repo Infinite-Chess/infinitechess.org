@@ -143,7 +143,15 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 		}
 
 		// Report progress every 50 games (optional optimization to keep UI responsive)
-		if (localResults.successfulCount % 10 === 0) {
+		if (
+			(localResults.successfulCount +
+				localResults.icnconverterErrors +
+				localResults.formulatorErrors +
+				localResults.illegalMoveErrors +
+				localResults.terminationMismatchErrors) %
+				10 ===
+			0
+		) {
 			self.postMessage({ type: 'progress', chunkId, count: 10 });
 		}
 	}
