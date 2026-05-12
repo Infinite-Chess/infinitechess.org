@@ -18,10 +18,10 @@ export interface LoadModule {
 	 */
 	getGeneratorRules?: () => { pawnDoublePush: boolean; castleWith?: RawType };
 	/**
-	 * Returns a function that generates the full piece moveset map for this variant.
-	 * If absent, default movesets are used.
+	 * Generates the full piece moveset modifications map for this variant.
+	 * If absent, full default movesets are used.
 	 */
-	getMovesetGenerator?: () => () => Movesets;
+	genMovesetModifications?: () => Movesets;
 	/** Returns special move function overrides. */
 	getSpecialMoves?: () => RawTypeGroup<SpecialMoveFunction>;
 	/**

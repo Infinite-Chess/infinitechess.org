@@ -223,8 +223,8 @@ function getMovesetsOfVariant(
 
 	const loadMod = getLoadModule(variantCode);
 
-	if (loadMod?.getMovesetGenerator) {
-		const movesetModifications = loadMod.getMovesetGenerator()();
+	if (loadMod?.genMovesetModifications) {
+		const movesetModifications = loadMod.genMovesetModifications();
 		return getMovesets(movesetModifications, slideLimit);
 	} else {
 		// No custom moveset generator, so just get the default movesets

@@ -16,8 +16,8 @@ export function getGeneratorRules(): { pawnDoublePush: boolean; castleWith?: Raw
 	return { pawnDoublePush: true, castleWith: r.ROOK };
 }
 
-export function getMovesetGenerator(): () => Movesets {
-	return () => fourdimensionalloader.gen4DMoveset(8n, 8n, 9n, true, false);
+export function genMovesetModifications(): Movesets {
+	return fourdimensionalloader.gen4DMoveset(8n, 8n, 9n, true, false);
 }
 
 export function getSpecialMoves(): RawTypeGroup<SpecialMoveFunction> {
