@@ -11,7 +11,6 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import * as z from 'zod';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import { isGameInstantlyDeleted } from '../../../shared/chess/variants/servervalidation.js';
 
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
@@ -47,7 +46,7 @@ function onReport(
 
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
-	if (isGameInstantlyDeleted(servergame.match.variant, servergame.basegame.dateTimestamp)) {
+	if (servergame.boardsim !== undefined) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(

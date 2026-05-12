@@ -38,6 +38,8 @@ async function loadAllVariants(): Promise<void> {
 /**
  * Retrieves an already-loaded variant module from cache.
  * Throws if the variant has not been loaded yet via {@link ensureVariantLoaded} or {@link loadAllVariants}.
+ * SHOULD ONLY ever be called immediately after calling {@link ensureVariantLoaded}, except
+ * when on the server, as {@link loadAllVariants} should have already pre-loaded everything.
  */
 function getModule(code: VariantCode): VariantModule {
 	const mod = moduleCache.get(code);

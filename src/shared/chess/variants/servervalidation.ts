@@ -8,9 +8,8 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { VariantCode } from './variantregistry.js';
+import type { LoadedVariant } from '../logic/gamefile.js';
 
-import variantcache from './variantcache.js';
 import variantreader from './variantreader.js';
 
 // Constants -----------------------------------------------------------------
@@ -29,16 +28,18 @@ const POSITION_STRING_THRESHOLD = 2500;
  * Returns `true` if the given variant supports server-side move legality validation.
  * Variants whose position string exceeds {@link POSITION_STRING_THRESHOLD} characters,
  * or that use position generators, are not supported.
- * @param variantCode - The variant code, if available.
+ * @param variant - The loaded variant, if available.
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
 function doesVariantSupportServerValidation(
-	variantCode: VariantCode | undefined,
+	variant: LoadedVariant | undefined,
 	timestamp: number,
 ): boolean {
-	if (variantCode === undefined) return false;
-	const mod = variantcache.getModule(variantCode);
-	const positionStringLength = variantreader.getVariantPositionStringLength(mod, timestamp);
+	if (variant === undefined) return false;
+	const positionStringLength = variantreader.getVariantPositionStringLength(
+		variant.mod,
+		timestamp,
+	);
 	if (positionStringLength === undefined) return false; // Generator-based variant
 	return positionStringLength <= POSITION_STRING_THRESHOLD;
 }
@@ -52,12 +53,12 @@ function doesVariantSupportServerValidation(
  * - The server removes players from the active-games list immediately.
  * - Clients do not need to send `removefromplayersinactivegames`.
  * - Clients should not send cheat reports.
- * @param variantCode - The variant code, if available.
+ * @param variant - The loaded variant, if available.
  * @param timestamp - The game's start timestamp in ms since epoch.
  * @param isPrivate - Whether the game is a private match.
  */
-function isGameInstantlyDeleted(variantCode: VariantCode | undefined, timestamp: number): boolean {
-	return doesVariantSupportServerValidation(variantCode, timestamp);
+function isGameInstantlyDeleted(variant: LoadedVariant | undefined, timestamp: number): boolean {
+	return doesVariantSupportServerValidation(variant, timestamp);
 }
 
 export { doesVariantSupportServerValidation, isGameInstantlyDeleted };

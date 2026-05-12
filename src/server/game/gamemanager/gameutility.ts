@@ -159,6 +159,7 @@ type ServerGame = {
 	/**
 	 * Used for server-side move legality validation.
 	 * Present only for small variants.
+	 * This also determines whether the server game is instantly deleted or not after conclusion.
 	 */
 	boardsim?: Board;
 };

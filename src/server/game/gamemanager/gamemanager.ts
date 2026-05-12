@@ -21,10 +21,7 @@ import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import {
-	doesVariantSupportServerValidation,
-	isGameInstantlyDeleted,
-} from '../../../shared/chess/variants/servervalidation.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -113,7 +110,7 @@ function createGame(
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
-	const boardsim = doesVariantSupportServerValidation(match.variant, basegame.dateTimestamp)
+	const boardsim = doesVariantSupportServerValidation(variant, basegame.dateTimestamp)
 		? gamefile.initBoard(basegame.gameRules, variant, basegame.dateTimestamp)
 		: undefined;
 
@@ -410,7 +407,7 @@ function teardownGame(servergame: ServerGame): void {
 		gameutility.broadcastGameUpdate(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (isGameInstantlyDeleted(servergame.match.variant, servergame.basegame.dateTimestamp)) {
+	if (servergame.boardsim !== undefined) {
 		// Server validated every move — cheating is impossible.
 		// We can log and unsubscribe clients immediately.
 		deleteGame(servergame);

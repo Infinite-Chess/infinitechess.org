@@ -361,7 +361,7 @@ function requestRemovalFromPlayersInActiveGames(): void {
 
 	// Don't send this request if the server will have deleted this game instantly.
 	const { basegame, boardsim } = gameslot.getGamefile()!;
-	if (isGameInstantlyDeleted(boardsim.variant?.code, basegame.dateTimestamp)) return;
+	if (isGameInstantlyDeleted(boardsim.variant, basegame.dateTimestamp)) return;
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
