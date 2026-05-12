@@ -429,7 +429,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = gamefile.initFullGame(
+		const loadedGamefile = await gamefile.initFullGame(
 			longformOut.metadata,
 			timestamp,
 			resolvedVariantCode,

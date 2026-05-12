@@ -1,13 +1,9 @@
 // src/shared/chess/load_variants/variants/load_omegasquared.ts
 
-/**
+/*
  * Load data for the "Showcase: Omega^2" variant.
  */
 
-/**
- * Permanent preset annotations. Can't be erased.
- * Helpful for emphasizing important lines/squares in showcasings.
- */
 export function getAnnotePresets(): { squares?: string; rays?: string } {
 	return {
 		squares: '-42,76|16,86|15,84|27,88|35,80|37,82|33,86|37,90|41,86|41,80|44,80|27,2|53,71',

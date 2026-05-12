@@ -4,15 +4,19 @@
  * "Chess" standard variant.
  */
 
-import type { VariantPreview } from '../previewutil';
+import type { CoordsKey } from '../../util/coordutil';
 
 import icnconverter from '../../logic/icn/icnconverter';
 import { CLASSICAL_POSITION_STRING } from '../classicalPositionString';
 
-export function getPreview(): VariantPreview {
-	return {
-		getPosition: () =>
-			icnconverter.generatePositionFromShortForm(CLASSICAL_POSITION_STRING).position,
-		worldBorderDist: 0n,
-	};
+export function getPosition(): {
+	position: Map<CoordsKey, number>;
+	specialRights: Set<CoordsKey>;
+} {
+	return icnconverter.generatePositionFromShortForm(CLASSICAL_POSITION_STRING);
+}
+export const worldBorderDist = 0n;
+
+export function getPositionStringLength(): number {
+	return CLASSICAL_POSITION_STRING.length;
 }

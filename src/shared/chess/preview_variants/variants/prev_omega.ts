@@ -4,7 +4,8 @@
  * "Omega" showcase variant.
  */
 
-import type { VariantPreview } from '../previewutil';
+import type { CoordsKey } from '../../util/coordutil';
+import type { GameRuleModifications } from '../previewutil';
 
 import previewutil from '../previewutil';
 import icnconverter from '../../logic/icn/icnconverter';
@@ -17,14 +18,22 @@ const POSITION_STRINGS: Record<number, string> = {
 	0: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3+|Q-1,-3|P2,-3+|K0,-4',
 };
 
-export function getPreview(timestamp: number = Date.now()): VariantPreview {
+export function getPosition(timestamp: number = Date.now()): {
+	position: Map<CoordsKey, number>;
+	specialRights: Set<CoordsKey>;
+} {
 	const positionString = previewutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
+	return icnconverter.generatePositionFromShortForm(positionString);
+}
+
+export function gameruleModifications(): GameRuleModifications {
 	return {
-		getPosition: () => icnconverter.generatePositionFromShortForm(positionString).position,
-		gameruleModifications: {
-			turnOrder: [p.BLACK, p.WHITE],
-			promotionsAllowed: null,
-			moveRule: null,
-		},
+		turnOrder: [p.BLACK, p.WHITE],
+		promotionsAllowed: null,
+		moveRule: null,
 	};
+}
+
+export function getPositionStringLength(timestamp: number = Date.now()): number {
+	return previewutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }

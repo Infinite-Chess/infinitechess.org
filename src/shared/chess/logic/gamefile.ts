@@ -133,7 +133,10 @@ interface Additional {
 	worldBorder?: BoundingBox;
 }
 
-/** Creates a new {@link Game} object from provided arguments */
+/**
+ * Creates a new {@link Game} object from provided arguments.
+ * ASSUMES THE VARIANT SCRIPT IS ALREADY LOADED. This part is synchronous.
+ */
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
@@ -302,16 +305,18 @@ function loadGameWithBoard(
 
 /**
  * Initiates both the base game and board of the FullGame at the same time.
- * Used on just the client.
+ * **Asynchronous** because variant modules must be loaded. Used on just the client.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
-function initFullGame(
+async function initFullGame(
 	metadata: MetaData,
 	dateTimestamp: number,
 	variantCode: VariantCode | null,
 	additional: Additional = {},
 	validateMoves?: true,
-): FullGame {
+): Promise<FullGame> {
+	if (variantCode !== null) await variant.ensureVariantLoaded(variantCode);
+
 	const basegame = initGame(
 		metadata,
 		dateTimestamp,

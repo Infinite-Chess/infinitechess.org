@@ -112,7 +112,7 @@ function genSpecialVicinity(
 	timestamp: number,
 	existingRawTypes: RawType[],
 ): Vicinity {
-	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(variantCode, timestamp);
+	const specialVicinityByPiece = variant.getSpecialVicinityOfVariant(variantCode);
 	const vicinity = {} as Vicinity;
 	// Object keys are strings, so we need to cast the type to a number
 	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {

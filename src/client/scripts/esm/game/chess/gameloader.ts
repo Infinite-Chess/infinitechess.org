@@ -164,7 +164,8 @@ async function startLocalGame(options: {
 			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -219,7 +220,18 @@ async function startOnlineGame(options: {
 			allowEditCoords: false,
 			additional,
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => {
+			// Logical loaded, return graphical promise
+
+			// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
+			// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
+			// THUS playing the drum sound effect for our opponent.
+			const basegame = gameslot.getGamefile()!.basegame;
+			if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
+
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	onlinegame.initOnlineGame({
@@ -227,12 +239,6 @@ async function startOnlineGame(options: {
 		youAreColor: options.youAreColor,
 		participantState: options.participantState,
 	});
-
-	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
-	// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
-	// THUS playing the drum sound effect for our opponent.
-	const basegame = gameslot.getGamefile()!.basegame;
-	if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -292,30 +298,27 @@ async function startEngineGame(options: {
 
 	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
-	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata,
-		variant: options.variant,
-		dateTimestamp,
-		viewWhitePerspective,
-		allowEditCoords: false,
-		additional: {
-			variantOptions: options.variantOptions,
-			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
-		},
-	});
+	gameslot
+		.loadGamefile({
+			metadata,
+			variant: options.variant,
+			dateTimestamp,
+			viewWhitePerspective,
+			allowEditCoords: false,
+			additional: {
+				variantOptions: options.variantOptions,
+				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
+			},
+		})
+		.then(async ({ graphical }) => {
+			// Logical loaded, return graphical promise
 
-	/** A promise that resolves when the engine script has been fetched. */
-	const enginePromise: Promise<void> = enginegame
-		.initEngineGame(options)
-		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+			/** A promise that resolves when the engine script has been fetched. */
+			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
 
-	/**
-	 * This resolves when BOTH the graphical and engine promises resolve,
-	 * OR rejects immediately when one of them rejects!
-	 */
-	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading(viewWhitePerspective))
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -355,7 +358,8 @@ async function startBoardEditor(): Promise<void> {
 			 */
 			additional: { editor: true },
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	await guipalette.initUI();
@@ -394,7 +398,8 @@ async function startCustomLocalGame(options: {
 			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -444,30 +449,27 @@ async function startCustomEngineGame(options: {
 
 	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
-	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata,
-		variant: null, // Not specified for custom position
-		dateTimestamp,
-		viewWhitePerspective,
-		allowEditCoords: false,
-		additional: {
-			variantOptions: options.additional.variantOptions,
-			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
-		},
-	});
+	gameslot
+		.loadGamefile({
+			metadata,
+			variant: null, // Not specified for custom position
+			dateTimestamp,
+			viewWhitePerspective,
+			allowEditCoords: false,
+			additional: {
+				variantOptions: options.additional.variantOptions,
+				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
+			},
+		})
+		.then(async ({ graphical }) => {
+			// Logical loaded, return graphical promise
 
-	/** A promise that resolves when the engine script has been fetched. */
-	const enginePromise: Promise<void> = enginegame
-		.initEngineGame(options)
-		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+			/** A promise that resolves when the engine script has been fetched. */
+			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
 
-	/**
-	 * This resolves when BOTH the graphical and engine promises resolve,
-	 * OR rejects immediately when one of them rejects!
-	 */
-	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading(viewWhitePerspective))
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -518,7 +520,8 @@ async function startBoardEditorFromCustomPosition(
 			additional: { ...options.additional, editor: true },
 			presetAnnotes: options.presetAnnotes,
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -560,7 +563,8 @@ async function pasteGame(options: {
 			presetAnnotes: options.presetAnnotes,
 			additional: options.additional,
 		})
-		.then((_result: any) => onFinishedLoading(viewWhitePerspective))
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,

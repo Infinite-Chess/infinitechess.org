@@ -3,10 +3,13 @@
 /**
  * Master registry of all variants.
  *
- * Stores variant's code, display name, and paths to their custom preview and load scripts.
+ * Stores variant's code, display name, and dynamic import functions for their preview and load scripts.
  *
  * Existing groups are: Standard, Horde, 4D, and Showcase.
  */
+
+import type { LoadModule } from '../load_variants/loadutil.js';
+import type { PreviewModule } from '../preview_variants/previewutil.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -27,16 +30,14 @@ export type VariantRegistryEntry = {
 	group: VariantGroup;
 	/** The English display name. */
 	name: string;
+	/** Dynamically imports the preview script for this variant. */
+	loadPreview: () => Promise<PreviewModule>;
 	/**
-	 * Absolute web path to the preview script, containing its position string and
-	 * gamerule modifications, enough to render a preview tooltip of the variant.
+	 * Dynamically imports the load script for this variant.
+	 * Only present for variants with non-default movesets, special moves,
+	 * special vicinity, or preset annotations.
 	 */
-	previewPath: string;
-	/**
-	 * Absolute web path to the load script, present only for variants with
-	 * non-default movesets, special moves, special vicinity, or preset annotations.
-	 */
-	loadPath?: string;
+	loadModule?: () => Promise<LoadModule>;
 };
 
 // ====================================== VARIANT REGISTRY ======================================
@@ -46,146 +47,146 @@ const VARIANT_REGISTRY = {
 	Classical: {
 		group: 'standard',
 		name: 'Classical',
-		previewPath: '/shared/chess/preview_variants/variants/prev_classical.js',
+		loadPreview: () => import('../preview_variants/variants/prev_classical.js'),
 	},
 	Core: {
 		group: 'standard',
 		name: 'Core',
-		previewPath: '/shared/chess/preview_variants/variants/prev_core.js',
+		loadPreview: () => import('../preview_variants/variants/prev_core.js'),
 	},
 	Standarch: {
 		group: 'standard',
 		name: 'Standarch',
-		previewPath: '/shared/chess/preview_variants/variants/prev_standarch.js',
+		loadPreview: () => import('../preview_variants/variants/prev_standarch.js'),
 	},
 	Space_Classic: {
 		group: 'standard',
 		name: 'Space Classic',
-		previewPath: '/shared/chess/preview_variants/variants/prev_spaceclassic.js',
+		loadPreview: () => import('../preview_variants/variants/prev_spaceclassic.js'),
 	},
 	CoaIP: {
 		group: 'standard',
 		name: 'Chess on an Infinite Plane',
-		previewPath: '/shared/chess/preview_variants/variants/prev_coaip.js',
+		loadPreview: () => import('../preview_variants/variants/prev_coaip.js'),
 	},
 	Space: {
 		group: 'standard',
 		name: 'Space',
-		previewPath: '/shared/chess/preview_variants/variants/prev_space.js',
+		loadPreview: () => import('../preview_variants/variants/prev_space.js'),
 	},
 	Obstocean: {
 		group: 'standard',
 		name: 'Obstocean',
-		previewPath: '/shared/chess/preview_variants/variants/prev_obstocean.js',
+		loadPreview: () => import('../preview_variants/variants/prev_obstocean.js'),
 	},
 	Chess: {
 		group: 'standard',
 		name: 'Chess',
-		previewPath: '/shared/chess/preview_variants/variants/prev_chess.js',
+		loadPreview: () => import('../preview_variants/variants/prev_chess.js'),
 	},
 	Confined_Classical: {
 		group: 'standard',
 		name: 'Confined Classical',
-		previewPath: '/shared/chess/preview_variants/variants/prev_confinedclassical.js',
+		loadPreview: () => import('../preview_variants/variants/prev_confinedclassical.js'),
 	},
 	Classical_Plus: {
 		group: 'standard',
 		name: 'Classical+',
-		previewPath: '/shared/chess/preview_variants/variants/prev_classicalplus.js',
+		loadPreview: () => import('../preview_variants/variants/prev_classicalplus.js'),
 	},
 	Pawndard: {
 		group: 'standard',
 		name: 'Pawndard',
-		previewPath: '/shared/chess/preview_variants/variants/prev_pawndard.js',
+		loadPreview: () => import('../preview_variants/variants/prev_pawndard.js'),
 	},
 	Knightline: {
 		group: 'standard',
 		name: 'Knightline',
-		previewPath: '/shared/chess/preview_variants/variants/prev_knightline.js',
+		loadPreview: () => import('../preview_variants/variants/prev_knightline.js'),
 	},
 	Palace: {
 		group: 'standard',
 		name: 'Palace',
-		previewPath: '/shared/chess/preview_variants/variants/prev_palace.js',
+		loadPreview: () => import('../preview_variants/variants/prev_palace.js'),
 	},
 	CoaIP_HO: {
 		group: 'standard',
 		name: 'Chess on an Infinite Plane - Huygens Option',
-		previewPath: '/shared/chess/preview_variants/variants/prev_coaipho.js',
+		loadPreview: () => import('../preview_variants/variants/prev_coaipho.js'),
 	},
 	CoaIP_RO: {
 		group: 'standard',
 		name: 'Chess on an Infinite Plane - Roses Option',
-		previewPath: '/shared/chess/preview_variants/variants/prev_coaipro.js',
+		loadPreview: () => import('../preview_variants/variants/prev_coaipro.js'),
 	},
 	CoaIP_NO: {
 		group: 'standard',
 		name: 'Chess on an Infinite Plane - Knightriders Option',
-		previewPath: '/shared/chess/preview_variants/variants/prev_coaipno.js',
+		loadPreview: () => import('../preview_variants/variants/prev_coaipno.js'),
 	},
 	// Deleted variants, kept to support pasting old game notation.
 	Knighted_Chess: {
 		group: 'standard',
 		name: 'Knighted Chess',
-		previewPath: '/shared/chess/preview_variants/variants/prev_knightedchess.js',
+		loadPreview: () => import('../preview_variants/variants/prev_knightedchess.js'),
 	},
 	Abundance: {
 		group: 'standard',
 		name: 'Abundance',
-		previewPath: '/shared/chess/preview_variants/variants/prev_abundance.js',
+		loadPreview: () => import('../preview_variants/variants/prev_abundance.js'),
 	},
 	Amazon_Chandelier: {
 		group: 'standard',
 		name: 'Amazon Chandelier',
-		previewPath: '/shared/chess/preview_variants/variants/prev_amazonchandelier.js',
+		loadPreview: () => import('../preview_variants/variants/prev_amazonchandelier.js'),
 	},
 	Containment: {
 		group: 'standard',
 		name: 'Containment',
-		previewPath: '/shared/chess/preview_variants/variants/prev_containment.js',
+		loadPreview: () => import('../preview_variants/variants/prev_containment.js'),
 	},
 	// ---- Horde ----
 	Pawn_Horde: {
 		group: 'horde',
 		name: 'Pawn Horde',
-		previewPath: '/shared/chess/preview_variants/variants/prev_pawnhorde.js',
+		loadPreview: () => import('../preview_variants/variants/prev_pawnhorde.js'),
 	},
 	// ---- 4D ----
 	'4x4x4x4_Chess': {
 		group: '4D',
 		name: '4×4×4×4 Chess',
-		previewPath: '/shared/chess/preview_variants/variants/prev_4x4x4x4chess.js',
-		loadPath: '/shared/chess/load_variants/variants/load_4x4x4x4chess.js',
+		loadPreview: () => import('../preview_variants/variants/prev_4x4x4x4chess.js'),
+		loadModule: () => import('../load_variants/variants/load_4x4x4x4chess.js'),
 	},
 	'5D_Chess': {
 		group: '4D',
 		name: '5D Chess',
-		previewPath: '/shared/chess/preview_variants/variants/prev_5dchess.js',
-		loadPath: '/shared/chess/load_variants/variants/load_5dchess.js',
+		loadPreview: () => import('../preview_variants/variants/prev_5dchess.js'),
+		loadModule: () => import('../load_variants/variants/load_5dchess.js'),
 	},
 	// ---- Showcase ----
 	Omega: {
 		group: 'showcase',
 		name: 'Showcase: Omega',
-		previewPath: '/shared/chess/preview_variants/variants/prev_omega.js',
+		loadPreview: () => import('../preview_variants/variants/prev_omega.js'),
 	},
 	Omega_Squared: {
 		group: 'showcase',
 		name: 'Showcase: Omega^2',
-		previewPath: '/shared/chess/preview_variants/variants/prev_omegasquared.js',
-		loadPath: '/shared/chess/load_variants/variants/load_omegasquared.js',
+		loadPreview: () => import('../preview_variants/variants/prev_omegasquared.js'),
+		loadModule: () => import('../load_variants/variants/load_omegasquared.js'),
 	},
 	Omega_Cubed: {
 		group: 'showcase',
 		name: 'Showcase: Omega^3',
-		previewPath: '/shared/chess/preview_variants/variants/prev_omegacubed.js',
-		loadPath: '/shared/chess/load_variants/variants/load_omegacubed.js',
+		loadPreview: () => import('../preview_variants/variants/prev_omegacubed.js'),
+		loadModule: () => import('../load_variants/variants/load_omegacubed.js'),
 	},
 	Omega_Fourth: {
 		group: 'showcase',
 		name: 'Showcase: Omega^4',
-		previewPath: '/shared/chess/preview_variants/variants/prev_omegafourth.js',
-		loadPath: '/shared/chess/load_variants/variants/load_omegafourth.js',
+		loadPreview: () => import('../preview_variants/variants/prev_omegafourth.js'),
+		loadModule: () => import('../load_variants/variants/load_omegafourth.js'),
 	},
 } satisfies Record<string, VariantRegistryEntry>;
 

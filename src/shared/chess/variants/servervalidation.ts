@@ -36,9 +36,9 @@ function doesVariantSupportServerValidation(
 	timestamp: number,
 ): boolean {
 	if (variantCode === null) return false;
-	const positionString = variant.getVariantPositionString(variantCode, timestamp);
-	if (positionString === undefined) return false; // Generator-based variant
-	return positionString.length <= POSITION_STRING_THRESHOLD;
+	const positionStringLength = variant.getVariantPositionStringLength(variantCode, timestamp);
+	if (positionStringLength === undefined) return false; // Generator-based variant
+	return positionStringLength <= POSITION_STRING_THRESHOLD;
 }
 
 /**

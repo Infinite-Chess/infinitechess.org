@@ -136,41 +136,37 @@ function isLoadedGameViewingWhitePerspective(): boolean {
 
 /**
  * Loads a gamefile onto the board.
+ * Returns a promise that resolves once the LOGICAL stuff is finished loading.
+ * The resolved value is `{ graphical }` — a second promise that resolves when
+ * the GRAPHICAL stuff (piece textures, mesh generation, etc.) finishes.
  *
- * This loads the logical stuff first, then returns a PROMISE that resolves
- * when the GRAPHICAL stuff is finished loading (such as piece textures).
+ * Note: Returning a plain object `{ graphical }` rather than returning the inner
+ * promise directly is intentional — JavaScript automatically flattens a promise
+ * resolved *with* another promise, collapsing the two stages into one.
  */
-function loadGamefile(loadOptions: LoadOptions): Promise<void> {
+function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<void> }> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
 	// console.log("Loading gamefile...");
 
-	// console.log('Started loading game...');
+	// The game should be considered loaded once the LOGICAL stuff is finished.
+	// Any canvas loading animation should close only when thre GRAPHICAL stuff is finished.
 
-	// The game should be considered loaded once the LOGICAL stuff is finished,
-	// but the loading animation should only be closed when
-	// both the LOGICAL and GRAPHICAL stuff are finished.
+	return loadLogical(loadOptions).then(() => {
+		// console.log('Finished loading LOGICAL game stuff.');
 
-	// First load the LOGICAL stuff...
-	loadLogical(loadOptions);
-	// console.log('Finished loading LOGICAL game stuff.');
+		// Play the start game sound once LOGICAL stuff is finished loading,
+		// so that the sound will still play in chrome, with the tab hidden, and
+		// someone accepts your invite. (In that scenario, the graphical loading is blocked)
+		gamesound.playGamestart();
 
-	// Play the start game sound once LOGICAL stuff is finished loading,
-	// so that the sound will still play in chrome, with the tab hidden, and
-	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
-	gamesound.playGamestart();
-
-	/**
-	 * Next start loading the GRAPHICAL stuff...
-	 *
-	 * This returns a promise that resolves when it's fully loaded,
-	 * since the graphics loading is asynchronious.
-	 */
-	return loadGraphical(loadOptions);
+		// Start GRAPHICAL loading immediately and hand its promise to the caller.
+		return { graphical: loadGraphical(loadOptions) };
+	});
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions): void {
-	loadedGamefile = gamefile.initFullGame(
+async function loadLogical(loadOptions: LoadOptions): Promise<void> {
+	loadedGamefile = await gamefile.initFullGame(
 		loadOptions.metadata,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,

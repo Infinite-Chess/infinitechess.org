@@ -6,12 +6,14 @@
 
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
+import type { LoadModule } from '../load_variants/loadutil.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { VariantCode, VariantRegistryEntry } from './variantregistry.js';
 import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
+import type { PreviewModule, GameRuleModifications } from '../preview_variants/previewutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import movesets from '../logic/movesets.js';
@@ -20,7 +22,6 @@ import icnconverter from '../logic/icn/icnconverter.js';
 import variantregistry from './variantregistry.js';
 import { players as p } from '../util/typeutil.js';
 import { DEFAULT_PROMOTIONS } from '../preview_variants/defaultPromotions.js';
-import { GameRuleModifications } from '../preview_variants/previewutil.js';
 
 // Constants -------------------------------------------------------------------------------
 
@@ -29,6 +30,46 @@ const defaultWinConditions: PlayerGroup<GameruleWinCondition[]> = {
 	[p.BLACK]: ['checkmate'],
 };
 const defaultTurnOrder = [p.WHITE, p.BLACK];
+
+// Module caches -------------------------------------------------------------------------------
+
+const previewModuleCache = new Map<VariantCode, PreviewModule>();
+const loadModuleCache = new Map<VariantCode, LoadModule>();
+
+/**
+ * Ensures the preview and load module for the given variant are cached.
+ * Only returns a `Promise<void>` when the modules must be dynamically imported,
+ * otherwise this is synchronious.
+ */
+function ensureVariantLoaded(variantCode: VariantCode): void | Promise<void> {
+	if (previewModuleCache.has(variantCode)) return; // Already loaded — synchronous fast path
+	const entry = variantregistry.VARIANT_REGISTRY[variantCode] as VariantRegistryEntry;
+	return Promise.all([
+		entry.loadPreview(),
+		entry.loadModule ? entry.loadModule() : Promise.resolve(undefined),
+	]).then(([previewMod, loadMod]) => {
+		console.log(`Variant "${entry.name}" loaded!`);
+		previewModuleCache.set(variantCode, previewMod);
+		if (loadMod !== undefined) loadModuleCache.set(variantCode, loadMod);
+	});
+}
+
+/** Loads all variant modules. Call once at startup on the server. */
+async function loadAllVariants(): Promise<void> {
+	await Promise.all(variantregistry.VARIANT_CODES.map((code) => ensureVariantLoaded(code)));
+	console.log('-- All variants loaded! --');
+}
+
+/** Guards against accessing a variant that hasn't been loaded yet. */
+function getPreviewModule(code: VariantCode): PreviewModule {
+	const mod = previewModuleCache.get(code);
+	if (!mod) throw new Error(`Variant "${code}" not loaded. Call ensureVariantLoaded() first.`);
+	return mod;
+}
+
+function getLoadModule(code: VariantCode): LoadModule | undefined {
+	return loadModuleCache.get(code);
+}
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -88,24 +129,25 @@ function getStartingPositionOfVariant(
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
-	const variantEntry = variantDictionary[variantCode];
+	// eslint-disable-next-line prefer-const
+	let { position, specialRights } = getPreviewModule(variantCode).getPosition(timestamp);
 
-	let positionString: string;
-	let position: Map<CoordsKey, number>;
-
-	// Does the entry have a `positionString` property, or a `generator` property?
-	if (variantEntry.positionString !== undefined) {
-		positionString = getApplicableTimestampEntry(variantEntry.positionString, timestamp);
-		return icnconverter.generatePositionFromShortForm(positionString);
-	} else {
-		// Generate the starting position
-		position = variantEntry.generator.algorithm();
-		const specialRights = icnconverter.generateSpecialRights(
+	const loadMod = getLoadModule(variantCode);
+	if (loadMod?.getGeneratorRules) {
+		// Generator-based: derive specialRights from the load module's rules
+		const rules = loadMod.getGeneratorRules();
+		specialRights = icnconverter.generateSpecialRights(
 			position,
-			variantEntry.generator.rules.pawnDoublePush,
-			variantEntry.generator.rules.castleWith,
+			rules.pawnDoublePush,
+			rules.castleWith,
 		);
 		return { position, specialRights };
+	} else {
+		// String-based: specialRights were parsed from the position string
+		return {
+			position: position,
+			specialRights: specialRights!, // Always available for string-based variants,
+		};
 	}
 }
 
@@ -128,11 +170,7 @@ function getVariantGameRuleModifications(
 	variantCode: VariantCode,
 	timestamp: number,
 ): GameRuleModifications {
-	const variantEntry = variantDictionary[variantCode];
-
-	// Does the gameruleModifications entry have multiple UTC timestamps? Or just one?
-
-	return getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp);
+	return getPreviewModule(variantCode).gameruleModifications?.(timestamp) ?? {};
 }
 
 /**
@@ -158,7 +196,7 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 
-	return jsutil.deepCopyObject(gameRules) as GameRules; // Copy it so the game doesn't modify the values in this module.
+	return jsutil.deepCopyObject(gameRules); // Copy it so the game doesn't modify the values in this module.
 }
 
 /**
@@ -178,28 +216,20 @@ function getBareMinimumGameRules(): GameRules {
  */
 function getMovesetsOfVariant(
 	variantCode: VariantCode | null,
-	timestamp: number,
 	slideLimit?: bigint,
 ): RawTypeGroup<() => PieceMoveset> {
 	// Pasted games with no variant specified use the default movesets
 	if (variantCode === null) return getMovesets(undefined, slideLimit);
-	const variantEntry = variantDictionary[variantCode];
 
-	let movesetModifications: Movesets;
+	const loadMod = getLoadModule(variantCode);
 
-	if (!variantEntry.movesetGenerator) {
-		movesetModifications = {};
-		slideLimit =
-			slideLimit ??
-			getApplicableTimestampEntry(variantEntry.gameruleModifications, timestamp).slideLimit;
+	if (loadMod?.getMovesetGenerator) {
+		const movesetModifications = loadMod.getMovesetGenerator()();
+		return getMovesets(movesetModifications, slideLimit);
 	} else {
-		movesetModifications = getApplicableTimestampEntry(
-			variantEntry.movesetGenerator,
-			timestamp,
-		)();
+		// No custom moveset generator, so just get the default movesets
+		return getMovesets(undefined, slideLimit);
 	}
-
-	return getMovesets(movesetModifications, slideLimit);
 }
 
 /**
@@ -231,33 +261,24 @@ function getMovesets(
 /** Returns the special moves for the given variant at the specified timestamp. */
 function getSpecialMovesOfVariant(
 	variantCode: VariantCode | null,
-	timestamp: number,
 ): RawTypeGroup<SpecialMoveFunction> {
 	const defaultSpecialMoves = jsutil.deepCopyObject(specialmove.defaultSpecialMoves);
 	// Pasted games with no variant specified use the default
 	if (variantCode === null) return defaultSpecialMoves;
-	const variantEntry = variantDictionary[variantCode];
 
-	if (variantEntry.specialMoves === undefined) return defaultSpecialMoves;
-
-	const overrides = getApplicableTimestampEntry(variantEntry.specialMoves, timestamp);
+	const overrides = getLoadModule(variantCode)?.getSpecialMoves?.();
+	if (overrides === undefined) return defaultSpecialMoves;
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialMoves);
 	return defaultSpecialMoves;
 }
-
 /** Returns the special vicinity for the given variant at the specified timestamp. */
-function getSpecialVicinityOfVariant(
-	variantCode: VariantCode | null,
-	timestamp: number,
-): SpecialVicinity {
+function getSpecialVicinityOfVariant(variantCode: VariantCode | null): SpecialVicinity {
 	const defaultSpecialVicinityByPiece = specialmove.getDefaultSpecialVicinitiesByPiece();
 	// Pasted games with no variant specified use the default
 	if (variantCode === null) return defaultSpecialVicinityByPiece;
-	const variantEntry = variantDictionary[variantCode];
 
-	if (variantEntry.specialVicinity === undefined) return defaultSpecialVicinityByPiece;
-
-	const overrides = getApplicableTimestampEntry(variantEntry.specialVicinity, timestamp);
+	const overrides = getLoadModule(variantCode)?.getSpecialVicinity?.();
+	if (overrides === undefined) return defaultSpecialVicinityByPiece;
 	jsutil.copyPropertiesToObject(overrides, defaultSpecialVicinityByPiece);
 	return defaultSpecialVicinityByPiece;
 }
@@ -265,36 +286,34 @@ function getSpecialVicinityOfVariant(
 /** Returns the preset square annotations for the given variant, if they have any. */
 function getSquarePresets(variantCode: VariantCode | null): Coords[] {
 	if (variantCode === null) return [];
-	const square_presets = variantDictionary[variantCode].annotePresets?.squares;
-	return square_presets ? icnconverter.parsePresetSquares(square_presets) : [];
+	const squarePresets = getLoadModule(variantCode)?.getAnnotePresets?.()?.squares;
+	return squarePresets ? icnconverter.parsePresetSquares(squarePresets) : [];
 }
 
 /** Returns the preset ray annotations for the given variant, if they have any. */
 function getRayPresets(variantCode: VariantCode | null): BaseRay[] {
 	if (variantCode === null) return [];
-	const ray_presets = variantDictionary[variantCode].annotePresets?.rays;
-	return ray_presets ? icnconverter.parsePresetRays(ray_presets) : [];
+	const rayPresets = getLoadModule(variantCode)?.getAnnotePresets?.()?.rays;
+	return rayPresets ? icnconverter.parsePresetRays(rayPresets) : [];
 }
 
 /** Returns the worldBorder property for the given variant, if they have one. */
 function getVariantWorldBorder(variantCode: VariantCode | null): bigint | undefined {
 	if (variantCode === null) return undefined;
-	return variantDictionary[variantCode].worldBorderDist;
+	return getPreviewModule(variantCode).worldBorderDist;
 }
 
 /**
- * Returns the position string for the given variant at the specified timestamp,
+ * Returns the length of the position string for the given variant at the specified timestamp,
  * or `undefined` if the variant uses a generator (no fixed position string).
  * @param variantCode - The variant code.
  * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getVariantPositionString(variantCode: VariantCode, timestamp: number): string | undefined {
-	const variantEntry = variantDictionary[variantCode];
-
-	if (!variantEntry.positionString) return undefined; // Generator-based variant
-
-	// Multiple position strings for different timestamps
-	return getApplicableTimestampEntry(variantEntry.positionString, timestamp);
+function getVariantPositionStringLength(
+	variantCode: VariantCode,
+	timestamp: number,
+): number | undefined {
+	return getPreviewModule(variantCode).getPositionStringLength?.(timestamp);
 }
 
 /** Returns the English display name of the given variant, as stored in the variant dictionary. */
@@ -315,6 +334,8 @@ function isVariantValid(variant: string): variant is VariantCode {
 export default {
 	resolveVariantCode,
 	resolveAndNormalizeVariantFromMetadata,
+	ensureVariantLoaded,
+	loadAllVariants,
 	getStartingPositionOfVariant,
 	getGameRulesOfVariant,
 	getMovesetsOfVariant,
@@ -324,7 +345,7 @@ export default {
 	getSquarePresets,
 	getRayPresets,
 	getVariantWorldBorder,
-	getVariantPositionString,
+	getVariantPositionStringLength,
 	getVariantName,
 	isVariantValid,
 };

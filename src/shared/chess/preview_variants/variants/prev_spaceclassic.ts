@@ -4,7 +4,8 @@
  * "Space Classic" standard variant.
  */
 
-import type { GameRuleModifications, VariantPreview } from '../previewutil';
+import type { CoordsKey } from '../../util/coordutil';
+import type { GameRuleModifications } from '../previewutil';
 
 import previewutil from '../previewutil';
 import icnconverter from '../../logic/icn/icnconverter';
@@ -28,10 +29,18 @@ const GAMERULE_MODIFICATIONS: Record<number, GameRuleModifications> = {
 	0: { promotionRanks: { [p.WHITE]: [4n], [p.BLACK]: [-3n] } },
 };
 
-export function getPreview(timestamp: number = Date.now()): VariantPreview {
+export function getPosition(timestamp: number = Date.now()): {
+	position: Map<CoordsKey, number>;
+	specialRights: Set<CoordsKey>;
+} {
 	const positionString = previewutil.resolveAtTimestamp(POSITION_STRINGS, timestamp);
-	return {
-		getPosition: () => icnconverter.generatePositionFromShortForm(positionString).position,
-		gameruleModifications: previewutil.resolveAtTimestamp(GAMERULE_MODIFICATIONS, timestamp),
-	};
+	return icnconverter.generatePositionFromShortForm(positionString);
+}
+
+export function gameruleModifications(timestamp: number = Date.now()): GameRuleModifications {
+	return previewutil.resolveAtTimestamp(GAMERULE_MODIFICATIONS, timestamp);
+}
+
+export function getPositionStringLength(timestamp: number = Date.now()): number {
+	return previewutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }

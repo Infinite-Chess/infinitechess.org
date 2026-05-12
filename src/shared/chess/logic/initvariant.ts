@@ -69,8 +69,8 @@ function getPieceMovesets(
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 } {
-	const pieceMovesets = variant.getMovesetsOfVariant(variantCode, timestamp, slideLimit);
-	const specialMoves = variant.getSpecialMovesOfVariant(variantCode, timestamp);
+	const pieceMovesets = variant.getMovesetsOfVariant(variantCode, slideLimit);
+	const specialMoves = variant.getSpecialMovesOfVariant(variantCode);
 	return {
 		pieceMovesets,
 		specialMoves,

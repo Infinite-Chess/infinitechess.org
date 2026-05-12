@@ -4,22 +4,23 @@
  * Omega^3 showcase variant.
  */
 
-import type { VariantPreview } from '../previewutil';
+import type { GameRuleModifications } from '../previewutil';
 
 import { BoundingBox } from '../../../util/math/bounds';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil';
 import { ext as e, players as p, rawTypes as r } from '../../util/typeutil';
 
-export function getPreview(): VariantPreview {
+export function getPosition(): { position: Map<CoordsKey, number> } {
+	return { position: genPositionOfOmegaCubed() };
+}
+
+export function gameruleModifications(): GameRuleModifications {
 	return {
-		getPosition: () => genPositionOfOmegaCubed(),
-		gameruleModifications: {
-			turnOrder: [p.BLACK, p.WHITE],
-			promotionsAllowed: null,
-			moveRule: null,
-			// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
-			winConditions: { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] },
-		},
+		turnOrder: [p.BLACK, p.WHITE],
+		promotionsAllowed: null,
+		moveRule: null,
+		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
+		winConditions: { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] },
 	};
 }
 
