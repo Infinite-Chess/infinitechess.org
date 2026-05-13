@@ -18,8 +18,8 @@ import type {
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
-import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -1680,7 +1680,7 @@ function runIterativeDeepening(
 							emptyPieceMovesets,
 							basegame.gameRules.turnOrder,
 							input_gamefile.boardsim.editor,
-							basegame.gameRules.promotionsAllowed,
+							basegame.gameRules.promotion,
 						).pieces,
 					} as unknown as Board;
 

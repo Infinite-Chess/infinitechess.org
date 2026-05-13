@@ -10,7 +10,7 @@ import type { GameRuleModifications } from '../variantutil';
 import variantutil from '../variantutil';
 import icnconverter from '../../logic/icn/icnconverter';
 import { rawTypes as r } from '../../util/typeutil';
-import { DEFAULT_PROMOTIONS } from '../defaultPromotions';
+import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// 6:43 PM Dec 24, 2025, MST - Knightriders can no longer give a discovered check on move one.
@@ -30,7 +30,9 @@ export function getPosition(timestamp: number = Date.now()): {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionsAllowed: [...DEFAULT_PROMOTIONS, r.GUARD, r.CHANCELLOR, r.KNIGHTRIDER],
+		promotion: {
+			pieces: [...DEFAULT_PROMOTION_PIECES, r.GUARD, r.CHANCELLOR, r.KNIGHTRIDER],
+		},
 	};
 }
 

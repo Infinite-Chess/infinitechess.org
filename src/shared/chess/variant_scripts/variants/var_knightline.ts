@@ -22,7 +22,7 @@ export function getPosition(): {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionsAllowed: [r.KNIGHT, r.QUEEN],
+		promotion: { pieces: [r.KNIGHT, r.QUEEN] },
 	};
 }
 

@@ -30,7 +30,7 @@ export function getPosition(timestamp: number = Date.now()): {
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		turnOrder: [p.BLACK, p.WHITE],
-		promotionsAllowed: null,
+		promotion: null,
 		moveRule: null,
 	};
 }

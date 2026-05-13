@@ -94,7 +94,7 @@ const elements_selectionList: HTMLInputElement[] = [
 /** Regexes for validating game rules input fields */
 const integerRegex = new RegExp(String.raw`^${icnconverter.integerSource}$`);
 const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.promotionRanksSource}$`);
-const promotionsAllowedRegex = new RegExp(String.raw`^${icnconverter.promotionsAllowedSource}$`);
+const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.promotionsPiecesSource}$`);
 
 // Create floating window -------------------------------------
 
@@ -224,13 +224,13 @@ function readGameRules(): void {
 		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
 	};
 
-	// promotions allowed
-	let promotionsAllowed: RawType[] | undefined = undefined;
-	const promotionsAllowedRaw = element_promotionpieces.value;
-	pa: if (promotionsAllowedRegex.test(promotionsAllowedRaw)) {
-		const runningPromotionsAllowed: RawType[] = [];
+	// promotion pieces
+	let promotionPieces: RawType[] | undefined = undefined;
+	const promotionPiecesRaw = element_promotionpieces.value;
+	pa: if (promotionPiecesRegex.test(promotionPiecesRaw)) {
+		const runningpromotionPieces: RawType[] = [];
 
-		for (const code of promotionsAllowedRaw.split(',')) {
+		for (const code of promotionPiecesRaw.split(',')) {
 			const typeStr: string | undefined = icnconverter.piece_codes_inverted[code];
 			if (typeStr === undefined) {
 				element_promotionpieces.classList.add('invalid-input');
@@ -243,19 +243,19 @@ function readGameRules(): void {
 				typeutil.royals.includes(rawType) || // Can't promote to royals
 				rawType === r.PAWN || // Can't promote to pawns
 				color === p.NEUTRAL || // Can't promote to neutrals
-				runningPromotionsAllowed.includes(rawType) // No duplicates
+				runningpromotionPieces.includes(rawType) // No duplicates
 			) {
 				element_promotionpieces.classList.add('invalid-input');
 				break pa;
 			}
 
-			runningPromotionsAllowed.push(rawType);
+			runningpromotionPieces.push(rawType);
 		}
 
 		// All promotion pieces are valid
 		element_promotionpieces.classList.remove('invalid-input');
-		promotionsAllowed = runningPromotionsAllowed;
-	} else if (promotionsAllowedRaw === '') {
+		promotionPieces = runningpromotionPieces;
+	} else if (promotionPiecesRaw === '') {
 		element_promotionpieces.classList.remove('invalid-input');
 	} else {
 		element_promotionpieces.classList.add('invalid-input');
@@ -359,7 +359,7 @@ function readGameRules(): void {
 		enPassant,
 		moveRule,
 		promotionRanks,
-		promotionsAllowed,
+		promotionPieces,
 		winConditions,
 		pawnDoublePush,
 		castling,
@@ -372,6 +372,7 @@ function readGameRules(): void {
 	egamerules.updateGamefileProperties(
 		enpassantSquare,
 		gameRules.promotionRanks,
+		gameRules.promotionPieces,
 		gameRules.playerToMove,
 		gameRules.worldBorder,
 	);
@@ -448,8 +449,8 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 		element_promotionranksBlack.value = '';
 	}
 
-	if (gamerulesGUIinfo.promotionsAllowed !== undefined) {
-		element_promotionpieces.value = gamerulesGUIinfo.promotionsAllowed
+	if (gamerulesGUIinfo.promotionPieces !== undefined) {
+		element_promotionpieces.value = gamerulesGUIinfo.promotionPieces
 			.map((type) => icnconverter.piece_codes_raw[type])
 			.join(',')
 			.toUpperCase();

@@ -12,8 +12,8 @@
 
 import type { BaseRay } from '../../../util/math/geometry.js';
 import type { MetaData } from '../../../types.js';
-import type { GameRules } from '../../util/gamerules.js';
 import type { UnboundedRectangle } from '../../../util/math/bounds.js';
+import type { GameRules, Promotion } from '../../util/gamerules.js';
 import type { GameruleWinCondition } from '../../util/winconutil.js';
 import type { EnPassant, GlobalGameState } from '../state.js';
 
@@ -21,7 +21,7 @@ import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import winconutil from '../../util/winconutil.js';
-import { DEFAULT_PROMOTIONS } from '../../variant_scripts/defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../../variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
 import {
@@ -224,8 +224,8 @@ const metadata_ordering: (keyof MetaData)[] = [
 
 /** Tests if the provided array of legal promotions is the default set of promotions. */
 function isPromotionListDefaultPromotions(promotionList: RawType[]): boolean {
-	if (promotionList.length !== DEFAULT_PROMOTIONS.length) return false;
-	return DEFAULT_PROMOTIONS.every((promotion) => promotionList.includes(promotion));
+	if (promotionList.length !== DEFAULT_PROMOTION_PIECES.length) return false;
+	return DEFAULT_PROMOTION_PIECES.every((promotion) => promotionList.includes(promotion));
 }
 
 /** The default win condition for each player, if none specified in the ICN. */
@@ -385,12 +385,12 @@ const fullMoveRegex = new RegExp(
 );
 
 const promotionRanksSource = `${integerSource}(?:,${integerSource})*`; // '8,16,24,32'
-const promotionsAllowedSource = `${piece_code_regex_source}(?:,${piece_code_regex_source})*`; // 'q,r,b,n'
+const promotionsPiecesSource = `${piece_code_regex_source}(?:,${piece_code_regex_source})*`; // 'q,r,b,n'
 // FUTURE TODO: Drop support for old way of specifying promotions in ICN.
 // Change a single player promotion source to just the rank numbers, no promotion pieces,
 // and add a new regex for detecting custom promotion pieces after all player ranks and before the closing parenthesis.
-const singlePlayerPromotionSource = `(?:${promotionRanksSource})?(?:;${promotionsAllowedSource})?`; // '8,16,24,32;q,r,b,n' | '8' | ';q,r,b,n' | ''
-/** Captures the promotion ranks and promotions allowed section in the ICN. */
+const singlePlayerPromotionSource = `(?:${promotionRanksSource})?(?:;${promotionsPiecesSource})?`; // '8,16,24,32;q,r,b,n' | '8' | ';q,r,b,n' | ''
+/** Captures the promotion ranks and promotion pieces section in the ICN. */
 const promotionsRegex = new RegExp(
 	String.raw`\((?<promotions>${singlePlayerPromotionSource}(?:\|${singlePlayerPromotionSource})*)\)${whiteSpaceOrEnd}`,
 	'y',
@@ -645,19 +645,9 @@ function LongToShort_Format(
 	positionSegments.push(String(longformat.fullMove));
 
 	// Promotion lines
-	if (longformat.gameRules.promotionRanks || longformat.gameRules.promotionsAllowed) {
-		// Make sure both promotionRanks and promotionsAllowed are present
-		if (!longformat.gameRules.promotionRanks)
-			throw Error(
-				'promotionRanks must be present when converting a game with promotionsAllowed to shortform!',
-			);
-		if (!longformat.gameRules.promotionsAllowed)
-			throw Error(
-				'promotionsAllowed must be present when converting a game with promotionRanks to shortform!',
-			);
-
-		const promotionRanksCopy = jsutil.deepCopyObject(longformat.gameRules.promotionRanks);
-		const promotionsAllowed = longformat.gameRules.promotionsAllowed;
+	if (longformat.gameRules.promotion) {
+		const promotionRanksCopy = jsutil.deepCopyObject(longformat.gameRules.promotion.ranks);
+		const promotionPieces = longformat.gameRules.promotion.pieces;
 
 		/** A sorted list (ascending) of all unique player numbers in the game. */
 		const uniquePlayers = Array.from(new Set(longformat.gameRules.turnOrder)).sort(
@@ -677,11 +667,11 @@ function LongToShort_Format(
 			delete promotionRanksCopy[player]; // Remove the player from the object
 		}
 
-		const promotionsAllowedString = !isPromotionListDefaultPromotions(promotionsAllowed)
-			? ';' + promotionsAllowed.map((type) => piece_codes_raw[type]).join(',') // ';N,R,B,Q,AM'
+		const promotionPiecesString = !isPromotionListDefaultPromotions(promotionPieces)
+			? ';' + promotionPieces.map((type) => piece_codes_raw[type]).join(',') // ';N,R,B,Q,AM'
 			: '';
 
-		positionSegments.push('(' + playerSegments.join('|') + promotionsAllowedString + ')'); // '(8,17|1,10)'
+		positionSegments.push('(' + playerSegments.join('|') + promotionPiecesString + ')'); // '(8,17|1,10)'
 
 		// Check if there are any remaining players not accounted for
 		if (Object.keys(promotionRanksCopy).length > 0)
@@ -801,8 +791,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	let moveRule: number | undefined;
 	let moveRuleState: number | undefined;
 	let fullMove: number; // Required
-	let promotionRanks: PlayerGroup<bigint[]> | undefined;
-	let promotionsAllowed: RawType[] | undefined;
+	let promotion: Promotion | undefined;
 	let winConditions: PlayerGroup<GameruleWinCondition[]> = {}; // Required
 	let worldBorder: UnboundedRectangle | undefined;
 	let presetSquares: Coords[] | undefined;
@@ -941,7 +930,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		// console.log("Results of promotions regex:", promotionsResults);
 		const promotionsString = promotionsResults.groups!['promotions']!;
 
-		promotionRanks = {};
+		const promotionRanks: PlayerGroup<bigint[]> = {};
 		const promotions = promotionsString.split('|'); // ['8,16,24,32;q,r,b,n','1,9,17,25;q,r,b,n']
 		// Make sure the number of promotions matches the number of players
 		if (promotions.length !== uniquePlayers.length)
@@ -952,7 +941,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		// OLD FORMAT COMPAT: Old ICN wrote a per-player promotion list (e.g. "(8;q,r,b,n,am|1;q,r,b,n,am)").
 		// New ICN writes the shared list only after the rank definitions (e.g. "(8|1;q,r,b,n,am)").
 		// We use the last explicitly-specified list to handle both formats correctly.
-		// This variable and the fallback to DEFAULT_PROMOTIONS below can be removed once old-format support is dropped.
+		// This variable and the fallback to DEFAULT_PROMOTION_PIECES below can be removed once old-format support is dropped.
 		let lastSpecifiedPromotions: RawType[] | undefined;
 		for (const player of uniquePlayers) {
 			const playerPromotions = promotions.shift()!; // '8,16,24,32;q,r,b,n'
@@ -964,12 +953,15 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 				// prettier-ignore
 				lastSpecifiedPromotions = [...new Set(allowed.split(',').map(raw => {
 					const rawPieceCode = piece_codes_raw_inverted[raw.toLowerCase()];
-					if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotions allowed!`);
+					if (rawPieceCode === undefined) throw new Error(`Unknown raw piece code (${raw}) when parsing promotion pieces!`);
 					return Number(rawPieceCode) as RawType;
 				}))];
 			}
 		}
-		promotionsAllowed = lastSpecifiedPromotions ?? jsutil.deepCopyObject(DEFAULT_PROMOTIONS);
+		promotion = {
+			ranks: promotionRanks,
+			pieces: lastSpecifiedPromotions ?? jsutil.deepCopyObject(DEFAULT_PROMOTION_PIECES),
+		};
 
 		lastIndex = promotionsRegex.lastIndex; // Update the ICN index being observed
 	}
@@ -1164,8 +1156,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		turnOrder,
 		winConditions,
 	};
-	if (promotionRanks) gameRules.promotionRanks = promotionRanks;
-	if (promotionsAllowed) gameRules.promotionsAllowed = promotionsAllowed;
+	if (promotion) gameRules.promotion = promotion;
 	if (moveRule !== undefined) gameRules.moveRule = moveRule;
 	if (worldBorder) gameRules.worldBorder = worldBorder;
 
@@ -1658,7 +1649,7 @@ export default {
 	wholeNumberSource,
 	integerSource,
 	promotionRanksSource,
-	promotionsAllowedSource,
+	promotionsPiecesSource,
 	default_win_condition,
 	piece_codes_inverted,
 	piece_codes_raw,

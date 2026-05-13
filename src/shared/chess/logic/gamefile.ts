@@ -255,7 +255,7 @@ function initBoard(
 	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
 	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
 
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotionsAllowed); // prettier-ignore
+	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
 
 	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
 

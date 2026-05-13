@@ -238,7 +238,7 @@ function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
 				organizedpieces.getTypeUndefinedsBehavior(
 					change.piece.type,
 					boardsim.editor,
-					basegame.gameRules.promotionsAllowed,
+					basegame.gameRules.promotion,
 				) === 0
 			)
 				throw Error(
@@ -247,7 +247,7 @@ function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
 			organizedpieces.regenerateLists(
 				boardsim.pieces,
 				boardsim.editor,
-				basegame.gameRules.promotionsAllowed,
+				basegame.gameRules.promotion,
 			);
 		}
 

@@ -18,7 +18,7 @@ export function getPosition(): { position: Map<CoordsKey, number> } {
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		turnOrder: [p.BLACK, p.WHITE],
-		promotionsAllowed: null,
+		promotion: null,
 		moveRule: null,
 		// WE HAVE TO EXPLICITLY STATE the royalcapture win condition so that it will go into the ICN!!! It doesn't matter the game will automatically swap from checkmate.
 		winConditions: { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] },

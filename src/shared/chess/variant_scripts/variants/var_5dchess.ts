@@ -23,9 +23,11 @@ export function getPosition(): { position: Map<CoordsKey, number> } {
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		winConditions: { [p.WHITE]: ['royalcapture'], [p.BLACK]: ['royalcapture'] },
-		promotionRanks: {
-			[p.WHITE]: [8n, 17n, 26n, 35n, 44n, 53n, 62n, 71n],
-			[p.BLACK]: [1n, 10n, 19n, 28n, 37n, 46n, 55n, 64n],
+		promotion: {
+			ranks: {
+				[p.WHITE]: [8n, 17n, 26n, 35n, 44n, 53n, 62n, 71n],
+				[p.BLACK]: [1n, 10n, 19n, 28n, 37n, 46n, 55n, 64n],
+			},
 		},
 	};
 }

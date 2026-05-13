@@ -322,8 +322,8 @@ function appendPawnMoveAndAttachPromoteTag(
 	landCoords: CoordsTagged,
 	color: Player,
 ): void {
-	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+	if (basegame.gameRules.promotion !== undefined) {
+		const teamPromotionRanks = basegame.gameRules.promotion.ranks[color];
 		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
@@ -468,10 +468,10 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
  */
 function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): boolean {
 	if (typeutil.getRawType(type) !== r.PAWN) return false;
-	if (!basegame.gameRules.promotionRanks) return false; // This game doesn't have promotion.
+	if (!basegame.gameRules.promotion) return false; // This game doesn't have promotion.
 
 	const color = typeutil.getColorFromType(type);
-	const promotionRanks = basegame.gameRules.promotionRanks[color];
+	const promotionRanks = basegame.gameRules.promotion.ranks[color];
 
 	return promotionRanks?.includes(coordsClicked[1]) || false;
 }

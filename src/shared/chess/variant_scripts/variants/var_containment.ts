@@ -21,7 +21,7 @@ export function getPosition(): {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionsAllowed: null,
+		promotion: null,
 	};
 }
 

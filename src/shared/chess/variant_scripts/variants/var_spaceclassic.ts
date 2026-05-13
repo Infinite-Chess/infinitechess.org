@@ -26,7 +26,9 @@ const GAMERULE_MODIFICATIONS: Record<number, GameRuleModifications> = {
 	// UTC Feb 27, 2024, 7:00 AM - Use standard promotion lines.
 	1709017200000: {},
 	// Original - Custom promotion ranks.
-	0: { promotionRanks: { [p.WHITE]: [4n], [p.BLACK]: [-3n] } },
+	0: {
+		promotion: { ranks: { [p.WHITE]: [4n], [p.BLACK]: [-3n] } },
+	},
 };
 
 export function getPosition(timestamp: number = Date.now()): {

@@ -2,6 +2,7 @@
 
 import type { Movesets } from '../logic/movesets.js';
 import type { CoordsKey } from '../util/coordutil.js';
+import type { Promotion } from '../util/gamerules.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
 import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../util/typeutil.js';
@@ -56,10 +57,13 @@ export type GameRuleModifications = {
 	moveRule?: number | null;
 	turnOrder?: Player[];
 	winConditions?: PlayerGroup<GameruleWinCondition[]>;
-} & (
-	| { promotionsAllowed?: RawType[]; promotionRanks?: PlayerGroup<bigint[]> }
-	| { promotionsAllowed: null; promotionRanks?: never }
-);
+	promotion?: PromotionModifications | null;
+};
+
+type PromotionModifications = {
+	ranks?: Promotion['ranks'];
+	pieces?: Promotion['pieces'];
+};
 
 /**
  * Selects the value from a time-versioned record whose key is the highest timestamp

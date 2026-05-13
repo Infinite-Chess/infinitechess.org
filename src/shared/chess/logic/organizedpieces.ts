@@ -11,6 +11,7 @@
  * - By line
  */
 
+import type { Promotion } from '../util/gamerules.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
@@ -107,7 +108,7 @@ function processInitialPosition(
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
 	turnOrder: Player[],
 	editor: boolean,
-	promotionsAllowed?: RawType[],
+	promotion?: Promotion,
 ): {
 	pieces: OrganizedPieces;
 	/**
@@ -139,7 +140,7 @@ function processInitialPosition(
 		existingTypesSet,
 		turnOrder,
 		editor,
-		promotionsAllowed,
+		promotion,
 	);
 
 	// Determine how many undefineds each type needs
@@ -151,7 +152,7 @@ function processInitialPosition(
 			type,
 			numOfPieceInStartingPos,
 			editor,
-			promotionsAllowed,
+			promotion,
 		);
 	}
 
@@ -256,7 +257,7 @@ function processInitialPosition(
  * Afterward, flags the pieces as newly regenerated. movesequence may
  * watch for that to know when to regenerate the piece models.
  */
-function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?: RawType[]): void {
+function regenerateLists(o: OrganizedPieces, editor: boolean, promotion?: Promotion): void {
 	const additionalUndefinedsNeeded: Map<number, number> = new Map();
 	const typeOffsets: Map<number, number> = new Map();
 	const modifiedTypes: number[] = []; // A list of all type ranges that changed in size.
@@ -267,12 +268,7 @@ function regenerateLists(o: OrganizedPieces, editor: boolean, promotionsAllowed?
 	// for (const [type, range] of typesAndRanges) {
 	for (const [type, range] of o.typeRanges) {
 		const pieceTypeCount = range.end - range.start - range.undefineds.length; // The type of this piece, excluding undefineds
-		const targetUndefineds = getListExtrasOfType(
-			type,
-			pieceTypeCount,
-			editor,
-			promotionsAllowed,
-		);
+		const targetUndefineds = getListExtrasOfType(type, pieceTypeCount, editor, promotion);
 		const needed = Math.max(0, targetUndefineds - range.undefineds.length);
 
 		additionalUndefinedsNeeded.set(type, needed);
@@ -495,7 +491,7 @@ function calcRemainingExistingTypes(
 	positionExistingTypes: Set<number>,
 	turnOrder: Player[],
 	editor: boolean,
-	promotionsAllowed?: RawType[],
+	promotion?: Promotion,
 ): {
 	existingTypes: number[];
 	existingRawTypes: RawType[];
@@ -511,11 +507,11 @@ function calcRemainingExistingTypes(
 		existingTypes = [...new Set([...neutralRawTypes, ...existingTypes])]; // This ensures VOID and OBSTACLE are always added.
 		existingRawTypes = Object.values(rawTypes);
 	} else {
-		if (promotionsAllowed) {
+		if (promotion) {
 			// Makes sure pieces that are possible to promote to are accounted for.
 			const uniquePlayers = [...new Set(turnOrder)];
 			for (const player of uniquePlayers) {
-				for (const rawType of promotionsAllowed) {
+				for (const rawType of promotion.pieces) {
 					positionExistingTypes.add(typeutil.buildType(rawType, player));
 				}
 			}
@@ -547,9 +543,9 @@ function getListExtrasOfType(
 	type: number,
 	numOfPieces: number,
 	editor: boolean,
-	promotionsAllowed?: RawType[],
+	promotion?: Promotion,
 ): number {
-	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotionsAllowed);
+	const undefinedsBehavior = getTypeUndefinedsBehavior(type, editor, promotion);
 
 	// prettier-ignore
 	return undefinedsBehavior === 2 ? Math.max(listExtras_Editor, numOfPieces) // Count of piece can increase RAPIDLY (editor)
@@ -568,13 +564,13 @@ function getListExtrasOfType(
 function getTypeUndefinedsBehavior(
 	type: number,
 	editor: boolean,
-	promotionsAllowed?: RawType[],
+	promotion?: Promotion,
 ): 0 | 1 | 2 {
 	if (editor) return 2; // gamefile is in the board editor, EVERY piece needs undefined placeholders, and a lot of them!
-	if (!promotionsAllowed) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
+	if (!promotion) return 0; // No pieces can promote, definitely not appending undefineds to this piece.
 	const [rawType, player] = typeutil.splitType(type);
 	if (player === p.NEUTRAL) return 0; // Neutral pieces cannot promote.
-	if (promotionsAllowed.includes(rawType)) return 1; // Can be promoted to
+	if (promotion.pieces.includes(rawType)) return 1; // Can be promoted to
 	return 0; // This piece cannot be promoted to anything.
 }
 

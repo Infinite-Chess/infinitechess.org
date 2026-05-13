@@ -223,8 +223,8 @@ function appendPawnMoveAndAttachPromoteTag(
 	landCoords: CoordsTagged,
 	color: Player,
 ): void {
-	if (basegame.gameRules.promotionRanks !== undefined) {
-		const teamPromotionRanks = basegame.gameRules.promotionRanks[color];
+	if (basegame.gameRules.promotion !== undefined) {
+		const teamPromotionRanks = basegame.gameRules.promotion.ranks[color];
 		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 

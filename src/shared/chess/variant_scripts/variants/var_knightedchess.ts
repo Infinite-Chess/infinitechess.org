@@ -29,7 +29,7 @@ export function getPosition(timestamp: number = Date.now()): {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionsAllowed: [r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON],
+		promotion: { pieces: [r.CHANCELLOR, r.KNIGHTRIDER, r.ARCHBISHOP, r.AMAZON] },
 	};
 }
 

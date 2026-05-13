@@ -19,7 +19,7 @@ import movesets from '../logic/movesets.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
 import { players as p } from '../util/typeutil.js';
-import { DEFAULT_PROMOTIONS } from '../variant_scripts/defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../variant_scripts/defaultPromotions.js';
 
 // Constants ------------------------------------------------------------------
 
@@ -28,6 +28,10 @@ const defaultWinConditions: PlayerGroup<GameruleWinCondition[]> = {
 	[p.BLACK]: ['checkmate'],
 };
 const defaultTurnOrder = [p.WHITE, p.BLACK];
+const defaultPromotionRanks = {
+	[p.WHITE]: [8n],
+	[p.BLACK]: [1n],
+};
 
 // Functions ------------------------------------------------------------------
 
@@ -74,7 +78,7 @@ function getStartingPositionOfVariant(
 function getGameRulesOfVariant(mod: VariantModule | undefined, timestamp?: number): GameRules {
 	const gameruleModifications: GameRuleModifications = mod
 		? (mod.gameruleModifications?.(timestamp) ?? {})
-		: { promotionsAllowed: null, moveRule: null };
+		: { promotion: null, moveRule: null };
 	return getGameRules(jsutil.deepCopyObject(gameruleModifications));
 }
 
@@ -97,12 +101,11 @@ function getGameRules(modifications: GameRuleModifications = {}): GameRules {
 	};
 
 	// GameRules that have a dedicated ICN spot...
-	if (modifications.promotionsAllowed !== null) {
-		gameRules.promotionRanks = modifications.promotionRanks || {
-			[p.WHITE]: [8n],
-			[p.BLACK]: [1n],
+	if (modifications.promotion !== null) {
+		gameRules.promotion = {
+			ranks: modifications.promotion?.ranks ?? defaultPromotionRanks,
+			pieces: modifications.promotion?.pieces ?? DEFAULT_PROMOTION_PIECES,
 		};
-		gameRules.promotionsAllowed = modifications.promotionsAllowed ?? DEFAULT_PROMOTIONS;
 	}
 	if (modifications.moveRule !== null) gameRules.moveRule = modifications.moveRule || 100;
 

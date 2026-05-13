@@ -32,7 +32,7 @@ export function getPosition(): { position: Map<CoordsKey, number> } {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionRanks: { [p.WHITE]: [19n], [p.BLACK]: [1n] },
+		promotion: { ranks: { [p.WHITE]: [19n], [p.BLACK]: [1n] } },
 	};
 }
 

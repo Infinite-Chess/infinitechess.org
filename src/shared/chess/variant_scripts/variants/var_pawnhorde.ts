@@ -33,7 +33,7 @@ export function getPosition(timestamp: number = Date.now()): {
 export function gameruleModifications(): GameRuleModifications {
 	return {
 		winConditions: { [p.WHITE]: ['checkmate'], [p.BLACK]: ['allpiecescaptured'] },
-		promotionRanks: { [p.WHITE]: [2n], [p.BLACK]: [-7n] },
+		promotion: { ranks: { [p.WHITE]: [2n], [p.BLACK]: [-7n] } },
 	};
 }
 

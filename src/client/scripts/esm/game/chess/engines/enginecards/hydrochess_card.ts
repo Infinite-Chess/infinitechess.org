@@ -93,8 +93,8 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	}
 
 	// 4. Maximum of one promotion line per player.
-	if (variantOptions.gameRules.promotionRanks) {
-		for (const playerRanks of Object.values(variantOptions.gameRules.promotionRanks)) {
+	if (variantOptions.gameRules.promotion) {
+		for (const playerRanks of Object.values(variantOptions.gameRules.promotion.ranks)) {
 			if (playerRanks.length > 1) {
 				return {
 					supported: false,

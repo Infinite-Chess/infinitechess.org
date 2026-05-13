@@ -107,7 +107,7 @@ document.addEventListener('theme-change', () => {
 	// Reinit the promotion UI
 	guipromotion.resetUI();
 	const uniquePlayers = new Set(gamefile.basegame.gameRules.turnOrder);
-	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed, uniquePlayers);
+	guipromotion.initUI(gamefile.basegame.gameRules.promotion?.pieces, uniquePlayers);
 });
 
 // Functions ---------------------------------------------------------------
@@ -207,7 +207,7 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	const uniquePlayers = new Set(loadedGamefile!.basegame.gameRules.turnOrder);
-	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed, uniquePlayers);
+	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);

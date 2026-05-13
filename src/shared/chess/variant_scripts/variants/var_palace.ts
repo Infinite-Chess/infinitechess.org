@@ -8,7 +8,7 @@ import type { CoordsKey } from '../../util/coordutil';
 import type { GameRuleModifications } from '../variantutil';
 
 import icnconverter from '../../logic/icn/icnconverter';
-import { DEFAULT_PROMOTIONS } from '../defaultPromotions';
+import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions';
 import { rawTypes as r, players as p } from '../../util/typeutil';
 
 const POSITION_STRING =
@@ -23,8 +23,10 @@ export function getPosition(): {
 
 export function gameruleModifications(): GameRuleModifications {
 	return {
-		promotionRanks: { [p.WHITE]: [4n], [p.BLACK]: [2n] },
-		promotionsAllowed: [...DEFAULT_PROMOTIONS, r.AMAZON],
+		promotion: {
+			ranks: { [p.WHITE]: [4n], [p.BLACK]: [2n] },
+			pieces: [...DEFAULT_PROMOTION_PIECES, r.AMAZON],
+		},
 	};
 }
 
