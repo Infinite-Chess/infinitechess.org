@@ -7,7 +7,7 @@ import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { PieceMoveset } from './movesets.js';
-import type { VariantModule } from '../variant_scripts/variantutil.js';
+import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';

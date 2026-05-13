@@ -12,14 +12,14 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { Movesets, PieceMoveset } from '../logic/movesets.js';
 import type { RawType, RawTypeGroup, PlayerGroup } from '../util/typeutil.js';
 import type { SpecialMoveFunction, SpecialVicinity } from '../logic/specialmove.js';
-import type { VariantModule, GameRuleModifications } from '../variant_scripts/variantutil.js';
+import type { VariantModule, GameRuleModifications } from './variant_scripts/variantutil.js';
 
 import jsutil from '../../util/jsutil.js';
 import movesets from '../logic/movesets.js';
 import specialmove from '../logic/specialmove.js';
 import icnconverter from '../logic/icn/icnconverter.js';
 import { players as p } from '../util/typeutil.js';
-import { DEFAULT_PROMOTION_PIECES } from '../variant_scripts/defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from './variant_scripts/defaultPromotions.js';
 
 // Constants ------------------------------------------------------------------
 

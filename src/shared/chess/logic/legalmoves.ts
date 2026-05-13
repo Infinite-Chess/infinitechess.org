@@ -6,7 +6,7 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { VariantModule } from '../variant_scripts/variantutil.js';
+import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';

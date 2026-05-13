@@ -23,7 +23,7 @@ import typeutil from '../../util/typeutil.js';
 import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
 import castlingutil from '../castlingutil.js';
-import { DEFAULT_PROMOTION_PIECES } from '../../variant_scripts/defaultPromotions.js';
+import { DEFAULT_PROMOTION_PIECES } from '../../variants/variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
 import {

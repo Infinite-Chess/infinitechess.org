@@ -8,7 +8,7 @@
  */
 
 import type { VariantCode } from './variantregistry.js';
-import type { VariantModule } from '../variant_scripts/variantutil.js';
+import type { VariantModule } from './variant_scripts/variantutil.js';
 
 import variantregistry from './variantregistry.js';
 

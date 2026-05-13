@@ -11,7 +11,7 @@
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { Dimensions } from '../variant_scripts/gen4DPosition.js';
+import type { Dimensions } from '../variants/variant_scripts/gen4DPosition.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
