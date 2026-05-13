@@ -335,6 +335,18 @@ svg.bg-omega {
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
+	margin-top: 18px;
+}
+
+.collapsible {
+	overflow: hidden;
+	max-height: 110px;
+	transition: max-height 160ms ease;
+}
+
+.collapsible.is-collapsed {
+	max-height: 0;
+	pointer-events: none;
 }
 
 .form-label {

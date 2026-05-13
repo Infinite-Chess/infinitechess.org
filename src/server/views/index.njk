@@ -147,39 +147,43 @@
 			</div>
 
 			{# ── Time control ─────────────────────────────────────────────── #}
-			<div class="form-row">
-				<span class="form-label">Time control</span>
-				<div class="option-group">
-					<button class="option-btn active" data-time="timed" type="button">Timed</button>
-					<button class="option-btn" data-time="infinite" type="button">Infinite</button>
+			<div>
+				<div class="form-row">
+					<span class="form-label">Time control</span>
+					<div class="option-group">
+						<button class="option-btn active" data-time="timed" type="button">Timed</button>
+						<button class="option-btn" data-time="infinite" type="button">Infinite</button>
+					</div>
 				</div>
-			</div>
 
-			{# Time sliders - hidden when "Infinite" is selected #}
-			<div class="time-sliders" id="time-sliders">
-				<div class="time-sliders-grid">
-					<div class="slider-header">
-						<label class="slider-label" for="slider-minutes">Minutes per side</label>
-						<span class="slider-value" id="minutes-display">10</span>
+				{# Time sliders - revealed when "Finite" is selected #}
+				<div class="collapsible" id="time-sliders">
+					<div class="time-sliders">
+						<div class="time-sliders-grid">
+							<div class="slider-header">
+								<label class="slider-label" for="slider-minutes">Minutes per side</label>
+								<span class="slider-value" id="minutes-display">10</span>
+							</div>
+							<div class="slider-separator">+</div>
+							<div class="slider-header">
+								<span class="slider-value" id="increment-display">4</span>
+								<label class="slider-label" for="slider-increment">Increment in seconds</label>
+							</div>
+							<input type="range" class="slider" id="slider-minutes" min="0" max="25" value="9" step="1">
+							<div></div>
+							<input type="range" class="slider" id="slider-increment" min="0" max="26" value="4" step="1">
+						</div>
+						<div class="time-presets">
+							<button class="preset-btn" data-minutes="1" data-increment="2" type="button">1+2</button>
+							<button class="preset-btn" data-minutes="2" data-increment="2" type="button">2+2</button>
+							<button class="preset-btn" data-minutes="3" data-increment="2" type="button">3+2</button>
+							<button class="preset-btn" data-minutes="5" data-increment="2" type="button">5+2</button>
+							<button class="preset-btn active" data-minutes="8" data-increment="3" type="button">8+3</button>
+							<button class="preset-btn" data-minutes="10" data-increment="4" type="button">10+4</button>
+							<button class="preset-btn" data-minutes="15" data-increment="5" type="button">15+5</button>
+							<button class="preset-btn" data-minutes="20" data-increment="6" type="button">20+6</button>
+						</div>
 					</div>
-					<div class="slider-separator">+</div>
-					<div class="slider-header">
-						<span class="slider-value" id="increment-display">4</span>
-						<label class="slider-label" for="slider-increment">Increment in seconds</label>
-					</div>
-					<input type="range" class="slider" id="slider-minutes" min="0" max="25" value="9" step="1">
-					<div></div>
-					<input type="range" class="slider" id="slider-increment" min="0" max="26" value="4" step="1">
-				</div>
-				<div class="time-presets">
-					<button class="preset-btn" data-minutes="1" data-increment="2" type="button">1+2</button>
-					<button class="preset-btn" data-minutes="2" data-increment="2" type="button">2+2</button>
-					<button class="preset-btn" data-minutes="3" data-increment="2" type="button">3+2</button>
-					<button class="preset-btn" data-minutes="5" data-increment="2" type="button">5+2</button>
-					<button class="preset-btn" data-minutes="8" data-increment="3" type="button">8+3</button>
-					<button class="preset-btn active" data-minutes="10" data-increment="4" type="button">10+4</button>
-					<button class="preset-btn" data-minutes="15" data-increment="5" type="button">15+5</button>
-					<button class="preset-btn" data-minutes="20" data-increment="6" type="button">20+6</button>
 				</div>
 			</div>
 

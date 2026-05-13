@@ -189,7 +189,7 @@ function syncPresetHighlight(): void {
 function onTimeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-time].active')!;
 	const isTimed = activeBtn.getAttribute('data-time') === 'timed';
-	element_timeSliders.classList.toggle('hidden', !isTimed);
+	element_timeSliders.classList.toggle('is-collapsed', !isTimed);
 }
 
 /** Switches between preset-variant and custom-ICN inputs based on active type. */
