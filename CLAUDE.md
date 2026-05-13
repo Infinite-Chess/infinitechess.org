@@ -1,6 +1,6 @@
 # Claude Instructions for infinitechess.org
 
-When you finish making any new changes, always ensure these checks pass: `npm run type-check --silent`, `npm run lint --silent`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
+When you finish making any new changes to scripts, always ensure these checks pass: `npm run type-check --silent`, `npm run lint --silent`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
 
 ## Key Guidelines
 
