@@ -555,7 +555,7 @@ svg.bg-omega {
 }
 
 /* Side-group buttons stack icon + label vertically */
-.option-group--icons .option-btn {
+.option-group.icons .option-btn {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
