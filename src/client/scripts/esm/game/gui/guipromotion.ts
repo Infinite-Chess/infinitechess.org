@@ -70,11 +70,11 @@ function close(): void {
 /**
  * Inits the promotion UI. Hides promotions not allowed, reveals promotion pieces.
  * @param promotionPieces - The shared list of raw piece types any player can promote to.
- * @param uniquePlayers - The set of all players in the game.
+ * @param uniquePlayers - An array of all unique players in the game.
  */
 async function initUI(
 	promotionPieces: RawType[] | undefined,
-	uniquePlayers: Set<Player>,
+	uniquePlayers: Player[],
 ): Promise<void> {
 	if (promotionPieces === undefined) return;
 

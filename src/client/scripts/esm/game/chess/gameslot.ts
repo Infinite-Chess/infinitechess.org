@@ -21,6 +21,7 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -106,7 +107,9 @@ document.addEventListener('theme-change', () => {
 	});
 	// Reinit the promotion UI
 	guipromotion.resetUI();
-	const uniquePlayers = new Set(gamefile.basegame.gameRules.turnOrder);
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
+		gamefile.basegame.gameRules.turnOrder,
+	);
 	guipromotion.initUI(gamefile.basegame.gameRules.promotion?.pieces, uniquePlayers);
 });
 
@@ -206,7 +209,9 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
-	const uniquePlayers = new Set(loadedGamefile!.basegame.gameRules.turnOrder);
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
+		loadedGamefile!.basegame.gameRules.turnOrder,
+	);
 	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.

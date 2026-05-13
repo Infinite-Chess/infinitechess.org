@@ -20,6 +20,7 @@ import type { EnPassant, GlobalGameState } from '../state.js';
 import jsutil from '../../../util/jsutil.js';
 import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
+import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
 import { DEFAULT_PROMOTION_PIECES } from '../../variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
@@ -650,9 +651,9 @@ function LongToShort_Format(
 		const promotionPieces = longformat.gameRules.promotion.pieces;
 
 		/** A sorted list (ascending) of all unique player numbers in the game. */
-		const uniquePlayers = Array.from(new Set(longformat.gameRules.turnOrder)).sort(
-			(a, b) => a - b,
-		);
+		const uniquePlayers = gamerules
+			.getUniquePlayersInTurnOrder(longformat.gameRules.turnOrder)
+			.sort((a, b) => a - b);
 
 		const playerSegments: string[] = []; // ['8,17','1,10']
 		for (const player of uniquePlayers) {
@@ -873,7 +874,7 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 	}
 
 	/** A sorted list (ascending) of all unique player numbers in the game. */
-	const uniquePlayers = Array.from(new Set(turnOrder)).sort((a, b) => a - b);
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(turnOrder).sort((a, b) => a - b);
 
 	// Enpassant
 	// Test if the enpassant square lies at our current index being observed

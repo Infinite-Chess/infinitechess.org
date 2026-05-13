@@ -75,8 +75,18 @@ function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 	if (changeMade) console.log('Swapped checkmate win conditions for royalcapture.');
 }
 
+/**
+ * Returns a list of all unique players in the turn order.
+ * Removes duplicates while preserving the order of first appearance.
+ * @param turnOrder - The turn order array that may contain duplicate players
+ */
+function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
+	return [...new Set(turnOrder)];
+}
+
 export default {
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,
+	getUniquePlayersInTurnOrder,
 };

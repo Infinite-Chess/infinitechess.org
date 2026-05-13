@@ -18,6 +18,7 @@ import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.
 
 import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
+import gamerules from '../util/gamerules.js';
 import coordutil from '../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/typeutil.js';
@@ -509,7 +510,7 @@ function calcRemainingExistingTypes(
 	} else {
 		if (promotion) {
 			// Makes sure pieces that are possible to promote to are accounted for.
-			const uniquePlayers = [...new Set(turnOrder)];
+			const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(turnOrder);
 			for (const player of uniquePlayers) {
 				for (const rawType of promotion.pieces) {
 					positionExistingTypes.add(typeutil.buildType(rawType, player));

@@ -177,7 +177,7 @@ function initGame(
 		variantOptions?.gameRules ?? variantreader.getGameRulesOfVariant(mod, dateTimestamp);
 
 	const clockDependantVars: ClockDependant = clock.init(
-		new Set(gameRules.turnOrder),
+		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
