@@ -15,14 +15,16 @@ type ToggleGroupAttribute = 'data-type' | 'data-time' | 'data-mode' | 'data-side
 /** Mappings from slider index to actual time control values for both time control sliders. */
 const TIME_CONTROL_SLIDER_MAPPINGS = {
 	BASE: [
-		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45,
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+		25, 30, 35, 40, 45,
 		60,
 	],
 	INCREMENT: [
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 35, 40,
-		45, 60,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+		25, 30, 35, 40, 45,
+		60,
 	],
-};
+}; // prettier-ignore
 
 /** Labels for the modal submit button based on the active mode. */
 const SUBMIT_LABELS: Record<ModalMode, string> = {
