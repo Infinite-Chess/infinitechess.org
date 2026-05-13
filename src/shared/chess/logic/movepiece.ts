@@ -16,12 +16,12 @@ import type { Board, FullGame } from './gamefile.js';
 import type { EnPassant, MoveState } from './state.js';
 
 import state from './state.js';
-import bimath from '../../util/math/bimath.js';
 import typeutil from '../util/typeutil.js';
 import moveutil from '../util/moveutil.js';
 import coordutil from '../util/coordutil.js';
 import boardutil from '../util/boardutil.js';
 import legalmoves from './legalmoves.js';
+import castlingutil from './castlingutil.js';
 import boardchanges from './boardchanges.js';
 import icnconverter from './icn/icnconverter.js';
 import wincondition from './wincondition.js';
@@ -332,12 +332,10 @@ function hasCastlingPartner(
 	candidate: Piece,
 	partnerConstraint?: (partner: Piece) => boolean,
 ): boolean {
-	const [candRawType, candPlayer] = typeutil.splitType(candidate.type);
+	const candRawType = typeutil.getRawType(candidate.type);
 
-	// Basic Validity Checks
-	if (candRawType === r.PAWN) throw new Error('Cannot test if pawn has valid castling partner.'); // Safety, this could be easy to accidentally pass in.
-
-	const candidateIsTrigger = typeutil.jumpingRoyals.includes(candRawType); // Royals are the castling triggers
+	// Safety: pawns cannot have castling partners.
+	if (candRawType === r.PAWN) throw new Error('Cannot test if pawn has valid castling partner.');
 
 	const key = organizedpieces.getKeyFromLine([1n, 0n], candidate.coords);
 	const row = boardsim.pieces.lines.get('1,0')!.get(key)!;
@@ -345,22 +343,12 @@ function hasCastlingPartner(
 	// Search: Does this candidate have ANY valid castling partner?
 	const hasValidPartner = row.some((partnerIdx) => {
 		const partner = boardutil.getDefinedPieceFromIdx(boardsim.pieces, partnerIdx);
-		const [partnerRawType, partnerPlayer] = typeutil.splitType(partner.type);
 
-		// Partner Validation
-		if (partnerPlayer !== candPlayer) return false; // Affects friends only
-		if (partnerRawType === r.PAWN) return false; // Pawns don't have castling rights
+		if (!castlingutil.isValidPair(candidate.coords, candidate.type, partner.coords, partner.type))
+			return false; // prettier-ignore
 
 		const partnerCoordsKey = coordutil.getKeyFromCoords(partner.coords);
 		if (!boardsim.state.global.specialRights.has(partnerCoordsKey)) return false; // Partner must have rights
-
-		// A valid partner must be the OPPOSITE role (King needs Rook, Rook needs King)
-		const partnerIsTrigger = typeutil.jumpingRoyals.includes(partnerRawType);
-		if (partnerIsTrigger === candidateIsTrigger) return false;
-
-		// Distance Check: Must be at least 3 spaces away
-		const dist = bimath.abs(candidate.coords[0] - partner.coords[0]);
-		if (dist < 3n) return false;
 
 		// Additional optional constraint checks
 		if (partnerConstraint && !partnerConstraint(partner)) return false;

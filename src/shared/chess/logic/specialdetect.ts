@@ -25,6 +25,7 @@ import coordutil from '../util/coordutil.js';
 import gamerules from '../util/gamerules.js';
 import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
+import castlingutil from './castlingutil.js';
 import checkresolver from './checkresolver.js';
 import gamefileutility from '../util/gamefileutility.js';
 import organizedpieces from './organizedpieces.js';
@@ -102,29 +103,16 @@ function kings(
 	}
 
 	/**
-	 * Returns whether the piece at the given coordinates is castleable:
-	 * * Its distance from the king is at least 3 squares
-	 * * It has its special rights
-	 * * It is a friendly piece
-	 * * It is not a pawn or jumping royal
+	 * Returns whether the piece at the given coordinates is castleable.
+	 * It must form a valid castling pair with the king and have its special rights.
 	 */
 	function isPieceCastleable(pieceCoords: Coords): boolean {
-		// Distance should be at least 3 squares away.
-		const dist = bimath.abs(kingX - pieceCoords[0]); // Distance from the king to the piece
-		if (dist < 3) return false; // Piece is too close, can't castle with it
-
 		// Piece should have its special rights
-		if (!doesPieceHaveSpecialRight(boardsim, pieceCoords)) return false; // Piece doesn't have special rights, can't castle with it
+		if (!doesPieceHaveSpecialRight(boardsim, pieceCoords)) return false;
 
-		// Color should be a friendly piece
-		const pieceType: number = boardutil.getTypeFromCoords(boardsim.pieces, pieceCoords)!;
-		const [rawType, pieceColor] = typeutil.splitType(pieceType);
-		if (pieceColor !== color) return false;
-
-		// Piece should not be a pawn or jumping royal
-		if (rawType === r.PAWN || typeutil.jumpingRoyals.includes(rawType)) return false;
-
-		return true;
+		// Must form a valid castling pair with the king (same player, opposite role, min distance)
+		const pieceType = boardutil.getTypeFromCoords(boardsim.pieces, pieceCoords)!;
+		return castlingutil.isValidPair(coords, king.type, pieceCoords, pieceType);
 	}
 
 	/**

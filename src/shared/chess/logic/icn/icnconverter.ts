@@ -22,6 +22,7 @@ import bimath from '../../../util/math/bimath.js';
 import typeutil from '../../util/typeutil.js';
 import gamerules from '../../util/gamerules.js';
 import winconutil from '../../util/winconutil.js';
+import castlingutil from '../castlingutil.js';
 import { DEFAULT_PROMOTION_PIECES } from '../../variant_scripts/defaultPromotions.js';
 import coordutil, { Coords, CoordsKey } from '../../util/coordutil.js';
 import icncommentutils, { CommandObject } from './icncommentutils.js';
@@ -1546,7 +1547,7 @@ function generateSpecialRights(
 			if (castleWithsFound[coord as CoordsKey] !== kingsFound[kingCoord as CoordsKey])
 				continue; // Their players don't match
 			const xDist = bimath.abs(coords[0] - kingCoords[0]);
-			if (xDist < 3) continue; // Not at least 3 squares away
+			if (xDist < castlingutil.MIN_DISTANCE) continue; // Not at least minimum distance away
 			specialRights.add(coord as CoordsKey); // Same row and color as the king! This piece can castle.
 			// We already know this piece can castle, we don't
 			// need to see if it's on the same rank as any other king
