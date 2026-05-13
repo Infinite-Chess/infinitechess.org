@@ -30,7 +30,7 @@ const printNewInviteCreationsAndDeletions = false;
 /** The number of digits generated invite IDs are. */
 const IDLengthOfInvites = 5;
 
-/** The list of all active invites, including private ones. */
+/** The list of all active invites. */
 const invites: AuthSeek[] = [];
 
 /**
@@ -54,11 +54,8 @@ const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
 
 //-------------------------------------------------------------------------------------------
 
-/**
- * Gets the list of public invites with sensitive information REMOVED (such as browser-ids)
- * DOES NOT include private invites, not even your own, ADD THOSE SEPARATELY.
- */
-function getPublicInvitesListSafe(): OutSeek[] {
+/** Gets the list of invites with sensitive information REMOVED (such as browser-ids) */
+function getInvitesListSafe(): OutSeek[] {
 	const deepCopiedInvites: OutSeek[] = [];
 
 	for (const invite of invites) {
@@ -71,8 +68,8 @@ function getPublicInvitesListSafe(): OutSeek[] {
 // When a PUBLIC invite is added or removed..
 
 /**
- * Call when a public invite is added or deleted.
- * @param ws - The websocket that trigerred this public invites change.
+ * Call when an invite is added or deleted.
+ * @param ws - The websocket that trigerred this invites change.
  * @param replyto - The ID of the incoming websocket message that triggered this method
  */
 function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void {
@@ -86,7 +83,7 @@ function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void {
  * @param replyto - The ID of the incoming websocket message that triggered this broadcast
  */
 function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
-	const newInvitesList = getPublicInvitesListSafe();
+	const newInvitesList = getInvitesListSafe();
 	const currentGameCount = getActiveGameCount();
 
 	const subscribedClients = getInviteSubscribers() as Record<string, CustomWebSocket>;
@@ -104,17 +101,16 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
 }
 
 /**
- * Sends the invites list to a specified socket, including any private invites the player owns,
- * and also sends the current active game count.
+ * Sends the invites list to a specified socket, and also sends the current active game count.
  * @param ws - The socket of the player to send the invites list to.
- * @param options.invitesList - The list of invites to send. Defaults to the public invites list if not provided. [getPublicInvitesListSafe()]
+ * @param options.invitesList - The list of invites to send. Defaults to the invites list if not provided.
  * @param options.currentGameCount - The current active game count. Defaults to the current game count if not provided. [getActiveGameCount()]
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
  */
 function sendClientInvitesList(
 	ws: CustomWebSocket,
 	{
-		invitesList = getPublicInvitesListSafe(),
+		invitesList = getInvitesListSafe(),
 		currentGameCount = getActiveGameCount(),
 		replyto = undefined,
 	}: { replyto?: number; invitesList?: OutSeek[]; currentGameCount?: number } = {},
@@ -147,7 +143,7 @@ function addInvite(ws: CustomWebSocket, invite: AuthSeek, replyto?: number): voi
  * @param index - The index of the invite in the invites array. This is found using {@link getInviteAndIndexByID}.
  * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
  * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
- * @returns true if there was a public invite change
+ * @returns true if there was an invite change
  */
 function deleteInviteByIndex(
 	ws: CustomWebSocket,
@@ -162,7 +158,7 @@ function deleteInviteByIndex(
 		console.error(
 			`Cannot delete invite of index ${index} when the length of our invites list is ${invites.length}!`,
 		);
-		return false; // No public invite change
+		return false; // No invite change
 	}
 	invites.splice(index, 1); // Delete the invite
 
@@ -278,7 +274,7 @@ function cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws: CustomWebSoc
  * but only if they don't have an active connection.
  * If the invite belongs to a signed-in member, checks username;
  * otherwise, it checks the browser ID.
- * If any public invite is deleted, it broadcasts the new invites list to all subscribers.
+ * If any invite is deleted, it broadcasts the new invites list to all subscribers.
  * @param signedIn - Flag to specify if the invite is for a signed-in member (true) or for a browser ID (false)
  * @param identifier - The identifier of the member or browser (username for signed-in members, browser ID for non-signed-in users)
  */
@@ -296,10 +292,10 @@ function deleteUserInvitesIfNotConnected(info: AuthMemberInfo): void {
 
 /**
  * Deletes the invite associated with a specific member or browser ID.
- * If any public invite is deleted, it optionally broadcasts the new invites list to all subscribers.
+ * If any invite is deleted, it optionally broadcasts the new invites list to all subscribers.
  * @param info The info related to a user
  * @param options.broadCastNewInvites - Flag to specify whether to broadcast the new invites list after deleting (defaults to true). [true]
- * @returns Returns true if any public invite was deleted, otherwise false.
+ * @returns Returns true if any invite was deleted, otherwise false.
  */
 function deleteUsersExistingInvite(
 	info: AuthMemberInfo,
@@ -318,7 +314,7 @@ function deleteUsersExistingInvite(
 			);
 	}
 
-	if (deletedInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if a public invite was deleted
+	if (deletedInvite && broadCastNewInvites) onPublicInvitesChange(); // Broadcast the change if an invite was deleted
 	return deletedInvite;
 }
 
