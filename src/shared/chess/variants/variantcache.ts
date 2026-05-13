@@ -23,7 +23,7 @@ const moduleCache = new Map<VariantCode, VariantModule>();
  * Only returns a `Promise<void>` when the module must be dynamically imported,
  * otherwise this is synchronious.
  */
-function ensureVariantLoaded(variantCode: VariantCode): void | Promise<void> {
+async function ensureVariantLoaded(variantCode: VariantCode): Promise<void> {
 	if (moduleCache.has(variantCode)) return; // Already loaded — synchronous fast path
 	const loader = variantregistry.getVariantLoader(variantCode);
 	return loader().then((mod) => {
