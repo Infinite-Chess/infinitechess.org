@@ -98,15 +98,9 @@ const strtypes = [
 	'pawn',
 ] as const;
 
-/** A list of the royals that are compatible with checkmate. If a royal can slide, DO NOT put it in here, put it in {@link slidingRoyals} instead! */
+/** Royals with no sliding movements. */
 const jumpingRoyals: RawType[] = [rawTypes.KING, rawTypes.ROYALCENTAUR];
-/**
- * A list of the royals that the checkmate algorithm cannot detect when they are in checkmate,
- * however it still is illegal to move into check.
- *
- * Players have to voluntarily resign if they
- * believe their sliding royal is in checkmate.
- */
+/** Royals that require special rules disabling them from sliding into check. */
 const slidingRoyals: RawType[] = [rawTypes.ROYALQUEEN];
 /**
  * A list of the royal pieces, without the color appended.
@@ -241,7 +235,6 @@ export { rawTypes, neutralRawTypes, ext, numTypes, players };
 export default {
 	// Constants
 	jumpingRoyals,
-	slidingRoyals,
 	royals,
 	SVGLESS_TYPES,
 	strcolors,
