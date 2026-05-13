@@ -42,7 +42,7 @@ function getVariantIconId(group: VariantGroup): string {
 		case 'standard':
 			return '#svg-pawn';
 		case 'horde':
-			return '#svg-horde';
+			return '#svg-keypad';
 		case '4D':
 			return '#svg-tesseract';
 		case 'showcase':
