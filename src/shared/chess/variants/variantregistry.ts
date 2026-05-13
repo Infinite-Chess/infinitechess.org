@@ -12,15 +12,15 @@ import type { VariantModule } from './variant_scripts/variantutil.js';
 
 // Types -------------------------------------------------------------------------------
 
-/** All valid variant group names. */
-export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase' | 'custom';
+/** All valid variant group names. Does not include custom variants. */
+export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
 
 /** Union of all valid variant codes, derived from the keys of {@link VARIANT_REGISTRY}. */
 export type VariantCode = (typeof VARIANT_CODES)[number];
 
 export type VariantInfo = {
 	group: VariantGroup;
-	name: VariantCode;
+	code: VariantCode;
 };
 
 /** Entry in the variant registry. */
@@ -158,22 +158,22 @@ const VARIANT_REGISTRY = {
 	// ---- Showcase ----
 	Omega: {
 		group: 'showcase',
-		name: 'Showcase: Omega',
+		name: 'Omega',
 		loadVariant: () => import('./variant_scripts/variants/var_omega.js'),
 	},
 	Omega_Squared: {
 		group: 'showcase',
-		name: 'Showcase: Omega^2',
+		name: 'Omega^2',
 		loadVariant: () => import('./variant_scripts/variants/var_omegasquared.js'),
 	},
 	Omega_Cubed: {
 		group: 'showcase',
-		name: 'Showcase: Omega^3',
+		name: 'Omega^3',
 		loadVariant: () => import('./variant_scripts/variants/var_omegacubed.js'),
 	},
 	Omega_Fourth: {
 		group: 'showcase',
-		name: 'Showcase: Omega^4',
+		name: 'Omega^4',
 		loadVariant: () => import('./variant_scripts/variants/var_omegafourth.js'),
 	},
 } satisfies Record<string, VariantRegistryEntry>;

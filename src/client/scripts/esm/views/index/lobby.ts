@@ -7,20 +7,27 @@ import type {
 	VariantInfo,
 } from '../../../../../shared/chess/variants/variantregistry.js';
 
-import { attributesModule, h, init } from 'snabbdom';
+import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
-const patch = init([attributesModule]);
+const patch = init([attributesModule, classModule]);
 
 // Types ----------------------------------------------
 
 /** [CLIENT] The structure for a single seek in the lobby. */
-export interface LobbySeek extends BaseSeek {
-	variant: VariantInfo;
-}
+export type LobbySeek = BaseSeek &
+	(
+		| {
+				variant: VariantInfo;
+		  }
+		| {
+				variant: { group: 'custom'; name: 'Custom Variant' };
+		  }
+	);
 
 // Constants ------------------------------------------
 
@@ -37,18 +44,18 @@ function getClockLabel(clock: TimeControl): string | undefined {
 }
 
 /** Returns the symbol ID of the SVG icon that represents the variant group. */
-function getVariantIconId(group: VariantGroup): string {
+function getVariantIcon(group: VariantGroup | 'custom'): string {
 	switch (group) {
 		case 'standard':
-			return '#svg-pawn';
+			return 'svg-pawn';
 		case 'horde':
-			return '#svg-keypad';
+			return 'svg-keypad';
 		case '4D':
-			return '#svg-tesseract';
+			return 'svg-tesseract';
 		case 'showcase':
-			return '#svg-trophy';
+			return 'svg-trophy';
 		case 'custom':
-			return '#svg-wrench';
+			return 'svg-wrench';
 	}
 }
 
@@ -71,6 +78,12 @@ function createSeekListVNode(seeks: LobbySeek[]): VNode {
 function createSeekRowVNode(seek: LobbySeek): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
+	const variantIcon = getVariantIcon(seek.variant.group);
+	const variantName =
+		seek.variant.group === 'custom'
+			? seek.variant.name
+			: variantregistry.getVariantName(seek.variant.code);
+	const speedIcon = clockutil.getSpeedIconId(seek.time);
 
 	return h(
 		'tr.invite-row',
@@ -93,18 +106,16 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 			]),
 			h('td', [
 				h('div.cell-flex', [
-					h('svg.cell-icon', [
-						h('use', { attrs: { href: getVariantIconId(seek.variant.group) } }),
+					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
+						h('use', { attrs: { href: `#${variantIcon}` } }),
 					]),
-					seek.variant.name,
+					variantName,
 				]),
 			]),
 			h('td', [
 				h('div.cell-flex', [
-					h('svg.cell-icon', [
-						h('use', {
-							attrs: { href: `#${clockutil.getSpeedIconId(seek.time)}` },
-						}),
+					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
+						h('use', { attrs: { href: `#${speedIcon}` } }),
 					]),
 					getClockLabel(seek.time),
 				]),
@@ -124,7 +135,8 @@ function createPlayerRatingVNode(rating: Rating | undefined): VNode | null {
 function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 	if (color === null) return null;
 	const selector = color === players.BLACK ? 'div.side-dot.black' : 'div.side-dot';
-	return h(selector);
+	const colorName = color === players.WHITE ? 'white' : color === players.BLACK ? 'black' : (() => { throw new Error(`Invalid color: ${color}`) })(); // prettier-ignore
+	return h(selector, { attrs: { title: `Invite owner chooses to be ${colorName}` } });
 }
 
 // Exports ----------------------------------------------
