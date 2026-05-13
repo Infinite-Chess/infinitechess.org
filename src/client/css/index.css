@@ -299,7 +299,8 @@ svg.bg-omega {
 }
 
 .modal-close:hover {
-	color: red;
+	color: var(--c-text-emphasis);
+	transform: scale(1.15);
 }
 
 .modal-close svg {
@@ -558,8 +559,8 @@ svg.bg-omega {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 5px;
-	padding: 10px 12px;
+	gap: 3px;
+	padding: 6px 8px;
 }
 
 .side-icon {
