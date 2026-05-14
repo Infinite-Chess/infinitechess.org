@@ -103,7 +103,7 @@ function initModal(): void {
 	initPresets();
 	initPasteButton();
 	initVariantGroupDropdown();
-	applyVariantToTrigger(_selectedVariantCode);
+	applyVariantToSelector(_selectedVariantCode);
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
@@ -255,7 +255,7 @@ function toggleVariantDropdown(): void {
 	}
 }
 
-/** Closes all variant panels and resets the trigger arrowhead. */
+/** Closes all variant panels and resets the selector arrowhead. */
 function closeVariantDropdown(): void {
 	element_variantGroupDropdown.classList.remove('open');
 	element_variantListPanels.forEach((p) => p.classList.remove('open'));
@@ -268,8 +268,8 @@ function openVariantList(group: VariantGroup): void {
 	document.querySelector(`.variant-list-panel[data-group="${group}"]`)!.classList.add('open');
 }
 
-/** Updates the trigger button's icon and name to reflect the given variant. */
-function applyVariantToTrigger(code: VariantCode): void {
+/** Updates the selector button's icon and name to reflect the given variant. */
+function applyVariantToSelector(code: VariantCode): void {
 	const variantGroup = variantregistry.getVariantGroup(code);
 	const iconId = variantregistry.getVariantGroupIconId(variantGroup);
 	element_variantName.textContent = variantregistry.getVariantName(code);
@@ -279,10 +279,10 @@ function applyVariantToTrigger(code: VariantCode): void {
 	element_variantGroupIcon.querySelector('use')?.setAttribute('href', `#${iconId}`);
 }
 
-/** Updates the selected variant state and trigger button, then closes all panels. */
+/** Updates the selected variant state and selector button, then closes all panels. */
 function selectVariant(code: VariantCode): void {
 	_selectedVariantCode = code;
-	applyVariantToTrigger(code);
+	applyVariantToSelector(code);
 	closeVariantDropdown();
 }
 

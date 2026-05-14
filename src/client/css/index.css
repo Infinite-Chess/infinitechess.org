@@ -401,14 +401,14 @@ svg.bg-omega {
 	color: var(--c-text);
 }
 
-.arrowhead {
+.selector-arrow {
 	width: 15px;
 	height: 15px;
 	flex-shrink: 0;
 	color: var(--c-text-muted);
 }
 
-.variant-display.open .arrowhead {
+.variant-display.open .selector-arrow {
 	transform: rotate(180deg);
 }
 
