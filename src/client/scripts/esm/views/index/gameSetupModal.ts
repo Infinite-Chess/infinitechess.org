@@ -4,18 +4,26 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
+import type { VNode } from 'snabbdom';
+import type { CloudSaveListRecord } from '../../game/boardeditor/actions/editorSavesAPI.js';
 import type {
 	VariantGroup,
 	VariantCode,
 } from '../../../../../shared/chess/variants/variantregistry.js';
 
+import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
+
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+
+import IndexedDB from '../../util/IndexedDB.js';
+import validatorama from '../../util/validatorama.js';
+import editorSavesAPI from '../../game/boardeditor/actions/editorSavesAPI.js';
 
 // Types ----------------------------------------------
 
 type ModalMode = 'online' | 'friend' | 'computer';
 
-type ToggleGroupAttribute = 'data-type' | 'data-time' | 'data-mode' | 'data-side' | 'data-level';
+type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level';
 
 // Constants ------------------------------------------
 
@@ -40,6 +48,10 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 	computer: 'Play against computer',
 };
 
+const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-';
+
+const patch = init([attributesModule, classModule, eventListenersModule]);
+
 // Elements ----------------------------------------------
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
@@ -57,6 +69,7 @@ const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
 const element_btnPasteIcn = document.getElementById('btn-paste-icn')!;
+const element_customVariantContent = document.getElementById('variant-custom-content')!;
 const element_timeSliders = document.getElementById('time-sliders')!;
 const element_sliderMinutes = document.getElementById('slider-minutes') as HTMLInputElement;
 const element_minutesDisplay = document.getElementById('minutes-display')!;
@@ -66,7 +79,6 @@ const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-bt
 const element_rowGameMode = document.getElementById('row-game-mode')!;
 const element_rowStrength = document.getElementById('row-strength')!;
 const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTMLElement>> = {
-	'data-type': document.querySelectorAll<HTMLElement>('[data-type]'),
 	'data-time': document.querySelectorAll<HTMLElement>('[data-time]'),
 	'data-mode': document.querySelectorAll<HTMLElement>('[data-mode]'),
 	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
@@ -76,6 +88,7 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 // State ----------------------------------------------
 
 let _selectedVariantCode: VariantCode = 'Classical';
+let customContentVNode: VNode | Element = element_customVariantContent;
 
 // Initialization ----------------------------------------------
 
@@ -148,14 +161,13 @@ function linkSlider(
 
 /** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
 function initToggleGroups(): void {
-	// Each [data-time], [data-mode], [data-side], [data-level], [data-type] button is an exclusive-select group.
+	// Each [data-time], [data-mode], [data-side], [data-level] button is an exclusive-select group.
 	// Buttons sharing the same data-* attribute key form one group.
 	const groups: [ToggleGroupAttribute, (() => void)?][] = [
 		['data-time', onTimeToggle],
 		['data-mode'],
 		['data-side'],
 		['data-level'],
-		['data-type', onVariantTypeToggle],
 	];
 	for (const [attr, callback] of groups) {
 		element_buttonsByToggleGroup[attr].forEach((btn) => {
@@ -211,13 +223,6 @@ function onTimeToggle(): void {
 	element_timeSliders.classList.toggle('is-collapsed', !isTimed);
 }
 
-/** Switches between preset-variant and custom-ICN inputs based on active type. */
-function onVariantTypeToggle(): void {
-	const activeBtn = document.querySelector<HTMLElement>('[data-type].active');
-	const isCustom = activeBtn?.getAttribute('data-type') === 'custom';
-	element_variantCustomSection.classList.toggle('hidden', !isCustom);
-}
-
 /** Wires the variant selector open/close and group navigation. */
 function initVariantGroupDropdown(): void {
 	element_variantDisplay.addEventListener('click', toggleVariantDropdown);
@@ -225,9 +230,11 @@ function initVariantGroupDropdown(): void {
 		if (!element_variantSelector.contains(e.target as Node)) closeVariantDropdown();
 	});
 	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
-		item.addEventListener('click', () =>
-			openVariantList(item.getAttribute('data-group')! as VariantGroup),
-		);
+		item.addEventListener('click', () => {
+			const group = item.getAttribute('data-group')!;
+			if (group === 'custom') void openCustomVariantList();
+			else openVariantList(group as VariantGroup);
+		});
 	});
 	element_variantListPanels.forEach((panel) => {
 		panel.querySelector('.variant-list-back')!.addEventListener('click', () => {
@@ -268,21 +275,151 @@ function openVariantList(group: VariantGroup): void {
 	document.querySelector(`.variant-list-panel[data-group="${group}"]`)!.classList.add('open');
 }
 
-/** Updates the selector button's icon and name to reflect the given variant. */
-function applyVariantToSelector(code: VariantCode): void {
-	const variantGroup = variantregistry.getVariantGroup(code);
-	const iconId = variantregistry.getVariantGroupIconId(variantGroup);
-	element_variantName.textContent = variantregistry.getVariantName(code);
+/**
+ * Opens the custom variant panel and (re-)loads saved positions.
+ * Action rows are shown immediately; the saved-positions list populates asynchronously.
+ */
+async function openCustomVariantList(): Promise<void> {
+	element_variantGroupDropdown.classList.remove('open');
+	document.querySelector('.variant-list-panel[data-group="custom"]')!.classList.add('open');
+
+	customContentVNode = patch(customContentVNode, createCustomContentVNode([], []));
+
+	const [cloudResult, localResult] = await Promise.allSettled([
+		validatorama.areWeLoggedIn() ? editorSavesAPI.getSavedPositions() : Promise.resolve([]),
+		getLocalSaveInfos(),
+	]);
+
+	const cloudSaves = cloudResult.status === 'fulfilled' ? cloudResult.value : [];
+	const localSaves = localResult.status === 'fulfilled' ? localResult.value : [];
+
+	customContentVNode = patch(
+		customContentVNode,
+		createCustomContentVNode(cloudSaves, localSaves),
+	);
+}
+
+/** Reads all abridged save infos stored locally in IndexedDB. */
+async function getLocalSaveInfos(): Promise<Array<{ position_name: string; timestamp: number }>> {
+	await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate 0.5s delay
+	const keys = (await IndexedDB.getAllKeys()).filter((k) => k.startsWith(EDITOR_SAVEINFO_PREFIX));
+	const results = await Promise.all(
+		keys.map(async (key) => {
+			const raw = (await IndexedDB.loadItem(key)) as unknown;
+			if (!raw || typeof raw !== 'object') return null;
+			const obj = raw as Record<string, unknown>;
+			if (typeof obj['position_name'] !== 'string' || typeof obj['timestamp'] !== 'number')
+				return null;
+			return { position_name: obj['position_name'], timestamp: obj['timestamp'] };
+		}),
+	);
+	return results.filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+/** Builds the snabbdom VNode for the custom panel's dynamic content area. */
+function createCustomContentVNode(
+	cloudSaves: CloudSaveListRecord[],
+	localSaves: Array<{ position_name: string; timestamp: number }>,
+): VNode {
+	const sortedCloud = [...cloudSaves].sort((a, b) => b.timestamp - a.timestamp);
+	const sortedLocal = [...localSaves].sort((a, b) => b.timestamp - a.timestamp);
+
+	const actions: Array<{ iconId: string; name: string; desc: string; onClick: (name: string) => void }> = [
+		{ iconId: 'svg-pencil',    name: 'Create',   desc: 'Go to the board editor.',       onClick: goToEditor },
+		{ iconId: 'svg-clipboard', name: 'From ICN', desc: 'Paste an accessible ICN code.', onClick: openFromICN },
+	]; // prettier-ignore
+
+	const actionRows: VNode[] = actions.map(({ iconId, name, desc, onClick }) =>
+		h('button.variant-group-item', { on: { click: () => onClick(name) } }, [
+			h(`svg.group-icon.${iconId}`, {}, [h('use', { attrs: { href: `#${iconId}` } })]),
+			h('span.group-name', {}, name),
+			h('span.group-desc', {}, desc),
+		]),
+	);
+
+	const cloudRows: VNode[] = sortedCloud.map((s) =>
+		h(
+			'button.variant-item',
+			{ key: `cloud-${s.name}`, on: { click: () => selectCustomSave(s.name) } },
+			[
+				h('span.variant-name', {}, s.name),
+				h('svg.svg-eye', {}, [h('use', { attrs: { href: '#svg-eye' } })]),
+			],
+		),
+	);
+
+	const localRows: VNode[] = sortedLocal.map((s) =>
+		h(
+			'button.variant-item',
+			{
+				key: `local-${s.position_name}`,
+				on: { click: () => selectCustomSave(s.position_name) },
+			},
+			[
+				h('span.variant-name', {}, s.position_name),
+				h('svg.svg-eye', {}, [h('use', { attrs: { href: '#svg-eye' } })]),
+			],
+		),
+	);
+
+	const saveRows = [...cloudRows, ...localRows];
+
+	return h('div#variant-custom-content', {}, [
+		...actionRows,
+		...(saveRows.length > 0
+			? [h('div.custom-saves-heading', {}, 'Saved positions'), ...saveRows]
+			: []),
+	]);
+}
+
+/** Navigates to the board editor page. */
+function goToEditor(_name: string): void {
+	window.location.href = '/editor';
+}
+
+/** Shows the ICN input section and updates the selector to the row's display name. */
+function openFromICN(name: string): void {
+	applyCustomToSelector(name);
+	element_variantCustomSection.classList.remove('hidden');
+	closeVariantDropdown();
+	element_icnInput.focus();
+}
+
+/** Selects a saved custom position by name and updates the selector display. */
+function selectCustomSave(name: string): void {
+	applyCustomToSelector(name);
+	element_variantCustomSection.classList.add('hidden');
+	closeVariantDropdown();
+}
+
+/** Sets the variant selector display button's name text and group icon. */
+function setSelectorDisplay(name: string, iconId: string): void {
+	element_variantName.textContent = name;
 	const classList = element_variantGroupIcon.classList;
 	[...classList].filter((c) => c.startsWith('svg-')).forEach((c) => classList.remove(c));
 	classList.add(iconId);
 	element_variantGroupIcon.querySelector('use')?.setAttribute('href', `#${iconId}`);
 }
 
+/** Updates the selector button's icon and name to reflect the given preset variant. */
+function applyVariantToSelector(code: VariantCode): void {
+	const variantGroup = variantregistry.getVariantGroup(code);
+	setSelectorDisplay(
+		variantregistry.getVariantName(code),
+		variantregistry.getVariantGroupIconId(variantGroup),
+	);
+}
+
+/** Updates the selector button's icon and name to reflect a custom (non-preset) selection. */
+function applyCustomToSelector(name: string): void {
+	setSelectorDisplay(name, 'svg-wrench');
+}
+
 /** Updates the selected variant state and selector button, then closes all panels. */
 function selectVariant(code: VariantCode): void {
 	_selectedVariantCode = code;
 	applyVariantToSelector(code);
+	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
 }
 

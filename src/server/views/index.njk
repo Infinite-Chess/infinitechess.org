@@ -103,10 +103,6 @@
 			{# ── Variant ─────────────────────────────────────────────────── #}
 			<div class="modal-row">
 				<span class="model-label">Variant</span>
-				<div class="option-group">
-					<button class="option-btn active" data-type="preset">Preset variant</button>
-					<button class="option-btn" data-type="custom">Custom (ICN)</button>
-				</div>
 				{# Variant selector #}
 				<div class="variant-selector" id="variant-selector">
 					<button class="variant-display" id="variant-display">
@@ -125,6 +121,12 @@
 							<svg class="group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
 						</button>
 						{% endfor %}
+						<button class="variant-group-item" data-group="custom">
+							<svg class="group-icon svg-wrench"><use href="#svg-wrench"/></svg>
+							<span class="group-name">Custom</span>
+							<span class="group-desc">Your own position, your own rules.</span>
+							<svg class="group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+						</button>
 					</div>
 					{% for g in variantGroups %}
 					<div class="variant-dropdown variant-list-panel" data-group="{{ g.group }}">
@@ -142,8 +144,17 @@
 						{% endfor %}
 					</div>
 					{% endfor %}
+					<div class="variant-dropdown variant-list-panel" data-group="custom" id="variant-custom-panel">
+						<button class="variant-list-back">
+							<svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+							<svg class="group-icon svg-wrench"><use href="#svg-wrench"/></svg>
+							<span class="group-name">Custom</span>
+							<span class="group-desc">Your own position, your own rules.</span>
+						</button>
+						<div id="variant-custom-content"></div>
+					</div>
 				</div>
-				{# Custom ICN - shown when "Custom (ICN)" tab is active #}
+				{# Custom ICN - revealed when "From ICN" is selected in the Custom group #}
 				<div id="variant-custom-section" class="hidden">
 					<div class="icn-input-row">
 						<div class="icn-input-wrap">
