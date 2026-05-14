@@ -19,8 +19,6 @@ import camera from './camera.js';
 import meshes from './meshes.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import guinavigation from '../gui/guinavigation.js';
 import Transition, { ZoomTransition } from './transitions/Transition.js';
 
 /**
@@ -62,10 +60,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 
 	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
-	const topNavHeight = guinavigation.getHeightOfNavBar();
-	const bottomNavHeight = guigameinfo.getHeightOfGameInfoBar();
-	const navHeight = topNavHeight + bottomNavHeight;
-	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
+	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels();
 
 	/** Start with a copy with zero padding. */
 	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
@@ -76,7 +71,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		const paddingToUse: number =
 			bd.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0 ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
-		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
+		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse;
 
 		const paddingHorzWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels),
