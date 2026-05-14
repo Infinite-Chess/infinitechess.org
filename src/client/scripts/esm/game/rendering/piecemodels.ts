@@ -21,7 +21,6 @@ import meshes from './meshes.js';
 import { gl } from './webgl.js';
 import camera from './camera.js';
 import boardpos from './boardpos.js';
-import miniimage from './miniimage.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
@@ -417,15 +416,6 @@ function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
 	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
-
-	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
-		// Only render voids
-		// NOT ANYMORE SINCE ADDING STAR FIELD ANIMATION (voids are rendered separately)
-		// mesh.types[r.VOID]?.model.render(position, scale);
-		return;
-	}
-
-	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
 	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset))

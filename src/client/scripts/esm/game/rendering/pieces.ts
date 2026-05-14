@@ -10,6 +10,7 @@ import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 
 import meshes from './meshes.js';
+import boardpos from './boardpos.js';
 import miniimage from './miniimage.js';
 import piecemodels from './piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -27,7 +28,10 @@ const ghostOpacity: number = 0.4;
  * including voids, and mini images, if visible.
  */
 function renderPiecesInGame(boardsim: Board, mesh: Mesh | undefined): void {
-	piecemodels.renderAll(boardsim, mesh);
+	// Skip individual piece rendering when zoomed out and miniimage is active (it renders them instead).
+	if (!boardpos.areZoomedOut() || miniimage.isDisabled()) {
+		piecemodels.renderAll(boardsim, mesh);
+	}
 	miniimage.render();
 }
 
