@@ -43,9 +43,7 @@
 	transform: scale(1.2);
 }
 .svg-pawn {
-	transform: scale(1.1);
-	position: relative;
-	bottom: 2px;
+	transform: scale(1.1) translateY(-7%);
 }
 .svg-keypad {
 	transform: scale(0.95);
