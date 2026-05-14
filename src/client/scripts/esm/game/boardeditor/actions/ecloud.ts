@@ -2,7 +2,7 @@
 
 /**
  * Handles cloud (server) save/load operations for the board editor.
- * Mirrors esave.ts for cloud storage.
+ * Mirrors esavestore.ts for cloud storage.
  */
 
 import type { MetaData } from '../../../../../../shared/types';
@@ -15,9 +15,9 @@ import editorutil from '../../../../../../shared/util/editorutil';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import toast from '../../gui/toast';
-import esave from './esave';
 import eactions from './eactions';
 import eautosave from './eautosave';
+import esavestore from './esavestore';
 import egamerules from '../egamerules';
 import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
@@ -207,14 +207,17 @@ async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[]
 async function transferPositionToCloud(
 	position_name: string,
 ): Promise<CloudSaveListRecord[] | undefined> {
-	const editorSaveState = await esave.readLocal(position_name);
-	if (editorSaveState === undefined) return;
+	const editorSaveState = await esavestore.readLocal(position_name);
+	if (editorSaveState === undefined) {
+		toast.show(translations.editor.position_corrupted, { error: true });
+		return;
+	}
 
 	const result = await saveCloudState(editorSaveState);
 	if (!result.success) return;
 
 	// Success! Delete local copy now.
-	await esave.deleteLocal(position_name);
+	await esavestore.deleteLocal(position_name);
 
 	if (boardeditor.isActivePosition(position_name, 'local'))
 		boardeditor.setActivePosition({
@@ -249,7 +252,7 @@ async function removePositionFromCloud(
 	}
 
 	// Success! Save locally now.
-	await esave.saveState(editorSaveState);
+	await esavestore.saveState(editorSaveState);
 
 	if (boardeditor.isActivePosition(position_name, 'cloud'))
 		boardeditor.setActivePosition({ name: position_name, storage_type: 'local' });
@@ -260,7 +263,7 @@ async function removePositionFromCloud(
 
 /**
  * Fetches all cloud saves for the current user.
- * Mirrors esave.getAllLocalSaveInfos() for cloud storage.
+ * Mirrors esavestore.getAllLocalSaveInfos() for cloud storage.
  * @returns An array of cloud save records, or an empty array on failure.
  */
 async function getAllCloudSaveInfos(): Promise<CloudSaveListRecord[]> {

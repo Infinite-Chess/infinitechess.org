@@ -10,10 +10,11 @@ import type { StorageType } from '../../../../boardeditor/boardeditor';
 import type { CloudSaveListRecord } from '../../../../boardeditor/actions/editorSavesAPI';
 import type { EditorAbridgedSaveState } from '../../../../boardeditor/editortypes';
 
-import esave from '../../../../boardeditor/actions/esave';
+import toast from '../../../toast';
 import style from '../../../style';
 import ecloud from '../../../../boardeditor/actions/ecloud';
 import eactions from '../../../../boardeditor/actions/eactions';
+import esavestore from '../../../../boardeditor/actions/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
 import { GameBus } from '../../../../GameBus';
 import validatorama from '../../../../../util/validatorama';
@@ -114,7 +115,7 @@ async function performLoad(position_name: string, storage_type: StorageType): Pr
 	const editorSaveState =
 		storage_type === 'cloud'
 			? await withRequest(() => ecloud.readCloud(position_name))
-			: await esave.readLocal(position_name);
+			: await esavestore.readLocal(position_name);
 	// If the load count changed while the request was in-flight, the user already
 	// loaded a different position — discard this stale result.
 	if (load_counter !== initialLoadCount) {
@@ -125,6 +126,8 @@ async function performLoad(position_name: string, storage_type: StorageType): Pr
 		// Pass false to skip resetting the window's position on screen
 		guiloadposition.close(false);
 		await eactions.load(editorSaveState, storage_type);
+	} else if (storage_type === 'local') {
+		toast.show(translations.editor.position_corrupted, { error: true });
 	}
 }
 
@@ -158,7 +161,7 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 	if (storage_type === 'cloud') {
 		preloadedCloudSaves = await withRequest(() => ecloud.deleteCloud(position_name));
 	} else {
-		await esave.deleteLocal(position_name);
+		await esavestore.deleteLocal(position_name);
 	}
 	// Clear active position name if the deleted position was active
 	if (boardeditor.isActivePosition(position_name, storage_type))
@@ -197,7 +200,7 @@ async function updateSavedPositionListUI(preloadedCloudSaves?: PreloadedCloudSav
 	}
 
 	// Load all local saves
-	const localSaveList = await esave.getAllLocalSaveInfos();
+	const localSaveList = await esavestore.getAllLocalSaveInfos();
 
 	// Add local saves
 	for (const abridged of localSaveList) {

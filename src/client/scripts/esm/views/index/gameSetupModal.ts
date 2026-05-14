@@ -15,9 +15,9 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
-import IndexedDB from '../../util/IndexedDB.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/boardeditor/actions/editorSavesAPI.js';
+import editorpositionsdb from '../../game/boardeditor/actions/esavestore.js';
 
 // Types ----------------------------------------------
 
@@ -47,8 +47,6 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 	friend: 'Challenge a friend',
 	computer: 'Play against computer',
 };
-
-const EDITOR_SAVEINFO_PREFIX = 'editor-saveinfo-';
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
@@ -287,7 +285,7 @@ async function openCustomVariantList(): Promise<void> {
 
 	const [cloudResult, localResult] = await Promise.allSettled([
 		validatorama.areWeLoggedIn() ? editorSavesAPI.getSavedPositions() : Promise.resolve([]),
-		getLocalSaveInfos(),
+		editorpositionsdb.getAllLocalSaveInfos(),
 	]);
 
 	const cloudSaves = cloudResult.status === 'fulfilled' ? cloudResult.value : [];
@@ -297,23 +295,6 @@ async function openCustomVariantList(): Promise<void> {
 		customContentVNode,
 		createCustomContentVNode(cloudSaves, localSaves),
 	);
-}
-
-/** Reads all abridged save infos stored locally in IndexedDB. */
-async function getLocalSaveInfos(): Promise<Array<{ position_name: string; timestamp: number }>> {
-	await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate 0.5s delay
-	const keys = (await IndexedDB.getAllKeys()).filter((k) => k.startsWith(EDITOR_SAVEINFO_PREFIX));
-	const results = await Promise.all(
-		keys.map(async (key) => {
-			const raw = (await IndexedDB.loadItem(key)) as unknown;
-			if (!raw || typeof raw !== 'object') return null;
-			const obj = raw as Record<string, unknown>;
-			if (typeof obj['position_name'] !== 'string' || typeof obj['timestamp'] !== 'number')
-				return null;
-			return { position_name: obj['position_name'], timestamp: obj['timestamp'] };
-		}),
-	);
-	return results.filter((x): x is NonNullable<typeof x> => x !== null);
 }
 
 /** Builds the snabbdom VNode for the custom panel's dynamic content area. */
