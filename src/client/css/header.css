@@ -47,12 +47,14 @@
 	position: relative;
 	bottom: 2px;
 }
-.svg-keypad,
-.svg-trophy {
+.svg-keypad {
 	transform: scale(0.95);
 }
 .svg-tesseract {
 	transform: scale(1.05);
+}
+.svg-trophy {
+	transform: scale(0.9);
 }
 .svg-speed-bullet {
 	transform: scale(1.1);
