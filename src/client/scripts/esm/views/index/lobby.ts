@@ -43,20 +43,13 @@ function getClockLabel(clock: TimeControl): string | undefined {
 	return `${minutesAndIncrement.minutes}+${minutesAndIncrement.increment}`;
 }
 
-/** Returns the symbol ID of the SVG icon that represents the variant group. */
+/**
+ * Returns the symbol ID of the SVG icon that represents the variant group.
+ * Includes the `custom` group for custom variants.
+ */
 function getVariantIcon(group: VariantGroup | 'custom'): string {
-	switch (group) {
-		case 'standard':
-			return 'svg-pawn';
-		case 'horde':
-			return 'svg-keypad';
-		case '4D':
-			return 'svg-tesseract';
-		case 'showcase':
-			return 'svg-trophy';
-		case 'custom':
-			return 'svg-wrench';
-	}
+	if (group === 'custom') return 'svg-wrench';
+	return variantregistry.getVariantGroupIconId(group);
 }
 
 // Snabbdom Rendering ----------------------------------------------

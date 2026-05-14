@@ -4,6 +4,13 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
+import type {
+	VariantGroup,
+	VariantCode,
+} from '../../../../../shared/chess/variants/variantregistry.js';
+
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+
 // Types ----------------------------------------------
 
 type ModalMode = 'online' | 'friend' | 'computer';
@@ -41,8 +48,13 @@ const element_modalSubmit = document.getElementById('modal-submit')!;
 const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
-const element_variantPresetSection = document.getElementById('variant-preset-section')!;
 const element_variantCustomSection = document.getElementById('variant-custom-section')!;
+const element_variantSelector = document.getElementById('variant-selector')!;
+const element_variantDisplay = document.getElementById('variant-display')!;
+const element_variantGroupDropdown = document.getElementById('variant-dropdown')!;
+const element_variantListPanels = document.querySelectorAll<HTMLElement>('.variant-list-panel');
+const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
+const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
 const element_btnPasteIcn = document.getElementById('btn-paste-icn')!;
 const element_timeSliders = document.getElementById('time-sliders')!;
@@ -60,6 +72,10 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
 	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
 };
+
+// State ----------------------------------------------
+
+let _selectedVariantCode: VariantCode = 'Classical';
 
 // Initialization ----------------------------------------------
 
@@ -86,6 +102,8 @@ function initModal(): void {
 	onTimeToggle();
 	initPresets();
 	initPasteButton();
+	initVariantGroupDropdown();
+	applyVariantToTrigger(_selectedVariantCode);
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
@@ -103,6 +121,7 @@ function openModal(mode: ModalMode): void {
 /** Hides the modal. */
 function closeModal(): void {
 	element_modalOverlay.classList.add('hidden');
+	closeVariantDropdown();
 }
 
 /** Connects both time sliders to their value displays. */
@@ -196,8 +215,75 @@ function onTimeToggle(): void {
 function onVariantTypeToggle(): void {
 	const activeBtn = document.querySelector<HTMLElement>('[data-type].active');
 	const isCustom = activeBtn?.getAttribute('data-type') === 'custom';
-	element_variantPresetSection.classList.toggle('hidden', isCustom);
 	element_variantCustomSection.classList.toggle('hidden', !isCustom);
+}
+
+/** Wires the variant selector open/close and group navigation. */
+function initVariantGroupDropdown(): void {
+	element_variantDisplay.addEventListener('click', toggleVariantDropdown);
+	document.addEventListener('pointerdown', (e) => {
+		if (!element_variantSelector.contains(e.target as Node)) closeVariantDropdown();
+	});
+	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
+		item.addEventListener('click', () =>
+			openVariantList(item.getAttribute('data-group')! as VariantGroup),
+		);
+	});
+	element_variantListPanels.forEach((panel) => {
+		panel.querySelector('.variant-list-back')!.addEventListener('click', () => {
+			panel.classList.remove('open');
+			element_variantGroupDropdown.classList.add('open');
+		});
+		panel.querySelectorAll<HTMLElement>('.variant-item').forEach((btn) => {
+			btn.addEventListener('click', () =>
+				selectVariant(btn.getAttribute('data-code')! as VariantCode),
+			);
+		});
+	});
+}
+
+/** Toggles the group dropdown, closing the variant list if it was open instead. */
+function toggleVariantDropdown(): void {
+	const anyOpen =
+		element_variantGroupDropdown.classList.contains('open') ||
+		[...element_variantListPanels].some((p) => p.classList.contains('open'));
+	if (anyOpen) {
+		closeVariantDropdown();
+	} else {
+		element_variantGroupDropdown.classList.add('open');
+		element_variantDisplay.classList.add('open');
+	}
+}
+
+/** Closes all variant panels and resets the trigger arrowhead. */
+function closeVariantDropdown(): void {
+	element_variantGroupDropdown.classList.remove('open');
+	element_variantListPanels.forEach((p) => p.classList.remove('open'));
+	element_variantDisplay.classList.remove('open');
+}
+
+/** Switches from the group list to the pre-rendered variant list for the given group. */
+function openVariantList(group: VariantGroup): void {
+	element_variantGroupDropdown.classList.remove('open');
+	document.querySelector(`.variant-list-panel[data-group="${group}"]`)!.classList.add('open');
+}
+
+/** Updates the trigger button's icon and name to reflect the given variant. */
+function applyVariantToTrigger(code: VariantCode): void {
+	const variantGroup = variantregistry.getVariantGroup(code);
+	const iconId = variantregistry.getVariantGroupIconId(variantGroup);
+	element_variantName.textContent = variantregistry.getVariantName(code);
+	const classList = element_variantGroupIcon.classList;
+	[...classList].filter((c) => c.startsWith('svg-')).forEach((c) => classList.remove(c));
+	classList.add(iconId);
+	element_variantGroupIcon.querySelector('use')?.setAttribute('href', `#${iconId}`);
+}
+
+/** Updates the selected variant state and trigger button, then closes all panels. */
+function selectVariant(code: VariantCode): void {
+	_selectedVariantCode = code;
+	applyVariantToTrigger(code);
+	closeVariantDropdown();
 }
 
 /** Adds clipboard paste behavior for the custom ICN textarea. */

@@ -92,7 +92,7 @@
 		<div class="modal-header">
 			<div class="modal-header-gap"></div>
 			<h2 class="modal-title">Game options</h2>
-			<button class="modal-close" id="modal-close" type="button">
+			<button class="modal-close" id="modal-close">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
 				     stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 			</button>
@@ -101,23 +101,47 @@
 		<div class="modal-body">
 
 			{# ── Variant ─────────────────────────────────────────────────── #}
-			<div class="form-row">
-				<span class="form-label">Variant</span>
+			<div class="modal-row">
+				<span class="model-label">Variant</span>
 				<div class="option-group">
-					<button class="option-btn active" data-type="preset" type="button">Preset variant</button>
-					<button class="option-btn" data-type="custom" type="button">Custom (ICN)</button>
+					<button class="option-btn active" data-type="preset">Preset variant</button>
+					<button class="option-btn" data-type="custom">Custom (ICN)</button>
 				</div>
-				{# Preset variant selector - clicking opens the variant picker popup (TODO) #}
-				<div id="variant-preset-section">
-					<button class="variant-display-btn" id="variant-display" type="button"
-					        title="Click to choose a variant (coming soon)">
-						<span class="variant-icon">♾️</span>
-						<span id="variant-name">Infinite Chess</span>
-						<svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-						     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<polyline points="6 9 12 15 18 9"/>
-						</svg>
+				{# Variant selector #}
+				<div class="variant-selector" id="variant-selector">
+					<button class="variant-display" id="variant-display">
+						<svg class="variant-group-icon" id="variant-group-icon"><use></use></svg>
+						<span id="variant-name"></span>
+						<svg class="svg-pencil"><use href="#svg-pencil"></use></svg>
+						<svg class="svg-eye"><use href="#svg-eye"></use></svg>
+						<svg class="arrowhead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</button>
+					<div class="variant-dropdown" id="variant-dropdown">
+						{% for g in variantGroups %}
+						<button class="variant-group-item" data-group="{{ g.group }}">
+							<svg class="group-icon {{ g.iconId }}"><use href="#{{ g.iconId }}"/></svg>
+							<span class="group-name">{{ g.name }}</span>
+							<span class="group-desc">{{ g.description }}</span>
+							<svg class="group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+						</button>
+						{% endfor %}
+					</div>
+					{% for g in variantGroups %}
+					<div class="variant-dropdown variant-list-panel" data-group="{{ g.group }}">
+						<button class="variant-list-back">
+							<svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+							<svg class="group-icon {{ g.iconId }}"><use href="#{{ g.iconId }}"/></svg>
+							<span class="group-name">{{ g.name }}</span>
+							<span class="group-desc">{{ g.description }}</span>
+						</button>
+						{% for v in g.variants %}
+						<button class="variant-item" data-code="{{ v.code }}">
+							<span class="variant-name">{{ v.name }}</span>
+							<svg class="svg-eye"><use href="#svg-eye"></use></svg>
+						</button>
+						{% endfor %}
+					</div>
+					{% endfor %}
 				</div>
 				{# Custom ICN - shown when "Custom (ICN)" tab is active #}
 				<div id="variant-custom-section" class="hidden">
@@ -127,14 +151,14 @@
 							          placeholder="Paste ICN text here" rows="1"></textarea>
 						</div>
 						<div class="icn-buttons">
-							<button class="icon-btn" id="btn-paste-icn" type="button" title="Paste from clipboard">
+							<button class="icon-btn" id="btn-paste-icn" title="Paste from clipboard">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
 								     stroke-linecap="round" stroke-linejoin="round">
 									<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
 									<rect x="8" y="2" width="8" height="4" rx="1"/>
 								</svg>
 							</button>
-							<button class="icon-btn" id="btn-edit-icn" type="button" title="Open in board editor">
+							<button class="icon-btn" id="btn-edit-icn" title="Open in board editor">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
 								     stroke-linecap="round" stroke-linejoin="round">
 									<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -148,11 +172,11 @@
 
 			{# ── Time control ─────────────────────────────────────────────── #}
 			<div>
-				<div class="form-row">
-					<span class="form-label">Time control</span>
+				<div class="modal-row">
+					<span class="model-label">Time control</span>
 					<div class="option-group">
-						<button class="option-btn active" data-time="timed" type="button">Timed</button>
-						<button class="option-btn" data-time="infinite" type="button">Infinite</button>
+						<button class="option-btn active" data-time="timed">Timed</button>
+						<button class="option-btn" data-time="infinite">Infinite</button>
 					</div>
 				</div>
 
@@ -174,42 +198,42 @@
 							<input type="range" class="slider" id="slider-increment" min="0" max="26" value="4" step="1">
 						</div>
 						<div class="time-presets">
-							<button class="preset-btn" data-minutes="1" data-increment="2" type="button">1+2</button>
-							<button class="preset-btn" data-minutes="2" data-increment="2" type="button">2+2</button>
-							<button class="preset-btn" data-minutes="3" data-increment="2" type="button">3+2</button>
-							<button class="preset-btn" data-minutes="5" data-increment="2" type="button">5+2</button>
-							<button class="preset-btn active" data-minutes="8" data-increment="3" type="button">8+3</button>
-							<button class="preset-btn" data-minutes="10" data-increment="4" type="button">10+4</button>
-							<button class="preset-btn" data-minutes="15" data-increment="5" type="button">15+5</button>
-							<button class="preset-btn" data-minutes="20" data-increment="6" type="button">20+6</button>
+							<button class="preset-btn" data-minutes="1" data-increment="2">1+2</button>
+							<button class="preset-btn" data-minutes="2" data-increment="2">2+2</button>
+							<button class="preset-btn" data-minutes="3" data-increment="2">3+2</button>
+							<button class="preset-btn" data-minutes="5" data-increment="2">5+2</button>
+							<button class="preset-btn active" data-minutes="8" data-increment="3">8+3</button>
+							<button class="preset-btn" data-minutes="10" data-increment="4">10+4</button>
+							<button class="preset-btn" data-minutes="15" data-increment="5">15+5</button>
+							<button class="preset-btn" data-minutes="20" data-increment="6">20+6</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
 			{# ── Game mode (hidden for "Play against computer") ──────────── #}
-			<div class="form-row" id="row-game-mode">
-				<span class="form-label">Game mode</span>
+			<div class="modal-row" id="row-game-mode">
+				<span class="model-label">Game mode</span>
 				<div class="option-group">
-					<button class="option-btn active" data-mode="casual" type="button">Casual</button>
-					<button class="option-btn" data-mode="rated" type="button">Rated</button>
+					<button class="option-btn active" data-mode="casual">Casual</button>
+					<button class="option-btn" data-mode="rated">Rated</button>
 				</div>
 			</div>
 
 			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
-			<div class="form-row">
-				<span class="form-label">Side</span>
+			<div class="modal-row">
+				<span class="model-label">Side</span>
 				<div class="option-group icons">
-					<button class="option-btn" data-side="white" type="button">
+					<button class="option-btn" data-side="white">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></svg>
 						White
 					</button>
-					<button class="option-btn active" data-side="random" type="button">
+					<button class="option-btn active" data-side="random">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450"><defs><clipPath id="a"><path d="M0 0h225v450H0"/></clipPath><clipPath id="b"><path d="M225 0H450v450H225"/></clipPath></defs><g stroke-linejoin="round" stroke-width="15" clip-path="url(#a)"><g fill="#000" stroke="#000"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><g fill="none" stroke="#FFF" stroke-linecap="round"><path d="M225 200s32.5-30 20-55c0 0-5-15-20-15s-20 15-20 15c-12.5 25 20 55 20 55" stroke-linecap="square"/><path d="M320 295s85-40 60.3-96.5C341.5 140 250 180 225 245l.1 21-.1-21C200 180 99 140 70 198.5c-25 56.5 48.5 90 48.5 90"/><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0"/></g></g><g stroke="#000" stroke-width="15" clip-path="url(#b)"><g fill="#FFF" stroke-linejoin="round"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0" fill="none" stroke-linecap="round"/></g></svg>
 
 						Random
 					</button>
-					<button class="option-btn" data-side="black" type="button">
+					<button class="option-btn" data-side="black">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-opacity="1" fill-rule="evenodd" stroke="#000" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5"><path d="M22.5 11.63V6" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#000" fill-opacity="1" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#000" stroke="#000"/><path d="M20 8h5" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M32 29.5s8.5-4 6.03-9.65C34.15 14 25 18 22.5 24.5v2.1-2.1C20 18 10.85 14 6.97 19.85 4.5 25.5 13 29.5 13 29.5" fill="none" stroke="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0" fill="none" stroke="#fff"/></g></svg>
 						Black
 					</button>
@@ -217,24 +241,24 @@
 			</div>
 
 			{# ── Strength (only for "Play against computer") ─────────────── #}
-			<div class="form-row hidden" id="row-strength">
-				<span class="form-label">Strength</span>
+			<div class="modal-row hidden" id="row-strength">
+				<span class="model-label">Strength</span>
 				<div class="option-group">
-					<button class="option-btn" data-level="1" type="button">1</button>
-					<button class="option-btn" data-level="2" type="button">2</button>
-					<button class="option-btn" data-level="3" type="button">3</button>
-					<button class="option-btn active" data-level="4" type="button">4</button>
-					<button class="option-btn" data-level="5" type="button">5</button>
-					<button class="option-btn" data-level="6" type="button">6</button>
-					<button class="option-btn" data-level="7" type="button">7</button>
-					<button class="option-btn" data-level="8" type="button">8</button>
+					<button class="option-btn" data-level="1">1</button>
+					<button class="option-btn" data-level="2">2</button>
+					<button class="option-btn" data-level="3">3</button>
+					<button class="option-btn active" data-level="4">4</button>
+					<button class="option-btn" data-level="5">5</button>
+					<button class="option-btn" data-level="6">6</button>
+					<button class="option-btn" data-level="7">7</button>
+					<button class="option-btn" data-level="8">8</button>
 				</div>
 			</div>
 
 		</div>{# .modal-body #}
 
 		<div class="modal-footer">
-			<button class="submit-btn" id="modal-submit" type="button">Create Game</button>
+			<button class="submit-btn" id="modal-submit">Create Game</button>
 		</div>
 
 	</div>{# .modal #}

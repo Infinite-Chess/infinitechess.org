@@ -2,6 +2,8 @@
 
 import express, { NextFunction, Request, Response } from 'express';
 
+import variantregistry from '../../shared/chess/variants/variantregistry.js';
+
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import {
@@ -28,8 +30,11 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 	next();
 });
 
+/** Cache all variant groups and their variants. */
+const variantGroups = variantregistry.getVariantGroupsWithVariants();
+
 // Regular pages
-router.get('^/$|/index(.html)?', (_req: Request, res: Response) => res.render('index.njk'));
+router.get('^/$|/index(.html)?', (_req: Request, res: Response) => res.render('index.njk', { variantGroups })); // prettier-ignore
 router.get('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 router.get('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
 router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));

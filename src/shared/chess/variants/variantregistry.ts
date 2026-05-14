@@ -15,6 +15,13 @@ import type { VariantModule } from './variant_scripts/variantutil.js';
 /** All valid variant group names. Does not include custom variants. */
 export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
 
+/** Entry in the variant group registry. */
+export type GroupRegistryEntry = {
+	name: string;
+	description: string;
+	iconId: string;
+};
+
 /** Union of all valid variant codes, derived from the keys of {@link VARIANT_REGISTRY}. */
 export type VariantCode = (typeof VARIANT_CODES)[number];
 
@@ -31,7 +38,39 @@ export type VariantRegistryEntry = {
 	name: string;
 	/** Dynamically imports the script for this variant. */
 	loadVariant: () => Promise<VariantModule>;
+	/** If true, the variant is excluded from variant-selection UI (e.g. deleted variants kept for notation support). */
+	hidden?: true;
 };
+
+// ================================ VARIANT GROUP REGISTRY ================================
+
+const VARIANT_GROUP_REGISTRY = {
+	standard: {
+		name: 'Standard',
+		description: 'Normal rules apply.',
+		iconId: 'svg-pawn',
+	},
+	horde: {
+		name: 'Horde',
+		description: 'One side has a large number of pawns, the other has a normal army.',
+		iconId: 'svg-keypad',
+	},
+	'4D': {
+		name: '4D',
+		description: 'Pieces can travel four-dimensionally.',
+		iconId: 'svg-tesseract',
+	},
+	showcase: {
+		name: 'Showcase',
+		description: 'Mate in omega, and greater, forced checkmate positions.',
+		iconId: 'svg-trophy',
+	},
+} satisfies Record<VariantGroup, GroupRegistryEntry>;
+
+/** An array of all valid variant groups. */
+const VARIANT_GROUPS = Object.keys(
+	VARIANT_GROUP_REGISTRY,
+) as (keyof typeof VARIANT_GROUP_REGISTRY)[];
 
 // ================================ VARIANT REGISTRY ================================
 
@@ -122,21 +161,25 @@ const VARIANT_REGISTRY = {
 		group: 'standard',
 		name: 'Knighted Chess',
 		loadVariant: () => import('./variant_scripts/variants/var_knightedchess.js'),
+		hidden: true,
 	},
 	Abundance: {
 		group: 'standard',
 		name: 'Abundance',
 		loadVariant: () => import('./variant_scripts/variants/var_abundance.js'),
+		hidden: true,
 	},
 	Amazon_Chandelier: {
 		group: 'standard',
 		name: 'Amazon Chandelier',
 		loadVariant: () => import('./variant_scripts/variants/var_amazonchandelier.js'),
+		hidden: true,
 	},
 	Containment: {
 		group: 'standard',
 		name: 'Containment',
 		loadVariant: () => import('./variant_scripts/variants/var_containment.js'),
+		hidden: true,
 	},
 	// ---- Horde ----
 	Pawn_Horde: {
@@ -183,6 +226,11 @@ const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REG
 
 // Functions ------------------------------------------------------------------
 
+/** Returns the id for the icon of the given variant group. */
+function getVariantGroupIconId(group: VariantGroup): string {
+	return VARIANT_GROUP_REGISTRY[group].iconId;
+}
+
 /**
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
  * Warns if the variant is not recognized.
@@ -207,6 +255,11 @@ function getVariantName(variantCode: VariantCode): string {
 	return VARIANT_REGISTRY[variantCode].name;
 }
 
+/** Returns the group of the given variant code. */
+function getVariantGroup(variantCode: VariantCode): VariantGroup {
+	return VARIANT_REGISTRY[variantCode].group;
+}
+
 /**
  * Tests if the provided variant is a valid variant.
  * Acts as a type guard, narrowing the input to {@link VariantCode}.
@@ -220,14 +273,47 @@ function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule
 	return VARIANT_REGISTRY[variantCode].loadVariant;
 }
 
+/**
+ * Returns all variant groups in display order, each with their metadata
+ * and the list of non-hidden variants belonging to that group.
+ * Used for SSR'ing the index page.
+ */
+function getVariantGroupsWithVariants(): {
+	group: VariantGroup;
+	name: string;
+	description: string;
+	iconId: string;
+	variants: Array<{ code: string; name: string }>;
+}[] {
+	return VARIANT_GROUPS.map((group) => ({
+		group,
+		...VARIANT_GROUP_REGISTRY[group],
+		variants: getVariantsForGroup(group).map((code) => ({
+			code,
+			name: VARIANT_REGISTRY[code].name,
+		})),
+	}));
+}
+
+/** Returns all non-hidden variant codes belonging to the given group, in registry order. */
+function getVariantsForGroup(group: VariantGroup): VariantCode[] {
+	return VARIANT_CODES.filter((code) => {
+		const entry = VARIANT_REGISTRY[code] as VariantRegistryEntry;
+		return entry.group === group && !entry.hidden;
+	});
+}
+
 // Exports ----------------------------------------------------------
 
 export default {
 	// Constants
 	VARIANT_CODES,
 	// Functions
+	getVariantGroupIconId,
 	resolveVariantCode,
 	getVariantName,
+	getVariantGroup,
 	isVariantValid,
 	getVariantLoader,
+	getVariantGroupsWithVariants,
 };
