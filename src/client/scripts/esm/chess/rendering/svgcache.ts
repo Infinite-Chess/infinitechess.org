@@ -205,7 +205,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
  * @param types - An array of piece type numbers to get SVGs for.
  * @param [width] - Optional width to set on the SVG elements.
  * @param [height] - Optional height to set on the SVG elements.
- * @returns An array of cloned and prepared SVG elements.
+ * @returns An array of cloned and prepared SVG elements. Their id is now the integer id of the piece.
  */
 function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
 	let failed: boolean = false;
@@ -214,14 +214,14 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const checks: string[] = getSVGColorPriority(c);
-		for (const c of checks) {
+		const colorExts: string[] = getSVGColorPriority(c);
+		for (const c of colorExts) {
 			const id = baseId + c;
 			if (!(id in cachedPieceSVGs)) continue;
 			// Clone the SVG element
 			const cloned = cachedPieceSVGs[id]!.cloneNode(true) as SVGElement;
 
-			cloned.id = String(type);
+			cloned.id = String(type); // Override 'pawn-white' with the integer piece type
 
 			// Set width and height if specified
 			if (width !== undefined) cloned.setAttribute('width', width.toString());
@@ -234,7 +234,7 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			continue l;
 		}
 		console.error(
-			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`,
+			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`,
 		);
 		failed = true;
 	}

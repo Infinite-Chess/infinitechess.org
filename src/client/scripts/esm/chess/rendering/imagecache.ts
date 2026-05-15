@@ -1,8 +1,7 @@
 // src/client/scripts/esm/chess/rendering/imagecache.ts
 
 /**
- * This script caches the HTMLImageElement objects for the pieces
- * required by the currently loaded game.
+ * This script caches the HTMLImageElement objects for the pieces.
  *
  * It assumes that `initImagesForGame` is called before any
  * attempt to retrieve an image using `getPieceImage`.
@@ -22,8 +21,8 @@ import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 // Variables ---------------------------------------------------------------------------
 
 /**
- * The cache storing HTMLImageElement objects for each piece type
- * required by the current game. Keys are the numeric piece types.
+ * The cache storing HTMLImageElement objects for each piece type.
+ * Keys are the numeric piece types.
  */
 let cachedImages: TypeGroup<HTMLImageElement> = {};
 
@@ -41,13 +40,13 @@ GameBus.addEventListener('game-unloaded', () => {
  * normalizes them, and stores them in the cache.
  */
 async function initImagesForGame(boardsim: Board): Promise<void> {
-	// 1. Determine required piece types (excluding SVG-less ones and already-cached ones)
+	// 1. Determine required piece types (excluding already-cached and SVG-less ones)
 	const types = boardsim.existingTypes.filter(
-		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)) && !cachedImages[t],
+		(t: number) => !cachedImages[t] && !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
 	);
 	if (types.length === 0) return;
 
-	// console.log("Required piece types for image cache:", types);
+	// console.log("Needed piece types to load image cache:", types);
 
 	try {
 		// 2. Get SVG elements using the existing svgcache
@@ -61,7 +60,6 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 
 		// 4. Normalize images and populate the cache
 		// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
-		const newCache: { [type: string]: HTMLImageElement } = {}; // 'pawn-white' => HTMLImageElement
 		const normalizationPromises: Promise<void>[] = [];
 
 		for (const img of initialImages) {
@@ -72,7 +70,7 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 			const promise = svgtoimageconverter
 				.normalizeImagePixelData(img)
 				.then((normalizedImg) => {
-					newCache[img.id] = normalizedImg;
+					cachedImages[Number(img.id)] = normalizedImg;
 					// Optional: Log successful caching of a specific type
 					// console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
@@ -88,9 +86,6 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 
 		// Wait for all normalizations to complete
 		await Promise.all(normalizationPromises);
-
-		// Merge new entries into the existing cache
-		Object.assign(cachedImages, newCache);
 
 		// console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
 	} catch (error) {
