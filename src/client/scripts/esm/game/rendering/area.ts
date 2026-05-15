@@ -37,12 +37,12 @@ export interface Area {
 const TWO = bd.fromNumber(2.0);
 
 const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
-const paddingMiniimage: number = 0.2; // The padding to use when miniimages are visible (zoomed out far)
+const paddingMiniimage: number = 0.03; // The padding to use when miniimages are visible (zoomed out far)
 /**
  * The minimum number of squares that should be visible when transitioning somewhere.
  * This is so that it doesn't zoom too close-up on a single piece or small group.
  */
-const areaMinHeightSquares: number = 17; // Divided by screen width
+const areaMinHeightSquares: number = 10; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
 // so we need to iterate it a few times for more accuracy.

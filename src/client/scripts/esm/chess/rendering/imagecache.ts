@@ -41,20 +41,11 @@ GameBus.addEventListener('game-unloaded', () => {
  * normalizes them, and stores them in the cache.
  */
 async function initImagesForGame(boardsim: Board): Promise<void> {
-	if (Object.keys(cachedImages).length > 0)
-		throw Error(
-			'Image cache already initialized. Call deleteImageCache() when unloading games.',
-		);
-	// console.log("Initializing image cache for game...");
-
-	// 1. Determine required piece types (excluding SVG-less ones)
+	// 1. Determine required piece types (excluding SVG-less ones and already-cached ones)
 	const types = boardsim.existingTypes.filter(
-		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)) && !cachedImages[t],
 	);
-	if (types.length === 0)
-		return console.log(
-			'No piece types with SVGs found for this game. Image cache remains empty.',
-		);
+	if (types.length === 0) return;
 
 	// console.log("Required piece types for image cache:", types);
 
@@ -98,8 +89,8 @@ async function initImagesForGame(boardsim: Board): Promise<void> {
 		// Wait for all normalizations to complete
 		await Promise.all(normalizationPromises);
 
-		// Replace the old cache with the newly populated one
-		cachedImages = newCache;
+		// Merge new entries into the existing cache
+		Object.assign(cachedImages, newCache);
 
 		// console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
 	} catch (error) {

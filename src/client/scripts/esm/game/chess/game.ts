@@ -328,8 +328,12 @@ function renderScene(): void {
 
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(): void {
+	const gamefile = gameslot.getGamefile()!;
 	effectZoneManager!.renderBoard();
-	promotionlines.render();
+	promotionlines.render(
+		gamefile.basegame.gameRules.promotion,
+		gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box,
+	);
 }
 
 /**

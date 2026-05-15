@@ -116,6 +116,10 @@ body {
 	display: none;
 }
 
+.visibility-hidden {
+	visibility: hidden;
+}
+
 .italic {
 	font-style: italic;
 }

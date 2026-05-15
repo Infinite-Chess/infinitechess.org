@@ -20,6 +20,7 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/boardeditor/actions/editorSavesAPI.js';
 import editorpositionsdb from '../../game/boardeditor/actions/esavestore.js';
+import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 // Elements ----------------------------------------------
 
@@ -36,7 +37,12 @@ const element_customVariantContent = document.getElementById('variant-custom-con
 
 // State ----------------------------------------------
 
-let _selectedVariantCode: VariantCode = 'Classical';
+type DisplaySelection =
+	| { kind: 'preset'; code: VariantCode }
+	| { kind: 'local'; name: string }
+	| { kind: 'other' }; // cloud save, ICN paste — no quick preview available
+
+let _selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
@@ -45,7 +51,10 @@ const patch = init([attributesModule, classModule, eventListenersModule]);
 
 /** Wires the variant selector open/close and group navigation. */
 function initVariantGroupDropdown(): void {
-	element_variantDisplay.addEventListener('click', toggleVariantDropdown);
+	element_variantDisplay.addEventListener('click', (e) => {
+		if ((e.target as HTMLElement).closest('.preview')) return;
+		toggleVariantDropdown();
+	});
 	document.addEventListener('pointerdown', (e) => {
 		if (!element_variantSelector.contains(e.target as Node)) closeVariantDropdown();
 	});
@@ -62,12 +71,30 @@ function initVariantGroupDropdown(): void {
 			element_variantGroupDropdown.classList.add('open');
 		});
 		panel.querySelectorAll<HTMLElement>('.variant-item').forEach((btn) => {
-			btn.addEventListener('click', () =>
-				selectVariant(btn.getAttribute('data-code')! as VariantCode),
-			);
+			const code = btn.getAttribute('data-code') as VariantCode | null;
+			btn.addEventListener('click', (e) => {
+				if ((e.target as HTMLElement).closest('.preview')) return;
+				if (code) selectVariant(code);
+			});
+			if (code) {
+				const eye = btn.querySelector<SVGElement>('.svg-eye');
+				eye?.addEventListener('mouseenter', (e) => {
+					void variantPreviewTooltip.showForVariantCode(
+						e.currentTarget as HTMLElement,
+						code,
+					);
+				});
+				eye?.addEventListener('mouseleave', () => variantPreviewTooltip.hide());
+			}
 		});
 	});
-	applyVariantToSelector(_selectedVariantCode);
+	applyVariantToSelector('Classical');
+
+	const element_displayEye = element_variantDisplay.querySelector<HTMLElement>('.svg-eye')!;
+	element_displayEye.addEventListener('mouseenter', () =>
+		handleDisplayEyeHover(element_displayEye),
+	);
+	element_displayEye.addEventListener('mouseleave', () => variantPreviewTooltip.hide());
 }
 
 /** Adds clipboard paste behavior for the custom ICN textarea. */
@@ -155,10 +182,18 @@ function createCustomContentVNode(
 	const cloudRows: VNode[] = sortedCloud.map((s) =>
 		h(
 			'button.variant-item',
-			{ key: `cloud-${s.name}`, on: { click: () => selectCustomSave(s.name) } },
+			{
+				key: `cloud-${s.name}`,
+				on: {
+					click: (e: MouseEvent) => {
+						if ((e.target as HTMLElement).closest('.preview')) return;
+						selectCustomSave(s.name);
+					},
+				},
+			},
 			[
 				h('span.variant-name', {}, s.name),
-				h('svg.svg-eye', {}, [h('use', { attrs: { href: '#svg-eye' } })]),
+				h('svg.svg-eye.preview', {}, [h('use', { attrs: { href: '#svg-eye' } })]),
 			],
 		),
 	);
@@ -168,11 +203,26 @@ function createCustomContentVNode(
 			'button.variant-item',
 			{
 				key: `local-${s.position_name}`,
-				on: { click: () => selectCustomSave(s.position_name) },
+				on: {
+					click: (e: MouseEvent) => {
+						if ((e.target as HTMLElement).closest('.preview')) return;
+						selectLocalCustomSave(s.position_name);
+					},
+				},
 			},
 			[
 				h('span.variant-name', {}, s.position_name),
-				h('svg.svg-eye', {}, [h('use', { attrs: { href: '#svg-eye' } })]),
+				h(
+					'svg.svg-eye.preview',
+					{
+						on: {
+							mouseenter: (e: MouseEvent) =>
+								handleLocalSaveEyeHover(e, s.position_name),
+							mouseleave: () => variantPreviewTooltip.hide(),
+						},
+					},
+					[h('use', { attrs: { href: '#svg-eye' } })],
+				),
 			],
 		),
 	);
@@ -194,17 +244,36 @@ function goToEditor(_name: string): void {
 
 /** Shows the ICN input section and updates the selector to the row's display name. */
 function openFromICN(name: string): void {
+	_selection = { kind: 'other' };
 	applyCustomToSelector(name);
 	element_variantCustomSection.classList.remove('hidden');
 	closeVariantDropdown();
 	element_icnInput.focus();
 }
 
-/** Selects a saved custom position by name and updates the selector display. */
+/** Selects a cloud saved position by name and updates the selector display. */
 function selectCustomSave(name: string): void {
+	_selection = { kind: 'other' };
 	applyCustomToSelector(name);
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
+}
+
+/** Selects a local saved position by name and updates the selector display. */
+function selectLocalCustomSave(name: string): void {
+	_selection = { kind: 'local', name };
+	applyCustomToSelector(name);
+	element_variantCustomSection.classList.add('hidden');
+	closeVariantDropdown();
+}
+
+/** Loads a local save and shows the preview tooltip anchored to the eye SVG. */
+function handleLocalSaveEyeHover(e: MouseEvent, positionName: string): void {
+	const anchor = e.currentTarget as HTMLElement;
+	void editorpositionsdb.readLocal(positionName).then((saveState) => {
+		if (!saveState) return;
+		void variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions);
+	});
 }
 
 /** Sets the variant selector display button's name text and group icon. */
@@ -230,9 +299,23 @@ function applyCustomToSelector(name: string): void {
 	setSelectorDisplay(name, 'svg-wrench');
 }
 
+/** Shows the preview tooltip for the currently selected variant in the display button. */
+function handleDisplayEyeHover(anchor: HTMLElement): void {
+	if (_selection.kind === 'preset') {
+		void variantPreviewTooltip.showForVariantCode(anchor, _selection.code);
+	} else if (_selection.kind === 'local') {
+		const name = _selection.name;
+		void editorpositionsdb.readLocal(name).then((saveState) => {
+			if (!saveState) return;
+			void variantPreviewTooltip.show(anchor, name, saveState.variantOptions);
+		});
+	}
+	// kind === 'other': no preview available
+}
+
 /** Updates the selected variant state and selector button, then closes all panels. */
 function selectVariant(code: VariantCode): void {
-	_selectedVariantCode = code;
+	_selection = { kind: 'preset', code };
 	applyVariantToSelector(code);
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();

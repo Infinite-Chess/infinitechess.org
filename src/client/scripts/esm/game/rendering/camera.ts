@@ -54,7 +54,7 @@ let fieldOfView: number;
 let DEBUG: boolean = false;
 
 /** The canvas document element that WebGL renders the game onto. */
-const canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
+let canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
 let canvasWidthVirtualPixels: number;
 let canvasHeightVirtualPixels: number;
 let aspect: number; // Aspect ratio of the canvas width to height.
@@ -278,7 +278,10 @@ function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 }
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
-function init(): void {
+function init(
+	canvasElement: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement,
+): void {
+	canvas = canvasElement;
 	initFOV();
 	initMatrixes();
 	document.addEventListener('fov-change', () => onFOVChange());
@@ -401,6 +404,7 @@ function initScreenBoundingBox(): void {
 }
 
 function onScreenResize(): void {
+	// Keep canvas buffer in sync with its CSS size when the window is resized, zoomed, or moved between monitors (The DPI changes)
 	updateCanvasDimensions(); // Also updates viewport
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
@@ -445,7 +449,9 @@ export type { Mat4 };
 
 export default {
 	DIST_TO_RENDER_BOARD,
-	canvas,
+	get canvas() {
+		return canvas;
+	},
 	getRotX,
 	getRotZ,
 	getIsViewingBlackPerspective,

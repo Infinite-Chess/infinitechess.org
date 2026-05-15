@@ -58,10 +58,12 @@ function setClearColor(newClearColor: Vec3): void {
 
 /**
  * Initiate the WebGL context. This is our web-based render engine.
+ * @param [canvasOverride] - Canvas to use instead of the default camera canvas.
  */
-function init(): void {
+function init(canvasOverride?: HTMLCanvasElement): void {
+	const targetCanvas = canvasOverride ?? camera.canvas;
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	const newContext = camera.canvas.getContext('webgl2', {
+	const newContext = targetCanvas.getContext('webgl2', {
 		alpha: false,
 		stencil: true,
 		preserveDrawingBuffer: true, // Reduces likelihood of context lost?

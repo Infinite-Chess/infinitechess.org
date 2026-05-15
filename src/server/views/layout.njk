@@ -44,6 +44,9 @@
     {# Site-wide header script #}
     <script type="module" src="{{ manifest['scripts/esm/components/header/header.ts'] }}"></script>
 
+    {# Pre-load Classical variant loader - used very commonly #}
+    <script type="module" src="{{ manifest['src/shared/chess/variants/variant_scripts/variants/var_classical.ts'] }}"></script>
+
     {# Page entry-point script #}
     {% block script %}{% endblock %}
 

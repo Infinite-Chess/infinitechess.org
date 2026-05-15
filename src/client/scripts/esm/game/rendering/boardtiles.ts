@@ -96,17 +96,22 @@ document.addEventListener('theme-change', () => {
 });
 
 /** Loads the tiles texture. */
-function init(): void {
+async function init(): Promise<void> {
 	// Generate the tiles mask texture
 	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
-	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then((tilesMask_IMG) => {
-		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
-	});
+	const maskPromise = checkerboardgenerator
+		.createCheckerboardIMG('white', 'black', 256)
+		.then((tilesMask_IMG) => {
+			tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
+		});
 
-	// Initial generation of tile textures
-	updateTheme();
+	// Initial generation of tile textures (sets lightTiles/darkTiles via resetColor)
+	const texturesPromise = resetColor();
+	updateSkyColor();
 
 	recalcVariables(); // Variables dependant on the board position & scale
+
+	await Promise.all([maskPromise, texturesPromise]);
 }
 
 async function initTextures(): Promise<void> {
@@ -275,11 +280,12 @@ function updateTheme(): void {
 function resetColor(
 	newLightTiles = preferences.getColorOfLightTiles(),
 	newDarkTiles = preferences.getColorOfDarkTiles(),
-): void {
+): Promise<void> {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
-	initTextures();
+	const promise = initTextures();
 	frametracker.onVisualChange();
+	return promise;
 }
 
 // Updates sky color based on current board color

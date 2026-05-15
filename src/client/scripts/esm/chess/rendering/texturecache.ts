@@ -44,9 +44,9 @@ async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board):
 
 	// console.log("Required piece types for texture cache:", types);
 
-	// 2. Iterate and create textures
+	// 2. Iterate and create textures for types not already cached
 	for (const type of types) {
-		// Retrieve the pre-cached loaded image
+		if (textureCache[type]) continue;
 		const img = imagecache.getPieceImage(type);
 		textureCache[type] = TextureLoader.loadTexture(gl, img, { mipmaps: true });
 		// console.log(`TextureCache: Cached texture for type ${typeutil.debugType(type)}`);
