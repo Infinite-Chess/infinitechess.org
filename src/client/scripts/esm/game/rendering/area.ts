@@ -38,9 +38,12 @@ const TWO = bd.fromNumber(2.0);
 
 const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
 const paddingMiniimage: number = 0.03; // The padding to use when miniimages are visible (zoomed out far)
+
+/** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
+const areaMaxSquareVirtualPixels: BigDecimal = bd.fromNumber(100);
 /**
  * The minimum number of squares that should be visible when transitioning somewhere.
- * This is so that it doesn't zoom too close-up on a single piece or small group.
+ * Prevents variant preview tooltips from being too zoomed in.
  */
 const areaMinHeightSquares: number = 10; // Divided by screen width
 
@@ -153,10 +156,19 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	const yScale = bd.divideFloating(screenBoundingBoxBD.top, yHalfLength);
 	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
 	// Can afterward cast to BigDecimal since they are small numbers.
-	const capScale = bd.fromNumber(screenHeight / areaMinHeightSquares);
 
 	let newScale = bd.min(xScale, yScale);
-	newScale = bd.min(newScale, capScale); // Cap the scale to not zoom in too close for comfort
+
+	// Cap the scale to areaMinHeightSquares
+	const capScale = bd.fromNumber(screenHeight / areaMinHeightSquares);
+	newScale = bd.min(newScale, capScale);
+
+	// Also cap the scale if squares would be too large visibly on screen
+	const tileWidthPixels = boardtiles.gtileWidth_Pixels(false, newScale);
+	if (bd.compare(tileWidthPixels, areaMaxSquareVirtualPixels) > 0) {
+		const scaleFactor = bd.divideFloating(areaMaxSquareVirtualPixels, tileWidthPixels);
+		newScale = bd.multiplyFloating(newScale, scaleFactor);
+	}
 
 	return newScale;
 }

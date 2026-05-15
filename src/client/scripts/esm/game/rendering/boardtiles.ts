@@ -165,11 +165,18 @@ function getSquareCenterAsNumber(): number {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
+/**
+ * Returns the width of a tile in virtual pixels at the provided board scale.
+ * @param scale - Defaults to the current board scale, but can be overridden.
+ */
+function gtileWidth_Pixels(
+	debugMode = camera.getDebug(),
+	scale: BigDecimal = boardpos.getBoardScale(),
+): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
 	const factor1: BigDecimal = bd.fromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
-	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, scale); // Greater for retina displays
 
 	const divisor = bd.fromNumber(window.devicePixelRatio);
 	const tileWidthPixels_Virtual = bd.divideFloating(tileWidthPixels_Physical, divisor);
