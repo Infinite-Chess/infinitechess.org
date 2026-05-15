@@ -36,16 +36,21 @@ export interface Area {
 
 const TWO = bd.fromNumber(2.0);
 
-const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
-const paddingMiniimage: number = 0.03; // The padding to use when miniimages are visible (zoomed out far)
+/**
+ * Padding between an area's pieces and the edge of thes creen,
+ * as a percentage of the screen WIDTH/HEIGHT.
+ */
+const padding: number = 0.03;
+/** The padding to use when miniimages are visible (zoomed out far) */
+const paddingMiniimage: number = 0.03; // Default: 0.2
 
 /** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
-const areaMaxSquareVirtualPixels: BigDecimal = bd.fromNumber(100);
+const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(100);
 /**
  * The minimum number of squares that should be visible when transitioning somewhere.
  * Prevents variant preview tooltips from being too zoomed in.
  */
-const areaMinHeightSquares: number = 10; // Divided by screen width
+const AREA_MIN_HEIGHT_SQUARES: number = 10; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
 // so we need to iterate it a few times for more accuracy.
@@ -160,13 +165,13 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	let newScale = bd.min(xScale, yScale);
 
 	// Cap the scale to areaMinHeightSquares
-	const capScale = bd.fromNumber(screenHeight / areaMinHeightSquares);
+	const capScale = bd.fromNumber(screenHeight / AREA_MIN_HEIGHT_SQUARES);
 	newScale = bd.min(newScale, capScale);
 
 	// Also cap the scale if squares would be too large visibly on screen
 	const tileWidthPixels = boardtiles.gtileWidth_Pixels(false, newScale);
-	if (bd.compare(tileWidthPixels, areaMaxSquareVirtualPixels) > 0) {
-		const scaleFactor = bd.divideFloating(areaMaxSquareVirtualPixels, tileWidthPixels);
+	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
+		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
 		newScale = bd.multiplyFloating(newScale, scaleFactor);
 	}
 
