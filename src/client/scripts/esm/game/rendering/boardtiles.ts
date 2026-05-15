@@ -95,23 +95,31 @@ document.addEventListener('theme-change', () => {
 	updateTheme();
 });
 
-/** Loads the tiles texture. */
+/** Loads and generates the tile textures. */
 async function init(): Promise<void> {
 	// Generate the tiles mask texture
-	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
-	const maskPromise = checkerboardgenerator
-		.createCheckerboardIMG('white', 'black', 256)
-		.then((tilesMask_IMG) => {
-			tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
-		});
-
-	// Initial generation of tile textures (sets lightTiles/darkTiles via resetColor)
-	const texturesPromise = resetColor();
-	updateSkyColor();
+	const maskPromise = initMaskTexture();
+	// Generation main tile textures
+	const texturesPromise = updateTheme();
 
 	recalcVariables(); // Variables dependant on the board position & scale
 
 	await Promise.all([maskPromise, texturesPromise]);
+}
+
+/**
+ * Generates the tiles mask texture.
+ * Used for applying zone effects to selective light/dark tiles.
+ */
+async function initMaskTexture(): Promise<void> {
+	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
+
+	const tilesMask_IMG: HTMLImageElement = await checkerboardgenerator.createCheckerboardIMG(
+		'white',
+		'black',
+		256,
+	);
+	tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 }
 
 async function initTextures(): Promise<void> {
@@ -279,20 +287,20 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 }
 
 /** Resets the board color and sky color. */
-function updateTheme(): void {
-	resetColor();
+function updateTheme(): Promise<void> {
 	updateSkyColor();
+	return resetColor();
 }
 
+/** Returns a promise that resolves when the new tiles textures have been generated. */
 function resetColor(
 	newLightTiles = preferences.getColorOfLightTiles(),
 	newDarkTiles = preferences.getColorOfDarkTiles(),
 ): Promise<void> {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
-	const promise = initTextures();
 	frametracker.onVisualChange();
-	return promise;
+	return initTextures();
 }
 
 // Updates sky color based on current board color
