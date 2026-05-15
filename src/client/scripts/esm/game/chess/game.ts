@@ -328,12 +328,13 @@ function renderScene(): void {
 
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(): void {
-	const gamefile = gameslot.getGamefile()!;
 	effectZoneManager!.renderBoard();
-	promotionlines.render(
-		gamefile.basegame.gameRules.promotion,
-		gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box,
-	);
+
+	const gamefile = gameslot.getGamefile()!;
+	// The start box determines how far out promotion lines are rendered.
+	// In editor mode, don't provide it, so the lines extend to the screen edges.
+	const startBox = gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box;
+	promotionlines.render(gamefile.basegame.gameRules.promotion, startBox);
 }
 
 /**

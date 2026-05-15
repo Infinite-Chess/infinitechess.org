@@ -31,7 +31,7 @@ const THICKNESS = 0.01;
 /**
  * Renders the promotion lines for the given promotion rules.
  * @param promotion - The promotion rules, if any.
- * @param startBox - The starting position bounding box. When undefined (editor mode), lines extend to screen edges.
+ * @param startBox - The starting position bounding box. When undefined, lines extend to screen edges.
  */
 function render(promotion: Promotion | undefined, startBox?: BoundingBox): void {
 	if (promotion === undefined) return; // No promotion ranks in this game
@@ -45,7 +45,7 @@ function render(promotion: Promotion | undefined, startBox?: BoundingBox): void 
 	let right: number;
 
 	if (startBox === undefined) {
-		// In editor mode (or preview without known bounds), lines extend to the edges of the screen
+		// Lines extend to the edges of the screen
 		({ left, right } = camera.getRespectiveScreenBox());
 	} else {
 		// Round the start position box away to encapsulate the entirety of all squares
