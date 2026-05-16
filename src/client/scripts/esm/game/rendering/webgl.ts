@@ -61,7 +61,7 @@ function setClearColor(newClearColor: Vec3): void {
  * @param [canvasOverride] - Canvas to use instead of the default camera canvas.
  */
 function init(canvasOverride?: HTMLCanvasElement): void {
-	const targetCanvas = canvasOverride ?? camera.canvas;
+	const targetCanvas = canvasOverride ?? camera.getCanvas();
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
 	const newContext = targetCanvas.getContext('webgl2', {
 		alpha: false,
@@ -72,11 +72,11 @@ function init(canvasOverride?: HTMLCanvasElement): void {
 		// WebGL2 not supported
 		alert(translations.webgl_unsupported);
 		throw new Error('WebGL2 not supported by browser.');
-		// gl = camera.canvas.getContext('webgl', { alpha: false });
+		// gl = camera.getCanvas().getContext('webgl', { alpha: false });
 	}
 	// if (!gl) { // Init WebGL experimental
 	// 	console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
-	// 	gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
+	// 	gl = camera.getCanvas().getContext('experimental-webgl', { alpha: false});
 	// }
 	// if (!gl) { // Experimental also failed to init
 	// 	alert(translations.webgl_unsupported);

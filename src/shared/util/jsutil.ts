@@ -57,23 +57,6 @@ function deepCopyObject<T extends unknown>(src: T): T {
 }
 
 /**
- * Deep copies a Float32Array.
- */
-function copyFloat32Array(src: Float32Array): Float32Array {
-	if (!src || !(src instanceof Float32Array)) {
-		throw new Error('Invalid input: must be a Float32Array');
-	}
-
-	const copy = new Float32Array(src.length);
-
-	for (let i = 0; i < src.length; i++) {
-		copy[i]! = src[i]!;
-	}
-
-	return copy;
-}
-
-/**
  * Searches an organized array and returns an object telling
  * you the index the element could be added at for the array to remain
  * organized, and whether the element was already found in the array.
@@ -380,7 +363,6 @@ function ensureJSONString(input: any, errorMessage?: string): string {
 export default {
 	binarySearch,
 	deepCopyObject,
-	copyFloat32Array,
 	addElementToOrganizedArray,
 	findIndexOfPointInOrganizedArray,
 	copyPropertiesToObject,

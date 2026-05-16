@@ -46,7 +46,8 @@ export class OceanZone implements Zone {
 		this.colorGradePass.tint = [0.9, 0.95, 1.0]; // Slight blue
 
 		// Initialize the WaterPass with the current canvas dimensions.
-		this.waterPass = new WaterPass(programManager, camera.canvas.width, camera.canvas.height);
+		const canvas = camera.getCanvas();
+		this.waterPass = new WaterPass(programManager, canvas.width, canvas.height);
 
 		// Initialize the three permanent ripple sources. Their location will be updated each frame.
 		this.sources = [{ center: [0, 0] }, { center: [0, 0] }, { center: [0, 0] }];

@@ -183,7 +183,9 @@ function gtileWidth_Pixels(
 ): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
-	const factor1: BigDecimal = bd.fromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
+	const factor1: BigDecimal = bd.fromNumber(
+		(camera.getCanvas().height * 0.5) / screenBoundingBox.top,
+	);
 	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, scale); // Greater for retina displays
 
 	const divisor = bd.fromNumber(window.devicePixelRatio);

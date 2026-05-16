@@ -27,7 +27,7 @@ import frametracker from './frametracker.js';
 // Types --------------------------------------------------------------
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
-type Mat4 = Float32Array;
+export type Mat4 = Float32Array;
 
 // Constants -------------------------------------------------------------
 
@@ -53,8 +53,8 @@ let fieldOfView: number;
 /** If true, the camera is stationed farther back. */
 let DEBUG: boolean = false;
 
-/** The canvas document element that WebGL renders the game onto. */
-let canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
+/** The canvas document element that WebGL will render the game onto. */
+let canvas: HTMLCanvasElement;
 let canvasWidthVirtualPixels: number;
 let canvasHeightVirtualPixels: number;
 let aspect: number; // Aspect ratio of the canvas width to height.
@@ -264,7 +264,7 @@ function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
  * @returns The view matrix
  */
 function getViewMatrix(): Mat4 {
-	return jsutil.copyFloat32Array(viewMatrix);
+	return jsutil.deepCopyObject(viewMatrix);
 }
 
 /**
@@ -272,15 +272,13 @@ function getViewMatrix(): Mat4 {
  */
 function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 	return {
-		projMatrix: jsutil.copyFloat32Array(projMatrix),
-		viewMatrix: jsutil.copyFloat32Array(viewMatrix),
+		projMatrix: jsutil.deepCopyObject(projMatrix),
+		viewMatrix: jsutil.deepCopyObject(viewMatrix),
 	};
 }
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
-function init(
-	canvasElement: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement,
-): void {
+function init(canvasElement: HTMLCanvasElement): void {
 	canvas = canvasElement;
 	initFOV();
 	initMatrixes();
@@ -445,13 +443,12 @@ function getScaleWhenZoomedOut(): BigDecimal {
 	return bd.multiply(getScaleWhenTilesInvisible(), WDPR_BD);
 }
 
-export type { Mat4 };
+function getCanvas(): HTMLCanvasElement {
+	return canvas;
+}
 
 export default {
 	DIST_TO_RENDER_BOARD,
-	get canvas() {
-		return canvas;
-	},
 	getRotX,
 	getRotZ,
 	getIsViewingBlackPerspective,
@@ -476,4 +473,5 @@ export default {
 	onPositionChange,
 	getScaleWhenTilesInvisible,
 	getScaleWhenZoomedOut,
+	getCanvas,
 };
