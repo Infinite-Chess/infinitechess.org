@@ -7,14 +7,14 @@
  */
 
 import type { StorageType } from '../../../../boardeditor/boardeditor';
-import type { CloudSaveListRecord } from '../../../../boardeditor/actions/editorSavesAPI';
+import type { CloudSaveListRecord } from '../../../../editorstores/editorSavesAPI';
 import type { EditorAbridgedSaveState } from '../../../../boardeditor/editortypes';
 
 import toast from '../../../toast';
 import style from '../../../style';
 import ecloud from '../../../../boardeditor/actions/ecloud';
 import eactions from '../../../../boardeditor/actions/eactions';
-import esavestore from '../../../../boardeditor/actions/esavestore';
+import esavestore from '../../../../editorstores/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
 import { GameBus } from '../../../../GameBus';
 import validatorama from '../../../../../util/validatorama';

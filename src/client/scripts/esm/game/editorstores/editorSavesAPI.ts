@@ -1,12 +1,12 @@
-// src/client/scripts/esm/game/boardeditor/actions/editorSavesAPI.ts
+// src/client/scripts/esm/game/editorstores/editorSavesAPI.ts
 
 /**
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
-import type { CompressionMode } from '../../../util/compression';
+import type { CompressionMode } from '../../util/compression';
 
-import validatorama from '../../../util/validatorama';
+import validatorama from '../../util/validatorama';
 
 // Types ----------------------------------------------------------------------------
 

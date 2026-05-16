@@ -1,14 +1,13 @@
-// src/client/scripts/esm/game/boardeditor/actions/esavestore.ts
+// src/client/scripts/esm/game/editorstores/esavestore.ts
 
 /**
  * Low-level IndexedDB read/write operations for board editor saves.
- * No game-logic dependencies — safe to import from outside the board editor.
  */
 
-import type { EditorAbridgedSaveState, EditorSaveState } from '../editortypes.js';
+import type { EditorAbridgedSaveState, EditorSaveState } from '../boardeditor/editortypes.js';
 
-import IndexedDB from '../../../util/IndexedDB.js';
-import editortypes from '../editortypes.js';
+import IndexedDB from '../../util/IndexedDB.js';
+import editortypes from '../boardeditor/editortypes.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -109,7 +108,6 @@ async function readLocal(position_name: string): Promise<EditorSaveState | undef
 // Exports --------------------------------------------------------------------
 
 export default {
-	EDITOR_SAVEINFO_PREFIX,
 	saveState,
 	deleteLocal,
 	localSaveExists,

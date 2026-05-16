@@ -5,134 +5,36 @@
  * Mirrors esavestore.ts for cloud storage.
  */
 
-import type { MetaData } from '../../../../../../shared/types';
-import type { LongFormatIn } from '../../../../../../shared/chess/logic/icn/icnconverter';
-import type { VariantOptions } from '../../../../../../shared/chess/logic/gamefile';
 import type { EditorSaveState } from '../editortypes';
-import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
-
-import editorutil from '../../../../../../shared/util/editorutil';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter';
+import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI';
 
 import toast from '../../gui/toast';
 import eactions from './eactions';
 import eautosave from './eautosave';
-import esavestore from './esavestore';
+import esavestore from '../../editorstores/esavestore';
 import egamerules from '../egamerules';
-import compression from '../../../util/compression';
 import boardeditor from '../boardeditor';
 import validatorama from '../../../util/validatorama';
-import editorSavesAPI from './editorSavesAPI';
+import editorSavesAPI from '../../editorstores/editorSavesAPI';
+import ecloudstore, {
+	ICNConversionError,
+	ICNDecompressionError,
+	ICNParseError,
+	PositionTooLargeError,
+} from '../../editorstores/ecloudstore';
 
 // Actions ----------------------------------------------------------------------
 
-/**
- * Parses a CloudPositionRecord into an EditorSaveState, decompressing the ICN
- * if necessary.
- * @returns An EditorSaveState on success, undefined on failure (errors are toasted internally).
- */
-async function parseCloudPosition(
-	position_name: string,
-	cloudPosition: CloudPositionRecord,
-): Promise<EditorSaveState | undefined> {
-	let icn: string;
-	try {
-		icn = await compression.decompressString(cloudPosition.icn, cloudPosition.compression);
-	} catch (err) {
-		const errMsg = err instanceof Error ? err.message : String(err);
-		console.error('Failed to decompress cloud position ICN:', err);
-		toast.show(`${translations.editor.failed_to_load} ${errMsg}`, { error: true });
-		return undefined;
-	}
-
-	let longFormOut;
-	try {
-		longFormOut = icnconverter.ShortToLong_Format(icn);
-	} catch (err) {
-		console.error('Failed to parse cloud position ICN:', err);
-		toast.show(translations.editor.position_corrupted, { error: true });
-		return;
-	}
-	const variantOptions: VariantOptions = {
-		position: longFormOut.position ?? new Map(),
-		gameRules: longFormOut.gameRules,
-		state_global: {
-			...longFormOut.state_global,
-			specialRights: longFormOut.state_global.specialRights ?? new Set(),
-		},
-		fullMove: longFormOut.fullMove,
-	};
-	return {
-		position_name,
-		timestamp: cloudPosition.timestamp,
-		piece_count: variantOptions.position.size,
-		variantOptions,
-		pawnDoublePush: cloudPosition.pawn_double_push,
-		castling: cloudPosition.castling,
-	};
-}
-
-/**
- * Converts an EditorSaveState to ICN and uploads it to the cloud.
- * Does NOT modify local storage or the active position state.
- * @returns `{ success: true, saves }` on success, `{ success: false }` on failure (errors are toasted internally).
- */
-async function saveCloudState(
-	editorSaveState: EditorSaveState,
-): Promise<{ success: true; saves: CloudSaveListRecord[] } | { success: false }> {
-	// Convert variantOptions to ICN
-	const longFormatIn: LongFormatIn = {
-		metadata: {} as MetaData, // Empty metadata object required by ICN converter
-		position: editorSaveState.variantOptions.position,
-		gameRules: editorSaveState.variantOptions.gameRules,
-		state_global: editorSaveState.variantOptions.state_global,
-		fullMove: editorSaveState.variantOptions.fullMove ?? 1,
-	};
-	let icn: string;
-	try {
-		icn = icnconverter.LongToShort_Format(longFormatIn, {
-			skipPosition: false,
-			compact: true,
-			spaces: false,
-			comments: false,
-			make_new_lines: false,
-			move_numbers: false,
-		});
-	} catch (err) {
-		console.error('Failed to convert position to ICN:', err);
-		toast.show(translations.editor.failed_to_convert_icn, { error: true });
-		return { success: false };
-	}
-
-	// Compress ICN first
-	const { data: compressedICN, compression: compressionMode } =
-		await compression.compressString(icn);
-
-	if (compressedICN.length > editorutil.MAX_ICN_LENGTH) {
+/** Helper that maps a saveCloudState failure to the correct toast message. */
+function toastSaveCloudError(err: unknown): void {
+	if (err instanceof PositionTooLargeError) {
 		toast.show(translations.editor.too_large_for_cloud, { error: true });
-		return { success: false };
-	}
-
-	let saves: CloudSaveListRecord[];
-	try {
-		saves = await editorSavesAPI.savePosition(
-			editorSaveState.position_name,
-			editorSaveState.piece_count,
-			editorSaveState.timestamp,
-			compressedICN,
-			compressionMode,
-			editorSaveState.pawnDoublePush,
-			editorSaveState.castling,
-		);
-	} catch (err) {
-		console.error('Failed to upload position to cloud:', err);
+	} else if (err instanceof ICNConversionError) {
+		toast.show(translations.editor.failed_to_convert_icn, { error: true });
+	} else {
 		const errMsg = err instanceof Error ? err.message : String(err);
 		toast.show(translations.editor.failed_to_upload + ' ' + errMsg, { error: true });
-		return { success: false };
 	}
-
-	toast.show(translations.editor.saved_to_cloud);
-	return { success: true, saves };
 }
 
 /**
@@ -160,12 +62,18 @@ async function saveCloud(position_name: string): Promise<void> {
 		castling,
 	};
 
-	const result = await saveCloudState(editorSaveState);
-	if (result.success) {
-		boardeditor.markPositionClean();
-		eautosave.markPositionDirty();
-		void eautosave.autosaveCurrentPositionOnce();
+	try {
+		await ecloudstore.saveCloudState(editorSaveState);
+	} catch (err) {
+		console.error('Failed to save cloud position:', err);
+		toastSaveCloudError(err);
+		return;
 	}
+
+	toast.show(translations.editor.saved_to_cloud);
+	boardeditor.markPositionClean();
+	eautosave.markPositionDirty();
+	void eautosave.autosaveCurrentPositionOnce();
 }
 
 /**
@@ -173,16 +81,23 @@ async function saveCloud(position_name: string): Promise<void> {
  * @returns An EditorSaveState on success, undefined on failure.
  */
 async function readCloud(position_name: string): Promise<EditorSaveState | undefined> {
-	let cloudPosition: CloudPositionRecord;
 	try {
-		cloudPosition = await editorSavesAPI.getPosition(position_name);
+		return await ecloudstore.readCloud(position_name);
 	} catch (err) {
-		console.error('Failed to load cloud position:', err);
-		const errMsg = err instanceof Error ? err.message : String(err);
-		toast.show(translations.editor.failed_to_load_cloud + ' ' + errMsg, { error: true });
-		return;
+		if (err instanceof ICNDecompressionError) {
+			console.error('Failed to decompress cloud position ICN:', err);
+			const errMsg = err instanceof Error ? err.message : String(err);
+			toast.show(`${translations.editor.failed_to_load} ${errMsg}`, { error: true });
+		} else if (err instanceof ICNParseError) {
+			console.error('Failed to parse cloud position ICN:', err);
+			toast.show(translations.editor.position_corrupted, { error: true });
+		} else {
+			console.error('Failed to load cloud position:', err);
+			const errMsg = err instanceof Error ? err.message : String(err);
+			toast.show(`${translations.editor.failed_to_load_cloud} ${errMsg}`, { error: true });
+		}
+		return undefined;
 	}
-	return parseCloudPosition(position_name, cloudPosition);
 }
 
 /**
@@ -213,8 +128,16 @@ async function transferPositionToCloud(
 		return;
 	}
 
-	const result = await saveCloudState(editorSaveState);
-	if (!result.success) return;
+	let saves: CloudSaveListRecord[];
+	try {
+		saves = await ecloudstore.saveCloudState(editorSaveState);
+	} catch (err) {
+		console.error('Failed to upload position to cloud during transfer:', err);
+		toastSaveCloudError(err);
+		return;
+	}
+
+	toast.show(translations.editor.saved_to_cloud);
 
 	// Success! Delete local copy now.
 	await esavestore.deleteLocal(position_name);
@@ -226,7 +149,7 @@ async function transferPositionToCloud(
 			owner: validatorama.getOurUsername()!,
 		});
 
-	return result.saves;
+	return saves;
 }
 
 /**

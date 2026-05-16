@@ -8,7 +8,7 @@ import toast from '../../gui/toast';
 import eactions from './eactions';
 import eautosave from './eautosave';
 import egamerules from '../egamerules';
-import esavestore from './esavestore';
+import esavestore from '../../editorstores/esavestore';
 import boardeditor from '../boardeditor';
 
 // State --------------------------------------------------------------------
