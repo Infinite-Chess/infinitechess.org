@@ -20,7 +20,6 @@ import { DEFAULT_PROMOTION_PIECES } from '../../../../../shared/chess/variants/v
 
 import area from '../../game/rendering/area.js';
 import webgl from '../../game/rendering/webgl.js';
-import { gl } from '../../game/rendering/webgl.js';
 import camera from '../../game/rendering/camera.js';
 import meshes from '../../game/rendering/meshes.js';
 import border from '../../game/rendering/border.js';
@@ -71,6 +70,11 @@ element_rules.append(element_rulesHeader, element_rulesBody);
 element_tooltip.append(element_name, element_rules, element_canvas);
 document.body.appendChild(element_tooltip);
 
+// State ----------------------------------------------------------------
+
+/** The WebGL context for the preview canvas. */
+let gl: WebGL2RenderingContext;
+
 // Functions ---------------------------------------------------------------
 
 /** Initializes the preview WebGL context once (idempotent). */
@@ -78,8 +82,8 @@ async function ensureGLReady(): Promise<void> {
 	if (glInitialized) return;
 	element_canvas.width = element_canvas.clientWidth * window.devicePixelRatio;
 	element_canvas.height = element_canvas.clientHeight * window.devicePixelRatio;
-	webgl.init(element_canvas);
-	camera.init(element_canvas);
+	gl = webgl.init(element_canvas);
+	camera.init(gl, element_canvas);
 	const programManager = new ProgramManager(gl);
 	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);

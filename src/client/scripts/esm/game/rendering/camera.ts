@@ -19,7 +19,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
-import { gl } from './webgl.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
@@ -53,7 +52,9 @@ let fieldOfView: number;
 /** If true, the camera is stationed farther back. */
 let DEBUG: boolean = false;
 
-/** The canvas document element that WebGL will render the game onto. */
+/** The webgl context. */
+let gl: WebGL2RenderingContext;
+/** The canvas document element that WebGL will render the game onto. Identical to {@link gl.canvas}. */
 let canvas: HTMLCanvasElement;
 let canvasWidthVirtualPixels: number;
 let canvasHeightVirtualPixels: number;
@@ -278,7 +279,8 @@ function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 }
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
-function init(canvasElement: HTMLCanvasElement): void {
+function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void {
+	gl = glContext;
 	canvas = canvasElement;
 	initFOV();
 	initMatrixes();
