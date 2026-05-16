@@ -109,7 +109,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 	// Animated pieces
 	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
-		boardtiles.gtileWidth_Pixels(),
+		boardtiles.getTileWidthPixels(),
 	);
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
@@ -263,7 +263,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	// 1. Process all animations and add pieces relevant to the current move
 	const maxDistB4Teleport = bd.divideFloating(
 		MAX_ANIM_DIST_VPIXELS,
-		boardtiles.gtileWidth_Pixels(),
+		boardtiles.getTileWidthPixels(),
 	);
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();

@@ -169,7 +169,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	newScale = bd.min(newScale, capScale);
 
 	// Also cap the scale if squares would be too large visibly on screen
-	const tileWidthPixels = boardtiles.gtileWidth_Pixels(false, newScale);
+	const tileWidthPixels = boardtiles.getTileWidthPixels(false, newScale);
 	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
 		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
 		newScale = bd.multiplyFloating(newScale, scaleFactor);

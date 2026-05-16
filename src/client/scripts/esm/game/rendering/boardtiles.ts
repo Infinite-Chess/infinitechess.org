@@ -177,7 +177,7 @@ function getSquareCenterAsNumber(): number {
  * Returns the width of a tile in virtual pixels at the provided board scale.
  * @param scale - Defaults to the current board scale, but can be overridden.
  */
-function gtileWidth_Pixels(
+function getTileWidthPixels(
 	debugMode = camera.getDebug(),
 	scale: BigDecimal = boardpos.getBoardScale(),
 ): BigDecimal {
@@ -498,7 +498,7 @@ export default {
 	// Public API
 	getSquareCenter,
 	getSquareCenterAsNumber,
-	gtileWidth_Pixels,
+	getTileWidthPixels,
 	gboundingBox,
 	gboundingBoxFloat,
 	getBoundingBoxOfBoard,

@@ -146,7 +146,7 @@ export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
 export function areZoomedInEnoughForArrows(): boolean {
-	return bd.compare(boardtiles.gtileWidth_Pixels(false), MIN_SQUARE_SIZE) >= 0;
+	return bd.compare(boardtiles.getTileWidthPixels(false), MIN_SQUARE_SIZE) >= 0;
 }
 
 /**
