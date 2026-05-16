@@ -27,8 +27,9 @@ import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js
 
 type DisplaySelection =
 	| { kind: 'preset'; code: VariantCode }
+	| { kind: 'online'; name: string }
 	| { kind: 'local'; name: string }
-	| { kind: 'other' }; // cloud save, ICN paste - needs custom preview logic
+	| { kind: 'icn' };
 
 // Elements ----------------------------------------------
 
@@ -77,7 +78,7 @@ function initVariantGroupDropdown(): void {
 	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
 		item.addEventListener('click', () => {
 			const group = item.getAttribute('data-group') as VariantGroup | 'custom';
-			if (group === 'custom') void openCustomVariantList();
+			if (group === 'custom') openCustomVariantList();
 			else openVariantList(group);
 		});
 	});
@@ -194,7 +195,7 @@ function createCustomContentVNode(
 				on: {
 					click: (e: MouseEvent) => {
 						if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
-						selectCustomSave(s.name);
+						selectOnlineCustomSave(s.name);
 					},
 				},
 			},
@@ -204,7 +205,7 @@ function createCustomContentVNode(
 					'svg.svg-eye.preview',
 					{
 						on: {
-							mouseenter: (e: MouseEvent) => handleCloudSaveEyeHover(e, s.name),
+							mouseenter: (e: MouseEvent) => handleCloudSavePreview(e, s.name),
 							mouseleave: () => variantPreviewTooltip.hide(),
 						},
 					},
@@ -233,7 +234,7 @@ function createCustomContentVNode(
 					{
 						on: {
 							mouseenter: (e: MouseEvent) =>
-								handleLocalSaveEyeHover(e, s.position_name),
+								handleLocalSavePreview(e, s.position_name),
 							mouseleave: () => variantPreviewTooltip.hide(),
 						},
 					},
@@ -260,7 +261,7 @@ function goToEditor(_name: string): void {
 
 /** Shows the ICN input section and updates the selector to the row's display name. */
 function openFromICN(name: string): void {
-	selection = { kind: 'other' };
+	selection = { kind: 'icn' };
 	applyCustomToSelector(name);
 	element_variantCustomSection.classList.remove('hidden');
 	closeVariantDropdown();
@@ -268,8 +269,8 @@ function openFromICN(name: string): void {
 }
 
 /** Selects a cloud saved position by name and updates the selector display. */
-function selectCustomSave(name: string): void {
-	selection = { kind: 'other' };
+function selectOnlineCustomSave(name: string): void {
+	selection = { kind: 'online', name };
 	applyCustomToSelector(name);
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
@@ -283,10 +284,10 @@ function selectLocalCustomSave(name: string): void {
 	closeVariantDropdown();
 }
 
-/** Fetches a cloud save and shows the preview tooltip anchored to the eye SVG. */
-function handleCloudSaveEyeHover(e: MouseEvent, positionName: string): void {
+/** Fetches a cloud save and shows the preview tooltip anchored to the preview icon. */
+function handleCloudSavePreview(e: MouseEvent, positionName: string): void {
 	const anchor = e.currentTarget as HTMLElement;
-	void ecloudstore
+	ecloudstore
 		.readCloud(positionName)
 		.then((saveState) =>
 			variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions),
@@ -296,12 +297,12 @@ function handleCloudSaveEyeHover(e: MouseEvent, positionName: string): void {
 		});
 }
 
-/** Loads a local save and shows the preview tooltip anchored to the eye SVG. */
-function handleLocalSaveEyeHover(e: MouseEvent, positionName: string): void {
+/** Loads a local save and shows the preview tooltip anchored to the preview icon. */
+function handleLocalSavePreview(e: MouseEvent, positionName: string): void {
 	const anchor = e.currentTarget as HTMLElement;
 	void editorpositionsdb.readLocal(positionName).then((saveState) => {
 		if (!saveState) return;
-		void variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions);
+		variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions);
 	});
 }
 
@@ -332,11 +333,12 @@ function applyCustomToSelector(name: string): void {
 function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
+	} else if (selection.kind === 'online') {
 	} else if (selection.kind === 'local') {
 		const name = selection.name;
-		void editorpositionsdb.readLocal(name).then((saveState) => {
+		editorpositionsdb.readLocal(name).then((saveState) => {
 			if (!saveState) return;
-			void variantPreviewTooltip.show(anchor, name, saveState.variantOptions);
+			variantPreviewTooltip.show(anchor, name, saveState.variantOptions);
 		});
 	}
 	// kind === 'other': no preview available

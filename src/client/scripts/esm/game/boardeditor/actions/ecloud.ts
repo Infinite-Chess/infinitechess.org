@@ -2,7 +2,7 @@
 
 /**
  * Handles cloud (server) save/load operations for the board editor.
- * Mirrors esavestore.ts for cloud storage.
+ * Mirrors esave.ts for cloud storage.
  */
 
 import type { EditorSaveState } from '../editortypes';
