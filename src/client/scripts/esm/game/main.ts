@@ -20,6 +20,7 @@ import loadbalancer from './misc/loadbalancer.js';
 import socketmessages from './websocket/socketmessages.js';
 import frameratelimiter from './rendering/frameratelimiter.js';
 
+/** The play page game canvas. */
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 // Starts the game. Runs automatically once the page is loaded.
