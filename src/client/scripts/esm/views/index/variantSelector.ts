@@ -305,10 +305,14 @@ function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void
 
 /** Loads a local save and shows the preview tooltip anchored to the given element. */
 function handleLocalSavePreview(anchor: HTMLElement, positionName: string): void {
-	void editorpositionsdb.readLocal(positionName).then((saveState) => {
-		if (!saveState) return;
-		variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions);
-	});
+	editorpositionsdb
+		.readLocal(positionName)
+		.then((saveState) =>
+			variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions),
+		)
+		.catch(() => {
+			/* Preview unavailable – silently ignore */
+		});
 }
 
 /** Sets the variant selector display button's name text and group icon. */

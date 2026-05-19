@@ -91,16 +91,19 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 
 /**
  * Reads a locally saved position from IndexedDB.
- * @returns An EditorSaveState on success, undefined if not found or corrupted.
+ * @throws If not found.
+ * @throws If the stored data fails schema validation (corrupted).
  */
-async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
+async function readLocal(position_name: string): Promise<EditorSaveState> {
 	const editorSaveStateRaw = await IndexedDB.loadItem(saveKey(position_name));
+	if (editorSaveStateRaw === undefined)
+		throw new Error(`Local save "${position_name}" not found`);
 	const editorSaveStateParsed = editortypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
 		console.error(
 			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,
 		);
-		return;
+		throw new Error(`Corrupted local save "${position_name}"`);
 	}
 	return editorSaveStateParsed.data;
 }

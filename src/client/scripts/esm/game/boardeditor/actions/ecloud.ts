@@ -9,6 +9,7 @@ import type { EditorSaveState } from '../editortypes';
 import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI';
 
 import toast from '../../gui/toast';
+import esave from './esave';
 import eactions from './eactions';
 import eautosave from './eautosave';
 import esavestore from '../../editorstores/esavestore';
@@ -78,6 +79,7 @@ async function saveCloud(position_name: string): Promise<void> {
 
 /**
  * Downloads a position from the server.
+ * Shows a descriptive error toast on failure.
  * @returns An EditorSaveState on success, undefined on failure.
  */
 async function readCloud(position_name: string): Promise<EditorSaveState | undefined> {
@@ -122,11 +124,8 @@ async function deleteCloud(position_name: string): Promise<CloudSaveListRecord[]
 async function transferPositionToCloud(
 	position_name: string,
 ): Promise<CloudSaveListRecord[] | undefined> {
-	const editorSaveState = await esavestore.readLocal(position_name);
-	if (editorSaveState === undefined) {
-		toast.show(translations.editor.position_corrupted, { error: true });
-		return;
-	}
+	const editorSaveState = await esave.readLocal(position_name);
+	if (editorSaveState === undefined) return; // readLocal() will have already shown a descriptive toast
 
 	let saves: CloudSaveListRecord[];
 	try {
@@ -161,8 +160,7 @@ async function removePositionFromCloud(
 ): Promise<CloudSaveListRecord[] | undefined> {
 	// Read first so that we don't lose the position if the delete succeeds but request doesn't return
 	const editorSaveState = await readCloud(position_name);
-	if (editorSaveState === undefined) return;
-
+	if (editorSaveState === undefined) return; // readCloud() will have already shown a descriptive toast
 	// Delete from server (returns the updated list)
 	let saves: CloudSaveListRecord[];
 	try {

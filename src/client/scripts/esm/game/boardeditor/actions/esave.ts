@@ -4,6 +4,8 @@
  * Handles the saving of positions in boardeditor
  */
 
+import type { EditorSaveState } from '../editortypes';
+
 import toast from '../../gui/toast';
 import eactions from './eactions';
 import eautosave from './eautosave';
@@ -66,8 +68,23 @@ async function saveLocal(position_name: string): Promise<void> {
 	}
 }
 
+/**
+ * Reads a locally saved position from IndexedDB.
+ * Shows the position_corrupted toast on failure.
+ * @returns An EditorSaveState on success, undefined on failure.
+ */
+async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
+	try {
+		return await esavestore.readLocal(position_name);
+	} catch {
+		toast.show(translations.editor.position_corrupted, { error: true });
+		return undefined;
+	}
+}
+
 // Exports --------------------------------------------------------------------
 
 export default {
 	saveLocal,
+	readLocal,
 };
