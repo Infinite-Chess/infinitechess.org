@@ -31,6 +31,9 @@ type DisplaySelection =
 	| { kind: 'local'; name: string }
 	| { kind: 'icn' };
 
+/** The union of all possible group type dropdowns. */
+type GroupType = VariantGroup | 'custom';
+
 // Elements ----------------------------------------------
 
 const element_variantCustomSection = document.getElementById('variant-custom-section')!;
@@ -77,7 +80,7 @@ function initVariantGroupDropdown(): void {
 	// Wire up group buttons
 	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
 		item.addEventListener('click', () => {
-			const group = item.getAttribute('data-group') as VariantGroup | 'custom';
+			const group = item.getAttribute('data-group') as GroupType;
 			if (group === 'custom') openCustomVariantList();
 			else openVariantList(group);
 		});
@@ -334,6 +337,13 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
 	} else if (selection.kind === 'online') {
+		const name = selection.name;
+		ecloudstore
+			.readCloud(name)
+			.then((saveState) => variantPreviewTooltip.show(anchor, name, saveState.variantOptions))
+			.catch(() => {
+				/* Preview unavailable – silently ignore */
+			});
 	} else if (selection.kind === 'local') {
 		const name = selection.name;
 		editorpositionsdb.readLocal(name).then((saveState) => {
@@ -341,7 +351,6 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 			variantPreviewTooltip.show(anchor, name, saveState.variantOptions);
 		});
 	}
-	// kind === 'other': no preview available
 }
 
 /** Updates the selected variant state and selector button, then closes all panels. */
