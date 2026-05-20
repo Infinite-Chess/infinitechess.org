@@ -41,7 +41,7 @@ import gamefile, {
 	Board,
 	FullGame,
 	VariantOptions,
-} from '../../../../../../shared/chess/logic/gamefile';
+} from '../../../../../../shared/chess/logic/fullgame';
 
 import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';

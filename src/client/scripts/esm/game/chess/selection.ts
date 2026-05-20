@@ -8,7 +8,7 @@
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
-import type { Game, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Game, FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 import type { CoordsTagged, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';

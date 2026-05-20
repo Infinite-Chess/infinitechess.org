@@ -7,7 +7,7 @@
  * We also have the animate move method here.
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';

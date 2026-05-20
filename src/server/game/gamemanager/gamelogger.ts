@@ -6,7 +6,7 @@
  * It also updates the players' stats in the "players_stats" table
  */
 
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
+import type { Game } from '../../../shared/chess/logic/fullgame.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 

@@ -3,7 +3,7 @@
 /** This script stores the default methods for EXECUTING special moves */
 
 import type { Piece } from '../util/boardutil.js';
-import type { Board } from './gamefile.js';
+import type { Board } from './fullgame.js';
 import type { Coords } from '../util/coordutil.js';
 import type { RawTypeGroup } from '../util/typeutil.js';
 import type { Edit, MoveTagged } from './movepiece.js';

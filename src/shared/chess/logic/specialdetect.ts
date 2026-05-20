@@ -8,7 +8,7 @@
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { FullGame, Game, Board } from './gamefile.js';
+import type { FullGame, Game, Board } from './fullgame.js';
 import type { MoveTagged, MoveSpecialTags, SpecialTags } from './movepiece.js';
 
 import bd from '@naviary/bigdecimal';

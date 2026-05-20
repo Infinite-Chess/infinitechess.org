@@ -8,7 +8,7 @@ import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { MoveFull } from '../logic/movepiece.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
-import type { Game, Board } from '../logic/gamefile.js';
+import type { Game, Board } from '../logic/fullgame.js';
 import type { CoordsTagged } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';

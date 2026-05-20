@@ -6,7 +6,7 @@
  * textures based on their source type. All textures are created with mipmaps enabled.
  */
 
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../shared/chess/logic/fullgame.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';

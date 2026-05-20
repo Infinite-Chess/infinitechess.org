@@ -8,7 +8,7 @@
 
 import type { Coords } from '../util/coordutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './gamefile.js';
+import type { Board, FullGame } from './fullgame.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';

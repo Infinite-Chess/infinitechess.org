@@ -8,7 +8,7 @@
  * dependency chain at runtime.
  */
 
-import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type { ActivePosition } from './boardeditor.js';
 
 import * as z from 'zod';

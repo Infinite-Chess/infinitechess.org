@@ -4,7 +4,7 @@
  * This script detects draws by insufficient material.
  */
 
-import type { Board } from './gamefile.js';
+import type { Board } from './fullgame.js';
 import type { Coords } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';

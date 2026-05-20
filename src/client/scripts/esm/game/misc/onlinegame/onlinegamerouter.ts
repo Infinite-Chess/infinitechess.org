@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
-import type { Game } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Game } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';

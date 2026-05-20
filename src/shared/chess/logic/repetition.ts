@@ -10,7 +10,7 @@
  */
 
 import type { MoveFull } from './movepiece.js';
-import type { FullGame } from './gamefile.js';
+import type { FullGame } from './fullgame.js';
 import type { StateChange } from './state.js';
 import type { GameConclusion } from '../util/winconutil.js';
 

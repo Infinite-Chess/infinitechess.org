@@ -8,7 +8,7 @@
  * It also computes hint arrows for off-screen legal move destinations.
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type {
 	BDCoords,

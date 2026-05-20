@@ -6,7 +6,7 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { FullGame } from './gamefile.js';
+import type { FullGame } from './fullgame.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';

@@ -7,7 +7,7 @@
  * active position tracking, and the main update/render loop.
  */
 
-import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';

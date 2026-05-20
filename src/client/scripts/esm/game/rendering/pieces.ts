@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from './piecemodels.js';
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../shared/chess/logic/fullgame.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 
 import meshes from './meshes.js';

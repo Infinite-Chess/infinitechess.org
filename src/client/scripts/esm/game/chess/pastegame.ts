@@ -9,7 +9,7 @@ import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';

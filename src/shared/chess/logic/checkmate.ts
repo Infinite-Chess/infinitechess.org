@@ -4,7 +4,7 @@
  * This script contains our checkmate algorithm.
  */
 
-import type { FullGame } from './gamefile.js';
+import type { FullGame } from './fullgame.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import typeutil from '../util/typeutil.js';

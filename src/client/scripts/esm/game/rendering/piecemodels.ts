@@ -5,7 +5,7 @@
  */
 
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../shared/chess/logic/fullgame.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 

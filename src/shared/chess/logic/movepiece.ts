@@ -12,7 +12,7 @@ import type { Change } from './boardchanges.js';
 import type { MoveCoords } from './icn/icnconverter.js';
 import type { MovePacket } from '../../types.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './gamefile.js';
+import type { Board, FullGame } from './fullgame.js';
 import type { EnPassant, MoveState } from './state.js';
 
 import state from './state.js';

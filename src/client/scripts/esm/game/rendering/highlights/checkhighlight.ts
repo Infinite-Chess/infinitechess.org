@@ -5,7 +5,7 @@
  * royal pieces currently in check.
  */
 
-import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { BDCoords, Coords } from '../../../../../../shared/chess/util/coordutil.js';
 

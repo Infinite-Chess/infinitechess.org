@@ -1,4 +1,4 @@
-// src/shared/chess/logic/gamefile.ts
+// src/shared/chess/logic/fullgame.ts
 
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';

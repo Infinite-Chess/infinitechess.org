@@ -6,7 +6,7 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board, FullGame } from '../logic/gamefile.js';
+import type { Game, Board, FullGame } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';

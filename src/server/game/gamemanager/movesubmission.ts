@@ -6,7 +6,7 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { FullGame } from '../../../shared/chess/logic/gamefile.js';
+import type { FullGame } from '../../../shared/chess/logic/fullgame.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';

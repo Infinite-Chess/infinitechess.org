@@ -14,7 +14,7 @@ import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
 import type { GameState, GlobalGameState } from './state.js';
-import type { Board, Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
+import type { Board, Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
 
 import jsutil from '../../util/jsutil.js';
 import typeutil from '../util/typeutil.js';

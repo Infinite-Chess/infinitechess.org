@@ -27,7 +27,7 @@ import type {
 } from '../../../shared/chess/util/winconutil.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
+import fullgame from '../../../shared/chess/logic/fullgame.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -147,7 +147,7 @@ function restoreSingleGame(
 
 	// 5. Create the basegame
 	const variant = { code: matchInfo.variant, mod: variantcache.getModule(matchInfo.variant) };
-	const basegame = gamefile.initGame(
+	const basegame = fullgame.initGame(
 		gameMetadata,
 		gameRow.time_created,
 		variant?.mod,
