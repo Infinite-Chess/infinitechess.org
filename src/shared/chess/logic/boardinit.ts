@@ -13,6 +13,7 @@ import type { CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
 import type { BoardPreview } from './boardpreviewer.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
 import type { VariantOptions, LoadedVariant } from './fullgame.js';
@@ -31,6 +32,8 @@ import organizedpieces from './organizedpieces.js';
  * Used by client always, may not be used by the server.
  */
 export interface Board extends BoardPreview {
+	/** Fully-populated organized pieces, with slide lines and all. */
+	pieces: OrganizedPieces;
 	moves: MoveFull[];
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
@@ -62,9 +65,9 @@ function initBoard(
 	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, pieceMovesets);
 	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, specialMoves);
 
-	// Populate slide lines on the already-organized pieces object
+	// Populate slide lines — upgrades boardPreview.pieces (OrganizedPiecesBase) to a full OrganizedPieces.
 	// The board preview didn't need slide lines.
-	organizedpieces.addSlideLines(boardPreview.pieces, pieceMovesets);
+	const pieces = organizedpieces.addSlideLines(boardPreview.pieces, pieceMovesets);
 
 	const vicinity = genVicinity(pieceMovesets);
 	const specialVicinity = genSpecialVicinity(variant?.mod, boardPreview.existingRawTypes);
@@ -73,6 +76,7 @@ function initBoard(
 
 	return {
 		...boardPreview,
+		pieces, // Replaces the boardPreview's pieces
 		moves,
 		vicinity,
 		specialVicinity,

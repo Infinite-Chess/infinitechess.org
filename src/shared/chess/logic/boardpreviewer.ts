@@ -12,12 +12,11 @@
 import type { RawType } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { OrganizedPieces } from './organizedpieces.js';
+import type { OrganizedPiecesBase } from './organizedpieces.js';
 import type { GameState, GlobalGameState } from './state.js';
 import type { Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
 
 import jsutil from '../../util/jsutil.js';
-import boardutil from '../util/boardutil.js';
 import organizedpieces from './organizedpieces.js';
 import variantpreviewer from '../variants/variantpreviewer.js';
 
@@ -35,7 +34,7 @@ export type BoardPreview = {
 	/** An array of all RAW piece types that are in this game. */
 	existingRawTypes: RawType[];
 
-	pieces: OrganizedPieces;
+	pieces: OrganizedPiecesBase;
 	state: GameState;
 
 	/** Whether the gamefile is for the board editor. */
@@ -101,9 +100,9 @@ function initBoardPreview(
 		global: jsutil.deepCopyObject(state_global),
 	};
 
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
+	const { pieces, existingTypes, existingRawTypes, boundingBox } = organizedpieces.processInitialPosition(position, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
 
-	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
+	let startingPositionBox = boundingBox;
 	// Fallback if no pieces present
 	if (startingPositionBox === undefined)
 		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };

@@ -6,7 +6,7 @@
 
 import type { RawType, Player } from './typeutil.js';
 import type { Coords, CoordsKey } from './coordutil.js';
-import type { OrganizedPieces, TypeRange } from '../logic/organizedpieces.js';
+import type { OrganizedPieces, OrganizedPiecesBase, TypeRange } from '../logic/organizedpieces.js';
 
 import jsutil from '../../util/jsutil.js';
 import vectors from '../../util/math/vectors.js';
@@ -17,7 +17,7 @@ import bounds, { BoundingBox } from '../../util/math/bounds.js';
 
 // Types ----------------------------------------------------------------------------------------------------
 
-interface Piece {
+export interface Piece {
 	type: number;
 	coords: Coords;
 	/**
@@ -41,7 +41,7 @@ interface Piece {
  * @returns The number of pieces in the gamefile.
  */
 function getPieceCountOfGame(
-	o: OrganizedPieces,
+	o: OrganizedPiecesBase,
 	{
 		ignoreColors,
 		ignoreRawTypes,
@@ -68,7 +68,7 @@ function getPieceCountOfGame(
  * @param o - The organized pieces data
  * @returns The total number of royal pieces on the board
  */
-function getRoyalCountOfGame(o: OrganizedPieces): number {
+function getRoyalCountOfGame(o: OrganizedPiecesBase): number {
 	let royalCount = 0;
 
 	for (const [type, range] of o.typeRanges) {
@@ -84,7 +84,7 @@ function getRoyalCountOfGame(o: OrganizedPieces): number {
  * Returns the number of pieces of a SPECIFIC color in a game,
  * EXCLUDING undefined placeholders
  */
-function getPieceCountOfColor(o: OrganizedPieces, color: Player): number {
+function getPieceCountOfColor(o: OrganizedPiecesBase, color: Player): number {
 	let pieceCount = 0;
 
 	for (const [type, range] of o.typeRanges) {
@@ -103,7 +103,7 @@ function getPieceCountOfColor(o: OrganizedPieces, color: Player): number {
  * @param o the piece data for the game
  * @param type
  */
-function getPieceCountOfType(o: OrganizedPieces, type: number): number {
+function getPieceCountOfType(o: OrganizedPiecesBase, type: number): number {
 	const typeList = o.typeRanges.get(type);
 	if (typeList === undefined) return 0;
 	return getPieceCountOfTypeRange(typeList);
@@ -117,7 +117,7 @@ function getPieceCountOfTypeRange(range: TypeRange): number {
 /**
  * Calculates and returns the total number of pieces in the `OrganizedPieces` lists, INCLUDING undefined placeholders.
  */
-function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
+function getPieceCount_IncludingUndefineds(o: OrganizedPiecesBase): number {
 	return o.types.length;
 }
 
@@ -128,7 +128,7 @@ function getPieceCount_IncludingUndefineds(o: OrganizedPieces): number {
  * @param o - contains the pieces data.
  * @returns A list of coordinates of all pieces.
  */
-function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
+function getCoordsOfAllPieces(o: OrganizedPiecesBase): Coords[] {
 	const allCoords: Coords[] = [];
 	for (const range of o.typeRanges.values()) {
 		getCoordsOfTypeRange(o, allCoords, range);
@@ -142,7 +142,7 @@ function getCoordsOfAllPieces(o: OrganizedPieces): Coords[] {
  * @param color - The color of the royals to look for.
  * @returns A list of coordinates where all the royals of the provided color are at.
  */
-function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
+function getRoyalCoordsOfColor(o: OrganizedPiecesBase, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = [];
 
 	typeutil.forEachPieceType(
@@ -160,7 +160,7 @@ function getRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
 }
 
 /**
- * O(sqrt(n)) algorithm to get the bounding box of all pieces.
+ * O(sqrt(n)) algorithm to get the bounding box of all pieces using organized slide lines.
  * Falls back to O(n) if no vertical or horizontal slides are in the game.
  */
 function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined {
@@ -228,7 +228,7 @@ function getBoundingBoxOfAllPieces(o: OrganizedPieces): BoundingBox | undefined 
  * @param color - The color of the jumping royals to look for.
  * @returns A list of coordinates where all the jumping royals of the provided color are at.
  */
-function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords[] {
+function getJumpingRoyalCoordsOfColor(o: OrganizedPiecesBase, color: Player): Coords[] {
 	const royalCoordsList: Coords[] = []; // A running list of all the jumping royals of this color
 
 	typeutil.forEachPieceType(
@@ -251,7 +251,7 @@ function getJumpingRoyalCoordsOfColor(o: OrganizedPieces, color: Player): Coords
  * on each piece idx.
  */
 function iteratePiecesInTypeRange(
-	o: OrganizedPieces,
+	o: OrganizedPiecesBase,
 	type: number,
 	callback: (_idx: number) => void,
 ): void {
@@ -272,7 +272,7 @@ function iteratePiecesInTypeRange(
  * calculating if each idx is an undefined placeholder.
  */
 function iteratePiecesInTypeRange_IncludeUndefineds(
-	o: OrganizedPieces,
+	o: OrganizedPiecesBase,
 	type: number,
 	callback: (_idx: number, _isUndefined: boolean) => void,
 ): void {
@@ -285,7 +285,7 @@ function iteratePiecesInTypeRange_IncludeUndefineds(
 	}
 }
 
-function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeRange): void {
+function getCoordsOfTypeRange(o: OrganizedPiecesBase, coords: Coords[], range: TypeRange): void {
 	let undefinedidx = 0;
 	for (let idx = range.start; idx < range.end; idx++) {
 		if (idx === range.undefineds[undefinedidx]) {
@@ -299,29 +299,29 @@ function getCoordsOfTypeRange(o: OrganizedPieces, coords: Coords[], range: TypeR
 
 // Getting A Single Piece -------------------------------------------------------------------------------------------------
 
-function getCoordsFromIdx(o: OrganizedPieces, idx: number): Coords {
+function getCoordsFromIdx(o: OrganizedPiecesBase, idx: number): Coords {
 	return [o.XPositions[idx]!, o.YPositions[idx]!];
 }
 
-function isIdxUndefinedPiece(o: OrganizedPieces, idx: number): boolean {
+function isIdxUndefinedPiece(o: OrganizedPiecesBase, idx: number): boolean {
 	return jsutil.binarySearch(o.typeRanges.get(o.types[idx]!)!.undefineds, idx).found;
 }
 
-function getTypeFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {
+function getTypeFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
 	return o.types[idx]!;
 }
 
-function getIdxFromCoords(o: OrganizedPieces, coords: Coords): number | undefined {
+function getIdxFromCoords(o: OrganizedPiecesBase, coords: Coords): number | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
 	return idx;
 }
 
-function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefined {
+function getPieceFromCoords(o: OrganizedPiecesBase, coords: Coords): Piece | undefined {
 	const key = coordutil.getKeyFromCoords(coords);
 	if (!o.coords.has(key)) return undefined;
 	const idx = o.coords.get(key)!;
@@ -333,7 +333,7 @@ function getPieceFromCoords(o: OrganizedPieces, coords: Coords): Piece | undefin
 	};
 }
 
-function getPieceFromCoordsKey(o: OrganizedPieces, coordsKey: CoordsKey): Piece | undefined {
+function getPieceFromCoordsKey(o: OrganizedPiecesBase, coordsKey: CoordsKey): Piece | undefined {
 	if (!o.coords.has(coordsKey)) return undefined;
 	const idx = o.coords.get(coordsKey)!;
 	const type = o.types[idx]!;
@@ -345,12 +345,12 @@ function getPieceFromCoordsKey(o: OrganizedPieces, coordsKey: CoordsKey): Piece 
 }
 
 /** Returns the relative index of a piece in its type range. */
-function getRelativeIdx(o: OrganizedPieces, idx: number): number {
+function getRelativeIdx(o: OrganizedPiecesBase, idx: number): number {
 	return idx - o.typeRanges.get(o.types[idx]!)!.start;
 }
 
 /** Reverts the relative-ness of the piece's index to the start of its type range to get its absolute index. */
-function getAbsoluteIdx(o: OrganizedPieces, piece: Piece): number {
+function getAbsoluteIdx(o: OrganizedPiecesBase, piece: Piece): number {
 	return piece.index + o.typeRanges.get(piece.type)!.start;
 }
 
@@ -359,7 +359,7 @@ function getAbsoluteIdx(o: OrganizedPieces, piece: Piece): number {
  * idx is an undefined placeholder (has to perform a search to find that out).
  * IF YOU KNOW it's not an undefined placeholder, use {@link getDefinedPieceFromIdx} instead for better performance.
  */
-function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
+function getPieceFromIdx(o: OrganizedPiecesBase, idx: number): Piece | undefined {
 	if (isIdxUndefinedPiece(o, idx)) return undefined;
 	return getDefinedPieceFromIdx(o, idx);
 }
@@ -368,7 +368,7 @@ function getPieceFromIdx(o: OrganizedPieces, idx: number): Piece | undefined {
  * Returns the Piece object of the piece with given idx. MORE PERFORMANT than {@link getPieceFromIdx}.
  * Only call if you know it's not an undefined placeholder.
  */
-function getDefinedPieceFromIdx(o: OrganizedPieces, idx: number): Piece {
+function getDefinedPieceFromIdx(o: OrganizedPiecesBase, idx: number): Piece {
 	const type = o.types[idx]!;
 	return {
 		type,
@@ -377,7 +377,7 @@ function getDefinedPieceFromIdx(o: OrganizedPieces, idx: number): Piece {
 	};
 }
 
-function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
+function getTypeRangeFromIdx(o: OrganizedPiecesBase, idx: number): TypeRange {
 	const type = o.types[idx];
 	if (type === undefined) throw Error('Index is out of piece lists');
 	if (!o.typeRanges.has(type)) throw Error('Typerange is not initialized');
@@ -386,11 +386,9 @@ function getTypeRangeFromIdx(o: OrganizedPieces, idx: number): TypeRange {
 }
 
 /** Whether a piece is on the provided coords */
-function isPieceOnCoords(o: OrganizedPieces, coords: Coords): boolean {
+function isPieceOnCoords(o: OrganizedPiecesBase, coords: Coords): boolean {
 	return o.coords.has(coordutil.getKeyFromCoords(coords));
 }
-
-export type { Piece };
 
 export default {
 	getPieceCountOfGame,
