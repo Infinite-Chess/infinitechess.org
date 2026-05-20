@@ -7,9 +7,10 @@
 
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
+import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { FullGame, Game, Board } from './fullgame.js';
-import type { MoveTagged, MoveSpecialTags, SpecialTags } from './movepiece.js';
+import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -20,10 +21,10 @@ import bounds from '../../util/math/bounds.js';
 import vectors from '../../util/math/vectors.js';
 import typeutil from '../util/typeutil.js';
 import bdcoords from '../util/bdcoords.js';
+import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import gamerules from '../util/gamerules.js';
-import movepiece from './movepiece.js';
 import legalmoves from './legalmoves.js';
 import castlingutil from './castlingutil.js';
 import checkresolver from './checkresolver.js';
@@ -470,7 +471,7 @@ function isPawnPromotion(basegame: Game, type: number, coordsClicked: Coords): b
  * consumed and deleted before any call to this function.
  */
 function transferSpecialTags_FromCoordsToMove(coords: CoordsTagged, move: MoveTagged): void {
-	for (const special of movepiece.MOVE_SPECIAL_TAGS) {
+	for (const special of moveutil.MOVE_SPECIAL_TAGS) {
 		transferSpecialTag(coords, move, special);
 	}
 }
@@ -484,7 +485,7 @@ function transferSpecialTags_FromCoordsToCoords(
 	srcCoords: CoordsTagged,
 	destCoords: CoordsTagged,
 ): void {
-	for (const special of movepiece.SPECIAL_TAGS) {
+	for (const special of moveutil.SPECIAL_TAGS) {
 		transferSpecialTag(srcCoords, destCoords, special);
 	}
 }

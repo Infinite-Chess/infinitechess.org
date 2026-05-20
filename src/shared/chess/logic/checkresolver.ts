@@ -15,7 +15,8 @@ import type { FullGame } from './fullgame.js';
 import type { CheckInfo } from './state.js';
 import type { LegalMoves } from './legalmoves.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
-import type { CoordsTagged, MoveTagged, MoveSpecialTags } from './movepiece.js';
+import type { MoveSpecialTags } from '../util/moveutil.js';
+import type { CoordsTagged, MoveTagged } from './movepiece.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
