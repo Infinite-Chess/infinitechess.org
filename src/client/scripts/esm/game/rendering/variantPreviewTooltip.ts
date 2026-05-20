@@ -66,13 +66,15 @@ let showToken = 0;
 const element_tooltip = document.createElement('div');
 element_tooltip.id = 'variant-preview-tooltip';
 element_tooltip.classList.add('visibility-hidden');
-// Tapping/clicking the tooltip dismisses it.
-element_tooltip.addEventListener('click', () => hide());
-// Tapping/clicking anywhere outside the tooltip also dismisses it (needed on touch devices where mouseleave doesn't fire reliably).
-document.addEventListener('click', (e) => {
-	if (element_tooltip.classList.contains('visibility-hidden')) return;
-	if (!element_tooltip.contains(e.target as Node)) hide();
-});
+// On touch devices, any finger-down anywhere immediately dismisses the tooltip.
+document.addEventListener(
+	'touchstart',
+	() => {
+		if (element_tooltip.classList.contains('visibility-hidden')) return;
+		hide();
+	},
+	{ passive: true },
+);
 
 const element_name = document.createElement('div');
 element_name.className = 'preview-tooltip-name';
