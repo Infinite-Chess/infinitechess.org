@@ -222,6 +222,20 @@ async function populateRules(
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];
 
+	// Turn order — show if not standard [White, Black]
+	const defaultTurnOrder = [players.WHITE, players.BLACK];
+	const blackFirstTurnOrder = [players.BLACK, players.WHITE];
+	const turnOrderIsDefault = matchesTurnOrder(gameRules, defaultTurnOrder);
+	if (!turnOrderIsDefault) {
+		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
+		if (isBlackFirst) {
+			items.push('Black moves first');
+		} else {
+			const order = gameRules.turnOrder.map((p) => ext_inverted[p]).join(', ');
+			items.push(`Turn order: ${order}`);
+		}
+	}
+
 	// Win conditions — show if not all checkmate
 	const allCheckmate = Object.values(gameRules.winConditions).every(
 		(conds) => conds.length === 1 && conds[0] === 'checkmate',
@@ -250,20 +264,6 @@ async function populateRules(
 					items.push(`${colorStr} wins by ${label}`);
 				}
 			}
-		}
-	}
-
-	// Turn order — show if not standard [White, Black]
-	const defaultTurnOrder = [players.WHITE, players.BLACK];
-	const blackFirstTurnOrder = [players.BLACK, players.WHITE];
-	const turnOrderIsDefault = matchesTurnOrder(gameRules, defaultTurnOrder);
-	if (!turnOrderIsDefault) {
-		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
-		if (isBlackFirst) {
-			items.push('Black moves first');
-		} else {
-			const order = gameRules.turnOrder.map((p) => ext_inverted[p]).join(', ');
-			items.push(`Turn order: ${order}`);
 		}
 	}
 
