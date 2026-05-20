@@ -378,6 +378,7 @@ svg.bg-omega {
 	color: var(--c-text-emphasis);
 	font-size: 15px;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-display:hover {
@@ -441,6 +442,7 @@ svg.bg-omega {
 	font-size: 14px;
 	text-align: left;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-group-item:first-child {
@@ -517,6 +519,7 @@ svg.bg-omega {
 	font-size: 14px;
 	text-align: left;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-item:first-child {
