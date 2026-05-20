@@ -20,7 +20,7 @@ import clock from './clock.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
-import wincondition from './wincondition.js';
+import winconutil from '../util/winconutil.js';
 import variantcache from '../variants/variantcache.js';
 import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
@@ -211,7 +211,7 @@ function loadGameWithBoard(
 	const gamefile = { basegame, boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile))
+	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
 		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{
