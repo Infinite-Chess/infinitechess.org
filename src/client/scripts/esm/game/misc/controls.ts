@@ -45,6 +45,11 @@ const panAccel2D: number = 145; // Default: 145
 /** The accelleration/deceleration rate of the board velocity in 3D mode. */
 const panAccel3D: number = 75; // Default: 75
 
+/** The hypotenuse of the x & y pan velocities cannot exceed this value in 2D mode. */
+const panVelCap2D = 22.0; // Default: 22
+/** The hypotenuse of the x & y pan velocities cannot exceed this value in 3D mode. */
+const panVelCap3D = 16.0; // Default: 16
+
 /** The acceleration/deration rate of the board SCALE velocity in 2D mode. */
 const scaleAccel_Desktop: number = 6.0; // Acceleration of board scaling   Default: 6
 /**
@@ -133,7 +138,7 @@ function detectPanning(): void {
 	if (panning) {
 		// Make sure the velocity doesn't exceed the cap
 		const hyp = Math.hypot(...panVel);
-		const relativePanVelCap = boardpos.getRelativePanVelCap();
+		const relativePanVelCap = perspective.getEnabled() ? panVelCap3D : panVelCap2D;
 		const ratio = hyp / relativePanVelCap;
 		if (ratio > 1) {
 			// Too fast, divide components by the ratio to cap our velocity
