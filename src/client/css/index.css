@@ -574,7 +574,7 @@ svg.bg-omega {
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 8px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 	-webkit-tap-highlight-color: transparent;
 }
 
