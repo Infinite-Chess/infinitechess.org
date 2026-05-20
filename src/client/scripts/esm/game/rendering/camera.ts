@@ -292,7 +292,7 @@ function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElemen
 function initMatrixes(): void {
 	projMatrix = mat4.create(); // Same for every shader program
 
-	updateCanvasDimensions();
+	syncCanvasDimensions();
 	initPerspective(); // Initiates perspective, including the projection matrix
 
 	initViewMatrix(); // Camera
@@ -305,19 +305,21 @@ function initPerspective(): void {
 	initProjMatrix();
 }
 
+/** Resyncs the canvas's pixel buffer and GL viewport to its current CSS display size × DPR. */
+function resyncCanvasBuffer(): void {
+	canvas.width = canvas.clientWidth * window.devicePixelRatio;
+	canvas.height = canvas.clientHeight * window.devicePixelRatio;
+	gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
 // Also updates viewport, and updates canvas-dependant variables
-function updateCanvasDimensions(): void {
+function syncCanvasDimensions(): void {
 	// Get the canvas element's bounding rectangle
 	const rect = canvas.getBoundingClientRect();
 	canvasWidthVirtualPixels = rect.width;
 	canvasHeightVirtualPixels = rect.height;
 
-	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio;
-	canvas.height = canvasHeightVirtualPixels * window.devicePixelRatio;
-
-	gl.viewport(0, 0, canvas.width, canvas.height);
-
+	resyncCanvasBuffer();
 	recalcCanvasVariables(); // Recalculate canvas-dependant variables
 
 	// Dispatch event to notify other application code of the new canvas dimensions
@@ -405,7 +407,7 @@ function initScreenBoundingBox(): void {
 
 function onScreenResize(): void {
 	// Keep canvas buffer in sync with its CSS size when the window is resized, zoomed, or moved between monitors (The DPI changes)
-	updateCanvasDimensions(); // Also updates viewport
+	syncCanvasDimensions(); // Also updates viewport
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	// console.log('Resized window.')
@@ -476,4 +478,5 @@ export default {
 	getScaleWhenTilesInvisible,
 	getScaleWhenZoomedOut,
 	getCanvas,
+	resyncCanvasBuffer,
 };

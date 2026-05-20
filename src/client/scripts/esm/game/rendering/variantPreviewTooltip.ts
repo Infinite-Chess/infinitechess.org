@@ -12,7 +12,6 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { Board, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import math from '../../../../../shared/util/math/math.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -40,9 +39,11 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 
 // Constants ---------------------------------------------------------------
 
+/** Natural (max) width of the tooltip in px — must match the CSS max-width. */
+const TOOLTIP_MAX_WIDTH = 400;
 /** Horizontal gap in px between the tooltip and its anchor element. */
 const TOOLTIP_OFFSET_X = 12;
-/** Minimum horizontal/vertical gap in px between the tooltip and the viewport edge. */
+/** Minimum gap in px between the tooltip and the viewport edge. */
 const EDGE_PAD = 8;
 
 /** Human-readable labels for known non-checkmate win conditions. */
@@ -162,30 +163,30 @@ async function showForBoard(
 	isPreset: boolean,
 ): Promise<void> {
 	element_name.textContent = name;
-	positionTooltip(anchor);
 	await populateRules(gameRules, boardsim, isPreset);
 	await ensureReady(boardsim);
 
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
+
+	positionTooltip(anchor);
 	renderBoard(boardsim, gameRules);
 	element_tooltip.classList.remove('visibility-hidden');
 }
 
-/** Positions the tooltip to the left of the anchor, clamped to all viewport edges. */
+/** Positions the tooltip immediately to the left of the anchor. */
 function positionTooltip(anchor: HTMLElement): void {
 	const rect = anchor.getBoundingClientRect();
-	const tooltipW = element_tooltip.offsetWidth;
-	const tooltipH = element_tooltip.offsetHeight;
 
-	const left = math.clamp(
-		rect.left - tooltipW - TOOLTIP_OFFSET_X,
-		EDGE_PAD,
-		window.innerWidth - tooltipW - EDGE_PAD,
-	);
-	const top = math.clamp(rect.top, EDGE_PAD, window.innerHeight - tooltipH - EDGE_PAD);
-
+	const left = Math.max(rect.left - TOOLTIP_MAX_WIDTH - TOOLTIP_OFFSET_X, EDGE_PAD);
 	element_tooltip.style.left = `${left}px`;
+	element_tooltip.style.right = `${EDGE_PAD}px`;
+
+	// Read natural height after horizontal constraints are applied (canvas shrinks with width via aspect-ratio).
+	const tooltipH = element_tooltip.offsetHeight;
+	const top = Math.min(rect.top, window.innerHeight - tooltipH - EDGE_PAD);
 	element_tooltip.style.top = `${top}px`;
+
+	camera.resyncCanvasBuffer();
 }
 
 /** Initializes WebGL once and loads any not-yet-cached images and textures for the board. */
