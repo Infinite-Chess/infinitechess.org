@@ -6,15 +6,13 @@
 
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board, FullGame } from '../logic/fullgame.js';
+import type { Game, Board } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
-import moveutil from './moveutil.js';
 import gamerules from './gamerules.js';
 import winconutil from './winconutil.js';
 import metadatautil from './metadatautil.js';
-import wincondition from '../logic/wincondition.js'; // THIS IS ONLY USED FOR GAME-OVER CHECKMATE TESTS and inflates this files dependancy list!!!
 
 // Methods -------------------------------------------------------------
 
@@ -80,21 +78,7 @@ function getPlayerCount(basegame: Game): number {
 	return new Set(basegame.gameRules.turnOrder).size;
 }
 
-// FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-/**
- * Tests if the game is over by the used win condition, andif so,
- * sets the `gameConclusion` property according to how the game was terminated,
- * and adds the respective mate flag on the last move played.
- */
-function doGameOverChecks(gamefile: FullGame): void {
-	const conclusion = wincondition.getGameConclusion(gamefile);
-	setConclusion(gamefile.basegame, conclusion);
-	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
-		moveutil.flagLastMoveAsMate(gamefile.boardsim);
-}
-
-// ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// Exports -------------------------------------------------------------
 
 export default {
 	isGameOver,
@@ -102,6 +86,5 @@ export default {
 	getCheckCoordsOfCurrentViewedPosition,
 	setConclusion,
 	isOpponentUsingWinCondition,
-	doGameOverChecks,
 	getPlayerCount,
 };

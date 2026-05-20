@@ -19,6 +19,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import gameconfig from '../../../shared/util/gameconfig.js';
+import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
@@ -201,7 +202,7 @@ function applyServerValidatedMove(
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
 	// Auto-sets basegame.gameConclusion if the move triggers a conclusion.
-	gamefileutility.doGameOverChecks(gamefile);
+	wincondition.doGameOverChecks(gamefile);
 
 	return moveRecord;
 }

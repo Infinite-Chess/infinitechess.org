@@ -21,6 +21,7 @@ import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
 import winconutil from '../util/winconutil.js';
+import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
 import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
@@ -228,7 +229,7 @@ function loadGameWithBoard(
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	// Do not overwrite pre-existing server conclusion, if present.
-	if (basegame.gameConclusion === undefined) gamefileutility.doGameOverChecks(gamefile);
+	if (basegame.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
 	return gamefile;
 }
 

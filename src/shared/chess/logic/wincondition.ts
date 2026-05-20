@@ -12,6 +12,7 @@ import type { Board, FullGame } from './fullgame.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
+import winconutil from '../util/winconutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil, { RawType } from '../util/typeutil.js';
@@ -23,6 +24,18 @@ import { detectCheckmateOrStalemate } from './checkmate.js';
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore
 const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
+
+/**
+ * Tests if the game is over by the used win condition, and if so,
+ * sets the `gameConclusion` property according to how the game was terminated,
+ * and adds the respective mate flag on the last move played.
+ */
+function doGameOverChecks(gamefile: FullGame): void {
+	const conclusion = getGameConclusion(gamefile);
+	gamefileutility.setConclusion(gamefile.basegame, conclusion);
+	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
+		moveutil.flagLastMoveAsMate(gamefile.boardsim);
+}
 
 /**
  * Tests if the game is over by the win condition used, and if so,
@@ -190,4 +203,5 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 
 export default {
 	getGameConclusion,
+	doGameOverChecks,
 };

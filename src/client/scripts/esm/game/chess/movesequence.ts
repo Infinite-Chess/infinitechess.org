@@ -14,6 +14,7 @@ import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+import wincondition from '../../../../../shared/chess/logic/wincondition.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import stats from '../gui/stats.js';
@@ -62,7 +63,7 @@ function makeMove(
 	}
 
 	if (doGameOverChecks) {
-		gamefileutility.doGameOverChecks(gamefile);
+		wincondition.doGameOverChecks(gamefile);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
 		if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame())
 			gameslot.concludeGame();
