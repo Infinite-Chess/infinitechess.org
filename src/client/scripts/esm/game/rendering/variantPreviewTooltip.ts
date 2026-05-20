@@ -65,6 +65,13 @@ let showToken = 0;
 const element_tooltip = document.createElement('div');
 element_tooltip.id = 'variant-preview-tooltip';
 element_tooltip.classList.add('visibility-hidden');
+// Tapping/clicking the tooltip dismisses it.
+element_tooltip.addEventListener('click', () => hide());
+// Tapping/clicking anywhere outside the tooltip also dismisses it (needed on touch devices where mouseleave doesn't fire reliably).
+document.addEventListener('click', (e) => {
+	if (element_tooltip.classList.contains('visibility-hidden')) return;
+	if (!element_tooltip.contains(e.target as Node)) hide();
+});
 
 const element_name = document.createElement('div');
 element_name.className = 'preview-tooltip-name';
@@ -334,8 +341,14 @@ function matchesTurnOrder(gameRules: GameRules, order: Player[]): boolean {
 
 // Exports -----------------------------------------------------------------
 
+/** Returns true if the given node is inside the tooltip element. */
+function containsNode(node: Node): boolean {
+	return element_tooltip.contains(node);
+}
+
 export default {
 	showForPosition,
 	showForVariantCode,
 	hide,
+	containsNode,
 };

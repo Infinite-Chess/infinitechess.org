@@ -66,7 +66,12 @@ function initVariantGroupDropdown(): void {
 		toggleVariantDropdown();
 	});
 	document.addEventListener('pointerdown', (e) => {
-		if (!element_variantSelector.contains(e.target as Node)) closeVariantDropdown();
+		const target = e.target as Node;
+		if (
+			!element_variantSelector.contains(target) &&
+			!variantPreviewTooltip.containsNode(target)
+		)
+			closeVariantDropdown();
 	});
 
 	// Set up variant preview tooltip listener on hovering the preview (eye) icon
@@ -75,7 +80,10 @@ function initVariantGroupDropdown(): void {
 	element_displayPreviewAnchor.addEventListener('mouseenter', () =>
 		handleDisplayPreviewHover(element_displayPreviewAnchor),
 	);
-	element_displayPreviewAnchor.addEventListener('mouseleave', () => variantPreviewTooltip.hide());
+	// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+	element_displayPreviewAnchor.addEventListener('pointerleave', (e) => {
+		if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+	});
 
 	// Wire up group buttons
 	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
@@ -103,7 +111,10 @@ function initVariantGroupDropdown(): void {
 			preview.addEventListener('mouseenter', (e) => {
 				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
 			});
-			preview.addEventListener('mouseleave', () => variantPreviewTooltip.hide());
+			// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+			preview.addEventListener('pointerleave', (e) => {
+				if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+			});
 		});
 	});
 }
@@ -210,7 +221,10 @@ function createCustomContentVNode(
 						on: {
 							mouseenter: (e: MouseEvent) =>
 								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name),
-							mouseleave: () => variantPreviewTooltip.hide(),
+							// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+							pointerleave: (e: PointerEvent) => {
+								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+							},
 						},
 					},
 					[h('use', { attrs: { href: '#svg-eye' } })],
@@ -242,7 +256,10 @@ function createCustomContentVNode(
 									e.currentTarget as HTMLElement,
 									s.position_name,
 								),
-							mouseleave: () => variantPreviewTooltip.hide(),
+							// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+							pointerleave: (e: PointerEvent) => {
+								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+							},
 						},
 					},
 					[h('use', { attrs: { href: '#svg-eye' } })],

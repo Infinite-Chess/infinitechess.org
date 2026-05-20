@@ -571,7 +571,7 @@ svg.bg-omega {
 	border: 1px solid var(--c-border);
 	border-radius: 8px;
 	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
-	pointer-events: none;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .preview-tooltip-name {
