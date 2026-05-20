@@ -259,6 +259,7 @@ svg.bg-omega {
 	max-width: 540px;
 	max-height: 90vh;
 	overflow-y: auto;
+	overscroll-behavior: none contain;
 	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 	display: flex;
 	flex-direction: column;
