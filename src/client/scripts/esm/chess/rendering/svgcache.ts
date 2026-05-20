@@ -8,8 +8,8 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import preferences from '../../components/header/preferences.js';
 
@@ -243,6 +243,48 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 }
 
 /**
+ * Recursively replaces all explicit fill and stroke color values on an SVG element
+ * and its descendants with "currentColor", leaving "none" values untouched.
+ * This converts the SVG into a monochrome silhouette driven by the CSS `color` property.
+ */
+function recolorToCurrentColor(element: Element): void {
+	const fill = element.getAttribute('fill');
+	if (fill !== null && fill !== 'none') element.setAttribute('fill', 'currentColor');
+	const stroke = element.getAttribute('stroke');
+	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
+	for (const child of element.children) recolorToCurrentColor(child);
+}
+
+/**
+ * Returns a cloned SVG element for the given raw piece type rendered as a monochrome
+ * silhouette. All fill/stroke color values are replaced with `currentColor`, so the
+ * silhouette color is controlled entirely by the CSS `color` property of its container.
+ * @param rawType - The raw piece type (without color extension).
+ */
+async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
+	const type = typeutil.buildType(rawType, players.BLACK);
+	const locations = getNeededSVGLocations([type]);
+	if (locations.size > 0) await fetchMissingTypes(locations);
+
+	const baseId = typeutil.getRawTypeStr(rawType);
+	const colorExts = getSVGColorPriority(players.BLACK);
+	let source: SVGElement | undefined;
+	for (const ext of colorExts) {
+		const id = baseId + ext;
+		if (id in cachedPieceSVGs) {
+			source = cachedPieceSVGs[id];
+			break;
+		}
+	}
+	if (source === undefined) throw new Error(`No SVG found for raw piece type ${rawType}`);
+
+	const clone = source.cloneNode(true) as SVGElement;
+	clone.removeAttribute('id');
+	recolorToCurrentColor(clone);
+	return clone;
+}
+
+/**
  * Appends all cached SVG elements directly to the document body for debugging purposes.
  * This allows visual inspection of the SVGs currently held in the cache.
  */
@@ -256,5 +298,6 @@ function showCache(): void {
 
 export default {
 	getSVGElements,
+	getSilhouetteSVG,
 	showCache,
 };

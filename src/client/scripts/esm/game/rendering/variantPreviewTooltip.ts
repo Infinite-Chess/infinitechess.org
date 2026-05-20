@@ -7,6 +7,7 @@
  */
 
 import type { Mesh } from '../../game/rendering/piecemodels.js';
+import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
@@ -28,6 +29,7 @@ import camera from '../../game/rendering/camera.js';
 import meshes from '../../game/rendering/meshes.js';
 import border from '../../game/rendering/border.js';
 import boardpos from '../../game/rendering/boardpos.js';
+import svgcache from '../../chess/rendering/svgcache.js';
 import boardtiles from '../../game/rendering/boardtiles.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
 import imagecache from '../../chess/rendering/imagecache.js';
@@ -159,7 +161,7 @@ async function showForBoard(
 ): Promise<void> {
 	element_name.textContent = name;
 	positionTooltip(anchor);
-	populateRules(gameRules, boardsim, isPreset);
+	await populateRules(gameRules, boardsim, isPreset);
 	await ensureReady(boardsim);
 
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
@@ -218,8 +220,12 @@ function renderBoard(boardsim: Board, gameRules: GameRules): void {
 }
 
 /** Populates the gamerule modifications list above the canvas. */
-function populateRules(gameRules: GameRules, boardsim: Board, isPreset: boolean): void {
-	const items: string[] = [];
+async function populateRules(
+	gameRules: GameRules,
+	boardsim: Board,
+	isPreset: boolean,
+): Promise<void> {
+	const items: Array<string | HTMLElement> = [];
 
 	// Win conditions — show if not all checkmate
 	const allCheckmate = Object.values(gameRules.winConditions).every(
@@ -272,10 +278,14 @@ function populateRules(gameRules: GameRules, boardsim: Board, isPreset: boolean)
 	if (gameRules.promotion === undefined) {
 		items.push('No promotion');
 	} else if (!isPreset) {
-		const pieceNames = gameRules.promotion.pieces
-			.map((raw) => typeutil.getRawTypeStr(raw))
-			.join(', ');
-		items.push(`Promotion: ${pieceNames}`);
+		const span = document.createElement('span');
+		span.className = 'preview-tooltip-promotion-icons';
+		span.append('Promotion: ');
+		for (const raw of gameRules.promotion.pieces) {
+			const silhouetteSVG = await svgcache.getSilhouetteSVG(raw);
+			span.appendChild(silhouetteSVG);
+		}
+		items.push(span);
 	}
 
 	// Move rule — show if not default (100)
@@ -302,7 +312,16 @@ function populateRules(gameRules: GameRules, boardsim: Board, isPreset: boolean)
 	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);
-	element_rulesBody.textContent = items.map((s) => s + '.').join(' ');
+	element_rulesBody.replaceChildren();
+	items.forEach((item, i) => {
+		const suffix = i < items.length - 1 ? '. ' : '.';
+		if (typeof item === 'string') {
+			element_rulesBody.append(item + suffix);
+		} else {
+			element_rulesBody.appendChild(item);
+			element_rulesBody.append(suffix);
+		}
+	});
 }
 
 /** Returns a human-readable label for a win condition code. */
