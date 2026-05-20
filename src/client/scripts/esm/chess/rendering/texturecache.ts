@@ -6,8 +6,8 @@
  * textures based on their source type. All textures are created with mipmaps enabled.
  */
 
-import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
@@ -27,7 +27,10 @@ const textureCache: TypeGroup<WebGLTexture> = {};
  * @param gl - The WebGL2 rendering context.
  * @param boardsim - The board containing the list of piece types used.
  */
-async function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: Board): Promise<void> {
+async function initTexturesForGame(
+	gl: WebGL2RenderingContext,
+	boardsim: BoardPreview,
+): Promise<void> {
 	// Clear existing cache before initializing for a new game
 	// if (Object.keys(textureCache).length > 0) throw Error("TextureCache: Cache already initialized. Call deleteTextureCache() when unloading games.");
 	// console.log("Initializing texture cache for game...");

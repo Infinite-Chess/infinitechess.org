@@ -14,12 +14,6 @@ import legalmoves from './legalmoves.js';
 import { rawTypes } from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 
-/** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
-const pieceCountToDisableCheckmate = 50_000;
-
-/** The maximum number of royal pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
-const royalCountToDisableCheckmate = 6;
-
 /**
  * Calculates if the provided gamefile is over by checkmate or stalemate
  * @param gamefile - The gamefile to detect if it's in checkmate
@@ -63,4 +57,4 @@ function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefi
 	} else return { victor: null, condition: 'stalemate' };
 }
 
-export { pieceCountToDisableCheckmate, royalCountToDisableCheckmate, detectCheckmateOrStalemate };
+export { detectCheckmateOrStalemate };

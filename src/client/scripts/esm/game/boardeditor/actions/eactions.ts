@@ -25,8 +25,8 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
-import variantreader from '../../../../../../shared/chess/variants/variantreader';
 import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
+import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
@@ -91,7 +91,7 @@ async function clearAll(): Promise<void> {
 	gameloader.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
-	const gameRules = variantreader.getBareMinimumGameRules();
+	const gameRules = variantpreviewer.getBareMinimumGameRules();
 	const position: Map<CoordsKey, number> = new Map();
 	const specialRights: Set<CoordsKey> = new Set();
 	const state_global: GlobalGameState = { specialRights };

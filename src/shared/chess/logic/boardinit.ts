@@ -9,58 +9,34 @@
 
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
+import type { CoordsKey } from '../util/coordutil.js';
 import type { PieceMoveset } from './movesets.js';
+import type { BoardPreview } from './boardpreviewer.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
+import type { VariantOptions, LoadedVariant } from './fullgame.js';
 
-import jsutil from '../../util/jsutil.js';
 import typeutil from '../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
 import variantreader from '../variants/variantreader.js';
+import boardpreviewer from './boardpreviewer.js';
 import organizedpieces from './organizedpieces.js';
 
 // Types ------------------------------------------------------------------
 
 /**
  * Game data used for simulating game logic and board state.
+ * Extends {@link BoardPreview} with move-execution machinery.
  * Used by client always, may not be used by the server.
  */
-export type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
-	existingTypes: number[];
-	/** An array of all RAW piece types that are in this game. */
-	existingRawTypes: RawType[];
-
+export interface Board extends BoardPreview {
 	moves: MoveFull[];
-	pieces: OrganizedPieces;
-	state: GameState;
-
 	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
-
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
-
-	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor: boolean;
-
-	/**
-	 * The variant code and its loaded module.
-	 * Undefined for custom/pasted positions without a known variant.
-	 */
-	variant?: LoadedVariant;
-
-	/**
-	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
-	 */
-	startSnapshot: Snapshot;
-};
+}
 
 type Vicinity = Record<CoordsKey, RawType[]>;
 
@@ -76,101 +52,32 @@ function initBoard(
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
 ): Board {
-	// Construct board state
-	if (
-		variantOptions?.gameRules.moveRule !== undefined &&
-		variantOptions?.state_global.moveRuleState === undefined
-	)
-		throw new Error('If moveRule is specified, moveRuleState must also be specified.');
-
-	const fullMove = variantOptions?.fullMove ?? 1;
-	const enpassant = variantOptions?.state_global.enpassant;
-	const moveRuleState =
-		variantOptions?.state_global.moveRuleState ??
-		(gameRules.moveRule !== undefined ? 0 : undefined);
-
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-
-	if (variantOptions) {
-		position = variantOptions.position;
-		specialRights = variantOptions.state_global.specialRights;
-	} else if (variant !== undefined) {
-		({ position, specialRights } = variantreader.getStartingPositionOfVariant(
-			variant.mod,
-			dateTimestamp,
-		));
-	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
-
-	const state_global: GlobalGameState = { specialRights };
-	if (enpassant !== undefined) state_global.enpassant = enpassant;
-	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
-
-	const state: GameState = {
-		local: {
-			moveIndex: -1,
-			inCheck: false,
-			checks: [],
-		},
-		global: jsutil.deepCopyObject(state_global),
-	};
+	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, dateTimestamp, variantOptions, editor, worldBorderDist); // prettier-ignore
 
 	// Calculate movesets
 	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
 	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
 
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
+	// Trim both groups to only include types actually present in the game
+	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, pieceMovesets);
+	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, specialMoves);
 
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
-
-	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
-	// Fallback if no pieces present
-	if (startingPositionBox === undefined)
-		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
-
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(variant?.mod);
-	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
-	}
-
-	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
-		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
-	}
-
-	const startSnapshot: Snapshot = {
-		position,
-		state_global,
-		fullMove,
-		box: startingPositionBox,
-	};
+	// Populate slide lines on the already-organized pieces object
+	// The board preview didn't need slide lines.
+	organizedpieces.addSlideLines(boardPreview.pieces, pieceMovesets);
 
 	const vicinity = genVicinity(pieceMovesets);
-	const specialVicinity = genSpecialVicinity(variant?.mod, existingRawTypes);
+	const specialVicinity = genSpecialVicinity(variant?.mod, boardPreview.existingRawTypes);
 
 	const moves: MoveFull[] = [];
 
 	return {
-		pieces,
-		existingTypes,
-		existingRawTypes,
-		state,
+		...boardPreview,
 		moves,
 		vicinity,
 		specialVicinity,
 		pieceMovesets,
 		specialMoves,
-		editor,
-		variant,
-		startSnapshot,
 	};
 }
 
@@ -219,7 +126,7 @@ function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: Ra
 		const rawType = Number(rawTypeString) as RawType;
 		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
 		pieceVicinity.forEach((coords) => {
-			const coordsKey = coordutil.getKeyFromCoords(coords as Coords);
+			const coordsKey = coordutil.getKeyFromCoords(coords);
 			// typescript doesn't realize vicinity[coordsKey] is guaranteed to be defined
 			// after this statement if we use (coordsKey in vicinity) for some reason
 			if (!vicinity[coordsKey]) vicinity[coordsKey] = []; // Make sure it's initialized

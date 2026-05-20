@@ -14,7 +14,6 @@ import moveutil from './moveutil.js';
 import boardutil from './boardutil.js';
 import typeschemas from './typeschemas.js';
 import gamefileutility from './gamefileutility.js';
-import { pieceCountToDisableCheckmate, royalCountToDisableCheckmate } from '../logic/checkmate.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -57,6 +56,12 @@ const MOVE_TRIGGERED_CONCLUSIONS = [
 	...GAMERULE_WIN_CONDITIONS,
 	...MOVE_TRIGGERED_DRAW_CONDITIONS,
 ] as const;
+
+/** The maximum number of pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
+export const pieceCountToDisableCheckmate = 50_000;
+
+/** The maximum number of royal pieces in-game to still use the checkmate algorithm. Above this uses "royalcapture". */
+export const royalCountToDisableCheckmate = 6;
 
 // Types --------------------------------------------------------------------------
 
@@ -171,6 +176,8 @@ export default {
 	gameConclusionSchema,
 
 	GAMERULE_WIN_CONDITIONS,
+	pieceCountToDisableCheckmate,
+	royalCountToDisableCheckmate,
 
 	isCheckmateCompatibleWithGame,
 	isConclusionMoveTriggered,

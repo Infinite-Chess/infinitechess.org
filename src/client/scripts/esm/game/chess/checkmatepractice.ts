@@ -12,9 +12,9 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
+import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
 import {
 	players as p,
 	ext as e,
@@ -98,7 +98,7 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
 		fullMove: 1,
 		position,
 		state_global: { specialRights },
-		gameRules: variantreader.getBareMinimumGameRules(),
+		gameRules: variantpreviewer.getBareMinimumGameRules(),
 	};
 	const currentEngine = 'engineCheckmatePractice' as const;
 

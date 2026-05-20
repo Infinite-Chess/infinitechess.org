@@ -7,15 +7,15 @@
  */
 
 import type { Mesh } from '../../game/rendering/piecemodels.js';
-import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 
-import boardinit from '../../../../../shared/chess/logic/boardinit.js';
-import variantreader from '../../../../../shared/chess/variants/variantreader.js';
+import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
 import typeutil, {
 	ext_inverted,
 	Player,
@@ -124,7 +124,7 @@ async function showForPosition(
 ): Promise<void> {
 	const token = ++showToken;
 	const timestamp = Date.now();
-	const boardsim = boardinit.initBoard(
+	const boardsim = boardpreviewer.initBoardPreview(
 		variantOptions.gameRules,
 		undefined,
 		timestamp,
@@ -144,9 +144,9 @@ async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promi
 	const variantName = variantregistry.getVariantName(code);
 	const mod = await variantregistry.getVariantLoader(code)();
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
-	const gameRules = variantreader.getGameRulesOfVariant(mod, timestamp);
+	const gameRules = variantpreviewer.getGameRulesOfVariant(mod, timestamp);
 	const loadedVariant = { code, mod };
-	const boardsim = boardinit.initBoard(gameRules, loadedVariant, timestamp);
+	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, timestamp);
 	await showForBoard(anchor, variantName, boardsim, gameRules, token, true);
 }
 
@@ -160,7 +160,7 @@ function hide(): void {
 async function showForBoard(
 	anchor: HTMLElement,
 	name: string,
-	boardsim: Board,
+	boardsim: BoardPreview,
 	gameRules: GameRules,
 	token: number,
 	isPreset: boolean,
@@ -193,14 +193,14 @@ function positionTooltip(anchor: HTMLElement): void {
 }
 
 /** Initializes WebGL once and loads any not-yet-cached images and textures for the board. */
-async function ensureReady(boardsim: Board): Promise<void> {
+async function ensureReady(boardsim: BoardPreview): Promise<void> {
 	await ensureGLReady();
 	await imagecache.initImagesForGame(boardsim);
 	await texturecache.initTexturesForGame(gl, boardsim);
 }
 
 /** Renders the board to the preview canvas. */
-function renderBoard(boardsim: Board, gameRules: GameRules): void {
+function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(boardsim, mesh);
 
@@ -228,7 +228,7 @@ function renderBoard(boardsim: Board, gameRules: GameRules): void {
 /** Populates the gamerule modifications list above the canvas. */
 async function populateRules(
 	gameRules: GameRules,
-	boardsim: Board,
+	boardsim: BoardPreview,
 	isPreset: boolean,
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];

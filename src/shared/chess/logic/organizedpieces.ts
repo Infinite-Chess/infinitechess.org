@@ -17,7 +17,6 @@ import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import movesets from './movesets.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
@@ -99,14 +98,11 @@ const listExtras_Editor = 50;
 // Main Functions ---------------------------------------------------------------------
 
 /**
- * Takes the source Position for the variant, and constructs the entire
- * organized pieces object, and returns other information inherited from it.
- *
- * Mutates pieceMovesets to remove useless movesets
+ * Takes the source Position for the variant and constructs the organized pieces object.
+ * Slide lines are NOT computed here — call {@link addSlideLines} afterward when needed.
  */
 function processInitialPosition(
 	position: Map<CoordsKey, number>,
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
 	turnOrder: Player[],
 	editor: boolean,
 	promotion?: Promotion,
@@ -160,14 +156,8 @@ function processInitialPosition(
 	// console.log("List extras by type:");
 	// console.log(listExtrasByType);
 
-	/**
-	 * Trim the pieceMovesets to only include movesets for types in the game
-	 * This is REQUIRED for possible slides to be calculated correctly!!
-	 */
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, pieceMovesets);
-
-	// We can get the possible slides now that the movesets are trimmed to only include the types in the game.
-	const slides = movesets.getPossibleSlides(pieceMovesets);
+	// Slide lines are not computed here. Call addSlideLines() afterward when needed.
+	const slides: Vec2[] = [];
 
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
@@ -399,6 +389,24 @@ function* getPieceIterable({ coords, types }: OrganizedPieces): Iterable<[Coords
 
 // Processing and Removing Pieces in space -------------------------------------------------
 
+/** Adds a piece to o.lines. */
+function registerPieceInLines(
+	idx: number,
+	o: {
+		XPositions: bigint[];
+		YPositions: bigint[];
+		lines: Map<Vec2Key, Map<LineKey, number[]>>;
+	},
+	coords: Coords,
+): void {
+	for (const [strline, linegroup] of o.lines) {
+		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
+		// Is line initialized
+		if (!linegroup.has(lkey)) linegroup.set(lkey, []);
+		linegroup.get(lkey)!.push(idx);
+	}
+}
+
 /** Adds a piece to o.coords and o.lines so that it can be used for efficient collision detection. */
 function registerPieceInSpace(
 	idx: number,
@@ -415,9 +423,7 @@ function registerPieceInSpace(
 	},
 ): void {
 	if (idx === undefined) throw Error('Undefined idx is trying');
-	const x = o.XPositions[idx];
-	const y = o.YPositions[idx];
-	const coords = [x, y] as Coords;
+	const coords: Coords = [o.XPositions[idx]!, o.YPositions[idx]!];
 	// console.log("Registering piece in space: " + idx + " coords: " + coords);
 	const key = coordutil.getKeyFromCoords(coords);
 	if (o.coords.has(key))
@@ -425,13 +431,7 @@ function registerPieceInSpace(
 			`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`,
 		);
 	o.coords.set(key, idx);
-	const lines = o.lines;
-	for (const [strline, linegroup] of lines) {
-		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
-		// Is line initialized
-		if (linegroup.get(lkey) === undefined) lines.get(strline)!.set(lkey, []);
-		linegroup.get(lkey)!.push(idx);
-	}
+	registerPieceInLines(idx, o, coords);
 }
 
 /** Deletes a piece from o.coords and o.lines */
@@ -639,10 +639,56 @@ function getXFromLine(step: Coords, coords: Coords): bigint {
 	return bimath.posMod(coordAxis, deltaAxis);
 }
 
+// Slide Line Functions -------------------------------------------------------
+
+/**
+ * Extracts all unique slide directions from the provided piece movesets.
+ * The `[1,0]` direction is always included so castling can work.
+ * @param pieceMovesets - Must already be trimmed to only existing types.
+ */
+function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
+	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
+	for (const rawtype in pieceMovesets) {
+		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
+		if (!moveset.sliding) continue;
+		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as Vec2Key));
+	}
+	return Array.from(slides, vectors.getVec2FromKey);
+}
+
+/**
+ * Populates `pieces.slides`, `pieces.lines`, and `pieces.hippogonalsPresent`
+ * from the provided piece movesets.
+ *
+ * Must be called after `typeutil.deleteUnusedFromRawTypeGroup` has trimmed
+ * `pieceMovesets` to only existing types, so slide computation is correct.
+ */
+function addSlideLines(
+	pieces: OrganizedPieces,
+	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
+): void {
+	const slides = getPossibleSlides(pieceMovesets);
+	pieces.slides = slides;
+	pieces.hippogonalsPresent = areHippogonalsPresentInGame(slides);
+
+	// Initialize the organized lines
+	for (const line of slides) {
+		const strline = vectors.getKeyFromVec2(line);
+		pieces.lines.set(strline, new Map());
+	}
+
+	// Register every real piece in the new line maps (using coords as the source of truth).
+	for (const [, idx] of pieces.coords) {
+		const coords: Coords = [pieces.XPositions[idx]!, pieces.YPositions[idx]!];
+		registerPieceInLines(idx, pieces, coords);
+	}
+}
+
 // Exports --------------------------------------------------
 
 export default {
 	processInitialPosition,
+	addSlideLines,
 	regenerateLists,
 	generatePositionFromPieces,
 	getPieceIterable,

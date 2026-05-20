@@ -13,7 +13,7 @@ import type { Coords, DoubleCoords } from '../../../../../../../shared/chess/uti
 import vectors from '../../../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../../shared/chess/util/coordutil.js';
-import variantreader from '../../../../../../../shared/chess/variants/variantreader.js';
+import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 
 import space from '../../../misc/space.js';
 import mouse from '../../../../util/mouse.js';
@@ -168,7 +168,7 @@ function clearPresetOverrides(): void {
 function render(highlights: Square[]): void {
 	const presetSquares =
 		preset_squares ??
-		variantreader.getSquarePresets(gameslot.getGamefile()!.boardsim.variant?.mod);
+		variantpreviewer.getSquarePresets(gameslot.getGamefile()!.boardsim.variant?.mod);
 
 	// If we're zoomed out, then the size of the highlights is constant.
 	const u_size = boardpos.areZoomedOut()

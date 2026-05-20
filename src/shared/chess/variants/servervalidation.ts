@@ -10,7 +10,7 @@
 
 import type { LoadedVariant } from '../logic/fullgame.js';
 
-import variantreader from './variantreader.js';
+import variantpreviewer from './variantpreviewer.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -36,7 +36,7 @@ function doesVariantSupportServerValidation(
 	timestamp: number,
 ): boolean {
 	if (variant === undefined) return false;
-	const positionStringLength = variantreader.getVariantPositionStringLength(
+	const positionStringLength = variantpreviewer.getVariantPositionStringLength(
 		variant.mod,
 		timestamp,
 	);

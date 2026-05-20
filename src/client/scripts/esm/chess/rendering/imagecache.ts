@@ -9,8 +9,8 @@
  * If no game is loaded, the cache should be empty.
  */
 
-import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 
@@ -39,7 +39,7 @@ GameBus.addEventListener('game-unloaded', () => {
  * Fetches necessary SVGs (using svgcache), converts them to images,
  * normalizes them, and stores them in the cache.
  */
-async function initImagesForGame(boardsim: Board): Promise<void> {
+async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 	// 1. Determine required piece types (excluding already-cached and SVG-less ones)
 	const types = boardsim.existingTypes.filter(
 		(t: number) => !cachedImages[t] && !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),

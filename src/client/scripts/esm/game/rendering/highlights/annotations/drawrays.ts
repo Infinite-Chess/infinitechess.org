@@ -9,7 +9,7 @@
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
-import variantreader from '../../../../../../../shared/chess/variants/variantreader.js';
+import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 import vectors, { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import coordutil, {
@@ -59,7 +59,8 @@ function areDrawing(): boolean {
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
 	const baseRays =
-		preset_rays ?? variantreader.getRayPresets(gameslot.getGamefile()!.boardsim.variant?.mod);
+		preset_rays ??
+		variantpreviewer.getRayPresets(gameslot.getGamefile()!.boardsim.variant?.mod);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map((r) => {
 		return {

@@ -21,9 +21,9 @@ import boardinit from './boardinit.js';
 import winconutil from '../util/winconutil.js';
 import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
-import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
 import gamefileutility from '../util/gamefileutility.js';
+import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ----------------------------------------------------
 
@@ -134,7 +134,7 @@ function initGame(
 	variantOptions?: VariantOptions,
 ): Game {
 	const gameRules =
-		variantOptions?.gameRules ?? variantreader.getGameRulesOfVariant(mod, dateTimestamp);
+		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
