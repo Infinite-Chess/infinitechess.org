@@ -9,7 +9,7 @@
  * If no game is loaded, the cache should be empty.
  */
 
-import type { Board } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';

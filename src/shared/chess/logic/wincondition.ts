@@ -6,9 +6,10 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
+import type { FullGame } from './fullgame.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './fullgame.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';

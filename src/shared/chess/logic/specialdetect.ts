@@ -5,11 +5,12 @@
  * Does NOT execute the moves!
  */
 
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
 import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { FullGame, Game, Board } from './fullgame.js';
+import type { FullGame, Game } from './fullgame.js';
 import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import bd from '@naviary/bigdecimal';

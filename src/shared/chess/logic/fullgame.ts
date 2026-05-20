@@ -1,20 +1,18 @@
 // src/shared/chess/logic/fullgame.ts
 
+import type { Board } from './boardinit.js';
+import type { Player } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
+import type { MoveRecord } from './movepiece.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
-import type { PieceMoveset } from './movesets.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { SpecialMoveFunction } from './specialmove.js';
-import type { MoveFull, MoveRecord } from './movepiece.js';
+import type { GlobalGameState } from './state.js';
 import type { ClockValues, MetaData } from '../../types.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';
@@ -91,41 +89,6 @@ export type ClockDependant =
 			untimed: false;
 			clocks: ClockData;
 	  };
-
-/**
- * Game data used for simulating game logic and board state
- * Use by client always, may not be used by the server.
- */
-export type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
-	existingTypes: number[];
-	/** An array of all RAW piece types that are in this game. */
-	existingRawTypes: RawType[];
-
-	moves: MoveFull[];
-	pieces: OrganizedPieces;
-	state: GameState;
-
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
-	specialMoves: RawTypeGroup<SpecialMoveFunction>;
-
-	specialVicinity: Record<CoordsKey, RawType[]>;
-	vicinity: Record<CoordsKey, RawType[]>;
-
-	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor: boolean;
-
-	/**
-	 * The variant code and its loaded module.
-	 * Undefined for custom/pasted positions without a known variant.
-	 */
-	variant?: LoadedVariant;
-
-	/**
-	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
-	 */
-	startSnapshot: Snapshot;
-};
 
 /**
  * Both game data AND board state used on the client-side,

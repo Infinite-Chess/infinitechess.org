@@ -5,12 +5,13 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
+import type { FullGame } from './fullgame.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
-import type { Board, FullGame } from './fullgame.js';
 import type { CoordsTagged, MoveTagged } from './movepiece.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 

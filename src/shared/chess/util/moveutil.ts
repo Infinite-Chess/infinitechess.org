@@ -4,11 +4,12 @@
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
+import type { Game } from '../logic/fullgame.js';
+import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { EnPassant } from '../logic/state.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
-import type { Game, Board } from '../logic/fullgame.js';
 import type { MoveFull, CoordsTagged } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';

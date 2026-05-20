@@ -7,10 +7,11 @@
  * At most this ever handles a single game, not multiple.
  */
 
+import type { Game } from '../../../shared/chess/logic/fullgame.js';
+import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
-import type { Board, Game } from '../../../shared/chess/logic/fullgame.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';

@@ -8,7 +8,8 @@
  * @author Andreas Tsevas
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type {
 	Coords,
 	CoordsKey,

@@ -11,10 +11,12 @@ import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { PieceMoveset } from './movesets.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
+import type { OrganizedPieces } from './organizedpieces.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
+import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
 import type { GameState, GlobalGameState } from './state.js';
-import type { Board, Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
+import type { Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
 
 import jsutil from '../../util/jsutil.js';
 import typeutil from '../util/typeutil.js';
@@ -24,6 +26,41 @@ import variantreader from '../variants/variantreader.js';
 import organizedpieces from './organizedpieces.js';
 
 // Types ------------------------------------------------------------------
+
+/**
+ * Game data used for simulating game logic and board state.
+ * Used by client always, may not be used by the server.
+ */
+export type Board = {
+	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
+	existingTypes: number[];
+	/** An array of all RAW piece types that are in this game. */
+	existingRawTypes: RawType[];
+
+	moves: MoveFull[];
+	pieces: OrganizedPieces;
+	state: GameState;
+
+	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
+	specialMoves: RawTypeGroup<SpecialMoveFunction>;
+
+	specialVicinity: Record<CoordsKey, RawType[]>;
+	vicinity: Record<CoordsKey, RawType[]>;
+
+	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
+	editor: boolean;
+
+	/**
+	 * The variant code and its loaded module.
+	 * Undefined for custom/pasted positions without a known variant.
+	 */
+	variant?: LoadedVariant;
+
+	/**
+	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
+	 */
+	startSnapshot: Snapshot;
+};
 
 type Vicinity = Record<CoordsKey, RawType[]>;
 

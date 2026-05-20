@@ -15,6 +15,7 @@
  */
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit';
 import type { EngineUIConfig } from '../../gui/boardeditor/actions/guistartenginegame';
 import type { EditorSaveState } from '../editortypes';
 import type { MetaData, MovePacket } from '../../../../../../shared/types.js';
@@ -31,17 +32,16 @@ import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/uti
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces';
+import gamefile, {
+	Additional,
+	FullGame,
+	VariantOptions,
+} from '../../../../../../shared/chess/logic/fullgame';
 import icnconverter, {
 	MoveParsed,
 	LongFormatIn,
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
-import gamefile, {
-	Additional,
-	Board,
-	FullGame,
-	VariantOptions,
-} from '../../../../../../shared/chess/logic/fullgame';
 
 import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';

@@ -4,9 +4,10 @@
  * This script contains many utility methods for working with gamefiles.
  */
 
+import type { Game } from '../logic/fullgame.js';
+import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { Game, Board } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
