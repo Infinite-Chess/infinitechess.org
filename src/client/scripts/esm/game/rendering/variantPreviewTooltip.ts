@@ -69,7 +69,7 @@ element_tooltip.classList.add('visibility-hidden');
 element_tooltip.addEventListener('click', () => hide());
 // Tapping/clicking anywhere outside the tooltip also dismisses it (needed on touch devices where mouseleave doesn't fire reliably).
 document.addEventListener('click', (e) => {
-	if (element_tooltip.classList.contains('visibility-hidden')) return;
+	if (!isVisible()) return;
 	if (!element_tooltip.contains(e.target as Node)) hide();
 });
 
@@ -346,9 +346,15 @@ function containsNode(node: Node): boolean {
 	return element_tooltip.contains(node);
 }
 
+/** Returns true if the tooltip is currently visible. */
+function isVisible(): boolean {
+	return !element_tooltip.classList.contains('visibility-hidden');
+}
+
 export default {
 	showForPosition,
 	showForVariantCode,
 	hide,
 	containsNode,
+	isVisible,
 };

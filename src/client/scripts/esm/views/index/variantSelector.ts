@@ -77,12 +77,17 @@ function initVariantGroupDropdown(): void {
 	// Set up variant preview tooltip listener on hovering the preview (eye) icon
 	const element_displayPreviewAnchor =
 		element_variantDisplay.querySelector<HTMLElement>('.preview')!;
-	element_displayPreviewAnchor.addEventListener('mouseenter', () =>
-		handleDisplayPreviewHover(element_displayPreviewAnchor),
-	);
-	// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+	// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
+	element_displayPreviewAnchor.addEventListener('pointerenter', (e) => {
+		if (e.pointerType === 'touch') return;
+		handleDisplayPreviewHover(element_displayPreviewAnchor);
+	});
 	element_displayPreviewAnchor.addEventListener('pointerleave', (e) => {
 		if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+	});
+	element_displayPreviewAnchor.addEventListener('click', () => {
+		if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
+		else handleDisplayPreviewHover(element_displayPreviewAnchor);
 	});
 
 	// Wire up group buttons
@@ -106,14 +111,19 @@ function initVariantGroupDropdown(): void {
 				if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
 				selectVariant(code);
 			});
-			// Set up variant preview tooltip listener on hovering the preview (eye) icon
+			// Set up variant preview tooltip listener on hovering the preview (eye) icon.
+			// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
 			const preview = btn.querySelector<SVGElement>('.preview')!;
-			preview.addEventListener('mouseenter', (e) => {
+			preview.addEventListener('pointerenter', (e) => {
+				if (e.pointerType === 'touch') return;
 				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
 			});
-			// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
 			preview.addEventListener('pointerleave', (e) => {
 				if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+			});
+			preview.addEventListener('click', (e) => {
+				if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
+				else variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
 			});
 		});
 	});
@@ -219,11 +229,17 @@ function createCustomContentVNode(
 					'svg.svg-eye.preview',
 					{
 						on: {
-							mouseenter: (e: MouseEvent) =>
-								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name),
-							// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+							// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
+							pointerenter: (e: PointerEvent) => {
+								if (e.pointerType === 'touch') return;
+								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
+							},
 							pointerleave: (e: PointerEvent) => {
 								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+							},
+							click: (e: MouseEvent) => {
+								if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
+								else handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
 							},
 						},
 					},
@@ -251,14 +267,24 @@ function createCustomContentVNode(
 					'svg.svg-eye.preview',
 					{
 						on: {
-							mouseenter: (e: MouseEvent) =>
+							// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
+							pointerenter: (e: PointerEvent) => {
+								if (e.pointerType === 'touch') return;
 								handleLocalSavePreview(
 									e.currentTarget as HTMLElement,
 									s.position_name,
-								),
-							// Hide the tooltip when the mouse leaves the icon; touch is excluded since on mobile the document click listener handles dismissal.
+								);
+							},
 							pointerleave: (e: PointerEvent) => {
 								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+							},
+							click: (e: MouseEvent) => {
+								if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
+								else
+									handleLocalSavePreview(
+										e.currentTarget as HTMLElement,
+										s.position_name,
+									);
 							},
 						},
 					},
