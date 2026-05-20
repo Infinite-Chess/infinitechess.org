@@ -243,19 +243,6 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 }
 
 /**
- * Recursively replaces all explicit fill and stroke color values on an SVG element
- * and its descendants with "currentColor", leaving "none" values untouched.
- * This converts the SVG into a monochrome silhouette driven by the CSS `color` property.
- */
-function recolorToCurrentColor(element: Element): void {
-	const fill = element.getAttribute('fill');
-	if (fill !== null && fill !== 'none') element.setAttribute('fill', 'currentColor');
-	const stroke = element.getAttribute('stroke');
-	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
-	for (const child of element.children) recolorToCurrentColor(child);
-}
-
-/**
  * Returns a cloned SVG element for the given raw piece type rendered as a monochrome
  * silhouette. All fill/stroke color values are replaced with `currentColor`, so the
  * silhouette color is controlled entirely by the CSS `color` property of its container.
@@ -282,6 +269,19 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
 	clone.removeAttribute('id');
 	recolorToCurrentColor(clone);
 	return clone;
+}
+
+/**
+ * Recursively replaces all explicit fill and stroke color values on an SVG element
+ * and its descendants with "currentColor", leaving "none" values untouched.
+ * This converts the SVG into a monochrome silhouette driven by the CSS `color` property.
+ */
+function recolorToCurrentColor(element: Element): void {
+	const fill = element.getAttribute('fill');
+	if (fill !== null && fill !== 'none') element.setAttribute('fill', 'currentColor');
+	const stroke = element.getAttribute('stroke');
+	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
+	for (const child of element.children) recolorToCurrentColor(child);
 }
 
 /**
