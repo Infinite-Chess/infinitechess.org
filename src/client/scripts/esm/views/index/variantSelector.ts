@@ -296,7 +296,7 @@ function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void
 	ecloudstore
 		.readCloud(positionName)
 		.then((saveState) =>
-			variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions),
+			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions),
 		)
 		.catch(() => {
 			/* Preview unavailable – silently ignore */
@@ -308,7 +308,7 @@ function handleLocalSavePreview(anchor: HTMLElement, positionName: string): void
 	editorpositionsdb
 		.readLocal(positionName)
 		.then((saveState) =>
-			variantPreviewTooltip.show(anchor, positionName, saveState.variantOptions),
+			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions),
 		)
 		.catch(() => {
 			/* Preview unavailable – silently ignore */

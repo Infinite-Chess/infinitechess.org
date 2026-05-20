@@ -141,10 +141,10 @@ function isEmpty(obj: object): boolean {
  * Returns a new object with the keys being the values of the provided object, and the values being the keys.
  * THE VALUES WILL ALWAYS BE STRINGS. This is because the keys of an object are always strings.
  */
-function invertObj(obj: Record<string, string>): Record<string, string> {
+function invertObj(obj: Record<string, string> | Record<number, string>): Record<string, string> {
 	const inv: Record<string, string> = {};
 	for (const key in obj) {
-		inv[obj[key]!] = key;
+		inv[obj[key as keyof typeof obj]!] = key;
 	}
 	return inv;
 }

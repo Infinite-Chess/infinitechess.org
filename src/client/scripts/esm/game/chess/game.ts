@@ -95,12 +95,12 @@ function init(): void {
 	programManager = new ProgramManager(gl);
 	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
+	boardtiles.init();
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
-	boardtiles.init();
 
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);

@@ -2,21 +2,25 @@
 
 /**
  * Renders a floating tooltip containing a small WebGL board preview and
- * gamerule summary when the user hovers over a variant eye icon.
+ * gamerule summary when the user hovers over a variant preview (eye) icon.
  * Supports both preset variant codes and custom saved positions.
  */
 
 import type { Mesh } from '../../game/rendering/piecemodels.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { Board, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import math from '../../../../../shared/util/math/math.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
-import { DEFAULT_PROMOTION_PIECES } from '../../../../../shared/chess/variants/variant_scripts/defaultPromotions.js';
+import typeutil, {
+	ext_inverted,
+	Player,
+	players,
+} from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../../game/rendering/area.js';
 import webgl from '../../game/rendering/webgl.js';
@@ -35,8 +39,18 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 
 // Constants ---------------------------------------------------------------
 
-const TOOLTIP_OFFSET_X = 12; // px gap between anchor and tooltip left edge
-const EDGE_PAD = 8; // minimum px gap between tooltip and any viewport edge
+/** Horizontal gap in px between the tooltip and its anchor element. */
+const TOOLTIP_OFFSET_X = 12;
+/** Minimum horizontal/vertical gap in px between the tooltip and the viewport edge. */
+const EDGE_PAD = 8;
+
+/** Human-readable labels for known non-checkmate win conditions. */
+const WIN_CONDITION_LABELS: Partial<Record<GameruleWinCondition, string>> = {
+	royalcapture: 'royal capture',
+	allroyalscaptured: 'capturing all royals',
+	allpiecescaptured: 'capturing all pieces',
+	koth: 'reaching the center',
+};
 
 // State -------------------------------------------------------------------
 
@@ -80,8 +94,6 @@ let gl: WebGL2RenderingContext;
 /** Initializes the preview WebGL context once (idempotent). */
 async function ensureGLReady(): Promise<void> {
 	if (glInitialized) return;
-	element_canvas.width = element_canvas.clientWidth * window.devicePixelRatio;
-	element_canvas.height = element_canvas.clientHeight * window.devicePixelRatio;
 	gl = webgl.init(element_canvas);
 	camera.init(gl, element_canvas);
 	const programManager = new ProgramManager(gl);
@@ -92,12 +104,12 @@ async function ensureGLReady(): Promise<void> {
 }
 
 /**
- * Shows the preview tooltip for a custom saved position (local or cloud with known variantOptions).
+ * Shows the preview tooltip for a custom position (from variantOptions).
  * @param anchor - The element the tooltip should appear beside.
  * @param name - The display name of the saved position.
  * @param variantOptions - The position and gamerules to preview.
  */
-async function show(
+async function showForPosition(
 	anchor: HTMLElement,
 	name: string,
 	variantOptions: VariantOptions,
@@ -110,7 +122,7 @@ async function show(
 		timestamp,
 		variantOptions,
 	);
-	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token);
+	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false);
 }
 
 /**
@@ -123,11 +135,11 @@ async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promi
 	const timestamp = Date.now();
 	const variantName = variantregistry.getVariantName(code);
 	const mod = await variantregistry.getVariantLoader(code)();
-	if (token !== showToken) return;
+	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
 	const gameRules = variantreader.getGameRulesOfVariant(mod, timestamp);
 	const loadedVariant = { code, mod };
 	const boardsim = gamefile.initBoard(gameRules, loadedVariant, timestamp);
-	await showForBoard(anchor, variantName, boardsim, gameRules, token);
+	await showForBoard(anchor, variantName, boardsim, gameRules, token, true);
 }
 
 /** Hides the tooltip. */
@@ -143,18 +155,15 @@ async function showForBoard(
 	boardsim: Board,
 	gameRules: GameRules,
 	token: number,
+	isPreset: boolean,
 ): Promise<void> {
 	element_name.textContent = name;
 	positionTooltip(anchor);
-	populateRules(gameRules);
+	populateRules(gameRules, boardsim, isPreset);
 	await ensureReady(boardsim);
 
-	if (token !== showToken) return;
-	try {
-		renderBoard(boardsim, gameRules);
-	} catch (e) {
-		console.error('Preview render failed:', e);
-	}
+	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
+	renderBoard(boardsim, gameRules);
 	element_tooltip.classList.remove('visibility-hidden');
 }
 
@@ -208,8 +217,8 @@ function renderBoard(boardsim: Board, gameRules: GameRules): void {
 	piecemodels.renderAll(boardsim, mesh);
 }
 
-/** Populates the gamerule list below the canvas. */
-function populateRules(gameRules: GameRules): void {
+/** Populates the gamerule modifications list above the canvas. */
+function populateRules(gameRules: GameRules, boardsim: Board, isPreset: boolean): void {
 	const items: string[] = [];
 
 	// Win conditions — show if not all checkmate
@@ -217,42 +226,62 @@ function populateRules(gameRules: GameRules): void {
 		(conds) => conds.length === 1 && conds[0] === 'checkmate',
 	);
 	if (!allCheckmate) {
-		const condSet = new Set<string>();
-		Object.values(gameRules.winConditions).forEach((conds) =>
-			conds.forEach((c) => condSet.add(c)),
-		);
-		items.push(`Win: ${[...condSet].join(', ')}`);
+		const playerCount = Object.keys(gameRules.winConditions).length;
+		// Map each non-checkmate win condition to the list of players that have it
+		const condToPlayers = new Map<GameruleWinCondition, Player[]>();
+		for (const [playerStr, conds] of Object.entries(gameRules.winConditions)) {
+			const player = Number(playerStr) as Player;
+			for (const cond of conds) {
+				if (!condToPlayers.has(cond)) condToPlayers.set(cond, []);
+				condToPlayers.get(cond)!.push(player);
+			}
+		}
+		for (const [cond, condPlayers] of condToPlayers) {
+			const label = formatWinCondition(cond);
+			if (condPlayers.length === playerCount) {
+				// All players share this win condition
+				items.push(`Win by ${label}`);
+			} else {
+				// Only specific players have this win condition
+				for (const player of condPlayers) {
+					const color = typeutil.strcolors[player];
+					const colorStr = color.charAt(0).toUpperCase() + color.slice(1); // Capitalize first letter
+					items.push(`${colorStr} wins by ${label}`);
+				}
+			}
+		}
 	}
 
 	// Turn order — show if not standard [White, Black]
 	const defaultTurnOrder = [players.WHITE, players.BLACK];
-	const turnOrderIsDefault =
-		gameRules.turnOrder.length === defaultTurnOrder.length &&
-		gameRules.turnOrder.every((p, i) => p === defaultTurnOrder[i]);
+	const blackFirstTurnOrder = [players.BLACK, players.WHITE];
+	const turnOrderIsDefault = matchesTurnOrder(gameRules, defaultTurnOrder);
 	if (!turnOrderIsDefault) {
-		const order = gameRules.turnOrder.map((p) => (p === players.WHITE ? 'W' : 'B')).join(', ');
-		items.push(`Turn order: ${order}`);
+		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
+		if (isBlackFirst) {
+			items.push('Black moves first');
+		} else {
+			const order = gameRules.turnOrder.map((p) => ext_inverted[p]).join(', ');
+			items.push(`Turn order: ${order}`);
+		}
 	}
 
-	// Promotion — show if absent or pieces differ from default
+	// Promotion — for preset variants, skip when promotion is defined (pieces are
+	// always explicitly set and don't need enumerating); still show "No promotion"
+	// when absent. For custom positions, always show the full promotion info.
 	if (gameRules.promotion === undefined) {
 		items.push('No promotion');
-	} else {
-		const piecesAreDefault =
-			gameRules.promotion.pieces.length === DEFAULT_PROMOTION_PIECES.length &&
-			gameRules.promotion.pieces.every((p, i) => p === DEFAULT_PROMOTION_PIECES[i]);
-		if (!piecesAreDefault) {
-			const pieceNames = gameRules.promotion.pieces
-				.map((raw) => typeutil.getRawTypeStr(raw))
-				.join(', ');
-			items.push(`Promotion: ${pieceNames}`);
-		}
+	} else if (!isPreset) {
+		const pieceNames = gameRules.promotion.pieces
+			.map((raw) => typeutil.getRawTypeStr(raw))
+			.join(', ');
+		items.push(`Promotion: ${pieceNames}`);
 	}
 
 	// Move rule — show if not default (100)
 	if (gameRules.moveRule !== 100) {
-		if (gameRules.moveRule === undefined) items.push('No move rule');
-		else items.push(`Move rule: ${gameRules.moveRule}`);
+		if (gameRules.moveRule === undefined) items.push('No 50-move rule');
+		else items.push(`Move rule: ${gameRules.moveRule} plies.`);
 	}
 
 	// Slide limit — show if set
@@ -260,14 +289,39 @@ function populateRules(gameRules: GameRules): void {
 		items.push(`Slide limit: ${gameRules.slideLimit}`);
 	}
 
+	// Game state: enpassant square
+	const { enpassant, moveRuleState } = boardsim.startSnapshot.state_global;
+	if (enpassant !== undefined) {
+		const [x, y] = enpassant.square;
+		items.push(`En passant square: (${x},${y})`);
+	}
+
+	// Game state: move rule counter
+	if (moveRuleState !== undefined) {
+		items.push(`${moveRuleState} plies passed since last capture or pawn push`);
+	}
+
 	element_rules.classList.toggle('hidden', items.length === 0);
 	element_rulesBody.textContent = items.map((s) => s + '.').join(' ');
+}
+
+/** Returns a human-readable label for a win condition code. */
+function formatWinCondition(cond: GameruleWinCondition): string {
+	return WIN_CONDITION_LABELS[cond] ?? cond;
+}
+
+/** Whether the turn order in gameRules matches the given order. */
+function matchesTurnOrder(gameRules: GameRules, order: Player[]): boolean {
+	return (
+		gameRules.turnOrder.length === order.length &&
+		gameRules.turnOrder.every((p, i) => p === order[i])
+	);
 }
 
 // Exports -----------------------------------------------------------------
 
 export default {
-	show,
+	showForPosition,
 	showForVariantCode,
 	hide,
 };
