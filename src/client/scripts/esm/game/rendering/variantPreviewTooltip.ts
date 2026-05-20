@@ -12,7 +12,7 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { Board, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import boardinit from '../../../../../shared/chess/logic/boardinit.js';
 import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import typeutil, {
@@ -123,7 +123,7 @@ async function showForPosition(
 ): Promise<void> {
 	const token = ++showToken;
 	const timestamp = Date.now();
-	const boardsim = gamefile.initBoard(
+	const boardsim = boardinit.initBoard(
 		variantOptions.gameRules,
 		undefined,
 		timestamp,
@@ -145,7 +145,7 @@ async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promi
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
 	const gameRules = variantreader.getGameRulesOfVariant(mod, timestamp);
 	const loadedVariant = { code, mod };
-	const boardsim = gamefile.initBoard(gameRules, loadedVariant, timestamp);
+	const boardsim = boardinit.initBoard(gameRules, loadedVariant, timestamp);
 	await showForBoard(anchor, variantName, boardsim, gameRules, token, true);
 }
 

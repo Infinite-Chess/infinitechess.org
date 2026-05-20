@@ -17,6 +17,7 @@ import WebSocket from 'ws';
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import boardinit from '../../../shared/chess/logic/boardinit.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
@@ -111,7 +112,7 @@ function createGame(
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(variant, basegame.dateTimestamp)
-		? gamefile.initBoard(basegame.gameRules, variant, basegame.dateTimestamp)
+		? boardinit.initBoard(basegame.gameRules, variant, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };

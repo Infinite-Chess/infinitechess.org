@@ -29,6 +29,7 @@ import type {
 import jsutil from '../../../shared/util/jsutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
+import boardinit from '../../../shared/chess/logic/boardinit.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -163,7 +164,7 @@ function restoreSingleGame(
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
-		const boardsim = gamefile.initBoard(basegame.gameRules, variant, basegame.dateTimestamp);
+		const boardsim = boardinit.initBoard(basegame.gameRules, variant, basegame.dateTimestamp);
 		servergame.boardsim = boardsim;
 		// Pushes moves to BOTH the basegame and boardsim
 		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);

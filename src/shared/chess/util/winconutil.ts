@@ -3,7 +3,6 @@
 /**
  * This script contains lists of compatible win conditions in the game.
  * And contains a few utility methods for them.
- *
  */
 
 import type { GameRules } from './gamerules.js';

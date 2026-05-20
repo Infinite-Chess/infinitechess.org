@@ -17,17 +17,13 @@ import type { GameState, GlobalGameState } from './state.js';
 import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 import clock from './clock.js';
-import jsutil from '../../util/jsutil.js';
-import typeutil from '../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
-import legalmoves from './legalmoves.js';
+import boardinit from './boardinit.js';
 import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
 import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
-import organizedpieces from './organizedpieces.js';
 import gamefileutility from '../util/gamefileutility.js';
 
 // Types ----------------------------------------------------
@@ -202,114 +198,6 @@ function initGame(
 	return game;
 }
 
-/** Creates a new {@link Board} object from provided arguments */
-function initBoard(
-	gameRules: GameRules,
-	variant: LoadedVariant | undefined,
-	dateTimestamp: number,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
-): Board {
-	// Construct board state
-	if (
-		variantOptions?.gameRules.moveRule !== undefined &&
-		variantOptions?.state_global.moveRuleState === undefined
-	)
-		throw new Error('If moveRule is specified, moveRuleState must also be specified.');
-
-	const fullMove = variantOptions?.fullMove ?? 1;
-	const enpassant = variantOptions?.state_global.enpassant;
-	const moveRuleState =
-		variantOptions?.state_global.moveRuleState ??
-		(gameRules.moveRule !== undefined ? 0 : undefined);
-
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-
-	if (variantOptions) {
-		position = variantOptions.position;
-		specialRights = variantOptions.state_global.specialRights;
-	} else if (variant !== undefined) {
-		({ position, specialRights } = variantreader.getStartingPositionOfVariant(
-			variant.mod,
-			dateTimestamp,
-		));
-	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
-
-	const state_global: GlobalGameState = { specialRights };
-	if (enpassant !== undefined) state_global.enpassant = enpassant;
-	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
-
-	const state: GameState = {
-		local: {
-			moveIndex: -1,
-			inCheck: false,
-			checks: [],
-		},
-		global: jsutil.deepCopyObject(state_global),
-	};
-
-	// Calculate movesets
-	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
-	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
-
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
-
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
-
-	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
-	// Fallback if no pieces present
-	if (startingPositionBox === undefined)
-		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
-
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(variant?.mod);
-	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
-	}
-
-	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
-		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
-	}
-
-	const startSnapshot: Snapshot = {
-		position,
-		state_global,
-		fullMove,
-		box: startingPositionBox,
-	};
-
-	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(variant?.mod, existingRawTypes);
-
-	const moves: MoveFull[] = [];
-
-	return {
-		pieces,
-		existingTypes,
-		existingRawTypes,
-		state,
-		moves,
-		vicinity,
-		specialVicinity,
-		pieceMovesets,
-		specialMoves,
-		editor,
-		variant,
-		startSnapshot,
-	};
-}
-
 /**
  * Attaches a board to a specific game. Used for loading a game after it was started.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
@@ -370,7 +258,7 @@ async function initFullGame(
 		additional.clockValues,
 		additional.variantOptions,
 	);
-	const boardsim = initBoard(
+	const boardsim = boardinit.initBoard(
 		basegame.gameRules,
 		variant,
 		dateTimestamp,
@@ -383,6 +271,5 @@ async function initFullGame(
 
 export default {
 	initGame,
-	initBoard,
 	initFullGame,
 };

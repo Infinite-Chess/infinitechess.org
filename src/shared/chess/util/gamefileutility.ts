@@ -75,6 +75,11 @@ function isOpponentUsingWinCondition(
 	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }
 
+/** Returns the number of players in the game (unique players in the turnOrder). */
+function getPlayerCount(basegame: Game): number {
+	return new Set(basegame.gameRules.turnOrder).size;
+}
+
 // FUNCTIONS THAT SHOULD BE MOVED ELSEWHERE!!!!! They introduce too many dependancies ----------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 /**
@@ -87,11 +92,6 @@ function doGameOverChecks(gamefile: FullGame): void {
 	setConclusion(gamefile.basegame, conclusion);
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
 		moveutil.flagLastMoveAsMate(gamefile.boardsim);
-}
-
-/** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(basegame: Game): number {
-	return new Set(basegame.gameRules.turnOrder).size;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

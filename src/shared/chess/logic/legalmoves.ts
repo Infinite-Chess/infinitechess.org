@@ -5,21 +5,19 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
+import type { Coords } from '../util/coordutil.js';
+import type { Player } from '../util/typeutil.js';
 import type { PieceMoveset } from './movesets.js';
-import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { Board, FullGame } from './gamefile.js';
-import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { CoordsTagged, MoveTagged } from './movepiece.js';
-import type { RawType, Player, RawTypeGroup } from '../util/typeutil.js';
 import type { IgnoreFunction, BlockingFunction } from './movesets.js';
 
 import bimath from '../../util/math/bimath.js';
 import movesets from './movesets.js';
 import boardutil from '../util/boardutil.js';
 import coordutil from '../util/coordutil.js';
-import variantreader from '../variants/variantreader.js';
 import specialdetect from './specialdetect.js';
 import checkresolver from './checkresolver.js';
 import organizedpieces from './organizedpieces.js';
@@ -52,12 +50,6 @@ interface LegalMoves {
 	colinear: boolean;
 }
 
-/**
- * A dictionary of vector distances from an origin square containing
- * a list of raw piece types, typically that can capture from that distance.
- */
-type Vicinity = Record<CoordsKey, RawType[]>;
-
 // Constants -----------------------------------------------------------------------
 
 /**
@@ -68,61 +60,6 @@ type Vicinity = Record<CoordsKey, RawType[]>;
 const MAX_BRUTE_SIMULATIONS = 200n;
 
 // Functions -----------------------------------------------------------------------
-
-/**
- * Calculates the area around you in which jumping pieces can land on you from that distance.
- * This is used for efficient calculating if a king move would put you in check.
- * Must be called after the piece movesets are initialized.
- * In the format: `{ '1,2': ['knights', 'chancellors'], '1,0': ['guards', 'king']... }`
- * DOES NOT include pawn moves.
- * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
- * @returns The vicinity object
- */
-function genVicinity(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vicinity {
-	const vicinity: Record<CoordsKey, RawType[]> = {};
-
-	// For every type in the game...
-	for (const [rawTypeString, movesetFunc] of Object.entries(pieceMovesets)) {
-		const rawType = Number(rawTypeString) as RawType;
-		const individualMoves = movesetFunc().individual ?? [];
-		individualMoves.forEach((coords) => {
-			const coordsKey = coordutil.getKeyFromCoords(coords);
-			if (!(coordsKey in vicinity)) vicinity[coordsKey] = []; // Make sure it's initialized
-			vicinity[coordsKey]!.push(rawType); // Make sure the key contains the piece type that can capture from that distance
-		});
-	}
-
-	return vicinity;
-}
-
-/**
- * Calculates the area around you in which special pieces HAVE A CHANCE to capture you from that distance.
- * This is used for efficient calculating if a move would put you in check by a special piece.
- * If a special piece is found at any of these distances, their legal moves are calculated
- * to see if they would check you or not.
- * This saves us from having to iterate through every single
- * special piece in the game to see if they would check you.
- * @param mod - The loaded variant module, or `undefined` for custom/pasted positions.
- * @param existingRawTypes
- * @returns The specialVicinity object, in the format: `{ '1,1': ['pawns'], '1,2': ['roses'], ... }`
- */
-function genSpecialVicinity(mod: VariantModule | undefined, existingRawTypes: RawType[]): Vicinity {
-	const specialVicinityByPiece = variantreader.getSpecialVicinityOfVariant(mod);
-	const vicinity: Vicinity = {};
-	// Object keys are strings, so we need to cast the type to a number
-	for (const [rawTypeString, pieceVicinity] of Object.entries(specialVicinityByPiece)) {
-		const rawType = Number(rawTypeString) as RawType;
-		if (!existingRawTypes.includes(rawType)) continue; // This piece isn't present in our game
-		pieceVicinity.forEach((coords) => {
-			const coordsKey = coordutil.getKeyFromCoords(coords as Coords);
-			// typescript doesn't realize vicinity[coordsKey] is gauranteed to be defined
-			// after this statement if we use (coordsKey in vicinity) for some reason
-			if (!vicinity[coordsKey]) vicinity[coordsKey] = []; // Make sure it's initialized
-			vicinity[coordsKey].push(rawType);
-		});
-	}
-	return vicinity;
-}
 
 /**
  * Gets the moveset of the type of piece specified.
@@ -741,8 +678,6 @@ function hasAtleast1Move(moves: LegalMoves, gamefile: FullGame, piece: Piece): b
 export type { LegalMoves, SlideLimits };
 
 export default {
-	genVicinity,
-	genSpecialVicinity,
 	getPieceMoveset,
 
 	getBlockingFuncFromPieceMoveset,
