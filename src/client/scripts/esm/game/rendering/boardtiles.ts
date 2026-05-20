@@ -92,7 +92,7 @@ let darkTiles: Color;
 document.addEventListener('theme-change', () => {
 	// Custom Event listener.
 	// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
-	updateTheme();
+	resetColor();
 });
 
 /** Loads and generates the tile textures. */
@@ -100,7 +100,7 @@ async function init(): Promise<void> {
 	// Generate the tiles mask texture
 	const maskPromise = initMaskTexture();
 	// Generation main tile textures
-	const texturesPromise = updateTheme();
+	const texturesPromise = resetColor();
 
 	recalcVariables(); // Variables dependant on the board position & scale
 
@@ -288,12 +288,6 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	return { left, right, bottom, top };
 }
 
-/** Resets the board color and sky color. */
-function updateTheme(): Promise<void> {
-	updateSkyColor();
-	return resetColor();
-}
-
 /** Returns a promise that resolves when the new tiles textures have been generated. */
 function resetColor(
 	newLightTiles = preferences.getColorOfLightTiles(),
@@ -301,6 +295,7 @@ function resetColor(
 ): Promise<void> {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
+	updateSkyColor();
 	frametracker.onVisualChange();
 	return initTextures();
 }
