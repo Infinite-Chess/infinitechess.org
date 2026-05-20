@@ -85,9 +85,9 @@ function initVariantGroupDropdown(): void {
 	element_displayPreviewAnchor.addEventListener('pointerleave', (e) => {
 		if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
 	});
-	element_displayPreviewAnchor.addEventListener('click', () => {
-		if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
-		else handleDisplayPreviewHover(element_displayPreviewAnchor);
+	element_displayPreviewAnchor.addEventListener('click', (e) => {
+		e.stopPropagation();
+		handleDisplayPreviewHover(element_displayPreviewAnchor);
 	});
 
 	// Wire up group buttons
@@ -122,8 +122,8 @@ function initVariantGroupDropdown(): void {
 				if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
 			});
 			preview.addEventListener('click', (e) => {
-				if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
-				else variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
+				e.stopPropagation();
+				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
 			});
 		});
 	});
@@ -238,8 +238,8 @@ function createCustomContentVNode(
 								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
 							},
 							click: (e: MouseEvent) => {
-								if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
-								else handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
+								e.stopPropagation();
+								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
 							},
 						},
 					},
@@ -279,12 +279,11 @@ function createCustomContentVNode(
 								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
 							},
 							click: (e: MouseEvent) => {
-								if (variantPreviewTooltip.isVisible()) variantPreviewTooltip.hide();
-								else
-									handleLocalSavePreview(
-										e.currentTarget as HTMLElement,
-										s.position_name,
-									);
+								e.stopPropagation();
+								handleLocalSavePreview(
+									e.currentTarget as HTMLElement,
+									s.position_name,
+								);
 							},
 						},
 					},
