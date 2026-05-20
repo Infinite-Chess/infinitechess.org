@@ -72,15 +72,11 @@ element_name.className = 'preview-tooltip-name';
 const element_canvas = document.createElement('canvas');
 element_canvas.className = 'preview-tooltip-canvas';
 
-const element_rulesHeader = document.createElement('span');
-element_rulesHeader.className = 'preview-tooltip-rules-header';
-element_rulesHeader.textContent = 'Modifications: ';
-
 const element_rulesBody = document.createElement('span');
 
 const element_rules = document.createElement('p');
 element_rules.className = 'preview-tooltip-rules hidden';
-element_rules.append(element_rulesHeader, element_rulesBody);
+element_rules.append(element_rulesBody);
 
 element_tooltip.append(element_name, element_rules, element_canvas);
 document.body.appendChild(element_tooltip);

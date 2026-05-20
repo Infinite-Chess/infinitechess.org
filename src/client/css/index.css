@@ -589,10 +589,6 @@ svg.bg-omega {
 	outline: 1px solid var(--c-border);
 }
 
-.preview-tooltip-rules-header {
-	font-weight: 600;
-}
-
 .preview-tooltip-rules {
 	margin: 0;
 	padding: 0;
