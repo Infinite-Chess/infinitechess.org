@@ -1,6 +1,6 @@
 // src/shared/chess/util/typeutil.ts
 
-import jsutil from '../../util/jsutil';
+import jsutil from '../../util/jsutil.js';
 
 /**
  * This script contains lists of all piece types and players,
