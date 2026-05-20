@@ -7,7 +7,6 @@
  */
 
 import type { Mesh } from '../../game/rendering/piecemodels.js';
-import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
@@ -307,7 +306,7 @@ async function populateRules(
 	}
 
 	// Game state: move rule counter
-	if (moveRuleState !== undefined) {
+	if (moveRuleState !== undefined && moveRuleState !== 0) {
 		items.push(`${moveRuleState} plies passed since last capture or pawn push`);
 	}
 
