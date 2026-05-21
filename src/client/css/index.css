@@ -85,7 +85,6 @@ main {
 
 .lobby-btn:hover {
 	background: rgb(255 88 0 / 45%);
-	color: var(--c-text-emphasis);
 }
 
 .btn-icon {
@@ -267,16 +266,21 @@ svg.bg-omega {
 	scrollbar-color: var(--c-border) transparent;
 }
 
+.modal-header,
+.modal-footer {
+	padding: 16px 20px;
+	flex-shrink: 0;
+}
+
 .modal-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 16px 20px;
 	border-bottom: 1px solid var(--c-border);
-	flex-shrink: 0;
 }
 
-.modal-header-gap {
+.modal-header-gap,
+.modal-close {
 	width: 32px;
 	flex-shrink: 0;
 }
@@ -290,7 +294,6 @@ svg.bg-omega {
 }
 
 .modal-close {
-	width: 32px;
 	height: 32px;
 	background: none;
 	color: var(--c-text-muted);
@@ -298,7 +301,6 @@ svg.bg-omega {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-shrink: 0;
 }
 
 .modal-close:hover {
@@ -319,9 +321,7 @@ svg.bg-omega {
 }
 
 .modal-footer {
-	padding: 16px 20px;
 	border-top: 1px solid var(--c-border);
-	flex-shrink: 0;
 }
 
 /* ============================================================
@@ -432,25 +432,35 @@ svg.bg-omega {
 	display: block;
 }
 
-.variant-group-item {
+/* Base styles shared by all three dropdown row types */
+.variant-group-item,
+.variant-list-back,
+.variant-item {
 	display: flex;
 	align-items: center;
 	gap: 10px;
 	width: 100%;
 	padding: 9px 14px;
 	background: none;
-	border-top: 1px solid var(--c-border-muted);
 	font-size: 14px;
 	text-align: left;
 	cursor: pointer;
+}
+
+.variant-group-item,
+.variant-item {
+	border-top: 1px solid var(--c-border-muted);
 	-webkit-tap-highlight-color: transparent;
 }
 
-.variant-group-item:first-child {
+.variant-group-item:first-child,
+.variant-item:first-child {
 	border-top: none;
 }
 
-.variant-group-item:hover {
+.variant-group-item:hover,
+.variant-list-back:hover,
+.variant-item:hover {
 	background: var(--c-surface-2);
 }
 
@@ -472,35 +482,7 @@ svg.bg-omega {
 	font-size: 13px;
 }
 
-.group-arrow {
-	width: 14px;
-	height: 14px;
-	flex-shrink: 0;
-	margin-left: auto;
-	color: var(--c-text-muted);
-}
-
-/* ============================================================
-   Variant list panel (second-level dropdown)
-   ============================================================ */
-
-.variant-list-back {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	width: 100%;
-	padding: 9px 14px;
-	background: none;
-	border-bottom: 1px solid var(--c-border-2);
-	font-size: 14px;
-	text-align: left;
-	cursor: pointer;
-}
-
-.variant-list-back:hover {
-	background: var(--c-surface-2);
-}
-
+.group-arrow,
 .back-arrow {
 	width: 14px;
 	height: 14px;
@@ -508,27 +490,20 @@ svg.bg-omega {
 	color: var(--c-text-muted);
 }
 
+.group-arrow {
+	margin-left: auto;
+}
+
+/* ============================================================
+   Variant list panel (second-level dropdown)
+   ============================================================ */
+
+.variant-list-back {
+	border-bottom: 1px solid var(--c-border-2);
+}
+
 .variant-item {
-	display: flex;
-	align-items: center;
-	width: 100%;
-	padding: 9px 14px;
-	gap: 10px;
-	background: none;
-	border-top: 1px solid var(--c-border-muted);
 	color: var(--c-text-emphasis);
-	font-size: 14px;
-	text-align: left;
-	cursor: pointer;
-	-webkit-tap-highlight-color: transparent;
-}
-
-.variant-item:first-child {
-	border-top: none;
-}
-
-.variant-item:hover {
-	background: var(--c-surface-2);
 }
 
 .variant-selector .svg-eye,
