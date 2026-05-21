@@ -57,21 +57,24 @@ function linkSlider(
 /** Applies a selected preset to both sliders and display labels. */
 function initPresets(): void {
 	element_presetButtons.forEach((btn) => {
-		btn.addEventListener('click', () => {
-			// Presets store literal minute/increment values, not slider indices.
-			const minutes = Number(btn.getAttribute('data-minutes'));
-			const increment = Number(btn.getAttribute('data-increment'));
-			element_sliderMinutes.value = String(
-				TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes),
-			);
-			element_minutesDisplay.textContent = String(minutes);
-			element_sliderIncrement.value = String(
-				TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT.indexOf(increment),
-			);
-			element_incrementDisplay.textContent = String(increment);
-			syncPresetHighlight();
-		});
+		btn.addEventListener('click', () => applyPreset(btn));
 	});
+	const activePreset = document.querySelector<HTMLElement>('.preset-btn.active');
+	if (activePreset) applyPreset(activePreset);
+}
+
+/** Sets both sliders and their displays to the given preset button's values. */
+function applyPreset(btn: HTMLElement): void {
+	// Presets store literal minute/increment values, not slider indices.
+	const minutes = Number(btn.getAttribute('data-minutes'));
+	const increment = Number(btn.getAttribute('data-increment'));
+	element_sliderMinutes.value = String(TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes));
+	element_minutesDisplay.textContent = String(minutes);
+	element_sliderIncrement.value = String(
+		TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT.indexOf(increment),
+	);
+	element_incrementDisplay.textContent = String(increment);
+	syncPresetHighlight();
 }
 
 /** Highlights the preset button that matches the current slider values. */
