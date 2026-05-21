@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/miniimagecore.ts
+// src/client/scripts/esm/game/rendering/miniimagerenderer.ts
 
 /**
  * The core mini image rendering pipeline.

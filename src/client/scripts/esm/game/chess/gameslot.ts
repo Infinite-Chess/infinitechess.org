@@ -48,9 +48,9 @@ import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import miniimagecore from '../rendering/miniimagecore.js';
 import guinavigation from '../gui/guinavigation.js';
 import { animateMove } from './graphicalchanges.js';
+import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -181,7 +181,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
 	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimagecore.pieceCountToDisableMiniImages) miniimage.disable();
+	if (pieceCount > miniimagerenderer.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (
 		pieceCount > arrows.MAX_PIECES ||

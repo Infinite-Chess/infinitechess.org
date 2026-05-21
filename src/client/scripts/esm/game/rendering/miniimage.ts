@@ -34,7 +34,7 @@ import boardtiles from './boardtiles.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
-import miniimagecore from './miniimagecore.js';
+import miniimagerenderer from './miniimagerenderer.js';
 import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
 // Variables --------------------------------------------------------------
@@ -332,7 +332,7 @@ function render(): void {
 	const inverted = camera.getIsViewingBlackPerspective();
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
-	miniimagecore.render(
+	miniimagerenderer.render(
 		boardsim.existingTypes,
 		instanceData,
 		instanceData_hovered,

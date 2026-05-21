@@ -28,8 +28,8 @@ import drawingtool from './tools/drawingtool.js';
 import { GameBus } from '../GameBus.js';
 import boardeditor from './boardeditor.js';
 import movesequence from '../chess/movesequence.js';
-import miniimagecore from '../rendering/miniimagecore.js';
 import guinavigation from '../gui/guinavigation.js';
+import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ----------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
 	if (
-		pieceCount > miniimagecore.pieceCountToDisableMiniImages ||
+		pieceCount > miniimagerenderer.pieceCountToDisableMiniImages ||
 		pieceCount > arrows.MAX_PIECES
 	) {
 		miniimage.disable();

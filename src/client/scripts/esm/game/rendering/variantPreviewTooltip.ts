@@ -37,8 +37,8 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import Renderable from '../../webgl/Renderable.js';
 import piecemodels from '../../game/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import miniimagecore from '../../game/rendering/miniimagecore.js';
 import promotionlines from '../../game/rendering/promotionlines.js';
+import miniimagerenderer from '../../game/rendering/miniimagerenderer.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 
 // Constants ---------------------------------------------------------------
@@ -250,12 +250,13 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 	// Render pieces
 	if (
 		!boardpos.areZoomedOut() ||
-		boardutil.getPieceCountOfGame(boardsim.pieces) > miniimagecore.pieceCountToDisableMiniImages
+		boardutil.getPieceCountOfGame(boardsim.pieces) >
+			miniimagerenderer.pieceCountToDisableMiniImages
 	) {
 		piecemodels.renderAll(boardsim, mesh);
 	} else {
-		const instanceData = miniimagecore.buildInstanceData(boardsim);
-		miniimagecore.render(boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
+		const instanceData = miniimagerenderer.buildInstanceData(boardsim);
+		miniimagerenderer.render(boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
 	}
 }
 
