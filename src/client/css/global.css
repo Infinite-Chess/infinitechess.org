@@ -196,7 +196,7 @@ body {
 	word-wrap: break-word;
 	word-break: break-word;
 	white-space: normal;
-	z-index: 10000;
+	z-index: 1000;
 }
 
 #tooltip-arrow {
@@ -208,7 +208,7 @@ body {
 	opacity: 0;
 	transition: opacity 0.1s ease-in-out;
 	pointer-events: none;
-	z-index: 10000;
+	z-index: 1000;
 }
 
 /* Arrow pointing downward (tooltip-d / tooltip-dl / tooltip-dr) */
