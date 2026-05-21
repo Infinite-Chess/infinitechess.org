@@ -7,6 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
+import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type {
 	VariantGroup,
@@ -53,6 +54,8 @@ const element_customVariantContent = document.getElementById('variant-custom-con
 /** The currently selected variant for the game options modal. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
+/** The parsed VariantOptions from the last successfully validated ICN input. */
+let icnVariantOptions: VariantOptions | null = null;
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
@@ -373,6 +376,10 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 		handleCloudSavePreview(anchor, selection.name);
 	} else if (selection.kind === 'local') {
 		handleLocalSavePreview(anchor, selection.name);
+	} else if (selection.kind === 'icn') {
+		validateIcnInput();
+		if (icnVariantOptions !== null)
+			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnVariantOptions);
 	}
 }
 
@@ -384,23 +391,40 @@ function selectVariant(code: VariantCode): void {
 	closeVariantDropdown();
 }
 
-/** Validates the ICN textarea on blur and toggles the invalid style on its wrapper. */
+/** Validates the current ICN textarea value, updates the invalid style, and stores parsed VariantOptions. */
+function validateIcnInput(): void {
+	const value = element_icnInput.value;
+	if (value === '') {
+		element_icnInputWrap.classList.remove('invalid');
+		icnVariantOptions = null;
+		return;
+	}
+	try {
+		const longFormat = icnconverter.ShortToLong_Format(value);
+		element_icnInputWrap.classList.remove('invalid');
+		icnVariantOptions = {
+			position: longFormat.position ?? new Map(),
+			gameRules: longFormat.gameRules,
+			state_global: {
+				...longFormat.state_global,
+				specialRights: longFormat.state_global.specialRights ?? new Set(),
+			},
+			fullMove: longFormat.fullMove,
+		};
+	} catch {
+		element_icnInputWrap.classList.add('invalid');
+		icnVariantOptions = null;
+	}
+}
+
+/** Wires blur/focus/input listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
-	element_icnInput.addEventListener('blur', () => {
-		const value = element_icnInput.value;
-		if (value === '') {
-			element_icnInputWrap.classList.remove('invalid');
-			return;
-		}
-		try {
-			icnconverter.ShortToLong_Format(value);
-			element_icnInputWrap.classList.remove('invalid');
-		} catch {
-			element_icnInputWrap.classList.add('invalid');
-		}
-	});
+	element_icnInput.addEventListener('blur', validateIcnInput);
 	element_icnInput.addEventListener('focus', () => {
 		element_icnInputWrap.classList.remove('invalid');
+	});
+	element_icnInput.addEventListener('input', () => {
+		icnVariantOptions = null;
 	});
 }
 
