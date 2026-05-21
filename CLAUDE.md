@@ -12,7 +12,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 
 ## Project Architecture
 
-- **Frontend:** TS, CSS, and assets in `src/client`. No major frameworks detected; uses vanilla and modular scripts.
+- **Frontend:** TS, CSS, and assets in `src/client`. No major frameworks detected; uses vanilla and modular scripts. Bundled with **esbuild** (not Vite).
 - **Backend:** Node.js server in `src/server/server.js`, with API, game logic, and socket communication.
 
 ## Key Files & Directories
