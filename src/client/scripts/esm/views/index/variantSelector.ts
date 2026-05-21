@@ -166,15 +166,10 @@ function openVariantList(group: VariantGroup): void {
 	document.querySelector(`.variant-list-panel[data-group="${group}"]`)!.classList.add('open');
 }
 
-/**
- * Opens the custom variant panel and (re-)loads saved positions.
- * Action rows are shown immediately; the saved-positions list populates asynchronously.
- */
+/** Opens the custom variant panel and refreshes saved positions. */
 async function openCustomVariantList(): Promise<void> {
 	element_variantGroupDropdown.classList.remove('open');
 	document.querySelector('.variant-list-panel[data-group="custom"]')!.classList.add('open');
-
-	customContentVNode = patch(customContentVNode, createCustomContentVNode([], []));
 
 	const [cloudResult, localResult] = await Promise.allSettled([
 		validatorama.areWeLoggedIn() ? editorSavesAPI.getSavedPositions() : Promise.resolve([]),
