@@ -14,8 +14,8 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
-import board from './boardtiles.js';
 import meshes from './meshes.js';
+import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
 
@@ -99,8 +99,8 @@ function getDataLegalMoveDot(color: Color): number[] {
 
 	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
 	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
-	const x = coords[0] + (1 - board.getSquareCenterAsNumber()) - 0.5;
-	const y = coords[1] + (1 - board.getSquareCenterAsNumber()) - 0.5;
+	const x = coords[0] + (1 - boardtiles.getSquareCenterAsNumber()) - 0.5;
+	const y = coords[1] + (1 - boardtiles.getSquareCenterAsNumber()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
 	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, colorCopy);
@@ -119,7 +119,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
-	const boardCenterAdjust = 1 - board.getSquareCenterAsNumber() - 0.5;
+	const boardCenterAdjust = 1 - boardtiles.getSquareCenterAsNumber() - 0.5;
 	const centerX = boardCenterAdjust;
 	const centerY = boardCenterAdjust;
 
@@ -240,7 +240,7 @@ function getDataPlusSign(color: Color): number[] {
 function getDataBoxOutline(): number[] {
 	const [r, g, b, a] = preferences.getBoxOutlineColor();
 
-	const squareCenter = board.getSquareCenterAsNumber();
+	const squareCenter = boardtiles.getSquareCenterAsNumber();
 	const centerX = 0.5 - squareCenter;
 	const centerY = 0.5 - squareCenter;
 
