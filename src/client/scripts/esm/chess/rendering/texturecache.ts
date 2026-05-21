@@ -40,10 +40,10 @@ async function initTexturesForGame(
 		(t: number) => !typeutil.SVGLESS_TYPES.has(typeutil.getRawType(t)),
 	);
 
-	if (types.length === 0)
-		return console.log(
-			'TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.',
-		);
+	// if (types.length === 0)
+	// 	return console.log(
+	// 		'TextureCache: No piece types with SVGs found for this game. Texture cache remains empty.',
+	// 	);
 
 	// console.log("Required piece types for texture cache:", types);
 

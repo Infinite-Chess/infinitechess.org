@@ -106,7 +106,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  */
 function regenAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
 	if (!mesh) return;
-	console.log('Regenerating all piece type meshes.');
+	// console.log('Regenerating all piece type meshes.');
 
 	// Update the offset
 	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
