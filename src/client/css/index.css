@@ -626,6 +626,11 @@ svg.bg-omega {
 	border-color: var(--c-border-2);
 }
 
+.icn-input-wrap.invalid {
+	border-color: #e05555;
+	box-shadow: 0 0 0 3px rgba(224, 85, 85, 0.3);
+}
+
 .icn-input {
 	display: block;
 	width: 100%;

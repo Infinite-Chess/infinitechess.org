@@ -3,7 +3,7 @@
 /**
  * This script manages the variant selector widget inside the game setup modal:
  * the group dropdown, per-group variant lists, custom saves panel (cloud + local),
- * and the ICN paste action.
+ * and the ICN validation.
  */
 
 import type { VNode } from 'snabbdom';
@@ -15,6 +15,7 @@ import type {
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
@@ -44,6 +45,7 @@ const element_variantListPanels = document.querySelectorAll<HTMLElement>('.varia
 const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
+const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
 
 // State ----------------------------------------------
@@ -382,9 +384,30 @@ function selectVariant(code: VariantCode): void {
 	closeVariantDropdown();
 }
 
+/** Validates the ICN textarea on blur and toggles the invalid style on its wrapper. */
+function initIcnValidation(): void {
+	element_icnInput.addEventListener('blur', () => {
+		const value = element_icnInput.value;
+		if (value === '') {
+			element_icnInputWrap.classList.remove('invalid');
+			return;
+		}
+		try {
+			icnconverter.ShortToLong_Format(value);
+			element_icnInputWrap.classList.remove('invalid');
+		} catch {
+			element_icnInputWrap.classList.add('invalid');
+		}
+	});
+	element_icnInput.addEventListener('focus', () => {
+		element_icnInputWrap.classList.remove('invalid');
+	});
+}
+
 // Exports ----------------------------------------------
 
 export default {
 	initVariantGroupDropdown,
+	initIcnValidation,
 	closeVariantDropdown,
 };

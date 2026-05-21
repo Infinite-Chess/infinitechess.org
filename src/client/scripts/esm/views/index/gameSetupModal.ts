@@ -90,6 +90,7 @@ function initModal(): void {
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
 	variantSelector.initVariantGroupDropdown();
+	variantSelector.initIcnValidation();
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
