@@ -585,19 +585,8 @@ svg.bg-omega {
 	text-align: center;
 }
 
-.preview-tooltip-canvas {
-	display: block;
-	width: 100%;
-	aspect-ratio: 1 / 1;
-	border-radius: 4px;
-	outline: 1px solid var(--c-border);
-}
-
 .preview-tooltip-rules {
-	margin: 0;
-	padding: 0;
 	font-size: 11px;
-	color: var(--c-text-muted);
 }
 
 .preview-tooltip-promotion-icons {
@@ -613,6 +602,12 @@ svg.bg-omega {
 
 .preview-tooltip-promotion-icons svg:not(:first-of-type) {
 	margin-inline-start: -3px;
+}
+
+.preview-tooltip-canvas {
+	aspect-ratio: 1 / 1;
+	border-radius: 4px;
+	outline: 1px solid var(--c-border);
 }
 
 /* ============================================================
