@@ -286,7 +286,7 @@ async function populateRules(
 	} else if (!isPreset) {
 		const span = document.createElement('span');
 		span.className = 'preview-tooltip-promotion-icons';
-		span.append('Promotion: ');
+		span.append('Promotion: '); // Use a non-breaking space to ensure spacing between the label and icons.
 		for (const raw of gameRules.promotion.pieces) {
 			const silhouetteSVG = await svgcache.getSilhouetteSVG(raw);
 			span.appendChild(silhouetteSVG);

@@ -592,16 +592,14 @@ svg.bg-omega {
 .preview-tooltip-promotion-icons {
 	display: inline-flex;
 	align-items: center;
-	vertical-align: middle;
 }
 
 .preview-tooltip-promotion-icons svg {
-	width: 10px;
-	height: 10px;
+	width: 14px;
 }
 
 .preview-tooltip-promotion-icons svg:not(:first-of-type) {
-	margin-inline-start: -3px;
+	margin-inline-start: -2px;
 }
 
 .preview-tooltip-canvas {

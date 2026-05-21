@@ -278,7 +278,7 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
  */
 function recolorToCurrentColor(element: Element): void {
 	const fill = element.getAttribute('fill');
-	if (fill !== null && fill !== 'none') element.setAttribute('fill', 'currentColor');
+	if (fill !== 'none') element.setAttribute('fill', 'currentColor');
 	const stroke = element.getAttribute('stroke');
 	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
 	for (const child of element.children) recolorToCurrentColor(child);
