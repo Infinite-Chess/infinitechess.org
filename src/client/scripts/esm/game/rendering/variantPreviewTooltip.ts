@@ -13,6 +13,7 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
@@ -158,8 +159,9 @@ async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promi
 	const token = ++showToken;
 	const timestamp = Date.now();
 	const variantName = variantregistry.getVariantName(code);
-	const mod = await variantregistry.getVariantLoader(code)();
+	await variantcache.ensureVariantLoaded(code);
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
+	const mod = variantcache.getModule(code);
 	const gameRules = variantpreviewer.getGameRulesOfVariant(mod, timestamp);
 	const loadedVariant = { code, mod };
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, timestamp);
