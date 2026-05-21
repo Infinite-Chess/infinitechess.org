@@ -17,9 +17,7 @@ import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js
 import space from '../misc/space.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
-import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
-import Transition, { ZoomTransition } from './transitions/Transition.js';
 
 /**
  * An area object, containing the information {@link Transition} needs
@@ -203,63 +201,7 @@ function calculateFromUnpaddedBox(box: BoundingBoxBD): Area {
 	return calculateFromBox(paddedBox);
 }
 
-/**
- * High level function that initaties one or two zoom transitions
- * with the goal of getting the target Area on screen.
- * @param thisArea - The Area object to get on screen.
- * @param [ignoreHistory] Whether to skip adding this teleport to the teleport history.
- */
-function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
-	const thisAreaBox = thisArea.boundingBox;
-
-	const startCoords = boardpos.getBoardPos();
-	const endCoords = thisArea.coords;
-
-	const currentBoardBoundingBox = boardtiles.gboundingBoxFloat(); // Tile/board space, NOT world-space
-
-	// Will a teleport to this area be a zoom out or in?
-	const isAZoomOut = bd.compare(thisArea.scale, boardpos.getBoardScale()) < 0;
-
-	let firstArea: Area | undefined;
-
-	if (isAZoomOut) {
-		// If our current screen isn't within the final area, create new area to teleport to first
-		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
-			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
-			firstArea = calculateFromUnpaddedBox(thisAreaBox);
-		}
-		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
-		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
-		//     firstArea = calculateFromBox(mergedBoxes);
-		// }
-	} else {
-		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
-			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
-			firstArea = calculateFromUnpaddedBox(currentBoardBoundingBox);
-		}
-		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
-		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
-		//     firstArea = calculateFromBox(mergedBoxes);
-		// }
-	}
-
-	const trans1: ZoomTransition | undefined = firstArea
-		? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale }
-		: undefined;
-	const trans2: ZoomTransition = {
-		destinationCoords: thisArea.coords,
-		destinationScale: thisArea.scale,
-	};
-
-	if (trans1) Transition.startZoomTransition(trans1, trans2, ignoreHistory);
-	else Transition.startZoomTransition(trans2, undefined, ignoreHistory);
-}
-
 export default {
 	calculateFromCoordsList,
 	calculateFromUnpaddedBox,
-	initTransitionFromArea,
 };
