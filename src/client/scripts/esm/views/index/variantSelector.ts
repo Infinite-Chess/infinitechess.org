@@ -19,6 +19,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
+import icnimport from '../../game/chess/icnimport.js';
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
@@ -54,7 +55,7 @@ const element_customVariantContent = document.getElementById('variant-custom-con
 /** The currently selected variant for the game options modal. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
-/** The parsed VariantOptions from the last successfully validated ICN input. */
+/** The VariantOptions from the last successfully validated ICN input. */
 let icnVariantOptions: VariantOptions | null = null;
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
@@ -369,7 +370,7 @@ function applyCustomToSelector(name: string): void {
 }
 
 /** Shows the preview tooltip for the currently selected variant in the display button. */
-function handleDisplayPreviewHover(anchor: HTMLElement): void {
+async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
 	} else if (selection.kind === 'online') {
@@ -377,7 +378,7 @@ function handleDisplayPreviewHover(anchor: HTMLElement): void {
 	} else if (selection.kind === 'local') {
 		handleLocalSavePreview(anchor, selection.name);
 	} else if (selection.kind === 'icn') {
-		validateIcnInput();
+		await validateIcnInput();
 		if (icnVariantOptions !== null)
 			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnVariantOptions);
 	}
@@ -391,8 +392,8 @@ function selectVariant(code: VariantCode): void {
 	closeVariantDropdown();
 }
 
-/** Validates the current ICN textarea value, updates the invalid style, and stores parsed VariantOptions. */
-function validateIcnInput(): void {
+/** Validates the current ICN textarea value, updates the invalid style, and stores resolved VariantOptions. */
+async function validateIcnInput(): Promise<void> {
 	const value = element_icnInput.value;
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
@@ -402,13 +403,13 @@ function validateIcnInput(): void {
 	try {
 		const longFormat = icnconverter.ShortToLong_Format(value);
 		element_icnInputWrap.classList.remove('invalid');
+		const variantCode = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
+		const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variantCode); // prettier-ignore
+
 		icnVariantOptions = {
-			position: longFormat.position ?? new Map(),
+			position,
 			gameRules: longFormat.gameRules,
-			state_global: {
-				...longFormat.state_global,
-				specialRights: longFormat.state_global.specialRights ?? new Set(),
-			},
+			state_global: { ...longFormat.state_global, specialRights },
 			fullMove: longFormat.fullMove,
 		};
 	} catch {

@@ -5,16 +5,13 @@
  */
 
 import type { MetaData } from '../../../../../shared/types.js';
-import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter, {
 	MoveParsed,
@@ -22,6 +19,7 @@ import icnconverter, {
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
+import icnimport from './icnimport.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import clientmetadatautil from './clientmetadatautil.js';
@@ -129,11 +127,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);
-	const { position, specialRights } = await getPositionAndSpecialRightsFromLongFormat(
-		longformOut,
-		resolvedVariantCode,
-		timestamp,
-	);
+	const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
@@ -195,38 +189,6 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 }
 
 /**
- * Utility for extracting position and specialRights from a LongFormatOut.
- * @param longFormat - The parsed long format from ICN.
- * @param variantCode - The pre-resolved variant code (avoids re-resolving from metadata).
- * @param timestamp - The game's start timestamp in ms since epoch.
- */
-async function getPositionAndSpecialRightsFromLongFormat(
-	longFormat: LongFormatOut,
-	variantCode: VariantCode | undefined,
-	timestamp: number,
-): Promise<{
-	position: Map<CoordsKey, number>;
-	specialRights: Set<CoordsKey>;
-}> {
-	// Get relevant position and specialRights information from longformat
-	if (longFormat.position && longFormat.state_global.specialRights) {
-		return {
-			position: longFormat.position,
-			specialRights: longFormat.state_global.specialRights,
-		};
-	} else if (variantCode !== undefined) {
-		// No position specified in the ICN, extract from the variant
-		// Before pasting a game, we must ensure the variant has been loaded
-		await variantcache.ensureVariantLoaded(variantCode);
-		const mod = variantcache.getModule(variantCode);
-		return variantpreviewer.getStartingPositionOfVariant(mod, timestamp);
-	} else {
-		// Empty position
-		return { position: new Map(), specialRights: new Set() };
-	}
-}
-
-/**
  * Resolves the variant from the metadata, normalizes the metadata's
  * `Variant` property to the English display name (if recognized),
  * or deletes it (if not recognized), then returns the resolved {@link VariantCode}.
@@ -249,6 +211,5 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 
 export default {
 	callbackPaste,
-	getPositionAndSpecialRightsFromLongFormat,
 	resolveAndNormalizeVariantFromMetadata,
 };

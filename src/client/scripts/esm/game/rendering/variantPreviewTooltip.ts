@@ -313,7 +313,7 @@ async function populateRules(
 	// Move rule — show if not default (100)
 	if (gameRules.moveRule !== 100) {
 		if (gameRules.moveRule === undefined) items.push('No 50-move rule');
-		else items.push(`Move rule: ${gameRules.moveRule} plies.`);
+		else items.push(`Move rule: ${gameRules.moveRule} plies`);
 	}
 
 	// Slide limit — show if set

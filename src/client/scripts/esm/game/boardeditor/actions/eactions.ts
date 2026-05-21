@@ -47,6 +47,7 @@ import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
 import pastegame from '../../chess/pastegame';
+import icnimport from '../../chess/icnimport';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
@@ -405,11 +406,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		longformOut.metadata.UTCTime,
 	);
 
-	let { position, specialRights } = await pastegame.getPositionAndSpecialRightsFromLongFormat(
-		longformOut,
-		resolvedVariantCode,
-		timestamp,
-	);
+	let { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
 	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
