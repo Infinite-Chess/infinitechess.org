@@ -89,7 +89,6 @@ function initModal(): void {
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
 	timeControls.initPresets();
-	variantSelector.initPasteButton();
 	variantSelector.initVariantGroupDropdown();
 }
 

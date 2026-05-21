@@ -44,7 +44,6 @@ const element_variantListPanels = document.querySelectorAll<HTMLElement>('.varia
 const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
-const element_btnPasteIcn = document.getElementById('btn-paste-icn')!;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
 
 // State ----------------------------------------------
@@ -126,17 +125,6 @@ function initVariantGroupDropdown(): void {
 				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
 			});
 		});
-	});
-}
-
-/** Adds clipboard paste behavior for the custom ICN textarea. */
-function initPasteButton(): void {
-	element_btnPasteIcn.addEventListener('click', async () => {
-		try {
-			element_icnInput.value = await navigator.clipboard.readText();
-		} catch {
-			// Clipboard access denied — silently ignore.
-		}
 	});
 }
 
@@ -398,6 +386,5 @@ function selectVariant(code: VariantCode): void {
 
 export default {
 	initVariantGroupDropdown,
-	initPasteButton,
 	closeVariantDropdown,
 };

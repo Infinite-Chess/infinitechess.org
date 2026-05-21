@@ -612,13 +612,6 @@ svg.bg-omega {
    Custom ICN input
    ============================================================ */
 
-.icn-input-row {
-	display: flex;
-	gap: 8px;
-	align-items: stretch;
-	margin-top: 8px;
-}
-
 .icn-input-wrap {
 	flex: 1;
 	padding: 0 10px;
@@ -651,35 +644,6 @@ svg.bg-omega {
 
 .icn-input::-webkit-scrollbar {
 	display: none;
-}
-
-.icn-buttons {
-	display: flex;
-	flex-direction: row;
-	align-items: stretch;
-	gap: 6px;
-}
-
-.icon-btn {
-	width: 34px;
-	background: var(--c-surface-2);
-	border: 1px solid var(--c-border);
-	border-radius: 6px;
-	color: var(--c-text-muted);
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.icon-btn:hover {
-	background: var(--c-surface);
-	color: var(--c-text-emphasis);
-}
-
-.icon-btn svg {
-	width: 15px;
-	height: 15px;
 }
 
 /* ============================================================
