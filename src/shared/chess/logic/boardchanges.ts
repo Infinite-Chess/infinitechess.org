@@ -26,7 +26,7 @@ const oneWayActions: string[] = ['capture', 'delete'];
 import type { MoveFull } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Piece } from '../util/boardutil.js';
-import type { FullGame } from './gamefile.js';
+import type { FullGame } from './fullgame.js';
 
 /**
  * Generic type to describe any changes to the board

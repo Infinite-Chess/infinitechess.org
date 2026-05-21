@@ -9,13 +9,13 @@ import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
-import variantreader from '../../../../../shared/chess/variants/variantreader.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/logic/checkmate.js';
+import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
+import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter, {
 	MoveParsed,
 	LongFormatOut,
@@ -219,7 +219,7 @@ async function getPositionAndSpecialRightsFromLongFormat(
 		// Before pasting a game, we must ensure the variant has been loaded
 		await variantcache.ensureVariantLoaded(variantCode);
 		const mod = variantcache.getModule(variantCode);
-		return variantreader.getStartingPositionOfVariant(mod, timestamp);
+		return variantpreviewer.getStartingPositionOfVariant(mod, timestamp);
 	} else {
 		// Empty position
 		return { position: new Map(), specialRights: new Set() };

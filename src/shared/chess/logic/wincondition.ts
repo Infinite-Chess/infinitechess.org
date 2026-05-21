@@ -6,27 +6,37 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
+import type { FullGame } from './fullgame.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './gamefile.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
+import winconutil from '../util/winconutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../util/typeutil.js';
 import { detectInsufficientMaterial } from './insufficientmaterial.js';
-import {
-	detectCheckmateOrStalemate,
-	pieceCountToDisableCheckmate,
-	royalCountToDisableCheckmate,
-} from './checkmate.js';
+import { detectCheckmateOrStalemate } from './checkmate.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore
 const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
+
+/**
+ * Tests if the game is over by the used win condition, and if so,
+ * sets the `gameConclusion` property according to how the game was terminated,
+ * and adds the respective mate flag on the last move played.
+ */
+function doGameOverChecks(gamefile: FullGame): void {
+	const conclusion = getGameConclusion(gamefile);
+	gamefileutility.setConclusion(gamefile.basegame, conclusion);
+	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
+		moveutil.flagLastMoveAsMate(gamefile.boardsim);
+}
 
 /**
  * Tests if the game is over by the win condition used, and if so,
@@ -192,27 +202,7 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 	return false;
 }
 
-/**
- * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
- * of the kings no matter the win conditions, by way of one person opening a discovered on turn 1, and
- * another person capturing the king on turn 2 => CHECKMATE NOT COMPATIBLE!
- *
- * Checkmate is also not compatible with games with colinear lines present, because the logic surrounding
- * making opening discovered attacks illegal is a nightmare.
- * @param gamefile
- * @returns true if the gamefile is checkmate compatible
- */
-function isCheckmateCompatibleWithGame({ boardsim, basegame }: FullGame): boolean {
-	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
-	if (boardutil.getPieceCountOfGame(boardsim.pieces) > pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
-	if (gamefileutility.getPlayerCount(basegame) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
-	if (moveutil.doesAnyPlayerGet2TurnsInARow(basegame)) return false; // This also allows the capture of the king.
-	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > royalCountToDisableCheckmate) return false; // Too many royals (check & checkmate algorithm takes too long)
-	return true; // Checkmate compatible!
-}
-
 export default {
 	getGameConclusion,
-	isCheckmateCompatibleWithGame,
+	doGameOverChecks,
 };

@@ -8,7 +8,7 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Tool } from './etoolmanager';
-import type { FullGame } from '../../../../../../shared/chess/logic/gamefile';
+import type { FullGame } from '../../../../../../shared/chess/logic/fullgame';
 
 import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';

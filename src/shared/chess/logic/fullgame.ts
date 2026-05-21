@@ -1,34 +1,29 @@
-// src/shared/chess/logic/gamefile.ts
+// src/shared/chess/logic/fullgame.ts
 
+import type { Board } from './boardinit.js';
+import type { Player } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
+import type { MoveRecord } from './movepiece.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
-import type { PieceMoveset } from './movesets.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { SpecialMoveFunction } from './specialmove.js';
-import type { MoveFull, MoveRecord } from './movepiece.js';
+import type { GlobalGameState } from './state.js';
 import type { ClockValues, MetaData } from '../../types.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 import clock from './clock.js';
-import jsutil from '../../util/jsutil.js';
-import typeutil from '../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
-import legalmoves from './legalmoves.js';
+import boardinit from './boardinit.js';
+import winconutil from '../util/winconutil.js';
 import wincondition from './wincondition.js';
 import variantcache from '../variants/variantcache.js';
-import variantreader from '../variants/variantreader.js';
 import checkdetection from './checkdetection.js';
-import organizedpieces from './organizedpieces.js';
 import gamefileutility from '../util/gamefileutility.js';
+import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ----------------------------------------------------
 
@@ -96,41 +91,6 @@ export type ClockDependant =
 	  };
 
 /**
- * Game data used for simulating game logic and board state
- * Use by client always, may not be used by the server.
- */
-export type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
-	existingTypes: number[];
-	/** An array of all RAW piece types that are in this game. */
-	existingRawTypes: RawType[];
-
-	moves: MoveFull[];
-	pieces: OrganizedPieces;
-	state: GameState;
-
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
-	specialMoves: RawTypeGroup<SpecialMoveFunction>;
-
-	specialVicinity: Record<CoordsKey, RawType[]>;
-	vicinity: Record<CoordsKey, RawType[]>;
-
-	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor: boolean;
-
-	/**
-	 * The variant code and its loaded module.
-	 * Undefined for custom/pasted positions without a known variant.
-	 */
-	variant?: LoadedVariant;
-
-	/**
-	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
-	 */
-	startSnapshot: Snapshot;
-};
-
-/**
  * Both game data AND board state used on the client-side,
  * and in the future *sometimes* used on the server-side,
  * when the server starts doing legal move validation.
@@ -174,7 +134,7 @@ function initGame(
 	variantOptions?: VariantOptions,
 ): Game {
 	const gameRules =
-		variantOptions?.gameRules ?? variantreader.getGameRulesOfVariant(mod, dateTimestamp);
+		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
@@ -202,114 +162,6 @@ function initGame(
 	return game;
 }
 
-/** Creates a new {@link Board} object from provided arguments */
-function initBoard(
-	gameRules: GameRules,
-	variant: LoadedVariant | undefined,
-	dateTimestamp: number,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
-): Board {
-	// Construct board state
-	if (
-		variantOptions?.gameRules.moveRule !== undefined &&
-		variantOptions?.state_global.moveRuleState === undefined
-	)
-		throw new Error('If moveRule is specified, moveRuleState must also be specified.');
-
-	const fullMove = variantOptions?.fullMove ?? 1;
-	const enpassant = variantOptions?.state_global.enpassant;
-	const moveRuleState =
-		variantOptions?.state_global.moveRuleState ??
-		(gameRules.moveRule !== undefined ? 0 : undefined);
-
-	let position: Map<CoordsKey, number>;
-	let specialRights: Set<CoordsKey>;
-
-	if (variantOptions) {
-		position = variantOptions.position;
-		specialRights = variantOptions.state_global.specialRights;
-	} else if (variant !== undefined) {
-		({ position, specialRights } = variantreader.getStartingPositionOfVariant(
-			variant.mod,
-			dateTimestamp,
-		));
-	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
-
-	const state_global: GlobalGameState = { specialRights };
-	if (enpassant !== undefined) state_global.enpassant = enpassant;
-	if (moveRuleState !== undefined) state_global.moveRuleState = moveRuleState;
-
-	const state: GameState = {
-		local: {
-			moveIndex: -1,
-			inCheck: false,
-			checks: [],
-		},
-		global: jsutil.deepCopyObject(state_global),
-	};
-
-	// Calculate movesets
-	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);
-	const specialMoves = variantreader.getSpecialMovesOfVariant(variant?.mod);
-
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(position, pieceMovesets, gameRules.turnOrder, editor, gameRules.promotion); // prettier-ignore
-
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
-
-	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
-	// Fallback if no pieces present
-	if (startingPositionBox === undefined)
-		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
-
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variantreader.getVariantWorldBorder(variant?.mod);
-	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
-	}
-
-	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
-		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
-	}
-
-	const startSnapshot: Snapshot = {
-		position,
-		state_global,
-		fullMove,
-		box: startingPositionBox,
-	};
-
-	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(variant?.mod, existingRawTypes);
-
-	const moves: MoveFull[] = [];
-
-	return {
-		pieces,
-		existingTypes,
-		existingRawTypes,
-		state,
-		moves,
-		vicinity,
-		specialVicinity,
-		pieceMovesets,
-		specialMoves,
-		editor,
-		variant,
-		startSnapshot,
-	};
-}
-
 /**
  * Attaches a board to a specific game. Used for loading a game after it was started.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
@@ -323,7 +175,7 @@ function loadGameWithBoard(
 	const gamefile = { basegame, boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile))
+	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
 		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{
@@ -340,7 +192,7 @@ function loadGameWithBoard(
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	// Do not overwrite pre-existing server conclusion, if present.
-	if (basegame.gameConclusion === undefined) gamefileutility.doGameOverChecks(gamefile);
+	if (basegame.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
@@ -370,7 +222,7 @@ async function initFullGame(
 		additional.clockValues,
 		additional.variantOptions,
 	);
-	const boardsim = initBoard(
+	const boardsim = boardinit.initBoard(
 		basegame.gameRules,
 		variant,
 		dateTimestamp,
@@ -383,6 +235,5 @@ async function initFullGame(
 
 export default {
 	initGame,
-	initBoard,
 	initFullGame,
 };

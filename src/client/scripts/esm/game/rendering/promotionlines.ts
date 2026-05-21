@@ -5,6 +5,8 @@
  */
 
 import type { Color } from '../../../../../shared/util/math/math.js';
+import type { Promotion } from '../../../../../shared/chess/util/gamerules.js';
+import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -12,7 +14,6 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import camera from './camera.js';
 import meshes from './meshes.js';
-import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
@@ -27,9 +28,13 @@ const THICKNESS = 0.01;
 
 // ===================================== Functions =====================================
 
-function render(): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (gamefile.basegame.gameRules.promotion === undefined) return; // No promotion ranks in this game
+/**
+ * Renders the promotion lines for the given promotion rules.
+ * @param promotion - The promotion rules, if any.
+ * @param startBox - The starting position bounding box. When undefined, lines extend to screen edges.
+ */
+function render(promotion: Promotion | undefined, startBox?: BoundingBox): void {
+	if (promotion === undefined) return; // No promotion ranks in this game
 
 	// Generate the vertex data
 
@@ -39,14 +44,12 @@ function render(): void {
 	let left: number;
 	let right: number;
 
-	if (gamefile.boardsim.editor) {
-		// In editor mode, the promotion lines extend to the edges of the screen
+	if (startBox === undefined) {
+		// Lines extend to the edges of the screen
 		({ left, right } = camera.getRespectiveScreenBox());
 	} else {
-		// Round the start position box away to encapsulate the entirity of all squares
-		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-			gamefile.boardsim.startSnapshot.box,
-		);
+		// Round the start position box away to encapsulate the entirety of all squares
+		const floatingBox = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
 		left = (bd.toNumber(bd.subtract(floatingBox.left, position[0])) - EXTRA_LENGTH) * scale;
 		right = (bd.toNumber(bd.subtract(floatingBox.right, position[0])) + EXTRA_LENGTH) * scale;
 	}
@@ -55,8 +58,8 @@ function render(): void {
 	const color: Color = [0, 0, 0, 1];
 	const vertexData: number[] = [];
 
-	addDataForSide(gamefile.basegame.gameRules.promotion.ranks[p.WHITE], 1);
-	addDataForSide(gamefile.basegame.gameRules.promotion.ranks[p.BLACK], 0);
+	addDataForSide(promotion.ranks[p.WHITE], 1);
+	addDataForSide(promotion.ranks[p.BLACK], 0);
 
 	function addDataForSide(ranks: bigint[] | undefined, yShift: 1 | 0): void {
 		if (!ranks) return;

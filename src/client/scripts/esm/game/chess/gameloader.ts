@@ -18,7 +18,7 @@ import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../websocket/socketschemas.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type {
 	ClockValues,
 	MetaData,

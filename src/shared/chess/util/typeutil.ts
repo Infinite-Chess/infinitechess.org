@@ -1,5 +1,7 @@
 // src/shared/chess/util/typeutil.ts
 
+import jsutil from '../../util/jsutil.js';
+
 /**
  * This script contains lists of all piece types and players,
  * and utility methods for working with them.
@@ -67,6 +69,7 @@ const ext = {
 	Y: players.YELLOW * numTypes,
 	G: players.GREEN * numTypes,
 } as const;
+const ext_inverted = jsutil.invertObj(ext);
 
 /**
  * The string representations of each raw type.
@@ -230,7 +233,7 @@ function debugType(type: number): string {
 
 export type { RawType, Player, RawTypeGroup, TypeGroup, PlayerGroup };
 
-export { rawTypes, neutralRawTypes, ext, numTypes, players };
+export { rawTypes, neutralRawTypes, ext, ext_inverted, numTypes, players };
 
 export default {
 	// Constants

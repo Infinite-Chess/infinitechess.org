@@ -86,9 +86,9 @@ function relockMouse(): void {
 }
 
 function lockMouse(): void {
-	camera.canvas.requestPointerLock();
+	camera.getCanvas().requestPointerLock();
 	// Disables OS-level mouse acceleration. This does NOT solve safari being more sensitive.
-	// camera.canvas.requestPointerLock({ unadjustedMovement: true });
+	// camera.getCanvas().requestPointerLock({ unadjustedMovement: true });
 }
 
 /**
@@ -107,7 +107,7 @@ function addRotation(mouseChangeX: number, mouseChangeY: number): void {
 }
 
 function isMouseLocked(): boolean {
-	return document.pointerLockElement === camera.canvas;
+	return document.pointerLockElement === camera.getCanvas();
 }
 
 // Buffer model of crosshair. Called whenever perspective is enabled, screen is resized, or devMode is toggled.

@@ -12,12 +12,12 @@
  */
 
 import type { Promotion } from '../util/gamerules.js';
+import type { BoundingBox } from '../../util/math/bounds.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 import type { Player, RawType, TypeGroup, RawTypeGroup } from '../util/typeutil.js';
 
 import bimath from '../../util/math/bimath.js';
-import movesets from './movesets.js';
 import gamerules from '../util/gamerules.js';
 import coordutil from '../util/coordutil.js';
 import vectors, { Vec2, Vec2Key } from '../../util/math/vectors.js';
@@ -26,17 +26,11 @@ import typeutil, { ext, players as p, rawTypes, neutralRawTypes } from '../util/
 // Types ---------------------------------------------------------------------------
 
 /**
- * An object that stores the pieces on the board in several different organized ways.
- * This way we can quickly access the pieces when we are given different information.
- *
- * - By index
- * - By coordinate
- * - By line
- *
- * Also stores variables for all possible slide lines in the game,
- * and whether there are any hippogonal riders present.
+ * An object that stores the pieces on the board organized for fast lookup by
+ * index and by coordinate. This is the base subset — slide-line maps are absent,
+ * those require moveset information to construct, so they're added later.
  */
-interface OrganizedPieces {
+export interface OrganizedPiecesBase {
 	/** The X position of all pieces. Undefined pieces are set to 0. */
 	XPositions: bigint[];
 	/** The Y position of all pieces. Undefined pieces are set to 0. */
@@ -55,6 +49,26 @@ interface OrganizedPieces {
 	 */
 	coords: Map<CoordsKey, number>;
 	/**
+	 * If this flag is present, it means the pieces have been regenerated
+	 * to add more undefineds to the type ranges.
+	 * movesequence should see this and immediately regenerate the piece models!
+	 */
+	newlyRegenerated?: true;
+}
+
+/**
+ * An object that stores the pieces on the board in several different organized ways.
+ * This way we can quickly access the pieces when we are given different information.
+ *
+ * - By index
+ * - By coordinate
+ * - By line
+ *
+ * Also stores variables for all possible slide lines in the game,
+ * and whether there are any hippogonal riders present.
+ */
+export interface OrganizedPieces extends OrganizedPiecesBase {
+	/**
 	 * Pieces organized by line (rank/file/diagonal)
 	 * Map{ 'dx,dy' => Map { 'yint|xafter0' => [idx, idx, idx...] }}
 	 * dx is never negative. If dx is 0, dy cannot be negative either.
@@ -64,19 +78,13 @@ interface OrganizedPieces {
 	slides: Vec2[];
 	/** Whether there are any hippogonal riders in the game (knightriders). */
 	hippogonalsPresent: boolean;
-	/**
-	 * If this flag is present, it means the pieces have been regenerated
-	 * to add more undefineds to the type ranges.
-	 * movesequence should see this and immediately regenerate the piece models!
-	 */
-	newlyRegenerated?: true;
 }
 
 /** Contains start and end indices for where each type of piece begins and ends in the types array. */
 type TypeRanges = Map<number, TypeRange>;
 
 /** Contains the start and end indices for where a single piece type begins and ends in the types array. */
-interface TypeRange {
+export interface TypeRange {
 	/** Inclusive */
 	start: number;
 	/** Exclusive */
@@ -86,7 +94,7 @@ interface TypeRange {
 }
 
 /** A unique identifier for a single line of pieces. `C|X` */
-type LineKey = `${bigint}|${bigint}`;
+export type LineKey = `${bigint}|${bigint}`;
 
 // Constants ---------------------------------------------------------------------------
 
@@ -99,19 +107,17 @@ const listExtras_Editor = 50;
 // Main Functions ---------------------------------------------------------------------
 
 /**
- * Takes the source Position for the variant, and constructs the entire
- * organized pieces object, and returns other information inherited from it.
- *
- * Mutates pieceMovesets to remove useless movesets
+ * Takes the source Position for the variant and constructs the organized pieces object base.
+ * Slide lines are NOT computed here — call {@link addSlideLines} afterward to produce
+ * a full {@link OrganizedPieces} when needed.
  */
 function processInitialPosition(
 	position: Map<CoordsKey, number>,
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
 	turnOrder: Player[],
 	editor: boolean,
 	promotion?: Promotion,
 ): {
-	pieces: OrganizedPieces;
+	pieces: OrganizedPiecesBase;
 	/**
 	 * All existing types in the game, with their color information.
 	 * This may include pieces not in the starting position,
@@ -120,12 +126,20 @@ function processInitialPosition(
 	existingTypes: number[];
 	/** All raw existing types in the game. */
 	existingRawTypes: RawType[];
+	/** Bounding box of all pieces in the starting position. Undefined if the position has no pieces. */
+	boundingBox: BoundingBox | undefined;
 } {
 	// Organize the pieces by type
 
 	const piecesByType: Map<number, Coords[]> = new Map();
 	const existingTypesSet = new Set<number>();
 	if (!(position instanceof Map)) throw Error(`Position is not a map! (${typeof position})`);
+	// Bounding box variables
+	let minX: bigint | undefined;
+	let maxX: bigint | undefined;
+	let minY: bigint | undefined;
+	let maxY: bigint | undefined;
+	// Iterate through the position
 	for (const [coordsKey, type] of position) {
 		if (typeof type !== 'number')
 			throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
@@ -133,41 +147,29 @@ function processInitialPosition(
 		existingTypesSet.add(type);
 		if (!piecesByType.has(type)) piecesByType.set(type, []);
 		piecesByType.get(type)!.push(coords); // Push the coords
+		// Update bounding box
+		if (minX === undefined || coords[0] < minX) minX = coords[0];
+		if (maxX === undefined || coords[0] > maxX) maxX = coords[0];
+		if (minY === undefined || coords[1] < minY) minY = coords[1];
+		if (maxY === undefined || coords[1] > maxY) maxY = coords[1];
 	}
+	const boundingBox: BoundingBox | undefined =
+		minX !== undefined ? { left: minX, right: maxX!, bottom: minY!, top: maxY! } : undefined;
 
 	// Calculate the possible types
 
-	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(
-		existingTypesSet,
-		turnOrder,
-		editor,
-		promotion,
-	);
+	const { existingTypes, existingRawTypes } = calcRemainingExistingTypes(existingTypesSet, turnOrder, editor, promotion); // prettier-ignore
 
 	// Determine how many undefineds each type needs
 
 	const listExtrasByType: TypeGroup<number> = {};
 	for (const type of existingTypes) {
 		const numOfPieceInStartingPos = piecesByType.get(type)?.length ?? 0;
-		listExtrasByType[type] = getListExtrasOfType(
-			type,
-			numOfPieceInStartingPos,
-			editor,
-			promotion,
-		);
+		listExtrasByType[type] = getListExtrasOfType(type, numOfPieceInStartingPos, editor, promotion); // prettier-ignore
 	}
 
 	// console.log("List extras by type:");
 	// console.log(listExtrasByType);
-
-	/**
-	 * Trim the pieceMovesets to only include movesets for types in the game
-	 * This is REQUIRED for possible slides to be calculated correctly!!
-	 */
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, pieceMovesets);
-
-	// We can get the possible slides now that the movesets are trimmed to only include the types in the game.
-	const slides = movesets.getPossibleSlides(pieceMovesets);
 
 	// Allocate the space needed for the XPositions, YPositions, and types arrays
 
@@ -181,21 +183,12 @@ function processInitialPosition(
 	const YPositions = new Array<bigint>(totalSlotsNeeded);
 	const types = new Uint8Array(totalSlotsNeeded);
 
-	// Initialize the organized lines
-
-	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
-	for (const line of slides) {
-		const strline = vectors.getKeyFromVec2(line);
-		lines.set(strline, new Map());
-	}
-
-	// Fill the lists and Construct the type ranges, coords, and lines!
+	// Fill the lists and construct the type ranges and coords!
 
 	const partialPieces = {
 		XPositions,
 		YPositions,
 		coords: new Map<CoordsKey, number>(),
-		lines,
 	};
 
 	let start = 0; // The next range start
@@ -204,12 +197,13 @@ function processInitialPosition(
 	for (const type of existingTypes) {
 		const pieces = piecesByType.get(type) ?? []; // It will be empty if there are no pieces of this type in the starting position. Those may be acquired via promotion / board editor.
 
-		// Set the pieces X, Y, and type, and register in space
+		// Set the pieces X, Y, and type, and register in coords
 		for (let i = 0; i < pieces.length; i++) {
-			XPositions[pointer] = pieces[i]![0];
-			YPositions[pointer] = pieces[i]![1];
+			const coords: Coords = [pieces[i]![0], pieces[i]![1]];
+			XPositions[pointer] = coords[0];
+			YPositions[pointer] = coords[1];
 			types[pointer] = Number(type);
-			registerPieceInSpace(pointer, partialPieces);
+			registerPieceInCoords(pointer, partialPieces, coords);
 			pointer++;
 		}
 
@@ -235,21 +229,20 @@ function processInitialPosition(
 		start = pointer;
 	}
 
-	// Construct the OrganizedPieces object
+	// Construct the OrganizedPiecesBase object
+	const pieces: OrganizedPiecesBase = {
+		XPositions,
+		YPositions,
+		types,
+		typeRanges: ranges,
+		coords: partialPieces.coords,
+	};
 
 	return {
-		pieces: {
-			XPositions,
-			YPositions,
-			types,
-			typeRanges: ranges,
-			coords: partialPieces.coords,
-			lines: partialPieces.lines,
-			slides,
-			hippogonalsPresent: areHippogonalsPresentInGame(slides),
-		},
+		pieces,
 		existingTypes,
 		existingRawTypes,
+		boundingBox,
 	};
 }
 
@@ -414,22 +407,45 @@ function registerPieceInSpace(
 		lines: Map<Vec2Key, Map<LineKey, number[]>>;
 	},
 ): void {
-	if (idx === undefined) throw Error('Undefined idx is trying');
-	const x = o.XPositions[idx];
-	const y = o.YPositions[idx];
-	const coords = [x, y] as Coords;
+	const coords: Coords = [o.XPositions[idx]!, o.YPositions[idx]!];
 	// console.log("Registering piece in space: " + idx + " coords: " + coords);
+	registerPieceInCoords(idx, o, coords);
+	registerPieceInLines(idx, o, coords);
+}
+
+/** Adds a piece to o.coords for coordinate-based lookup. */
+function registerPieceInCoords(
+	idx: number,
+	o: {
+		XPositions: bigint[];
+		YPositions: bigint[];
+		coords: Map<CoordsKey, number>;
+	},
+	coords: Coords,
+): void {
+	if (idx === undefined) throw Error('Undefined idx');
 	const key = coordutil.getKeyFromCoords(coords);
 	if (o.coords.has(key))
 		throw Error(
 			`While organizing a piece, there was already an existing piece there!! ${key} idx ${idx}`,
 		);
 	o.coords.set(key, idx);
-	const lines = o.lines;
-	for (const [strline, linegroup] of lines) {
+}
+
+/** Adds a piece to o.lines. */
+function registerPieceInLines(
+	idx: number,
+	o: {
+		XPositions: bigint[];
+		YPositions: bigint[];
+		lines: Map<Vec2Key, Map<LineKey, number[]>>;
+	},
+	coords: Coords,
+): void {
+	for (const [strline, linegroup] of o.lines) {
 		const lkey = getKeyFromLine(coordutil.getCoordsFromKey(strline), coords);
-		// Is line initialized
-		if (linegroup.get(lkey) === undefined) lines.get(strline)!.set(lkey, []);
+		// Ensure line initialized
+		if (!linegroup.has(lkey)) linegroup.set(lkey, []);
 		linegroup.get(lkey)!.push(idx);
 	}
 }
@@ -639,10 +655,60 @@ function getXFromLine(step: Coords, coords: Coords): bigint {
 	return bimath.posMod(coordAxis, deltaAxis);
 }
 
+// Slide Line Functions -------------------------------------------------------
+
+/**
+ * Takes an {@link OrganizedPiecesBase} and computes its slide lines from the
+ * provided piece movesets, returning a fully populated {@link OrganizedPieces}.
+ *
+ * Must be called after `typeutil.deleteUnusedFromRawTypeGroup` has trimmed
+ * `pieceMovesets` to only existing types, so slide computation is correct.
+ */
+function addSlideLines(
+	base: OrganizedPiecesBase,
+	pieceMovesets: RawTypeGroup<() => PieceMoveset>,
+): OrganizedPieces {
+	const slides = getPossibleSlides(pieceMovesets);
+	const hippogonalsPresent = areHippogonalsPresentInGame(slides);
+
+	// Initialize the organized lines
+	const lines = new Map<Vec2Key, Map<LineKey, number[]>>();
+	for (const line of slides) {
+		const strline = vectors.getKeyFromVec2(line);
+		lines.set(strline, new Map());
+	}
+
+	const pieces: OrganizedPieces = { ...base, slides, hippogonalsPresent, lines };
+
+	// Register every real piece in the new line maps (using coords as the source of truth).
+	for (const [, idx] of pieces.coords) {
+		const coords: Coords = [pieces.XPositions[idx]!, pieces.YPositions[idx]!];
+		registerPieceInLines(idx, pieces, coords);
+	}
+
+	return pieces;
+}
+
+/**
+ * Extracts all unique slide directions from the provided piece movesets.
+ * The `[1,0]` direction is always included so castling can work.
+ * @param pieceMovesets - Must already be trimmed to only existing types.
+ */
+function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
+	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
+	for (const rawtype in pieceMovesets) {
+		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
+		if (!moveset.sliding) continue;
+		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as Vec2Key));
+	}
+	return Array.from(slides, vectors.getVec2FromKey);
+}
+
 // Exports --------------------------------------------------
 
 export default {
 	processInitialPosition,
+	addSlideLines,
 	regenerateLists,
 	generatePositionFromPieces,
 	getPieceIterable,
@@ -653,5 +719,3 @@ export default {
 	getCFromKey,
 	getXFromLine,
 };
-
-export type { OrganizedPieces, TypeRange, LineKey };

@@ -15,7 +15,6 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import camera from './camera.js';
 import deltatime from '../misc/deltatime.js';
-import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 
 // BigDecimal Constants ---------------------------------------------------
@@ -41,11 +40,6 @@ let panVel: DoubleCoords = [0, 0];
 let boardScale: BigDecimal = bd.fromBigInt(1n); // Default: 1
 /** The current board scale (zoom) velocity. */
 let scaleVel: number = 0;
-
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 2D mode. */
-const panVelCap2D = 22.0; // Default: 22
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 3D mode. */
-const panVelCap3D = 16.0; // Default: 16
 
 /** The furthest we can be zoomed IN. */
 const maximumScale = bd.fromBigInt(5n); // Default: 5.0
@@ -79,10 +73,6 @@ function getBoardScaleAsNumber(): number {
 
 function getPanVel(): DoubleCoords {
 	return [...panVel]; // Copies
-}
-
-function getRelativePanVelCap(): number {
-	return perspective.getEnabled() ? panVelCap3D : panVelCap2D;
 }
 
 function getScaleVel(): number {
@@ -228,7 +218,6 @@ export default {
 	getBoardScale,
 	getBoardScaleAsNumber,
 	getPanVel,
-	getRelativePanVelCap,
 	getScaleVel,
 	glimitToDampScale,
 	// Setters

@@ -7,13 +7,15 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Change } from './boardchanges.js';
+import type { FullGame } from './fullgame.js';
+import type { MoveState } from './state.js';
 import type { MoveCoords } from './icn/icnconverter.js';
 import type { MovePacket } from '../../types.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './gamefile.js';
-import type { EnPassant, MoveState } from './state.js';
+import type { MoveSpecialTags, SpecialTags } from '../util/moveutil.js';
 
 import state from './state.js';
 import typeutil from '../util/typeutil.js';
@@ -33,66 +35,15 @@ import { rawTypes as r } from '../util/typeutil.js';
 
 // Types --------------------------------------------------------------------------------------------------------------------------
 
-/** A special move tag name on {@link CoordsTagged}, both move tags and UI tags. */
-interface SpecialTags extends MoveSpecialTags, UISpecialTags {}
-
-/**
- * A special move tag that is retained when transferring from {@link CoordsTagged} to a move.
- * This describes what actually happened during the move execution.
- */
-interface MoveSpecialTags {
-	/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
-	enpassantCreate: EnPassant;
-	/**
-	 * A special move tag for enpassant capture.
-	 *
-	 * If true, the specialMove function for pawns will read the gamefile's
-	 * enpassant property to figure out where the pawn to capture is.
-	 * After that, the captured piece is appended to the move's changes list,
-	 * so we don't actually need to store more information in here.
-	 */
-	enpassant: true;
-	/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
-	promotion: number;
-	/** A special move tag for castling. */
-	castle: {
-		/** 1 => King castled right   -1 => King castled left */
-		dir: 1n | -1n;
-		/** The coordinate of the piece the king castled with, usually a rook. */
-		coord: Coords;
-	};
-	/**
-	 * A special move tag that stores a list of all the waypoints along
-	 * the travel path of a piece. Inclusive to start and end.
-	 *
-	 * Used for Rose piece.
-	 */
-	path: Coords[];
-}
-
-/**
- * A special move tag that is UI-only. It is present on {@link CoordsTagged}
- * to signal something to the UI (e.g. open the promotion picker), and is
- * consumed and removed BEFORE the move is executed — never transferred to a move.
- */
-interface UISpecialTags {
-	/**
-	 * A special move tag that, when the move is attempted to be made should
-	 * trigger the promotion UI to open. The special detect functions are in
-	 * charge of adding this. selection.ts will delete it and open the promotion UI.
-	 */
-	promoteTrigger: boolean;
-}
-
 /**
  * A pair of coordinates, WITH attached special move information.
  * This usually denotes a legal square you can move to that will
  * activate said special move.
  */
-type CoordsTagged = Coords & Partial<SpecialTags>;
+export type CoordsTagged = Coords & Partial<SpecialTags>;
 
 /** A move as stored in the base game. Does not need a lot of details. */
-interface MoveRecord extends MoveCoords {
+export interface MoveRecord extends MoveCoords {
 	/**
 	 * How much time the player had left after they made their move, in millis.
 	 *
@@ -105,10 +56,10 @@ interface MoveRecord extends MoveCoords {
 }
 
 /** A {@link MoveCoords} move with all special tags attached. */
-type MoveTagged = MoveCoords & Partial<MoveSpecialTags>;
+export type MoveTagged = MoveCoords & Partial<MoveSpecialTags>;
 
 /** Information about some change on the chessboard, either by a move or some other property change (e.g. as used in the board editor) */
-interface Edit {
+export interface Edit {
 	/** A list of changes the move made to the board, whether it moved a piece, captured a piece, added a piece, etc. */
 	changes: Array<Change>;
 	/** The state of the move is used to know how to modify specific gamefile
@@ -120,7 +71,7 @@ interface Edit {
  * All properties of a move needed to apply/unapply it
  * to/from the board state, along with other useful flags.
  */
-interface MoveFull extends Edit, MoveTagged, MoveRecord {
+export interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	/** The type of piece moved */
 	type: number;
 	/** The index this move was generated for. This can act as a safety net
@@ -140,32 +91,6 @@ interface MoveFull extends Edit, MoveTagged, MoveRecord {
 	 */
 	comment?: string;
 }
-
-// Constants -------------------------------------------------------------------------------------------------------
-
-/**
- * All special move tag names that are retained when transferring from {@link CoordsTagged}
- * to a move. These describe what actually happened during the move execution.
- */
-const MOVE_SPECIAL_TAGS = [
-	'enpassantCreate',
-	'enpassant',
-	'promotion',
-	'castle',
-	'path',
-] satisfies ReadonlyArray<keyof MoveSpecialTags>;
-
-/**
- * All special move tag names that are UI-only. They are present on {@link CoordsTagged}
- * to signal something to the UI (e.g. open the promotion picker), and are
- * consumed and removed BEFORE the move is executed — never transferred to a move.
- */
-const UI_SPECIAL_TAGS = ['promoteTrigger'] satisfies ReadonlyArray<keyof UISpecialTags>;
-
-/** All special move tags names on {@link CoordsTagged}, both move tags and UI tags. */
-const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies ReadonlyArray<
-	keyof SpecialTags
->;
 
 // Move Generating --------------------------------------------------------------------------------------------------
 
@@ -670,13 +595,7 @@ function getSimulatedConclusion(
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-export type { MoveFull, Edit, MoveRecord, MoveTagged, SpecialTags, MoveSpecialTags, CoordsTagged };
-
 export default {
-	// Constants
-	MOVE_SPECIAL_TAGS,
-	SPECIAL_TAGS,
-	// Functions
 	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,

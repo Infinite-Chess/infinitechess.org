@@ -259,6 +259,7 @@ svg.bg-omega {
 	max-width: 540px;
 	max-height: 90vh;
 	overflow-y: auto;
+	overscroll-behavior: none contain;
 	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 	display: flex;
 	flex-direction: column;
@@ -378,6 +379,7 @@ svg.bg-omega {
 	color: var(--c-text-emphasis);
 	font-size: 15px;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-display:hover {
@@ -441,6 +443,7 @@ svg.bg-omega {
 	font-size: 14px;
 	text-align: left;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-group-item:first-child {
@@ -517,6 +520,7 @@ svg.bg-omega {
 	font-size: 14px;
 	text-align: left;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .variant-item:first-child {
@@ -553,6 +557,55 @@ svg.bg-omega {
 	letter-spacing: 0.04em;
 	color: var(--c-text-muted);
 	border-top: 1px solid var(--c-border-2);
+}
+
+/* ============================================================
+   Variant preview tooltip
+   ============================================================ */
+
+#variant-preview-tooltip {
+	position: fixed;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 10px 12px 12px;
+	max-width: 400px; /* Must match TOOLTIP_MAX_WIDTH in variantPreviewTooltip.ts */
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+	-webkit-tap-highlight-color: transparent;
+}
+
+.preview-tooltip-name {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+	text-align: center;
+}
+
+.preview-tooltip-rules {
+	font-size: 11px;
+}
+
+.preview-tooltip-promotion-icons {
+	display: inline-flex;
+	align-items: center;
+}
+
+.preview-tooltip-promotion-icons svg {
+	width: 14px;
+}
+
+.preview-tooltip-promotion-icons svg:not(:first-of-type) {
+	margin-inline-start: -2px;
+}
+
+.preview-tooltip-canvas {
+	aspect-ratio: 1 / 1;
+	border-radius: 4px;
+	outline: 1px solid var(--c-border);
 }
 
 /* ============================================================

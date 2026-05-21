@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';

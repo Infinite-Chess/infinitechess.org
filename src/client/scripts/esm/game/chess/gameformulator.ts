@@ -5,13 +5,13 @@
  */
 
 import type { MovePacket } from '../../../../../shared/types.js';
-import type { FullGame, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { FullGame, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type {
 	MovePreprint,
 	LongFormatIn,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import fullgame from '../../../../../shared/chess/logic/fullgame.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
@@ -53,7 +53,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 	);
 	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
-	return gamefile.initFullGame(
+	return fullgame.initFullGame(
 		longformIn.metadata,
 		resolvedTimestamp,
 		resolvedVariant,

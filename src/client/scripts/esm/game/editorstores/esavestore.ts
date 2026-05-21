@@ -1,14 +1,13 @@
-// src/client/scripts/esm/game/boardeditor/actions/esavestore.ts
+// src/client/scripts/esm/game/editorstores/esavestore.ts
 
 /**
  * Low-level IndexedDB read/write operations for board editor saves.
- * No game-logic dependencies — safe to import from outside the board editor.
  */
 
-import type { EditorAbridgedSaveState, EditorSaveState } from '../editortypes.js';
+import type { EditorAbridgedSaveState, EditorSaveState } from '../boardeditor/editortypes.js';
 
-import IndexedDB from '../../../util/IndexedDB.js';
-import editortypes from '../editortypes.js';
+import IndexedDB from '../../util/IndexedDB.js';
+import editortypes from '../boardeditor/editortypes.js';
 
 // Constants ----------------------------------------------------------------------
 
@@ -92,16 +91,19 @@ async function getAllLocalSaveInfos(): Promise<EditorAbridgedSaveState[]> {
 
 /**
  * Reads a locally saved position from IndexedDB.
- * @returns An EditorSaveState on success, undefined if not found or corrupted.
+ * @throws If not found.
+ * @throws If the stored data fails schema validation (corrupted).
  */
-async function readLocal(position_name: string): Promise<EditorSaveState | undefined> {
+async function readLocal(position_name: string): Promise<EditorSaveState> {
 	const editorSaveStateRaw = await IndexedDB.loadItem(saveKey(position_name));
+	if (editorSaveStateRaw === undefined)
+		throw new Error(`Local save "${position_name}" not found`);
 	const editorSaveStateParsed = editortypes.SaveStateSchema.safeParse(editorSaveStateRaw);
 	if (!editorSaveStateParsed.success) {
 		console.error(
 			`Corrupted local save "${position_name}" found. Error: ${editorSaveStateParsed.error}`,
 		);
-		return;
+		throw new Error(`Corrupted local save "${position_name}"`);
 	}
 	return editorSaveStateParsed.data;
 }
@@ -109,7 +111,6 @@ async function readLocal(position_name: string): Promise<EditorSaveState | undef
 // Exports --------------------------------------------------------------------
 
 export default {
-	EDITOR_SAVEINFO_PREFIX,
 	saveState,
 	deleteLocal,
 	localSaveExists,

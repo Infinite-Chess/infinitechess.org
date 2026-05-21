@@ -8,7 +8,7 @@
 import editorutil from '../../../../../../../../shared/util/editorutil';
 
 import esave from '../../../../boardeditor/actions/esave';
-import esavestore from '../../../../boardeditor/actions/esavestore';
+import esavestore from '../../../../editorstores/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
 import guifloatingwindow from '../../guifloatingwindow';
 import guiloadpositionmodal from './guiloadpositionmodal';

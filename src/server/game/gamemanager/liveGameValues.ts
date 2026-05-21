@@ -16,7 +16,7 @@ import type {
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
-import { Game } from '../../../shared/chess/logic/gamefile.js';
+import { Game } from '../../../shared/chess/logic/fullgame.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 

@@ -7,14 +7,14 @@
  */
 
 import type { StorageType } from '../../../../boardeditor/boardeditor';
-import type { CloudSaveListRecord } from '../../../../boardeditor/actions/editorSavesAPI';
+import type { CloudSaveListRecord } from '../../../../editorstores/editorSavesAPI';
 import type { EditorAbridgedSaveState } from '../../../../boardeditor/editortypes';
 
-import toast from '../../../toast';
 import style from '../../../style';
+import esave from '../../../../boardeditor/actions/esave';
 import ecloud from '../../../../boardeditor/actions/ecloud';
 import eactions from '../../../../boardeditor/actions/eactions';
-import esavestore from '../../../../boardeditor/actions/esavestore';
+import esavestore from '../../../../editorstores/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
 import { GameBus } from '../../../../GameBus';
 import validatorama from '../../../../../util/validatorama';
@@ -74,18 +74,17 @@ GameBus.addEventListener('game-loaded', () => {
 
 /**
  * Runs an async API call while showing the loading spinner, hiding it when done.
- * @param fn The async function that performs the API call. All errors should be caught internally, this wrapper does not catch errors!
+ * @param fn The async function that performs the API call. All errors should be caught manually, this wrapper does not catch errors!
  */
 async function withRequest<T>(fn: () => Promise<T>): Promise<T> {
 	activeRequestCount++;
 	element_loadingPawn.classList.remove('hidden');
-
-	const result = await fn();
-
-	activeRequestCount = Math.max(0, activeRequestCount - 1);
-	if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
-
-	return result;
+	try {
+		return await fn();
+	} finally {
+		activeRequestCount = Math.max(0, activeRequestCount - 1);
+		if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
+	}
 }
 
 // Utilities----------------------------------------------------------------
@@ -115,20 +114,17 @@ async function performLoad(position_name: string, storage_type: StorageType): Pr
 	const editorSaveState =
 		storage_type === 'cloud'
 			? await withRequest(() => ecloud.readCloud(position_name))
-			: await esavestore.readLocal(position_name);
+			: await esave.readLocal(position_name);
+	if (editorSaveState === undefined) return; // Both functions already display a descriptive toast on failure.
 	// If the load count changed while the request was in-flight, the user already
 	// loaded a different position — discard this stale result.
 	if (load_counter !== initialLoadCount) {
 		console.log(`Discarding cloud load result`);
 		return;
 	}
-	if (editorSaveState !== undefined) {
-		// Pass false to skip resetting the window's position on screen
-		guiloadposition.close(false);
-		await eactions.load(editorSaveState, storage_type);
-	} else if (storage_type === 'local') {
-		toast.show(translations.editor.position_corrupted, { error: true });
-	}
+	// Pass false to skip resetting the window's position on screen
+	guiloadposition.close(false);
+	await eactions.load(editorSaveState, storage_type);
 }
 
 /**

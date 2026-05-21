@@ -6,7 +6,7 @@
 
 import type { Piece } from '../util/boardutil.js';
 import type { Coords } from '../util/coordutil.js';
-import type { FullGame } from './gamefile.js';
+import type { FullGame } from './fullgame.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
@@ -306,21 +306,6 @@ function getPieceDefaultMovesets(slideLimit: bigint | null = null): Movesets {
 	return convertRawMovesetsToPieceMovesets(rawMovesets);
 }
 
-/**
- * Calculates all possible slides that should be possible in the provided game,
- * based on the provided movesets.
- * @param pieceMovesets - MUST BE TRIMMED beforehand to not include movesets of types not present in the game!!!!!
- */
-function getPossibleSlides(pieceMovesets: RawTypeGroup<() => PieceMoveset>): Vec2[] {
-	const slides = new Set<Vec2Key>(['1,0']); // '1,0' is required if castling is enabled.
-	for (const rawtype in pieceMovesets) {
-		const moveset = pieceMovesets[Number(rawtype) as RawType]!();
-		if (!moveset.sliding) continue;
-		Object.keys(moveset.sliding).forEach((slide) => slides.add(slide as Vec2Key));
-	}
-	return Array.from(slides, vectors.getVec2FromKey);
-}
-
 /** Converts raw movesets into final piece movesets by auto adding the colinear property. */
 function convertRawMovesetsToPieceMovesets(pieceMovesets: RawTypeGroup<RawPieceMoveset>): Movesets {
 	// Now, auto add in the colinear property to each piece moveset
@@ -386,7 +371,6 @@ export default {
 	defaultBlockingFunction,
 	defaultIgnoreFunction,
 	getPieceDefaultMovesets,
-	getPossibleSlides,
 	convertRawMovesetsToPieceMovesets,
 	isVectorColinear,
 	// determinePlayerFacingDirection,

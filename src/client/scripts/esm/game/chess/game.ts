@@ -8,7 +8,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -95,12 +95,12 @@ function init(): void {
 	programManager = new ProgramManager(gl);
 	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
+	boardtiles.init();
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
-	boardtiles.init();
 
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
@@ -329,7 +329,12 @@ function renderScene(): void {
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(): void {
 	effectZoneManager!.renderBoard();
-	promotionlines.render();
+
+	const gamefile = gameslot.getGamefile()!;
+	// The start box determines how far out promotion lines are rendered.
+	// In editor mode, don't provide it, so the lines extend to the screen edges.
+	const startBox = gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box;
+	promotionlines.render(gamefile.basegame.gameRules.promotion, startBox);
 }
 
 /**

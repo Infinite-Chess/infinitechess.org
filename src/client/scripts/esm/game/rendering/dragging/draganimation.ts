@@ -319,7 +319,7 @@ function renderOutline(): void {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardtiles.gtileWidth_Pixels()) < minSizeToDrawOutline)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardtiles.getTileWidthPixels()) < minSizeToDrawOutline)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();

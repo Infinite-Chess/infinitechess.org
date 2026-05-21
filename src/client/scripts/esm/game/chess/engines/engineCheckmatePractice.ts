@@ -8,7 +8,8 @@
  * @author Andreas Tsevas
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -28,7 +29,7 @@ import {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
-// type gamefile = import("../../chess/logic/gamefile").default;
+// type gamefile = import("../../chess/logic/fullgame").default;
 // type Coords = import("../../chess/util/coordutil").Coords;
 
 /**
@@ -1668,16 +1669,12 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?
 					const basegame = input_gamefile.basegame;
 					const dummy_board = {
 						moves: [],
-						// pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
-						// This will cause the possible slides to be calculated incorrectly, and thus the `lines` property not entirely filled out.
-						// I THINK we are safe though, because I saw nowhere in detectInsufficientMaterial() where it reads the lines.
+						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
-							emptyPieceMovesets,
 							basegame.gameRules.turnOrder,
 							input_gamefile.boardsim.editor,
 							basegame.gameRules.promotion,

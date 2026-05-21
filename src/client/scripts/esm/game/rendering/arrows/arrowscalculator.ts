@@ -8,7 +8,8 @@
  * It also computes hint arrows for off-screen legal move destinations.
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type {
 	BDCoords,
@@ -146,7 +147,7 @@ export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
 export function areZoomedInEnoughForArrows(): boolean {
-	return bd.compare(boardtiles.gtileWidth_Pixels(false), MIN_SQUARE_SIZE) >= 0;
+	return bd.compare(boardtiles.getTileWidthPixels(false), MIN_SQUARE_SIZE) >= 0;
 }
 
 /**

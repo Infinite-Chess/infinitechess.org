@@ -19,7 +19,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from './gl-matrix.js';
-import { gl } from './webgl.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
@@ -27,7 +26,7 @@ import frametracker from './frametracker.js';
 // Types --------------------------------------------------------------
 
 /** A 4x4 matrix, represented as a 16-element Float32Array */
-type Mat4 = Float32Array;
+export type Mat4 = Float32Array;
 
 // Constants -------------------------------------------------------------
 
@@ -53,8 +52,10 @@ let fieldOfView: number;
 /** If true, the camera is stationed farther back. */
 let DEBUG: boolean = false;
 
-/** The canvas document element that WebGL renders the game onto. */
-const canvas: HTMLCanvasElement = document.getElementById('game') as HTMLCanvasElement;
+/** The webgl context. */
+let gl: WebGL2RenderingContext;
+/** The canvas document element that WebGL will render the game onto. Identical to {@link gl.canvas}. */
+let canvas: HTMLCanvasElement;
 let canvasWidthVirtualPixels: number;
 let canvasHeightVirtualPixels: number;
 let aspect: number; // Aspect ratio of the canvas width to height.
@@ -264,7 +265,7 @@ function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
  * @returns The view matrix
  */
 function getViewMatrix(): Mat4 {
-	return jsutil.copyFloat32Array(viewMatrix);
+	return jsutil.deepCopyObject(viewMatrix);
 }
 
 /**
@@ -272,13 +273,15 @@ function getViewMatrix(): Mat4 {
  */
 function getProjAndViewMatrixes(): { projMatrix: Mat4; viewMatrix: Mat4 } {
 	return {
-		projMatrix: jsutil.copyFloat32Array(projMatrix),
-		viewMatrix: jsutil.copyFloat32Array(viewMatrix),
+		projMatrix: jsutil.deepCopyObject(projMatrix),
+		viewMatrix: jsutil.deepCopyObject(viewMatrix),
 	};
 }
 
 // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), modelMatrix (world translation)
-function init(): void {
+function init(glContext: WebGL2RenderingContext, canvasElement: HTMLCanvasElement): void {
+	gl = glContext;
+	canvas = canvasElement;
 	initFOV();
 	initMatrixes();
 	document.addEventListener('fov-change', () => onFOVChange());
@@ -289,7 +292,7 @@ function init(): void {
 function initMatrixes(): void {
 	projMatrix = mat4.create(); // Same for every shader program
 
-	updateCanvasDimensions();
+	syncCanvasDimensions();
 	initPerspective(); // Initiates perspective, including the projection matrix
 
 	initViewMatrix(); // Camera
@@ -302,19 +305,21 @@ function initPerspective(): void {
 	initProjMatrix();
 }
 
+/** Resyncs the canvas's pixel buffer and GL viewport to its current CSS display size × DPR. */
+function resyncCanvasBuffer(): void {
+	canvas.width = canvas.clientWidth * window.devicePixelRatio;
+	canvas.height = canvas.clientHeight * window.devicePixelRatio;
+	gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
 // Also updates viewport, and updates canvas-dependant variables
-function updateCanvasDimensions(): void {
+function syncCanvasDimensions(): void {
 	// Get the canvas element's bounding rectangle
 	const rect = canvas.getBoundingClientRect();
 	canvasWidthVirtualPixels = rect.width;
 	canvasHeightVirtualPixels = rect.height;
 
-	// Size of entire window in physical pixels, not virtual. Retina displays have a greater width.
-	canvas.width = canvasWidthVirtualPixels * window.devicePixelRatio;
-	canvas.height = canvasHeightVirtualPixels * window.devicePixelRatio;
-
-	gl.viewport(0, 0, canvas.width, canvas.height);
-
+	resyncCanvasBuffer();
 	recalcCanvasVariables(); // Recalculate canvas-dependant variables
 
 	// Dispatch event to notify other application code of the new canvas dimensions
@@ -401,7 +406,8 @@ function initScreenBoundingBox(): void {
 }
 
 function onScreenResize(): void {
-	updateCanvasDimensions(); // Also updates viewport
+	// Keep canvas buffer in sync with its CSS size when the window is resized, zoomed, or moved between monitors (The DPI changes)
+	syncCanvasDimensions(); // Also updates viewport
 	initPerspective(); // The projection matrix needs to be recalculated every screen resize
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	// console.log('Resized window.')
@@ -441,11 +447,12 @@ function getScaleWhenZoomedOut(): BigDecimal {
 	return bd.multiply(getScaleWhenTilesInvisible(), WDPR_BD);
 }
 
-export type { Mat4 };
+function getCanvas(): HTMLCanvasElement {
+	return canvas;
+}
 
 export default {
 	DIST_TO_RENDER_BOARD,
-	canvas,
 	getRotX,
 	getRotZ,
 	getIsViewingBlackPerspective,
@@ -470,4 +477,6 @@ export default {
 	onPositionChange,
 	getScaleWhenTilesInvisible,
 	getScaleWhenZoomedOut,
+	getCanvas,
+	resyncCanvasBuffer,
 };

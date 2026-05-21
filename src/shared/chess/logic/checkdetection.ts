@@ -6,10 +6,11 @@
  * other piece, be it individual, special, or sliding move.
  */
 
+import type { Board } from './boardinit.js';
 import type { Player } from '../util/typeutil.js';
+import type { FullGame } from './fullgame.js';
 import type { CheckInfo } from './state.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { Board, FullGame } from './gamefile.js';
 import type { Coords, CoordsKey } from '../util/coordutil.js';
 
 import typeutil from '../util/typeutil.js';

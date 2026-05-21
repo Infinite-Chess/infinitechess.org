@@ -92,21 +92,34 @@ let darkTiles: Color;
 document.addEventListener('theme-change', () => {
 	// Custom Event listener.
 	// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
-	updateTheme();
+	resetColor();
 });
 
-/** Loads the tiles texture. */
-function init(): void {
+/** Loads and generates the tile textures. */
+async function init(): Promise<void> {
 	// Generate the tiles mask texture
-	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
-	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then((tilesMask_IMG) => {
-		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
-	});
-
-	// Initial generation of tile textures
-	updateTheme();
+	const maskPromise = initMaskTexture();
+	// Generation main tile textures
+	const texturesPromise = resetColor();
 
 	recalcVariables(); // Variables dependant on the board position & scale
+
+	await Promise.all([maskPromise, texturesPromise]);
+}
+
+/**
+ * Generates the tiles mask texture.
+ * Used for applying zone effects to selective light/dark tiles.
+ */
+async function initMaskTexture(): Promise<void> {
+	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
+
+	const tilesMask_IMG: HTMLImageElement = await checkerboardgenerator.createCheckerboardIMG(
+		'white',
+		'black',
+		256,
+	);
+	tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 }
 
 async function initTextures(): Promise<void> {
@@ -160,11 +173,20 @@ function getSquareCenterAsNumber(): number {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
+/**
+ * Returns the width of a tile in virtual pixels at the provided board scale.
+ * @param scale - Defaults to the current board scale, but can be overridden.
+ */
+function getTileWidthPixels(
+	debugMode = camera.getDebug(),
+	scale: BigDecimal = boardpos.getBoardScale(),
+): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
-	const factor1: BigDecimal = bd.fromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
-	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+	const factor1: BigDecimal = bd.fromNumber(
+		(camera.getCanvas().height * 0.5) / screenBoundingBox.top,
+	);
+	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, scale); // Greater for retina displays
 
 	const divisor = bd.fromNumber(window.devicePixelRatio);
 	const tileWidthPixels_Virtual = bd.divideFloating(tileWidthPixels_Physical, divisor);
@@ -266,20 +288,16 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	return { left, right, bottom, top };
 }
 
-/** Resets the board color and sky color. */
-function updateTheme(): void {
-	resetColor();
-	updateSkyColor();
-}
-
+/** Returns a promise that resolves when the new tiles textures have been generated. */
 function resetColor(
 	newLightTiles = preferences.getColorOfLightTiles(),
 	newDarkTiles = preferences.getColorOfDarkTiles(),
-): void {
+): Promise<void> {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
-	initTextures();
+	updateSkyColor();
 	frametracker.onVisualChange();
+	return initTextures();
 }
 
 // Updates sky color based on current board color
@@ -475,7 +493,7 @@ export default {
 	// Public API
 	getSquareCenter,
 	getSquareCenterAsNumber,
-	gtileWidth_Pixels,
+	getTileWidthPixels,
 	gboundingBox,
 	gboundingBoxFloat,
 	getBoundingBoxOfBoard,

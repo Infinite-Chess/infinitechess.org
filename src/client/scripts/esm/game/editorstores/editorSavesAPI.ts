@@ -1,12 +1,12 @@
-// src/client/scripts/esm/game/boardeditor/actions/editorSavesAPI.ts
+// src/client/scripts/esm/game/editorstores/editorSavesAPI.ts
 
 /**
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
-import type { CompressionMode } from '../../../util/compression';
+import type { CompressionMode } from '../../util/compression';
 
-import validatorama from '../../../util/validatorama';
+import validatorama from '../../util/validatorama';
 
 // Types ----------------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ async function savePosition(
 /**
  * GET /api/editor-saves/:position_name
  * Returns the full ICN and game rules for a saved position.
- * @throws If the request fails or the server returns a non-OK response.
+ * @throws If the request fails or the server returns a non-OK response. Can happen if the position has since been deleted.
  */
 async function getPosition(position_name: string): Promise<CloudPositionRecord> {
 	const headers = await buildAuthHeaders();

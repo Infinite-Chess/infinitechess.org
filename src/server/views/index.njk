@@ -109,7 +109,7 @@
 						<svg class="variant-group-icon" id="variant-group-icon"><use></use></svg>
 						<span id="variant-name"></span>
 						<svg class="svg-pencil tooltip-d" data-tooltip="Edit position and gamerules"><use href="#svg-pencil"></use></svg>
-						<svg class="svg-eye"><use href="#svg-eye"></use></svg>
+						<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>
 						<svg class="selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</button>
 					<div class="variant-dropdown" id="variant-dropdown">
@@ -139,7 +139,7 @@
 						{% for v in g.variants %}
 						<button class="variant-item" data-code="{{ v.code }}">
 							<span class="variant-name">{{ v.name }}</span>
-							<svg class="svg-eye"><use href="#svg-eye"></use></svg>
+							<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>
 						</button>
 						{% endfor %}
 					</div>

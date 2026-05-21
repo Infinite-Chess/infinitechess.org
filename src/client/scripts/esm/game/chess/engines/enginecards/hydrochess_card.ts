@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/chess/engines/enginecards/hydrochess_card.ts
 
-import type { VariantOptions } from '../../../../../../../shared/chess/logic/gamefile';
+import type { VariantOptions } from '../../../../../../../shared/chess/logic/fullgame';
 
 import bimath from '../../../../../../../shared/util/math/bimath';
 import bounds from '../../../../../../../shared/util/math/bounds';
