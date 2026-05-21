@@ -17,9 +17,9 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
+import snapping from './snapping.js';
 import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
-import snapping from './snapping.js';
 import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
 import drawsquares from './annotations/drawsquares.js';

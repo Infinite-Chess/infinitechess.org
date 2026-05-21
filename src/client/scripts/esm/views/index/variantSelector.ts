@@ -335,7 +335,7 @@ function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void
 	const cached = cloudPreviewCache.get(positionName);
 	if (cached !== undefined) {
 		// Cache hit!
-		console.log('Cloud preview cache hit for', positionName);
+		// console.log('Cloud preview cache hit for', positionName);
 		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
 		return;
 	}
@@ -356,7 +356,7 @@ function handleLocalSavePreview(anchor: HTMLElement, positionName: string): void
 	const cached = localPreviewCache.get(positionName);
 	if (cached !== undefined) {
 		// Cache hit!
-		console.log('Local preview cache hit for', positionName);
+		// console.log('Local preview cache hit for', positionName);
 		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
 		return;
 	}

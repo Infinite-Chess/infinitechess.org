@@ -13,6 +13,7 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 
+import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -36,10 +37,14 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import Renderable from '../../webgl/Renderable.js';
 import piecemodels from '../../game/rendering/piecemodels.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import miniimagecore from '../../game/rendering/miniimagecore.js';
 import promotionlines from '../../game/rendering/promotionlines.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 
 // Constants ---------------------------------------------------------------
+
+/** Size of mini image icons in the preview tooltip, in virtual pixels. */
+const PREVIEW_ENTITY_WIDTH_VPIXELS = 20;
 
 /** Natural (max) width of the tooltip in px — must match the CSS max-width. */
 const TOOLTIP_MAX_WIDTH = 400;
@@ -231,6 +236,8 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 	boardtiles.recalcVariables();
 
 	webgl.clearScreen();
+
+	// Render board and promotion lines
 	maskedDraw.execute(
 		() => border.drawPlayableRegionMask(gameRules.worldBorder), // INCLUSION MASK: playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK: voids
@@ -240,7 +247,16 @@ function renderBoard(boardsim: BoardPreview, gameRules: GameRules): void {
 		},
 		'and',
 	);
-	piecemodels.renderAll(boardsim, mesh);
+	// Render pieces
+	if (
+		!boardpos.areZoomedOut() ||
+		boardutil.getPieceCountOfGame(boardsim.pieces) > miniimagecore.pieceCountToDisableMiniImages
+	) {
+		piecemodels.renderAll(boardsim, mesh);
+	} else {
+		const instanceData = miniimagecore.buildInstanceData(boardsim);
+		miniimagecore.render(boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
+	}
 }
 
 /** Populates the gamerule modifications list above the canvas. */

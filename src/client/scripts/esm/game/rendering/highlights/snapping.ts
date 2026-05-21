@@ -46,8 +46,12 @@ import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
 
-/** Width of entities (mini images, highlights) when zoomed out, in virtual pixels. */
-const ENTITY_WIDTH_VPIXELS = 40; // Default: 40
+/**
+ * Width of all entity icons when zoomed out, in virtual pixels.
+ * Includes mini images, square annotations, arrows, move hints,
+ * snap point ghost images.
+ */
+export const ENTITY_WIDTH_VPIXELS = 40;
 
 /** The color of the line that shows you what entity your mouse is snapped to. */
 const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
@@ -81,16 +85,12 @@ type Snap = {
 	source?: BDCoords;
 };
 
-// Entity Hovering ---------------------------------------------------------
-
-/**
- * {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units.
- * This can change depending on the screen dimensions.
- * Scale doesn't affect entity's visible size on screen.
- */
-function getEntityWidthWorld(): number {
+/** Returns the width of entity icons when zoomed out, in world-space units. */
+export function getEntityWidthWorld(): number {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
+
+// Entity Hovering ---------------------------------------------------------
 
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
@@ -205,11 +205,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	const allLines: Line[] = getAllLinesSegmented(drawnRays, presetRays);
 	if (allLines.length === 0) return; // No lines to have snap
 
-	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
 	/** THe minimum distance from a snap point, in world space, for our mouse to snap to it. */
-	const snapDistWorld: BigDecimal = bd.fromNumber(
-		space.convertPixelsToWorldSpace_Virtual(snapDistVPixels),
-	);
+	const snapDistWorld: BigDecimal = bd.fromNumber(getEntityWidthWorld() / 2);
 	/** The mimimum distance from a snap point, in squares, for our mouse to snap to it. */
 	const snapDistSquares: BigDecimal = bd.divideFloating(snapDistWorld, boardpos.getBoardScale());
 

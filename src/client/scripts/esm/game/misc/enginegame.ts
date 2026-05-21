@@ -13,8 +13,8 @@ import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/c
 import toast from '../gui/toast.js';
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
-import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
+import boardpos from '../rendering/boardpos.js';
 import selection from '../chess/selection.js';
 import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';

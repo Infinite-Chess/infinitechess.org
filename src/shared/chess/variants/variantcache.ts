@@ -35,7 +35,7 @@ async function ensureVariantLoaded(variantCode: VariantCode): Promise<void> {
 		if (!url) throw err;
 		return import(url + '?retry=' + Date.now());
 	});
-	console.log(`Variant "${variantCode}" loaded!`);
+	// console.log(`Variant "${variantCode}" loaded!`);
 	moduleCache.set(variantCode, mod);
 }
 
