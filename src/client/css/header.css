@@ -219,6 +219,7 @@ a.header-donate:hover {
 .settings {
 	position: relative;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 /* Input slider style overrides - the settings background is brighter */
