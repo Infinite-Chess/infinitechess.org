@@ -67,15 +67,31 @@ let showToken = 0;
 const element_tooltip = document.createElement('div');
 element_tooltip.id = 'variant-preview-tooltip';
 element_tooltip.classList.add('visibility-hidden');
+/**
+ * Prevent the imminent release of a finger that hides the
+ * tooltip from triggering a click on the items that we below it.
+ */
+let suppressSynthesizedEventsUntil = 0;
+
 // On touch devices, any finger-down anywhere immediately dismisses the tooltip.
 document.addEventListener(
 	'touchstart',
 	() => {
 		if (element_tooltip.classList.contains('visibility-hidden')) return;
 		hide();
+		suppressSynthesizedEventsUntil = Date.now() + 200;
 	},
 	{ passive: true },
 );
+
+// Prevent the imminent release of a finger that hides the tooltip from triggering a click on the items that we below it.
+document.addEventListener('click', eatSynthesizedEvent, { capture: true });
+function eatSynthesizedEvent(e: Event): void {
+	if (Date.now() < suppressSynthesizedEventsUntil) {
+		e.stopPropagation();
+		e.preventDefault();
+	}
+}
 
 const element_name = document.createElement('div');
 element_name.className = 'preview-tooltip-name';
