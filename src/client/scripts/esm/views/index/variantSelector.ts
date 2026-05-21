@@ -58,6 +58,14 @@ let customContentVNode: VNode | Element = element_customVariantContent;
 /** The VariantOptions from the last successfully validated ICN input. */
 let icnVariantOptions: VariantOptions | null = null;
 
+// Custom position caching
+// Very low chance a position is edited in another tab when it is sitting in the cache.
+
+/** Cache for fetched cloud save previews — keyed by position name. */
+const cloudPreviewCache = new Map<string, VariantOptions>();
+/** Cache for fetched local save previews — keyed by position name. */
+const localPreviewCache = new Map<string, VariantOptions>();
+
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
 // Functions ----------------------------------------------
@@ -324,11 +332,20 @@ function selectLocalCustomSave(name: string): void {
 
 /** Fetches a cloud save and shows the preview tooltip anchored to the given element. */
 function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void {
+	const cached = cloudPreviewCache.get(positionName);
+	if (cached !== undefined) {
+		// Cache hit!
+		console.log('Cloud preview cache hit for', positionName);
+		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
+		return;
+	}
+	// Request for the first time, cache the result.
 	ecloudstore
 		.readCloud(positionName)
-		.then((saveState) =>
-			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions),
-		)
+		.then((saveState) => {
+			cloudPreviewCache.set(positionName, saveState.variantOptions);
+			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
+		})
 		.catch(() => {
 			/* Preview unavailable – silently ignore */
 		});
@@ -336,11 +353,20 @@ function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void
 
 /** Loads a local save and shows the preview tooltip anchored to the given element. */
 function handleLocalSavePreview(anchor: HTMLElement, positionName: string): void {
+	const cached = localPreviewCache.get(positionName);
+	if (cached !== undefined) {
+		// Cache hit!
+		console.log('Local preview cache hit for', positionName);
+		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
+		return;
+	}
+	// Request for the first time, cache the result.
 	editorpositionsdb
 		.readLocal(positionName)
-		.then((saveState) =>
-			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions),
-		)
+		.then((saveState) => {
+			localPreviewCache.set(positionName, saveState.variantOptions);
+			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
+		})
 		.catch(() => {
 			/* Preview unavailable – silently ignore */
 		});
