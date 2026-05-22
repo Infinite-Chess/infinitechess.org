@@ -107,12 +107,12 @@ function createGame(
 		ratinginfo,
 	);
 	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
-	const basegame = fullgame.initGame(metadata, now, variant?.mod);
-	const match = gameutility.initMatch(invite, gameID, assignments);
+	const { game: basegame, gameRules } = fullgame.initGame(metadata, now, variant?.mod);
+	const match = gameutility.initMatch(invite, gameID, assignments, gameRules);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(variant, basegame.dateTimestamp)
-		? boardinit.initBoard(basegame.gameRules, variant, basegame.dateTimestamp)
+		? boardinit.initBoard(gameRules, variant, basegame.dateTimestamp)
 		: undefined;
 
 	const servergame: ServerGame = { basegame, match, boardsim };
@@ -318,11 +318,11 @@ function onRequestRemovalFromPlayersInActiveGames(
  */
 function pushGameClock({ basegame, match }: ServerGame): number | undefined {
 	basegame.whosTurn =
-		basegame.gameRules.turnOrder[basegame.moves.length % basegame.gameRules.turnOrder.length]!;
+		match.gameRules.turnOrder[basegame.moves.length % match.gameRules.turnOrder.length]!;
 
 	if (basegame.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	const data = clock.push(basegame, basegame.clocks);
+	const data = clock.push(basegame, basegame.clocks, match.gameRules);
 
 	// Reset the timer that will auto terminate the game when one player loses on time.
 	if (!gameutility.isGameOver(basegame) && gameutility.isGameResignable(basegame)) {
@@ -361,7 +361,7 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	gamefileutility.setConclusion(servergame.basegame, conclusion);
+	gamefileutility.setConclusion(servergame.basegame, conclusion, servergame.match.gameRules);
 
 	if (conclusion === undefined) return;
 

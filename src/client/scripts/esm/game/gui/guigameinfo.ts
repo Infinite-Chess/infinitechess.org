@@ -344,7 +344,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 	const { victor, condition } = conclusion;
 	const resultTranslations = translations.results;
 
-	const { basegame } = gameslot.getGamefile()!;
+	const { boardsim } = gameslot.getGamefile()!;
 
 	// prettier-ignore
 	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole() || enginegame.areInEngineGame()) {
@@ -361,7 +361,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 															 : resultTranslations.you_generic;
 		else if (victor === null) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                : condition === 'repetition' ? resultTranslations.draw_repetition
-                                                               : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
+                                                               : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(boardsim.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
                                                                : condition === 'agreement' ? resultTranslations.draw_agreement
 															   : resultTranslations.draw_generic;
@@ -405,7 +405,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 		else if (condition === 'repetition')
 			element_whosturn.textContent = resultTranslations.draw_repetition;
 		else if (condition === 'moverule')
-			element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${basegame.gameRules.moveRule! / 2}${resultTranslations.draw_moverule[1]}`;
+			element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${boardsim.gameRules.moveRule! / 2}${resultTranslations.draw_moverule[1]}`;
 		else if (condition === 'insuffmat')
 			element_whosturn.textContent = resultTranslations.draw_insuffmat;
 		else if (condition === 'agreement')

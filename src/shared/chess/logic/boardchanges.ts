@@ -222,7 +222,7 @@ function applyChanges<T>(
  * Most basic add-a-piece method. Adds it the gamefile's piece list,
  * organizes the piece in the organized lists
  */
-function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
+function addPiece({ boardsim }: FullGame, change: Change): void {
 	// desiredIndex optional
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
@@ -238,7 +238,7 @@ function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
 				organizedpieces.getTypeUndefinedsBehavior(
 					change.piece.type,
 					boardsim.editor,
-					basegame.gameRules.promotion,
+					boardsim.gameRules.promotion,
 				) === 0
 			)
 				throw Error(
@@ -247,7 +247,7 @@ function addPiece({ boardsim, basegame }: FullGame, change: Change): void {
 			organizedpieces.regenerateLists(
 				boardsim.pieces,
 				boardsim.editor,
-				basegame.gameRules.promotion,
+				boardsim.gameRules.promotion,
 			);
 		}
 

@@ -61,4 +61,4 @@ function isGameInstantlyDeleted(variant: LoadedVariant | undefined, timestamp: n
 	return doesVariantSupportServerValidation(variant, timestamp);
 }
 
-export { doesVariantSupportServerValidation, isGameInstantlyDeleted };
+export { POSITION_STRING_THRESHOLD, doesVariantSupportServerValidation, isGameInstantlyDeleted };

@@ -240,7 +240,7 @@ function closeListeners(): void {
 /** Helper: Returns an array of players based on the current gamefile's turn order. */
 function _getPlayersInOrder(): Player[] {
 	const gamefile = gameslot.getGamefile()!;
-	return gamerules.getUniquePlayersInTurnOrder(gamefile.basegame.gameRules.turnOrder);
+	return gamerules.getUniquePlayersInTurnOrder(gamefile.boardsim.gameRules.turnOrder);
 }
 
 /** Helper: Returns an array of all piece elements that are currently clickable (active color + neutral). */

@@ -44,13 +44,13 @@ function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefi
 	// So is this draw or checkmate? Depends on whether the current state is check!
 	// Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
 	const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(
-		basegame,
-		basegame.whosTurn,
+		boardsim.gameRules,
+		boardsim.whosTurn,
 		'checkmate',
 	);
 	if (gamefileutility.isCurrentViewedPositionInCheck(boardsim) && usingCheckmate) {
 		const colorThatWon = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'checkmate' };

@@ -289,7 +289,7 @@ function doesLineAttackSquare(
 		if (!moveset) continue; // Piece can't slide in the direction our line is going
 		const blockingFunc = legalmoves.getBlockingFuncFromPieceMoveset(thisPieceMoveset);
 		const thisPieceLegalSlide = legalmoves.slide_CalcLegalLimit(
-			gamefile.basegame.gameRules.worldBorder,
+			gamefile.boardsim.gameRules.worldBorder,
 			blockingFunc,
 			gamefile.boardsim.pieces,
 			line,
