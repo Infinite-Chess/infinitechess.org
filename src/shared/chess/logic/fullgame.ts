@@ -154,7 +154,8 @@ function initGameMetadata(
 		clock.edit(gamemetadata.clocks, clockValues);
 	}
 
-	gamefileutility.setConclusion(gamemetadata, gameConclusion, gameRules);
+	gamemetadata.gameConclusion = gameConclusion; // <-- SHOULD NOT HAVE TO SET HERE
+	gamefileutility.setConclusion({ metadata: gamemetadata.metadata, gameRules }, gameConclusion); // <-- SHOULD ACCEPT THE ACTUAL GAME, NOT A FAKE
 
 	return { gamemetadata, gameRules };
 }

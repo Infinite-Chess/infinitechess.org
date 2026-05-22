@@ -264,7 +264,7 @@ function handleLogin(basegame: Game): void {
 function handleNoGame(gamefile: FullGame): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(gamefile, { condition: 'aborted' }, gamefile.gameRules);
+	gamefileutility.setConclusion(gamefile, { condition: 'aborted' });
 	gameslot.concludeGame();
 }
 

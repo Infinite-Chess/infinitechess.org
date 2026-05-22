@@ -300,17 +300,17 @@ function callbackCopy(_event: Event): void {
  */
 function concludeGame(): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	const basegame = loadedGamefile;
-	if (basegame.gameConclusion === undefined)
+	const gamefile = loadedGamefile;
+	if (gamefile.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
 
-	clock.endGame(basegame);
-	guiclock.stopClocks(basegame);
-	guigameinfo.gameEnd(basegame.gameConclusion);
+	clock.endGame(gamefile);
+	guiclock.stopClocks(gamefile);
+	guigameinfo.gameEnd(gamefile.gameConclusion);
 
 	GameBus.dispatch('game-concluded');
 
-	const victor = basegame.gameConclusion.victor; // undefined if aborted, null if draw
+	const victor = gamefile.gameConclusion.victor; // undefined if aborted, null if draw
 	const delayToPlayConcludeSoundSecs = 0.65;
 	if (gameloader.areInLocalGame()) {
 		if (victor !== null && victor !== undefined) {
@@ -330,7 +330,7 @@ function concludeGame(): void {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	gamefileutility.setConclusion(loadedGamefile!, undefined, loadedGamefile!.gameRules);
+	gamefileutility.setConclusion(loadedGamefile!, undefined);
 }
 
 export default {

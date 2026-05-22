@@ -298,11 +298,13 @@ function getValidatedPosition(): VariantOptions | null {
 	); // prettier-ignore
 	const illegalReason = positionvalidation.validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
+		// The position is illegal
 		toast.show(illegalReason, { error: true });
 		return null;
 	}
 	return variantOptions;
 }
+
 /** Queues the removal of all pieces from the position. */
 function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {

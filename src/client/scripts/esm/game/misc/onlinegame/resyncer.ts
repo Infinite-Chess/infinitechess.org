@@ -63,7 +63,7 @@ function handleServerGameUpdate(
 	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
 
 	// Must be set before editing the clocks.
-	gamefileutility.setConclusion(gamefile, claimedGameConclusion, gamefile.gameRules);
+	gamefileutility.setConclusion(gamefile, claimedGameConclusion);
 
 	// Adjust the timer whos turn it is depending on ping.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);

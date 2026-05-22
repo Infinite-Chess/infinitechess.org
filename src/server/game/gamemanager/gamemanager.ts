@@ -369,7 +369,11 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	gamefileutility.setConclusion(servergame, conclusion, servergame.match.gameRules);
+	servergame.gameConclusion = conclusion;
+	gamefileutility.setConclusion(
+		{ metadata: servergame.metadata, gameRules: servergame.match.gameRules },
+		conclusion,
+	);
 
 	if (conclusion === undefined) return;
 

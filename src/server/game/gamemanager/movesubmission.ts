@@ -199,7 +199,11 @@ function applyServerValidatedMove(
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
 	const conclusion = wincondition.getGameConclusion(servergame.boardsim!);
-	gamefileutility.setConclusion(servergame, conclusion, servergame.match.gameRules);
+	servergame.gameConclusion = conclusion;
+	gamefileutility.setConclusion(
+		{ metadata: servergame.metadata, gameRules: servergame.match.gameRules },
+		conclusion,
+	);
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
 		moveutil.flagLastMoveAsMate(servergame.boardsim!);
 
@@ -238,10 +242,10 @@ function applyClientReportedMove(
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 
 	// Manually set gameConclusion to client-reported conclusion
+	servergame.gameConclusion = messageContents.gameConclusion;
 	gamefileutility.setConclusion(
-		servergame,
+		{ metadata: servergame.metadata, gameRules: servergame.match.gameRules },
 		messageContents.gameConclusion,
-		servergame.match.gameRules,
 	);
 
 	return moveRecord;

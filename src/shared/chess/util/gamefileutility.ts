@@ -7,6 +7,7 @@
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
+import type { MetaData } from '../../types.js';
 import type { GameRules } from './gamerules.js';
 import type { GameMetadata } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
@@ -45,21 +46,29 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * essentially un-concluding the game if it was already concluded.
  */
 function setConclusion(
-	basegame: GameMetadata,
+	/**
+	 * The minimum properties needed from the gamefile to set the conclusion.
+	 * MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+	 */
+	gamefile: {
+		/** Information about the game */
+		metadata: MetaData;
+		gameConclusion?: GameConclusion;
+		gameRules: GameRules;
+	},
 	conclusion: GameConclusion | undefined,
-	gameRules: GameRules,
 ): void {
-	basegame.gameConclusion = conclusion;
+	gamefile.gameConclusion = conclusion;
 
 	if (conclusion !== undefined) {
-		basegame.metadata.Termination = winconutil.getTerminationInEnglish(
-			gameRules,
+		gamefile.metadata.Termination = winconutil.getTerminationInEnglish(
+			gamefile.gameRules,
 			conclusion.condition,
 		);
-		basegame.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
+		gamefile.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
 	} else {
-		delete basegame.metadata.Result;
-		delete basegame.metadata.Termination;
+		delete gamefile.metadata.Result;
+		delete gamefile.metadata.Termination;
 	}
 }
 
