@@ -316,7 +316,7 @@ function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
 	appendPotentialMoves(piece, moveset, moves);
 	removeObstructedMoves(
 		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
+		gamefile.basegame.gameRules.worldBorder,
 		piece,
 		moveset,
 		moves,
@@ -339,7 +339,7 @@ function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
 	appendPotentialMoves(piece, moveset, moves);
 	removeObstructedMoves(
 		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
+		gamefile.basegame.gameRules.worldBorder,
 		piece,
 		moveset,
 		moves,

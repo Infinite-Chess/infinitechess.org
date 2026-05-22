@@ -74,7 +74,7 @@ async function initBoardEditor(
 	if (variantOptions === undefined) {
 		const gamefile = gameslot.getGamefile()!;
 		// Set gamerulesGUIinfo object according to loaded Classical variant
-		const gameRules = jsutil.deepCopyObject(gamefile.boardsim.gameRules);
+		const gameRules = jsutil.deepCopyObject(gamefile.basegame.gameRules);
 		gameRules.winConditions[p.WHITE] = [icnconverter.default_win_condition];
 		gameRules.winConditions[p.BLACK] = [icnconverter.default_win_condition];
 		const globalState = jsutil.deepCopyObject(gamefile.boardsim.state.global);
@@ -107,7 +107,7 @@ async function initBoardEditor(
 	gamefile.boardsim.state.local.checks = [];
 	// Also set gameConclusion to undefined. Otherwise, starting from a position that
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
-	gamefileutility.setConclusion(gamefile.basegame, undefined, gamefile.boardsim.gameRules);
+	gamefileutility.setConclusion(gamefile.basegame, undefined);
 
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();

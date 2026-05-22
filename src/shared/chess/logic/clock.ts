@@ -8,7 +8,6 @@
  */
 
 import type { Player } from '../util/typeutil.js';
-import type { GameRules } from '../util/gamerules.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { ClockDependant, Game } from './fullgame.js';
 import type { ClockValues, TimeControl } from '../../types.js';
@@ -124,8 +123,8 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
  * Call after flipping whosTurn. Flips colorTicking in local games.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(basegame: Game, clocks: ClockData, gameRules: GameRules): number | undefined {
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gameRules, basegame.moves.length - 2);
+function push(basegame: Game, clocks: ClockData): number | undefined {
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 2);
 
 	if (!moveutil.isGameResignable(basegame)) return clocks.currentTime[prevcolor]!;
 

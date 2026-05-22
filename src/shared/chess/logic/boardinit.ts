@@ -7,7 +7,6 @@
  * full game-play engine (movepiece, checkdetection, wincondition).
  */
 
-import type { Player } from '../util/typeutil.js';
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
@@ -40,11 +39,6 @@ export interface Board extends BoardPreview {
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
-	/** The rules governing this game's movement, win conditions, etc. Source of truth for all game-logic. */
-	gameRules: GameRules;
-	/** The color whose turn it currently is at the front of the game.
-	 * Kept in sync with {@link Game.whosTurn} by {@link movepiece.updateTurn}. */
-	whosTurn: Player;
 }
 
 type Vicinity = Record<CoordsKey, RawType[]>;
@@ -88,8 +82,6 @@ function initBoard(
 		specialVicinity,
 		pieceMovesets,
 		specialMoves,
-		gameRules,
-		whosTurn: gameRules.turnOrder[0]!,
 	};
 }
 

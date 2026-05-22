@@ -12,10 +12,10 @@ import type { Piece } from '../util/boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { FullGame } from './fullgame.js';
 import type { Dimensions } from '../variants/variant_scripts/gen4DPosition.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
+import type { Game, FullGame } from './fullgame.js';
 import type { UnboundedRectangle } from '../../util/math/bounds.js';
 
 import state from './state.js';
@@ -65,7 +65,7 @@ function pawnLegalMoves(
 	dim: Dimensions,
 	strong_pawns: boolean,
 ): CoordsTagged[] {
-	const { boardsim } = gamefile;
+	const { basegame, boardsim } = gamefile;
 	const distance = movetype === 'spacelike' ? 1n : dim.BOARD_SPACING;
 	const distance_complement = movetype === 'spacelike' ? dim.BOARD_SPACING : 1n;
 
@@ -80,7 +80,7 @@ function pawnLegalMoves(
 	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yDistanceParity];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
-		boardsim.gameRules.worldBorder,
+		basegame.gameRules.worldBorder,
 		singlePushCoord,
 		color,
 		premove,
@@ -94,7 +94,7 @@ function pawnLegalMoves(
 		singlePushCoord[1] > dim.MIN_Y &&
 		singlePushCoord[1] < dim.MAX_Y // Pawn within boundaries
 	) {
-		appendPawnMoveAndAttachPromoteTag(boardsim, individualMoves, singlePushCoord, color); // No piece, add the move
+		appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, singlePushCoord, color); // No piece, add the move
 
 		// Is the double push legal?
 		const doublePushCoord: CoordsTagged = [
@@ -103,7 +103,7 @@ function pawnLegalMoves(
 		];
 		moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
+			basegame.gameRules.worldBorder,
 			doublePushCoord,
 			color,
 			premove,
@@ -123,7 +123,7 @@ function pawnLegalMoves(
 				coords,
 				doublePushCoord,
 			);
-			appendPawnMoveAndAttachPromoteTag(boardsim, individualMoves, doublePushCoord, color); // Add the double push!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, doublePushCoord, color); // Add the double push!
 		}
 	}
 
@@ -141,14 +141,14 @@ function pawnLegalMoves(
 	for (const captureCoords of coordsToCapture) {
 		const moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
+			basegame.gameRules.worldBorder,
 			captureCoords,
 			color,
 			premove,
 			true,
 		); // true for capture is required
 		if (moveValidity <= 1)
-			appendPawnMoveAndAttachPromoteTag(boardsim, individualMoves, captureCoords, color); // Good to add the capture!
+			appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, captureCoords, color); // Good to add the capture!
 	}
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
@@ -211,7 +211,7 @@ function addPossibleEnPassant(
 	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
 	// on the individual move to detect en passant captures and to know what piece to delete
 	enPassantSquare.enpassant = true;
-	appendPawnMoveAndAttachPromoteTag(boardsim, individualMoves, enPassantSquare, color);
+	appendPawnMoveAndAttachPromoteTag(basegame, individualMoves, enPassantSquare, color);
 }
 
 /**
@@ -219,13 +219,13 @@ function addPossibleEnPassant(
  * and adds the `promoteTrigger` special flag to it if it landed on a promotion rank.
  */
 function appendPawnMoveAndAttachPromoteTag(
-	boardsim: Board,
+	basegame: Game,
 	individualMoves: CoordsTagged[],
 	landCoords: CoordsTagged,
 	color: Player,
 ): void {
-	if (boardsim.gameRules.promotion !== undefined) {
-		const teamPromotionRanks = boardsim.gameRules.promotion.ranks[color];
+	if (basegame.gameRules.promotion !== undefined) {
+		const teamPromotionRanks = basegame.gameRules.promotion.ranks[color];
 		if (teamPromotionRanks?.includes(landCoords[1])) landCoords.promoteTrigger = true;
 	}
 
@@ -305,7 +305,7 @@ function fourDimensionalKnightMove(
 						if (
 							legalmoves.testSquareValidity(
 								gamefile.boardsim,
-								gamefile.boardsim.gameRules.worldBorder,
+								gamefile.basegame.gameRules.worldBorder,
 								endCoords,
 								color,
 								premove,
@@ -356,7 +356,7 @@ function fourDimensionalKingMove(
 ): Coords[] {
 	const legalMoves: Coords[] = kingLegalMoves(
 		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
+		gamefile.basegame.gameRules.worldBorder,
 		coords,
 		color,
 		premove,

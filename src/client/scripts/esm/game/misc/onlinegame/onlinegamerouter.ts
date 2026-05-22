@@ -1,9 +1,9 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
+import type { Game } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Game, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
 import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
 
@@ -89,7 +89,7 @@ function routeMessage(contents: GameMessage): void {
 			handleLogin(gamefile.basegame);
 			break;
 		case 'nogame':
-			handleNoGame(gamefile);
+			handleNoGame(gamefile.basegame);
 			break;
 		case 'leavegame':
 			handleLeaveGame();
@@ -261,14 +261,10 @@ function handleLogin(basegame: Game): void {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(gamefile: FullGame): void {
+function handleNoGame(basegame: Game): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(
-		gamefile.basegame,
-		{ condition: 'aborted' },
-		gamefile.boardsim.gameRules,
-	);
+	gamefileutility.setConclusion(basegame, { condition: 'aborted' });
 	gameslot.concludeGame();
 }
 

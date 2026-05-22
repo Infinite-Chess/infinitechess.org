@@ -63,11 +63,7 @@ function handleServerGameUpdate(
 	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
 
 	// Must be set before editing the clocks.
-	gamefileutility.setConclusion(
-		gamefile.basegame,
-		claimedGameConclusion,
-		gamefile.boardsim.gameRules,
-	);
+	gamefileutility.setConclusion(gamefile.basegame, claimedGameConclusion);
 
 	// Adjust the timer whos turn it is depending on ping.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
@@ -105,10 +101,8 @@ function synchronizeMovesList(
 	const hasOneMoreMoveThanServer = boardsim.moves.length === moves.length + 1;
 	const finalMoveIsOurMove =
 		boardsim.moves.length > 0 &&
-		moveutil.getColorThatPlayedMoveIndex(
-			gamefile.boardsim.gameRules,
-			boardsim.moves.length - 1,
-		) === onlinegame.getOurColor();
+		moveutil.getColorThatPlayedMoveIndex(gamefile.basegame, boardsim.moves.length - 1) ===
+			onlinegame.getOurColor();
 	const previousMove =
 		boardsim.moves.length > 1 ? boardsim.moves[boardsim.moves.length - 2] : undefined;
 	const previousMoveMatches =
@@ -153,10 +147,7 @@ function synchronizeMovesList(
 		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
 			// Incrementally add the server's correct moves to our own moves list
 			const isLastMove = i === moves.length - 1;
-			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(
-				gamefile.boardsim.gameRules,
-				i,
-			);
+			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile.basegame, i);
 			const isOpponentMove = playerOfMove !== ourColor;
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add

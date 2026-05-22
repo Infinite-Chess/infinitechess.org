@@ -72,6 +72,7 @@ export type Game = {
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
 	moves: MoveRecord[];
+	gameRules: GameRules;
 	whosTurn: Player;
 	gameConclusion?: GameConclusion;
 } & ClockDependant;
@@ -131,7 +132,7 @@ function initGame(
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): { game: Game; gameRules: GameRules } {
+): Game {
 	const gameRules =
 		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
@@ -143,6 +144,7 @@ function initGame(
 		metadata,
 		dateTimestamp,
 		moves: [],
+		gameRules,
 		whosTurn: gameRules.turnOrder[0]!,
 		...clockDependantVars,
 	};
@@ -155,9 +157,9 @@ function initGame(
 		clock.edit(game.clocks, clockValues);
 	}
 
-	gamefileutility.setConclusion(game, gameConclusion, gameRules);
+	gamefileutility.setConclusion(game, gameConclusion);
 
-	return { game, gameRules };
+	return game;
 }
 
 /**
@@ -174,16 +176,16 @@ function loadGameWithBoard(
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
-		gamerules.swapCheckmateForRoyalCapture(boardsim.gameRules);
+		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
 
 	{
 		// Set the game's `inCheck` and `checks` properties at the front of the game.
 		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
-			boardsim.gameRules,
-			boardsim.whosTurn,
+			basegame,
+			basegame.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(gamefile, boardsim.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
 		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
 		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
 	}
@@ -212,7 +214,7 @@ async function initFullGame(
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
-	const { game: basegame, gameRules } = initGame(
+	const basegame = initGame(
 		metadata,
 		dateTimestamp,
 		variant?.mod,
@@ -221,7 +223,7 @@ async function initFullGame(
 		additional.variantOptions,
 	);
 	const boardsim = boardinit.initBoard(
-		gameRules,
+		basegame.gameRules,
 		variant,
 		dateTimestamp,
 		additional.variantOptions,

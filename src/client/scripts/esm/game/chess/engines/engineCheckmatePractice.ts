@@ -1669,19 +1669,19 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const boardsim = input_gamefile.boardsim;
+					const basegame = input_gamefile.basegame;
 					const dummy_board = {
 						moves: [],
 						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
-							boardsim.gameRules.turnOrder,
+							basegame.gameRules.turnOrder,
 							input_gamefile.boardsim.editor,
-							boardsim.gameRules.promotion,
+							basegame.gameRules.promotion,
 						).pieces,
 					} as unknown as Board;
 
-					if (detectInsufficientMaterial(boardsim.gameRules, dummy_board)) break;
+					if (detectInsufficientMaterial(basegame.gameRules, dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture

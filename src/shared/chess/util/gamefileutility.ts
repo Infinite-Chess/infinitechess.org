@@ -8,7 +8,6 @@ import type { Game } from '../logic/fullgame.js';
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { GameRules } from './gamerules.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
@@ -44,16 +43,12 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * If the conclusion is undefined, it removes the metadata,
  * essentially un-concluding the game if it was already concluded.
  */
-function setConclusion(
-	basegame: Game,
-	conclusion: GameConclusion | undefined,
-	gameRules: GameRules,
-): void {
+function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
 	basegame.gameConclusion = conclusion;
 
 	if (conclusion !== undefined) {
 		basegame.metadata.Termination = winconutil.getTerminationInEnglish(
-			gameRules,
+			basegame.gameRules,
 			conclusion.condition,
 		);
 		basegame.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
@@ -65,23 +60,23 @@ function setConclusion(
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
- * @param gameRules
+ * @param basegame
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
 function isOpponentUsingWinCondition(
-	gameRules: GameRules,
+	basegame: Game,
 	friendlyColor: Player,
 	winCondition: GameruleWinCondition,
 ): boolean {
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
-	return gamerules.doesColorHaveWinCondition(gameRules, oppositeColor, winCondition);
+	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(gameRules: GameRules): number {
-	return new Set(gameRules.turnOrder).size;
+function getPlayerCount(basegame: Game): number {
+	return new Set(basegame.gameRules.turnOrder).size;
 }
 
 // Exports -------------------------------------------------------------

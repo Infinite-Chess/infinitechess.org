@@ -61,7 +61,7 @@ function onReport(
 
 	const perpetratingMoveIndex = servergame.basegame.moves.length - 1;
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
-		servergame.match.gameRules,
+		servergame.basegame,
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {

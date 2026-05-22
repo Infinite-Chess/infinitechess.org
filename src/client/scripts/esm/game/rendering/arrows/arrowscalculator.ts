@@ -372,7 +372,7 @@ export function calcArrowsLineDraft(
 		 */
 
 		// prettier-ignore
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile.boardsim, gamefile.boardsim.gameRules.worldBorder, piece, slideDir, slideKey, organizedline);
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile.boardsim, gamefile.basegame.gameRules.worldBorder, piece, slideDir, slideKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 
 		/**

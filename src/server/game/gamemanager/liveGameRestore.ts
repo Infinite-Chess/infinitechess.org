@@ -11,7 +11,6 @@
  * See dev-utils/live-game-persistence.md for the schema and restoration details.
  */
 
-import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
@@ -143,12 +142,12 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 5. Create the basegame (also computes gameRules)
-	const variant = {
-		code: gameRow.variant as VariantCode,
-		mod: variantcache.getModule(gameRow.variant as VariantCode),
-	};
-	const { game: basegame, gameRules } = fullgame.initGame(
+	// 8. Reconstruct MatchInfo
+	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
+
+	// 5. Create the basegame
+	const variant = { code: matchInfo.variant, mod: variantcache.getModule(matchInfo.variant) };
+	const basegame = fullgame.initGame(
 		gameMetadata,
 		gameRow.time_created,
 		variant?.mod,
@@ -159,16 +158,13 @@ function restoreSingleGame(
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
-	// 8. Reconstruct MatchInfo
-	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities, gameRules);
-
 	const servergame: ServerGame = { match: matchInfo, basegame };
 
 	// 6. Parse & replay moves, conditionally constructing boardsim
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(gameRules, variant, basegame.dateTimestamp);
+		const boardsim = boardinit.initBoard(basegame.gameRules, variant, basegame.dateTimestamp);
 		servergame.boardsim = boardsim;
 		// Pushes moves to BOTH the basegame and boardsim
 		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
@@ -180,8 +176,8 @@ function restoreSingleGame(
 
 		// Update whosTurn based on move count
 		basegame.whosTurn =
-			matchInfo.gameRules.turnOrder[
-				basegame.moves.length % matchInfo.gameRules.turnOrder.length
+			basegame.gameRules.turnOrder[
+				basegame.moves.length % basegame.gameRules.turnOrder.length
 			]!;
 	}
 
@@ -345,7 +341,6 @@ function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
-	gameRules: GameRules,
 ): MatchInfo {
 	const playerData: PlayerGroup<PlayerData> = {};
 
@@ -372,7 +367,6 @@ function reconstructMatchInfo(
 		timeEnded: gameRow.time_ended ?? undefined,
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
-		gameRules,
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),

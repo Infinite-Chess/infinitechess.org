@@ -239,11 +239,7 @@ function applyClientReportedMove(
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 
 	// Manually set basegame.gameConclusion to client-reported conclusion
-	gamefileutility.setConclusion(
-		servergame.basegame,
-		messageContents.gameConclusion,
-		servergame.match.gameRules,
-	);
+	gamefileutility.setConclusion(servergame.basegame, messageContents.gameConclusion);
 
 	return moveRecord;
 }

@@ -63,7 +63,7 @@ function compressGamefile(
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
-	const gameRulesCopy = jsutil.deepCopyObject(boardsim.gameRules);
+	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
 	let gamestate: SimplifiedGameState = {
 		position: jsutil.deepCopyObject(boardsim.startSnapshot.position),
 		turnOrder: gameRulesCopy.turnOrder,

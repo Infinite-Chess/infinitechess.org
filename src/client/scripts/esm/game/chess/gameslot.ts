@@ -109,9 +109,9 @@ document.addEventListener('theme-change', () => {
 	// Reinit the promotion UI
 	guipromotion.resetUI();
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
-		gamefile.boardsim.gameRules.turnOrder,
+		gamefile.basegame.gameRules.turnOrder,
 	);
-	guipromotion.initUI(gamefile.boardsim.gameRules.promotion?.pieces, uniquePlayers);
+	guipromotion.initUI(gamefile.basegame.gameRules.promotion?.pieces, uniquePlayers);
 });
 
 // Functions ---------------------------------------------------------------
@@ -211,9 +211,9 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
-		loadedGamefile!.boardsim.gameRules.turnOrder,
+		loadedGamefile!.basegame.gameRules.turnOrder,
 	);
-	guipromotion.initUI(loadedGamefile!.boardsim.gameRules.promotion?.pieces, uniquePlayers);
+	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);
@@ -335,11 +335,7 @@ function concludeGame(): void {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	gamefileutility.setConclusion(
-		loadedGamefile!.basegame,
-		undefined,
-		loadedGamefile!.boardsim.gameRules,
-	);
+	gamefileutility.setConclusion(loadedGamefile!.basegame, undefined);
 }
 
 export default {
