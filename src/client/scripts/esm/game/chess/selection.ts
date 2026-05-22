@@ -7,8 +7,9 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
-import type { Game, FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 import type { CoordsTagged, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
@@ -314,7 +315,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefi
  * A piece will not be considered draggable (level 2) if the user disabled dragging.
  * This means more information is needed to tell if the piece is moveable by us.
  */
-function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2 {
+function canSelectPieceType(basegame: { whosTurn: Player }, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
 	const dragEnabled = keybinds.getEffectiveDragEnabled();
 	if (boardeditor.areInBoardEditor()) return dragEnabled ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
@@ -341,7 +342,7 @@ function canMovePieceType(pieceType: number): boolean {
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
-function isOpponentType(basegame: Game, type: number): boolean {
+function isOpponentType(basegame: { whosTurn: Player }, type: number): boolean {
 	const pieceColor = typeutil.getColorFromType(type);
 	if (boardeditor.areInBoardEditor()) return false;
 	else if (gameloader.areInLocalGame()) return pieceColor !== basegame.whosTurn;

@@ -1,7 +1,6 @@
 // src/shared/chess/logic/fullgame.ts
 
 import type { Board } from './boardinit.js';
-import type { Player } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
@@ -93,12 +92,6 @@ export type ClockDependant =
  * accepts a FullGame — no unwrapping needed.
  */
 export type FullGame = Board & GameMetadata;
-
-/**
- * Minimal game interface accepted by shared utility functions (clock, moveutil).
- * Satisfied structurally by both {@link FullGame} and the server's `ServerGame`.
- */
-export type Game = GameMetadata & { whosTurn: Player; moves: { length: number } };
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */

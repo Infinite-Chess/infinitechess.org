@@ -12,7 +12,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { MoveRecord } from './movepiece.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { ClockDependant, Game } from './fullgame.js';
+import type { ClockDependant } from './fullgame.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
 import typeutil from '../util/typeutil.js';
@@ -161,7 +161,7 @@ function push(gamefile: {
 	return clocks.currentTime[prevcolor];
 }
 
-function stop(basegame: Game): void {
+function stop(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
@@ -176,7 +176,7 @@ function stop(basegame: Game): void {
 	endGame(basegame);
 }
 
-function endGame(basegame: Game): void {
+function endGame(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 	delete clocks.timeRemainAtTurnStart;
@@ -234,7 +234,7 @@ function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
 }
 
-function printClocks(basegame: Game): void {
+function printClocks(basegame: ClockDependant): void {
 	if (basegame.untimed) return console.log('Game is untimed.');
 	const clocks = basegame.clocks!;
 	for (const color in clocks.currentTime) {

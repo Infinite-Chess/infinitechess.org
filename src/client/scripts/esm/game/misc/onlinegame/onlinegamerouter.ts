@@ -3,7 +3,7 @@
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Game, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { ClockDependant, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
 import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
 
@@ -217,7 +217,7 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 /**
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(basegame: Game, clockValues: ClockValues): void {
+function handleUpdatedClock(basegame: ClockDependant, clockValues: ClockValues): void {
 	if (basegame.untimed) throw Error('Received clock values for untimed game??');
 
 	// Adjust the timer whos turn it is depending on ping.
@@ -243,7 +243,7 @@ function handleUnsubbing(): void {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(basegame: Game): void {
+function handleLogin(basegame: ClockDependant): void {
 	toast.show(translations.onlinegame.not_logged_in, { error: true, durationMultiplier: 100 });
 	socketsubs.deleteSub('game');
 	clock.endGame(basegame);

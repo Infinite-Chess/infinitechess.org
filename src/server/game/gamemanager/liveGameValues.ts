@@ -8,8 +8,9 @@
  * See dev-utils/live-game-persistence.md for the schema and event matrix.
  */
 
-import type { Game } from '../../../shared/chess/logic/fullgame.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { MetaData } from '../../../shared/types.js';
+import type { ClockDependant } from '../../../shared/chess/logic/fullgame.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { ServerGame, PlayerData, PlayerDisconnect } from './gameutility.js';
 import type {
@@ -47,7 +48,7 @@ function getMovesString(servergame: ServerGame): string {
 /**
  * Extracts the elo display string for a player from game metadata.
  */
-function getPlayerEloString(basegame: Game, player: Player): string | null {
+function getPlayerEloString(basegame: { metadata: MetaData }, player: Player): string | null {
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
 	// prettier-ignore
 	const eloKey = player === p.WHITE ? 'WhiteElo' :
@@ -89,7 +90,7 @@ function buildPlayerRecord(
 	game_id: number,
 	player: Player,
 	playerData: PlayerData,
-	basegame: Game,
+	basegame: { metadata: MetaData } & ClockDependant,
 ): LivePlayerGamesRecord {
 	const { identifier, disconnect } = playerData;
 
