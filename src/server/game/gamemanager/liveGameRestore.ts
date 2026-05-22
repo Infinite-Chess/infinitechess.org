@@ -11,7 +11,6 @@
  * See dev-utils/live-game-persistence.md for the schema and restoration details.
  */
 
-import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
@@ -159,17 +158,17 @@ function restoreSingleGame(
 	// by clock.edit() inside initGameMetadata() via the clockValues we pass in.
 
 	// 8. Reconstruct MatchInfo
-	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities, gameRules);
+	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
 	// 6. Parse & replay moves, conditionally constructing boardsim
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	const servergame: ServerGame = {
 		...gamemetadata,
+		gameRules,
 		match: matchInfo,
 		moves,
-		whosTurn:
-			matchInfo.gameRules.turnOrder[moves.length % matchInfo.gameRules.turnOrder.length]!,
+		whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
 	};
 
 	if (gameRow.validate_moves) {
@@ -339,7 +338,6 @@ function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
-	gameRules: GameRules,
 ): MatchInfo {
 	const playerData: PlayerGroup<PlayerData> = {};
 
@@ -366,7 +364,6 @@ function reconstructMatchInfo(
 		timeEnded: gameRow.time_ended ?? undefined,
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
-		gameRules,
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),

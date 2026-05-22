@@ -131,8 +131,8 @@ interface MatchInfo {
 	 * The time control of the game (e.g. `"600+5"` or `"-"` for untimed).
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
 	 */
-	clock: TimeControl; /** The rules governing how this game is played. */
-	gameRules: GameRules; /** The data held for each player */
+	clock: TimeControl;
+	/** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 
 	/** The ID of the timeout which will auto-lose the player
@@ -156,6 +156,8 @@ interface MatchInfo {
 
 /** The game stored in the server */
 type ServerGame = GameMetadata & {
+	/** The rules governing how this game is played. */
+	gameRules: GameRules;
 	match: MatchInfo;
 	moves: MoveRecord[];
 	whosTurn: Player;
@@ -176,7 +178,6 @@ function initMatch(
 	invite: AuthSeek,
 	id: number,
 	assignedPlayers: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	gameRules: GameRules,
 ): MatchInfo {
 	const playerData: MatchInfo['playerData'] = {};
 
@@ -198,7 +199,6 @@ function initMatch(
 		timeCreated: Date.now(),
 		rated: invite.mode === 'rated',
 		clock: invite.time,
-		gameRules,
 	};
 }
 

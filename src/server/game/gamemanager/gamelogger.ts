@@ -192,7 +192,7 @@ function addGameRecordsInTransaction(
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
 	// --- Prepare ICN ---
-	const icn = getICNOfGame(servergame, match.gameRules); // This will throw on failure.
+	const icn = getICNOfGame(servergame, servergame.gameRules); // This will throw on failure.
 
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
@@ -378,15 +378,16 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	// Optimized to not require iterating through each move in the list.
 	const playerMoveCounts: PlayerGroup<number> = {};
 	const fullmoves_completed_total = Math.floor(
-		servergame.moves.length / match.gameRules.turnOrder.length,
+		servergame.moves.length / servergame.gameRules.turnOrder.length,
 	);
-	const last_partial_move_length = servergame.moves.length % match.gameRules.turnOrder.length;
+	const last_partial_move_length =
+		servergame.moves.length % servergame.gameRules.turnOrder.length;
 	for (const playerStr in match.playerData) {
 		const player: Player = Number(playerStr) as Player;
 		playerMoveCounts[player] =
 			fullmoves_completed_total *
-			match.gameRules.turnOrder.filter((p: Player) => p === player).length;
-		playerMoveCounts[player] += match.gameRules.turnOrder
+			servergame.gameRules.turnOrder.filter((p: Player) => p === player).length;
+		playerMoveCounts[player] += servergame.gameRules.turnOrder
 			.slice(0, last_partial_move_length)
 			.filter((p: Player) => p === player).length;
 	}

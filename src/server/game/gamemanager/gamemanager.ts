@@ -108,7 +108,7 @@ function createGame(
 	);
 	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
 	const { gamemetadata, gameRules } = fullgame.initGameMetadata(metadata, now, variant?.mod);
-	const match = gameutility.initMatch(invite, gameID, assignments, gameRules);
+	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	const boardsim = doesVariantSupportServerValidation(variant, gamemetadata.dateTimestamp)
@@ -117,6 +117,7 @@ function createGame(
 
 	const servergame: ServerGame = {
 		...gamemetadata,
+		gameRules,
 		match,
 		moves: [],
 		whosTurn: gameRules.turnOrder[0]!,
@@ -324,13 +325,13 @@ function onRequestRemovalFromPlayersInActiveGames(
  */
 function pushGameClock(servergame: ServerGame): number | undefined {
 	servergame.whosTurn =
-		servergame.match.gameRules.turnOrder[
-			servergame.moves.length % servergame.match.gameRules.turnOrder.length
+		servergame.gameRules.turnOrder[
+			servergame.moves.length % servergame.gameRules.turnOrder.length
 		]!;
 
 	if (servergame.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	const data = clock.push(servergame, servergame.clocks, servergame.match.gameRules);
+	const data = clock.push(servergame, servergame.clocks, servergame.gameRules);
 
 	// Reset the timer that will auto terminate the game when one player loses on time.
 	if (!gameutility.isGameOver(servergame) && gameutility.isGameResignable(servergame)) {
@@ -369,11 +370,7 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	servergame.gameConclusion = conclusion;
-	gamefileutility.setConclusion(
-		{ metadata: servergame.metadata, gameRules: servergame.match.gameRules },
-		conclusion,
-	);
+	gamefileutility.setConclusion(servergame, conclusion);
 
 	if (conclusion === undefined) return;
 
