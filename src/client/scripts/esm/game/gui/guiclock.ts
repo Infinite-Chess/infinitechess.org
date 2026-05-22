@@ -1,9 +1,11 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
-import type { Game } from '../../../../../shared/chess/logic/fullgame.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
+import type { MoveRecord } from '../../../../../shared/chess/logic/movepiece.js';
 import type { SoundObject } from '../../audio/AudioManager.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { ClockDependant, Game } from '../../../../../shared/chess/logic/fullgame.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -147,7 +149,16 @@ function resetClocks(): void {
 	lowtimeNotif.playersNotified = new Set();
 }
 
-function update(basegame: Game): void {
+/**
+ *
+ * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ */
+function update(
+	basegame: {
+		moves: MoveRecord[];
+		gameConclusion?: GameConclusion;
+	} & ClockDependant,
+): void {
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
 

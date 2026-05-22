@@ -4,14 +4,13 @@
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
-import type { Game } from '../logic/fullgame.js';
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { GameRules } from './gamerules.js';
 import type { EnPassant } from '../logic/state.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
-import type { MoveFull, CoordsTagged } from '../logic/movepiece.js';
+import type { MoveFull, CoordsTagged, MoveRecord } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
 
@@ -173,8 +172,9 @@ function flagLastMoveAsMate(boardsim: Board): void {
 /**
  * Returns whether the game is resignable (at least 2 moves have been played).
  * If not, then the game is considered abortable.
+ * @param game - The minimum properties needed from the gamefile to check if the game is resignable. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  */
-function isGameResignable(game: Game | Board): boolean {
+function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 	return game.moves.length > 1;
 }
 

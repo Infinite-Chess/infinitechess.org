@@ -9,7 +9,6 @@ import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { MetaData } from '../../types.js';
 import type { GameRules } from './gamerules.js';
-import type { GameMetadata } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
@@ -19,8 +18,11 @@ import metadatautil from './metadatautil.js';
 
 // Methods -------------------------------------------------------------
 
-/** Returns true if the game is over. */
-function isGameOver(basegame: GameMetadata): boolean {
+/**
+ * Returns true if the game is over.
+ * @param basegame - The minimum properties needed from the gamefile to check if the game is over. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ */
+function isGameOver(basegame: { gameConclusion?: GameConclusion }): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 

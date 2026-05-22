@@ -331,7 +331,7 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 
 	if (servergame.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	const data = clock.push(servergame, servergame.clocks, servergame.gameRules);
+	const data = clock.push(servergame);
 
 	// Reset the timer that will auto terminate the game when one player loses on time.
 	if (!gameutility.isGameOver(servergame) && gameutility.isGameResignable(servergame)) {

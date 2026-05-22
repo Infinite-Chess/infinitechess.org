@@ -9,7 +9,9 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { GameRules } from '../util/gamerules.js';
+import type { MoveRecord } from './movepiece.js';
 import type { PlayerGroup } from '../util/typeutil.js';
+import type { GameConclusion } from '../util/winconutil.js';
 import type { ClockDependant, Game } from './fullgame.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
@@ -122,12 +124,22 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 /**
  * Call after flipping whosTurn. Flips colorTicking in local games.
+ * @param gamefile - The minimum properties needed from the gamefile to push the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(basegame: Game, clocks: ClockData, gameRules: GameRules): number | undefined {
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gameRules, basegame.moves.length - 2);
+function push(gamefile: {
+	moves: MoveRecord[];
+	whosTurn: Player;
+	clocks: ClockData;
+	gameRules: GameRules;
+}): number | undefined {
+	const clocks = gamefile.clocks;
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(
+		gamefile.gameRules,
+		gamefile.moves.length - 2,
+	);
 
-	if (!moveutil.isGameResignable(basegame)) return clocks.currentTime[prevcolor]!;
+	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 
 	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) {
@@ -141,7 +153,7 @@ function push(basegame: Game, clocks: ClockData, gameRules: GameRules): number |
 	}
 
 	// Set up clocksticking for the new turn.
-	const whosTurn = basegame.whosTurn;
+	const whosTurn = gamefile.whosTurn;
 	clocks.colorTicking = whosTurn;
 	clocks.timeRemainAtTurnStart = clocks.currentTime[whosTurn]!;
 	clocks.timeAtTurnStart = Date.now();
@@ -174,10 +186,15 @@ function endGame(basegame: Game): void {
 
 /**
  * Called every frame, updates values.
- * @param basegame
+ * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  * @returns undefined if clocks still have time, otherwise it's the color who won.
  */
-function update(basegame: Game): Player | undefined {
+function update(
+	basegame: {
+		moves: MoveRecord[];
+		gameConclusion?: GameConclusion;
+	} & ClockDependant,
+): Player | undefined {
 	if (
 		basegame.untimed ||
 		gamefileutility.isGameOver(basegame) ||
