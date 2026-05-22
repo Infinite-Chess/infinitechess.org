@@ -461,8 +461,8 @@ function Transform(
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
 
 	// Determine whether the destination box is entirely contained within the border
-	const withinBorder = gamefile.basegame.gameRules.worldBorder
-		? bounds.boxContainsBox(gamefile.basegame.gameRules.worldBorder, destinationBox)
+	const withinBorder = gamefile.boardsim.gameRules.worldBorder
+		? bounds.boxContainsBox(gamefile.boardsim.gameRules.worldBorder, destinationBox)
 		: true;
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
@@ -487,7 +487,7 @@ function Transform(
 		// Skip if the destination is out of bounds
 		if (
 			!withinBorder &&
-			!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder!, transformed.coords)
+			!bounds.boxContainsSquare(gamefile.boardsim.gameRules.worldBorder!, transformed.coords)
 		)
 			continue;
 		// Queue the addition of the piece at its new location

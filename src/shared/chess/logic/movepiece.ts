@@ -287,8 +287,8 @@ function hasCastlingPartner(
 /**
  * Increments the gamefile's moveRuleStatus property, if the move-rule is in use.
  */
-function queueIncrementMoveRuleStateChange({ basegame, boardsim }: FullGame, move: MoveFull): void {
-	if (!basegame.gameRules.moveRule) return; // Not using the move-rule
+function queueIncrementMoveRuleStateChange({ boardsim }: FullGame, move: MoveFull): void {
+	if (!boardsim.gameRules.moveRule) return; // Not using the move-rule
 
 	// Reset if it was a capture or pawn movement
 	const newMoveRule =
@@ -369,10 +369,12 @@ function applyEdit(gamefile: FullGame, edit: Edit, forward: boolean, global: boo
  * Updates the `whosTurn` property of the gamefile, according to the move index we're on.
  */
 function updateTurn(gamefile: FullGame): void {
-	gamefile.basegame.whosTurn = moveutil.getWhosTurnAtMoveIndex(
-		gamefile.basegame,
+	const whosTurn = moveutil.getWhosTurnAtMoveIndex(
+		gamefile.boardsim.gameRules,
 		gamefile.boardsim.state.local.moveIndex,
 	);
+	gamefile.basegame.whosTurn = whosTurn;
+	gamefile.boardsim.whosTurn = whosTurn;
 }
 
 /**
@@ -380,14 +382,14 @@ function updateTurn(gamefile: FullGame): void {
  * then creates and set's the game state to reflect that.
  */
 function createCheckState(gamefile: FullGame, move: MoveFull): void {
-	const { boardsim, basegame } = gamefile;
+	const { boardsim } = gamefile;
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(
-		basegame,
+		boardsim.gameRules,
 		boardsim.state.local.moveIndex,
 	);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;
 	// Only track checks if we're using checkmate win condition.
-	const trackChecks = basegame.gameRules.winConditions[oppositeColor]!.includes('checkmate');
+	const trackChecks = boardsim.gameRules.winConditions[oppositeColor]!.includes('checkmate');
 
 	const checkResults = checkdetection.detectCheck(
 		gamefile,

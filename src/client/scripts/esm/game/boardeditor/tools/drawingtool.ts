@@ -125,8 +125,8 @@ function update(currentTool: Tool): void {
 
 	// Make sure we don't paint outside the world border
 	if (
-		gamefile.basegame.gameRules.worldBorder &&
-		!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder, mouseCoords)
+		gamefile.boardsim.gameRules.worldBorder &&
+		!bounds.boxContainsSquare(gamefile.boardsim.gameRules.worldBorder, mouseCoords)
 	)
 		return;
 

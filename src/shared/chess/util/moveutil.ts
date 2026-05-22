@@ -8,6 +8,7 @@ import type { Game } from '../logic/fullgame.js';
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
+import type { GameRules } from './gamerules.js';
 import type { EnPassant } from '../logic/state.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
 import type { MoveFull, CoordsTagged } from '../logic/movepiece.js';
@@ -180,8 +181,8 @@ function isGameResignable(game: Game | Board): boolean {
 /**
  * Returns the color of the player that played the provided index within the moves list.
  */
-function getColorThatPlayedMoveIndex(basegame: Game, index: number): Player {
-	const turnOrder = basegame.gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(gameRules: GameRules, index: number): Player {
+	const turnOrder = gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
 	if (index === -1) return turnOrder[turnOrder.length - 1]!;
 	return turnOrder[index % turnOrder.length]!;
@@ -190,16 +191,16 @@ function getColorThatPlayedMoveIndex(basegame: Game, index: number): Player {
 /**
  * Returns the color whos turn it is after the specified move index was played.
  */
-function getWhosTurnAtMoveIndex(basegame: Game, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(basegame, moveIndex + 1);
+function getWhosTurnAtMoveIndex(gameRules: GameRules, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(gameRules, moveIndex + 1);
 }
 
 /**
  * Returns true if any player in the turn order ever gets to turn in a row.
  */
-function doesAnyPlayerGet2TurnsInARow(basegame: Game): boolean {
+function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
 	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-	const turnOrder = basegame.gameRules.turnOrder;
+	const turnOrder = gameRules.turnOrder;
 	for (let i = 0; i < turnOrder.length; i++) {
 		const thisColor = turnOrder[i];
 		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.

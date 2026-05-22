@@ -18,6 +18,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import positionvalidation from '../../../../../shared/chess/variants/positionvalidation.js';
 
 import icnimport from '../../game/chess/icnimport.js';
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
@@ -438,6 +439,8 @@ async function validateIcnInput(): Promise<void> {
 			state_global: { ...longFormat.state_global, specialRights },
 			fullMove: longFormat.fullMove,
 		};
+		const illegalReason = positionvalidation.validatePosition(icnVariantOptions, value);
+		if (illegalReason !== null) throw new Error(illegalReason);
 	} catch {
 		element_icnInputWrap.classList.add('invalid');
 		icnVariantOptions = null;

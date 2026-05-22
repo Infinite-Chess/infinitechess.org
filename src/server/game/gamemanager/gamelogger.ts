@@ -7,6 +7,7 @@
  */
 
 import type { Game } from '../../../shared/chess/logic/fullgame.js';
+import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
@@ -191,7 +192,7 @@ function addGameRecordsInTransaction(
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
 	// --- Prepare ICN ---
-	const icn = getICNOfGame(basegame); // This will throw on failure.
+	const icn = getICNOfGame(basegame, match.gameRules); // This will throw on failure.
 
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
@@ -332,16 +333,17 @@ function updateSinglePlayerStatsInTransaction(
 }
 
 /** Converts a server-side {@link Game} into an ICN */
-function getICNOfGame(game: Game): string {
+function getICNOfGame(game: Game, gameRules: GameRules): string {
 	// Get ICN of game
 	let ICN: string;
 	try {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...game,
+				gameRules,
 				fullMove: 1,
 				state_global: {
-					moveRuleState: game.gameRules.moveRule !== undefined ? 0 : undefined,
+					moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
 				},
 			},
 			{
@@ -374,15 +376,15 @@ function getPlayerMoveCountsInGame({ match, basegame }: ServerGame): PlayerGroup
 	// Optimized to not require iterating through each move in the list.
 	const playerMoveCounts: PlayerGroup<number> = {};
 	const fullmoves_completed_total = Math.floor(
-		basegame.moves.length / basegame.gameRules.turnOrder.length,
+		basegame.moves.length / match.gameRules.turnOrder.length,
 	);
-	const last_partial_move_length = basegame.moves.length % basegame.gameRules.turnOrder.length;
+	const last_partial_move_length = basegame.moves.length % match.gameRules.turnOrder.length;
 	for (const playerStr in match.playerData) {
 		const player: Player = Number(playerStr) as Player;
 		playerMoveCounts[player] =
 			fullmoves_completed_total *
-			basegame.gameRules.turnOrder.filter((p: Player) => p === player).length;
-		playerMoveCounts[player] += basegame.gameRules.turnOrder
+			match.gameRules.turnOrder.filter((p: Player) => p === player).length;
+		playerMoveCounts[player] += match.gameRules.turnOrder
 			.slice(0, last_partial_move_length)
 			.filter((p: Player) => p === player).length;
 	}

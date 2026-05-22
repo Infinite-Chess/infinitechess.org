@@ -150,12 +150,12 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 
 	promotion: if (moveCoords.promotion !== undefined) {
 		// User IS promoting
-		if (!basegame.gameRules.promotion)
+		if (!boardsim.gameRules.promotion)
 			return { valid: false, reason: 'Game has no promoting.' };
 		if (rawTypeMoved !== r.PAWN) return { valid: false, reason: "Can't promote non-pawn." };
 
 		const promotionRanks: bigint[] | undefined =
-			basegame.gameRules.promotion.ranks[colorOfPieceMoved];
+			boardsim.gameRules.promotion.ranks[colorOfPieceMoved];
 		if (!promotionRanks) return { valid: false, reason: 'Color has no promotion ranks.' };
 
 		if (!promotionRanks.includes(moveCoords.endCoords[1]))
@@ -166,17 +166,17 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 			return { valid: false, reason: 'Incorrect promotion color.' };
 
 		const rawPromotion: RawType = typeutil.getRawType(moveCoords.promotion);
-		if (!basegame.gameRules.promotion.pieces.includes(rawPromotion))
+		if (!boardsim.gameRules.promotion.pieces.includes(rawPromotion))
 			return { valid: false, reason: 'Illegal promotion type.' };
 	} else {
 		// User is NOT promoting
 		// Make sure they aren't moving to a promotion rank WITHOUT promoting! That's also illegal.
-		if (!basegame.gameRules.promotion) break promotion; // This game doesn't have promotion.
+		if (!boardsim.gameRules.promotion) break promotion; // This game doesn't have promotion.
 
 		if (rawTypeMoved !== r.PAWN) break promotion; // Not a pawn, not forced to promote.
 
 		const promotionRanks: bigint[] | undefined =
-			basegame.gameRules.promotion.ranks[colorOfPieceMoved];
+			boardsim.gameRules.promotion.ranks[colorOfPieceMoved];
 		if (!promotionRanks) break promotion; // This color doesn't have promotion ranks, not forced to promote.
 
 		if (!promotionRanks.includes(moveCoords.endCoords[1])) break promotion; // Not on a promotion rank, not forced to promote.
@@ -197,7 +197,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 	legalmoves.appendPotentialMoves(piecemoved, moveset, legalMoves);
 	legalmoves.removeObstructedMoves(
 		gamefile.boardsim,
-		gamefile.basegame.gameRules.worldBorder,
+		gamefile.boardsim.gameRules.worldBorder,
 		piecemoved,
 		moveset,
 		legalMoves,

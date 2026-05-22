@@ -33,7 +33,7 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
  */
 function doGameOverChecks(gamefile: FullGame): void {
 	const conclusion = getGameConclusion(gamefile);
-	gamefileutility.setConclusion(gamefile.basegame, conclusion);
+	gamefileutility.setConclusion(gamefile.basegame, conclusion, gamefile.boardsim.gameRules);
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
 		moveutil.flagLastMoveAsMate(gamefile.boardsim);
 }
@@ -58,19 +58,25 @@ function getGameConclusion(gamefile: FullGame): GameConclusion | undefined {
 		detectCheckmateOrStalemate(gamefile) ||
 		// This needs to be last so that a draw isn't enforced in a true win
 		detectMoveRule(gamefile) || // 50-move-rule
-		detectInsufficientMaterial(gamefile.basegame.gameRules, gamefile.boardsim) ||
+		detectInsufficientMaterial(gamefile.boardsim.gameRules, gamefile.boardsim) ||
 		undefined
 	); // No win condition passed. No game conclusion!
 }
 
 function detectRoyalCapture({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture'))
+	if (
+		!gamefileutility.isOpponentUsingWinCondition(
+			boardsim.gameRules,
+			basegame.whosTurn,
+			'royalcapture',
+		)
+	)
 		return undefined; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'royalcapture' };
@@ -82,7 +88,7 @@ function detectRoyalCapture({ boardsim, basegame }: FullGame): GameConclusion | 
 function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			basegame,
+			boardsim.gameRules,
 			basegame.whosTurn,
 			'allroyalscaptured',
 		)
@@ -99,7 +105,7 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusi
 
 	if (royalCount.length === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allroyalscaptured' };
@@ -111,7 +117,7 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusi
 function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			basegame,
+			boardsim.gameRules,
 			basegame.whosTurn,
 			'allpiecescaptured',
 		)
@@ -123,7 +129,7 @@ function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusi
 
 	if (count === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allpiecescaptured' };
@@ -133,7 +139,7 @@ function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusi
 }
 
 function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth'))
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim.gameRules, basegame.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
@@ -156,7 +162,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 
 	if (kingInCenter) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim.gameRules,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'koth' };
@@ -170,9 +176,9 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
  * @param gamefile - The gamefile
  * @returns `{ victor: 0, condition: 'moverule' }`, if the game is over by the move-rule, otherwise *undefined*.
  */
-function detectMoveRule({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
-	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) {
+function detectMoveRule({ boardsim }: FullGame): GameConclusion | undefined {
+	if (boardsim.gameRules.moveRule === undefined) return undefined; // No move-rule being used
+	if (boardsim.state.global.moveRuleState === boardsim.gameRules.moveRule) {
 		return { victor: null, condition: 'moverule' };
 	}
 	return undefined;

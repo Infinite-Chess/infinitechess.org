@@ -317,9 +317,9 @@ function updateGamefileProperties(
 
 	// Update the promotionlines in the gamefile for rendering purposes
 	if (promotionRanks === undefined || promotionPieces === undefined) {
-		delete gamefile.basegame.gameRules.promotion;
+		delete gamefile.boardsim.gameRules.promotion;
 	} else {
-		gamefile.basegame.gameRules.promotion = {
+		gamefile.boardsim.gameRules.promotion = {
 			ranks: {
 				[p.WHITE]: promotionRanks.white,
 				[p.BLACK]: promotionRanks.black,
@@ -330,12 +330,13 @@ function updateGamefileProperties(
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
 	// prettier-ignore
-	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	gamefile.boardsim.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
-	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
+	gamefile.basegame.whosTurn = gamefile.boardsim.gameRules.turnOrder[0]!;
+	gamefile.boardsim.whosTurn = gamefile.boardsim.gameRules.turnOrder[0]!;
 
 	// Update World Border
-	gamefile.basegame.gameRules.worldBorder = worldBorder;
+	gamefile.boardsim.gameRules.worldBorder = worldBorder;
 }
 
 // Exports -------------------------------------------------------------

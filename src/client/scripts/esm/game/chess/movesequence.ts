@@ -56,7 +56,7 @@ function makeMove(
 	updateGui(false);
 
 	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
-		const clockStamp_ = clock.push(basegame, basegame.clocks!);
+		const clockStamp_ = clock.push(basegame, basegame.clocks!, boardsim.gameRules);
 		guiclock.push(basegame.clocks!);
 		// Add the clock stamp to the move
 		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;

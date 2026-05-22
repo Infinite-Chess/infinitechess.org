@@ -28,10 +28,6 @@ describe('gamecompressor', () => {
 				basegame: {
 					metadata: mockMetaData,
 					dateTimestamp: Date.now(),
-					// The game rules are essential for the compressor to know the turn order
-					gameRules: {
-						turnOrder: [p.WHITE, p.BLACK],
-					} as any,
 					moves: [],
 					whosTurn: p.WHITE,
 					untimed: true,
@@ -45,6 +41,10 @@ describe('gamecompressor', () => {
 							specialRights: new Set(),
 						},
 					},
+					// The game rules are essential for the compressor to know the turn order
+					gameRules: {
+						turnOrder: [p.WHITE, p.BLACK],
+					} as any,
 					moves: [],
 					state: {
 						local: {

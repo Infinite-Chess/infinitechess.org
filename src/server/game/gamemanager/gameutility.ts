@@ -9,6 +9,7 @@
 
 import type { Game } from '../../../shared/chess/logic/fullgame.js';
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
+import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
@@ -130,8 +131,8 @@ interface MatchInfo {
 	 * The time control of the game (e.g. `"600+5"` or `"-"` for untimed).
 	 * Guaranteed defined here because we can't read it from MetaData since it is optional there.
 	 */
-	clock: TimeControl;
-	/** The data held for each player */
+	clock: TimeControl; /** The rules governing how this game is played. */
+	gameRules: GameRules; /** The data held for each player */
 	playerData: PlayerGroup<PlayerData>;
 
 	/** The ID of the timeout which will auto-lose the player
@@ -174,6 +175,7 @@ function initMatch(
 	invite: AuthSeek,
 	id: number,
 	assignedPlayers: PlayerGroup<{ identifier: AuthMemberInfo }>,
+	gameRules: GameRules,
 ): MatchInfo {
 	const playerData: MatchInfo['playerData'] = {};
 
@@ -195,6 +197,7 @@ function initMatch(
 		timeCreated: Date.now(),
 		rated: invite.mode === 'rated',
 		clock: invite.time,
+		gameRules,
 	};
 }
 
@@ -783,8 +786,8 @@ function isGameBorderlineResignable(basegame: Game): boolean {
  * @param i - The moveIndex
  * @returns - The color that played the moveIndex
  */
-function getColorThatPlayedMoveIndex(basegame: Game, i: number): Player {
-	const turnOrder = basegame.gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(gameRules: GameRules, i: number): Player {
+	const turnOrder = gameRules.turnOrder;
 	if (i === -1) return turnOrder[turnOrder.length - 1]!;
 
 	return turnOrder[i % turnOrder.length]!;

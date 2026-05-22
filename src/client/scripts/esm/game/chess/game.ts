@@ -146,7 +146,11 @@ function update(): void {
 	const timeWinner = clock.update(gamefile.basegame);
 	if (timeWinner && !onlinegame.areInOnlineGame()) {
 		// undefined if no clock has ran out
-		gamefileutility.setConclusion(gamefile.basegame, { victor: timeWinner, condition: 'time' });
+		gamefileutility.setConclusion(
+			gamefile.basegame,
+			{ victor: timeWinner, condition: 'time' },
+			gamefile.boardsim.gameRules,
+		);
 		gameslot.concludeGame();
 	}
 	guiclock.update(gamefile.basegame);
@@ -271,7 +275,7 @@ function renderScene(): void {
 	// Star Field Animation: Appears in border & voids
 	maskedDraw.execute(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // EXCLUSION MASK is our playable region
+		() => border.drawPlayableRegionMask(gamefile.boardsim.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
@@ -279,7 +283,7 @@ function renderScene(): void {
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
 	maskedDraw.execute(
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // INCLUSION MASK containing playable region
+		() => border.drawPlayableRegionMask(gamefile.boardsim.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
@@ -334,7 +338,7 @@ function renderTilesAndPromoteLines(): void {
 	// The start box determines how far out promotion lines are rendered.
 	// In editor mode, don't provide it, so the lines extend to the screen edges.
 	const startBox = gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box;
-	promotionlines.render(gamefile.basegame.gameRules.promotion, startBox);
+	promotionlines.render(gamefile.boardsim.gameRules.promotion, startBox);
 }
 
 /**

@@ -133,7 +133,7 @@ function onNoButtonPress(): void {
 
 /** Updates the engineconfig UI values when opened */
 function updateEngineUIcontents(): void {
-	const existingBorder = gameslot.getGamefile()?.basegame.gameRules.worldBorder !== undefined;
+	const existingBorder = gameslot.getGamefile()?.boardsim.gameRules.worldBorder !== undefined;
 	element_noborder.checked = existingBorder;
 	element_yesborder.checked = !existingBorder;
 }
