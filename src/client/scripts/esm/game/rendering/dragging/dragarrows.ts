@@ -521,7 +521,6 @@ function renderSlideMoveHighlights(): void {
 	moves.sliding[lineKey] = moveset.sliding[lineKey]!;
 	legalmoves.removeObstructedMoves(
 		gamefile,
-		gamefile.gameRules.worldBorder,
 		piece,
 		moveset,
 		moves,

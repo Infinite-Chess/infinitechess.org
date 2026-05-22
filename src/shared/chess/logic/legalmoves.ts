@@ -159,7 +159,6 @@ function appendSpecialMoves(
  */
 function removeObstructedMoves(
 	boardsim: Board,
-	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	legalmoves: LegalMoves,
@@ -168,19 +167,11 @@ function removeObstructedMoves(
 	const color = typeutil.getColorFromType(piece.type);
 
 	// Remove obstructed jumping/individual moves
-	removeInvalidIndividualMoves(boardsim, worldBorder, legalmoves.individual, color, premove);
+	removeInvalidIndividualMoves(boardsim, legalmoves.individual, color, premove);
 
 	// Block sliding moves according to obstructions
 	if (moveset.sliding)
-		removeObstructedSlidingMoves(
-			boardsim,
-			worldBorder,
-			piece,
-			moveset,
-			legalmoves.sliding,
-			color,
-			premove,
-		);
+		removeObstructedSlidingMoves(boardsim, piece, moveset, legalmoves.sliding, color, premove);
 }
 
 /**
@@ -189,21 +180,13 @@ function removeObstructedMoves(
  */
 function removeInvalidIndividualMoves(
 	boardsim: Board,
-	worldBorder: UnboundedRectangle | undefined,
 	individualMoves: Coords[],
 	color: Player,
 	premove: boolean,
 ): Coords[] {
 	for (let i = individualMoves.length - 1; i >= 0; i--) {
 		const thisMove = individualMoves[i]!;
-		const moveValidity = testSquareValidity(
-			boardsim,
-			worldBorder,
-			thisMove,
-			color,
-			premove,
-			false,
-		);
+		const moveValidity = testSquareValidity(boardsim, thisMove, color, premove, false);
 		if (moveValidity === 2) individualMoves.splice(i, 1); // Not legal to land on
 	}
 
@@ -215,7 +198,6 @@ function removeInvalidIndividualMoves(
  */
 function removeObstructedSlidingMoves(
 	boardsim: Board,
-	worldBorder: UnboundedRectangle | undefined,
 	piece: Piece,
 	moveset: PieceMoveset,
 	slidingMoves: Record<Vec2Key, SlideLimits>,
@@ -231,7 +213,7 @@ function removeObstructedSlidingMoves(
 		const piecesLine = lines.get(key);
 		if (piecesLine === undefined) continue; // No pieces on this line, so no obstructions. Needed so dragarrows feature doesn't crash on empty lines.
 		slidingMoves[linekey as Vec2Key] = slide_CalcLegalLimit(
-			worldBorder,
+			boardsim.gameRules.worldBorder,
 			blockingFunc,
 			boardsim.pieces,
 			piecesLine,
@@ -257,13 +239,13 @@ function removeObstructedSlidingMoves(
  */
 function testSquareValidity(
 	boardsim: Board,
-	worldBorder: UnboundedRectangle | undefined,
 	coords: Coords,
 	friendlyColor: Player,
 	premove: boolean,
 	capturing: boolean,
 ): 0 | 1 | 2 {
 	// Test whether the given square lies out of bounds of the position.
+	const worldBorder = boardsim.gameRules.worldBorder;
 	if (worldBorder !== undefined && !bounds.boxContainsSquare(worldBorder, coords)) return 2;
 
 	const typeOnSquare = boardutil.getTypeFromCoords(boardsim.pieces, coords);
@@ -313,7 +295,7 @@ function calculateAll(boardsim: Board, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(boardsim, boardsim.gameRules.worldBorder, piece, moveset, moves, false);
+	removeObstructedMoves(boardsim, piece, moveset, moves, false);
 	appendSpecialMoves(boardsim, piece, moveset, moves, false);
 	checkresolver.removeCheckInvalidMoves(boardsim, piece, moves);
 	return moves;
@@ -329,7 +311,7 @@ function calculateAllPremoves(boardsim: Board, piece: Piece): LegalMoves {
 	const moveset = getPieceMoveset(boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(boardsim, boardsim.gameRules.worldBorder, piece, moveset, moves, true); // true to only remove void and world border obstructions
+	removeObstructedMoves(boardsim, piece, moveset, moves, true); // true to only remove void and world border obstructions
 	appendSpecialMoves(boardsim, piece, moveset, moves, true); // true to add all possible moves
 	// SKIP removing check invalids!
 	return moves;

@@ -197,7 +197,7 @@ type LineSnapPoint = {
  */
 function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	const pointerCoords = space.convertWorldSpaceToCoords(world);
-	const boardsim = gameslot.getGamefile()!;
+	const gamefile = gameslot.getGamefile()!;
 
 	const drawnRays = annotations.getRays();
 	const presetRays = drawrays.getPresetRays();
@@ -313,7 +313,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// const allPrimitiveSlidesInGame = boardsim.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
 	// prettier-ignore
-	const searchVectors = boardsim.pieces.hippogonalsPresent ? [
+	const searchVectors = gamefile.pieces.hippogonalsPresent ? [
 		...vectors.VECTORS_ORTHOGONAL,
 		...vectors.VECTORS_DIAGONAL,
 		...vectors.VECTORS_HIPPOGONAL
@@ -339,9 +339,9 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// 2. Pieces ========================================
 
 	// Only snap to these if there isn't too many pieces (slow)
-	if (boardutil.getPieceCountOfGame(boardsim.pieces) < THRESHOLD_TO_SNAP_PIECES) {
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces: BDCoords[] = boardutil
-			.getCoordsOfAllPieces(boardsim.pieces)
+			.getCoordsOfAllPieces(gamefile.pieces)
 			.map((c) => bdcoords.FromCoords(c)); // Convert to BDCoords
 		const closestPieceSnap = findClosestEntityOfGroup(
 			pieces,

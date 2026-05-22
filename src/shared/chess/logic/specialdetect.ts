@@ -170,7 +170,6 @@ function pawns(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yOneorNegOne];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
-		boardsim.gameRules.worldBorder,
 		singlePushCoord,
 		color,
 		premove,
@@ -193,7 +192,6 @@ function pawns(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 		];
 		moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
 			doublePushCoord,
 			color,
 			premove,
@@ -226,7 +224,6 @@ function pawns(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 	for (const captureCoords of coordsToCapture) {
 		const moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
 			captureCoords,
 			color,
 			premove,
@@ -349,7 +346,6 @@ function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean)
 
 				const moveValidity = legalmoves.testSquareValidity(
 					boardsim,
-					boardsim.gameRules.worldBorder,
 					currentCoord,
 					color,
 					premove,

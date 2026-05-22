@@ -192,14 +192,7 @@ function validateMove(boardsim: Board, moveCoords: MoveCoords): MoveValidationRe
 	const moveset = legalmoves.getPieceMoveset(boardsim, piecemoved.type);
 	const legalMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendPotentialMoves(piecemoved, moveset, legalMoves);
-	legalmoves.removeObstructedMoves(
-		boardsim,
-		boardsim.gameRules.worldBorder,
-		piecemoved,
-		moveset,
-		legalMoves,
-		false,
-	);
+	legalmoves.removeObstructedMoves(boardsim, piecemoved, moveset, legalMoves, false);
 	legalmoves.appendSpecialMoves(boardsim, piecemoved, moveset, legalMoves, false);
 
 	// Check if even the non-check-respecting move is legal first

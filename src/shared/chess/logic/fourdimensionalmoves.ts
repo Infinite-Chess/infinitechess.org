@@ -78,7 +78,6 @@ function pawnLegalMoves(
 	const singlePushCoord: CoordsTagged = [coords[0], coords[1] + yDistanceParity];
 	let moveValidity = legalmoves.testSquareValidity(
 		boardsim,
-		boardsim.gameRules.worldBorder,
 		singlePushCoord,
 		color,
 		premove,
@@ -101,7 +100,6 @@ function pawnLegalMoves(
 		];
 		moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
 			doublePushCoord,
 			color,
 			premove,
@@ -139,7 +137,6 @@ function pawnLegalMoves(
 	for (const captureCoords of coordsToCapture) {
 		const moveValidity = legalmoves.testSquareValidity(
 			boardsim,
-			boardsim.gameRules.worldBorder,
 			captureCoords,
 			color,
 			premove,
@@ -303,7 +300,6 @@ function fourDimensionalKnightMove(
 						if (
 							legalmoves.testSquareValidity(
 								boardsim,
-								boardsim.gameRules.worldBorder,
 								endCoords,
 								color,
 								premove,
@@ -354,7 +350,6 @@ function fourDimensionalKingMove(
 ): Coords[] {
 	const legalMoves: Coords[] = kingLegalMoves(
 		boardsim,
-		boardsim.gameRules.worldBorder,
 		coords,
 		color,
 		premove,
@@ -373,7 +368,6 @@ function fourDimensionalKingMove(
  */
 function kingLegalMoves(
 	boardsim: Board,
-	worldBorder: UnboundedRectangle | undefined,
 	coords: Coords,
 	color: Player,
 	premove: boolean,
@@ -402,7 +396,6 @@ function kingLegalMoves(
 					if (
 						legalmoves.testSquareValidity(
 							boardsim,
-							worldBorder,
 							endCoords,
 							color,
 							premove,
