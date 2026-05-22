@@ -158,24 +158,25 @@ function restoreSingleGame(
 	// by clock.edit() inside initGameMetadata() via the clockValues we pass in.
 
 	// 8. Reconstruct MatchInfo
-	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
+	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 6. Parse & replay moves, conditionally constructing boardsim
+	// 6. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
-	const servergame: ServerGame = {
-		...gamemetadata,
-		gameRules,
-		match: matchInfo,
-		moves,
-		whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
-	};
-
+	let servergame: ServerGame;
 	if (gameRow.validate_moves) {
 		const boardsim = boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp);
-		servergame.boardsim = boardsim;
 		movepiece.makeAllMovesInGame(boardsim, moves);
-		servergame.whosTurn = boardsim.whosTurn; // Sync whosTurn from replayed boardsim
+		servergame = { ...gamemetadata, match, ...boardsim, validateMoves: true };
+	} else {
+		servergame = {
+			...gamemetadata,
+			match,
+			gameRules,
+			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
+			moves,
+			validateMoves: false,
+		};
 	}
 
 	// 9. Compute pending timers

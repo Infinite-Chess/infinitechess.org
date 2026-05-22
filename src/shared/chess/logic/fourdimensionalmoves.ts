@@ -15,7 +15,6 @@ import type { Player } from '../util/typeutil.js';
 import type { Dimensions } from '../variants/variant_scripts/gen4DPosition.js';
 import type { MoveRunning } from './specialmove.js';
 import type { CoordsTagged } from './movepiece.js';
-import type { UnboundedRectangle } from '../../util/math/bounds.js';
 
 import state from './state.js';
 import bimath from '../../util/math/bimath.js';

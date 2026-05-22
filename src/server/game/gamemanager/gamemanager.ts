@@ -111,18 +111,20 @@ function createGame(
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
-	const boardsim = doesVariantSupportServerValidation(variant, gamemetadata.dateTimestamp)
-		? boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp)
-		: undefined;
-
-	const servergame: ServerGame = {
-		...gamemetadata,
-		gameRules,
-		match,
-		moves: [],
-		whosTurn: gameRules.turnOrder[0]!,
-		boardsim,
-	};
+	let servergame: ServerGame;
+	if (doesVariantSupportServerValidation(variant, gamemetadata.dateTimestamp)) {
+		const boardsim = boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp);
+		servergame = { ...gamemetadata, match, ...boardsim, validateMoves: true };
+	} else {
+		servergame = {
+			...gamemetadata,
+			match,
+			gameRules,
+			whosTurn: gameRules.turnOrder[0]!,
+			moves: [],
+			validateMoves: false,
+		};
+	}
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
 		if (socket)
@@ -417,7 +419,7 @@ function teardownGame(servergame: ServerGame): void {
 		gameutility.broadcastGameUpdate(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (servergame.boardsim !== undefined) {
+	if (servergame.validateMoves) {
 		// Server validated every move — cheating is impossible.
 		// We can log and unsubscribe clients immediately.
 		deleteGame(servergame);

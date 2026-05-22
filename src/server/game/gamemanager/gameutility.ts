@@ -156,23 +156,31 @@ interface MatchInfo {
 
 /** The game stored in the server */
 type ServerGame = GameMetadata & {
-	/** The rules governing how this game is played. */
-	gameRules: GameRules;
 	match: MatchInfo;
-	moves: MoveRecord[];
-	whosTurn: Player;
-	/**
-	 * Used for server-side move legality validation.
-	 * Present only for small variants.
-	 * This also determines whether the server game is instantly deleted or not after conclusion.
-	 */
-	boardsim?: Board;
-};
+} & ValidationDependant;
+
+/** The servergame variables that depend on whether the server is performing legal move validation. */
+export type ValidationDependant =
+	| ({
+			/**
+			 * Whether the server is performing move validation for this game.
+			 * If present, board state is fully tracked.
+			 * True only for small variants.
+			 * This also determines whether the server game is instantly deleted or not after conclusion.
+			 */
+			validateMoves: true;
+	  } & Board)
+	| {
+			validateMoves: false;
+			gameRules: GameRules;
+			whosTurn: Player;
+			moves: MoveRecord[];
+	  };
 
 // Functions --------------------------------------------------------------------------------------
 
 /**
- * Construct the match bject based on the invite options and how players have been assigned
+ * Construct the match object based on the invite options and how players have been assigned
  */
 function initMatch(
 	invite: AuthSeek,

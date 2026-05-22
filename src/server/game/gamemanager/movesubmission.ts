@@ -121,11 +121,10 @@ function submitMove(
 		return;
 	}
 
-	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
-	const moveRecord =
-		servergame.boardsim !== undefined
-			? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
-			: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
+	// Use server-side validation if enabled, otherwise trust the client's reported conclusion.
+	const moveRecord = servergame.validateMoves
+		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
+		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
@@ -164,12 +163,12 @@ function submitMove(
  */
 function applyServerValidatedMove(
 	ws: CustomWebSocket,
-	servergame: ServerGame,
+	servergame: ServerGame & { validateMoves: true },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
 	color: Player,
 ): MoveRecord | undefined {
-	const validationResult = movevalidation.validateMove(servergame.boardsim!, moveParsed);
+	const validationResult = movevalidation.validateMove(servergame, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -185,23 +184,18 @@ function applyServerValidatedMove(
 		return;
 	}
 
-	// Generate and make the move in the logical game
-	const fullMove = movepiece.generateAndMakeMove(servergame.boardsim!, validationResult.tagged);
+	// Generate and make the move. makeMove pushes the resulting MoveFull onto servergame.moves.
+	const moveRecord = movepiece.generateAndMakeMove(servergame, validationResult.tagged);
 
-	// Set the clock stamp on both the boardsim's MoveFull and the basegame's MoveRecord.
-	// (makeMove creates a separate MoveRecord object for basegame, so we must set both.)
-	const moveRecord = servergame.moves[servergame.moves.length - 1]!;
+	// Push the clock after the move has been added to servergame.moves.
 	const clockStamp = pushGameClock(servergame);
-	if (clockStamp !== undefined) {
-		fullMove.clockStamp = clockStamp;
-		moveRecord.clockStamp = clockStamp;
-	}
+	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp;
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
-	const conclusion = wincondition.getGameConclusion(servergame.boardsim!);
+	const conclusion = wincondition.getGameConclusion(servergame);
 	gamefileutility.setConclusion(servergame, conclusion);
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
-		moveutil.flagLastMoveAsMate(servergame.boardsim!);
+		moveutil.flagLastMoveAsMate(servergame);
 
 	return moveRecord;
 }
@@ -212,7 +206,7 @@ function applyServerValidatedMove(
  */
 function applyClientReportedMove(
 	ws: CustomWebSocket,
-	servergame: ServerGame,
+	servergame: ServerGame & { validateMoves: false },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
 	color: Player,

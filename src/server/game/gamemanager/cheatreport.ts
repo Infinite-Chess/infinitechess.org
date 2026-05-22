@@ -46,7 +46,7 @@ function onReport(
 
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
-	if (servergame.boardsim !== undefined) {
+	if (servergame.validateMoves) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(

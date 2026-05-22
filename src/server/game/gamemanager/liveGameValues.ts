@@ -130,7 +130,7 @@ function onGameCreated(servergame: ServerGame): void {
 		time_ended: null,
 		afk_resign_time: null,
 		delete_time: null,
-		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
+		validate_moves: servergame.validateMoves ? 1 : 0,
 	};
 
 	insertLiveGame(record);
