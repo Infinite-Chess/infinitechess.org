@@ -136,12 +136,12 @@ function applyPremove(
 ): void {
 	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward, true); // forward & global are true
-	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, premove, forward);
+	if (mesh) movesequence.runMeshChanges(gamefile, mesh, premove, forward);
 }
 
 /** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */
 function generatePremove(gamefile: FullGame, moveTagged: MoveTagged): Premove {
-	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, moveTagged.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
 			`Cannot generate premove because no piece exists at coords ${JSON.stringify(moveTagged.startCoords)}.`,
@@ -161,16 +161,12 @@ function generatePremove(gamefile: FullGame, moveTagged: MoveTagged): Premove {
 	// The actual function will return whether a special move was actually made or not.
 	// If a special move IS made, we skip the normal move piece method.
 
-	if (rawType in gamefile.boardsim.specialMoves)
-		specialMoveMade = gamefile.boardsim.specialMoves[rawType]!(
-			gamefile.boardsim,
-			piece,
-			premove,
-		);
-	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile.boardsim, piece, moveTagged, premove); // Move piece regularly (no special tag)
+	if (rawType in gamefile.specialMoves)
+		specialMoveMade = gamefile.specialMoves[rawType]!(gamefile, piece, premove);
+	if (!specialMoveMade) movepiece.calcMovesChanges(gamefile, piece, moveTagged, premove); // Move piece regularly (no special tag)
 
 	// Delete all special rights that should be revoked from the move.
-	movepiece.queueSpecialRightDeletionStateChanges(gamefile.boardsim, premove);
+	movepiece.queueSpecialRightDeletionStateChanges(gamefile, premove);
 
 	return premove;
 }
@@ -340,7 +336,7 @@ function premoveIsLegal(
 ): { legal: true; endCoordsTagged: CoordsTagged } | { legal: false } {
 	if (!premove) return { legal: false };
 
-	const piece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, premove.startCoords);
+	const piece = boardutil.getPieceFromCoords(gamefile.pieces, premove.startCoords);
 	if (!piece) return { legal: false }; // Can't premove nothing, could happen if your piece was captured by enpassant
 
 	if (premove.type !== piece.type) return { legal: false }; // Our piece was probably captured, so it can't move anymore, thus the premove is illegal.

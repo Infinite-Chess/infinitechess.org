@@ -125,12 +125,12 @@ function update(currentTool: Tool): void {
 
 	// Make sure we don't paint outside the world border
 	if (
-		gamefile.boardsim.gameRules.worldBorder &&
-		!bounds.boxContainsSquare(gamefile.boardsim.gameRules.worldBorder, mouseCoords)
+		gamefile.gameRules.worldBorder &&
+		!bounds.boxContainsSquare(gamefile.gameRules.worldBorder, mouseCoords)
 	)
 		return;
 
-	const pieceHovered = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, mouseCoords);
+	const pieceHovered = boardutil.getPieceFromCoords(gamefile.pieces, mouseCoords);
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
@@ -178,7 +178,7 @@ function queueToggleSpecialRight(
 ): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	const current = gamefile.state.global.specialRights.has(coordsKey);
 	const future = !current;
 
 	if (addingSpecialRights === undefined) addingSpecialRights = future;

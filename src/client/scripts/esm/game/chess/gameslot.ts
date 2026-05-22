@@ -101,17 +101,15 @@ document.addEventListener('theme-change', () => {
 	if (!gamefile) return;
 	imagecache.deleteImageCache();
 	// texturecache.deleteTextureCache(gl);
-	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
+	imagecache.initImagesForGame(gamefile).then(() => {
 		// Regenerate piece textures with the new tinted images
-		texturecache.initTexturesForGame(gl, gamefile.boardsim);
-		piecemodels.regenAll(gamefile.boardsim, mesh!);
+		texturecache.initTexturesForGame(gl, gamefile);
+		piecemodels.regenAll(gamefile, mesh!);
 	});
 	// Reinit the promotion UI
 	guipromotion.resetUI();
-	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
-		gamefile.boardsim.gameRules.turnOrder,
-	);
-	guipromotion.initUI(gamefile.boardsim.gameRules.promotion?.pieces, uniquePlayers);
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder);
+	guipromotion.initUI(gamefile.gameRules.promotion?.pieces, uniquePlayers);
 });
 
 // Functions ---------------------------------------------------------------
@@ -179,14 +177,11 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
 	// Disable miniimages if there's too many pieces
 	if (pieceCount > miniimagerenderer.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
-	if (
-		pieceCount > arrows.MAX_PIECES ||
-		loadedGamefile.boardsim.pieces.slides.length > arrows.MAX_LINES
-	)
+	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);
 
 	initCopyPastGameListeners();
@@ -204,19 +199,19 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile!.basegame);
+	guiclock.set(loadedGamefile!);
 
-	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
-	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
+	await imagecache.initImagesForGame(loadedGamefile!);
+	texturecache.initTexturesForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
-		loadedGamefile!.boardsim.gameRules.turnOrder,
+		loadedGamefile!.gameRules.turnOrder,
 	);
-	guipromotion.initUI(loadedGamefile!.boardsim.gameRules.promotion?.pieces, uniquePlayers);
+	guipromotion.initUI(loadedGamefile!.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);
+	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Initialize the mesh empty
@@ -227,13 +222,13 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!.boardsim, mesh);
+	piecemodels.regenAll(loadedGamefile!, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined)
 		animateLastMoveTimeoutID = setTimeout(() => {
 			// A small delay to animate the most recently played move.
-			if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
+			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
 			movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 			animateMove(lastmove.changes, true);
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
@@ -266,7 +261,7 @@ function unloadGame(): void {
  */
 function startStartingTransition(): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-		loadedGamefile!.boardsim.startSnapshot.box,
+		loadedGamefile!.startSnapshot.box,
 	);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
@@ -305,7 +300,7 @@ function callbackCopy(_event: Event): void {
  */
 function concludeGame(): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	const basegame = loadedGamefile.basegame;
+	const basegame = loadedGamefile;
 	if (basegame.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
 
@@ -335,11 +330,7 @@ function concludeGame(): void {
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	gamefileutility.setConclusion(
-		loadedGamefile!.basegame,
-		undefined,
-		loadedGamefile!.boardsim.gameRules,
-	);
+	gamefileutility.setConclusion(loadedGamefile!, undefined, loadedGamefile!.gameRules);
 }
 
 export default {

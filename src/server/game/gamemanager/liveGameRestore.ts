@@ -27,7 +27,6 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
 import fullgame from '../../../shared/chess/logic/fullgame.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
@@ -143,12 +142,12 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 5. Create the basegame (also computes gameRules)
+	// 5. Create the gamemetadata (also computes gameRules)
 	const variant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 	};
-	const { game: basegame, gameRules } = fullgame.initGame(
+	const { gamemetadata, gameRules } = fullgame.initGameMetadata(
 		gameMetadata,
 		gameRow.time_created,
 		variant?.mod,
@@ -157,32 +156,27 @@ function restoreSingleGame(
 	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
-	// by clock.edit() inside initGame() via the clockValues we pass in.
+	// by clock.edit() inside initGameMetadata() via the clockValues we pass in.
 
 	// 8. Reconstruct MatchInfo
 	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities, gameRules);
 
-	const servergame: ServerGame = { match: matchInfo, basegame };
-
 	// 6. Parse & replay moves, conditionally constructing boardsim
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
-	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(gameRules, variant, basegame.dateTimestamp);
-		servergame.boardsim = boardsim;
-		// Pushes moves to BOTH the basegame and boardsim
-		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
-	} else {
-		// Push all the moves to JUST the basegame
-		for (const move of moves) {
-			basegame.moves.push(jsutil.deepCopyObject(move));
-		}
+	const servergame: ServerGame = {
+		...gamemetadata,
+		match: matchInfo,
+		moves,
+		whosTurn:
+			matchInfo.gameRules.turnOrder[moves.length % matchInfo.gameRules.turnOrder.length]!,
+	};
 
-		// Update whosTurn based on move count
-		basegame.whosTurn =
-			matchInfo.gameRules.turnOrder[
-				basegame.moves.length % matchInfo.gameRules.turnOrder.length
-			]!;
+	if (gameRow.validate_moves) {
+		const boardsim = boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp);
+		servergame.boardsim = boardsim;
+		movepiece.makeAllMovesInGame(boardsim, moves);
+		servergame.whosTurn = boardsim.whosTurn; // Sync whosTurn from replayed boardsim
 	}
 
 	// 9. Compute pending timers
@@ -415,9 +409,8 @@ function computePendingTimers(
 	}
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.basegame.untimed && gameRow.color_ticking !== null) {
-		const tickingTime =
-			servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player]!;
+	if (!servergame.untimed && gameRow.color_ticking !== null) {
+		const tickingTime = servergame.clocks.currentTime[gameRow.color_ticking as Player]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 

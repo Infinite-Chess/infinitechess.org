@@ -45,19 +45,18 @@ function makeMove(
 	moveTagged: MoveTagged,
 	{ doGameOverChecks = true } = {},
 ): MoveFull {
-	const { basegame, boardsim } = gamefile;
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
 
-	if (mesh) runMeshChanges(boardsim, mesh, move, true);
+	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 
 	// GUI changes
 	updateGui(false);
 
-	if (!onlinegame.areInOnlineGame() && !gamefile.basegame.untimed) {
-		const clockStamp_ = clock.push(basegame, basegame.clocks!, boardsim.gameRules);
-		guiclock.push(basegame.clocks!);
+	if (!onlinegame.areInOnlineGame() && !gamefile.untimed) {
+		const clockStamp_ = clock.push(gamefile, gamefile.clocks!, gamefile.gameRules);
+		guiclock.push(gamefile.clocks!);
 		// Add the clock stamp to the move
 		if (clockStamp_ !== undefined) move.clockStamp = clockStamp_;
 	}
@@ -65,7 +64,7 @@ function makeMove(
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(basegame) && !onlinegame.areInOnlineGame())
+		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame())
 			gameslot.concludeGame();
 	}
 
@@ -97,12 +96,7 @@ function makeMoveAndAnimate(
  * were affected, because other pieces may still need graphical changes
  * from the move's changes! For example, pawn deleted that promoted.
  */
-function runMeshChanges(
-	boardsim: FullGame['boardsim'],
-	mesh: Mesh,
-	edit: Edit,
-	forward: boolean,
-): void {
+function runMeshChanges(boardsim: FullGame, mesh: Mesh, edit: Edit, forward: boolean): void {
 	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
 	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
@@ -115,12 +109,12 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
 	// Terminate all current animations to avoid a crash when undoing moves
 	animation.clearAnimations();
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
-	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
-	if (gamefileutility.isGameOver(gamefile.basegame)) gameslot.unConcludeGame();
+	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
 	updateGui(false); // GUI changes
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
@@ -156,8 +150,8 @@ function viewMove(
  * @param index the move index to goto
  */
 function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): void {
-	movepiece.goToMove(gamefile.boardsim, index, (move: MoveFull) =>
-		viewMove(gamefile, mesh, move, index >= gamefile.boardsim.state.local.moveIndex),
+	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
+		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
 	updateGui(false);
 }
@@ -167,7 +161,7 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): v
  */
 function viewFront(gamefile: FullGame, mesh: Mesh | undefined): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
-	viewIndex(gamefile, mesh, gamefile.boardsim.moves.length - 1);
+	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
 }
 
 /**
@@ -180,14 +174,12 @@ function viewFront(gamefile: FullGame, mesh: Mesh | undefined): void {
  * ASSUMES that it is legal to navigate in the direction.
  */
 function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boolean): void {
-	const { boardsim } = gamefile;
-
 	// Determine the index of the move to apply
-	const idx = forward ? boardsim.state.local.moveIndex + 1 : boardsim.state.local.moveIndex;
+	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
 
 	// Make sure the move exists. Normally we'd never call this method
 	// if it does, but just in case we forget to check.
-	const move = boardsim.moves[idx];
+	const move = gamefile.moves[idx];
 	if (move === undefined)
 		throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
 

@@ -25,38 +25,33 @@ describe('gamecompressor', () => {
 			} as const;
 
 			const mockGame: FullGame = {
-				basegame: {
-					metadata: mockMetaData,
-					dateTimestamp: Date.now(),
-					moves: [],
-					whosTurn: p.WHITE,
-					untimed: true,
-					clocks: undefined,
+				metadata: mockMetaData,
+				dateTimestamp: Date.now(),
+				whosTurn: p.WHITE,
+				untimed: true,
+				clocks: undefined,
+				startSnapshot: {
+					position: new Map(),
+					fullMove: 1,
+					state_global: {
+						specialRights: new Set(),
+					},
 				},
-				boardsim: {
-					startSnapshot: {
-						position: new Map(),
-						fullMove: 1,
-						state_global: {
-							specialRights: new Set(),
-						},
-					},
-					// The game rules are essential for the compressor to know the turn order
-					gameRules: {
-						turnOrder: [p.WHITE, p.BLACK],
-					} as any,
-					moves: [],
-					state: {
-						local: {
-							moveIndex: -1,
-						},
-					},
+				// The game rules are essential for the compressor to know the turn order
+				gameRules: {
+					turnOrder: [p.WHITE, p.BLACK],
 				} as any,
-			};
+				moves: [],
+				state: {
+					local: {
+						moveIndex: -1,
+					},
+				},
+			} as any;
 
 			const result = gamecompressor.compressGamefile(mockGame);
 
-			expect(result.metadata).toEqual(mockGame.basegame.metadata);
+			expect(result.metadata).toEqual(mockGame.metadata);
 			expect(result.fullMove).toBe(1);
 			expect(result.moves).toEqual([]);
 		});

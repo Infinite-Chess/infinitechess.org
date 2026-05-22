@@ -280,7 +280,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 	const gamefile = gameslot.getGamefile()!;
 
 	// Data of short range moves within 3 tiles
-	pushIndividual(instanceData_NonCapture, instanceData_Capture, legalMoves, gamefile.boardsim);
+	pushIndividual(instanceData_NonCapture, instanceData_Capture, legalMoves, gamefile);
 	// Potentially infinite data on sliding moves...
 	pushSliding(
 		instanceData_NonCapture,
@@ -329,9 +329,9 @@ function generateModelForSlideHighlightOutlines(
 	const gamefile = gameslot.getGamefile()!;
 
 	// Pass the same array for both capture and non-capture — the outline looks identical for both.
-	pushIndividual(instanceData, instanceData, legalMoves, gamefile.boardsim);
+	pushIndividual(instanceData, instanceData, legalMoves, gamefile);
 	// prettier-ignore
-	pushSliding(instanceData, instanceData, coords, legalMoves, gamefile, gamefile.basegame.whosTurn);
+	pushSliding(instanceData, instanceData, coords, legalMoves, gamefile, gamefile.whosTurn);
 
 	return createRenderable_Instanced(
 		vertexData,
@@ -536,10 +536,7 @@ function pushRay(
 					break legal;
 			}
 
-			const isPieceOnCoords = boardutil.isPieceOnCoords(
-				gamefile.boardsim.pieces,
-				targetCoords,
-			);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, targetCoords);
 			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}

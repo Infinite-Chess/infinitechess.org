@@ -5,8 +5,8 @@
  */
 
 import type { Piece } from '../util/boardutil.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
-import type { FullGame } from './fullgame.js';
 import type { CoordsTagged } from './movepiece.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { RawTypeGroup, Player, RawType } from '../util/typeutil.js';
@@ -119,7 +119,7 @@ type BlockingFunction = (
  * each of the coords will have a special property attached to it. castle/promote/enpassant
  */
 type SpecialFunction = (
-	_gamefile: FullGame,
+	_boardsim: Board,
 	_coords: Coords,
 	_color: Player,
 	_premove: boolean,

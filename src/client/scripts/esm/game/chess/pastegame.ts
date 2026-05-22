@@ -100,7 +100,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGamefile = gameslot.getGamefile()!;
-	const currentGameMetadata = currentGamefile.basegame.metadata;
+	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined)
@@ -172,7 +172,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		const gamefile = gameslot.getGamefile()!;
 
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
+		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 		if (pieceCount >= pieceCountToDisableCheckmate) {
 			// TOO MANY pieces!
 			toast.show(

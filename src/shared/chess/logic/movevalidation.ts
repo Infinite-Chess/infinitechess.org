@@ -1,6 +1,6 @@
 // src/shared/chess/logic/movevalidation.ts
 
-import type { FullGame } from './fullgame.js';
+import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import jsutil from '../../util/jsutil.js';
@@ -33,17 +33,16 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
 /**
  * UTILITY: Runs a specific validation action while the game is temporarily
  * fast-forwarded to the latest move. Afterwards restoring the game to its original state.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param action - The action to run while at the front of the game
  * @returns The result of the action
  */
-function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
-	const { boardsim } = gamefile;
+function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
 	const originalMoveIndex = boardsim.state.local.moveIndex;
 
 	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
 	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-		movepiece.applyMove(gamefile, move, true),
+		movepiece.applyMove(boardsim, move, true),
 	);
 
 	// Run the specific logic (move validation, conclusion check, etc)
@@ -51,7 +50,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
 
 	// Rewind to original state
 	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-		movepiece.applyMove(gamefile, move, false),
+		movepiece.applyMove(boardsim, move, false),
 	);
 
 	return result;
@@ -61,7 +60,7 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
  * Tests if the provided move is legal to play in this game,
  * including whether the claimed game conclusion is correct.
  * Also attaches and special move tags to the move coords.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param moveCoords - The move. Special move tags will be attached to them if it is legal.
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
@@ -69,19 +68,19 @@ function runActionAtGameFront<T>(gamefile: FullGame, action: () => T): T {
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function isOpponentsMoveLegal(
-	gamefile: FullGame,
+	boardsim: Board,
 	moveCoords: MoveCoords,
 	claimedGameConclusion: GameConclusion | undefined,
 ): MoveValidationResult {
 	// We run both move and conclusion checks when at the front of the game
-	return runActionAtGameFront(gamefile, () => {
+	return runActionAtGameFront(boardsim, () => {
 		// 1. Check Move Legality
-		const moveResult = validateMove(gamefile, moveCoords);
+		const moveResult = validateMove(boardsim, moveCoords);
 		if (!moveResult.valid) return moveResult;
 
 		// 2. Check Conclusion Validity (using the draft with special tags attached)
 		const conclusionResult = validateConclusion(
-			gamefile,
+			boardsim,
 			moveResult.tagged,
 			claimedGameConclusion,
 		);
@@ -95,13 +94,13 @@ function isOpponentsMoveLegal(
 
 /**
  * Tests if the provided compact move string is legal to play.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param tokenMove - The move that SHOULD be in compact string format (e.g. "x,y>x,y=Q"), but we can't trust all enginess response contents.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidationResult {
+function isTokenMoveLegal(boardsim: Board, tokenMove: unknown): MoveValidationResult {
 	if (typeof tokenMove !== 'string') return { valid: false, reason: 'Not a string.' };
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON format
@@ -115,8 +114,8 @@ function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidatio
 		return { valid: false, reason: 'Incorrect format.' };
 	}
 
-	return runActionAtGameFront(gamefile, () => {
-		return validateMove(gamefile, moveCoords);
+	return runActionAtGameFront(boardsim, () => {
+		return validateMove(boardsim, moveCoords);
 	});
 }
 
@@ -124,15 +123,13 @@ function isTokenMoveLegal(gamefile: FullGame, tokenMove: unknown): MoveValidatio
  * CORE LOGIC: Checks validity of a move.
  * REQUIRES you to be viewing the head of the game.
  * Also attaches and special move tags to the move coords.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param moveCoords - The move to validate. Special move tags will be attached to them if it is legal.
  * @returns An object containing either:
  * - `valid: true` and the `draft` of the move with any special tags attached.
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
-function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidationResult {
-	const { boardsim, basegame } = gamefile;
-
+function validateMove(boardsim: Board, moveCoords: MoveCoords): MoveValidationResult {
 	const piecemoved: Piece | undefined = boardutil.getPieceFromCoords(
 		boardsim.pieces,
 		moveCoords.startCoords,
@@ -143,7 +140,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 
 	// Make sure it matches the color of whos turn it is.
 	const colorOfPieceMoved: Player = typeutil.getColorFromType(piecemoved.type);
-	if (colorOfPieceMoved !== basegame.whosTurn)
+	if (colorOfPieceMoved !== boardsim.whosTurn)
 		return { valid: false, reason: 'Incorrect color.' };
 
 	const rawTypeMoved = typeutil.getRawType(piecemoved.type);
@@ -162,7 +159,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 			return { valid: false, reason: 'No promotion rank at end coords.' };
 
 		const colorPromotedTo: Player = typeutil.getColorFromType(moveCoords.promotion);
-		if (basegame.whosTurn !== colorPromotedTo)
+		if (boardsim.whosTurn !== colorPromotedTo)
 			return { valid: false, reason: 'Incorrect promotion color.' };
 
 		const rawPromotion: RawType = typeutil.getRawType(moveCoords.promotion);
@@ -192,24 +189,24 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 	// This logic is pulled out of legalmoves.calculateAll(), so we can observe
 	// it at each step to find the earliest illegality point of the move submission.
 
-	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piecemoved.type);
+	const moveset = legalmoves.getPieceMoveset(boardsim, piecemoved.type);
 	const legalMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendPotentialMoves(piecemoved, moveset, legalMoves);
 	legalmoves.removeObstructedMoves(
-		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
+		boardsim,
+		boardsim.gameRules.worldBorder,
 		piecemoved,
 		moveset,
 		legalMoves,
 		false,
 	);
-	legalmoves.appendSpecialMoves(gamefile, piecemoved, moveset, legalMoves, false);
+	legalmoves.appendSpecialMoves(boardsim, piecemoved, moveset, legalMoves, false);
 
 	// Check if even the non-check-respecting move is legal first
 	// This should pass on any special moves tags to endCoordsToAppendSpecialsTo at the same time.
 	if (
 		!legalmoves.checkIfMoveLegal(
-			gamefile,
+			boardsim,
 			legalMoves,
 			piecemoved.coords,
 			endCoordsToAppendTagsTo,
@@ -219,12 +216,12 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 		return { valid: false, reason: 'Invalid destination coords.' };
 	}
 
-	checkresolver.removeCheckInvalidMoves(gamefile, piecemoved, legalMoves);
+	checkresolver.removeCheckInvalidMoves(boardsim, piecemoved, legalMoves);
 
 	// Now check if the check-respecting move is legal
 	if (
 		!legalmoves.checkIfMoveLegal(
-			gamefile,
+			boardsim,
 			legalMoves,
 			piecemoved.coords,
 			endCoordsToAppendTagsTo,
@@ -243,7 +240,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
 
 /**
  * Determines whether the opponent's claimed conclusion matches what we calculate from the position.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param moveTagged - The move draft, WITH special tags attached!
  * @param claimedGameConclusion - The opponent's claimed game conclusion
  * @returns An object containing either:
@@ -251,7 +248,7 @@ function validateMove(gamefile: FullGame, moveCoords: MoveCoords): MoveValidatio
  * - `valid: false` and a `reason` string explaining why it is illegal.
  */
 function validateConclusion(
-	gamefile: FullGame,
+	boardsim: Board,
 	moveTagged: MoveTagged,
 	claimedGameConclusion: GameConclusion | undefined,
 ): ConclusionValidityResult {
@@ -264,7 +261,7 @@ function validateConclusion(
 	}
 
 	const moveTaggedCopy = jsutil.deepCopyObject(moveTagged);
-	const simulatedConclusion = movepiece.getSimulatedConclusion(gamefile, moveTaggedCopy);
+	const simulatedConclusion = movepiece.getSimulatedConclusion(boardsim, moveTaggedCopy);
 
 	if (
 		simulatedConclusion?.condition !== claimedGameConclusion?.condition ||

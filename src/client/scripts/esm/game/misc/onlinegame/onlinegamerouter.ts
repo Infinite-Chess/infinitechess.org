@@ -74,7 +74,7 @@ function routeMessage(contents: GameMessage): void {
 			movesendreceive.handleOpponentsMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile.basegame, contents.value);
+			handleUpdatedClock(gamefile, contents.value);
 			break;
 		case 'gameupdate':
 			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
@@ -86,7 +86,7 @@ function routeMessage(contents: GameMessage): void {
 			handleUnsubbing();
 			break;
 		case 'login':
-			handleLogin(gamefile.basegame);
+			handleLogin(gamefile);
 			break;
 		case 'nogame':
 			handleNoGame(gamefile);
@@ -264,11 +264,7 @@ function handleLogin(basegame: Game): void {
 function handleNoGame(gamefile: FullGame): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(
-		gamefile.basegame,
-		{ condition: 'aborted' },
-		gamefile.boardsim.gameRules,
-	);
+	gamefileutility.setConclusion(gamefile, { condition: 'aborted' }, gamefile.gameRules);
 	gameslot.concludeGame();
 }
 

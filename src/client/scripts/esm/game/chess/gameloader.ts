@@ -225,7 +225,7 @@ async function startOnlineGame(options: {
 			// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
 			// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
 			// THUS playing the drum sound effect for our opponent.
-			const basegame = gameslot.getGamefile()!.basegame;
+			const basegame = gameslot.getGamefile()!;
 			if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
 
 			return graphical;
@@ -611,7 +611,7 @@ function openGameinfoBarAndConcludeGameIfOver(
 	showGameControlButtons: boolean = false,
 ): void {
 	guigameinfo.open(metadata, showGameControlButtons);
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
 function unloadLogicalAndRendering(): void {

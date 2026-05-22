@@ -6,7 +6,6 @@ import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
-import type { MoveRecord } from './movepiece.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
@@ -63,16 +62,15 @@ export interface VariantOptions {
 }
 
 /**
- * Purely game data
- * Used on both sides
+ * Pure game metadata — display info, clock data, and conclusion.
+ * Contains no game state (moves, turn, pieces). Used as the non-board
+ * portion of {@link FullGame}.
  */
-export type Game = {
+export type GameMetadata = {
 	/** Information about the game */
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
-	moves: MoveRecord[];
-	whosTurn: Player;
 	gameConclusion?: GameConclusion;
 } & ClockDependant;
 
@@ -90,14 +88,17 @@ export type ClockDependant =
 	  };
 
 /**
- * Both game data AND board state used on the client-side,
- * and in the future *sometimes* used on the server-side,
- * when the server starts doing legal move validation.
+ * The complete client-side game object: full board state plus game metadata.
+ * Satisfies {@link Board} directly, so any function accepting a Board also
+ * accepts a FullGame — no unwrapping needed.
  */
-export type FullGame = {
-	basegame: Game;
-	boardsim: Board;
-};
+export type FullGame = Board & GameMetadata;
+
+/**
+ * Minimal game interface accepted by shared utility functions (clock, moveutil).
+ * Satisfied structurally by both {@link FullGame} and the server's `ServerGame`.
+ */
+export type Game = GameMetadata & { whosTurn: Player; moves: { length: number } };
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
@@ -121,17 +122,17 @@ export interface Additional {
 // Functions -------------------------------------------------------------
 
 /**
- * Creates a new {@link Game} object from provided arguments.
+ * Creates a new {@link GameMetadata} object from provided arguments.
  * ASSUMES THE VARIANT SCRIPT IS ALREADY LOADED. This part is synchronous.
  */
-function initGame(
+function initGameMetadata(
 	metadata: MetaData,
 	dateTimestamp: number,
 	mod: VariantModule | undefined,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): { game: Game; gameRules: GameRules } {
+): { gamemetadata: GameMetadata; gameRules: GameRules } {
 	const gameRules =
 		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
@@ -139,58 +140,56 @@ function initGame(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
-	const game: Game = {
+	const gamemetadata: GameMetadata = {
 		metadata,
 		dateTimestamp,
-		moves: [],
-		whosTurn: gameRules.turnOrder[0]!,
 		...clockDependantVars,
 	};
 
 	if (clockValues) {
-		if (game.untimed)
+		if (gamemetadata.untimed)
 			throw Error(
 				'Cannot set clock values for untimed game. Should not have specified clockValues.',
 			);
-		clock.edit(game.clocks, clockValues);
+		clock.edit(gamemetadata.clocks, clockValues);
 	}
 
-	gamefileutility.setConclusion(game, gameConclusion, gameRules);
+	gamefileutility.setConclusion(gamemetadata, gameConclusion, gameRules);
 
-	return { game, gameRules };
+	return { gamemetadata, gameRules };
 }
 
 /**
- * Attaches a board to a specific game. Used for loading a game after it was started.
+ * Combines a board and metadata into a flat {@link FullGame}. Used for loading a game after it was started.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function loadGameWithBoard(
-	basegame: Game,
+	gamemetadata: GameMetadata,
 	boardsim: Board,
 	moves: MovePacket[] = [],
 	validateMoves?: boolean,
 ): FullGame {
-	const gamefile = { basegame, boardsim };
+	const gamefile: FullGame = { ...boardsim, ...gamemetadata };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
-		gamerules.swapCheckmateForRoyalCapture(boardsim.gameRules);
+		gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
 	{
 		// Set the game's `inCheck` and `checks` properties at the front of the game.
 		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
-			boardsim.gameRules,
-			boardsim.whosTurn,
+			gamefile.gameRules,
+			gamefile.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(gamefile, boardsim.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
-		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
+		const checkResults = checkdetection.detectCheck(gamefile, gamefile.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+		gamefile.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackChecks) gamefile.state.local.checks = checkResults.checks ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	// Do not overwrite pre-existing server conclusion, if present.
-	if (basegame.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
+	if (gamefile.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
@@ -212,7 +211,7 @@ async function initFullGame(
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
-	const { game: basegame, gameRules } = initGame(
+	const { gamemetadata, gameRules } = initGameMetadata(
 		metadata,
 		dateTimestamp,
 		variant?.mod,
@@ -228,10 +227,10 @@ async function initFullGame(
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
+	return loadGameWithBoard(gamemetadata, boardsim, additional.moves, validateMoves);
 }
 
 export default {
-	initGame,
+	initGameMetadata,
 	initFullGame,
 };

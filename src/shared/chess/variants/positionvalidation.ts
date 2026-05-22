@@ -12,8 +12,7 @@
  */
 
 import type { RawType } from '../util/typeutil.js';
-import type { MetaData } from '../../types.js';
-import type { VariantOptions, FullGame } from '../logic/fullgame.js';
+import type { VariantOptions } from '../logic/fullgame.js';
 
 import gamerules from '../util/gamerules.js';
 import boardinit from '../logic/boardinit.js';
@@ -147,18 +146,7 @@ function validatePosition(variantOptions: VariantOptions, icnString: string): st
 		const secondPlayer = gameRules.turnOrder[1];
 		if (secondPlayer !== undefined) {
 			const boardsim = boardinit.initBoard(gameRules, undefined, 0, variantOptions);
-			const fakeFullGame: FullGame = {
-				basegame: {
-					metadata: {} as MetaData,
-					dateTimestamp: 0,
-					moves: [],
-					whosTurn: boardsim.whosTurn,
-					untimed: true,
-					clocks: undefined,
-				},
-				boardsim,
-			};
-			const checkResult = checkdetection.detectCheck(fakeFullGame, secondPlayer, false);
+			const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
 			if (checkResult.check) {
 				return `Illegal position: The 2nd player to move ('${typeutil.strcolors[secondPlayer]}') is already in check on turn 1, allowing the 1st player to immediately capture their royal piece.`;
 			}

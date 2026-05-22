@@ -28,12 +28,12 @@ import movesequence from '../../chess/movesequence';
  * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
  */
 function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
-	const edit = generateMoveEdit(gamefile.boardsim, moveCoords);
+	const edit = generateMoveEdit(gamefile, moveCoords);
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
 	GameBus.dispatch('physical-move');
 
-	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
+	if (mesh) movesequence.runMeshChanges(gamefile, mesh, edit, true);
 
 	edithistory.addEditToHistory(edit);
 

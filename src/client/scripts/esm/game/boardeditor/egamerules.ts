@@ -264,7 +264,7 @@ function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolea
 /** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
 function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): void {
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = gamefile.pieces;
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
@@ -278,7 +278,7 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = gamefile.pieces;
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
@@ -307,19 +307,19 @@ function updateGamefileProperties(
 
 	// Update en passant state for rendering purposes, and correct enpassant legality calculation
 	if (enpassantCoords === undefined) {
-		gamefile.boardsim.state.global.enpassant = undefined;
+		gamefile.state.global.enpassant = undefined;
 	} else {
 		// prettier-ignore
 		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 		const enpassant: EnPassant = { square: enpassantCoords, pawn };
-		gamefile.boardsim.state.global.enpassant = enpassant;
+		gamefile.state.global.enpassant = enpassant;
 	}
 
 	// Update the promotionlines in the gamefile for rendering purposes
 	if (promotionRanks === undefined || promotionPieces === undefined) {
-		delete gamefile.boardsim.gameRules.promotion;
+		delete gamefile.gameRules.promotion;
 	} else {
-		gamefile.boardsim.gameRules.promotion = {
+		gamefile.gameRules.promotion = {
 			ranks: {
 				[p.WHITE]: promotionRanks.white,
 				[p.BLACK]: promotionRanks.black,
@@ -330,13 +330,13 @@ function updateGamefileProperties(
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
 	// prettier-ignore
-	gamefile.boardsim.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	gamefile.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
-	gamefile.basegame.whosTurn = gamefile.boardsim.gameRules.turnOrder[0]!;
-	gamefile.boardsim.whosTurn = gamefile.boardsim.gameRules.turnOrder[0]!;
+	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
+	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
 
 	// Update World Border
-	gamefile.boardsim.gameRules.worldBorder = worldBorder;
+	gamefile.gameRules.worldBorder = worldBorder;
 }
 
 // Exports -------------------------------------------------------------

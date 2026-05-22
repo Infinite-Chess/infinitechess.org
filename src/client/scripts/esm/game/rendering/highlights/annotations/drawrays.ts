@@ -59,8 +59,7 @@ function areDrawing(): boolean {
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
 	const baseRays =
-		preset_rays ??
-		variantpreviewer.getRayPresets(gameslot.getGamefile()!.boardsim.variant?.mod);
+		preset_rays ?? variantpreviewer.getRayPresets(gameslot.getGamefile()!.variant?.mod);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map((r) => {
 		return {
@@ -220,7 +219,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	);
 	const vector = findClosestPredefinedVector(
 		vector_unnormalized,
-		gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent,
+		gameslot.getGamefile()!.pieces.hippogonalsPresent,
 	);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 

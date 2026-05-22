@@ -141,8 +141,9 @@ function push(basegame: Game, clocks: ClockData, gameRules: GameRules): number |
 	}
 
 	// Set up clocksticking for the new turn.
-	clocks.colorTicking = basegame.whosTurn;
-	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
+	const whosTurn = basegame.whosTurn;
+	clocks.colorTicking = whosTurn;
+	clocks.timeRemainAtTurnStart = clocks.currentTime[whosTurn]!;
 	clocks.timeAtTurnStart = Date.now();
 
 	return clocks.currentTime[prevcolor];

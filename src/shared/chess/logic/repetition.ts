@@ -9,8 +9,8 @@
  * It also takes into account special rights.
  */
 
+import type { Board } from './boardinit.js';
 import type { MoveFull } from './movepiece.js';
-import type { FullGame } from './fullgame.js';
 import type { StateChange } from './state.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
@@ -22,13 +22,13 @@ import { rawTypes as r } from '../util/typeutil.js';
 type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassant`
 
 /**
- * Tests if the provided gamefile has had a repetition draw.
+ * Tests if the provided boardsim has had a repetition draw.
  *
  * Complexity O(m) where m is the move count since the last pawn push or capture or special right loss!
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @returns Whether there is a three fold repetition present.
  */
-function detectRepetitionDraw({ boardsim }: FullGame): GameConclusion | undefined {
+function detectRepetitionDraw(boardsim: Board): GameConclusion | undefined {
 	const moveList = boardsim.moves;
 	const turnOrderLength = boardsim.gameRules.turnOrder.length;
 	/** What index of the turn order whos turn it is at the front of the game.

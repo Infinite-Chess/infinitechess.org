@@ -96,10 +96,10 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	GameBus.dispatch('physical-move');
 
 	// Run graphical changes
-	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
+	movesequence.runMeshChanges(gamefile, mesh, edit, forward);
 
 	// If the piece count is now high enough, disable icons and arrows.
-	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 	if (
 		pieceCount > miniimagerenderer.pieceCountToDisableMiniImages ||
 		pieceCount > arrows.MAX_PIECES
@@ -238,7 +238,7 @@ function queueAddPiece(
 /** Queues the addition/removal of a specialright at the specified coordinates. */
 function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add: boolean): void {
 	const coordsKey = coordutil.getKeyFromCoords(coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	const current = gamefile.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordsKey, current, add);
 }
 

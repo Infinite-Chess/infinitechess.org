@@ -8,7 +8,6 @@
 import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { FullGame } from './fullgame.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { MoveTagged } from './movepiece.js';
 import type { CoordsTagged } from './movepiece.js';
@@ -41,20 +40,13 @@ import { players as p, rawTypes as r } from '../util/typeutil.js';
 
 /**
  * Appends legal king special moves to the provided legal individual moves list. (castling)
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param coords - Coordinates of the king selected
  * @param color - The color of the king selected
  * @param premove - Whether we should return all possible moves (premoving)
  */
-function kings(
-	gamefile: FullGame,
-	coords: Coords,
-	color: Player,
-	premove: boolean,
-): CoordsTagged[] {
+function kings(boardsim: Board, coords: Coords, color: Player, premove: boolean): CoordsTagged[] {
 	const individualMoves: CoordsTagged[] = [];
-
-	const { boardsim } = gamefile;
 
 	if (!doesPieceHaveSpecialRight(boardsim, coords)) return individualMoves; // King doesn't have castling rights
 
@@ -142,7 +134,7 @@ function kings(
 
 			// The square the king passes through must not be a check. Let's simulate that.
 			const middleSquare: Coords = [kingX + dir, kingY]; // The square the king passes through
-			if (checkresolver.isMoveCheckInvalid(gamefile, king, middleSquare, color)) return; // The square the king passes through is a check
+			if (checkresolver.isMoveCheckInvalid(boardsim, king, middleSquare, color)) return; // The square the king passes through is a check
 
 			// The square the king LANDS ON will be tested later, within checkresolver.
 		}
@@ -161,18 +153,12 @@ function kings(
  * Appends legal pawn moves to the provided legal individual moves list.
  * This also is in charge of adding single-push, double-push, and capturing
  * pawn moves, even though those don't need a special move tag.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param coords - Coordinates of the pawn selected
  * @param color - The color of the pawn selected
  * @param premove - Whether we should return all possible moves (premoving)
  */
-function pawns(
-	gamefile: FullGame,
-	coords: Coords,
-	color: Player,
-	premove: boolean,
-): CoordsTagged[] {
-	const { boardsim } = gamefile;
+function pawns(boardsim: Board, coords: Coords, color: Player, premove: boolean): CoordsTagged[] {
 	// White and black pawns move and capture in opposite directions.
 	const yOneorNegOne = color === p.WHITE ? 1n : -1n;
 	const individualMoves: CoordsTagged[] = [];
@@ -257,13 +243,13 @@ function pawns(
 
 	// 3. It can capture en passant if a pawn next to it just pushed twice.
 	// Skip if we're premoving, as the capturing moves are added above
-	if (!premove) addPossibleEnPassant(gamefile, individualMoves, coords, color);
+	if (!premove) addPossibleEnPassant(boardsim, individualMoves, coords, color);
 
 	return individualMoves;
 }
 
 /**
- * Returns what the gamefile's enpassant property should be after this double pawn push move
+ * Returns what the boardsim's enpassant property should be after this double pawn push move
  * @param moveStartCoords - The start coordinates of the move
  * @param moveEndCoords - The end coordinates of the move
  * @returns The coordinates en passant is allowed
@@ -279,14 +265,14 @@ function getEnPassantGamefileProperty(
 
 /**
  * Appends legal enpassant capture to the selected pawn's provided individual moves.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param individualMoves - The running list of legal individual moves
  * @param coords - The coordinates of the pawn selected, [x,y]
  * @param color - The color of the pawn selected
  */
 // If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(
-	{ boardsim }: FullGame,
+	boardsim: Board,
 	individualMoves: CoordsTagged[],
 	coords: Coords,
 	color: Player,
@@ -312,7 +298,7 @@ function addPossibleEnPassant(
 		boardsim.state.global.enpassant.square,
 	);
 
-	// TAG THIS MOVE as an en passant capture!! gamefile looks for this tag
+	// TAG THIS MOVE as an en passant capture!! boardsim looks for this tag
 	// on the individual move to detect en passant captures and know when to perform them.
 	enPassantSquare.enpassant = true;
 	appendPawnMoveAndAttachPromoteTag(boardsim.gameRules, individualMoves, enPassantSquare, color);
@@ -338,18 +324,13 @@ function appendPawnMoveAndAttachPromoteTag(
 
 /**
  * Appends legal moves for the rose piece to the provided legal individual moves list.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param coords - Coordinates of the rose selected
  * @param color - The color of the rose selected
  * @param premove - Whether we should return all possible moves (premoving)
  * @returns
  */
-function roses(
-	gamefile: FullGame,
-	coords: Coords,
-	color: Player,
-	premove: boolean,
-): CoordsTagged[] {
+function roses(boardsim: Board, coords: Coords, color: Player, premove: boolean): CoordsTagged[] {
 	// prettier-ignore
 	const movements: Coords[] = [[-2n, -1n], [-1n, -2n], [1n, -2n], [2n, -1n], [2n, 1n], [1n, 2n], [-1n, 2n], [-2n, 1n]]; // Counter-clockwise
 	const directions = [1, -1] as const; // Counter-clockwise and clockwise directions
@@ -367,8 +348,8 @@ function roses(
 				path.push(coordutil.copyCoords(currentCoord));
 
 				const moveValidity = legalmoves.testSquareValidity(
-					gamefile.boardsim,
-					gamefile.boardsim.gameRules.worldBorder,
+					boardsim,
+					boardsim.gameRules.worldBorder,
 					currentCoord,
 					color,
 					premove,
@@ -414,7 +395,7 @@ function roses(
 				const newCoordPathBD = bdcoords.FromCoords(newCoord.path[1]!);
 
 				const startingBoxBD = bounds.castBoundingBoxToBigDecimal(
-					gamefile.boardsim.startSnapshot.box,
+					boardsim.startSnapshot.box,
 				);
 				const centerOfPlay = bounds.calcCenterOfBoundingBox(startingBoxBD);
 				const vectorToCenter = vectors.calculateVectorFromBDPoints(coordsBD, centerOfPlay);
@@ -454,7 +435,7 @@ function roses(
 
 /**
  * Tests if the piece at the given coordinates has it's special move rights.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @param coords - The coordinates of the piece
  * @returns *true* if it has it's special move rights.
  */
@@ -467,7 +448,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 
 /**
  * Returns true if a pawn moved onto a promotion line.
- * @param gamefile
+ * @param boardsim
  * @param type
  * @param coordsClicked
  * @returns

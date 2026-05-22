@@ -8,7 +8,6 @@ import type { Piece } from '../util/boardutil.js';
 import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
-import type { FullGame } from './fullgame.js';
 import type { PieceMoveset } from './movesets.js';
 import type { Vec2, Vec2Key } from '../../util/math/vectors.js';
 import type { OrganizedPieces } from './organizedpieces.js';
@@ -133,14 +132,14 @@ function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords:
 
 /**
  * Adds any of the pieces movesets applicable special moves
- * @param gamefile
+ * @param boardsim
  * @param piece
  * @param moveset
  * @param legalmoves
  * @param premove - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
  */
 function appendSpecialMoves(
-	gamefile: FullGame,
+	boardsim: Board,
 	piece: Piece,
 	moveset: PieceMoveset,
 	legalmoves: LegalMoves,
@@ -148,7 +147,7 @@ function appendSpecialMoves(
 ): void {
 	const color = typeutil.getColorFromType(piece.type);
 	if (moveset.special)
-		legalmoves.individual.push(...moveset.special(gamefile, piece.coords, color, premove));
+		legalmoves.individual.push(...moveset.special(boardsim, piece.coords, color, premove));
 }
 
 /**
@@ -305,47 +304,33 @@ function testCaptureValidity(
 }
 
 /**
- * Calculates and generates all legal moves of a piece in the provided gamefile.
- * @param gamefile
+ * Calculates and generates all legal moves of a piece in the provided boardsim.
+ * @param boardsim
  * @param piece
  * @returns The legal moves of that piece
  */
-function calculateAll(gamefile: FullGame, piece: Piece): LegalMoves {
-	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
+function calculateAll(boardsim: Board, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(
-		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
-		piece,
-		moveset,
-		moves,
-		false,
-	);
-	appendSpecialMoves(gamefile, piece, moveset, moves, false);
-	checkresolver.removeCheckInvalidMoves(gamefile, piece, moves);
+	removeObstructedMoves(boardsim, boardsim.gameRules.worldBorder, piece, moveset, moves, false);
+	appendSpecialMoves(boardsim, piece, moveset, moves, false);
+	checkresolver.removeCheckInvalidMoves(boardsim, piece, moves);
 	return moves;
 }
 
 /**
- * Calculates all possible premoves of a piece in the provided gamefile.
+ * Calculates all possible premoves of a piece in the provided boardsim.
  * * Jumps can't be obstructed.
  * * Slides can't be blocked.
  * * No check pruning is made.
  */
-function calculateAllPremoves(gamefile: FullGame, piece: Piece): LegalMoves {
-	const moveset = getPieceMoveset(gamefile.boardsim, piece.type);
+function calculateAllPremoves(boardsim: Board, piece: Piece): LegalMoves {
+	const moveset = getPieceMoveset(boardsim, piece.type);
 	const moves = getEmptyLegalMoves(moveset);
 	appendPotentialMoves(piece, moveset, moves);
-	removeObstructedMoves(
-		gamefile.boardsim,
-		gamefile.boardsim.gameRules.worldBorder,
-		piece,
-		moveset,
-		moves,
-		true,
-	); // true to only remove void and world border obstructions
-	appendSpecialMoves(gamefile, piece, moveset, moves, true); // true to add all possible moves
+	removeObstructedMoves(boardsim, boardsim.gameRules.worldBorder, piece, moveset, moves, true); // true to only remove void and world border obstructions
+	appendSpecialMoves(boardsim, piece, moveset, moves, true); // true to add all possible moves
 	// SKIP removing check invalids!
 	return moves;
 }
@@ -509,7 +494,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * legal moves in the provided legalMoves object.
  *
  * **This will modify** the provided endCoords to attach any special move tags.
- * @param gamefile
+ * @param boardsim
  * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
  * @param startCoords - The coordinates of the piece owning the legal moves
  * @param endCoords - The square to test if the piece can legally move to
@@ -517,7 +502,7 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * @returns *true* if the provided legalMoves object contains the provided endCoords.
  */
 function checkIfMoveLegal(
-	gamefile: FullGame,
+	boardsim: Board,
 	legalMoves: LegalMoves,
 	startCoords: Coords,
 	endCoords: CoordsTagged,
@@ -538,7 +523,7 @@ function checkIfMoveLegal(
 	if (legalMoves.brute) {
 		// Don't allow the slide if it results in check
 		const moveTagged = { startCoords, endCoords };
-		if (checkresolver.getSimulatedCheck(gamefile, moveTagged, colorOfFriendly).check)
+		if (checkresolver.getSimulatedCheck(boardsim, moveTagged, colorOfFriendly).check)
 			return false; // The move results in check => not legal
 	}
 	return true; // Move is legal
@@ -608,10 +593,10 @@ function doesSlidingMovesetContainSquare(
  * slide width exceeds {@link MAX_BRUTE_SIMULATIONS}, this may return true as
  * a safety measure to avoid hangs, even if there may not actually be a legal move.
  * @param moves
- * @param gamefile
+ * @param boardsim
  * @param piece - The piece that owns these legal moves
  */
-function hasAtleast1Move(moves: LegalMoves, gamefile: FullGame, piece: Piece): boolean {
+function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): boolean {
 	if (moves.individual.length > 0) return true;
 	for (const [lineKey, limits] of Object.entries(moves.sliding)) {
 		if (slideHasAtLeast1LegalMove(lineKey as Vec2Key, limits)) return true;
@@ -654,7 +639,7 @@ function hasAtleast1Move(moves: LegalMoves, gamefile: FullGame, piece: Piece): b
 			];
 			if (!moves.ignoreFunc(piece.coords, targetCoords)) return false; // Not a valid landing (e.g., not prime for Huygens)
 			const moveTagged: MoveTagged = { startCoords: piece.coords, endCoords: targetCoords };
-			return !checkresolver.getSimulatedCheck(gamefile, moveTagged, color).check;
+			return !checkresolver.getSimulatedCheck(boardsim, moveTagged, color).check;
 		}
 
 		// Positive side. Skip if range is entirely negative

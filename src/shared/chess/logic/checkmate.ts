@@ -4,7 +4,7 @@
  * This script contains our checkmate algorithm.
  */
 
-import type { FullGame } from './fullgame.js';
+import type { Board } from './boardinit.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import typeutil from '../util/typeutil.js';
@@ -15,28 +15,26 @@ import { rawTypes } from '../util/typeutil.js';
 import gamefileutility from '../util/gamefileutility.js';
 
 /**
- * Calculates if the provided gamefile is over by checkmate or stalemate
- * @param gamefile - The gamefile to detect if it's in checkmate
+ * Calculates if the provided boardsim is over by checkmate or stalemate
+ * @param boardsim - The boardsim to detect if it's in checkmate
  * @returns The color of the player who won by checkmate.
  * `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`,
  * or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.
  */
-function detectCheckmateOrStalemate(gamefile: FullGame): GameConclusion | undefined {
-	const { basegame, boardsim } = gamefile;
-
+function detectCheckmateOrStalemate(boardsim: Board): GameConclusion | undefined {
 	// The game will be over when the player has zero legal moves remaining, lose or draw.
 	// Iterate through every piece, calculating its legal moves. The first legal move we find, we
 	// know the game is not over yet...
 
 	for (const rType of Object.values(rawTypes)) {
-		const thisType = typeutil.buildType(rType, basegame.whosTurn);
+		const thisType = typeutil.buildType(rType, boardsim.whosTurn);
 		const thesePieces = boardsim.pieces.typeRanges.get(thisType);
 		if (!thesePieces) continue; // The game doesn't have this type of piece
 		for (let idx = thesePieces.start; idx < thesePieces.end; idx++) {
 			const thisPiece = boardutil.getPieceFromIdx(boardsim.pieces, idx);
 			if (!thisPiece) continue; // Piece undefined. We leave in deleted pieces so others retain their index!
-			const moves = legalmoves.calculateAll(gamefile, thisPiece);
-			if (legalmoves.hasAtleast1Move(moves, gamefile, thisPiece)) return undefined; // Not checkmate
+			const moves = legalmoves.calculateAll(boardsim, thisPiece);
+			if (legalmoves.hasAtleast1Move(moves, boardsim, thisPiece)) return undefined; // Not checkmate
 		}
 	}
 

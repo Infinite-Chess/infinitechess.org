@@ -4,11 +4,11 @@
  * This script contains many utility methods for working with gamefiles.
  */
 
-import type { Game } from '../logic/fullgame.js';
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
 import type { GameRules } from './gamerules.js';
+import type { GameMetadata } from '../logic/fullgame.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
@@ -19,7 +19,7 @@ import metadatautil from './metadatautil.js';
 // Methods -------------------------------------------------------------
 
 /** Returns true if the game is over. */
-function isGameOver(basegame: Game): boolean {
+function isGameOver(basegame: GameMetadata): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 
@@ -45,7 +45,7 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * essentially un-concluding the game if it was already concluded.
  */
 function setConclusion(
-	basegame: Game,
+	basegame: GameMetadata,
 	conclusion: GameConclusion | undefined,
 	gameRules: GameRules,
 ): void {

@@ -134,11 +134,7 @@ function update(): void {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (
-		boardpos.areZoomedOut() ||
-		gamefileutility.isGameOver(gamefile.basegame) ||
-		camera.isLookingUp()
-	) {
+	if (boardpos.areZoomedOut() || gamefileutility.isGameOver(gamefile) || camera.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased())
@@ -203,8 +199,8 @@ function updateHoverSquareLegal(gamefile: FullGame): void {
 		(legal && canMovePieceType(pieceSelected!.type)) ||
 		(boardeditor.areInBoardEditor() &&
 			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
-			(gamefile.boardsim.gameRules.worldBorder === undefined ||
-				bounds.boxContainsSquare(gamefile.boardsim.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
+			(gamefile.gameRules.worldBorder === undefined ||
+				bounds.boxContainsSquare(gamefile.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
 }
 
 // Piece Select / Drop / Move -----------------------------------------------------------------------------
@@ -230,11 +226,11 @@ function testIfPieceSelected(gamefile: FullGame, mesh: Mesh | undefined): void {
 
 	// We have clicked, test if we clicked a piece...
 
-	const pieceClicked = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, hoverSquare!);
+	const pieceClicked = boardutil.getPieceFromCoords(gamefile.pieces, hoverSquare!);
 	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
 	// Is the type selectable by us? (not necessarily moveable)
-	const selectionLevel = canSelectPieceType(gamefile.basegame, pieceClicked?.type);
+	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
 	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0)
 		return; // Can't select this piece type
@@ -299,11 +295,11 @@ function testIfPieceMoved(gamefile: FullGame, mesh: Mesh | undefined): void {
 /** Forwards to the front of the game if we're viewing history, and returns true if we did. */
 function viewFrontIfNotViewingLatestMove(gamefile: FullGame, mesh: Mesh | undefined): boolean {
 	// If we're viewing history, return.
-	if (moveutil.areWeViewingLatestMove(gamefile.boardsim)) return false;
+	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
-	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	animateMove(lastMove.changes);
 	return true;
 }
@@ -336,7 +332,7 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
  * Returns true if the user is currently allowed to move the pieceType. It must be our piece and our turn.
  */
 function canMovePieceType(pieceType: number): boolean {
-	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
+	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	// It is our piece type...
 	const isOurTurn = gameloader.isItOurTurn();
@@ -396,23 +392,17 @@ function reselectPiece(): void {
 	const mesh = gameslot.getMesh();
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
-	const pieceTypeOnCoords = boardutil.getTypeFromCoords(
-		gamefile.boardsim.pieces,
-		pieceSelected.coords,
-	);
+	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.pieces, pieceSelected.coords);
 	if (pieceTypeOnCoords !== pieceSelected.type) {
 		// It either moved, or was captured
 		unselectPiece(); // Can't be reselected, unselect it instead.
 		return;
 	}
 
-	if (gamefileutility.isGameOver(gamefile.basegame)) return; // Don't reselect, game is over
+	if (gamefileutility.isGameOver(gamefile)) return; // Don't reselect, game is over
 
 	// Reselect! Recalc its legal moves, and recolor.
-	const pieceToReselect = boardutil.getPieceFromCoords(
-		gamefile.boardsim.pieces,
-		pieceSelected.coords,
-	)!;
+	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.pieces, pieceSelected.coords)!;
 	initSelectedPieceInfo(gamefile, mesh, pieceToReselect);
 
 	// FIXES BUG where if you premove a promotion, but leave the promotion UI open,
@@ -462,7 +452,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 	// Initiate
 	pieceSelected = piece;
 
-	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
+	isOpponentPiece = isOpponentType(gamefile, piece.type);
 	isPremove = !isOpponentPiece && !gameloader.isItOurTurn();
 
 	// Calculate the legal moves it has...

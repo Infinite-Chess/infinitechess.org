@@ -56,7 +56,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 	if (
 		selection.isOpponentPieceSelected() ||
 		!gameloader.isItOurTurn() ||
-		!gamefileutility.isCurrentViewedPositionInCheck(gamefile.boardsim)
+		!gamefileutility.isCurrentViewedPositionInCheck(gamefile)
 	) {
 		clearIndividualMoves();
 		return;
@@ -64,7 +64,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 
 	const piece = selection.getPieceSelected()!;
 	selectedPieceCoords = piece.coords;
-	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
+	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
 	individualMoves = legalMoves.individual.filter((hintSquare) => {
 		const diff = coordutil.subtractCoords(hintSquare, selectedPieceCoords!);
 		const dir = vectors.absVector(vectors.normalizeVector(diff));

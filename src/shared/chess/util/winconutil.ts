@@ -5,7 +5,7 @@
  * And contains a few utility methods for them.
  */
 
-import type { FullGame } from '../logic/fullgame.js';
+import type { Board } from '../logic/boardinit.js';
 import type { GameRules } from './gamerules.js';
 
 import * as z from 'zod';
@@ -136,7 +136,7 @@ const TERMINATION_IN_ENGLISH = {
  * @param gamefile
  * @returns true if the gamefile is checkmate compatible
  */
-function isCheckmateCompatibleWithGame({ boardsim }: FullGame): boolean {
+function isCheckmateCompatibleWithGame(boardsim: Board): boolean {
 	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) > pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.

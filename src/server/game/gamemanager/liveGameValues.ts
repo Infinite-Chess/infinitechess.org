@@ -8,6 +8,7 @@
  * See dev-utils/live-game-persistence.md for the schema and event matrix.
  */
 
+import type { Game } from '../../../shared/chess/logic/fullgame.js';
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { ServerGame, PlayerData, PlayerDisconnect } from './gameutility.js';
@@ -16,7 +17,6 @@ import type {
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
-import { Game } from '../../../shared/chess/logic/fullgame.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
@@ -34,13 +34,12 @@ import {
  * Uses the ICN compact format: `1,2>3,4{[%clk 0:09:56.7]}|5,6>7,8=Q{[%clk 0:09:45.2]}`
  */
 function getMovesString(servergame: ServerGame): string {
-	const { basegame } = servergame;
-	if (basegame.moves.length === 0) return '';
+	if (servergame.moves.length === 0) return '';
 
-	return icnconverter.getShortFormMovesFromMoves(basegame.moves, {
+	return icnconverter.getShortFormMovesFromMoves(servergame.moves, {
 		compact: true,
 		spaces: false,
-		comments: !basegame.untimed,
+		comments: !servergame.untimed,
 		move_numbers: false,
 	});
 }
@@ -74,12 +73,11 @@ function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDiscon
  * No-op for untimed games.
  */
 function persistCurrentClockTimes(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-	if (basegame.untimed) return;
-	for (const playerStr of Object.keys(match.playerData)) {
+	if (servergame.untimed) return;
+	for (const playerStr of Object.keys(servergame.match.playerData)) {
 		const player = Number(playerStr) as Player;
-		updateLivePlayerGame(match.id, player, {
-			time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
+		updateLivePlayerGame(servergame.match.id, player, {
+			time_remaining_ms: servergame.clocks.currentTime[player] ?? null,
 		});
 	}
 }
@@ -113,7 +111,7 @@ function buildPlayerRecord(
  * Called when a new game is created. Inserts the full initial state into both tables.
  */
 function onGameCreated(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
+	const { match } = servergame;
 
 	const record: LiveGamesRecord = {
 		game_id: match.id,
@@ -139,7 +137,7 @@ function onGameCreated(servergame: ServerGame): void {
 	// Insert one row per player
 	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
 		const player = Number(playerStr) as Player;
-		const playerRecord = buildPlayerRecord(match.id, player, playerData, basegame);
+		const playerRecord = buildPlayerRecord(match.id, player, playerData, servergame);
 		insertLivePlayerGame(playerRecord);
 	}
 }
@@ -149,18 +147,16 @@ function onGameCreated(servergame: ServerGame): void {
  * Updates the moves string, clock state, and per-player time.
  */
 function onMoveSubmitted(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-
 	const gameUpdates: Partial<LiveGameData> = {
 		moves: getMovesString(servergame),
 	};
 
-	if (!basegame.untimed) {
-		gameUpdates.color_ticking = basegame.clocks.colorTicking ?? null;
-		gameUpdates.clock_snapshot_time = basegame.clocks.timeAtTurnStart ?? null;
+	if (!servergame.untimed) {
+		gameUpdates.color_ticking = servergame.clocks.colorTicking ?? null;
+		gameUpdates.clock_snapshot_time = servergame.clocks.timeAtTurnStart ?? null;
 	}
 
-	updateLiveGame(match.id, gameUpdates);
+	updateLiveGame(servergame.match.id, gameUpdates);
 
 	persistCurrentClockTimes(servergame);
 }
@@ -170,26 +166,25 @@ function onMoveSubmitted(servergame: ServerGame): void {
  * Updates conclusion columns and sets the delete timer target.
  */
 function onGameConcluded(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-	const conclusion = basegame.gameConclusion!;
+	const conclusion = servergame.gameConclusion!;
 
 	const gameUpdates: Partial<LiveGameData> = {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
-		time_ended: match.timeEnded!,
-		delete_time: match.timeEnded! + timeBeforeGameDeletionMillis,
+		time_ended: servergame.match.timeEnded!,
+		delete_time: servergame.match.timeEnded! + timeBeforeGameDeletionMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
 		afk_resign_time: null, // AFK timers are cancelled on conclusion
 	};
 
 	// Stop clock state
-	if (!basegame.untimed) {
+	if (!servergame.untimed) {
 		// Both color ticking and timeAtTurnStart are set to null on game end
 		gameUpdates.color_ticking = null;
 		gameUpdates.clock_snapshot_time = null;
 	}
 
-	updateLiveGame(match.id, gameUpdates);
+	updateLiveGame(servergame.match.id, gameUpdates);
 
 	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
 	persistCurrentClockTimes(servergame);

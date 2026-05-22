@@ -59,7 +59,7 @@ function onReport(
 		return;
 	}
 
-	const perpetratingMoveIndex = servergame.basegame.moves.length - 1;
+	const perpetratingMoveIndex = servergame.moves.length - 1;
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
 		servergame.match.gameRules,
 		perpetratingMoveIndex,
@@ -77,7 +77,7 @@ function onReport(
 		return;
 	}
 	// Remove the last move played.
-	const perpetratingMove = servergame.basegame.moves.pop();
+	const perpetratingMove = servergame.moves.pop();
 	if (!perpetratingMove) return;
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;

@@ -133,7 +133,7 @@ function Fill(
 	removeAllPieces(gamefile, edit, piecesInPasteBox);
 
 	// Cache frequently-used references for slightly better performance
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const specialRights = gamefile.state.global.specialRights;
 	const getKey = coordutil.getKeyFromCoords;
 
 	// Iterate over each whole copy, plus one additional for a partial if needed
@@ -190,7 +190,7 @@ function Copy(gamefile: FullGame, box: BoundingBox): void {
 	// Modify the pieces to include specialrights state
 
 	// Cache frequently-used references for slightly better performance
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const specialRights = gamefile.state.global.specialRights;
 	const getKey = coordutil.getKeyFromCoords;
 
 	// Modify the existing array in place to avoid performance hit of a new array.
@@ -461,8 +461,8 @@ function Transform(
 	const piecesInDestination = getPiecesInBox(gamefile, destinationBox);
 
 	// Determine whether the destination box is entirely contained within the border
-	const withinBorder = gamefile.boardsim.gameRules.worldBorder
-		? bounds.boxContainsBox(gamefile.boardsim.gameRules.worldBorder, destinationBox)
+	const withinBorder = gamefile.gameRules.worldBorder
+		? bounds.boxContainsBox(gamefile.gameRules.worldBorder, destinationBox)
 		: true;
 
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
@@ -477,7 +477,7 @@ function Transform(
 	removeAllPieces(gamefile, edit, piecesInSource);
 
 	// Cache frequently-used references for slightly better performance
-	const specialRights = gamefile.boardsim.state.global.specialRights;
+	const specialRights = gamefile.state.global.specialRights;
 	const getKey = coordutil.getKeyFromCoords;
 
 	// Add all pieces in the original selection area, but transformed
@@ -487,7 +487,7 @@ function Transform(
 		// Skip if the destination is out of bounds
 		if (
 			!withinBorder &&
-			!bounds.boxContainsSquare(gamefile.boardsim.gameRules.worldBorder!, transformed.coords)
+			!bounds.boxContainsSquare(gamefile.gameRules.worldBorder!, transformed.coords)
 		)
 			continue;
 		// Queue the addition of the piece at its new location
@@ -528,7 +528,7 @@ function applyEdit(gamefile: FullGame, mesh: Mesh, edit: Edit): void {
 
 /** Calculates all pieces within the given box area. */
 function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
-	const o = gamefile.boardsim.pieces; // Organized pieces
+	const o = gamefile.pieces; // Organized pieces
 
 	const selectionBoxWidth: bigint = intBox.right - intBox.left;
 	const selectionBoxHeight: bigint = intBox.top - intBox.bottom;

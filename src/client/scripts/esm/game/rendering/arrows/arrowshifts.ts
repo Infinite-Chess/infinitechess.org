@@ -200,11 +200,11 @@ export function executeArrowShifts(): void {
 			}; // Create a piece object for the arrow
 
 			// Add an arrow for every applicable direction
-			for (const lineKey of gamefile.boardsim.pieces.lines.keys()) {
+			for (const lineKey of gamefile.pieces.lines.keys()) {
 				let line = vectors.getVec2FromKey(lineKey);
 
 				// prettier-ignore
-				if (arrowscalculator.isAnimatedArrowUnnecessary(gamefile.boardsim, piece.type, line, lineKey, mode))
+				if (arrowscalculator.isAnimatedArrowUnnecessary(gamefile, piece.type, line, lineKey, mode))
 					continue; // Arrow mode isn't high enough, and the piece can't slide in the vector direction
 
 				// Determine the line's dot product with the screen box.
@@ -230,7 +230,7 @@ export function executeArrowShifts(): void {
 	/** Helper function to delete an arrow's start piece off the board. */
 	function deletePiece(start: Coords): number | undefined {
 		// Delete the piece from the gamefile, so that we can calculate the arrow lines correctly
-		const originalPiece = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, start);
+		const originalPiece = boardutil.getPieceFromCoords(gamefile.pieces, start);
 		if (originalPiece === undefined) return; // The piece may have been blown up by itself.
 		boardchanges.queueDeletePiece(changes, true, originalPiece);
 		return originalPiece.type;
@@ -274,7 +274,7 @@ function recalculateLinesThroughCoords(
 	pointerWorlds: DoubleCoords[],
 	slideExceptions: Vec2Key[],
 ): void {
-	for (const [slideKey, linegroup] of gamefile.boardsim.pieces.lines) {
+	for (const [slideKey, linegroup] of gamefile.pieces.lines) {
 		// For each slide direction in the game...
 		const slide = coordutil.getCoordsFromKey(slideKey);
 

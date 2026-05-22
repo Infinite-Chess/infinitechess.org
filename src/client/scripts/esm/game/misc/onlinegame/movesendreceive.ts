@@ -50,13 +50,13 @@ function sendMove(): void {
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
-	const lastMove = moveutil.getLastMove(gamefile.boardsim.moves)!;
+	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	const moveToken = lastMove.token; // "x,y>x,yN"
 
 	const data = {
 		move: moveToken,
-		moveNumber: gamefile.basegame.moves.length,
-		gameConclusion: gamefile.basegame.gameConclusion,
+		moveNumber: gamefile.moves.length,
+		gameConclusion: gamefile.gameConclusion,
 	};
 
 	socketmessages.send('game', 'submitmove', data, true);
@@ -75,7 +75,7 @@ function handleOpponentsMove(
 	message: OpponentsMoveMessage,
 ): void {
 	// Make sure the move number matches the expected.
-	const expectedMoveNumber = gamefile.boardsim.moves.length + 1;
+	const expectedMoveNumber = gamefile.moves.length + 1;
 	if (message.moveNumber !== expectedMoveNumber) {
 		// A desync happened
 		console.error(
@@ -118,13 +118,11 @@ function handleOpponentsMove(
 
 		// Edit the clocks
 
-		const { basegame } = gamefile;
-
 		// Adjust the timer whos turn it is depending on ping.
 		applyClockValues(gamefile, message.clockValues);
 
 		// For online games, the server is boss, so if they say the game is over, conclude it here.
-		if (gamefileutility.isGameOver(basegame)) gameslot.concludeGame();
+		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
 		onlinegame.onMovePlayed({ isOpponents: true });
 
@@ -153,7 +151,7 @@ function checkAndReportIllegalOpponentMove(
 		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
 	);
 
-	if (!isGameInstantlyDeleted(gamefile.boardsim.variant, gamefile.basegame.dateTimestamp)) {
+	if (!isGameInstantlyDeleted(gamefile.variant, gamefile.dateTimestamp)) {
 		onlinegame.reportOpponentsMove(moveValidationResult.reason);
 		return true;
 	}
@@ -164,13 +162,13 @@ function checkAndReportIllegalOpponentMove(
 /** Adjusts received clock values for ping and applies them to the game, if provided. */
 function applyClockValues(gamefile: FullGame, clockValues: ClockValues | undefined): void {
 	if (!clockValues) return;
-	if (gamefile.basegame.untimed) {
+	if (gamefile.untimed) {
 		console.warn('Received clock values for untimed game??');
 		return;
 	}
 	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile.basegame.clocks, clockValues);
-	guiclock.edit(gamefile.basegame);
+	clock.edit(gamefile.clocks, clockValues);
+	guiclock.edit(gamefile);
 }
 
 // Exports -------------------------------------------------------------------

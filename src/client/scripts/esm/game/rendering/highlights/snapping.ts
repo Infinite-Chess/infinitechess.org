@@ -197,7 +197,7 @@ type LineSnapPoint = {
  */
 function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	const pointerCoords = space.convertWorldSpaceToCoords(world);
-	const { boardsim } = gameslot.getGamefile()!;
+	const boardsim = gameslot.getGamefile()!;
 
 	const drawnRays = annotations.getRays();
 	const presetRays = drawrays.getPresetRays();

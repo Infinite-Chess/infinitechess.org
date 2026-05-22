@@ -1669,14 +1669,14 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const boardsim = input_gamefile.boardsim;
+					const boardsim = input_gamefile;
 					const dummy_board = {
 						moves: [],
 						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
 							boardsim.gameRules.turnOrder,
-							input_gamefile.boardsim.editor,
+							input_gamefile.editor,
 							boardsim.gameRules.promotion,
 						).pieces,
 					} as unknown as Board;
@@ -1808,7 +1808,7 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
  */
 async function runEngine(): Promise<void> {
 	try {
-		const board = input_gamefile.boardsim;
+		const board = input_gamefile;
 		// get real coordinates and parse type of black royal piece
 		if (doesTypeExist(board, r.KING + e.B)) {
 			gamefile_royal_coords = getFirstOfType(board, r.KING + e.B)!;

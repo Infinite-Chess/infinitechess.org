@@ -403,7 +403,7 @@ function callback_Back(): void {
 
 function callback_Expand(): void {
 	const box: Partial<BoundingBox> =
-		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces) ?? {};
+		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces) ?? {};
 
 	// Add the square annotation highlights, too.
 
@@ -434,7 +434,7 @@ function callback_Expand(): void {
 }
 
 function recenter(): void {
-	Transition.zoomToCoordsBox(gameslot.getGamefile()!.boardsim.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
+	Transition.zoomToCoordsBox(gameslot.getGamefile()!.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
@@ -524,8 +524,8 @@ function isItOkayToRewindOrForward(): boolean {
  */
 function update_MoveButtons(): void {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.boardsim);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.boardsim);
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -679,7 +679,7 @@ function rewindMove(): void {
 	// If we had premoves to cancel, just cancel them, don't rewind a move this time.
 	if (hadAtleastOnePremove) return;
 
-	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
@@ -695,7 +695,7 @@ function forwardMove(): void {
 
 	premoves.cancelPremoves(gamefile, mesh);
 
-	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, mesh, true);
 }
