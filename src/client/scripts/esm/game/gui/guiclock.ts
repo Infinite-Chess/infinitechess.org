@@ -1,10 +1,8 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
+import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
-import type { MoveRecord } from '../../../../../shared/chess/logic/movepiece.js';
 import type { SoundObject } from '../../audio/AudioManager.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { ClockDependant } from '../../../../../shared/chess/logic/fullgame.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -112,7 +110,7 @@ function showClocks(): void {
 /**
  * Stops clock sounds and removes all borders
  */
-function stopClocks(basegame?: ClockDependant): void {
+function stopClocks(basegame?: FullGame): void {
 	cancelSoundEffectTimers();
 
 	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
@@ -149,16 +147,7 @@ function resetClocks(): void {
 	lowtimeNotif.playersNotified = new Set();
 }
 
-/**
- *
- * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
- */
-function update(
-	basegame: {
-		moves: MoveRecord[];
-		gameConclusion?: GameConclusion;
-	} & ClockDependant,
-): void {
+function update(basegame: FullGame): void {
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
 
@@ -172,7 +161,7 @@ function update(
 	updateTextContent(basegame.clocks);
 }
 
-function edit(basegame: ClockDependant): void {
+function edit(basegame: FullGame): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 
@@ -271,7 +260,7 @@ function playMinuteTick(color: Player): void {
 	lowtimeNotif.playersNotified.add(color);
 }
 
-function set(basegame: ClockDependant): void {
+function set(basegame: FullGame): void {
 	if (basegame.untimed) return hideClocks();
 	else showClocks();
 	updateTextContent(basegame.clocks);

@@ -1,9 +1,9 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
+import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ClockDependant, FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
 import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
 
@@ -217,13 +217,13 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 /**
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(basegame: ClockDependant, clockValues: ClockValues): void {
-	if (basegame.untimed) throw Error('Received clock values for untimed game??');
+function handleUpdatedClock(gamefile: FullGame, clockValues: ClockValues): void {
+	if (gamefile.untimed) throw Error('Received clock values for untimed game??');
 
 	// Adjust the timer whos turn it is depending on ping.
 	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(basegame.clocks, clockValues); // Edit the clocks
-	guiclock.edit(basegame);
+	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
+	guiclock.edit(gamefile);
 }
 
 /**
@@ -243,11 +243,11 @@ function handleUnsubbing(): void {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(basegame: ClockDependant): void {
+function handleLogin(gamefile: FullGame): void {
 	toast.show(translations.onlinegame.not_logged_in, { error: true, durationMultiplier: 100 });
 	socketsubs.deleteSub('game');
-	clock.endGame(basegame);
-	guiclock.stopClocks(basegame);
+	clock.endGame(gamefile);
+	guiclock.stopClocks(gamefile);
 	selection.unselectPiece();
 }
 
