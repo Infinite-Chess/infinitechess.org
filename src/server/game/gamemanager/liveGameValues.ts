@@ -9,8 +9,6 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../shared/types.js';
-import type { ClockDependant } from '../../../shared/chess/logic/fullgame.js';
 import type { LiveGameData, LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { ServerGame, PlayerData, PlayerDisconnect } from './gameutility.js';
 import type {
@@ -48,13 +46,13 @@ function getMovesString(servergame: ServerGame): string {
 /**
  * Extracts the elo display string for a player from game metadata.
  */
-function getPlayerEloString(basegame: { metadata: MetaData }, player: Player): string | null {
+function getPlayerEloString(servergame: ServerGame, player: Player): string | null {
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
 	// prettier-ignore
 	const eloKey = player === p.WHITE ? 'WhiteElo' :
 				   player === p.BLACK ? 'BlackElo' :
 				   (() => { throw new Error(`Invalid player ${player} when getting elo string`); })();
-	return basegame.metadata[eloKey] ?? null;
+	return servergame.metadata[eloKey] ?? null;
 }
 
 /**
@@ -90,7 +88,7 @@ function buildPlayerRecord(
 	game_id: number,
 	player: Player,
 	playerData: PlayerData,
-	basegame: { metadata: MetaData } & ClockDependant,
+	servergame: ServerGame,
 ): LivePlayerGamesRecord {
 	const { identifier, disconnect } = playerData;
 
@@ -99,9 +97,11 @@ function buildPlayerRecord(
 		player_number: player,
 		user_id: identifier.signedIn ? identifier.user_id : null,
 		browser_id: identifier.browser_id,
-		elo: getPlayerEloString(basegame, player),
+		elo: getPlayerEloString(servergame, player),
 		last_draw_offer_ply: playerData.lastOfferPly ?? null,
-		time_remaining_ms: basegame.untimed ? null : (basegame.clocks.currentTime[player] ?? null),
+		time_remaining_ms: servergame.untimed
+			? null
+			: (servergame.clocks.currentTime[player] ?? null),
 		...getDisconnectColumnData(disconnect),
 	};
 }
