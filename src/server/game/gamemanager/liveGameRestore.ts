@@ -26,14 +26,13 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import movepiece from '../../../shared/chess/logic/movepiece.js';
-import boardinit from '../../../shared/chess/logic/boardinit.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
+import gameutility from './gameutility.js';
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
@@ -163,24 +162,15 @@ function restoreSingleGame(
 
 	// 9. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
+	const validateMoves = Boolean(gameRow.validate_moves);
 
-	let servergame: ServerGame;
-	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
-		movepiece.makeAllMovesInGame(boardsim, moves);
-		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
-	} else {
-		servergame = {
-			...gameWithRules,
-			match,
-			whosTurn:
-				gameWithRules.gameRules.turnOrder[
-					moves.length % gameWithRules.gameRules.turnOrder.length
-				]!,
-			moves,
-			validateMoves: false,
-		};
-	}
+	const servergame: ServerGame = gameutility.initServerGame(
+		gameWithRules,
+		match,
+		validateMoves,
+		variant,
+		moves,
+	);
 
 	// 9. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);

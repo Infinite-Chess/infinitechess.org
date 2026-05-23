@@ -16,7 +16,6 @@ import WebSocket from 'ws';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import boardinit from '../../../shared/chess/logic/boardinit.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
@@ -113,21 +112,14 @@ function createGame(
 	};
 	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);
 	const match = gameutility.initMatch(invite, gameID, assignments);
+	const validateMoves = doesVariantSupportServerValidation(variant);
 
-	// If the variant is small, construct the board for server-side move legality validation.
-	let servergame: ServerGame;
-	if (doesVariantSupportServerValidation(variant)) {
-		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
-		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
-	} else {
-		servergame = {
-			...gameWithRules,
-			match,
-			whosTurn: gameWithRules.gameRules.turnOrder[0]!,
-			moves: [],
-			validateMoves: false,
-		};
-	}
+	const servergame: ServerGame = gameutility.initServerGame(
+		gameWithRules,
+		match,
+		validateMoves,
+		variant,
+	);
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
 		if (socket)

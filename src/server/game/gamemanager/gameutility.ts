@@ -7,7 +7,6 @@
  * At most this ever handles a single game, not multiple.
  */
 
-import type { Game } from '../../../shared/chess/logic/gamefile.js';
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
@@ -15,6 +14,7 @@ import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	ClockValues,
@@ -29,6 +29,8 @@ import type {
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import boardinit from '../../../shared/chess/logic/boardinit.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
@@ -210,6 +212,36 @@ function initMatch(
 		rated: invite.mode === 'rated',
 		clock: invite.time,
 	};
+}
+
+/**
+ * Constructs a ServerGame from an initialized game and match.
+ * Handles both validated (board-tracked) and non-validated variants.
+ * Pass an existing moves list to replay them (e.g. on server restore); omit for a fresh game.
+ */
+function initServerGame(
+	gameWithRules: Game & { gameRules: GameRules },
+	match: MatchInfo,
+	validateMoves: boolean,
+	variant: LoadedVariant,
+	moves: MoveRecord[] = [],
+): ServerGame {
+	if (validateMoves) {
+		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
+		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
+		return { ...gameWithRules, match, ...boardsim, validateMoves: true };
+	} else {
+		return {
+			...gameWithRules,
+			match,
+			whosTurn:
+				gameWithRules.gameRules.turnOrder[
+					moves.length % gameWithRules.gameRules.turnOrder.length
+				]!,
+			moves,
+			validateMoves: false,
+		};
+	}
 }
 
 /**
@@ -799,6 +831,7 @@ export type { ServerGame, MatchInfo, PlayerData, PlayerDisconnect };
 
 export default {
 	initMatch,
+	initServerGame,
 	subscribeClientToGame,
 	unsubClientFromGame,
 	resyncToGame,
