@@ -1,14 +1,8 @@
 // src/shared/chess/variants/positionvalidation.ts
 
 /**
- * This script provides shared semantic validation of a VariantOptions object.
- *
- * It checks whether a position is playable: that player IDs are within supported
- * range, that the mode is pure 2-player or pure 4-player, that all required players
- * are in the turn order, that piece colors are consistent with the turn order,
- * that neutral gargoyles aren't present in 2-player mode, that every player has at
- * least one piece, that the ICN string isn't too long for server transfer, and
- * that players using royal-dependent win conditions have a royal piece on the board.
+ * This script provides validation of a VariantOptions object and ICN.
+ * No illegal positions, nor excessively large games, are allowed.
  */
 
 import type { RawType } from '../util/typeutil.js';
@@ -50,7 +44,7 @@ const FOUR_PLAYER_COLORS = [players.RED, players.BLUE, players.YELLOW, players.G
  * @param icnString - The ICN string representation of the position, used to check its length.
  * @returns `null` if valid, or a string describing the reason the position is illegal.
  */
-function validatePosition(variantOptions: VariantOptions, icnString: string): string | null {
+export function validatePosition(variantOptions: VariantOptions, icnString: string): string | null {
 	const { position, gameRules } = variantOptions;
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
 	const turnOrderSet = new Set<number>(uniquePlayers);
@@ -155,5 +149,3 @@ function validatePosition(variantOptions: VariantOptions, icnString: string): st
 
 	return null; // Position is valid.
 }
-
-export default { validatePosition };

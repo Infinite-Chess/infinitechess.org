@@ -26,7 +26,7 @@ import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
-import positionvalidation from '../../../../../../shared/chess/variants/positionvalidation';
+import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
@@ -296,7 +296,7 @@ function getValidatedPosition(): VariantOptions | null {
 		{ metadata: {} as MetaData, ...variantOptions },
 		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
 	); // prettier-ignore
-	const illegalReason = positionvalidation.validatePosition(variantOptions, icnString);
+	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		// The position is illegal
 		toast.show(illegalReason, { error: true });
