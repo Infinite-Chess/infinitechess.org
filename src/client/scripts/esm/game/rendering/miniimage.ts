@@ -79,7 +79,7 @@ function toggle(): void {
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
 function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => void): void {
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = gamefile.pieces;
 
 	// Animated pieces
 	const maxDistB4Teleport = bd.divideFloating(
@@ -108,7 +108,7 @@ function forEachRenderablePiece(callback: (_coords: BDCoords, _type: number) => 
 	}
 
 	// Static pieces
-	gamefile.boardsim.existingTypes.forEach((type: number) => {
+	gamefile.existingTypes.forEach((type: number) => {
 		if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
 		const range = pieces.typeRanges.get(type)!;
@@ -135,7 +135,7 @@ function getImageInstanceData(): {
 
 	const pointerWorlds = mouse.getAllPointerWorlds();
 
-	const boardsim = gameslot.getGamefile()!.boardsim;
+	const boardsim = gameslot.getGamefile()!;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
 	const areWatchingMousePosition: boolean =
@@ -231,8 +231,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	}
 
 	const gamefile = gameslot.getGamefile()!;
-	const boardsim = gamefile.boardsim;
-	const pieces = boardsim.pieces;
+	const pieces = gamefile.pieces;
 	const mesh = gameslot.getMesh();
 
 	// 1. Process all animations and add pieces relevant to the current move
@@ -284,9 +283,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	if (pieceSelected) pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
 
 	// 4. Add pieces from the last and next moves
-	const moveIndex = boardsim.state.local.moveIndex;
+	const moveIndex = gamefile.state.local.moveIndex;
 	// Last move's destination piece
-	const lastMove = boardsim.moves[moveIndex];
+	const lastMove = gamefile.moves[moveIndex];
 	if (
 		lastMove &&
 		!animation.animations.some((a) =>
@@ -302,7 +301,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
 	}
 	// Next move's starting piece
-	const nextMove = boardsim.moves[moveIndex + 1];
+	const nextMove = gamefile.moves[moveIndex + 1];
 	if (
 		nextMove &&
 		!animation.animations.some((a) =>
@@ -328,12 +327,12 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 
-	const boardsim = gameslot.getGamefile()!.boardsim;
+	const gamefile = gameslot.getGamefile()!;
 	const inverted = camera.getIsViewingBlackPerspective();
 	const { instanceData, instanceData_hovered } = getImageInstanceData();
 
 	miniimagerenderer.render(
-		boardsim.existingTypes,
+		gamefile.existingTypes,
 		instanceData,
 		instanceData_hovered,
 		inverted,

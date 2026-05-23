@@ -14,7 +14,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { OrganizedPiecesBase } from './organizedpieces.js';
 import type { GameState, GlobalGameState } from './state.js';
-import type { Snapshot, VariantOptions, LoadedVariant } from './fullgame.js';
+import type { Snapshot, VariantOptions, LoadedVariant } from './gamefile.js';
 
 import jsutil from '../../util/jsutil.js';
 import organizedpieces from './organizedpieces.js';

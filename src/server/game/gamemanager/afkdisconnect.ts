@@ -43,7 +43,7 @@ const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 60_000; // 60 seconds
 function cancelAutoAFKResignTimer(servergame: ServerGame, alertOpponent: boolean = false): void {
 	if (servergame.match.autoAFKResignTime !== undefined && alertOpponent) {
 		// Alert their opponent
-		const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn);
+		const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			opponentColor,
@@ -75,7 +75,7 @@ function startDisconnectTimer(
 	// console.log(`Starting disconnect timer to auto resign player ${color}.`);
 
 	const now = Date.now();
-	const resignable = gameutility.isGameResignable(servergame.basegame);
+	const resignable = gameutility.isGameResignable(servergame);
 
 	let timeBeforeAutoResign =
 		closureNotByChoice && resignable
@@ -88,10 +88,7 @@ function startDisconnectTimer(
 	// If so, delete it, transferring it's time remaining to this disconnect timer.
 	// We can do this because if player is disconnected, they are afk anyway.
 	// And if if they reconnect, then they're not afk anymore either.
-	if (
-		servergame.basegame.whosTurn === color &&
-		servergame.match.autoAFKResignTime !== undefined
-	) {
+	if (servergame.whosTurn === color && servergame.match.autoAFKResignTime !== undefined) {
 		if (servergame.match.autoAFKResignTime > timeToAutoLoss)
 			console.error(
 				"The time to auto-resign by AFK should not be greater than time to auto-resign by disconnect. We shouldn't be overwriting the AFK timer.",

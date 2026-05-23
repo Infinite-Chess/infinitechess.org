@@ -8,7 +8,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -143,13 +143,13 @@ function update(): void {
 
 	controls.testInGameToggles(gamefile, mesh);
 
-	const timeWinner = clock.update(gamefile.basegame);
+	const timeWinner = clock.update(gamefile);
 	if (timeWinner && !onlinegame.areInOnlineGame()) {
 		// undefined if no clock has ran out
-		gamefileutility.setConclusion(gamefile.basegame, { victor: timeWinner, condition: 'time' });
+		gamefileutility.setConclusion(gamefile, { victor: timeWinner, condition: 'time' });
 		gameslot.concludeGame();
 	}
-	guiclock.update(gamefile.basegame);
+	guiclock.update(gamefile);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
@@ -217,7 +217,7 @@ function update(): void {
  * Tests if by clicking an empty region of the board,
  * we need to clear premoves and collapse annotations.
  */
-function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined): void {
+function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefined): void {
 	const mouseKeybind = keybinds.getCollapseMouseButton();
 	if (mouseKeybind === undefined) return; // No button is assigned to collaping annotes / cancelling premoves currently
 
@@ -271,7 +271,7 @@ function renderScene(): void {
 	// Star Field Animation: Appears in border & voids
 	maskedDraw.execute(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // EXCLUSION MASK is our playable region
+		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
@@ -279,7 +279,7 @@ function renderScene(): void {
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
 	maskedDraw.execute(
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // INCLUSION MASK containing playable region
+		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
@@ -301,7 +301,7 @@ function renderScene(): void {
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		coordinates.render();
 		selectedpiecehighlightline.render();
-		highlights.render(gamefile.boardsim);
+		highlights.render(gamefile);
 		GameBus.dispatch('render-below-pieces');
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
@@ -310,7 +310,7 @@ function renderScene(): void {
 
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
+	pieces.renderPiecesInGame(gamefile, mesh);
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -333,8 +333,8 @@ function renderTilesAndPromoteLines(): void {
 	const gamefile = gameslot.getGamefile()!;
 	// The start box determines how far out promotion lines are rendered.
 	// In editor mode, don't provide it, so the lines extend to the screen edges.
-	const startBox = gamefile.boardsim.editor ? undefined : gamefile.boardsim.startSnapshot.box;
-	promotionlines.render(gamefile.basegame.gameRules.promotion, startBox);
+	const startBox = gamefile.editor ? undefined : gamefile.startSnapshot.box;
+	promotionlines.render(gamefile.gameRules.promotion, startBox);
 }
 
 /**

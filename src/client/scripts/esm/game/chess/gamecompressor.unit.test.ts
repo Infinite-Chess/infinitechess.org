@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
 
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { SimplifiedGameState } from './gamecompressor.js';
 
 import { describe, it, expect } from 'vitest';
@@ -24,39 +24,34 @@ describe('gamecompressor', () => {
 				Black: 'Waterman',
 			} as const;
 
-			const mockGame: FullGame = {
-				basegame: {
-					metadata: mockMetaData,
-					dateTimestamp: Date.now(),
-					// The game rules are essential for the compressor to know the turn order
-					gameRules: {
-						turnOrder: [p.WHITE, p.BLACK],
-					} as any,
-					moves: [],
-					whosTurn: p.WHITE,
-					untimed: true,
-					clocks: undefined,
+			const mockGame: GameFile = {
+				metadata: mockMetaData,
+				dateTimestamp: Date.now(),
+				whosTurn: p.WHITE,
+				untimed: true,
+				clocks: undefined,
+				startSnapshot: {
+					position: new Map(),
+					fullMove: 1,
+					state_global: {
+						specialRights: new Set(),
+					},
 				},
-				boardsim: {
-					startSnapshot: {
-						position: new Map(),
-						fullMove: 1,
-						state_global: {
-							specialRights: new Set(),
-						},
-					},
-					moves: [],
-					state: {
-						local: {
-							moveIndex: -1,
-						},
-					},
+				// The game rules are essential for the compressor to know the turn order
+				gameRules: {
+					turnOrder: [p.WHITE, p.BLACK],
 				} as any,
-			};
+				moves: [],
+				state: {
+					local: {
+						moveIndex: -1,
+					},
+				},
+			} as any;
 
 			const result = gamecompressor.compressGamefile(mockGame);
 
-			expect(result.metadata).toEqual(mockGame.basegame.metadata);
+			expect(result.metadata).toEqual(mockGame.metadata);
 			expect(result.fullMove).toBe(1);
 			expect(result.moves).toEqual([]);
 		});

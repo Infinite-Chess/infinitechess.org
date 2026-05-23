@@ -7,7 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type {
 	VariantGroup,
@@ -18,6 +18,7 @@ import { attributesModule, classModule, eventListenersModule, h, init } from 'sn
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
 
 import icnimport from '../../game/chess/icnimport.js';
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
@@ -436,10 +437,14 @@ async function validateIcnInput(): Promise<void> {
 			position,
 			gameRules: longFormat.gameRules,
 			state_global: { ...longFormat.state_global, specialRights },
-			fullMove: longFormat.fullMove,
+			// fullMove: longFormat.fullMove,
+			fullMove: 1, // For now, games can only start from a fullMove of 1
 		};
-	} catch {
+		const illegalReason = validatePosition(icnVariantOptions, value);
+		if (illegalReason !== null) throw new Error(illegalReason);
+	} catch (e) {
 		element_icnInputWrap.classList.add('invalid');
+		console.error('Illegal position:', e instanceof Error ? e.message : e);
 		icnVariantOptions = null;
 	}
 }

@@ -4,10 +4,11 @@
  * This script contains many utility methods for working with gamefiles.
  */
 
-import type { Game } from '../logic/fullgame.js';
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
+import type { MetaData } from '../../types.js';
+import type { GameRules } from './gamerules.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
@@ -17,8 +18,11 @@ import metadatautil from './metadatautil.js';
 
 // Methods -------------------------------------------------------------
 
-/** Returns true if the game is over. */
-function isGameOver(basegame: Game): boolean {
+/**
+ * Returns true if the game is over.
+ * @param basegame - The minimum properties needed from the gamefile to check if the game is over. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
+ */
+function isGameOver(basegame: { gameConclusion?: GameConclusion }): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 
@@ -42,41 +46,49 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * the `Termination` `Result` and metadata accordingly.
  * If the conclusion is undefined, it removes the metadata,
  * essentially un-concluding the game if it was already concluded.
+ * @param gamefile - The minimum properties needed from the gamefile to set the conclusion. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  */
-function setConclusion(basegame: Game, conclusion: GameConclusion | undefined): void {
-	basegame.gameConclusion = conclusion;
+function setConclusion(
+	gamefile: {
+		metadata: MetaData;
+		gameConclusion?: GameConclusion;
+		gameRules: GameRules;
+	},
+	conclusion: GameConclusion | undefined,
+): void {
+	gamefile.gameConclusion = conclusion;
 
 	if (conclusion !== undefined) {
-		basegame.metadata.Termination = winconutil.getTerminationInEnglish(
-			basegame.gameRules,
+		gamefile.metadata.Termination = winconutil.getTerminationInEnglish(
+			gamefile.gameRules,
 			conclusion.condition,
 		);
-		basegame.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
+		gamefile.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
 	} else {
-		delete basegame.metadata.Result;
-		delete basegame.metadata.Termination;
+		delete gamefile.metadata.Result;
+		delete gamefile.metadata.Termination;
 	}
 }
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
- * @param basegame
+ * @param game - The gamefile with the gameRules to check the win condition against.
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
 function isOpponentUsingWinCondition(
-	basegame: Game,
+	game: { gameRules: GameRules },
 	friendlyColor: Player,
 	winCondition: GameruleWinCondition,
 ): boolean {
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
-	return gamerules.doesColorHaveWinCondition(basegame.gameRules, oppositeColor, winCondition);
+	return gamerules.doesColorHaveWinCondition(game.gameRules, oppositeColor, winCondition);
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(basegame: Game): number {
-	return new Set(basegame.gameRules.turnOrder).size;
+function getPlayerCount(game: { gameRules: GameRules }): number {
+	return new Set(game.gameRules.turnOrder).size;
 }
 
 // Exports -------------------------------------------------------------

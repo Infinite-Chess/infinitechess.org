@@ -144,7 +144,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 	if (!servergame.match.rated) return;
 	// Skip if the game was aborted (this also covers 0 moves),
 	// the game will NOT have added an entry in the leaderboards table for the players!
-	if (servergame.basegame.gameConclusion!.victor === undefined) return;
+	if (servergame.gameConclusion!.victor === undefined) return;
 
 	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
 	const leaderboard_id = VariantLeaderboards[servergame.match.variant];

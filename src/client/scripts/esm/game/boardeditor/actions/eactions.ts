@@ -25,8 +25,8 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
-import checkdetection from '../../../../../../shared/chess/logic/checkdetection';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
+import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
 import coordutil, { Coords, CoordsKey } from '../../../../../../shared/chess/util/coordutil';
 import organizedpieces, {
@@ -34,9 +34,9 @@ import organizedpieces, {
 } from '../../../../../../shared/chess/logic/organizedpieces';
 import gamefile, {
 	Additional,
-	FullGame,
+	GameFile,
 	VariantOptions,
-} from '../../../../../../shared/chess/logic/fullgame';
+} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	MoveParsed,
 	LongFormatIn,
@@ -202,15 +202,8 @@ async function paste(): Promise<undefined> {
 function startLocalGame(): void {
 	if (!boardeditor.areInBoardEditor()) return;
 
-	const variantOptions = getCurrentPositionInformation(true);
-	if (isPositionIllegal(variantOptions)) {
-		toast.show(translations.editor.illegal_position_king_capture, { error: true });
-		return;
-	}
-	if (variantOptions.position.size === 0) {
-		toast.show(translations.editor.cannot_start_local_empty, { error: true });
-		return;
-	}
+	const variantOptions = getValidatedPosition();
+	if (variantOptions === null) return;
 
 	gameloader.unloadGame();
 	gameloader.startCustomLocalGame({
@@ -225,24 +218,15 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 
 	const currentEngine = 'hydrochess';
 
-	// Get current position
-	const variantOptions = getCurrentPositionInformation(true);
-	if (isPositionIllegal(variantOptions)) {
-		toast.show(translations.editor.illegal_position_king_capture, { error: true });
-		return;
-	}
+	const variantOptions = getValidatedPosition();
+	if (variantOptions === null) return;
 
 	// Determine whether it's not supported...
-
-	if (variantOptions.position.size === 0) {
-		toast.show(translations.editor.cannot_start_engine_empty, { error: true });
-		return;
-	}
 
 	// Set world border automatically, if wished
 	if (engineUIConfig.setDefaultWorldBorder) {
 		// Calculate minimum bounding box of all pieces
-		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
+		const bb = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces)!; // Guaranteed defined since above we check if there's > 0 pieces
 
 		/*
 		 * Priority:
@@ -303,27 +287,26 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 // Helpers ----------------------------------------------------------------
 
 /**
- * Returns true if the current editor position is illegal to start a checkmate game from,
- * because the 2nd player to move is already in check on turn 1 — meaning the 1st player
- * could immediately capture their royal piece, which can only happen in illegal positions.
+ * Gets and validates the current board editor position.
+ * Shows a toast and returns null if the position is illegal.
  */
-function isPositionIllegal(variantOptions: VariantOptions): boolean {
-	// Only applicable when checkmate is used by any player
-	const checkmateUsed = Object.values(variantOptions.gameRules.winConditions).some((conds) =>
-		conds.includes('checkmate'),
-	);
-	if (!checkmateUsed) return false; // King capture legal in non-checkmate variants
-
-	// The 2nd player to move is the one whose royal could be captured on the 1st move
-	const secondPlayer = variantOptions.gameRules.turnOrder[1];
-	if (secondPlayer === undefined) return false; // Umm why did this happen?
-
-	const result = checkdetection.detectCheck(gameslot.getGamefile()!, secondPlayer);
-	return result.check; // Illegal position (allows king capture)
+function getValidatedPosition(): VariantOptions | null {
+	const variantOptions = getCurrentPositionInformation(true);
+	const icnString = icnconverter.LongToShort_Format(
+		{ metadata: {} as MetaData, ...variantOptions },
+		{ skipPosition: false, compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false },
+	); // prettier-ignore
+	const illegalReason = validatePosition(variantOptions, icnString);
+	if (illegalReason !== null) {
+		// The position is illegal
+		toast.show(illegalReason, { error: true });
+		return null;
+	}
+	return variantOptions;
 }
 
 /** Queues the removal of all pieces from the position. */
-function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
+function queueRemovalOfAllPieces(gamefile: GameFile, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		edithistory.queueRemovePiece(gamefile, edit, pieceToDelete);
@@ -340,12 +323,12 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 
 	// Construct position
 	const gamefile = gameslot.getGamefile()!;
-	const position = organizedpieces.generatePositionFromPieces(gamefile.boardsim.pieces);
+	const position = organizedpieces.generatePositionFromPieces(gamefile.pieces);
 
 	// Construct state_global
 
-	const specialRights = new Set(gamefile.boardsim.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
-	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile.boardsim, specialRights);
+	const specialRights = new Set(gamefile.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile, specialRights);
 
 	let enpassant: EnPassant | undefined;
 	if (enpassantcoords !== undefined) {
@@ -374,7 +357,6 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 /**
  * Revokes special rights from pieces that no longer have a valid castling partner.
  * MUTATES the input specialRights set.
- * @param boardsim
  * @param specialRights - MUST be a copy of the gamefile's specialRights set! This will be mutated, NOT the gamefile's internal one.
  */
 function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<CoordsKey>): void {
@@ -409,7 +391,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	let { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
-	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
+	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time
 	if (longformOut.moves && longformOut.moves.length !== 0) {
 		const state_global = { ...longformOut.state_global, specialRights };
@@ -426,7 +408,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = await gamefile.initFullGame(
+		const loadedGamefile = await gamefile.initGameFile(
 			longformOut.metadata,
 			timestamp,
 			resolvedVariantCode,
@@ -440,8 +422,8 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		};
 		const new_gamestate = gamecompressor.GameToPosition(
 			gamestate,
-			loadedGamefile.boardsim.moves,
-			loadedGamefile.boardsim.moves.length,
+			loadedGamefile.moves,
+			loadedGamefile.moves.length,
 		);
 		position = new_gamestate.position;
 		specialRights = new_gamestate.state_global.specialRights!;
@@ -450,7 +432,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 
 	const thisGamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
-	const pieces = thisGamefile.boardsim.pieces;
+	const pieces = thisGamefile.pieces;
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	// Remove all current pieces from position

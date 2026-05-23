@@ -26,14 +26,13 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
-import fullgame from '../../../shared/chess/logic/fullgame.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -134,7 +133,7 @@ function restoreSingleGame(
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
 	// 2. Reconstruct MetaData
-	const gameMetadata = reconstructMetadata(gameRow, playerRows, playerIdentities);
+	const game = reconstructMetadata(gameRow, playerRows, playerIdentities);
 
 	// 3. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
@@ -142,15 +141,15 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 8. Reconstruct MatchInfo
-	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
-
-	// 5. Create the basegame
-	const variant = { code: matchInfo.variant, mod: variantcache.getModule(matchInfo.variant) };
-	const basegame = fullgame.initGame(
-		gameMetadata,
+	// 5. Create the game (also computes gameRules)
+	const variant: LoadedVariant = {
+		code: gameRow.variant as VariantCode,
+		mod: variantcache.getModule(gameRow.variant as VariantCode),
+	};
+	const gameWithRules = gamefile.initGame(
+		game,
 		gameRow.time_created,
-		variant?.mod,
+		variant.mod,
 		gameConclusion,
 		clockValues,
 	);
@@ -158,27 +157,32 @@ function restoreSingleGame(
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
-	const servergame: ServerGame = { match: matchInfo, basegame };
+	// 8. Reconstruct MatchInfo
+	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 6. Parse & replay moves, conditionally constructing boardsim
+	// 9. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
+	let servergame: ServerGame;
 	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(basegame.gameRules, variant, basegame.dateTimestamp);
-		servergame.boardsim = boardsim;
-		// Pushes moves to BOTH the basegame and boardsim
-		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
+		const boardsim = boardinit.initBoard(
+			gameWithRules.gameRules,
+			variant,
+			gameWithRules.dateTimestamp,
+		);
+		movepiece.makeAllMovesInGame(boardsim, moves);
+		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
 	} else {
-		// Push all the moves to JUST the basegame
-		for (const move of moves) {
-			basegame.moves.push(jsutil.deepCopyObject(move));
-		}
-
-		// Update whosTurn based on move count
-		basegame.whosTurn =
-			basegame.gameRules.turnOrder[
-				basegame.moves.length % basegame.gameRules.turnOrder.length
-			]!;
+		servergame = {
+			...gameWithRules,
+			match,
+			whosTurn:
+				gameWithRules.gameRules.turnOrder[
+					moves.length % gameWithRules.gameRules.turnOrder.length
+				]!,
+			moves,
+			validateMoves: false,
+		};
 	}
 
 	// 9. Compute pending timers
@@ -409,9 +413,8 @@ function computePendingTimers(
 	}
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.basegame.untimed && gameRow.color_ticking !== null) {
-		const tickingTime =
-			servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player]!;
+	if (!servergame.untimed && gameRow.color_ticking !== null) {
+		const tickingTime = servergame.clocks.currentTime[gameRow.color_ticking as Player]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 

@@ -330,7 +330,7 @@ function readGameRules(): void {
 
 			// Further check if all pieces are within the border
 			if (worldBorder) {
-				const allCoords = boardutil.getCoordsOfAllPieces(gamefile.boardsim.pieces);
+				const allCoords = boardutil.getCoordsOfAllPieces(gamefile.pieces);
 				if (allCoords.some((coords) => !bounds.boxContainsSquare(worldBorder!, coords))) {
 					// One or more pieces are outside the border -> All invalid
 					leftValid = false;

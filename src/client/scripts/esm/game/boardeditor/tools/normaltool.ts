@@ -9,7 +9,7 @@
 import type { Mesh } from '../../rendering/piecemodels';
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
 import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import state from '../../../../../../shared/chess/logic/state';
@@ -27,13 +27,13 @@ import movesequence from '../../chess/movesequence';
  * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
  * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
  */
-function makeMoveEdit(gamefile: FullGame, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
-	const edit = generateMoveEdit(gamefile.boardsim, moveCoords);
+function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
+	const edit = generateMoveEdit(gamefile, moveCoords);
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
 	GameBus.dispatch('physical-move');
 
-	if (mesh) movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, true);
+	if (mesh) movesequence.runMeshChanges(gamefile, mesh, edit, true);
 
 	edithistory.addEditToHistory(edit);
 

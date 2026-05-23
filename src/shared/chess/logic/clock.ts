@@ -8,8 +8,11 @@
  */
 
 import type { Player } from '../util/typeutil.js';
+import type { GameRules } from '../util/gamerules.js';
+import type { MoveRecord } from './movepiece.js';
 import type { PlayerGroup } from '../util/typeutil.js';
-import type { ClockDependant, Game } from './fullgame.js';
+import type { GameConclusion } from '../util/winconutil.js';
+import type { ClockDependant } from './gamefile.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
 import typeutil from '../util/typeutil.js';
@@ -121,12 +124,19 @@ function edit(currentClocks: ClockData, clockValues: ClockValues): void {
 
 /**
  * Call after flipping whosTurn. Flips colorTicking in local games.
+ * @param gamefile - The minimum properties needed from the gamefile to push the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  * @returns The time in milliseconds the player who just moved has remaining, if the clocks are ticking.
  */
-function push(basegame: Game, clocks: ClockData): number | undefined {
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 2);
+function push(gamefile: {
+	moves: MoveRecord[];
+	whosTurn: Player;
+	clocks: ClockData;
+	gameRules: GameRules;
+}): number | undefined {
+	const clocks = gamefile.clocks;
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 
-	if (!moveutil.isGameResignable(basegame)) return clocks.currentTime[prevcolor]!;
+	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 
 	// Add increment to the previous player's clock and capture their remaining time to later insert into move.
 	if (clocks.timeAtTurnStart !== undefined) {
@@ -140,14 +150,14 @@ function push(basegame: Game, clocks: ClockData): number | undefined {
 	}
 
 	// Set up clocksticking for the new turn.
-	clocks.colorTicking = basegame.whosTurn;
-	clocks.timeRemainAtTurnStart = clocks.currentTime[clocks.colorTicking]!;
+	clocks.colorTicking = gamefile.whosTurn;
+	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn]!;
 	clocks.timeAtTurnStart = Date.now();
 
 	return clocks.currentTime[prevcolor];
 }
 
-function stop(basegame: Game): void {
+function stop(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
@@ -162,7 +172,7 @@ function stop(basegame: Game): void {
 	endGame(basegame);
 }
 
-function endGame(basegame: Game): void {
+function endGame(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 	delete clocks.timeRemainAtTurnStart;
@@ -172,10 +182,15 @@ function endGame(basegame: Game): void {
 
 /**
  * Called every frame, updates values.
- * @param basegame
+ * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  * @returns undefined if clocks still have time, otherwise it's the color who won.
  */
-function update(basegame: Game): Player | undefined {
+function update(
+	basegame: {
+		moves: MoveRecord[];
+		gameConclusion?: GameConclusion;
+	} & ClockDependant,
+): Player | undefined {
 	if (
 		basegame.untimed ||
 		gamefileutility.isGameOver(basegame) ||
@@ -215,7 +230,7 @@ function getColorTickingTrueTimeRemaining(clocks: ClockData): number | undefined
 	return clocks.timeRemainAtTurnStart - timeElapsedSinceTurnStartMillis;
 }
 
-function printClocks(basegame: Game): void {
+function printClocks(basegame: ClockDependant): void {
 	if (basegame.untimed) return console.log('Game is untimed.');
 	const clocks = basegame.clocks!;
 	for (const color in clocks.currentTime) {

@@ -90,7 +90,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 }
 
 function updateAFK(): void {
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return; // Game is over
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return; // Game is over
 	if (!listener_overlay.atleastOneInput() && !listener_document.atleastOneInput()) return; // No input this frame, don't reset the timer to tell the server we are afk.
 	// There has been mouse movement, restart the afk auto-resign timer.
 	if (isOurAFKAutoResignTimerRunning()) tellServerWeBackFromAFK(); // Also tell the server we are back, IF it had started an auto-resign timer!
@@ -103,14 +103,14 @@ function updateAFK(): void {
  */
 function rescheduleAlertServerWeAFK(): void {
 	clearTimeout(timeoutID);
-	const { basegame } = gameslot.getGamefile()!;
-	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(basegame)) return;
+	const gamefile = gameslot.getGamefile()!;
+	if (!onlinegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) return;
 	// Timed resignable games cannot be auto-resigned from going afk (to make tournament games more fair)
-	if (!basegame.untimed && moveutil.isGameResignable(basegame)) return;
+	if (!gamefile.untimed && moveutil.isGameResignable(gamefile)) return;
 	// Games with less than 2 moves played more-quickly start the AFK auto resign timer
-	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(basegame)
+	const timeUntilAlertServerWeAFKSecs = !moveutil.isGameResignable(gamefile)
 		? timeUntilAFKSecs_Abortable
-		: basegame.untimed
+		: gamefile.untimed
 			? timeUntilAFKSecs_Untimed
 			: timeUntilAFKSecs;
 	timeoutID = setTimeout(tellServerWeAFK, timeUntilAlertServerWeAFKSecs * 1000);
@@ -146,7 +146,7 @@ function tellServerWeBackFromAFK(): void {
 }
 
 function displayWeAFK(secsRemaining: number): void {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!)
 		? translations.onlinegame.auto_resigning_in
 		: translations.onlinegame.auto_aborting_in;
 	toast.show(
@@ -197,7 +197,7 @@ function stopOpponentAFKCountdown(): void {
 }
 
 function displayOpponentAFK(secsRemaining: number): void {
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!)
 		? translations.onlinegame.auto_resigning_in
 		: translations.onlinegame.auto_aborting_in;
 	toast.show(

@@ -5,13 +5,13 @@
  */
 
 import type { MovePacket } from '../../../../../shared/types.js';
-import type { FullGame, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	MovePreprint,
 	LongFormatIn,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import fullgame from '../../../../../shared/chess/logic/fullgame.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
@@ -21,7 +21,7 @@ import clientmetadatautil from './clientmetadatautil.js';
  * @param longformIn - The return value of gamecompressor.compressGamefile()
  * @param validateMoves - Optional flag to validate move legality during formulation, throwing an error if any move is illegal.
  */
-async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Promise<FullGame> {
+async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Promise<GameFile> {
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error(
 			'Invalid longformIn when formulating game: Missing position or special rights.',
@@ -53,7 +53,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 	);
 	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
-	return fullgame.initFullGame(
+	return gamefile.initGameFile(
 		longformIn.metadata,
 		resolvedTimestamp,
 		resolvedVariant,

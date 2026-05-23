@@ -6,7 +6,7 @@
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { EnPassant } from '../../../../../shared/chess/logic/state.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
@@ -51,38 +51,34 @@ interface SimplifiedGameState {
  * @returns The primed gamefile for converting into ICN format
  */
 function compressGamefile(
-	{ basegame, boardsim }: FullGame,
+	gamefile: GameFile,
 	copySinglePosition?: boolean,
 	presetAnnotes?: PresetAnnotes,
 ): LongFormatIn {
-	// console.log("Compressing gamefile for ICN conversion...");
-	// console.log("Basegame:", jsutil.deepCopyObject(basegame));
-	// console.log("Boardsim:", jsutil.deepCopyObject(boardsim));
-
 	/*
 	 * We need to calculate the game state so that, if desired,
 	 * we can convert the gamefile to a single position.
 	 */
-	const gameRulesCopy = jsutil.deepCopyObject(basegame.gameRules);
+	const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 	let gamestate: SimplifiedGameState = {
-		position: jsutil.deepCopyObject(boardsim.startSnapshot.position),
+		position: jsutil.deepCopyObject(gamefile.startSnapshot.position),
 		turnOrder: gameRulesCopy.turnOrder,
-		fullMove: boardsim.startSnapshot.fullMove,
-		state_global: jsutil.deepCopyObject(boardsim.startSnapshot.state_global),
+		fullMove: gamefile.startSnapshot.fullMove,
+		state_global: jsutil.deepCopyObject(gamefile.startSnapshot.state_global),
 	};
 
 	// Modify the state if we're applying moves to match a single position
 	if (copySinglePosition)
-		gamestate = GameToPosition(gamestate, boardsim.moves, boardsim.state.local.moveIndex + 1); // Convert -1 based to 0 based
+		gamestate = GameToPosition(gamestate, gamefile.moves, gamefile.state.local.moveIndex + 1); // Convert -1 based to 0 based
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
-		metadata: jsutil.deepCopyObject(basegame.metadata),
+		metadata: jsutil.deepCopyObject(gamefile.metadata),
 		position: gamestate.position,
 		gameRules: gameRulesCopy,
 		fullMove: gamestate.fullMove,
 		state_global: gamestate.state_global,
-		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(boardsim.moves),
+		moves: copySinglePosition ? [] : convertMovesToICNConverterInMove(gamefile.moves),
 	};
 
 	// Add the preset annotation overrides from the previously pasted game, if present.

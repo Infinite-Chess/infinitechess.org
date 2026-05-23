@@ -82,7 +82,7 @@ function regenModel(): void {
 	const model_Offset: Coords = legalmovemodel.getOffset();
 	// Instance data
 	const squaresToHighlight: bigint[] = [];
-	for (const key of gamefile.boardsim.state.global.specialRights) {
+	for (const key of gamefile.state.global.specialRights) {
 		const coords = coordutil.getCoordsFromKey(key);
 		const offsetCoord = coordutil.subtractCoords(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
@@ -109,11 +109,11 @@ function renderSpecialRights(): void {
 
 function renderEnPassant(): void {
 	const gamefile = gameslot.getGamefile()!;
-	if (!gamefile.boardsim.state.global.enpassant) return; // No enpassant gamefile property
+	if (!gamefile.state.global.enpassant) return; // No enpassant gamefile property
 
 	const u_size = boardpos.getBoardScaleAsNumber();
 	squarerendering
-		.genModel([gamefile.boardsim.state.global.enpassant.square], ENPASSANT_COLOR)
+		.genModel([gamefile.state.global.enpassant.square], ENPASSANT_COLOR)
 		.render(undefined, undefined, { u_size });
 }
 

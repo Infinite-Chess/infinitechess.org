@@ -9,7 +9,7 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -29,7 +29,7 @@ import {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
-// type gamefile = import("../../chess/logic/fullgame").default;
+// type gamefile = import("../../chess/logic/gamefile").default;
 // type Coords = import("../../chess/util/coordutil").Coords;
 
 /**
@@ -69,7 +69,7 @@ let rand: Function;
 let engineInitialized: boolean = false;
 
 /** Externally supplied gamefile */
-let input_gamefile: FullGame;
+let input_gamefile: GameFile;
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;
@@ -1669,19 +1669,20 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const basegame = input_gamefile.basegame;
+					const gamefile = input_gamefile;
 					const dummy_board = {
+						gameRules: gamefile.gameRules,
 						moves: [],
 						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
-							basegame.gameRules.turnOrder,
-							input_gamefile.boardsim.editor,
-							basegame.gameRules.promotion,
+							gamefile.gameRules.turnOrder,
+							input_gamefile.editor,
+							gamefile.gameRules.promotion,
 						).pieces,
 					} as unknown as Board;
 
-					if (detectInsufficientMaterial(basegame.gameRules, dummy_board)) break;
+					if (detectInsufficientMaterial(dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture
@@ -1808,14 +1809,14 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
  */
 async function runEngine(): Promise<void> {
 	try {
-		const board = input_gamefile.boardsim;
+		const gamefile = input_gamefile;
 		// get real coordinates and parse type of black royal piece
-		if (doesTypeExist(board, r.KING + e.B)) {
-			gamefile_royal_coords = getFirstOfType(board, r.KING + e.B)!;
+		if (doesTypeExist(gamefile, r.KING + e.B)) {
+			gamefile_royal_coords = getFirstOfType(gamefile, r.KING + e.B)!;
 			royal_moves = king_moves;
 			royal_type = 'k';
-		} else if (doesTypeExist(board, r.ROYALCENTAUR + e.B)) {
-			gamefile_royal_coords = getFirstOfType(board, r.ROYALCENTAUR + e.B)!;
+		} else if (doesTypeExist(gamefile, r.ROYALCENTAUR + e.B)) {
+			gamefile_royal_coords = getFirstOfType(gamefile, r.ROYALCENTAUR + e.B)!;
 			royal_moves = centaur_moves;
 			royal_type = 'rc';
 		} else {
@@ -1825,7 +1826,7 @@ async function runEngine(): Promise<void> {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const [type, range] of board.pieces.typeRanges) {
+		for (const [type, range] of gamefile.pieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (idx === range.undefineds[undefinedidx]) {
@@ -1835,8 +1836,8 @@ async function runEngine(): Promise<void> {
 				}
 				if (Math.floor(type / numTypes) !== p.WHITE) continue;
 				const bigintCoords: Coords = [
-					board.pieces.XPositions[idx]!,
-					board.pieces.YPositions[idx]!,
+					gamefile.pieces.XPositions[idx]!,
+					gamefile.pieces.YPositions[idx]!,
 				];
 				// Convert the bigint coordinates to floating point coordinates that the engine works with.
 				const coords = convertBigIntCoordsToFloating(bigintCoords);

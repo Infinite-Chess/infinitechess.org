@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
-import type { Game } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -74,7 +74,7 @@ function routeMessage(contents: GameMessage): void {
 			movesendreceive.handleOpponentsMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
-			handleUpdatedClock(gamefile.basegame, contents.value);
+			handleUpdatedClock(gamefile, contents.value);
 			break;
 		case 'gameupdate':
 			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
@@ -86,10 +86,10 @@ function routeMessage(contents: GameMessage): void {
 			handleUnsubbing();
 			break;
 		case 'login':
-			handleLogin(gamefile.basegame);
+			handleLogin(gamefile);
 			break;
 		case 'nogame':
-			handleNoGame(gamefile.basegame);
+			handleNoGame(gamefile);
 			break;
 		case 'leavegame':
 			handleLeaveGame();
@@ -217,13 +217,13 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 /**
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(basegame: Game, clockValues: ClockValues): void {
-	if (basegame.untimed) throw Error('Received clock values for untimed game??');
+function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
+	if (gamefile.untimed) throw Error('Received clock values for untimed game??');
 
 	// Adjust the timer whos turn it is depending on ping.
 	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(basegame.clocks, clockValues); // Edit the clocks
-	guiclock.edit(basegame);
+	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
+	guiclock.edit(gamefile);
 }
 
 /**
@@ -243,11 +243,11 @@ function handleUnsubbing(): void {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(basegame: Game): void {
+function handleLogin(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.not_logged_in, { error: true, durationMultiplier: 100 });
 	socketsubs.deleteSub('game');
-	clock.endGame(basegame);
-	guiclock.stopClocks(basegame);
+	clock.endGame(gamefile);
+	guiclock.stopClocks(gamefile);
 	selection.unselectPiece();
 }
 
@@ -261,10 +261,10 @@ function handleLogin(basegame: Game): void {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(basegame: Game): void {
+function handleNoGame(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(basegame, { condition: 'aborted' });
+	gamefileutility.setConclusion(gamefile, { condition: 'aborted' });
 	gameslot.concludeGame();
 }
 

@@ -6,7 +6,6 @@
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { FullGame } from '../../../shared/chess/logic/fullgame.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
@@ -79,10 +78,10 @@ function submitMove(
 	const opponentColor = typeutil.invertPlayer(color);
 
 	// If the game is already over, don't accept it.
-	if (gameutility.isGameOver(servergame.basegame)) return;
+	if (gameutility.isGameOver(servergame)) return;
 
 	// Make sure it's their turn
-	if (servergame.basegame.whosTurn !== color) {
+	if (servergame.whosTurn !== color) {
 		// Can occasionally happen if they in rapid succession send a resync request and
 		// a move submission, then when their client resyncs they submit their move again.
 		// Just discard this submission and resync just in case they are actually out of sync.
@@ -91,7 +90,7 @@ function submitMove(
 	}
 
 	// Make sure the move number matches up. If not, they're out of sync, resync them!
-	const expectedMoveNumber = servergame.basegame.moves.length + 1;
+	const expectedMoveNumber = servergame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -121,11 +120,10 @@ function submitMove(
 		return;
 	}
 
-	// Use server-side validation if the boardsim exists, otherwise trust the client's reported conclusion.
-	const moveRecord =
-		servergame.boardsim !== undefined
-			? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
-			: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
+	// Use server-side validation if enabled, otherwise trust the client's reported conclusion.
+	const moveRecord = servergame.validateMoves
+		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
+		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
@@ -138,12 +136,12 @@ function submitMove(
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
 
-	const gameIsOver = gameutility.isGameOver(servergame.basegame);
+	const gameIsOver = gameutility.isGameOver(servergame);
 
 	if (gameIsOver) {
 		// If the game ended, finalize state before sending: stops the clock and persists to DB.
 		// This ensures both clients receive the same frozen clock values that are in the DB.
-		finalizeConclusion(servergame, servergame.basegame.gameConclusion);
+		finalizeConclusion(servergame, servergame.gameConclusion);
 		// Send a whole gameupdate to the move-submitter
 		gameutility.sendGameUpdateToColor(servergame, color, false);
 	} else {
@@ -164,15 +162,12 @@ function submitMove(
  */
 function applyServerValidatedMove(
 	ws: CustomWebSocket,
-	servergame: ServerGame,
+	servergame: ServerGame & { validateMoves: true },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
 	color: Player,
 ): MoveRecord | undefined {
-	// Makes ts happy knowing boardsim is already defined
-	const gamefile: FullGame = { basegame: servergame.basegame, boardsim: servergame.boardsim! };
-
-	const validationResult = movevalidation.validateMove(gamefile, moveParsed);
+	const validationResult = movevalidation.validateMove(servergame, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog.txt');
@@ -188,21 +183,16 @@ function applyServerValidatedMove(
 		return;
 	}
 
-	// Generate and make the move in the logical game
-	const fullMove = movepiece.generateAndMakeMove(gamefile, validationResult.tagged);
+	// Generate and make the move. makeMove pushes the resulting MoveFull onto servergame.moves.
+	const moveRecord = movepiece.generateAndMakeMove(servergame, validationResult.tagged);
 
-	// Set the clock stamp on both the boardsim's MoveFull and the basegame's MoveRecord.
-	// (makeMove creates a separate MoveRecord object for basegame, so we must set both.)
-	const moveRecord = servergame.basegame.moves[servergame.basegame.moves.length - 1]!;
+	// Push the clock after the move has been added to servergame.moves.
 	const clockStamp = pushGameClock(servergame);
-	if (clockStamp !== undefined) {
-		fullMove.clockStamp = clockStamp;
-		moveRecord.clockStamp = clockStamp;
-	}
+	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp;
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
 	// Auto-sets basegame.gameConclusion if the move triggers a conclusion.
-	wincondition.doGameOverChecks(gamefile);
+	wincondition.doGameOverChecks(servergame);
 
 	return moveRecord;
 }
@@ -213,7 +203,7 @@ function applyServerValidatedMove(
  */
 function applyClientReportedMove(
 	ws: CustomWebSocket,
-	servergame: ServerGame,
+	servergame: ServerGame & { validateMoves: false },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
 	color: Player,
@@ -233,13 +223,13 @@ function applyClientReportedMove(
 	};
 	if (moveParsed.promotion !== undefined) moveRecord.promotion = moveParsed.promotion;
 	// Must be BEFORE pushing the clock, because pushGameClock() depends on the length of the moves.
-	servergame.basegame.moves.push(moveRecord); // Add the move to the list!
+	servergame.moves.push(moveRecord); // Add the move to the list!
 	// Must be AFTER pushing the move, because pushGameClock() depends on the length of the moves.
 	const clockStamp = pushGameClock(servergame); // Flip whos turn and adjust the game properties
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 
-	// Manually set basegame.gameConclusion to client-reported conclusion
-	gamefileutility.setConclusion(servergame.basegame, messageContents.gameConclusion);
+	// Manually set gameConclusion to client-reported conclusion
+	gamefileutility.setConclusion(servergame, messageContents.gameConclusion);
 
 	return moveRecord;
 }

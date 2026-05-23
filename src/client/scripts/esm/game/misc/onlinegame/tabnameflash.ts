@@ -75,7 +75,7 @@ function cancelFlashTabTimer(): void {
 
 function scheduleMoveSound_timeoutID(): void {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
-	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
+	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	const ZERO = bd.fromBigInt(0n);
 	moveSound_timeoutID = setTimeout(

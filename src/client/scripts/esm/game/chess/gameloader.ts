@@ -18,7 +18,7 @@ import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { ServerGameInfo } from '../websocket/socketschemas.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ClockValues,
 	MetaData,
@@ -225,8 +225,8 @@ async function startOnlineGame(options: {
 			// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
 			// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
 			// THUS playing the drum sound effect for our opponent.
-			const basegame = gameslot.getGamefile()!.basegame;
-			if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
+			const gamefile = gameslot.getGamefile()!;
+			if (!gamefile.untimed) guiclock.rescheduleSoundEffects(gamefile.clocks);
 
 			return graphical;
 		})
@@ -611,7 +611,7 @@ function openGameinfoBarAndConcludeGameIfOver(
 	showGameControlButtons: boolean = false,
 ): void {
 	guigameinfo.open(metadata, showGameControlButtons);
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
 function unloadLogicalAndRendering(): void {

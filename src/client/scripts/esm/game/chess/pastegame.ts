@@ -8,7 +8,7 @@ import type { MetaData } from '../../../../../shared/types.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -100,7 +100,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 
 	// Retain most of the existing metadata on the currently loaded gamefile
 	const currentGamefile = gameslot.getGamefile()!;
-	const currentGameMetadata = currentGamefile.basegame.metadata;
+	const currentGameMetadata = currentGamefile.metadata;
 	retainMetadataWhenPasting.forEach((metadataName) => {
 		delete longformOut.metadata[metadataName];
 		if (currentGameMetadata[metadataName] !== undefined)
@@ -172,7 +172,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		const gamefile = gameslot.getGamefile()!;
 
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
-		const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
+		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 		if (pieceCount >= pieceCountToDisableCheckmate) {
 			// TOO MANY pieces!
 			toast.show(

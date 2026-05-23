@@ -8,7 +8,7 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Tool } from './etoolmanager';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
 
 import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';
@@ -125,12 +125,12 @@ function update(currentTool: Tool): void {
 
 	// Make sure we don't paint outside the world border
 	if (
-		gamefile.basegame.gameRules.worldBorder &&
-		!bounds.boxContainsSquare(gamefile.basegame.gameRules.worldBorder, mouseCoords)
+		gamefile.gameRules.worldBorder &&
+		!bounds.boxContainsSquare(gamefile.gameRules.worldBorder, mouseCoords)
 	)
 		return;
 
-	const pieceHovered = boardutil.getPieceFromCoords(gamefile.boardsim.pieces, mouseCoords);
+	const pieceHovered = boardutil.getPieceFromCoords(gamefile.pieces, mouseCoords);
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 
 	switch (currentTool) {
@@ -172,13 +172,13 @@ function update(currentTool: Tool): void {
 
 /** Queues a specialrights state addition/deletion on the specified piece. */
 function queueToggleSpecialRight(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	edit: Edit,
 	pieceHovered: Piece | undefined,
 ): void {
 	if (pieceHovered === undefined) return;
 	const coordsKey = coordutil.getKeyFromCoords(pieceHovered.coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	const current = gamefile.state.global.specialRights.has(coordsKey);
 	const future = !current;
 
 	if (addingSpecialRights === undefined) addingSpecialRights = future;

@@ -1,12 +1,10 @@
-// src/shared/chess/logic/fullgame.ts
+// src/shared/chess/logic/gamefile.ts
 
 import type { Board } from './boardinit.js';
-import type { Player } from '../util/typeutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
-import type { MoveRecord } from './movepiece.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
 import type { VariantCode } from '../variants/variantregistry.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
@@ -63,17 +61,15 @@ export interface VariantOptions {
 }
 
 /**
- * Purely game data
- * Used on both sides
+ * Pure game metadata — display info, clock data, and conclusion.
+ * Contains no game state (moves, turn, pieces). Used as the non-board
+ * portion of {@link GameFile}.
  */
 export type Game = {
 	/** Information about the game */
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
-	moves: MoveRecord[];
-	gameRules: GameRules;
-	whosTurn: Player;
 	gameConclusion?: GameConclusion;
 } & ClockDependant;
 
@@ -90,15 +86,8 @@ export type ClockDependant =
 			clocks: ClockData;
 	  };
 
-/**
- * Both game data AND board state used on the client-side,
- * and in the future *sometimes* used on the server-side,
- * when the server starts doing legal move validation.
- */
-export type FullGame = {
-	basegame: Game;
-	boardsim: Board;
-};
+/** The complete client-side game object: full board state plus game metadata. */
+export type GameFile = Game & Board;
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
@@ -121,10 +110,7 @@ export interface Additional {
 
 // Functions -------------------------------------------------------------
 
-/**
- * Creates a new {@link Game} object from provided arguments.
- * ASSUMES THE VARIANT SCRIPT IS ALREADY LOADED. This part is synchronous.
- */
+/** Creates a new {@link Game} object from provided arguments. */
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
@@ -132,7 +118,7 @@ function initGame(
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): Game {
+): Game & { gameRules: GameRules } {
 	const gameRules =
 		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
@@ -143,9 +129,6 @@ function initGame(
 	const game: Game = {
 		metadata,
 		dateTimestamp,
-		moves: [],
-		gameRules,
-		whosTurn: gameRules.turnOrder[0]!,
 		...clockDependantVars,
 	};
 
@@ -157,64 +140,66 @@ function initGame(
 		clock.edit(game.clocks, clockValues);
 	}
 
-	gamefileutility.setConclusion(game, gameConclusion);
+	const gameWithRules = { ...game, gameRules };
 
-	return game;
+	gamefileutility.setConclusion(gameWithRules, gameConclusion);
+
+	return gameWithRules;
 }
 
 /**
- * Attaches a board to a specific game. Used for loading a game after it was started.
+ * Combines a board and game into a flat {@link GameFile}. Used for loading a game when it starts.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function loadGameWithBoard(
-	basegame: Game,
+	game: Game,
 	boardsim: Board,
 	moves: MovePacket[] = [],
 	validateMoves?: boolean,
-): FullGame {
-	const gamefile = { basegame, boardsim };
+): GameFile {
+	const gamefile: GameFile = { ...game, ...boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
-		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
+		gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
 	{
 		// Set the game's `inCheck` and `checks` properties at the front of the game.
 		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
-			basegame,
-			basegame.whosTurn,
+			gamefile,
+			gamefile.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
-		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
+		const checkResults = checkdetection.detectCheck(gamefile, gamefile.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+		gamefile.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackChecks) gamefile.state.local.checks = checkResults.checks ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	// Do not overwrite pre-existing server conclusion, if present.
-	if (basegame.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
+	if (gamefile.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
 /**
- * Initiates both the base game and board of the FullGame at the same time.
+ * Initiates both the base game and board of the GameFile at the same time.
  * **Asynchronous** because variant modules must be loaded. Used on just the client.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
-async function initFullGame(
+async function initGameFile(
 	metadata: MetaData,
 	dateTimestamp: number,
 	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
-): Promise<FullGame> {
+): Promise<GameFile> {
 	let variant: LoadedVariant | undefined;
 	if (variantCode !== undefined) {
 		await variantcache.ensureVariantLoaded(variantCode);
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
-	const basegame = initGame(
+	const gameWithRules = initGame(
 		metadata,
 		dateTimestamp,
 		variant?.mod,
@@ -223,17 +208,17 @@ async function initFullGame(
 		additional.variantOptions,
 	);
 	const boardsim = boardinit.initBoard(
-		basegame.gameRules,
+		gameWithRules.gameRules,
 		variant,
 		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
+	return loadGameWithBoard(gameWithRules, boardsim, additional.moves, validateMoves);
 }
 
 export default {
 	initGame,
-	initFullGame,
+	initGameFile,
 };

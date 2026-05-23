@@ -232,7 +232,7 @@ function hidePlayerNames(): void {
 
 function toggle(): void {
 	if (isOpen) close();
-	else open(gameslot.getGamefile()!.basegame.metadata, showButtons);
+	else open(gameslot.getGamefile()!.metadata, showButtons);
 	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
 	frametracker.onVisualChange();
 }
@@ -314,13 +314,13 @@ function getPlayerNamesForGame(metadata: MetaData): {
  * Call this after flipping the gamefile's `whosTurn` property.
  */
 function updateWhosTurn(): void {
-	const { basegame } = gameslot.getGamefile()!;
+	const gamefile = gameslot.getGamefile()!;
 
 	// In the scenario we forward the game to front after the game has adjudicated,
 	// don't modify the game over text saying who won!
-	if (gamefileutility.isGameOver(basegame)) return gameEnd(basegame.gameConclusion);
+	if (gamefileutility.isGameOver(gamefile)) return gameEnd(gamefile.gameConclusion);
 
-	const color = basegame.whosTurn;
+	const color = gamefile.whosTurn;
 
 	if (color !== p.WHITE && color !== p.BLACK)
 		throw Error(
@@ -344,7 +344,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 	const { victor, condition } = conclusion;
 	const resultTranslations = translations.results;
 
-	const { basegame } = gameslot.getGamefile()!;
+	const gamefile = gameslot.getGamefile()!;
 
 	// prettier-ignore
 	if (onlinegame.areInOnlineGame() && onlinegame.doWeHaveRole() || enginegame.areInEngineGame()) {
@@ -361,7 +361,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 															 : resultTranslations.you_generic;
 		else if (victor === null) element_whosturn.textContent = condition === 'stalemate' ? resultTranslations.draw_stalemate
                                                                : condition === 'repetition' ? resultTranslations.draw_repetition
-                                                               : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(basegame.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
+                                                               : condition === 'moverule' ? `${resultTranslations.draw_moverule[0]}${(gamefile.gameRules.moveRule! / 2)}${resultTranslations.draw_moverule[1]}`
                                                                : condition === 'insuffmat' ? resultTranslations.draw_insuffmat
                                                                : condition === 'agreement' ? resultTranslations.draw_agreement
 															   : resultTranslations.draw_generic;
@@ -405,7 +405,7 @@ function gameEnd(conclusion?: GameConclusion): void {
 		else if (condition === 'repetition')
 			element_whosturn.textContent = resultTranslations.draw_repetition;
 		else if (condition === 'moverule')
-			element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${basegame.gameRules.moveRule! / 2}${resultTranslations.draw_moverule[1]}`;
+			element_whosturn.textContent = `${resultTranslations.draw_moverule[0]}${gamefile.gameRules.moveRule! / 2}${resultTranslations.draw_moverule[1]}`;
 		else if (condition === 'insuffmat')
 			element_whosturn.textContent = resultTranslations.draw_insuffmat;
 		else if (condition === 'agreement')
@@ -460,11 +460,11 @@ function addRatingChangeToExistingUsernameContainers(
 	ratingChanges: PlayerGroup<PlayerRatingChangeInfo>,
 ): void {
 	// Add the WhiteRatingDiff and BlackRatingDiff metadata to the gamefile
-	const { basegame } = gameslot.getGamefile()!;
-	basegame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+	const gamefile = gameslot.getGamefile()!;
+	gamefile.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.WHITE]!.change,
 	);
-	basegame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+	gamefile.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
 		ratingChanges[p.BLACK]!.change,
 	);
 

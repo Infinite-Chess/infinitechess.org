@@ -7,6 +7,7 @@
  * full game-play engine (movepiece, checkdetection, wincondition).
  */
 
+import type { Player } from '../util/typeutil.js';
 import type { MoveFull } from './movepiece.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { CoordsKey } from '../util/coordutil.js';
@@ -16,7 +17,7 @@ import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { SpecialMoveFunction } from './specialmove.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { VariantOptions, LoadedVariant } from './fullgame.js';
+import type { VariantOptions, LoadedVariant } from './gamefile.js';
 
 import typeutil from '../util/typeutil.js';
 import coordutil from '../util/coordutil.js';
@@ -39,6 +40,10 @@ export interface Board extends BoardPreview {
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
+	/** Determines turn order, win conditions, promotion, etc. */
+	gameRules: GameRules;
+	/** The color whose turn it currently is at the front of the game. */
+	whosTurn: Player;
 }
 
 type Vicinity = Record<CoordsKey, RawType[]>;
@@ -82,6 +87,8 @@ function initBoard(
 		specialVicinity,
 		pieceMovesets,
 		specialMoves,
+		gameRules,
+		whosTurn: gameRules.turnOrder[0]!,
 	};
 }
 
