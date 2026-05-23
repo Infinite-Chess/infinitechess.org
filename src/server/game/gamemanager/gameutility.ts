@@ -157,6 +157,10 @@ interface MatchInfo {
 /** The game stored in the server */
 type ServerGame = Game & {
 	match: MatchInfo;
+	/** Determines turn order, win conditions, promotion, etc. */
+	gameRules: GameRules;
+	/** The color whose turn it currently is at the front of the game. */
+	whosTurn: Player;
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
@@ -172,8 +176,6 @@ type ValidationDependant =
 	  } & Board)
 	| {
 			validateMoves: false;
-			gameRules: GameRules;
-			whosTurn: Player;
 			moves: MoveRecord[];
 	  };
 
