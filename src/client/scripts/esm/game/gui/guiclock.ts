@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 import type { SoundObject } from '../../audio/AudioManager.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -110,7 +110,7 @@ function showClocks(): void {
 /**
  * Stops clock sounds and removes all borders
  */
-function stopClocks(basegame?: FullGame): void {
+function stopClocks(basegame?: GameFile): void {
 	cancelSoundEffectTimers();
 
 	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Do this one last time so that when we lose on time, the clock doesn't freeze at one second remaining.
@@ -147,7 +147,7 @@ function resetClocks(): void {
 	lowtimeNotif.playersNotified = new Set();
 }
 
-function update(basegame: FullGame): void {
+function update(basegame: GameFile): void {
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
 
@@ -161,7 +161,7 @@ function update(basegame: FullGame): void {
 	updateTextContent(basegame.clocks);
 }
 
-function edit(basegame: FullGame): void {
+function edit(basegame: GameFile): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 
@@ -260,7 +260,7 @@ function playMinuteTick(color: Player): void {
 	lowtimeNotif.playersNotified.add(color);
 }
 
-function set(basegame: FullGame): void {
+function set(basegame: GameFile): void {
 	if (basegame.untimed) return hideClocks();
 	else showClocks();
 	updateTextContent(basegame.clocks);

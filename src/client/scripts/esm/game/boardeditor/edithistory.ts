@@ -11,7 +11,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
@@ -87,7 +87,7 @@ function reset(): void {
 // Running Edits --------------------------------------------------------------
 
 /** Runs both logical and graphical changes. */
-function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true): void {
+function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = true): void {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 
@@ -214,7 +214,7 @@ function canRedo(): boolean {
 // Queuing Edits --------------------------------------------------------------
 
 /** Queues the deletion of a piece, including its special rights, if present, to the edit changes. */
-function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
+function queueRemovePiece(gamefile: GameFile, edit: Edit, piece: Piece): void {
 	boardchanges.queueDeletePiece(edit.changes, false, piece);
 	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
@@ -224,7 +224,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
  * If specialrights is left undefined, it is set according to the game rules
  */
 function queueAddPiece(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	edit: Edit,
 	coords: Coords,
 	type: number,
@@ -236,7 +236,7 @@ function queueAddPiece(
 }
 
 /** Queues the addition/removal of a specialright at the specified coordinates. */
-function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add: boolean): void {
+function queueSpecialRights(gamefile: GameFile, edit: Edit, coords: Coords, add: boolean): void {
 	const coordsKey = coordutil.getKeyFromCoords(coords);
 	const current = gamefile.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordsKey, current, add);

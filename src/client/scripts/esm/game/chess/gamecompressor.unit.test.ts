@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
 
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 import type { SimplifiedGameState } from './gamecompressor.js';
 
 import { describe, it, expect } from 'vitest';
@@ -24,7 +24,7 @@ describe('gamecompressor', () => {
 				Black: 'Waterman',
 			} as const;
 
-			const mockGame: FullGame = {
+			const mockGame: GameFile = {
 				metadata: mockMetaData,
 				dateTimestamp: Date.now(),
 				whosTurn: p.WHITE,

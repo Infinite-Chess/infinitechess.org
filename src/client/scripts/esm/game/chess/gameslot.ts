@@ -12,7 +12,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Additional, FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Additional, GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -74,7 +74,7 @@ interface LoadOptions {
 // Variables ---------------------------------------------------------------
 
 /** The currently loaded game. */
-let loadedGamefile: FullGame | undefined;
+let loadedGamefile: GameFile | undefined;
 
 /** The mesh of the gamefile, if it is loaded. */
 let mesh: Mesh | undefined;
@@ -115,7 +115,7 @@ document.addEventListener('theme-change', () => {
 // Functions ---------------------------------------------------------------
 
 /**  Returns the gamefile currently loaded */
-function getGamefile(): FullGame | undefined {
+function getGamefile(): GameFile | undefined {
 	return loadedGamefile;
 }
 

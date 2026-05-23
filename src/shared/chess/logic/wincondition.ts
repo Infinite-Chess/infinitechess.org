@@ -8,7 +8,7 @@
 
 import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
-import type { FullGame } from './fullgame.js';
+import type { GameFile } from './fullgame.js';
 import type { GameConclusion } from '../util/winconutil.js';
 
 import moveutil from '../util/moveutil.js';
@@ -31,7 +31,7 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
  * sets the `gameConclusion` property according to how the game was terminated,
  * and adds the respective mate flag on the last move played.
  */
-function doGameOverChecks(gamefile: FullGame): void {
+function doGameOverChecks(gamefile: GameFile): void {
 	const conclusion = getGameConclusion(gamefile);
 	gamefileutility.setConclusion(gamefile, conclusion);
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))

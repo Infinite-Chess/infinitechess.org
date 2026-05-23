@@ -7,12 +7,12 @@
  * At most this ever handles a single game, not multiple.
  */
 
+import type { Game } from '../../../shared/chess/logic/fullgame.js';
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
-import type { GameMetadata } from '../../../shared/chess/logic/fullgame.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
@@ -155,7 +155,7 @@ interface MatchInfo {
 }
 
 /** The game stored in the server */
-type ServerGame = GameMetadata & {
+type ServerGame = Game & {
 	match: MatchInfo;
 } & ValidationDependant;
 
@@ -652,7 +652,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
  * @param basegame - The game
  * @returns true if the game is over (gameConclusion truthy)
  */
-function isGameOver(basegame: GameMetadata): boolean {
+function isGameOver(basegame: Game): boolean {
 	return basegame.gameConclusion !== undefined;
 }
 

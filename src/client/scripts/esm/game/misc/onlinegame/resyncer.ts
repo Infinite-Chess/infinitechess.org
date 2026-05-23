@@ -13,7 +13,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';
@@ -37,7 +37,7 @@ import movesendreceive from './movesendreceive.js';
  * OR we just need to resync! The game may not always be over.
  */
 function handleServerGameUpdate(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	message: GameUpdateMessage,
 ): void {
@@ -84,7 +84,7 @@ function handleServerGameUpdate(
  * @returns A result object containg the property `opponentPlayedIllegalMove`. If that's true, we'll report it to the server.
  */
 function synchronizeMovesList(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moves: MovePacket[],
 	claimedGameConclusion: GameConclusion | undefined,

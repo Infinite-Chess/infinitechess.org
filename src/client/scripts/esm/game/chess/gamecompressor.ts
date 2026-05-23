@@ -6,7 +6,7 @@
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { EnPassant } from '../../../../../shared/chess/logic/state.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
@@ -51,7 +51,7 @@ interface SimplifiedGameState {
  * @returns The primed gamefile for converting into ICN format
  */
 function compressGamefile(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	copySinglePosition?: boolean,
 	presetAnnotes?: PresetAnnotes,
 ): LongFormatIn {

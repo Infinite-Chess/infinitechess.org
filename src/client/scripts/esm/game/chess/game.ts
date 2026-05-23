@@ -8,7 +8,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -217,7 +217,7 @@ function update(): void {
  * Tests if by clicking an empty region of the board,
  * we need to clear premoves and collapse annotations.
  */
-function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined): void {
+function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefined): void {
 	const mouseKeybind = keybinds.getCollapseMouseButton();
 	if (mouseKeybind === undefined) return; // No button is assigned to collaping annotes / cancelling premoves currently
 

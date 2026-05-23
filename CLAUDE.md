@@ -29,7 +29,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 - All scripts have their file path on line 1. This is automatic via hook, you don't have to bother with maintaining it.
 - Almost all scripts have a brief description of their purpose on lines 3-7+.
 - Never use the Omit utility type. Instead, have one type extend the other.
-- For quick search-replace during refactors, all arguments and variables of the FullGame type are named `gamefile`, and all of the Board type are `boardsim`, and all of ServerGame are `servergame`. But be aware there is also a script and many import identifiers called `gamefile`.
+- For quick search-replace during refactors, all arguments and variables of the GameFile type are named `gamefile`, and all of the Board type are `boardsim`, and all of ServerGame are `servergame`. But be aware there is also a script and many import identifiers called `gamefile`.
 - **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`. Change notes in `changes.json` should be clear and concise, not containing more information than necessary, and always indicate the line numbers of the removed/added keys.
 - **Rendering:** When asked to add new graphics and visuals to the game (canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
 - When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.

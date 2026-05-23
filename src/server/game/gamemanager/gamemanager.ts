@@ -107,7 +107,7 @@ function createGame(
 		ratinginfo,
 	);
 	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
-	const gameWithRules = fullgame.initGameMetadata(metadata, now, variant?.mod);
+	const gameWithRules = fullgame.initGame(metadata, now, variant?.mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.

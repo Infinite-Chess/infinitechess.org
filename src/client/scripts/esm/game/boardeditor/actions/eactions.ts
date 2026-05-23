@@ -34,7 +34,7 @@ import organizedpieces, {
 } from '../../../../../../shared/chess/logic/organizedpieces';
 import gamefile, {
 	Additional,
-	FullGame,
+	GameFile,
 	VariantOptions,
 } from '../../../../../../shared/chess/logic/fullgame';
 import icnconverter, {
@@ -306,7 +306,7 @@ function getValidatedPosition(): VariantOptions | null {
 }
 
 /** Queues the removal of all pieces from the position. */
-function queueRemovalOfAllPieces(gamefile: FullGame, edit: Edit, pieces: OrganizedPieces): void {
+function queueRemovalOfAllPieces(gamefile: GameFile, edit: Edit, pieces: OrganizedPieces): void {
 	for (const idx of pieces.coords.values()) {
 		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		edithistory.queueRemovePiece(gamefile, edit, pieceToDelete);

@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
@@ -110,7 +110,7 @@ function arePremovesApplied(): boolean {
 }
 
 /** Similar to {@link movesequence.makeMove} Adds an premove and applies its changes to the board. */
-function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveTagged: MoveTagged): Premove {
+function addPremove(gamefile: GameFile, mesh: Mesh | undefined, moveTagged: MoveTagged): Premove {
 	// console.log("Adding premove");
 
 	if (!applied) throw Error("Don't addPremove when other premoves are not applied!");
@@ -129,7 +129,7 @@ function addPremove(gamefile: FullGame, mesh: Mesh | undefined, moveTagged: Move
 
 /** Applies a premove's changes to the board. */
 function applyPremove(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	premove: Premove,
 	forward: boolean,
@@ -140,7 +140,7 @@ function applyPremove(
 }
 
 /** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */
-function generatePremove(gamefile: FullGame, moveTagged: MoveTagged): Premove {
+function generatePremove(gamefile: GameFile, moveTagged: MoveTagged): Premove {
 	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveTagged.startCoords);
 	if (!piece)
 		throw Error(
@@ -181,7 +181,7 @@ function clearPremoves(): void {
 }
 
 /** Cancels all premoves */
-function cancelPremoves(gamefile: FullGame, mesh?: Mesh): void {
+function cancelPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
 
@@ -201,7 +201,7 @@ function cancelPremoves(gamefile: FullGame, mesh?: Mesh): void {
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
-function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
+function rewindPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	if (!applied) throw Error("Don't rewindPremoves when other premoves are not applied!");
 
 	// Reverse the original array so all changes are made in the reverse order they were added
@@ -222,7 +222,7 @@ function rewindPremoves(gamefile: FullGame, mesh?: Mesh): void {
  * All premove's must be regenerated, as for all we know
  * their destination square could have a new piece, or lack thereof.
  */
-function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
+function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	if (applied) throw Error("Don't applyPremoves when other premoves are already applied!");
 
 	for (let i = 0; i < premoves.length; i++) {
@@ -274,7 +274,7 @@ function applyPremoves(gamefile: FullGame, mesh?: Mesh): void {
  * A. Legal => Plays it, submits it, then applies the remaining premoves.
  * B. Illegal => Clears all premoves.
  */
-function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
+function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.error("Processing premoves");
 
 	if (applied)
@@ -330,7 +330,7 @@ function processPremoves(gamefile: FullGame, mesh?: Mesh): void {
  * @returns
  */
 function premoveIsLegal(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	premove: Premove | undefined,
 	mode: 'physical' | 'premove',
 ): { legal: true; endCoordsTagged: CoordsTagged } | { legal: false } {
@@ -373,7 +373,7 @@ function premoveIsLegal(
  *
  * Similar to {@link applyPremoves}, but before applying premoves, it attempts to play the first premove in the list if legal.
  */
-function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
+function onYourMove(gamefile: GameFile, mesh?: Mesh): void {
 	// Process the next premove, will reapply the premoves
 	processPremoves(gamefile, mesh);
 }
@@ -386,7 +386,7 @@ function onYourMove(gamefile: FullGame, mesh?: Mesh): void {
  * @param callback - A function that returns true if we should attempt to physically play our next premove when re-applying them.
  */
 function performWithUnapplied(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	callback: () => boolean,
 ): void {
@@ -407,7 +407,7 @@ function performWithUnapplied(
 // Updating Premoves ------------------------------------------------
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
-function update(gamefile: FullGame, mesh?: Mesh): void {
+function update(gamefile: GameFile, mesh?: Mesh): void {
 	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
 
 	if (mouse.isMouseDown(Mouse.RIGHT)) {

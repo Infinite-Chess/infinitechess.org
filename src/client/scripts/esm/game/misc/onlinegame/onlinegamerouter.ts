@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -217,7 +217,7 @@ function handleLoggedGameInfo(message: LoggedGameInfo): void {
 /**
  * Called when we received the updated clock values from the server after submitting our move.
  */
-function handleUpdatedClock(gamefile: FullGame, clockValues: ClockValues): void {
+function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
 	if (gamefile.untimed) throw Error('Received clock values for untimed game??');
 
 	// Adjust the timer whos turn it is depending on ping.
@@ -243,7 +243,7 @@ function handleUnsubbing(): void {
  * and from submitting actions as ourselves,
  * due to the reason we are no longer logged in.
  */
-function handleLogin(gamefile: FullGame): void {
+function handleLogin(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.not_logged_in, { error: true, durationMultiplier: 100 });
 	socketsubs.deleteSub('game');
 	clock.endGame(gamefile);
@@ -261,7 +261,7 @@ function handleLogin(gamefile: FullGame): void {
  * * Your page tries to resync to the game after it's long over.
  * * The server restarts mid-game.
  */
-function handleNoGame(gamefile: FullGame): void {
+function handleNoGame(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
 	gamefileutility.setConclusion(gamefile, { condition: 'aborted' });

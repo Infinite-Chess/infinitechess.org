@@ -63,9 +63,9 @@ export interface VariantOptions {
 /**
  * Pure game metadata — display info, clock data, and conclusion.
  * Contains no game state (moves, turn, pieces). Used as the non-board
- * portion of {@link FullGame}.
+ * portion of {@link GameFile}.
  */
-export type GameMetadata = {
+export type Game = {
 	/** Information about the game */
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
@@ -87,7 +87,7 @@ export type ClockDependant =
 	  };
 
 /** The complete client-side game object: full board state plus game metadata. */
-export type FullGame = Board & GameMetadata;
+export type GameFile = Game & Board;
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
@@ -110,15 +110,15 @@ export interface Additional {
 
 // Functions -------------------------------------------------------------
 
-/** Creates a new {@link GameMetadata} object from provided arguments. */
-function initGameMetadata(
+/** Creates a new {@link Game} object from provided arguments. */
+function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
 	mod: VariantModule | undefined,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): GameMetadata & { gameRules: GameRules } {
+): Game & { gameRules: GameRules } {
 	const gameRules =
 		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
@@ -126,21 +126,21 @@ function initGameMetadata(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
-	const gamemetadata: GameMetadata = {
+	const game: Game = {
 		metadata,
 		dateTimestamp,
 		...clockDependantVars,
 	};
 
 	if (clockValues) {
-		if (gamemetadata.untimed)
+		if (game.untimed)
 			throw Error(
 				'Cannot set clock values for untimed game. Should not have specified clockValues.',
 			);
-		clock.edit(gamemetadata.clocks, clockValues);
+		clock.edit(game.clocks, clockValues);
 	}
 
-	const gameWithRules = { ...gamemetadata, gameRules };
+	const gameWithRules = { ...game, gameRules };
 
 	gamefileutility.setConclusion(gameWithRules, gameConclusion);
 
@@ -148,16 +148,16 @@ function initGameMetadata(
 }
 
 /**
- * Combines a board and gamemetadata into a flat {@link FullGame}. Used for loading a game when it starts.
+ * Combines a board and game into a flat {@link GameFile}. Used for loading a game when it starts.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function loadGameWithBoard(
-	gamemetadata: GameMetadata,
+	game: Game,
 	boardsim: Board,
 	moves: MovePacket[] = [],
 	validateMoves?: boolean,
-): FullGame {
-	const gamefile: FullGame = { ...gamemetadata, ...boardsim };
+): GameFile {
+	const gamefile: GameFile = { ...game, ...boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
@@ -192,14 +192,14 @@ async function initFullGame(
 	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
-): Promise<FullGame> {
+): Promise<GameFile> {
 	let variant: LoadedVariant | undefined;
 	if (variantCode !== undefined) {
 		await variantcache.ensureVariantLoaded(variantCode);
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
-	const gameWithRules = initGameMetadata(
+	const gameWithRules = initGame(
 		metadata,
 		dateTimestamp,
 		variant?.mod,
@@ -219,6 +219,6 @@ async function initFullGame(
 }
 
 export default {
-	initGameMetadata,
+	initGame,
 	initFullGame,
 };

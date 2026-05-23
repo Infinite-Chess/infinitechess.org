@@ -10,7 +10,7 @@
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
@@ -385,7 +385,7 @@ function pushSliding(
 	instanceData_Capture: bigint[],
 	coords: Coords,
 	legalMoves: LegalMoves,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 ): void {
 	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) {
@@ -432,7 +432,7 @@ function pushSlide(
 	intsect2: IntersectionPoint,
 	limits: SlideLimits,
 	ignoreFunc: IgnoreFunction,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 	brute?: boolean,
 ): void {
@@ -510,7 +510,7 @@ function pushRay(
 	intsect2: IntersectionPoint,
 	limit: bigint | null,
 	ignoreFunc: IgnoreFunction,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 	brute?: boolean,
 	startStep: bigint = 1n,

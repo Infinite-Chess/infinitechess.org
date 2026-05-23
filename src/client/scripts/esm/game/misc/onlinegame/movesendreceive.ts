@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
 import type { ClockValues, OpponentsMoveMessage } from '../../../../../../shared/types.js';
@@ -70,7 +70,7 @@ function sendMove(): void {
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
 function handleOpponentsMove(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	message: OpponentsMoveMessage,
 ): void {
@@ -140,7 +140,7 @@ function handleOpponentsMove(
  * @returns Whether the move was illegal and was reported.
  */
 function checkAndReportIllegalOpponentMove(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	moveValidationResult: MoveValidationResult,
 	tokenMove: string,
 	moveNumber: number,
@@ -160,7 +160,7 @@ function checkAndReportIllegalOpponentMove(
 }
 
 /** Adjusts received clock values for ping and applies them to the game, if provided. */
-function applyClockValues(gamefile: FullGame, clockValues: ClockValues | undefined): void {
+function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefined): void {
 	if (!clockValues) return;
 	if (gamefile.untimed) {
 		console.warn('Received clock values for untimed game??');

@@ -133,7 +133,7 @@ function restoreSingleGame(
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
 	// 2. Reconstruct MetaData
-	const gameMetadata = reconstructMetadata(gameRow, playerRows, playerIdentities);
+	const game = reconstructMetadata(gameRow, playerRows, playerIdentities);
 
 	// 3. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
@@ -141,13 +141,13 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 5. Create the gamemetadata (also computes gameRules)
+	// 5. Create the game (also computes gameRules)
 	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 	};
-	const gameWithRules = fullgame.initGameMetadata(
-		gameMetadata,
+	const gameWithRules = fullgame.initGame(
+		game,
 		gameRow.time_created,
 		variant.mod,
 		gameConclusion,
@@ -155,7 +155,7 @@ function restoreSingleGame(
 	);
 
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
-	// by clock.edit() inside initGameMetadata() via the clockValues we pass in.
+	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 8. Reconstruct MatchInfo
 	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);

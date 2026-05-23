@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../../../rendering/piecemodels';
 import type { Edit } from '../../../../../../../shared/chess/logic/movepiece';
-import type { FullGame } from '../../../../../../../shared/chess/logic/fullgame';
+import type { GameFile } from '../../../../../../../shared/chess/logic/fullgame';
 import type { BoundingBox } from '../../../../../../../shared/util/math/bounds';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -58,7 +58,7 @@ let rotationParity: boolean = false;
 
 /** Translates the selection by a given vector. */
 function Translate(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh,
 	selectionBox: BoundingBox,
 	translation: Coords,
@@ -80,7 +80,7 @@ function Translate(
 
 /** Extends the selection area by repeating its contents into the given fill box. */
 function Fill(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh,
 	selectionBox: BoundingBox,
 	fillBox: BoundingBox,
@@ -176,7 +176,7 @@ function Fill(
 // Action Button Transformations ------------------------------------------------
 
 /** Deletes the given selection box. */
-function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function Delete(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
 	const edit: Edit = { changes: [], state: { local: [], global: [] } };
 	removeAllPieces(gamefile, edit, piecesInSelection);
@@ -184,7 +184,7 @@ function Delete(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
 }
 
 /** Copies the given selection box. */
-function Copy(gamefile: FullGame, box: BoundingBox): void {
+function Copy(gamefile: GameFile, box: BoundingBox): void {
 	const piecesInSelection: Piece[] = getPiecesInBox(gamefile, box);
 
 	// Modify the pieces to include specialrights state
@@ -205,7 +205,7 @@ function Copy(gamefile: FullGame, box: BoundingBox): void {
 }
 
 /** Pastes the copied region in whole multiples to fill the target box, but not exceed it. */
-function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
+function Paste(gamefile: GameFile, mesh: Mesh, targetBox: BoundingBox): void {
 	if (!clipboard || !clipboardBox) return; // Nothing to paste
 
 	// Determine the dimensions of the clipboard box
@@ -276,12 +276,12 @@ function Paste(gamefile: FullGame, mesh: Mesh, targetBox: BoundingBox): void {
 }
 
 /** Flips the selection box horizontally. */
-function FlipHorizontal(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function FlipHorizontal(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	Reflect(gamefile, mesh, box, 0); // Reflect across the X-axis
 }
 
 /** Flips the selection box vertically. */
-function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function FlipVertical(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	Reflect(gamefile, mesh, box, 1); // Reflect across the Y-axis
 }
 
@@ -289,7 +289,7 @@ function FlipVertical(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
  * Reflects the selection box across a given axis.
  * @param axis The axis to reflect across (0 for X, 1 for Y).
  */
-function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
+function Reflect(gamefile: GameFile, mesh: Mesh, box: BoundingBox, axis: 0 | 1): void {
 	// Determine the bounds for calculating the reflection line based on the axis
 	const [bound1, bound2] = axis === 0 ? [box.left, box.right] : [box.bottom, box.top];
 
@@ -328,17 +328,17 @@ function Reflect(gamefile: FullGame, mesh: Mesh, box: BoundingBox, axis: 0 | 1):
 }
 
 /** Rotates the selection 90 degrees to the left (counter-clockwise). */
-function RotateLeft(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function RotateLeft(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	Rotate(gamefile, mesh, box, false); // false for counter-clockwise
 }
 
 /** Rotates the selection 90 degrees to the right (clockwise). */
-function RotateRight(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function RotateRight(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	Rotate(gamefile, mesh, box, true); // true for clockwise
 }
 
 /** Rotates the selection 90 degrees clockwise or counter-clockwise. */
-function Rotate(gamefile: FullGame, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
+function Rotate(gamefile: GameFile, mesh: Mesh, box: BoundingBox, clockwise: boolean): void {
 	// Calculate the pivot point for rotation.
 	const sumXEdgesBD = bd.fromBigInt(box.left + box.right, 1);
 	const sumYEdgesBD = bd.fromBigInt(box.bottom + box.top, 1);
@@ -424,7 +424,7 @@ function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords
 }
 
 /** Inverts the color of the pieces in the selection box. */
-function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
+function InvertColor(gamefile: GameFile, mesh: Mesh, box: BoundingBox): void {
 	// These haven't changed from the original selection box
 	const selectionCorners: [Coords, Coords] = [
 		[box.left, box.top],
@@ -449,7 +449,7 @@ function InvertColor(gamefile: FullGame, mesh: Mesh, box: BoundingBox): void {
  * moving the pieces, and updating the selection area.
  */
 function Transform(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh,
 	sourceBox: BoundingBox,
 	destinationBox: BoundingBox,
@@ -511,14 +511,14 @@ function Transform(
 // Utility ------------------------------------------------------------
 
 /** Queues all the pieces in the list to be removed in this Edit. */
-function removeAllPieces(gamefile: FullGame, edit: Edit, pieces: Piece[]): void {
+function removeAllPieces(gamefile: GameFile, edit: Edit, pieces: Piece[]): void {
 	for (const piece of pieces) {
 		edithistory.queueRemovePiece(gamefile, edit, piece);
 	}
 }
 
 /** Applies the provided edit and adds it to the history. */
-function applyEdit(gamefile: FullGame, mesh: Mesh, edit: Edit): void {
+function applyEdit(gamefile: GameFile, mesh: Mesh, edit: Edit): void {
 	if (edit.changes.length === 0 && edit.state.global.length === 0) return; // No changes made => don't need to apply
 
 	// Apply the collective edit and add it to the history
@@ -527,7 +527,7 @@ function applyEdit(gamefile: FullGame, mesh: Mesh, edit: Edit): void {
 }
 
 /** Calculates all pieces within the given box area. */
-function getPiecesInBox(gamefile: FullGame, intBox: BoundingBox): Piece[] {
+function getPiecesInBox(gamefile: GameFile, intBox: BoundingBox): Piece[] {
 	const o = gamefile.pieces; // Organized pieces
 
 	const selectionBoxWidth: bigint = intBox.right - intBox.left;

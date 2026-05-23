@@ -9,7 +9,7 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -69,7 +69,7 @@ let rand: Function;
 let engineInitialized: boolean = false;
 
 /** Externally supplied gamefile */
-let input_gamefile: FullGame;
+let input_gamefile: GameFile;
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;

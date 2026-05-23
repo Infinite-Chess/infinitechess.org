@@ -7,7 +7,7 @@
  * We also have the animate move method here.
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -40,7 +40,7 @@ import { animateMove, meshChanges } from './graphicalchanges.js';
  * This returns the constructed MoveFull object so that we have the option to animate it if we so choose.
  */
 function makeMove(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
 	{ doGameOverChecks = true } = {},
@@ -75,7 +75,7 @@ function makeMove(
 
 /** Convenience wrapper: Makes a global forward move then animates it if the mesh exists. */
 function makeMoveAndAnimate(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
 	{ doGameOverChecks = true } = {},
@@ -96,7 +96,7 @@ function makeMoveAndAnimate(
  * were affected, because other pieces may still need graphical changes
  * from the move's changes! For example, pawn deleted that promoted.
  */
-function runMeshChanges(boardsim: FullGame, mesh: Mesh, edit: Edit, forward: boolean): void {
+function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boolean): void {
 	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(boardsim, mesh);
 	else boardchanges.runChanges(mesh, edit.changes, meshChanges, forward); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
@@ -105,7 +105,7 @@ function runMeshChanges(boardsim: FullGame, mesh: Mesh, edit: Edit, forward: boo
 /**
  * Makes a global backward move in the game.
  */
-function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
+function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// Terminate all current animations to avoid a crash when undoing moves
 	animation.clearAnimations();
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
@@ -132,7 +132,7 @@ function rewindMove(gamefile: FullGame, mesh: Mesh | undefined): void {
  * But it does change the check state.
  */
 function viewMove(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	move: MoveFull,
 	forward = true,
@@ -149,7 +149,7 @@ function viewMove(
  * Makes the game view a set move index
  * @param index the move index to goto
  */
-function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): void {
+function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): void {
 	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
@@ -159,7 +159,7 @@ function viewIndex(gamefile: FullGame, mesh: Mesh | undefined, index: number): v
 /**
  * Makes the game view the last move
  */
-function viewFront(gamefile: FullGame, mesh: Mesh | undefined): void {
+function viewFront(gamefile: GameFile, mesh: Mesh | undefined): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
 	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
 }
@@ -173,7 +173,7 @@ function viewFront(gamefile: FullGame, mesh: Mesh | undefined): void {
  *
  * ASSUMES that it is legal to navigate in the direction.
  */
-function navigateMove(gamefile: FullGame, mesh: Mesh | undefined, forward: boolean): void {
+function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boolean): void {
 	// Determine the index of the move to apply
 	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
 

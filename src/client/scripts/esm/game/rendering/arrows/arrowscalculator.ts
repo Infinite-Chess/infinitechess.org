@@ -9,7 +9,7 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type {
 	BDCoords,
@@ -293,7 +293,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
  * can jump/skip over other pieces.
  */
 export function calcArrowsLineDraft(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	slideDir: Vec2,
 	slideKey: Vec2Key,
 	organizedline: number[],

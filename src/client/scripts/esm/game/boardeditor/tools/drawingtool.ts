@@ -8,7 +8,7 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Tool } from './etoolmanager';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame';
 
 import state from '../../../../../../shared/chess/logic/state';
 import bounds from '../../../../../../shared/util/math/bounds';
@@ -172,7 +172,7 @@ function update(currentTool: Tool): void {
 
 /** Queues a specialrights state addition/deletion on the specified piece. */
 function queueToggleSpecialRight(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	edit: Edit,
 	pieceHovered: Piece | undefined,
 ): void {

@@ -11,7 +11,7 @@
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import type { FullGame } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
 import type { Arrow, ArrowPiece, SlideArrows } from './arrows.js';
 import type {
 	BDCoords,
@@ -268,7 +268,7 @@ export function executeArrowShifts(): void {
  */
 function recalculateLinesThroughCoords(
 	slideArrows: SlideArrows,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	coords: Coords,
 	worldHalfWidth: number,
 	pointerWorlds: DoubleCoords[],

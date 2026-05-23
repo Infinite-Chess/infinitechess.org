@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { FullGame } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
@@ -248,7 +248,7 @@ function testOutGameToggles(): void {
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGameToggles(gamefile: FullGame, mesh: Mesh | undefined): void {
+function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit2')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
