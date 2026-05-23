@@ -8,7 +8,7 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { LoadedVariant } from '../logic/fullgame.js';
+import type { LoadedVariant } from '../logic/gamefile.js';
 
 import variantpreviewer from './variantpreviewer.js';
 

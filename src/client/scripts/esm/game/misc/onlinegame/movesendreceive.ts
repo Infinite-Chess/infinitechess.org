@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { MoveValidationResult } from '../../../../../../shared/chess/logic/movevalidation.js';
 import type { ClockValues, OpponentsMoveMessage } from '../../../../../../shared/types.js';

@@ -5,7 +5,7 @@
  */
 
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';

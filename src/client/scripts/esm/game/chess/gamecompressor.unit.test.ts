@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/chess/gamecompressor.unit.test.ts
 
-import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { SimplifiedGameState } from './gamecompressor.js';
 
 import { describe, it, expect } from 'vitest';

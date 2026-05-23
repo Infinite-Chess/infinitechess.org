@@ -12,7 +12,7 @@
  */
 
 import type { RawType } from '../util/typeutil.js';
-import type { VariantOptions } from '../logic/fullgame.js';
+import type { VariantOptions } from '../logic/gamefile.js';
 
 import gamerules from '../util/gamerules.js';
 import boardinit from '../logic/boardinit.js';

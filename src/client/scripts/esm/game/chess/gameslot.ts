@@ -12,13 +12,13 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Additional, GameFile } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bd from '@naviary/bigdecimal';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import fullgame from '../../../../../shared/chess/logic/fullgame.js';
+import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
@@ -168,7 +168,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
-	loadedGamefile = await fullgame.initFullGame(
+	loadedGamefile = await gamefile.initGameFile(
 		loadOptions.metadata,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,

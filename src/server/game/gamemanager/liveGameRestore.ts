@@ -32,7 +32,7 @@ import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import fullgame, { LoadedVariant } from '../../../shared/chess/logic/fullgame.js';
+import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -146,7 +146,7 @@ function restoreSingleGame(
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 	};
-	const gameWithRules = fullgame.initGame(
+	const gameWithRules = gamefile.initGame(
 		game,
 		gameRow.time_created,
 		variant.mod,

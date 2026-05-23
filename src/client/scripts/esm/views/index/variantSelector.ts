@@ -7,7 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type {
 	VariantGroup,

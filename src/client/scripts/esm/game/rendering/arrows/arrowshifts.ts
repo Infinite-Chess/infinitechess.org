@@ -11,7 +11,7 @@
 import type { Piece } from '../../../../../../shared/chess/util/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Arrow, ArrowPiece, SlideArrows } from './arrows.js';
 import type {
 	BDCoords,

@@ -8,7 +8,7 @@ import type { MetaData } from '../../../../../shared/types.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';

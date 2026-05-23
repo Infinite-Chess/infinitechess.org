@@ -12,7 +12,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { MoveRecord } from './movepiece.js';
 import type { PlayerGroup } from '../util/typeutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { ClockDependant } from './fullgame.js';
+import type { ClockDependant } from './gamefile.js';
 import type { ClockValues, TimeControl } from '../../types.js';
 
 import typeutil from '../util/typeutil.js';

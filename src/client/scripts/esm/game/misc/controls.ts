@@ -6,7 +6,7 @@
  */
 
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';

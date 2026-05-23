@@ -1,4 +1,4 @@
-// src/shared/chess/logic/fullgame.ts
+// src/shared/chess/logic/gamefile.ts
 
 import type { Board } from './boardinit.js';
 import type { CoordsKey } from '../util/coordutil.js';
@@ -182,11 +182,11 @@ function loadGameWithBoard(
 }
 
 /**
- * Initiates both the base game and board of the FullGame at the same time.
+ * Initiates both the base game and board of the GameFile at the same time.
  * **Asynchronous** because variant modules must be loaded. Used on just the client.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
-async function initFullGame(
+async function initGameFile(
 	metadata: MetaData,
 	dateTimestamp: number,
 	variantCode: VariantCode | undefined,
@@ -220,5 +220,5 @@ async function initFullGame(
 
 export default {
 	initGame,
-	initFullGame,
+	initGameFile,
 };

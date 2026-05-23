@@ -36,7 +36,7 @@ import gamefile, {
 	Additional,
 	GameFile,
 	VariantOptions,
-} from '../../../../../../shared/chess/logic/fullgame';
+} from '../../../../../../shared/chess/logic/gamefile';
 import icnconverter, {
 	MoveParsed,
 	LongFormatIn,
@@ -391,7 +391,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	let { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, resolvedVariantCode); // prettier-ignore
 	let stateGlobal = longformOut.state_global;
 
-	// If longformat contains moves, then we construct a FullGame object and use it to fast forward to the final position
+	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time
 	if (longformOut.moves && longformOut.moves.length !== 0) {
 		const state_global = { ...longformOut.state_global, specialRights };
@@ -408,7 +408,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 				return move;
 			}),
 		};
-		const loadedGamefile = await gamefile.initFullGame(
+		const loadedGamefile = await gamefile.initGameFile(
 			longformOut.metadata,
 			timestamp,
 			resolvedVariantCode,

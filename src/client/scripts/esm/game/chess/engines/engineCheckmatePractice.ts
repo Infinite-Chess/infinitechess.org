@@ -9,7 +9,7 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -29,7 +29,7 @@ import {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 // If the Webworker during creation is not declared as a module, than type imports will have to be imported this way:
-// type gamefile = import("../../chess/logic/fullgame").default;
+// type gamefile = import("../../chess/logic/gamefile").default;
 // type Coords = import("../../chess/util/coordutil").Coords;
 
 /**

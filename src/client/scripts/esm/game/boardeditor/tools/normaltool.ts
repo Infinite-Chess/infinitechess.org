@@ -9,7 +9,7 @@
 import type { Mesh } from '../../rendering/piecemodels';
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile';
 import type { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter';
 
 import state from '../../../../../../shared/chess/logic/state';

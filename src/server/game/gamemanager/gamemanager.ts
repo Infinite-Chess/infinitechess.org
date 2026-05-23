@@ -16,7 +16,7 @@ import WebSocket from 'ws';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import fullgame from '../../../shared/chess/logic/fullgame.js';
+import gamefile from '../../../shared/chess/logic/gamefile.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -107,7 +107,7 @@ function createGame(
 		ratinginfo,
 	);
 	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
-	const gameWithRules = fullgame.initGame(metadata, now, variant?.mod);
+	const gameWithRules = gamefile.initGame(metadata, now, variant?.mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.

@@ -10,7 +10,7 @@ import type { Mesh } from '../../game/rendering/piecemodels.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/fullgame.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';

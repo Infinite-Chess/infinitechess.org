@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/gui/guiclock.ts
 
-import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ClockData } from '../../../../../shared/chess/logic/clock.js';
 import type { SoundObject } from '../../audio/AudioManager.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';

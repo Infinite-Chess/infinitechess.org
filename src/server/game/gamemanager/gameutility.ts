@@ -7,7 +7,7 @@
  * At most this ever handles a single game, not multiple.
  */
 
-import type { Game } from '../../../shared/chess/logic/fullgame.js';
+import type { Game } from '../../../shared/chess/logic/gamefile.js';
 import type { Board } from '../../../shared/chess/logic/boardinit.js';
 import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';

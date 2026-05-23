@@ -13,7 +13,7 @@
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';

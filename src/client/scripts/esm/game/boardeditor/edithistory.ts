@@ -11,7 +11,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { GameFile } from '../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';

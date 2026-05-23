@@ -10,7 +10,7 @@
 import type { Color } from '../../../../../../shared/util/math/math.js';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { GameFile } from '../../../../../../shared/chess/logic/fullgame.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
