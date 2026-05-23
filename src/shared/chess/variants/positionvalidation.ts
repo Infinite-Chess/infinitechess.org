@@ -124,7 +124,7 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	);
 	if (checkmateUsed) {
 		const secondPlayer = gameRules.turnOrder[1]!;
-		const boardsim = boardinit.initBoard(gameRules, undefined, Date.now(), variantOptions);
+		const boardsim = boardinit.initBoard(gameRules, undefined, variantOptions);
 		const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
 		if (checkResult.check) {
 			return `King capture possible on turn 1.`;

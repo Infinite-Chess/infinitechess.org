@@ -29,17 +29,10 @@ const POSITION_STRING_THRESHOLD = 2500;
  * Variants whose position string exceeds {@link POSITION_STRING_THRESHOLD} characters,
  * or that use position generators, are not supported.
  * @param variant - The loaded variant, if available.
- * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function doesVariantSupportServerValidation(
-	variant: LoadedVariant | undefined,
-	timestamp: number,
-): boolean {
+function doesVariantSupportServerValidation(variant: LoadedVariant | undefined): boolean {
 	if (variant === undefined) return false;
-	const positionStringLength = variantpreviewer.getVariantPositionStringLength(
-		variant.mod,
-		timestamp,
-	);
+	const positionStringLength = variantpreviewer.getVariantPositionStringLength(variant);
 	if (positionStringLength === undefined) return false; // Generator-based variant
 	return positionStringLength <= POSITION_STRING_THRESHOLD;
 }
@@ -54,11 +47,10 @@ function doesVariantSupportServerValidation(
  * - Clients do not need to send `removefromplayersinactivegames`.
  * - Clients should not send cheat reports.
  * @param variant - The loaded variant, if available.
- * @param timestamp - The game's start timestamp in ms since epoch.
  * @param isPrivate - Whether the game is a private match.
  */
-function isGameInstantlyDeleted(variant: LoadedVariant | undefined, timestamp: number): boolean {
-	return doesVariantSupportServerValidation(variant, timestamp);
+function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
+	return doesVariantSupportServerValidation(variant);
 }
 
 export { POSITION_STRING_THRESHOLD, doesVariantSupportServerValidation, isGameInstantlyDeleted };

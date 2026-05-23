@@ -9,6 +9,7 @@
 import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import type { LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
@@ -34,10 +35,11 @@ async function getPositionAndSpecialRightsFromLongFormat(
 		};
 	} else if (variantCode !== undefined) {
 		// No position specified in the ICN, extract from the variant
-		const timestamp = clientmetadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
+		const dateTimestamp = clientmetadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
 		await variantcache.ensureVariantLoaded(variantCode);
 		const mod = variantcache.getModule(variantCode);
-		return variantpreviewer.getStartingPositionOfVariant(mod, timestamp);
+		const variant: LoadedVariant = { code: variantCode, mod, dateTimestamp };
+		return variantpreviewer.getStartingPositionOfVariant(variant);
 	} else {
 		return { position: new Map(), specialRights: new Set() };
 	}

@@ -16,12 +16,12 @@ import WebSocket from 'ws';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
+import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
@@ -98,26 +98,26 @@ function createGame(
 	}
 
 	const gameID = issueUniqueGameId();
-	const now = Date.now();
+	const dateTimestamp = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
 		invite.mode === 'rated',
 		invite.variant,
 		invite.time,
-		now,
+		dateTimestamp,
 		ratinginfo,
 	);
-	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
-	const gameWithRules = gamefile.initGame(metadata, now, variant?.mod);
+	const variant: LoadedVariant = {
+		code: invite.variant,
+		mod: variantcache.getModule(invite.variant),
+		dateTimestamp,
+	};
+	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	let servergame: ServerGame;
-	if (doesVariantSupportServerValidation(variant, gameWithRules.dateTimestamp)) {
-		const boardsim = boardinit.initBoard(
-			gameWithRules.gameRules,
-			variant,
-			gameWithRules.dateTimestamp,
-		);
+	if (doesVariantSupportServerValidation(variant)) {
+		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
 		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
 	} else {
 		servergame = {

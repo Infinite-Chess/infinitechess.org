@@ -56,7 +56,6 @@ export type BoardPreview = {
 function initBoardPreview(
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
-	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
@@ -81,10 +80,7 @@ function initBoardPreview(
 		position = variantOptions.position;
 		specialRights = variantOptions.state_global.specialRights;
 	} else if (variant !== undefined) {
-		({ position, specialRights } = variantpreviewer.getStartingPositionOfVariant(
-			variant.mod,
-			dateTimestamp,
-		));
+		({ position, specialRights } = variantpreviewer.getStartingPositionOfVariant(variant));
 	} else throw Error('Cannot get starting position without a variant module or variantOptions.');
 
 	const state_global: GlobalGameState = { specialRights };

@@ -10,6 +10,7 @@
 import type { BaseRay } from '../../util/math/geometry.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { PlayerGroup } from '../util/typeutil.js';
+import type { LoadedVariant } from '../logic/gamefile.js';
 import type { CoordsKey, Coords } from '../util/coordutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { VariantModule, GameRuleModifications } from './variant_scripts/variantutil.js';
@@ -30,25 +31,17 @@ const defaultPromotionRanks = { [p.WHITE]: [8n], [p.BLACK]: [1n] };
 
 // Functions ------------------------------------------------------------------
 
-/**
- * Given the variant module and timestamp, calculates the starting position and specialRights.
- * @param mod - The loaded variant module.
- * @param timestamp - The game's start timestamp in ms since epoch.
- * @returns An object containing 2 properties: `position`, and `specialRights`.
- */
-function getStartingPositionOfVariant(
-	mod: VariantModule,
-	timestamp: number,
-): {
+/** Calculates the starting position and specialRights of a loaded variant. */
+function getStartingPositionOfVariant(variant: LoadedVariant): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
 	// eslint-disable-next-line prefer-const
-	let { position, specialRights } = mod.getPosition(timestamp);
+	let { position, specialRights } = variant.mod.getPosition(variant.dateTimestamp);
 
-	if (mod.getGeneratorRules) {
+	if (variant.mod.getGeneratorRules) {
 		// Generator-based: derive specialRights from the module's rules
-		const rules = mod.getGeneratorRules();
+		const rules = variant.mod.getGeneratorRules();
 		specialRights = icnconverter.generateSpecialRights(
 			position,
 			rules.pawnDoublePush,
@@ -65,14 +58,13 @@ function getStartingPositionOfVariant(
 }
 
 /**
- * Returns the variant's gamerules at the provided timestamp.
+ * Returns the variant's gamerules.
  * If the variant is specified but doesn't have any modifications -> default gamerules.
  * If the variant is not specified -> blank slate, zero gamerules.
- * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getGameRulesOfVariant(mod: VariantModule | undefined, timestamp?: number): GameRules {
-	const gameruleModifications: GameRuleModifications = mod
-		? (mod.gameruleModifications?.(timestamp) ?? {})
+function getGameRulesOfVariant(variant: LoadedVariant | undefined): GameRules {
+	const gameruleModifications: GameRuleModifications = variant
+		? (variant.mod.gameruleModifications?.(variant.dateTimestamp) ?? {})
 		: { promotion: null, moveRule: null };
 	return getGameRules(jsutil.deepCopyObject(gameruleModifications));
 }
@@ -117,13 +109,11 @@ function getVariantWorldBorder(mod: VariantModule | undefined): bigint | undefin
 }
 
 /**
- * Returns the length of the position string for the given variant module at the specified timestamp,
+ * Returns the length of the position string for the loaded variant,
  * or `undefined` if the variant uses a generator (no fixed position string).
- * @param mod - The loaded variant module.
- * @param timestamp - The game's start timestamp in ms since epoch.
  */
-function getVariantPositionStringLength(mod: VariantModule, timestamp: number): number | undefined {
-	return mod.getPositionStringLength?.(timestamp);
+function getVariantPositionStringLength(variant: LoadedVariant): number | undefined {
+	return variant.mod.getPositionStringLength?.(variant.dateTimestamp);
 }
 
 /**

@@ -10,8 +10,8 @@ import type { Mesh } from '../../game/rendering/piecemodels.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
+import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
@@ -145,11 +145,9 @@ async function showForPosition(
 	variantOptions: VariantOptions,
 ): Promise<void> {
 	const token = ++showToken;
-	const timestamp = Date.now();
 	const boardsim = boardpreviewer.initBoardPreview(
 		variantOptions.gameRules,
 		undefined,
-		timestamp,
 		variantOptions,
 	);
 	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false);
@@ -162,14 +160,16 @@ async function showForPosition(
  */
 async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promise<void> {
 	const token = ++showToken;
-	const timestamp = Date.now();
 	const variantName = variantregistry.getVariantName(code);
 	await variantcache.ensureVariantLoaded(code);
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
-	const mod = variantcache.getModule(code);
-	const gameRules = variantpreviewer.getGameRulesOfVariant(mod, timestamp);
-	const loadedVariant = { code, mod };
-	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant, timestamp);
+	const loadedVariant: LoadedVariant = {
+		code,
+		mod: variantcache.getModule(code),
+		dateTimestamp: Date.now(),
+	};
+	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
+	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
 	await showForBoard(anchor, variantName, boardsim, gameRules, token, true);
 }
 

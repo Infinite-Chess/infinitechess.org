@@ -54,13 +54,12 @@ type Vicinity = Record<CoordsKey, RawType[]>;
 function initBoard(
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
-	dateTimestamp: number,
 	variantOptions?: VariantOptions,
 	editor: boolean = false,
 	/** Only has an effect if the `worldBorder` gamerule is not present. */
 	worldBorderDist?: bigint,
 ): Board {
-	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, dateTimestamp, variantOptions, editor, worldBorderDist); // prettier-ignore
+	const boardPreview = boardpreviewer.initBoardPreview(gameRules, variant, variantOptions, editor, worldBorderDist); // prettier-ignore
 
 	// Calculate movesets
 	const pieceMovesets = variantreader.getMovesetsOfVariant(variant?.mod, gameRules.slideLimit);

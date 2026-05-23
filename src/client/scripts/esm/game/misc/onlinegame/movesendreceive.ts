@@ -151,7 +151,7 @@ function checkAndReportIllegalOpponentMove(
 		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
 	);
 
-	if (!isGameInstantlyDeleted(gamefile.variant, gamefile.dateTimestamp)) {
+	if (!isGameInstantlyDeleted(gamefile.variant)) {
 		onlinegame.reportOpponentsMove(moveValidationResult.reason);
 		return true;
 	}

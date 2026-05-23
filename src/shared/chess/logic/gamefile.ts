@@ -25,8 +25,8 @@ import variantpreviewer from '../variants/variantpreviewer.js';
 
 // Types ----------------------------------------------------
 
-/** A variant code paired with its loaded module. */
-export type LoadedVariant = { code: VariantCode; mod: VariantModule };
+/** A variant code paired with its loaded module and the game's creation timestamp. */
+export type LoadedVariant = { code: VariantCode; mod: VariantModule; dateTimestamp: number };
 
 export interface Snapshot {
 	/** In key format 'x,y':'type' */
@@ -114,13 +114,12 @@ export interface Additional {
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	mod: VariantModule | undefined,
+	variant: LoadedVariant | undefined,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
 ): Game & { gameRules: GameRules } {
-	const gameRules =
-		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
+	const gameRules = variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant);
 
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
@@ -196,13 +195,13 @@ async function initGameFile(
 	let variant: LoadedVariant | undefined;
 	if (variantCode !== undefined) {
 		await variantcache.ensureVariantLoaded(variantCode);
-		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
+		variant = { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp };
 	}
 
 	const gameWithRules = initGame(
 		metadata,
 		dateTimestamp,
-		variant?.mod,
+		variant,
 		additional.gameConclusion,
 		additional.clockValues,
 		additional.variantOptions,
@@ -210,7 +209,6 @@ async function initGameFile(
 	const boardsim = boardinit.initBoard(
 		gameWithRules.gameRules,
 		variant,
-		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,

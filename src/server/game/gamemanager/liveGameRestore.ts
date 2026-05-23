@@ -145,11 +145,12 @@ function restoreSingleGame(
 	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
+		dateTimestamp: gameRow.time_created,
 	};
 	const gameWithRules = gamefile.initGame(
 		game,
 		gameRow.time_created,
-		variant.mod,
+		variant,
 		gameConclusion,
 		clockValues,
 	);
@@ -165,11 +166,7 @@ function restoreSingleGame(
 
 	let servergame: ServerGame;
 	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(
-			gameWithRules.gameRules,
-			variant,
-			gameWithRules.dateTimestamp,
-		);
+		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
 		movepiece.makeAllMovesInGame(boardsim, moves);
 		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
 	} else {
