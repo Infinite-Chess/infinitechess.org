@@ -110,10 +110,7 @@ export interface Additional {
 
 // Functions -------------------------------------------------------------
 
-/**
- * Creates a new {@link GameMetadata} object from provided arguments.
- * ASSUMES THE VARIANT SCRIPT IS ALREADY LOADED. This part is synchronous.
- */
+/** Creates a new {@link GameMetadata} object from provided arguments. */
 function initGameMetadata(
 	metadata: MetaData,
 	dateTimestamp: number,
@@ -121,7 +118,7 @@ function initGameMetadata(
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): { gamemetadata: GameMetadata; gameRules: GameRules } {
+): GameMetadata & { gameRules: GameRules } {
 	const gameRules =
 		variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(mod, dateTimestamp);
 
@@ -143,10 +140,11 @@ function initGameMetadata(
 		clock.edit(gamemetadata.clocks, clockValues);
 	}
 
-	gamemetadata.gameConclusion = gameConclusion; // <-- SHOULD NOT HAVE TO SET HERE
-	gamefileutility.setConclusion({ metadata: gamemetadata.metadata, gameRules }, gameConclusion); // <-- SHOULD ACCEPT THE ACTUAL GAME, NOT A FAKE
+	const gameWithRules = { ...gamemetadata, gameRules };
 
-	return { gamemetadata, gameRules };
+	gamefileutility.setConclusion(gameWithRules, gameConclusion);
+
+	return gameWithRules;
 }
 
 /**
@@ -201,7 +199,7 @@ async function initFullGame(
 		variant = { code: variantCode, mod: variantcache.getModule(variantCode) };
 	}
 
-	const { gamemetadata, gameRules } = initGameMetadata(
+	const gameWithRules = initGameMetadata(
 		metadata,
 		dateTimestamp,
 		variant?.mod,
@@ -210,14 +208,14 @@ async function initFullGame(
 		additional.variantOptions,
 	);
 	const boardsim = boardinit.initBoard(
-		gameRules,
+		gameWithRules.gameRules,
 		variant,
 		dateTimestamp,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(gamemetadata, boardsim, additional.moves, validateMoves);
+	return loadGameWithBoard(gameWithRules, boardsim, additional.moves, validateMoves);
 }
 
 export default {
