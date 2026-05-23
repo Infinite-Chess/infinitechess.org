@@ -7,12 +7,13 @@
 
 import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from '../logic/gamefile.js';
+import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import gamerules from '../util/gamerules.js';
 import boardinit from '../logic/boardinit.js';
 import checkdetection from '../logic/checkdetection.js';
 import { POSITION_STRING_THRESHOLD } from './servervalidation.js';
-import typeutil, { neutralRawTypes, players } from '../util/typeutil.js';
+import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -20,10 +21,14 @@ import typeutil, { neutralRawTypes, players } from '../util/typeutil.js';
  * Win conditions that require a player to have at least one royal piece on the board.
  * If a player uses one of these but has no royal, the position is illegal.
  */
-const WIN_CONDITIONS_REQUIRING_ROYAL: string[] = ['checkmate', 'royalcapture', 'allroyalscaptured'];
+const WIN_CONDITIONS_REQUIRING_ROYAL: string[] = [
+	'checkmate',
+	'royalcapture',
+	'allroyalscaptured',
+] satisfies GameruleWinCondition[];
 
 /** All colored players required in a complete 4-player game's turn order. */
-const FOUR_PLAYER_COLORS = [players.RED, players.BLUE, players.YELLOW, players.GREEN] as const;
+const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
 
 // Functions -------------------------------------------------------------------------
 
@@ -31,14 +36,13 @@ const FOUR_PLAYER_COLORS = [players.RED, players.BLUE, players.YELLOW, players.G
  * Validates a VariantOptions object for semantic legality.
  *
  * Checks (in order):
- * 1. No player IDs above GREEN (6) in the turn order or piece colors.
- * 2. White/black and colored (4-player) players in the turn order are mutually exclusive.
- * 3. Mode completeness: 2-player needs both white+black; 4-player needs all 4 colored players.
- * 4. ICN string length does not exceed {@link POSITION_STRING_THRESHOLD}.
- * 5. Every non-neutral piece's color is in the turn order.
+ * 1. White/black and colored (4-player) players in the turn order are mutually exclusive.
+ * 2. Mode completeness: 2-player needs both white+black; 4-player needs all 4 colored players.
+ * 3. ICN string length is not too large.
+ * 4. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
- *    Tracks which players have pieces and which have royal pieces (single iteration).
- * 6. Every player in the turn order has at least one piece and, if required, a royal piece.
+ * 5. Every player in the turn order has at least one piece and, if required, a royal piece.
+ * 6. The 2nd player must not be in check on turn 1 (checkmate games only).
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The ICN string representation of the position, used to check its length.
@@ -49,46 +53,28 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
 	const turnOrderSet = new Set<number>(uniquePlayers);
 
-	// --- Rule 1: No player IDs above GREEN (6) in the turn order ---
-	for (const player of uniquePlayers) {
-		if (player > players.GREEN) {
-			return `Turn order contains invalid player ID ${player}. Only player IDs up to ${players.GREEN} (${typeutil.strcolors[players.GREEN]}) are supported.`;
-		}
-	}
-
-	// --- Rule 2: Mode mutual exclusivity (white/black vs colored) ---
-	const hasColoredPlayers = uniquePlayers.some((p) => p >= players.RED);
-	const hasTwoPlayerColors = uniquePlayers.some(
-		(p) => p === players.WHITE || p === players.BLACK,
-	);
-	if (hasColoredPlayers && hasTwoPlayerColors) {
-		return 'The turn order contains both 2-player (white/black) and colored (4-player) players. These are mutually exclusive.';
-	}
+	// --- Rule 1: Mode mutual exclusivity (white/black vs colored) ---
+	const hasColoredPlayers = uniquePlayers.some((up) => FOUR_PLAYER_COLORS.includes(up));
+	const hasTwoPlayerColors = uniquePlayers.some((up) => up === p.WHITE || up === p.BLACK);
+	if (hasColoredPlayers && hasTwoPlayerColors) return 'Cannot mix 2-player and 4-player.';
 
 	const isFourPlayerMode = hasColoredPlayers;
 
-	// --- Rule 3: Mode completeness ---
+	// --- Rule 2: Mode completeness ---
 	if (isFourPlayerMode) {
-		for (const p of FOUR_PLAYER_COLORS) {
-			if (!turnOrderSet.has(p)) {
-				return `4-player mode requires all four colored players in the turn order, but '${typeutil.strcolors[p]}' is missing.`;
-			}
+		for (const up of FOUR_PLAYER_COLORS) {
+			if (!turnOrderSet.has(up)) return 'All players need a turn.';
 		}
-	} else {
-		if (!turnOrderSet.has(players.WHITE)) {
-			return "2-player mode requires both white and black in the turn order, but 'white' is missing.";
-		}
-		if (!turnOrderSet.has(players.BLACK)) {
-			return "2-player mode requires both white and black in the turn order, but 'black' is missing.";
-		}
+	} else if (!turnOrderSet.has(p.WHITE) || !turnOrderSet.has(p.BLACK)) {
+		return 'All players need a turn.';
 	}
 
-	// --- Rule 4: ICN string length limit ---
+	// --- Rule 3: ICN string length limit ---
 	if (icnString.length > POSITION_STRING_THRESHOLD) {
-		return `The ICN position string is ${icnString.length} characters long, exceeding the maximum of ${POSITION_STRING_THRESHOLD}.`;
+		return `Position is too large.`;
 	}
 
-	// --- Rules 5 & 6 setup: single iteration over all pieces ---
+	// --- Rule 4: Piece color and turn order consistency ---
 	const neutralExemptRawTypes = new Set<RawType>(neutralRawTypes); // void and obstacle
 	const royalRawTypes = new Set<RawType>(typeutil.royals);
 	const playersWithPieces = new Set<number>();
@@ -97,53 +83,51 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	for (const pieceType of position.values()) {
 		const [rawType, color] = typeutil.splitType(pieceType);
 
-		if (color === players.NEUTRAL) {
+		if (color === p.NEUTRAL) {
 			// In 2-player mode, only void and obstacle neutrals are allowed; no gargoyles.
 			if (!isFourPlayerMode && !neutralExemptRawTypes.has(rawType)) {
-				return `Position contains a neutral ${typeutil.getRawTypeStr(rawType)} piece (a gargoyle), which is only valid in 4-player games.`;
+				return `No gargoyles allowed.`;
 			}
 		} else {
 			// Reject pieces with invalid player IDs (> GREEN).
-			if (color > players.GREEN) {
-				return `Position contains a piece with invalid player ID ${color}. Only player IDs up to ${players.GREEN} are supported.`;
+			if (color !== p.WHITE && color !== p.BLACK && !FOUR_PLAYER_COLORS.includes(color)) {
+				return `Piece has an invalid player ID.`;
 			}
-			// Non-neutral piece colors must be in the turn order.
+			// Non-neutral piece colors must be in the turn order. Otherwise this indicates a 2/4-player mode mismatch.
 			if (!turnOrderSet.has(color)) {
-				return `Position contains a ${typeutil.strcolors[color]} piece but '${typeutil.strcolors[color]}' is not in the turn order.`;
+				return 'Cannot mix 2-player and 4-player.';
 			}
 			playersWithPieces.add(color);
 			if (royalRawTypes.has(rawType)) playersWithRoyals.add(color);
 		}
 	}
 
-	// --- Rule 6: Per-player post-checks ---
+	// --- Rule 5: Per-player post-checks ---
 	for (const player of uniquePlayers) {
 		if (!playersWithPieces.has(player)) {
-			return `Player '${typeutil.strcolors[player]}' is in the turn order but has no pieces on the board.`;
+			return `Each player must have pieces.`;
 		}
 		const playerWinCons = gameRules.winConditions[player] ?? [];
-		const winConsRequiringRoyal = playerWinCons.filter((wc) =>
+		const playerRequiresRoyal = playerWinCons.some((wc) =>
 			WIN_CONDITIONS_REQUIRING_ROYAL.includes(wc),
 		);
-		if (winConsRequiringRoyal.length > 0 && !playersWithRoyals.has(player)) {
-			return `Player '${typeutil.strcolors[player]}' uses win condition '${winConsRequiringRoyal.join(', ')}' but has no royal piece on the board.`;
+		if (playerRequiresRoyal && !playersWithRoyals.has(player)) {
+			return `Player must have a royal.`;
 		}
 	}
 
-	// --- Rule 7: 2nd player must not be in check on turn 1 (checkmate games only) ---
+	// --- Rule 6: 2nd player must not be in check on turn 1 (checkmate games only) ---
 	// If they are, the 1st player can capture their royal piece immediately — in checkmate mode
 	// this doesn't end the game (no win condition fires), creating an illegal "limbo" state.
 	const checkmateUsed = uniquePlayers.some((player) =>
-		(gameRules.winConditions[player] ?? []).includes('checkmate'),
+		gameRules.winConditions[player]!.includes('checkmate'),
 	);
 	if (checkmateUsed) {
-		const secondPlayer = gameRules.turnOrder[1];
-		if (secondPlayer !== undefined) {
-			const boardsim = boardinit.initBoard(gameRules, undefined, 0, variantOptions);
-			const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
-			if (checkResult.check) {
-				return `Illegal position: The 2nd player to move ('${typeutil.strcolors[secondPlayer]}') is already in check on turn 1, allowing the 1st player to immediately capture their royal piece.`;
-			}
+		const secondPlayer = gameRules.turnOrder[1]!;
+		const boardsim = boardinit.initBoard(gameRules, undefined, Date.now(), variantOptions);
+		const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
+		if (checkResult.check) {
+			return `King capture possible on turn 1.`;
 		}
 	}
 

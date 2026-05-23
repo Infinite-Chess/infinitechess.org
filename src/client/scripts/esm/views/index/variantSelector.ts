@@ -437,12 +437,14 @@ async function validateIcnInput(): Promise<void> {
 			position,
 			gameRules: longFormat.gameRules,
 			state_global: { ...longFormat.state_global, specialRights },
-			fullMove: longFormat.fullMove,
+			// fullMove: longFormat.fullMove,
+			fullMove: 1, // For now, games can only start from a fullMove of 1
 		};
 		const illegalReason = validatePosition(icnVariantOptions, value);
 		if (illegalReason !== null) throw new Error(illegalReason);
-	} catch {
+	} catch (e) {
 		element_icnInputWrap.classList.add('invalid');
+		console.error('Illegal position:', e instanceof Error ? e.message : e);
 		icnVariantOptions = null;
 	}
 }
