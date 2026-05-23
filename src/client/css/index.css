@@ -626,6 +626,12 @@ svg.bg-omega {
 	display: none;
 }
 
+.icn-error-text {
+	margin: 4px 2px 0;
+	font-size: 12px;
+	color: #e05555;
+}
+
 /* ============================================================
    Time control sliders (Lichess-style side-by-side grid)
    ============================================================ */

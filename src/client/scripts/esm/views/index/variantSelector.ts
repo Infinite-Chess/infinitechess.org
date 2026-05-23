@@ -49,6 +49,7 @@ const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
 const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
+const element_icnErrorText = document.getElementById('icn-error-text') as HTMLElement;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
 
 // State ----------------------------------------------
@@ -424,6 +425,7 @@ async function validateIcnInput(): Promise<void> {
 	const value = element_icnInput.value;
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
+		element_icnErrorText.textContent = '';
 		icnVariantOptions = null;
 		return;
 	}
@@ -441,9 +443,17 @@ async function validateIcnInput(): Promise<void> {
 			fullMove: 1, // For now, games can only start from a fullMove of 1
 		};
 		const illegalReason = validatePosition(icnVariantOptions, value);
-		if (illegalReason !== null) throw new Error(illegalReason);
+		if (illegalReason !== null) {
+			element_icnInputWrap.classList.add('invalid');
+			element_icnErrorText.textContent = illegalReason;
+			icnVariantOptions = null;
+			return;
+		} else {
+			element_icnErrorText.textContent = '';
+		}
 	} catch (e) {
 		element_icnInputWrap.classList.add('invalid');
+		element_icnErrorText.textContent = '';
 		console.error('Illegal position:', e instanceof Error ? e.message : e);
 		icnVariantOptions = null;
 	}
@@ -454,6 +464,7 @@ function initIcnValidation(): void {
 	element_icnInput.addEventListener('blur', validateIcnInput);
 	element_icnInput.addEventListener('focus', () => {
 		element_icnInputWrap.classList.remove('invalid');
+		element_icnErrorText.textContent = '';
 	});
 	element_icnInput.addEventListener('input', () => {
 		icnVariantOptions = null;
