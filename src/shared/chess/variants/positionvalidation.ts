@@ -9,8 +9,10 @@ import type { RawType } from '../util/typeutil.js';
 import type { VariantOptions } from '../logic/gamefile.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
+import moveutil from '../util/moveutil.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from '../logic/boardinit.js';
+import winconutil from '../util/winconutil.js';
 import checkdetection from '../logic/checkdetection.js';
 import { POSITION_STRING_THRESHOLD } from './servervalidation.js';
 import typeutil, { neutralRawTypes, players as p } from '../util/typeutil.js';
@@ -42,7 +44,8 @@ const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
  * 4. Every non-neutral piece's color is in the turn order.
  *    In 2-player mode, no neutral gargoyle pieces are allowed.
  * 5. Every player in the turn order has at least one piece and, if required, a royal piece.
- * 6. The 2nd player must not be in check on turn 1 (checkmate games only).
+ * 6. Checkmate incompatibility: No player gets consecutive turns; royal count
+ *    is not too high; and king capture is not possible on turn 1.
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The ICN string representation of the position, used to check its length.
@@ -79,6 +82,7 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	const royalRawTypes = new Set<RawType>(typeutil.royals);
 	const playersWithPieces = new Set<number>();
 	const playersWithRoyals = new Set<number>();
+	let royalCount = 0;
 
 	for (const pieceType of position.values()) {
 		const [rawType, color] = typeutil.splitType(pieceType);
@@ -98,7 +102,10 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 				return 'Cannot mix 2-player and 4-player.';
 			}
 			playersWithPieces.add(color);
-			if (royalRawTypes.has(rawType)) playersWithRoyals.add(color);
+			if (royalRawTypes.has(rawType)) {
+				playersWithRoyals.add(color);
+				royalCount++;
+			}
 		}
 	}
 
@@ -116,13 +123,19 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 		}
 	}
 
-	// --- Rule 6: 2nd player must not be in check on turn 1 (checkmate games only) ---
-	// If they are, the 1st player can capture their royal piece immediately — in checkmate mode
-	// this doesn't end the game (no win condition fires), creating an illegal "limbo" state.
+	// --- Rule 6: Checkmate incompatibility ---
 	const checkmateUsed = uniquePlayers.some((player) =>
 		gameRules.winConditions[player]!.includes('checkmate'),
 	);
 	if (checkmateUsed) {
+		// In 2-player mode, if any player gets 2+ turns in a row, king capture is possible
+		if (!isFourPlayerMode && moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
+			return 'Player cannot have consecutive turns with checkmate.';
+		}
+		if (royalCount > winconutil.royalCountToDisableCheckmate) {
+			return 'Too many royals for checkmate.';
+		}
+		// King capture must not be possible on turn 1
 		const secondPlayer = gameRules.turnOrder[1]!;
 		const boardsim = boardinit.initBoard(gameRules, undefined, variantOptions);
 		const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
