@@ -336,18 +336,23 @@ function updateSinglePlayerStatsInTransaction(
 function getICNOfGame(servergame: ServerGame): string {
 	// Get ICN of game
 	let ICN: string;
+	const fullMove = servergame.validateMoves ? servergame.startSnapshot.fullMove : 1;
 	const moveRuleState = servergame.validateMoves
 		? servergame.startSnapshot.state_global.moveRuleState
 		: servergame.gameRules.moveRule !== undefined
 			? 0
 			: undefined;
+	const enpassant = servergame.validateMoves
+		? servergame.startSnapshot.state_global.enpassant
+		: undefined;
 	try {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...servergame,
-				fullMove: 1,
+				fullMove,
 				state_global: {
 					moveRuleState,
+					enpassant,
 				},
 			},
 			{
