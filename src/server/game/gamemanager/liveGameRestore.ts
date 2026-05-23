@@ -146,7 +146,7 @@ function restoreSingleGame(
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 	};
-	const { gamemetadata, gameRules } = fullgame.initGameMetadata(
+	const gameWithRules = fullgame.initGameMetadata(
 		gameMetadata,
 		gameRow.time_created,
 		variant.mod,
@@ -165,15 +165,21 @@ function restoreSingleGame(
 
 	let servergame: ServerGame;
 	if (gameRow.validate_moves) {
-		const boardsim = boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp);
+		const boardsim = boardinit.initBoard(
+			gameWithRules.gameRules,
+			variant,
+			gameWithRules.dateTimestamp,
+		);
 		movepiece.makeAllMovesInGame(boardsim, moves);
-		servergame = { ...gamemetadata, match, ...boardsim, validateMoves: true };
+		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
 	} else {
 		servergame = {
-			...gamemetadata,
+			...gameWithRules,
 			match,
-			gameRules,
-			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
+			whosTurn:
+				gameWithRules.gameRules.turnOrder[
+					moves.length % gameWithRules.gameRules.turnOrder.length
+				]!,
 			moves,
 			validateMoves: false,
 		};

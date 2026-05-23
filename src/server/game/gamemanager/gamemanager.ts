@@ -107,20 +107,23 @@ function createGame(
 		ratinginfo,
 	);
 	const variant = { code: invite.variant, mod: variantcache.getModule(invite.variant) };
-	const { gamemetadata, gameRules } = fullgame.initGameMetadata(metadata, now, variant?.mod);
+	const gameWithRules = fullgame.initGameMetadata(metadata, now, variant?.mod);
 	const match = gameutility.initMatch(invite, gameID, assignments);
 
 	// If the variant is small, construct the board for server-side move legality validation.
 	let servergame: ServerGame;
-	if (doesVariantSupportServerValidation(variant, gamemetadata.dateTimestamp)) {
-		const boardsim = boardinit.initBoard(gameRules, variant, gamemetadata.dateTimestamp);
-		servergame = { ...gamemetadata, match, ...boardsim, validateMoves: true };
+	if (doesVariantSupportServerValidation(variant, gameWithRules.dateTimestamp)) {
+		const boardsim = boardinit.initBoard(
+			gameWithRules.gameRules,
+			variant,
+			gameWithRules.dateTimestamp,
+		);
+		servergame = { ...gameWithRules, match, ...boardsim, validateMoves: true };
 	} else {
 		servergame = {
-			...gamemetadata,
+			...gameWithRules,
 			match,
-			gameRules,
-			whosTurn: gameRules.turnOrder[0]!,
+			whosTurn: gameWithRules.gameRules.turnOrder[0]!,
 			moves: [],
 			validateMoves: false,
 		};
