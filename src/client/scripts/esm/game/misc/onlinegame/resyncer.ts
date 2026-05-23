@@ -100,7 +100,7 @@ function synchronizeMovesList(
 	const hasOneMoreMoveThanServer = gamefile.moves.length === moves.length + 1;
 	const finalMoveIsOurMove =
 		gamefile.moves.length > 0 &&
-		moveutil.getColorThatPlayedMoveIndex(gamefile.gameRules, gamefile.moves.length - 1) ===
+		moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) ===
 			onlinegame.getOurColor();
 	const previousMove =
 		gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
@@ -146,7 +146,7 @@ function synchronizeMovesList(
 		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
 			// Incrementally add the server's correct moves to our own moves list
 			const isLastMove = i === moves.length - 1;
-			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile.gameRules, i);
+			const playerOfMove = moveutil.getColorThatPlayedMoveIndex(gamefile, i);
 			const isOpponentMove = playerOfMove !== ourColor;
 
 			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add

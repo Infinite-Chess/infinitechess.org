@@ -64,19 +64,13 @@ function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 }
 
 function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
-	if (
-		!gamefileutility.isOpponentUsingWinCondition(
-			boardsim.gameRules,
-			boardsim.whosTurn,
-			'royalcapture',
-		)
-	)
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'royalcapture'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'royalcapture' };
@@ -88,7 +82,7 @@ function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
 function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.whosTurn,
 			'allroyalscaptured',
 		)
@@ -105,7 +99,7 @@ function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 
 	if (royalCount.length === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allroyalscaptured' };
@@ -117,7 +111,7 @@ function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.whosTurn,
 			'allpiecescaptured',
 		)
@@ -129,7 +123,7 @@ function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 
 	if (count === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allpiecescaptured' };
@@ -139,7 +133,7 @@ function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 }
 
 function detectKoth(boardsim: Board): GameConclusion | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(boardsim.gameRules, boardsim.whosTurn, 'koth'))
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
@@ -162,7 +156,7 @@ function detectKoth(boardsim: Board): GameConclusion | undefined {
 
 	if (kingInCenter) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			boardsim.gameRules,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'koth' };

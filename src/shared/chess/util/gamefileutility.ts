@@ -72,22 +72,23 @@ function setConclusion(
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
+ * @param game - The gamefile with the gameRules to check the win condition against.
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.
  */
 function isOpponentUsingWinCondition(
-	gameRules: GameRules,
+	game: { gameRules: GameRules },
 	friendlyColor: Player,
 	winCondition: GameruleWinCondition,
 ): boolean {
 	const oppositeColor = typeutil.invertPlayer(friendlyColor)!;
-	return gamerules.doesColorHaveWinCondition(gameRules, oppositeColor, winCondition);
+	return gamerules.doesColorHaveWinCondition(game.gameRules, oppositeColor, winCondition);
 }
 
 /** Returns the number of players in the game (unique players in the turnOrder). */
-function getPlayerCount(gameRules: GameRules): number {
-	return new Set(gameRules.turnOrder).size;
+function getPlayerCount(game: { gameRules: GameRules }): number {
+	return new Set(game.gameRules.turnOrder).size;
 }
 
 // Exports -------------------------------------------------------------

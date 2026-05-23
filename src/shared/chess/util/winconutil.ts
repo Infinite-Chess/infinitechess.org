@@ -140,7 +140,7 @@ function isCheckmateCompatibleWithGame(boardsim: Board): boolean {
 	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
 	if (boardutil.getPieceCountOfGame(boardsim.pieces) > pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
 	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
-	if (gamefileutility.getPlayerCount(boardsim.gameRules) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
+	if (gamefileutility.getPlayerCount(boardsim) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
 	if (moveutil.doesAnyPlayerGet2TurnsInARow(boardsim.gameRules)) return false; // This also allows the capture of the king.
 	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > royalCountToDisableCheckmate) return false; // Too many royals (check & checkmate algorithm takes too long)
 	return true; // Checkmate compatible!

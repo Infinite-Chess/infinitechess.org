@@ -134,10 +134,7 @@ function push(gamefile: {
 	gameRules: GameRules;
 }): number | undefined {
 	const clocks = gamefile.clocks;
-	const prevcolor = moveutil.getWhosTurnAtMoveIndex(
-		gamefile.gameRules,
-		gamefile.moves.length - 2,
-	);
+	const prevcolor = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.moves.length - 2);
 
 	if (!moveutil.isGameResignable(gamefile)) return clocks.currentTime[prevcolor]!;
 

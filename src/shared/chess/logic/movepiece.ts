@@ -350,10 +350,7 @@ function applyEdit(boardsim: Board, edit: Edit, forward: boolean, global: boolea
  * Updates the `whosTurn` property of the boardsim, according to the move index we're on.
  */
 function updateTurn(boardsim: Board): void {
-	boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(
-		boardsim.gameRules,
-		boardsim.state.local.moveIndex,
-	);
+	boardsim.whosTurn = moveutil.getWhosTurnAtMoveIndex(boardsim, boardsim.state.local.moveIndex);
 }
 
 /**
@@ -362,7 +359,7 @@ function updateTurn(boardsim: Board): void {
  */
 function createCheckState(boardsim: Board, move: MoveFull): void {
 	const whosTurnItWasAtMoveIndex = moveutil.getWhosTurnAtMoveIndex(
-		boardsim.gameRules,
+		boardsim,
 		boardsim.state.local.moveIndex,
 	);
 	const oppositeColor = typeutil.invertPlayer(whosTurnItWasAtMoveIndex)!;

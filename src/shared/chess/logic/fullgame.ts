@@ -166,7 +166,7 @@ function loadGameWithBoard(
 	{
 		// Set the game's `inCheck` and `checks` properties at the front of the game.
 		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
-			gamefile.gameRules,
+			gamefile,
 			gamefile.whosTurn,
 			'checkmate',
 		);

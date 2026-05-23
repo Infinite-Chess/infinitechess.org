@@ -180,9 +180,10 @@ function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 
 /**
  * Returns the color of the player that played the provided index within the moves list.
+ * @param game - The gamefile with the gameRules
  */
-function getColorThatPlayedMoveIndex(gameRules: GameRules, index: number): Player {
-	const turnOrder = gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(game: { gameRules: GameRules }, index: number): Player {
+	const turnOrder = game.gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
 	if (index === -1) return turnOrder[turnOrder.length - 1]!;
 	return turnOrder[index % turnOrder.length]!;
@@ -190,9 +191,10 @@ function getColorThatPlayedMoveIndex(gameRules: GameRules, index: number): Playe
 
 /**
  * Returns the color whos turn it is after the specified move index was played.
+ * @param game - The gamefile with the gameRules
  */
-function getWhosTurnAtMoveIndex(gameRules: GameRules, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(gameRules, moveIndex + 1);
+function getWhosTurnAtMoveIndex(game: { gameRules: GameRules }, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
 }
 
 /**

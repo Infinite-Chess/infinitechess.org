@@ -57,8 +57,7 @@ import bounds, { BoundingBox } from '../../util/math/bounds.js';
 function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: LegalMoves): void {
 	const color = typeutil.getColorFromType(pieceSelected.type);
 	if (color === p.NEUTRAL) return; // Neutral pieces can't be in check
-	if (!gamefileutility.isOpponentUsingWinCondition(boardsim.gameRules, color, 'checkmate'))
-		return;
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, color, 'checkmate')) return;
 	if (boardutil.getRoyalCoordsOfColor(boardsim.pieces, color).length === 0) return; // No royals -> zero checks possible, ever.
 
 	// There's a couple type of moves that put you in check:
