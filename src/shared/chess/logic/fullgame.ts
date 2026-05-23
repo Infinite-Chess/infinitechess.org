@@ -86,11 +86,7 @@ export type ClockDependant =
 			clocks: ClockData;
 	  };
 
-/**
- * The complete client-side game object: full board state plus game metadata.
- * Satisfies {@link Board} directly, so any function accepting a Board also
- * accepts a FullGame — no unwrapping needed.
- */
+/** The complete client-side game object: full board state plus game metadata. */
 export type FullGame = Board & GameMetadata;
 
 /** Additional options that may go into the gamefile constructor.
@@ -154,7 +150,7 @@ function initGameMetadata(
 }
 
 /**
- * Combines a board and metadata into a flat {@link FullGame}. Used for loading a game after it was started.
+ * Combines a board and gamemetadata into a flat {@link FullGame}. Used for loading a game when it starts.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function loadGameWithBoard(
@@ -163,7 +159,7 @@ function loadGameWithBoard(
 	moves: MovePacket[] = [],
 	validateMoves?: boolean,
 ): FullGame {
-	const gamefile: FullGame = { ...boardsim, ...gamemetadata };
+	const gamefile: FullGame = { ...gamemetadata, ...boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
 	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))

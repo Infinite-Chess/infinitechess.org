@@ -281,7 +281,9 @@ function normalizeBishopParities(scen: Scenario): void {
 // Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
-function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): boolean {
+function doesPositionSupportInsuffmat(boardsim: Board): boolean {
+	const gameRules = boardsim.gameRules;
+
 	// Is the win condition is checkmate for both players?
 	if (
 		!gamerules.doesColorHaveWinCondition(gameRules, p.WHITE, 'checkmate') ||
@@ -314,7 +316,6 @@ function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): bo
 
 /**
  * Builds the current piece scenario that is on the board.
- * @param boardsim
  * @param exclude - Optional function, run for each piece, that returns
  * whether that piece should be excluded from the scenario.
  */
@@ -371,11 +372,10 @@ function invertScenario(scenario: Scenario): Scenario {
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
  */
-export function detectInsufficientMaterial(
-	gameRules: GameRules,
-	boardsim: Board,
-): GameConclusion | undefined {
-	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
+export function detectInsufficientMaterial(boardsim: Board): GameConclusion | undefined {
+	if (!doesPositionSupportInsuffmat(boardsim)) return undefined;
+
+	const gameRules = boardsim.gameRules;
 
 	const boardScenariosToCheck = buildBoardScenarios(gameRules, boardsim);
 	if (boardScenariosToCheck === false) return undefined; // Too many promotable pawns, skip insuffmat check entirely to avoid exponential blowup.

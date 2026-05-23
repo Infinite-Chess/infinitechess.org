@@ -153,9 +153,8 @@ function push(gamefile: {
 	}
 
 	// Set up clocksticking for the new turn.
-	const whosTurn = gamefile.whosTurn;
-	clocks.colorTicking = whosTurn;
-	clocks.timeRemainAtTurnStart = clocks.currentTime[whosTurn]!;
+	clocks.colorTicking = gamefile.whosTurn;
+	clocks.timeRemainAtTurnStart = clocks.currentTime[gamefile.whosTurn]!;
 	clocks.timeAtTurnStart = Date.now();
 
 	return clocks.currentTime[prevcolor];

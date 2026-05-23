@@ -58,7 +58,7 @@ function getGameConclusion(boardsim: Board): GameConclusion | undefined {
 		detectCheckmateOrStalemate(boardsim) ||
 		// This needs to be last so that a draw isn't enforced in a true win
 		detectMoveRule(boardsim) || // 50-move-rule
-		detectInsufficientMaterial(boardsim.gameRules, boardsim) ||
+		detectInsufficientMaterial(boardsim) ||
 		undefined
 	); // No win condition passed. No game conclusion!
 }

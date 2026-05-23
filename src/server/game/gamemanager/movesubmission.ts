@@ -15,7 +15,6 @@ import * as z from 'zod';
 
 import bimath from '../../../shared/util/math/bimath.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import moveutil from '../../../shared/chess/util/moveutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import gameconfig from '../../../shared/util/gameconfig.js';
@@ -192,10 +191,8 @@ function applyServerValidatedMove(
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp;
 
 	// The server determines the game conclusion; discard any client-claimed conclusion.
-	const conclusion = wincondition.getGameConclusion(servergame);
-	gamefileutility.setConclusion(servergame, conclusion);
-	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
-		moveutil.flagLastMoveAsMate(servergame);
+	// Auto-sets basegame.gameConclusion if the move triggers a conclusion.
+	wincondition.doGameOverChecks(servergame);
 
 	return moveRecord;
 }

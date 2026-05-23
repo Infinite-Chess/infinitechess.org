@@ -30,7 +30,7 @@ import {
  */
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log('Client offers a draw.');
-	const { match } = servergame;
+	const match = servergame.match;
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
 
 	if (gameutility.isGameOver(servergame))

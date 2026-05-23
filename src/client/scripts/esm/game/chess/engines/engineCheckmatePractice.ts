@@ -1671,6 +1671,7 @@ function runIterativeDeepening(
 					}
 					const gamefile = input_gamefile;
 					const dummy_board = {
+						gameRules: gamefile.gameRules,
 						moves: [],
 						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
@@ -1681,7 +1682,7 @@ function runIterativeDeepening(
 						).pieces,
 					} as unknown as Board;
 
-					if (detectInsufficientMaterial(gamefile.gameRules, dummy_board)) break;
+					if (detectInsufficientMaterial(dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture

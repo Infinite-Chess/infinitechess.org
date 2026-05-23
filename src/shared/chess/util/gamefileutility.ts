@@ -46,14 +46,10 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
  * the `Termination` `Result` and metadata accordingly.
  * If the conclusion is undefined, it removes the metadata,
  * essentially un-concluding the game if it was already concluded.
+ * @param gamefile - The minimum properties needed from the gamefile to set the conclusion. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  */
 function setConclusion(
-	/**
-	 * The minimum properties needed from the gamefile to set the conclusion.
-	 * MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
-	 */
 	gamefile: {
-		/** Information about the game */
 		metadata: MetaData;
 		gameConclusion?: GameConclusion;
 		gameRules: GameRules;
@@ -76,7 +72,6 @@ function setConclusion(
 
 /**
  * Tests if the color's opponent can win from the specified win condition.
- * @param gameRules
  * @param friendlyColor - The color of friendlies.
  * @param winCondition - The win condition to check against.
  * @returns True if the opponent can win from the specified win condition, otherwise false.

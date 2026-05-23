@@ -160,7 +160,7 @@ type ServerGame = GameMetadata & {
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
-export type ValidationDependant =
+type ValidationDependant =
 	| ({
 			/**
 			 * Whether the server is performing move validation for this game.
@@ -264,7 +264,7 @@ function subscribeClientToGame(
 	playerColor: Player,
 	{ sendGameInfo = true, replyto }: { sendGameInfo?: boolean; replyto?: number } = {},
 ): void {
-	const { match } = servergame;
+	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
 	const playerData = match.playerData[playerColor];
 	if (playerData === undefined)
@@ -467,7 +467,7 @@ function getGameUpdateMessageContents(
 	const messageContents: GameUpdateMessage = {
 		gameConclusion: servergame.gameConclusion,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
-		participantState: getParticipantState(servergame.match, color, servergame.whosTurn),
+		participantState: getParticipantState(servergame, color),
 		forceSync,
 	};
 
@@ -511,9 +511,10 @@ function getRatingChangeMessageContents(
 	return messageContents;
 }
 
-function getParticipantState(match: MatchInfo, color: Player, whosTurn: Player): ParticipantState {
+function getParticipantState(servergame: ServerGame, color: Player): ParticipantState {
 	const opponentColor = typeutil.invertPlayer(color);
 	const now = Date.now();
+	const match = servergame.match;
 	const opponentData = match.playerData[opponentColor]!;
 
 	const participantState: ParticipantState = {
@@ -526,7 +527,7 @@ function getParticipantState(match: MatchInfo, color: Player, whosTurn: Player):
 	// Include other relevant stuff if defined...
 
 	// Only send AFK countdown to the opponent, not to the AFK player themselves.
-	if (match.autoAFKResignTime !== undefined && color !== whosTurn) {
+	if (match.autoAFKResignTime !== undefined && color !== servergame.whosTurn) {
 		const millisLeftUntilAutoAFKResign = match.autoAFKResignTime - now;
 		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
 	}
@@ -690,11 +691,8 @@ function sendUpdatedClockToColor(servergame: ServerGame, color: Player): void {
  * Return the clock values of the servergame that can be sent to a client or logged.
  * It also includes who's clock is currently counting down, if one is.
  * This also updates the clocks, as the players current time should not be the same as when their turn first started.
- * @param servergame - The game
  */
-function getGameClockValues(servergame: ServerGame): ClockValues {
-	if (servergame.untimed)
-		throw new Error('Tried to get values of clocks from a game that had none!');
+function getGameClockValues(servergame: ServerGame & { untimed: false }): ClockValues {
 	updateClockValues(servergame);
 	return clock.createEdit(servergame.clocks);
 }
@@ -705,9 +703,9 @@ function getGameClockValues(servergame: ServerGame): ClockValues {
  *  so that it's as accurate as possible.
  * @param servergame - The game
  */
-function updateClockValues(servergame: ServerGame): undefined {
+function updateClockValues(servergame: ServerGame & { untimed: false }): undefined {
 	const now = Date.now();
-	if (servergame.untimed || !isGameResignable(servergame) || isGameOver(servergame)) return;
+	if (!isGameResignable(servergame) || isGameOver(servergame)) return;
 	if (servergame.clocks.timeAtTurnStart === undefined)
 		throw new Error('cannot update clock values when timeAtTurnStart is not defined!');
 
@@ -731,7 +729,7 @@ function updateClockValues(servergame: ServerGame): undefined {
  * @param color - The color of the player to send the latest move to
  */
 function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord): void {
-	const { match } = servergame;
+	const match = servergame.match;
 	if (!(color in match.playerData)) {
 		logEventsAndPrint(
 			`Color to send move to must be one that is in the game (white or black)! ${color}`,
@@ -787,12 +785,9 @@ function isGameBorderlineResignable(servergame: ServerGame): boolean {
 /**
  * Returns the color of the player that played that moveIndex within the moves list.
  * Returns error if index -1
- * @param basegame
- * @param i - The moveIndex
- * @returns - The color that played the moveIndex
  */
-function getColorThatPlayedMoveIndex(gameRules: GameRules, i: number): Player {
-	const turnOrder = gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(servergame: ServerGame, i: number): Player {
+	const turnOrder = servergame.gameRules.turnOrder;
 	if (i === -1) return turnOrder[turnOrder.length - 1]!;
 
 	return turnOrder[i % turnOrder.length]!;

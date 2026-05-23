@@ -16,7 +16,6 @@ import gamefileutility from '../util/gamefileutility.js';
 
 /**
  * Calculates if the provided boardsim is over by checkmate or stalemate
- * @param boardsim - The boardsim to detect if it's in checkmate
  * @returns The color of the player who won by checkmate.
  * `{ victor: 1, condition: 'checkmate' }`, `{ victor: 2, condition: 'checkmate' }`,
  * or `{ victor: 0, condition: 'stalemate' }`. Or *undefined* if the game isn't over.

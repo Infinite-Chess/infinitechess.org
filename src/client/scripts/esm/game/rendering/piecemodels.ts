@@ -131,8 +131,6 @@ function regenAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
  *
  * Regenerates the single model of the provided type.
  * Call externally after adding more undefined placeholders to a type list.
- * @param boardsim
- * @param mesh
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
 function regenType(boardsim: BoardPreview, mesh: Mesh, type: number): void {
@@ -150,8 +148,6 @@ function regenType(boardsim: BoardPreview, mesh: Mesh, type: number): void {
  * Must be called whenever we add more undefineds placeholders to the this piece list.
  *
  * SLOWEST. Minimize calling.
- * @param boardsim
- * @param mesh
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
 function genTypeModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshData {

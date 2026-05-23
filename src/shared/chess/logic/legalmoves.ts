@@ -132,10 +132,6 @@ function shiftIndividualMovesetByCoords(indivMoveset: readonly Coords[], coords:
 
 /**
  * Adds any of the pieces movesets applicable special moves
- * @param boardsim
- * @param piece
- * @param moveset
- * @param legalmoves
  * @param premove - Default: false. SET TO TRUE when you need to calculate premoves, which allow all possible moves!
  */
 function appendSpecialMoves(
@@ -287,8 +283,6 @@ function testCaptureValidity(
 
 /**
  * Calculates and generates all legal moves of a piece in the provided boardsim.
- * @param boardsim
- * @param piece
  * @returns The legal moves of that piece
  */
 function calculateAll(boardsim: Board, piece: Piece): LegalMoves {
@@ -437,9 +431,6 @@ function enforceWorldBorderOnSlideLimit(
 /**
  * Calculates how far a given piece can legally slide (ignoring ignore functions, and ignoring check respection)
  * on the given line of a specific slope.
- * @param boardsim
- * @param piece
- * @param slide
  * @param slideKey - The key `C|X` of the specific organized line we need to find out how far this piece can slide on
  * @param organizedLine - The organized line of the above key that our piece is on
  */
@@ -476,7 +467,6 @@ function calcPiecesLegalSlideLimitOnSpecificLine(
  * legal moves in the provided legalMoves object.
  *
  * **This will modify** the provided endCoords to attach any special move tags.
- * @param boardsim
  * @param legalMoves - The legalmoves object with the properties `individual`, `horizontal`, `vertical`, `diagonalUp`, `diagonalDown`.
  * @param startCoords - The coordinates of the piece owning the legal moves
  * @param endCoords - The square to test if the piece can legally move to
@@ -574,8 +564,6 @@ function doesSlidingMovesetContainSquare(
  * In the extreme case, when the `brute` flag is present for slides, and the
  * slide width exceeds {@link MAX_BRUTE_SIMULATIONS}, this may return true as
  * a safety measure to avoid hangs, even if there may not actually be a legal move.
- * @param moves
- * @param boardsim
  * @param piece - The piece that owns these legal moves
  */
 function hasAtleast1Move(moves: LegalMoves, boardsim: Board, piece: Piece): boolean {

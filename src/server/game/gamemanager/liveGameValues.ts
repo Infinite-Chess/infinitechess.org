@@ -112,7 +112,7 @@ function buildPlayerRecord(
  * Called when a new game is created. Inserts the full initial state into both tables.
  */
 function onGameCreated(servergame: ServerGame): void {
-	const { match } = servergame;
+	const match = servergame.match;
 
 	const record: LiveGamesRecord = {
 		game_id: match.id,

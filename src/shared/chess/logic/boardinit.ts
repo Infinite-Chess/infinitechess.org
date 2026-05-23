@@ -40,10 +40,9 @@ export interface Board extends BoardPreview {
 	specialMoves: RawTypeGroup<SpecialMoveFunction>;
 	specialVicinity: Record<CoordsKey, RawType[]>;
 	vicinity: Record<CoordsKey, RawType[]>;
-	/** The rules governing this game's movement, win conditions, etc. Source of truth for all game-logic. */
+	/** Determines turn order, win conditions, promotion, etc. */
 	gameRules: GameRules;
-	/** The color whose turn it currently is at the front of the game.
-	 * Kept in sync with {@link Game.whosTurn} by {@link movepiece.updateTurn}. */
+	/** The color whose turn it currently is at the front of the game. */
 	whosTurn: Player;
 }
 

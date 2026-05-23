@@ -246,7 +246,6 @@ function cascadeDeleteSpecialRights(boardsim: Board, coords: Coords, edit: Edit)
 
 /**
  * Determines whether a piece has any valid castling partner on the board.
- * @param boardsim
  * @param candidate - A candidate piece for castling. MUST NOT be a pawn.
  * @param partnerConstraint - An optional function, run for each partner, that must return true for them to be considered valid.
  */
@@ -286,7 +285,7 @@ function hasCastlingPartner(
  * Increments the boardsim's moveRuleStatus property, if the move-rule is in use.
  */
 function queueIncrementMoveRuleStateChange(boardsim: Board, move: MoveFull): void {
-	if (!boardsim.gameRules.moveRule) return; // Not using the move-rule
+	if (boardsim.gameRules.moveRule === undefined) return; // Not using the move-rule
 
 	// Reset if it was a capture or pawn movement
 	const newMoveRule =
@@ -318,8 +317,6 @@ function makeMove(boardsim: Board, move: MoveFull): void {
 /**
  * Applies a move's board changes to the boardsim, and updates moveIndex.
  * No graphical changes.
- * @param boardsim
- * @param move
  * @param forward - Whether the move's board changes should be applied forward or backward.
  * @param [options.global] - If true, we will also apply this move's global state changes to the boardsim
  */
@@ -509,9 +506,7 @@ function rewindMove(boardsim: Board): void {
  * Iterates to a certain move index, performing a callback function on each move.
  * The callback should be a move application function, either {@link applyMove}, or movesequence.viewMove(),
  * depending on if each move should make graphical changes or not. Both methods make logical board changes.
- * @param {boardsim} boardsim
- * @param {number} index
- * @param {CallableFunction} callback - Either {@link applyMove}, or movesequence.viewMove()
+ * @param callback - Either {@link applyMove}, or movesequence.viewMove()
  */
 function goToMove(boardsim: Board, index: number, callback: (_move: MoveFull) => void): void {
 	if (index === boardsim.state.local.moveIndex) return;

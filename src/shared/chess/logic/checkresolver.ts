@@ -50,7 +50,6 @@ import bounds, { BoundingBox } from '../../util/math/bounds.js';
  *
  * If only a finite number of squares of a slide are legal, the whole slide is
  * still deleted, and those finite number of squares added as new individual moves.
- * @param boardsim
  * @param moves - The LegalMoves object
  * @param pieceSelected - The piece of which the legalMoves were calculated for
  * @param color - The color of the player owning the piece
@@ -81,7 +80,6 @@ function removeCheckInvalidMoves(boardsim: Board, pieceSelected: Piece, moves: L
  *
  * This could be pinned pieces opening a discovered,
  * or not dodging/blocking/capturing an existing check.
- * @param boardsim
  * @param individualMoves - The precalculated legal individual (jumping) moves for a piece.
  * @param piece - The piece of which the legal individual moves are for.
  * @param color - The color of the player the piece belongs to.
@@ -107,7 +105,6 @@ function removeCheckInvalidMoves_Individual(
  *
  * If finitely many moves of a slide protect against check, the slide is still deleted, and each
  * one is added to the legal individual moves.
- * @param boardsim
  * @param moves - The precalculated legalMoves object for a piece.
  * @param piece - The piece of which the running legal moves are for.
  * @param color - The color of the player the piece belongs to.
@@ -138,7 +135,6 @@ function removeCheckInvalidMoves_Sliding(
 /**
  * Collapses all sliding moves that don't have a chance at addressing
  * the checks, replacing them with individual moves to be simulated later.
- * @param boardsim - The boardsim
  * @param moves - The legal moves object of which to delete moves that don't address check.
  * @param selectedPieceCoords - The coordinates of the piece we're calculating the legal moves for.
  * @param color - The color of friendlies
@@ -246,7 +242,6 @@ function addressChecks(
  * open up a discovered attack on any of our royals.
  * Reads the current checks from the boardsim and ignores any that are already present —
  * only newly-exposed checks (from deleting the piece) are treated as pins.
- * @param boardsim
  * @param moves - The running legal moves of the selected piece
  * @param pieceSelected - The piece with the provided running legal moves
  * @param color - The color of the player the piece belongs to.
@@ -413,7 +408,6 @@ function restrictSlideBetweenSquares(
  *
  * If colinears are present and the piece is on the same line as the line between
  * the attacker and the royal, sliding moves may be deleted.
- * @param boardsim
  * @param square1 - `[x,y]`
  * @param square2 - `[x,y]`
  * @param moves - The legal moves object of the piece selected, to see if it is able to block between squares 1 & 2
@@ -488,7 +482,6 @@ function appendBlockingMoves(
  * Takes a `path` special flag of a checking attacker piece, and appends any legal individual
  * blocking moves our selected piece can land on.
  * Should NOT be called if the piece with the legal moves is a royal piece.
- * @param boardsim
  * @param path - Individual move's `path` special move flag, with guaranteed at least 3 waypoints within it.
  * @param legalMoves - The precalculated legal moves of the selected piece
  * @param selectedPieceCoords
@@ -544,7 +537,6 @@ function sortChecks(checks: CheckInfo[]): CheckInfo[] {
 /**
  * Simulates moving the piece to the destination coords,
  * then tests if it results in the player who owns the piece being in check.
- * @param boardsim
  * @param piece - The piece moving to the destination coords
  * @param destCoords - The coords to move the piece to, with any attached special tags to execute with the move.
  * @param color - The color of the player the piece belongs to.

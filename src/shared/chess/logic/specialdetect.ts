@@ -267,7 +267,6 @@ function getEnPassantGamefileProperty(
  * @param coords - The coordinates of the pawn selected, [x,y]
  * @param color - The color of the pawn selected
  */
-// If it can capture en passant, the move is appended to  legalmoves
 function addPossibleEnPassant(
 	boardsim: Board,
 	individualMoves: CoordsTagged[],
@@ -442,13 +441,7 @@ function doesPieceHaveSpecialRight(boardsim: Board, coords: Coords): boolean {
 
 // Returns true if the type is a pawn and the coords it moved to is a promotion line
 
-/**
- * Returns true if a pawn moved onto a promotion line.
- * @param boardsim
- * @param type
- * @param coordsClicked
- * @returns
- */
+/** Returns true if a pawn moved onto a promotion line. */
 function isPawnPromotion(gameRules: GameRules, type: number, coordsClicked: Coords): boolean {
 	if (typeutil.getRawType(type) !== r.PAWN) return false;
 	if (!gameRules.promotion) return false; // This game doesn't have promotion.

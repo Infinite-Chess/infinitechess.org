@@ -24,7 +24,6 @@ import vectors, { Vec2 } from '../../util/math/vectors.js';
 
 /**
  * Tests if the provided player color is in check in the current position of the boardsim.
- * @param boardsim - The boardsim
  * @param color - The player color to test if any of their royals are in check in the current position.
  * @param trackChecks - If true, the results object will contain a list of check pairs for the player's royals. This is useful for calculating blocking moves that may resolve the check. Should be true if we're using checkmate, and left out if we're using royal capture, to save compute.
  * @returns An object containing information such as whether the given color is in check in the current position, which royals are in check, and if applicable, the check pairs (each checked royal with its attacker).
@@ -55,7 +54,6 @@ function detectCheck(
 
 /**
  * Checks if an opponent player color is attacking a specific square.
- * @param boardsim
  * @param coord - The square of which to check if an opponent player color is attacking.
  * @param colorOfFriendly - The color of the friendly player. All other player colors will be tested to see if they attack the square.
  * @param [checks] If provided, any opponent attacking the square will be appended to this array as a CheckInfo pair. If it is not provided, we may exit early as soon as one attacker is discovered.
@@ -96,7 +94,6 @@ function isSquareBeingAttacked(
 
 /**
  * Checks to see if any opponent jumper within the immediate vicinity of the coordinates can attack them with an individual move (discounting special movers).
- * @param boardsim
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
  * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
@@ -133,7 +130,6 @@ function doesVicinityAttackSquare(
 
 /**
  * Checks to see if any piece within the immediate vicinity of the coordinates can attack them with via a special individual move (e.g. pawns, roses...)
- * @param {boardsim} boardsim
  * @param square - The square to check if any opponent jumpers are attacking.
  * @param friendlyColor - The friendly player color
  * @param [checks] If provided, any opponent jumper attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one jumper attacker is discovered.
@@ -212,7 +208,6 @@ function doesSpecialAttackSquare(
 
 /**
  * Calculates if any sliding piece can attack the specified square.
- * @param boardsim
  * @param square - The square to check if any opponent sliders are attacking.
  * @param friendlyColor - The friendly player color
  * @param [checks] If provided, any opponent slider attacking the square will be appended to this array as a CheckInfo. If it is not provided, we may exit early as soon as one slider attacker is discovered.
@@ -251,7 +246,6 @@ function doesSlideAttackSquare(
 /**
  * Tests if a piece on the specified organized line can capture on the specified square via a sliding move.
  * REQUIRES the square be on the line!!!
- * @param boardsim
  * @param line - The organized line of pieces
  * @param direction - The step of the line: [dx,dy]
  * @param coords - The coordinates of the square to test if any piece on the line can slide to. MUST be on the line!!!

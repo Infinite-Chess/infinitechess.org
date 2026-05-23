@@ -6,7 +6,6 @@
  * It also updates the players' stats in the "players_stats" table
  */
 
-import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
@@ -188,11 +187,11 @@ function addGameRecordsInTransaction(
 	termination: string,
 	ratingData: RatingData | undefined,
 ): void {
-	const { match } = servergame;
+	const match = servergame.match;
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
 	// --- Prepare ICN ---
-	const icn = getICNOfGame(servergame, servergame.gameRules); // This will throw on failure.
+	const icn = getICNOfGame(servergame); // This will throw on failure.
 
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
@@ -259,7 +258,7 @@ function updateAllPlayerStatsInTransaction(
 	servergame: ServerGame,
 	victor: Player | null | undefined,
 ): void {
-	const { match } = servergame;
+	const match = servergame.match;
 	const playerMoveCounts = getPlayerMoveCountsInGame(servergame);
 
 	for (const playerStr in match.playerData) {
@@ -334,17 +333,21 @@ function updateSinglePlayerStatsInTransaction(
 }
 
 /** Converts a server-side game into an ICN */
-function getICNOfGame(servergame: ServerGame, gameRules: GameRules): string {
+function getICNOfGame(servergame: ServerGame): string {
 	// Get ICN of game
 	let ICN: string;
+	const moveRuleState = servergame.validateMoves
+		? servergame.startSnapshot.state_global.moveRuleState
+		: servergame.gameRules.moveRule !== undefined
+			? 0
+			: undefined;
 	try {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...servergame,
-				gameRules,
 				fullMove: 1,
 				state_global: {
-					moveRuleState: gameRules.moveRule !== undefined ? 0 : undefined,
+					moveRuleState,
 				},
 			},
 			{
@@ -360,9 +363,7 @@ function getICNOfGame(servergame: ServerGame, gameRules: GameRules): string {
 		const errMessage = error instanceof Error ? error.message : String(error);
 		const errStack = error instanceof Error ? error.stack : 'No stack trace available';
 		// Re-throw error with additional context, the orchestrator will catch it and roll back the transaction.
-		throw Error(
-			`Error converting game to ICN: ${errMessage}\nThe primed gamefile:\n${JSON.stringify(servergame)}\n${errStack}`,
-		);
+		throw Error(`Error converting game to ICN: ${errMessage}\n${errStack}`);
 	}
 
 	return ICN;
@@ -374,7 +375,7 @@ function getICNOfGame(servergame: ServerGame, gameRules: GameRules): string {
  * TODO: Move to moveutil script, once its dependancies are healthy!!!
  */
 function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> {
-	const { match } = servergame;
+	const match = servergame.match;
 	// Optimized to not require iterating through each move in the list.
 	const playerMoveCounts: PlayerGroup<number> = {};
 	const fullmoves_completed_total = Math.floor(

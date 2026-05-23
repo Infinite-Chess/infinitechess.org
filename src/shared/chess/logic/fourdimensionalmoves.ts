@@ -49,7 +49,6 @@ function fourDimensionalPawnMove(
 
 /**
  * Calculates legal pawn moves for either the spacelike or timelike dimensions.
- * @param boardsim
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
  * @param movetype - spacelike move or timelike move
@@ -165,7 +164,6 @@ function pawnLegalMoves(
 
 /**
  * Adds the en passant capture to the list of individual moves if it is possible.
- * @param boardsim
  * @param individualMoves - The list of individual moves to add the en passant capture to
  * @param coords - The coordinates of the pawn
  * @param color - The color of the pawn
@@ -269,7 +267,6 @@ function doFourDimensionalPawnMove(boardsim: Board, piece: Piece, move: MoveRunn
 /**
  * Calculates the legal knight moves in the current four dimensional variant
  * for both spacelike and timelike dimensions.
- * @param boardsim
  * @param coords - The coordinates of the knight
  * @param color - The color of the knight
  */
@@ -361,7 +358,6 @@ function fourDimensionalKingMove(
 
 /**
  * Calculates legal king moves for either the spacelike and timelike dimensions.
- * @param boardsim
  * @param coords - The coordinates of the king
  * @param color - The color of the king
  */

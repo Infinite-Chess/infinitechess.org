@@ -26,13 +26,13 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import fullgame from '../../../shared/chess/logic/fullgame.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import fullgame, { LoadedVariant } from '../../../shared/chess/logic/fullgame.js';
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
@@ -142,14 +142,14 @@ function restoreSingleGame(
 	const gameConclusion = reconstructConclusion(gameRow);
 
 	// 5. Create the gamemetadata (also computes gameRules)
-	const variant = {
+	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 	};
 	const { gamemetadata, gameRules } = fullgame.initGameMetadata(
 		gameMetadata,
 		gameRow.time_created,
-		variant?.mod,
+		variant.mod,
 		gameConclusion,
 		clockValues,
 	);
@@ -160,7 +160,7 @@ function restoreSingleGame(
 	// 8. Reconstruct MatchInfo
 	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 6. Parse & replay moves, conditionally constructing the board state
+	// 9. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	let servergame: ServerGame;

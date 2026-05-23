@@ -32,7 +32,7 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
  * @param servergame - The game they are in.
  */
 function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
-	const { match } = servergame;
+	const match = servergame.match;
 
 	// console.log("Client alerted us they are AFK.")
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
