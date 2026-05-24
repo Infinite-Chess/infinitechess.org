@@ -150,9 +150,7 @@
 	<div class="header-actions">
 		{% if memberInfo and memberInfo.signedIn %}
 			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000">
-					<path d="M1656 1800H344c-70 0-123-70-96-134C370 1370 662 1200 1000 1200s629 170 752 466c27 64-25 134-96 134M592 600c0-220 183-400 408-400s408 180 408 400-183 400-408 400a405 405 0 01-408-400m1404 1164a952 952 0 00-612-697 593 593 0 00 220-560 610 610 0 00-530-503A608 608 0 00 388 600c0 190 89 357 228 467a952 952 0 00-612 697c-27 122 74 236 200 236h1590c128 0 229-114 200-236" fill="currentColor" fill-rule="evenodd" />
-				</svg>
+				<svg viewBox="0 0 2000 2000"><use href="#svg-profile"/></svg>
 			</a>
 			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" data-tooltip="{{ t.actions.logout }}">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
