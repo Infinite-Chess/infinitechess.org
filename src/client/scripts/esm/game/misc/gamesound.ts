@@ -23,16 +23,16 @@ import AudioManager, { SoundObject } from '../../audio/AudioManager.js';
 
 /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
 const soundStamps = {
-	gamestart: [0, 2.008],
+	game_start: [0, 2.008],
 	move: [2.009, 2.15],
 	capture: [2.151, 2.462],
 	bell: [2.463, 5.402],
-	lowtime: [5.404, 5.985],
+	low_time: [5.404, 5.985],
 	win: [5.986, 7.994],
 	draw: [7.995, 10.003],
 	loss: [10.004, 12.012],
-	drum1: [12.013, 16.012],
-	drum2: [16.013, 19.262],
+	drum_1: [12.013, 16.012],
+	drum_2: [16.013, 19.262],
 	tick: [19.263, 25.012],
 	ticking: [25.013, 36.357],
 	viola_staccato_c3: [36.359, 38.357],
@@ -40,7 +40,7 @@ const soundStamps = {
 	marimba_c2: [40.359, 42.356],
 	marimba_c2_soft: [42.357, 44.356],
 	base_staccato_c2: [44.357, 46.354],
-	ripple: [46.356, 50.354],
+	ripple_a3: [46.356, 50.354],
 	glass_crack_1: [50.356, 50.76],
 	glass_crack_2: [50.76, 51.848],
 	glass_crack_3: [51.848, 52.621],
@@ -288,7 +288,7 @@ function playMove(
 			);
 		// console.log("Ripple playrate:", ripplePlayrate);
 
-		playSoundEffect('ripple', {
+		playSoundEffect('ripple_a3', {
 			volume: rippleVolume,
 			delay: delaySecs,
 			playbackRate: ripplePlayrate,
@@ -333,7 +333,7 @@ function calculateReverb(
 }
 
 function playGamestart(): SoundObject | undefined {
-	return playSoundEffect('gamestart', { volume: 0.4, bypassDownsampler: true });
+	return playSoundEffect('game_start', { volume: 0.4, bypassDownsampler: true });
 }
 
 function playWin(delay?: number): SoundObject | undefined {
@@ -349,11 +349,11 @@ function playLoss(delay?: number): SoundObject | undefined {
 }
 
 function playLowtime(): SoundObject | undefined {
-	return playSoundEffect('lowtime');
+	return playSoundEffect('low_time');
 }
 
 function playDrum(): SoundObject | undefined {
-	const soundName = Math.random() > 0.5 ? 'drum1' : 'drum2';
+	const soundName = Math.random() > 0.5 ? 'drum_1' : 'drum_2';
 	return playSoundEffect(soundName, { volume: 0.7 });
 }
 
