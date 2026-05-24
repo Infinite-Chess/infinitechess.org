@@ -187,6 +187,7 @@ svg.bg-omega {
 .cell-icon {
 	width: 20px;
 	aspect-ratio: 1;
+	flex-shrink: 0;
 }
 
 /* ============================================================
