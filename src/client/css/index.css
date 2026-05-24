@@ -120,6 +120,7 @@ main {
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 0.5em;
+	container-type: inline-size;
 }
 
 /* Faint omega logo watermark - references the sprite defined in header.njk */
@@ -142,6 +143,7 @@ svg.bg-omega {
 	width: 100%;
 	border-collapse: collapse;
 	position: relative;
+	font-size: min(8px + 0.923cqi, 16px);
 }
 
 .lobby-table thead {
