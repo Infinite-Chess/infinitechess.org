@@ -41,7 +41,7 @@ main {
 	max-width: 1200px;
 	margin: 20px auto;
 	flex-direction: column;
-	gap: 2rem;
+	gap: 32px;
 }
 
 /* ============================================================
@@ -104,7 +104,7 @@ main {
    ============================================================ */
 
 .lobby h2 {
-	padding: 0.65rem 1rem;
+	padding: 0.693em 1.067em;
 	justify-content: center;
 	font-size: 15px;
 	color: var(--c-text-muted);
@@ -146,8 +146,8 @@ svg.bg-omega {
 
 .lobby-table thead {
 	text-align: left;
-	padding: 0.5rem 1rem;
-	font-size: 0.75rem;
+	padding: 0.667em 1.333em;
+	font-size: 0.75em;
 	color: var(--c-text-muted);
 	letter-spacing: 0.06em;
 	background-color: var(--c-surface-transparent);
@@ -166,7 +166,7 @@ svg.bg-omega {
 
 .invite-row {
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 0.9em;
 }
 
 .invite-row:hover {
@@ -175,7 +175,7 @@ svg.bg-omega {
 }
 
 .lobby-table td {
-	padding: 0.6rem 1rem;
+	padding: 0.667em 1.111em;
 }
 
 .cell-flex {
@@ -898,7 +898,7 @@ svg.bg-omega {
 	/* Switch lobby layout to a side-by-side row */
 	.lobby-home {
 		flex-direction: row;
-		gap: 1rem;
+		gap: 1em;
 	}
 
 	/* Buttons column: ~1/3 of available width, stacked vertically, centered */
