@@ -25,7 +25,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 
 ## Conventions & Patterns
 
-- All typescript files' indentation is in tabs.
+- All typescript files' indentation is in tabs, not spaces.
 - All scripts have their file path on line 1. This is automatic via hook, you don't have to bother with maintaining it.
 - Almost all scripts have a brief description of their purpose on lines 3-7+.
 - Never use the Omit utility type. Instead, have one type extend the other.
