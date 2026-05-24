@@ -116,10 +116,10 @@ main {
 .lobby-wrap {
 	position: relative;
 	overflow: auto;
-	height: 400px;
+	height: 25em;
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
-	border-radius: 8px;
+	border-radius: 0.5em;
 }
 
 /* Faint omega logo watermark - references the sprite defined in header.njk */
@@ -154,7 +154,7 @@ svg.bg-omega {
 }
 
 .lobby-table th {
-	padding: 8px 16px;
+	padding: 0.667em 1.333em;
 	font-weight: normal;
 }
 
@@ -185,7 +185,7 @@ svg.bg-omega {
 }
 
 .cell-icon {
-	width: 20px;
+	width: 1.389em;
 	aspect-ratio: 1;
 	flex-shrink: 0;
 }
@@ -195,12 +195,12 @@ svg.bg-omega {
    ============================================================ */
 
 .side-dot {
-	width: 13px;
-	height: 13px;
-	margin-left: 6px;
+	width: 0.903em;
+	height: 0.903em;
+	margin-left: 0.417em;
 	border-radius: 50%;
 	background: var(--c-text);
-	border-width: 2px;
+	border-width: 0.139em;
 	border-style: solid;
 }
 
