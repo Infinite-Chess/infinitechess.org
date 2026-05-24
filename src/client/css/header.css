@@ -37,11 +37,6 @@
 }
 
 /* svg resizing */
-.svg-profile,
-.svg-engine,
-.svg-globe {
-	transform: scale(1.2);
-}
 .svg-pawn {
 	transform: scale(1.1) translateY(-7%);
 }
@@ -208,11 +203,15 @@ a.header-donate:hover {
 }
 
 /* Nudge slightly for better centering. */
-#login-link svg,
-#register-link svg {
+.header-actions .svg-login,
+.header-actions .svg-register {
 	position: relative;
 	left: 2px;
 	top: 1px;
+}
+
+.header-actions .svg-profile {
+	transform: scale(0.85);
 }
 
 /* Settings gear container is also an icon button, but holds dropdowns. */

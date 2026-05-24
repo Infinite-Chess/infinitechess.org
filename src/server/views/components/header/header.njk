@@ -149,22 +149,22 @@
 
 	<div class="header-actions">
 		{% if memberInfo and memberInfo.signedIn %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
-				<svg viewBox="0 0 2000 2000"><use href="#svg-profile"/></svg>
+			<a class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
+				<svg class="svg-profile" viewBox="0 0 2000 2000"><use href="#svg-profile"/></svg>
 			</a>
-			<a id="register-link" class="header-icon-btn tooltip-d" href="/logout" data-tooltip="{{ t.actions.logout }}">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
+			<a class="header-icon-btn tooltip-d" href="/logout" data-tooltip="{{ t.actions.logout }}">
+				<svg class="svg-logout" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
 		{% else %}
-			<a id="login-link" class="header-icon-btn tooltip-d" href="/login" data-tooltip="{{ t.actions.login }}">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
+			<a class="header-icon-btn tooltip-d" href="/login" data-tooltip="{{ t.actions.login }}">
+				<svg class="svg-login" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="M150 165V190a20 20 0 01-20 20H60a20 20 0 01-20-20V50c0-11 9-20 20-20h70a20 20 0 01 20 20v30m50 40H90m0 0 25 25M90 120l25-25" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>
 			</a>
-			<a id="register-link" class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" data-tooltip="{{ t.actions.register }}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100">
+			<a class="header-icon-btn header-icon-btn-tight tooltip-d" href="/register" data-tooltip="{{ t.actions.register }}">
+				<svg class="svg-register" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3100 3100">
 					<path d="m3006 1597-453-453a150 150 0 00-212 0l-91 90V150a150 150 0 00-150-150H200A150 150 0 00 50 150v2400a150 150 0 00 150 150h850v250a150 150 0 00 150 150h453c40 0 78-16 106-44L3006 1810a150 150 0 00 0-212zM350 300h1600v1235L1094 2390l-9 10H350V300zm1241 2500H1350v-241l1097-1097 240 241L1592 2800" fill="currentColor" />
 				</svg>
 			</a>

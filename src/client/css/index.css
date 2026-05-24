@@ -93,6 +93,12 @@ main {
 	flex-shrink: 0;
 }
 
+.lobby-actions .svg-profile,
+.lobby-actions .svg-engine,
+.lobby-actions .svg-globe {
+	transform: scale(1.2);
+}
+
 /* ============================================================
    Lobby
    ============================================================ */
