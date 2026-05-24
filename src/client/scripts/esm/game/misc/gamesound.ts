@@ -17,25 +17,6 @@ type SoundName =
 	| 'low_time'
 	| 'glass_crack_1' | 'glass_crack_2' | 'glass_crack_3' | 'glass_crack_4' | 'glass_crack_5'; // prettier-ignore
 
-// Sound file URLs --------------------------------------------------------------------------
-
-const soundFiles: Record<SoundName, string> = {
-	move: 'move.opus',
-	capture: 'capture.opus',
-	bell: 'bell.opus',
-	ripple_a3: 'ripple_a3.opus',
-	viola_staccato_c3: 'viola_staccato_c3.opus',
-	marimba_c2: 'marimba_c2.opus',
-	marimba_c2_soft: 'marimba_c2_soft.opus',
-	base_staccato_c2: 'base_staccato_c2.opus',
-	low_time: 'low_time.opus',
-	glass_crack_1: 'glass_crack_1.opus',
-	glass_crack_2: 'glass_crack_2.opus',
-	glass_crack_3: 'glass_crack_3.opus',
-	glass_crack_4: 'glass_crack_4.opus',
-	glass_crack_5: 'glass_crack_5.opus',
-};
-
 // Cache --------------------------------------------------------------------------
 
 const audioCache = new Map<SoundName, AudioBuffer>();
@@ -44,7 +25,7 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 	const cached = audioCache.get(soundName);
 	if (cached) return cached;
 	try {
-		const response = await fetch('sounds/' + soundFiles[soundName]);
+		const response = await fetch(`sounds/${soundName}.opus`);
 		const arrayBuffer = await response.arrayBuffer();
 		const decoded = await AudioManager.decodeAudioData(arrayBuffer);
 		audioCache.set(soundName, decoded);
