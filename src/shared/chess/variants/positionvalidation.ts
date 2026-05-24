@@ -27,6 +27,7 @@ const WIN_CONDITIONS_REQUIRING_ROYAL: string[] = [
 	'checkmate',
 	'royalcapture',
 	'allroyalscaptured',
+	'koth',
 ] satisfies GameruleWinCondition[];
 
 /** All colored players required in a complete 4-player game's turn order. */
