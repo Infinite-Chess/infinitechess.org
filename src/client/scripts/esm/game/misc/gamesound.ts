@@ -100,10 +100,6 @@ async function playSoundEffect(
 
 // Named Play Functions --------------------------------------------------------------------------
 
-function playLowtime(): void {
-	playSoundEffect('low_time');
-}
-
 function playViola_c3({ volume }: { volume?: number } = {}): void {
 	playSoundEffect('viola_staccato_c3', { volume });
 }
@@ -115,6 +111,10 @@ function playMarimba(): void {
 
 function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
 	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
+}
+
+function playLowtime(): void {
+	playSoundEffect('low_time');
 }
 
 function playGlassCrack(): void {
@@ -144,9 +144,9 @@ export default {
 	// Playing Sounds
 	playSoundEffect,
 	// Named Play Functions
-	playLowtime,
 	playViola_c3,
 	playMarimba,
 	playBase,
+	playLowtime,
 	playGlassCrack,
 };
