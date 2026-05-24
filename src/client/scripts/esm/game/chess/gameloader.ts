@@ -36,7 +36,6 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
-import guiclock from '../gui/guiclock.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
@@ -222,12 +221,6 @@ async function startOnlineGame(options: {
 		})
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
-
-			// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
-			// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
-			// THUS playing the drum sound effect for our opponent.
-			const gamefile = gameslot.getGamefile()!;
-			if (!gamefile.untimed) guiclock.rescheduleSoundEffects(gamefile.clocks);
 
 			return graphical;
 		})

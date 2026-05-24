@@ -132,8 +132,8 @@ function tellServerWeAFK(): void {
 
 	// Display on screen "You are AFK. Auto-resigning in 20..."
 	displayWeAFK(20);
-	// The first violin staccato note is played in 10 seconds
-	playStaccatoTimeoutID = setTimeout(playStaccatoNote, 10000, 'c3', 10);
+	// The first staccato note is played in 10 seconds
+	playStaccatoTimeoutID = setTimeout(playStaccatoNote, 10000, 10);
 }
 
 function tellServerWeBackFromAFK(): void {
@@ -160,19 +160,16 @@ function displayWeAFK(secsRemaining: number): void {
 	displayAFKTimeoutID = setTimeout(displayWeAFK, timeToPlayNextDisplayWeAFK, nextSecsRemaining);
 }
 
-function playStaccatoNote(note: 'c3' | 'c4', secsRemaining: number): void {
-	if (note === 'c3') gamesound.playViola_c3();
-	else if (note === 'c4') gamesound.playViolin_c4();
+function playStaccatoNote(secsRemaining: number): void {
+	gamesound.playBase();
 
 	const nextSecsRemaining = secsRemaining > 5 ? secsRemaining - 1 : secsRemaining - 0.5;
 	if (nextSecsRemaining === 0) return; // Stop
-	const nextNote = nextSecsRemaining === Math.floor(nextSecsRemaining) ? 'c3' : 'c4';
 	const timeRemainUntilAFKLoss = timeWeLoseFromAFK! - Date.now();
 	const timeToPlayNextDisplayWeAFK = timeRemainUntilAFKLoss - nextSecsRemaining * 1000;
 	playStaccatoTimeoutID = setTimeout(
 		playStaccatoNote,
 		timeToPlayNextDisplayWeAFK,
-		nextNote,
 		nextSecsRemaining,
 	);
 }
