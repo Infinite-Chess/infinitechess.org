@@ -34,6 +34,9 @@
     {# Client translations for the header component, injected as a global `t` object. #}
     <script>window.t = { header: {{ clientT('header') | json | safe }} };</script>
 
+    {# Hashed URL for the downsampler audio worklet processor. #}
+    <script>window.$downsamplerProcessorUrl = "{{ manifest['scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts'] }}";</script>
+
     {# Any extra head content (meta tags, preloads, etc.) #}
     {% block head %}{% endblock %}
 </head>

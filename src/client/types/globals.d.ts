@@ -39,6 +39,14 @@ declare global {
 		start: () => void;
 	};
 
+	/**
+	 * Hashed URL for the downsampler audio worklet processor script, injected by Nunjucks via the asset manifest.
+	 *
+	 * Unlike static `import()` calls (which esbuild rewrites to hashed paths at bundle time),
+	 * `AudioWorklet.addModule()` takes an opaque string argument that esbuild cannot analyze or rewrite.
+	 */
+	var $downsamplerProcessorUrl: string;
+
 	// Our Custom Events
 	interface DocumentEventMap {
 		ping: CustomEvent<number>;
