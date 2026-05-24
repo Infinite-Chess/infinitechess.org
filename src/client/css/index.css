@@ -121,17 +121,23 @@ main {
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
 	border-radius: 0.5em;
-	container-type: inline-size;
+	container-type: size;
+}
+
+/* Sticky zero-height anchor keeps the omega pinned to the visible area while scrolling */
+.omega-anchor {
+	position: sticky;
+	top: 0;
+	pointer-events: none;
 }
 
 /* Faint omega logo watermark - references the sprite defined in header.njk */
 svg.bg-omega {
 	position: absolute;
-	top: 50%;
+	top: 50cqb;
 	left: 50%;
 	transform: translate(-50%, -51%);
-	height: 94%;
-	width: auto;
+	height: 94cqb;
 	color: var(--c-text-emphasis);
 	opacity: 0.08;
 	pointer-events: none;
@@ -299,8 +305,6 @@ svg.bg-omega {
 	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 	display: flex;
 	flex-direction: column;
-	scrollbar-width: thin;
-	scrollbar-color: var(--c-border) transparent;
 }
 
 .modal-header,

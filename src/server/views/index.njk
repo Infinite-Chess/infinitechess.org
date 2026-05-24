@@ -56,9 +56,11 @@
 			{# -- Open challenges (lobby) ----------------------------------------- #}
 			<section class="lobby">
 				<h2>Lobby</h2>
-				<div class="lobby-wrap">
+				<div class="lobby-wrap scrollbar-thin">
 					{# Faint omega background - references symbol already defined in header.njk #}
-					<svg class="bg-omega" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
+					<div class="omega-anchor">
+						<svg class="bg-omega" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
+					</div>
 					<div class="lobby-grid">
 						<div class="lobby-header">
 							<div>Player</div>
@@ -107,7 +109,7 @@
    Game Options Modal
    ════════════════════════════════════════════════════════════════════════ #}
 <div id="modal-overlay" class="modal-overlay hidden">
-	<div class="modal" role="dialog">
+	<div class="modal scrollbar-thin" role="dialog">
 
 		<div class="modal-header">
 			<div class="modal-header-gap"></div>
