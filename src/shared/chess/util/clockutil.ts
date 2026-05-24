@@ -8,6 +8,42 @@
 
 import type { TimeControl } from '../../types.js';
 
+// Constants -----------------------------------------------
+
+/** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
+const VALID_BASE_MINUTES = [
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+/** Valid increment values in seconds, matching the game setup modal's increment slider ticks. */
+export const VALID_INCREMENT_SECS = [
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+// Functions -----------------------------------------------
+
+/**
+ * Returns true if the time control string is valid for a lobby seek.
+ * Untimed ("-") is always valid. Timed controls must have a base that is
+ * a multiple of 60 whose minute-value is in {@link VALID_BASE_MINUTES},
+ * and an increment in {@link VALID_INCREMENT_SECS}.
+ */
+function isTimedControlValid(time: TimeControl): boolean {
+	if (time === '-') return true;
+	const parsed = splitTimeControl(time);
+	if (parsed.base_time_seconds === null || parsed.increment_seconds === null) return false;
+	const baseTimeMinutes = parsed.base_time_seconds / 60;
+	return (
+		Number.isInteger(baseTimeMinutes) &&
+		VALID_BASE_MINUTES.includes(baseTimeMinutes) &&
+		VALID_INCREMENT_SECS.includes(parsed.increment_seconds)
+	);
+}
+
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);
 	let minutes = 0;
@@ -91,6 +127,11 @@ function getSpeedIconId(time_control: TimeControl): string {
 }
 
 export default {
+	// Constants
+	VALID_BASE_MINUTES,
+	VALID_INCREMENT_SECS,
+	// Functions
+	isTimedControlValid,
 	getTextContentFromTimeRemain,
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,

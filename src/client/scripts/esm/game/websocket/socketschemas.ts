@@ -15,6 +15,7 @@ import typeschemas from '../../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
+	GameModeSchema,
 	GameUpdateMessageSchema,
 	MetaDataSchema,
 	OpponentsMoveMessageSchema,
@@ -42,7 +43,7 @@ const InviteSchema = z.strictObject({
 	/** The player color (null = Random). */
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	/** Whether the game is rated or casual. */
-	mode: z.enum(['casual', 'rated']),
+	mode: GameModeSchema,
 });
 
 // Game Helper Schemas ---------------------------------------------------------------

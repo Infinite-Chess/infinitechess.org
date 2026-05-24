@@ -25,6 +25,8 @@ import type { ActivePosition, StorageType } from '../boardeditor';
 import bimath from '../../../../../../shared/util/math/bimath';
 import typeutil from '../../../../../../shared/chess/util/typeutil';
 import movepiece from '../../../../../../shared/chess/logic/movepiece';
+import icnimport from '../../../../../../shared/chess/logic/icn/icnimport.js';
+import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import variantpreviewer from '../../../../../../shared/chess/variants/variantpreviewer';
 import { validatePosition } from '../../../../../../shared/chess/variants/positionvalidation';
 import boardutil, { Piece } from '../../../../../../shared/chess/util/boardutil';
@@ -47,7 +49,6 @@ import toast from '../../gui/toast';
 import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
 import pastegame from '../../chess/pastegame';
-import icnimport from '../../chess/icnimport';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
 import annotations from '../../rendering/highlights/annotations/annotations';
@@ -57,7 +58,6 @@ import validatorama from '../../../util/validatorama';
 import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
-import clientmetadatautil from '../../chess/clientmetadatautil';
 import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -383,7 +383,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const resolvedVariantCode = pastegame.resolveAndNormalizeVariantFromMetadata(
 		longformOut.metadata,
 	);
-	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const timestamp = metadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);

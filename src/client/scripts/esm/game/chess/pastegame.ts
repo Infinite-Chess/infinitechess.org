@@ -11,6 +11,8 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter, {
@@ -19,7 +21,6 @@ import icnconverter, {
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../gui/toast.js';
-import icnimport from './icnimport.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import clientmetadatautil from './clientmetadatautil.js';
@@ -123,7 +124,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = resolveAndNormalizeVariantFromMetadata(longformOut.metadata);
 
-	const timestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const timestamp = metadatautil.resolveTimestampFromMetadata(
 		longformOut.metadata.UTCDate,
 		longformOut.metadata.UTCTime,
 	);

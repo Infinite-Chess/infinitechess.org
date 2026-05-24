@@ -204,9 +204,12 @@ function initMatch(
 		};
 	}
 
+	if (invite.variant.kind !== 'preset')
+		throw new Error('Custom variant game starting is not yet implemented.');
+
 	return {
 		id,
-		variant: invite.variant,
+		variant: invite.variant.code,
 		playerData,
 		timeCreated: Date.now(),
 		rated: invite.mode === 'rated',
@@ -402,7 +405,7 @@ function getRatingDataForGamePlayers(
  */
 function constructMetadataOfGame(
 	rated: boolean,
-	variantKey: VariantCode,
+	variantCode: VariantCode,
 	clock: TimeControl,
 	dateTimestamp: number,
 	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
@@ -425,7 +428,7 @@ function constructMetadataOfGame(
 	};
 	return servermetadatautil.buildGameMetadata(
 		rated,
-		variantKey,
+		variantCode,
 		clock,
 		dateTimestamp,
 		whiteIdentity,

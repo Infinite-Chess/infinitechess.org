@@ -28,6 +28,7 @@ import type {
 } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -202,7 +203,7 @@ async function startOnlineGame(options: {
 	};
 
 	const resolvedVariant = variantregistry.resolveVariantCode(options.metadata.Variant);
-	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
 		options.metadata.UTCDate,
 		options.metadata.UTCTime,
 	);

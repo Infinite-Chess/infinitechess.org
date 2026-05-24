@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/chess/icnimport.ts
+// src/shared/chess/logic/icn/icnimport.ts
 
 /**
  * Utilities for importing and resolving game data from pasted ICN strings.
@@ -6,15 +6,14 @@
  * or only variant metadata.
  */
 
-import type { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
+import type { CoordsKey } from '../../util/coordutil.js';
+import type { VariantCode } from '../../variants/variantregistry.js';
+import type { LongFormatOut } from './icnconverter.js';
+import type { LoadedVariant } from '../gamefile.js';
 
-import variantcache from '../../../../../shared/chess/variants/variantcache.js';
-import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
-
-import clientmetadatautil from './clientmetadatautil.js';
+import metadatautil from '../../util/metadatautil.js';
+import variantcache from '../../variants/variantcache.js';
+import variantpreviewer from '../../variants/variantpreviewer.js';
 
 /**
  * Resolves the starting position and specialRights from a parsed ICN long format.
@@ -35,7 +34,7 @@ async function getPositionAndSpecialRightsFromLongFormat(
 		};
 	} else if (variantCode !== undefined) {
 		// No position specified in the ICN, extract from the variant
-		const dateTimestamp = clientmetadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
+		const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
 		await variantcache.ensureVariantLoaded(variantCode);
 		const mod = variantcache.getModule(variantCode);
 		const variant: LoadedVariant = { code: variantCode, mod, dateTimestamp };

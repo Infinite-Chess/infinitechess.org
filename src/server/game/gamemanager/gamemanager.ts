@@ -96,18 +96,22 @@ function createGame(
 		}
 	}
 
+	if (invite.variant.kind !== 'preset')
+		throw new Error('Custom variant game starting is not yet implemented.');
+	const variantCode = invite.variant.code;
+
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
 		invite.mode === 'rated',
-		invite.variant,
+		variantCode,
 		invite.time,
 		dateTimestamp,
 		ratinginfo,
 	);
 	const variant: LoadedVariant = {
-		code: invite.variant,
-		mod: variantcache.getModule(invite.variant),
+		code: variantCode,
+		mod: variantcache.getModule(variantCode),
 		dateTimestamp,
 	};
 	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);

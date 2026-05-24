@@ -12,9 +12,8 @@ import type {
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-
-import clientmetadatautil from './clientmetadatautil.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.
@@ -47,7 +46,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 		},
 	};
 
-	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
 		longformIn.metadata.UTCDate,
 		longformIn.metadata.UTCTime,
 	);

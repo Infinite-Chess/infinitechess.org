@@ -16,11 +16,11 @@ import type {
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
 
-import icnimport from '../../game/chess/icnimport.js';
 import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';

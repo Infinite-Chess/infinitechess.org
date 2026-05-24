@@ -5,6 +5,8 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
+import gameconfig from '../../../../../shared/util/gameconfig.js';
+
 import variantSelector from './variantSelector.js';
 
 // Types -------------------------------------------------
@@ -31,15 +33,6 @@ const MODIFIER_ICON_IDS: Record<ModifierCode, string> = {
 
 /** Default slide limit distance in squares. */
 const SLIDE_LIMIT_DEFAULT = 7;
-
-/** Non-linear tick values for the slide limit slider, where the array index is the slider position. */
-const SLIDE_LIMIT_VALUES = [
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-	25, 30,
-	40, 50,
-	70,
-	100,
-]; // prettier-ignore
 
 // Elements ----------------------------------------------
 
@@ -78,12 +71,12 @@ function initModifierSelector(): void {
 
 	element_slideLimitSlider.addEventListener('input', () => {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
-		const value = SLIDE_LIMIT_VALUES[idx]!;
+		const value = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
 		element_slideLimitDisplay.textContent = String(value);
 	});
 
 	// Initialize slider display
-	const defaultIdx = SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
+	const defaultIdx = gameconfig.SLIDE_LIMIT_VALUES.indexOf(SLIDE_LIMIT_DEFAULT);
 	element_slideLimitSlider.value = String(defaultIdx);
 	element_slideLimitDisplay.textContent = String(SLIDE_LIMIT_DEFAULT);
 }
@@ -157,7 +150,7 @@ function getModifierConfigs(): ModifierConfig[] {
 	const configs: ModifierConfig[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
-		const slideLimit = SLIDE_LIMIT_VALUES[idx]!;
+		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
 		configs.push({ kind: 'slide-limit', slideLimit });
 	}
 	return configs;

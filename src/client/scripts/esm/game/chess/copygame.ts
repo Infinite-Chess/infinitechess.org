@@ -4,9 +4,8 @@
  * This script handles copying games
  */
 
-import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION } from '../../../../../shared/chess/variants/servervalidation.js';
 
 import toast from '../gui/toast.js';
 import docutil from '../../util/docutil.js';
@@ -15,13 +14,6 @@ import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
-
-const variantsTooBigToCopyPositionToICN: VariantCode[] = [
-	'Omega_Squared',
-	'Omega_Cubed',
-	'Omega_Fourth',
-	'5D_Chess',
-];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -51,7 +43,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 
 	const largeGame: boolean =
-		variantCode !== undefined && variantsTooBigToCopyPositionToICN.includes(variantCode);
+		variantCode !== undefined && VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION.includes(variantCode);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {

@@ -8,6 +8,7 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
+import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
 
 import variantpreviewer from './variantpreviewer.js';
@@ -21,6 +22,18 @@ import variantpreviewer from './variantpreviewer.js';
  * Omega Squared and above (length > 2500) are excluded.
  */
 const POSITION_STRING_THRESHOLD = 2500;
+
+/**
+ * Variants whose starting position is too large to
+ * include in an ICN string or to generate server-side.
+ * Auto-reject these variants for seeks.
+ */
+const VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION: VariantCode[] = [
+	'Omega_Squared',
+	'Omega_Cubed',
+	'Omega_Fourth',
+	'5D_Chess',
+];
 
 // Functions -----------------------------------------------------------------
 
@@ -53,4 +66,9 @@ function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
 	return doesVariantSupportServerValidation(variant);
 }
 
-export { POSITION_STRING_THRESHOLD, doesVariantSupportServerValidation, isGameInstantlyDeleted };
+export {
+	POSITION_STRING_THRESHOLD,
+	VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION,
+	doesVariantSupportServerValidation,
+	isGameInstantlyDeleted,
+};
