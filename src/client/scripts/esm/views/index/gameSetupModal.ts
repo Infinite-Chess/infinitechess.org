@@ -6,6 +6,7 @@
 
 import timeControls from './timeControls.js';
 import variantSelector from './variantSelector.js';
+import modifierSelector from './modifierSelector.js';
 
 // Types ----------------------------------------------
 
@@ -91,6 +92,7 @@ function initModal(): void {
 	timeControls.initPresets();
 	variantSelector.initVariantGroupDropdown();
 	variantSelector.initIcnValidation();
+	modifierSelector.initModifierSelector();
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
@@ -109,4 +111,5 @@ function openModal(mode: ModalMode): void {
 function closeModal(): void {
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
+	modifierSelector.closeModifierDropdown();
 }

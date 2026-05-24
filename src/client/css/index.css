@@ -396,13 +396,9 @@ svg.bg-omega {
 	flex-shrink: 0;
 }
 
-.variant-display .svg-pencil {
-	margin-left: auto;
-}
-
-.variant-display .svg-eye,
-.variant-display .svg-pencil {
-	color: var(--c-text);
+.variant-display .variant-name {
+	flex: 1;
+	text-align: left;
 }
 
 .selector-arrow {
@@ -421,6 +417,7 @@ svg.bg-omega {
 	top: calc(100% + 4px);
 	left: 0;
 	right: 0;
+	z-index: 1;
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-2);
 	border-radius: 6px;
@@ -507,7 +504,8 @@ svg.bg-omega {
 }
 
 .variant-selector .svg-eye,
-.variant-selector .svg-pencil {
+.variant-display .svg-pencil,
+.variant-display .modifier-add {
 	width: 17px;
 	height: 17px;
 	flex-shrink: 0;
@@ -515,7 +513,8 @@ svg.bg-omega {
 }
 
 .variant-selector .svg-eye:hover,
-.variant-selector .svg-pencil:hover {
+.variant-display .svg-pencil:hover,
+.variant-display .modifier-add:hover {
 	color: var(--c-text-emphasis);
 	transform: scale(1.1);
 }
@@ -630,6 +629,108 @@ svg.bg-omega {
 	margin: 4px 2px 0;
 	font-size: 12px;
 	color: #e05555;
+}
+
+/* ============================================================
+   Modifier dropdown
+   ============================================================ */
+
+.modifier-dropdown .group-icon {
+	width: 23px;
+	height: 23px;
+	color: var(--c-text-emphasis);
+}
+
+/* ============================================================
+   Modifiers section
+   ============================================================ */
+
+.modifiers-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.modifiers-label {
+	font-size: 16px;
+	color: var(--c-text-emphasis);
+	flex-shrink: 0;
+}
+
+.modifiers-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.modifier-chip {
+	position: relative;
+	width: 33px;
+	height: 33px;
+	cursor: pointer;
+	color: var(--c-text-emphasis);
+}
+
+.modifier-chip svg {
+	width: 100%;
+	height: 100%;
+}
+
+.modifier-chip-overlay {
+	position: absolute;
+	inset: 0;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.7);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-size: 18px;
+	font-weight: 900;
+	opacity: 0;
+}
+
+.modifier-chip:hover .modifier-chip-overlay {
+	opacity: 1;
+}
+
+/* ============================================================
+   Slide Limit section
+   ============================================================ */
+
+.slide-limit-section {
+	display: flex;
+	align-items: center;
+	margin-top: 9px;
+	gap: 16px;
+	padding: 14px 20px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+}
+
+.slide-limit-section .slider {
+	flex: 1;
+}
+
+.slide-limit-section .slider::-webkit-slider-runnable-track {
+	background: var(--c-surface);
+}
+
+.slide-limit-section .slider::-webkit-slider-thumb {
+	background: var(--c-surface-2);
+}
+
+.slide-limit-section .slider::-moz-range-track {
+	background: var(--c-surface);
+}
+
+.slide-limit-section .slider::-moz-range-thumb {
+	background: var(--c-surface-2);
+}
+
+.slide-limit-name {
+	font-size: 15px;
 }
 
 /* ============================================================

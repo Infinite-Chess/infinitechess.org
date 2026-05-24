@@ -129,7 +129,8 @@
 				<div class="variant-selector" id="variant-selector">
 					<button class="variant-display" id="variant-display">
 						<svg class="variant-group-icon" id="variant-group-icon"><use></use></svg>
-						<span id="variant-name"></span>
+						<span id="variant-name" class="variant-name"></span>
+						<svg class="modifier-add tooltip-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" data-tooltip="Add a fun modifier"><line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
 						<svg class="svg-pencil tooltip-d" data-tooltip="Edit position and gamerules"><use href="#svg-pencil"></use></svg>
 						{{ eyeIcon() }}
 						<svg class="selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -155,6 +156,13 @@
 						{{ variantListBack("svg-wrench", "Custom", "Your own position, your own rules.") }}
 						<div id="variant-custom-content"></div>
 					</div>
+					<div class="variant-dropdown modifier-dropdown" id="modifier-dropdown">
+						<button class="variant-group-item" data-modifier="slide-limit">
+							<svg class="group-icon svg-slide-limit"><use href="#svg-slide-limit"></use></svg>
+							<span class="group-name">Slide Limit</span>
+							<span class="group-desc">All pieces have a maximum distance they can slide in one move.</span>
+						</button>
+					</div>
 				</div>
 				{# Custom ICN - revealed when "From ICN" is selected in the Custom group #}
 				<div id="variant-custom-section" class="hidden">
@@ -163,6 +171,18 @@
 						          placeholder="Paste ICN text here" rows="1"></textarea>
 					</div>
 					<p class="icn-error-text" id="icn-error-text"></p>
+				</div>
+				{# Modifiers - revealed when at least one modifier is selected #}
+				<div id="modifiers-section" class="hidden">
+					<div class="modifiers-row">
+						<span class="modifiers-label">Modifiers:</span>
+						<div class="modifiers-list" id="modifiers-list"></div>
+					</div>
+					<div id="slide-limit-section" class="slide-limit-section hidden">
+						<span class="slide-limit-name">Slide Limit</span>
+						<input type="range" class="slider" id="slider-slide-limit" min="0" max="25" step="1">
+						<span class="slider-value" id="slide-limit-display"></span>
+					</div>
 				</div>
 			</div>
 

@@ -78,6 +78,7 @@ function initVariantGroupDropdown(): void {
 
 	element_variantDisplay.addEventListener('click', (e) => {
 		if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
+		if ((e.target as HTMLElement).closest('.modifier-add')) return; // They clicked the modifier button
 		toggleVariantDropdown();
 	});
 	document.addEventListener('pointerdown', (e) => {
@@ -106,7 +107,7 @@ function initVariantGroupDropdown(): void {
 	});
 
 	// Wire up group buttons
-	document.querySelectorAll<HTMLElement>('.variant-group-item').forEach((item) => {
+	document.querySelectorAll<HTMLElement>('button[data-group]').forEach((item) => {
 		item.addEventListener('click', () => {
 			const group = item.getAttribute('data-group') as GroupType;
 			if (group === 'custom') openCustomVariantList();
