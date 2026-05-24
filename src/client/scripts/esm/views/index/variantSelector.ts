@@ -57,8 +57,13 @@ const element_customVariantContent = document.getElementById('variant-custom-con
 /** The currently selected variant for the game options modal. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
-/** The VariantOptions from the last successfully validated ICN input. */
-let icnVariantOptions: VariantOptions | null = null;
+/** The last successfully parsed ICN input. */
+let icnResult: {
+	/** The variantOptions parsed from the ICN input, if it was syntactically valid. */
+	options: VariantOptions;
+	/** Whether the position passes validatePosition() and is legal to play. */
+	isValid: boolean;
+} | null = null;
 
 // Custom position caching
 // Very low chance a position is edited in another tab when it is sitting in the cache.
@@ -408,8 +413,8 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 		handleLocalSavePreview(anchor, selection.name);
 	} else if (selection.kind === 'icn') {
 		await validateIcnInput();
-		if (icnVariantOptions !== null)
-			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnVariantOptions);
+		if (icnResult !== null)
+			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnResult.options);
 	}
 }
 
@@ -427,7 +432,7 @@ async function validateIcnInput(): Promise<void> {
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
-		icnVariantOptions = null;
+		icnResult = null;
 		return;
 	}
 	try {
@@ -436,7 +441,7 @@ async function validateIcnInput(): Promise<void> {
 		const variantCode = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
 		const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variantCode); // prettier-ignore
 
-		icnVariantOptions = {
+		const icnVariantOptions = {
 			position,
 			gameRules: longFormat.gameRules,
 			state_global: { ...longFormat.state_global, specialRights },
@@ -447,16 +452,16 @@ async function validateIcnInput(): Promise<void> {
 		if (illegalReason !== null) {
 			element_icnInputWrap.classList.add('invalid');
 			element_icnErrorText.textContent = illegalReason;
-			icnVariantOptions = null;
-			return;
+			icnResult = { options: icnVariantOptions, isValid: false };
 		} else {
 			element_icnErrorText.textContent = '';
+			icnResult = { options: icnVariantOptions, isValid: true };
 		}
 	} catch (e) {
 		element_icnInputWrap.classList.add('invalid');
 		element_icnErrorText.textContent = '';
 		console.error('Illegal position:', e instanceof Error ? e.message : e);
-		icnVariantOptions = null;
+		icnResult = null;
 	}
 }
 
@@ -468,7 +473,7 @@ function initIcnValidation(): void {
 		element_icnErrorText.textContent = '';
 	});
 	element_icnInput.addEventListener('input', () => {
-		icnVariantOptions = null;
+		icnResult = null;
 	});
 }
 
