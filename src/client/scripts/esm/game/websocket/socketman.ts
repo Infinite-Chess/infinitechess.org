@@ -9,7 +9,6 @@
 import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
-import invites from '../misc/invites.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
@@ -125,7 +124,6 @@ async function establishSocket(): Promise<boolean> {
 			toast.show(translations.websocket.no_connection, {
 				durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
 			});
-			invites.clearIfOnPlayPage();
 			await thread.sleep(delay);
 		}
 		success = await openSocket();
@@ -203,6 +201,14 @@ function closeSocket(): void {
 
 // Resubscription --------------------------------------------------------------
 
+/** Called by the page that subscribes to invites to handle reconnection resubscription. */
+let invitesResubHandler: (() => Promise<void>) | null = null;
+
+/** Registers the callback used to resub to invites after a socket reconnection. */
+function setInvitesResubHandler(handler: (() => Promise<void>) | null): void {
+	invitesResubHandler = handler;
+}
+
 /**
  * Called when the socket unexpectedly closes. Reopens the socket
  * and resubscribes to everything that was previously subscribed.
@@ -222,7 +228,7 @@ async function resubAll(): Promise<void> {
 		if (!socketsubs.areSubbedToSub(sub)) continue;
 		switch (sub) {
 			case 'invites':
-				await invites.subscribeToInvites(true);
+				if (invitesResubHandler) await invitesResubHandler();
 				break;
 			case 'game':
 				onlinegame.resyncToGame();
@@ -242,6 +248,7 @@ export default {
 	establishSocket,
 	closeSocket,
 	resubAll,
+	setInvitesResubHandler,
 	toggleDebug,
 	isDebugEnabled,
 	dispatchLostConnectionCustomEvent,

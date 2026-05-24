@@ -4,6 +4,12 @@
  * This script manages the game setup invite/seek creation modal.
  */
 
+import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameMode } from '../../../../../shared/types.js';
+
+import { players } from '../../../../../shared/chess/util/typeutil.js';
+
+import lobby from './lobby.js';
 import timeControls from './timeControls.js';
 import variantSelector from './variantSelector.js';
 import modifierSelector from './modifierSelector.js';
@@ -41,6 +47,11 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
 	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
 };
+
+// Variables ------------------------------------------
+
+/** The active game creation flow. Tracked so the submit handler knows what to do. */
+let currentMode: ModalMode = 'online';
 
 // Initialization ----------------------------------------------
 
@@ -86,6 +97,11 @@ function initModal(): void {
 		if (e.key === 'Escape') closeModal();
 	});
 
+	element_modalSubmit.addEventListener('click', () => {
+		if (currentMode === 'online') handleOnlineSeek();
+		closeModal();
+	});
+
 	initToggleGroups();
 	timeControls.initModalSliders();
 	timeControls.onTimeToggle();
@@ -95,8 +111,29 @@ function initModal(): void {
 	modifierSelector.initModifierSelector();
 }
 
+/** Reads the online seek form state and sends a createinvite request via the lobby. */
+function handleOnlineSeek(): void {
+	const variant = variantSelector.getInviteVariant();
+	if (variant === null) return; // Invalid selection (e.g. bad ICN, unsupported local save)
+
+	const time = timeControls.getTimeControl();
+
+	const sideBtn = document.querySelector<HTMLElement>('[data-side].active');
+	const sideVal = sideBtn?.getAttribute('data-side') ?? null;
+	const color: Player | null =
+		sideVal === 'white' ? players.WHITE : sideVal === 'black' ? players.BLACK : null;
+
+	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active');
+	const mode: GameMode = (modeBtn?.getAttribute('data-mode') as GameMode) ?? 'casual';
+
+	const modifiers = modifierSelector.getInviteModifiers();
+
+	lobby.createSeek({ variant, time, color, mode, modifiers });
+}
+
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
+	currentMode = mode;
 	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
 
 	element_rowGameMode.classList.toggle('hidden', mode === 'computer');

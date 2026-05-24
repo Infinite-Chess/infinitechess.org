@@ -231,3 +231,9 @@ export const BaseSeekSchema = z.strictObject({
 	mode: GameModeSchema,
 	modifiers: z.array(InviteModifierSchema).optional(),
 });
+
+/** The version of seeks broadcast to lobby viewers. */
+export type OutSeek = z.infer<typeof OutSeekSchema>;
+export const OutSeekSchema = BaseSeekSchema.extend({
+	variant: OutSeekVariantSchema,
+});

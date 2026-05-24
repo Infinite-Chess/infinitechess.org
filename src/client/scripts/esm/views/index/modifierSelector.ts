@@ -5,6 +5,8 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
+import type { InviteModifier } from '../../../../../shared/types.js';
+
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import variantSelector from './variantSelector.js';
@@ -156,10 +158,19 @@ function getModifierConfigs(): ModifierConfig[] {
 	return configs;
 }
 
+/** Returns selected modifiers in the wire format for the createinvite message. */
+function getInviteModifiers(): InviteModifier[] {
+	return getModifierConfigs().map((cfg) => ({
+		kind: cfg.kind,
+		value: cfg.slideLimit as (typeof gameconfig.SLIDE_LIMIT_VALUES)[number],
+	}));
+}
+
 // Exports -----------------------------------------------
 
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
 	getModifierConfigs,
+	getInviteModifiers,
 };

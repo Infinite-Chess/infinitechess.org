@@ -20,7 +20,6 @@ import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import border from '../rendering/border.js';
 import camera from '../rendering/camera.js';
-import invites from '../misc/invites.js';
 import gameslot from './gameslot.js';
 import guititle from '../gui/guititle.js';
 import boardpos from '../rendering/boardpos.js';
@@ -120,7 +119,6 @@ function init(): void {
 function update(): void {
 	screenshake.update();
 	controls.testOutGameToggles();
-	invites.update();
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
 		frametracker.onVisualChange();

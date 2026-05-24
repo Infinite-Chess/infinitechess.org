@@ -7,6 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
+import type { InviteVariant } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type {
@@ -477,10 +478,29 @@ function initIcnValidation(): void {
 	});
 }
 
+/**
+ * Returns the current variant selection as an InviteVariant for the wire format,
+ * or null if the selection cannot be used for an online seek (invalid ICN, local save).
+ */
+function getInviteVariant(): InviteVariant | null {
+	if (selection.kind === 'preset') {
+		return { kind: 'preset', code: selection.code };
+	} else if (selection.kind === 'online') {
+		return { kind: 'cloudSave', name: selection.name };
+	} else if (selection.kind === 'icn') {
+		const content = element_icnInput.value.trim();
+		if (!icnResult?.isValid || !content) return null;
+		return { kind: 'icn', content };
+	}
+	// Local saves can't be referenced by name on the server
+	return null;
+}
+
 // Exports ----------------------------------------------
 
 export default {
 	initVariantGroupDropdown,
 	initIcnValidation,
 	closeVariantDropdown,
+	getInviteVariant,
 };

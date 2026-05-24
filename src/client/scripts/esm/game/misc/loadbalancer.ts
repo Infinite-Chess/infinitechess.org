@@ -8,7 +8,6 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import stats from '../gui/stats.js';
 import config from '../config.js';
-import invites from './invites.js';
 import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
@@ -39,8 +38,6 @@ let hibernateTimeoutID: number | undefined;
 
 let windowIsVisible = true;
 
-const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
-// const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
 let timeToDeleteInviteTimeoutID: number | undefined;
 
 // Functions -------------------------------------------------------------
@@ -116,7 +113,6 @@ function onReturnFromAFK(): void {
 	restartHibernateTimer();
 
 	// Make sure we're subbed to invites list if we're on the play page!
-	invites.subscribeToInvites();
 }
 
 function restartAFKTimer(): void {
@@ -136,13 +132,11 @@ function onAFK(): void {
 }
 
 function onHibernate(): void {
-	if (invites.doWeHave()) return restartHibernateTimer(); // Don't hibernate if we have an open invite AND the page is visible!
 	isHibernating = true;
 	hibernateTimeoutID = undefined;
 	// console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	invites.unsubFromInvites();
 }
 
 // The 'focus' and 'blur' event listeners fire the MOST common, when you so much as click a different window on-screen,
@@ -164,10 +158,6 @@ document.addEventListener('visibilitychange', function () {
 		// THIS ALSO UNSUBS US
 		// timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
 		// This ONLY cancels our invite if we have one
-		timeToDeleteInviteTimeoutID = window.setTimeout(
-			invites.cancel,
-			timeToDeleteInviteAfterPageHiddenMillis,
-		);
 	} else {
 		windowIsVisible = true;
 

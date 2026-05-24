@@ -15,36 +15,15 @@ import typeschemas from '../../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
-	GameModeSchema,
 	GameUpdateMessageSchema,
 	MetaDataSchema,
 	OpponentsMoveMessageSchema,
+	OutSeekSchema,
 	PlayerRatingChangeInfoSchema,
 	RatingSchema,
-	ServerUsernameContainerSchema,
-	TimeControlSchema,
 } from '../../../../../shared/types.js';
 
 // Invite Helper Schemas ---------------------------------------------------------------
-
-/** The invite object. NOT an HTML object. */
-export type Invite = z.infer<typeof InviteSchema>;
-const InviteSchema = z.strictObject({
-	/** Who owns the invite. */
-	usernamecontainer: ServerUsernameContainerSchema,
-	/** A unique identifier. */
-	id: z.string(),
-	/** Used to verify if an invite is your own. */
-	tag: z.string().optional(),
-	/** The name of the variant. */
-	variant: z.string(),
-	/** The clock value. */
-	clock: TimeControlSchema,
-	/** The player color (null = Random). */
-	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
-	/** Whether the game is rated or casual. */
-	mode: GameModeSchema,
-});
 
 // Game Helper Schemas ---------------------------------------------------------------
 
@@ -98,7 +77,10 @@ export type InvitesMessage = z.infer<typeof InvitesSchema>;
 const InvitesSchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('inviteslist'),
-		value: z.strictObject({ invitesList: z.array(InviteSchema), currentGameCount: z.number() }),
+		value: z.strictObject({
+			invitesList: z.array(OutSeekSchema),
+			currentGameCount: z.number(),
+		}),
 	}),
 	z.strictObject({ action: z.literal('gamecount'), value: z.number() }),
 ]);

@@ -7,6 +7,7 @@
  * and broadcasts changes out to the clients.
  */
 
+import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
@@ -14,7 +15,7 @@ import jsutil from '../../../shared/util/jsutil.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import { safelyCopyInvite, memberInfoEq, AuthSeek, OutSeek } from './inviteutility.js';
+import { safelyCopyInvite, memberInfoEq, type AuthSeek } from './inviteutility.js';
 import {
 	getInviteSubscribers,
 	addSocketToInvitesSubs,

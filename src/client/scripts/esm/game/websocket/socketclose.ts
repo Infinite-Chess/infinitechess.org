@@ -11,7 +11,6 @@ import wsutil from '../../../../../shared/util/wsutil.js';
 
 import toast from '../gui/toast.js';
 import config from '../config.js';
-import invites from '../misc/invites.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
 import validatorama from '../../util/validatorama.js';
@@ -88,7 +87,6 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 				`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 100 },
 			);
-			invites.clearIfOnPlayPage();
 			break;
 		case 'Authentication needed':
 			onAuthenticationNeeded();
@@ -121,7 +119,6 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 				`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`,
 				{ error: true, durationMultiplier: 3 },
 			);
-			invites.clearIfOnPlayPage();
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'No echo heard':
@@ -151,7 +148,6 @@ function enterTimeout(timeMillis: number): void {
 	if (inTimeout) return;
 	inTimeout = true;
 	window.setTimeout(() => leaveTimeout(), timeMillis);
-	invites.clearIfOnPlayPage();
 }
 
 /** Timeout from sending too many requests is over, try to reconnect. */
@@ -167,8 +163,6 @@ function leaveTimeout(): void {
  * Attempts to refresh the browser-id cookie and reconnect.
  */
 async function onAuthenticationNeeded(): Promise<void> {
-	invites.clearIfOnPlayPage();
-
 	// If this is the second time we're getting this message,
 	// that means that cookies aren't working on this browser.
 	const now = Date.now();
