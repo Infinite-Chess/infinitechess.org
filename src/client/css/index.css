@@ -925,9 +925,14 @@ svg.bg-omega {
 	/* Stack the three lobby buttons vertically instead of wrapping unevenly */
 	.lobby-actions {
 		flex-direction: column;
+		padding: 0 16px;
 	}
 	.lobby-btn {
 		min-height: 54px;
+	}
+	main {
+		padding-left: 0;
+		padding-right: 0;
 	}
 }
 
