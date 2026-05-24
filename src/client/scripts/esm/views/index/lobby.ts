@@ -59,15 +59,15 @@ function renderSeekList(seeks: LobbySeek[]): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks));
 }
 
-/** Creates the keyed snabbdom tbody vnode for the current seek list. */
+/** Creates the keyed snabbdom div vnode for the current seek list. */
 function createSeekListVNode(seeks: LobbySeek[]): VNode {
 	return h(
-		'tbody#lobby-tbody',
+		'div#lobby-tbody',
 		seeks.map((s) => createSeekRowVNode(s)),
 	);
 }
 
-/** Builds one lobby table row vnode from a seek object. */
+/** Builds one lobby row vnode from a seek object. */
 function createSeekRowVNode(seek: LobbySeek): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
@@ -79,7 +79,7 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 
 	return h(
-		'tr.invite-row',
+		'div.invite-row',
 		{
 			key: seek.id,
 			attrs: {
@@ -88,8 +88,8 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 			},
 		},
 		[
-			h('td', [
-				h('div.cell-flex', [
+			h('div.lobby-cell', [
+				h('div.cell-flex.text-fade', [
 					h('span.username-embed', [
 						h('span.username', seek.player.username),
 						...(playerRating ? [playerRating] : []),
@@ -97,15 +97,15 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 					...(sideDot ? [sideDot] : []),
 				]),
 			]),
-			h('td', [
+			h('div.lobby-cell', [
 				h('div.cell-flex', [
 					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
 						h('use', { attrs: { href: `#${variantIcon}` } }),
 					]),
-					variantName,
+					h('span', variantName),
 				]),
 			]),
-			h('td', [
+			h('div.lobby-cell', [
 				h('div.cell-flex', [
 					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
 						h('use', { attrs: { href: `#${speedIcon}` } }),
@@ -113,7 +113,7 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 					getClockLabel(seek.time),
 				]),
 			]),
-			h('td', seek.mode === 'rated' ? 'Rated' : 'Casual'),
+			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
 		],
 	);
 }

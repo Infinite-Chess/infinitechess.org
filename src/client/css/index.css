@@ -112,10 +112,11 @@ main {
 	text-align: center;
 }
 
-/* Table wrapper - fixed height with scroll; rows size naturally to their content */
+/* Fixed height with scroll; seek rows size naturally to their content */
 .lobby-wrap {
 	position: relative;
-	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: auto;
 	height: 25em;
 	background: var(--c-surface);
 	border: 1px solid var(--c-border);
@@ -133,51 +134,64 @@ svg.bg-omega {
 	width: auto;
 	color: var(--c-text-emphasis);
 	opacity: 0.08;
+	pointer-events: none;
 }
 
 /* ============================================================
-   Lobby table
+   Lobby grid
    ============================================================ */
 
-.lobby-table {
-	width: 100%;
-	border-collapse: collapse;
+.lobby-grid {
 	position: relative;
-	font-size: min(8px + 0.923cqi, 16px);
+	width: 100%;
+	display: grid;
+	grid-template-columns: 36% 34% 16% 14%;
+	font-size: min(7px + 1.15cqi, 16px);
 }
 
-.lobby-table thead {
-	text-align: left;
-	padding: 0.667em 1.333em;
+.lobby-header {
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: subgrid;
 	font-size: 0.75em;
 	color: var(--c-text-muted);
 	letter-spacing: 0.06em;
 	background-color: var(--c-surface-transparent);
 }
 
-.lobby-table th {
-	padding: 0.667em 1.333em;
+.lobby-header > div {
+	padding: 0.667em 0.4em;
 	font-weight: normal;
 }
 
-.lobby-table tr {
-	color: var(--c-text);
-	background-color: var(--c-surface-transparent);
-	border-bottom: 1px solid var(--c-border-muted);
+#lobby-tbody {
+	display: contents;
 }
 
 .invite-row {
+	display: grid;
+	grid-column: 1 / -1;
+	grid-template-columns: subgrid;
+	align-items: center;
 	cursor: pointer;
 	font-size: 0.9em;
+	background-color: var(--c-surface-transparent);
+	border-bottom: 1px solid var(--c-border-muted);
+	-webkit-tap-highlight-color: transparent;
 }
 
-.invite-row:hover {
-	color: var(--c-text-emphasis);
-	background: rgb(255 88 0 / 37%);
+.lobby-cell {
+	padding: 0.667em 0.3em;
+	overflow: hidden;
 }
 
-.lobby-table td {
-	padding: 0.667em 1.111em;
+.lobby-header > div:first-child,
+.lobby-cell:first-child {
+	padding-left: 1em;
+}
+.lobby-header > div:last-child,
+.lobby-cell:last-child {
+	padding-right: 1em;
 }
 
 .cell-flex {
@@ -186,10 +200,23 @@ svg.bg-omega {
 	align-items: center;
 }
 
+.invite-row .lobby-cell:nth-child(2) .cell-flex span {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
 .cell-icon {
 	width: 1.389em;
 	aspect-ratio: 1;
 	flex-shrink: 0;
+}
+
+.invite-row:hover {
+	color: var(--c-text-emphasis);
+	background: rgb(255 88 0 / 37%);
 }
 
 /* ============================================================
@@ -198,11 +225,11 @@ svg.bg-omega {
 
 .side-dot {
 	width: 0.903em;
-	height: 0.903em;
+	aspect-ratio: 1;
 	margin-left: 0.417em;
 	border-radius: 50%;
 	background: var(--c-text);
-	border-width: 0.139em;
+	border-width: 2px;
 	border-style: solid;
 }
 
@@ -213,6 +240,7 @@ svg.bg-omega {
 .side-dot.black {
 	background: transparent;
 	border-color: var(--c-text);
+	flex-shrink: 0;
 }
 
 .invite-row:hover .side-dot.black {

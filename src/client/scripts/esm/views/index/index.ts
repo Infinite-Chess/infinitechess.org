@@ -20,7 +20,7 @@ const EXAMPLE_SEEKS: LobbySeek[] = [
 			rating: { value: 1758, confident: false },
 		},
 		color: null,
-		variant: { group: 'standard', code: 'Classical' },
+		variant: { group: 'standard', code: 'CoaIP_HO' },
 		time: '1500+5',
 		mode: 'rated',
 	},
@@ -54,7 +54,7 @@ const EXAMPLE_SEEKS: LobbySeek[] = [
 		tag: 'tag4',
 		player: {
 			type: 'player',
-			username: 'ChessMaster3000',
+			username: 'ChessMaster300056674',
 			rating: { value: 2200, confident: true },
 		},
 		color: null,
