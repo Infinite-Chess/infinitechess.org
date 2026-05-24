@@ -38,6 +38,9 @@ const timeUntilAFKSecs_Untimed: number = 100; // 100 + 20 = 2 minutes
  * server we are afk, to the time we lose if we don't return. */
 const timerToLossFromAFK: number = 20000; // HAS TO MATCH SERVER-END
 
+/** How much the playback rate decreases per step during the 10-second staccato countdown, making each note slightly lower in pitch. */
+const staccatoPlaybackRateDecrement: number = 0.02;
+
 /** The ID of the timeout that can be used to cancel the timer that will alert the server we are afk, if we are not no longer afk by then. */
 let timeoutID: ReturnType<typeof setTimeout> | undefined;
 
@@ -161,17 +164,13 @@ function displayWeAFK(secsRemaining: number): void {
 }
 
 function playStaccatoNote(secsRemaining: number): void {
-	gamesound.playBase();
+	const playbackRate = 1.0 - (10 - secsRemaining) * staccatoPlaybackRateDecrement;
+	gamesound.playBase({ playbackRate });
 
-	const nextSecsRemaining = secsRemaining > 5 ? secsRemaining - 1 : secsRemaining - 0.5;
-	if (nextSecsRemaining === 0) return; // Stop
-	const timeRemainUntilAFKLoss = timeWeLoseFromAFK! - Date.now();
-	const timeToPlayNextDisplayWeAFK = timeRemainUntilAFKLoss - nextSecsRemaining * 1000;
-	playStaccatoTimeoutID = setTimeout(
-		playStaccatoNote,
-		timeToPlayNextDisplayWeAFK,
-		nextSecsRemaining,
-	);
+	const next = secsRemaining - 1;
+	if (next === 0) return;
+	const delay = timeWeLoseFromAFK! - Date.now() - next * 1000;
+	playStaccatoTimeoutID = setTimeout(playStaccatoNote, delay, next);
 }
 
 function startOpponentAFKCountdown(millisUntilAutoAFKResign: number): void {
@@ -202,14 +201,9 @@ function displayOpponentAFK(secsRemaining: number): void {
 		{ durationMillis: 1000 },
 	);
 	const nextSecsRemaining = secsRemaining - 1;
-	if (nextSecsRemaining === 0) return; // Stop
-	const timeRemainUntilAFKLoss = timeOpponentLoseFromAFK! - Date.now();
-	const timeToPlayNextDisplayWeAFK = timeRemainUntilAFKLoss - nextSecsRemaining * 1000;
-	displayOpponentAFKTimeoutID = setTimeout(
-		displayOpponentAFK,
-		timeToPlayNextDisplayWeAFK,
-		nextSecsRemaining,
-	);
+	if (nextSecsRemaining === 0) return;
+	const timeToNext = timeOpponentLoseFromAFK! - Date.now() - nextSecsRemaining * 1000;
+	displayOpponentAFKTimeoutID = setTimeout(displayOpponentAFK, timeToNext, nextSecsRemaining);
 }
 
 export default {

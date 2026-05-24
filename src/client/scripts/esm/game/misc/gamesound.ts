@@ -113,8 +113,8 @@ function playMarimba(): void {
 	playSoundEffect(audioName, { volume: 0.4 });
 }
 
-function playBase(): void {
-	playSoundEffect('base_staccato_c2', { volume: 0.8 });
+function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
+	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
 }
 
 function playGlassCrack(): void {
