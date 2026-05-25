@@ -164,7 +164,7 @@ async function openSocket(): Promise<boolean> {
  * that assumes lost connection if no response arrives.
  */
 function onSocketUpgradeReqLeave(): void {
-	SocketBus.dispatch('opening');
+	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
 	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
@@ -192,9 +192,8 @@ function closeSocket(): void {
 // Resubscription --------------------------------------------------------------
 
 /**
- * Called when the socket unexpectedly closes. Notifies all subscribers to resubscribe.
- * Each subscriber hears 'reconnected', sends its own subscribe message, and
- * socketmessages.send() lazily reopens the socket via establishSocket().
+ * Called when the socket unexpectedly closes. Notifies all subs to resubscribe.
+ * Then socketmessages.send() lazily reopens the socket.
  */
 function resubAll(): void {
 	if (config.DEV_BUILD) console.log('Resubbing all..');

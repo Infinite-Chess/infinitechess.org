@@ -40,7 +40,7 @@ const patch = init([attributesModule, classModule]);
 
 // Types ----------------------------------------------
 
-/** [CLIENT] The structure for a single seek in the lobby, with client-side rendering info. */
+/** The structure for a single seek in the lobby, with client-side rendering info. */
 export type LobbySeek = BaseSeek &
 	({ variant: VariantInfo } | { variant: { group: 'custom'; name: 'Custom Variant' } }) & {
 		isOurs: boolean;
@@ -101,10 +101,6 @@ function isSeekOurs(seek: OutSeek): boolean {
 	}
 	const localTag = LocalStorage.loadItem('invite-tag');
 	return !!localTag && seek.tag === localTag;
-}
-
-function doWeHaveSeek(): boolean {
-	return weHaveSeek;
 }
 
 /**
@@ -306,8 +302,6 @@ export default {
 	renderSeekList,
 	onSeekListUpdate,
 	createSeek,
-	cancel,
-	doWeHaveSeek,
 	subscribe,
 	unsubFromInvites,
 };

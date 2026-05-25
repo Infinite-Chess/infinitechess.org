@@ -25,12 +25,10 @@ let fps = 0;
 /** Estimation of the monitor's refresh rate. */
 let monitorRefreshRate = 0;
 
-let isAFK = false;
 /** Milliseconds of inactivity to pause title screen animation, saving cpu. */
 const timeUntilAFK = { normal: 30_000, dev: 2_000 }; // Default: 30_000
 let AFKTimeoutID: number | undefined;
 
-let isHibernating = false;
 const timeUntilHibernation = 1000 * 60 * 30; // 30 minutes
 // const timeUntilHibernation = 10000; // 10s for dev testing
 /** ID of the timer to declare we are hibernating! */
@@ -42,21 +40,8 @@ let timeToDeleteInviteTimeoutID: number | undefined;
 
 // Functions -------------------------------------------------------------
 
-/** Millis since the start of the program. */
-function getRunTime(): number {
-	return runTime;
-}
-
 function getTimeUntilAFK(): number {
 	return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
-}
-
-function areWeAFK(): boolean {
-	return isAFK;
-}
-
-function areWeHibernating(): boolean {
-	return isHibernating;
 }
 
 function isPageHidden(): boolean {
@@ -107,8 +92,6 @@ function updateAFK(): void {
 }
 
 function onReturnFromAFK(): void {
-	isAFK = false;
-	isHibernating = false;
 	restartAFKTimer();
 	restartHibernateTimer();
 
@@ -126,13 +109,11 @@ function restartHibernateTimer(): void {
 }
 
 function onAFK(): void {
-	isAFK = true;
 	AFKTimeoutID = undefined;
 	//console.log("Set AFK to true!")
 }
 
 function onHibernate(): void {
-	isHibernating = true;
 	hibernateTimeoutID = undefined;
 	// console.log("Set hibernating to true!")
 
@@ -180,10 +161,7 @@ function cancelTimerToDeleteInviteAfterLeavingPage(): void {
 // Exports --------------------------------------------------------------------
 
 export default {
-	getRunTime,
 	update,
-	areWeAFK,
-	areWeHibernating,
 	isPageHidden,
 	restartAFKTimer,
 };

@@ -51,7 +51,7 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 // Variables ------------------------------------------
 
 /** The active game creation flow. Tracked so the submit handler knows what to do. */
-let currentMode: ModalMode = 'online';
+let currentMode: ModalMode;
 
 // Initialization ----------------------------------------------
 
@@ -99,7 +99,11 @@ function initModal(): void {
 
 	element_modalSubmit.addEventListener('click', () => {
 		if (currentMode === 'online') handleOnlineSeek();
-		closeModal();
+		else if (currentMode === 'friend')
+			console.error('Friend challenge flow not implemented yet');
+		else if (currentMode === 'computer')
+			console.error('Computer game flow not implemented yet');
+		else console.error('Invalid modal mode:', currentMode);
 	});
 
 	initToggleGroups();

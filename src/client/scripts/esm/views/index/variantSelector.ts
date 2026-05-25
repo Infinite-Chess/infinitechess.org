@@ -487,12 +487,14 @@ function getInviteVariant(): InviteVariant | null {
 		return { kind: 'preset', code: selection.code };
 	} else if (selection.kind === 'online') {
 		return { kind: 'cloudSave', name: selection.name };
+	} else if (selection.kind === 'local') {
+		// return { kind: 'icn', content: /* Convert local save to ICN */ };
+		throw new Error('Local saves are not supported for online seeks yet');
 	} else if (selection.kind === 'icn') {
 		const content = element_icnInput.value.trim();
 		if (!icnResult?.isValid || !content) return null;
 		return { kind: 'icn', content };
 	}
-	// Local saves can't be referenced by name on the server
 	return null;
 }
 
