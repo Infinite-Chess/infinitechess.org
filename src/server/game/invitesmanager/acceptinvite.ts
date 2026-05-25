@@ -19,7 +19,6 @@ import { getTranslation } from '../../utility/translate.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { broadcastGameCountToInviteSubs } from '../gamemanager/gamecount.js';
 import {
 	getInviteAndIndexByID,
 	deleteInviteByIndex,
@@ -127,9 +126,7 @@ function acceptInvite(
 
 	// Broadcast the invites list change after creating the game,
 	// because the new game ups the game count.
-	if (hadPublicInvite)
-		onPublicInvitesChange(); // Broadcast to all invites list subscribers!
-	else broadcastGameCountToInviteSubs();
+	if (hadPublicInvite) onPublicInvitesChange(); // Broadcast to all invites list subscribers!
 }
 
 /**

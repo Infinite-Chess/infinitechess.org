@@ -5,7 +5,7 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { GameMode } from '../../../../../shared/types.js';
+import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -50,7 +50,7 @@ const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTML
 
 // Variables ------------------------------------------
 
-/** The active game creation flow. Tracked so the submit handler knows what to do. */
+/** The active game creation flow. */
 let currentMode: ModalMode;
 
 // Initialization ----------------------------------------------
@@ -118,17 +118,16 @@ function initModal(): void {
 /** Reads the online seek form state and sends a createinvite request via the lobby. */
 function handleOnlineSeek(): void {
 	const variant = variantSelector.getInviteVariant();
-	if (variant === null) return; // Invalid selection (e.g. bad ICN, unsupported local save)
+	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
-	const time = timeControls.getTimeControl();
+	const time: TimeControl = timeControls.getTimeControl();
 
 	const sideBtn = document.querySelector<HTMLElement>('[data-side].active');
-	const sideVal = sideBtn?.getAttribute('data-side') ?? null;
-	const color: Player | null =
-		sideVal === 'white' ? players.WHITE : sideVal === 'black' ? players.BLACK : null;
+	const sideVal = sideBtn?.getAttribute('data-side')!;
+	const color: Player | null = sideVal === 'random' ? null : sideVal === 'white' ? players.WHITE : sideVal === 'black' ? players.BLACK : (() => { throw new Error('Invalid side selection'); })(); // prettier-ignore
 
-	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active');
-	const mode: GameMode = (modeBtn?.getAttribute('data-mode') as GameMode) ?? 'casual';
+	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active')!;
+	const mode: GameMode = modeBtn.getAttribute('data-mode') as GameMode;
 
 	const modifiers = modifierSelector.getInviteModifiers();
 
@@ -150,6 +149,7 @@ function openModal(mode: ModalMode): void {
 
 /** Hides the modal. */
 function closeModal(): void {
+	console.error('Modal closing (What causes this when clicking "Create online game"?)');
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();

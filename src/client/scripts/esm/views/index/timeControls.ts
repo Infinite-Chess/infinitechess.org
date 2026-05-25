@@ -96,12 +96,18 @@ function onTimeToggle(): void {
 /** Returns the current time control value from the modal's slider/toggle state. */
 function getTimeControl(): TimeControl {
 	const activeBtn = document.querySelector<HTMLElement>('[data-time].active')!;
-	const isTimed = activeBtn.getAttribute('data-time') === 'timed';
-	if (!isTimed) return '-';
-	const minutes = TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!;
-	const increment =
-		TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!;
-	return `${minutes * 60}+${increment}` as TimeControl;
+	const timedVal = activeBtn.getAttribute('data-time')!;
+	if (timedVal === 'infinite') {
+		return '-';
+	} else if (timedVal === 'timed') {
+		const minutes = TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!;
+		const seconds = minutes * 60;
+		const increment =
+			TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!;
+		return `${seconds}+${increment}`;
+	} else {
+		throw new Error(`Invalid time mode: ${timedVal}`);
+	}
 }
 
 // Exports ----------------------------------------------

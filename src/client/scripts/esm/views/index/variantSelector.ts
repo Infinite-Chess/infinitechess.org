@@ -491,7 +491,7 @@ function getInviteVariant(): InviteVariant | null {
 		// return { kind: 'icn', content: /* Convert local save to ICN */ };
 		throw new Error('Local saves are not supported for online seeks yet');
 	} else if (selection.kind === 'icn') {
-		const content = element_icnInput.value.trim();
+		const content = element_icnInput.value;
 		if (!icnResult?.isValid || !content) return null;
 		return { kind: 'icn', content };
 	}

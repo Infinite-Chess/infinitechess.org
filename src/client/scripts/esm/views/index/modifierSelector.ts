@@ -16,9 +16,6 @@ import variantSelector from './variantSelector.js';
 /** Unique identifier for each available game modifier. */
 type ModifierCode = 'slide-limit';
 
-/** The full configuration for a single selected modifier, including any modifier-specific settings. */
-type ModifierConfig = { kind: 'slide-limit'; slideLimit: number };
-
 // Constants ---------------------------------------------
 
 /** Display name for each modifier code. */
@@ -148,22 +145,14 @@ function hasVisibleModifierItems(): boolean {
 }
 
 /** Returns the complete configuration for every currently selected modifier. */
-function getModifierConfigs(): ModifierConfig[] {
-	const configs: ModifierConfig[] = [];
+function getInviteModifiers(): InviteModifier[] {
+	const configs: InviteModifier[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
 		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
-		configs.push({ kind: 'slide-limit', slideLimit });
+		configs.push({ kind: 'slide-limit', value: slideLimit });
 	}
 	return configs;
-}
-
-/** Returns selected modifiers in the wire format for the createinvite message. */
-function getInviteModifiers(): InviteModifier[] {
-	return getModifierConfigs().map((cfg) => ({
-		kind: cfg.kind,
-		value: cfg.slideLimit as (typeof gameconfig.SLIDE_LIMIT_VALUES)[number],
-	}));
 }
 
 // Exports -----------------------------------------------
@@ -171,6 +160,5 @@ function getInviteModifiers(): InviteModifier[] {
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
-	getModifierConfigs,
 	getInviteModifiers,
 };
