@@ -203,6 +203,13 @@ async function send(
 	isUserAction?: boolean,
 	onreplyFunc?: () => void,
 ): Promise<boolean> {
+	// Guard: messages to a subscription route require an active subscription.
+	if (socketsubs.validSubs.includes(route) && !socketsubs.areSubbedToSub(route)) {
+		console.error(`Can't send route '${route}' action '${action}' while not subscribed.`);
+		onreplyFunc?.();
+		return false;
+	}
+
 	if (!(await socketman.establishSocket())) {
 		if (isUserAction) console.error("Too many requests. Can't send socket message.");
 		if (onreplyFunc) onreplyFunc();

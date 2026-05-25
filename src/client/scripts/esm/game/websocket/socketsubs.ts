@@ -9,7 +9,7 @@
 
 import socketmessages from './socketmessages.js';
 
-const validSubs = ['invites', 'game'] as const;
+const validSubs = ['invites', 'game'];
 
 type Sub = (typeof validSubs)[number];
 
