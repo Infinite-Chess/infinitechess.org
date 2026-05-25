@@ -29,10 +29,7 @@ import {
 } from './invitesmanager.js';
 
 /** The zod schema for validating the contents of the acceptinvite message. */
-const acceptinviteschem = z.strictObject({
-	id: z.string().length(IDLengthOfInvites),
-	isPrivate: z.boolean(),
-});
+const acceptinviteschem = z.string().length(IDLengthOfInvites);
 
 type AcceptInviteMessage = z.infer<typeof acceptinviteschem>;
 
@@ -52,9 +49,8 @@ function acceptInvite(
 		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto });
 
 	// Does the invite still exist?
-	const inviteAndIndex = getInviteAndIndexByID(messageContents.id); // { seek, index }
-	if (!inviteAndIndex)
-		return informThemGameAborted(ws, messageContents.isPrivate, messageContents.id, replyto);
+	const inviteAndIndex = getInviteAndIndexByID(messageContents);
+	if (!inviteAndIndex) return informThemGameAborted(ws, messageContents, replyto);
 
 	const { seek, index } = inviteAndIndex;
 
@@ -135,15 +131,8 @@ function acceptInvite(
  * was invalid, if they entered a private invite code.
  * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(
-	ws: CustomWebSocket,
-	isPrivate: boolean,
-	inviteID: string,
-	replyto?: number,
-): void {
-	const errString = isPrivate
-		? 'server.javascript.ws-invalid_code'
-		: 'server.javascript.ws-game_aborted';
+function informThemGameAborted(ws: CustomWebSocket, inviteID: string, replyto?: number): void {
+	const errString = 'server.javascript.ws-game_aborted';
 	return sendNotify(ws, errString, { replyto });
 }
 
