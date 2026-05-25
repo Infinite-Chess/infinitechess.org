@@ -212,7 +212,7 @@ async function send(
 
 	if (!(await socketman.establishSocket())) {
 		if (isUserAction) console.error("Too many requests. Can't send socket message.");
-		if (onreplyFunc) onreplyFunc();
+		onreplyFunc?.();
 		return false;
 	}
 
