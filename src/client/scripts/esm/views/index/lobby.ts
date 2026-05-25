@@ -199,9 +199,8 @@ function accept(seekId: string): void {
 // Subscribing ---------------------------------------------
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
-async function subscribe(ignoreAlreadySubbed = false): Promise<void> {
-	const alreadySubbed = socketsubs.areSubbedToSub('invites');
-	if (!ignoreAlreadySubbed && alreadySubbed) return;
+async function subscribe(): Promise<void> {
+	if (socketsubs.areSubbedToSub('invites')) return;
 	socketsubs.addSub('invites');
 	socketmessages.send('general', 'sub', 'invites');
 }

@@ -16,7 +16,7 @@ import './gameSetupModal.js';
 // Initial setup -----------------------------------------------------
 
 lobby.subscribe();
-SocketBus.addEventListener('reconnected', () => lobby.subscribe(true));
+SocketBus.addEventListener('reconnected', () => lobby.subscribe());
 
 SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 

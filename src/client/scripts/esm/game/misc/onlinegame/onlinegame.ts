@@ -297,6 +297,7 @@ function update(): void {
 function resyncToGame(): void {
 	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
+	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	socketmessages.send('game', 'resync', id!);
 }
 

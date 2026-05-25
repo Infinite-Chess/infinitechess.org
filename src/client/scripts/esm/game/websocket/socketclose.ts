@@ -64,6 +64,9 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	const unIntentional = notByChoice && !socketsubs.zeroSubs();
 	SocketBus.dispatch('closed', unIntentional);
 
+	// The server drops all subscriptions on close. Reconnect handlers should re-subscribe.
+	socketsubs.clearAllSubs();
+
 	// Connection closed unexpectedly (network interrupted) or server is down.
 	// We did nothing wrong on our part, it's okay to instantly try to reconnect!
 	// But don't if the connection wasn't fully open or this creates spamming!

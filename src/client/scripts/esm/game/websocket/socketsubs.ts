@@ -51,6 +51,14 @@ function deleteSub(sub: Sub): void {
 }
 
 /**
+ * Marks all subscription lists as unsubscribed.
+ * Called when the websocket closes, since the server drops all subs on its side.
+ */
+function clearAllSubs(): void {
+	for (const sub of validSubs) subs[sub] = false;
+}
+
+/**
  * Unsubs from the provided subscription list,
  * informing the server we no longer want updates.
  * @param sub - The name of the sub to unsubscribe from
@@ -70,5 +78,6 @@ export default {
 	areSubbedToSub,
 	addSub,
 	deleteSub,
+	clearAllSubs,
 	unsubFromSub,
 };
