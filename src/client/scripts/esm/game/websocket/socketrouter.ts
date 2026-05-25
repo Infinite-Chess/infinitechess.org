@@ -12,7 +12,6 @@ import * as z from 'zod';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
 
-import toast from '../gui/toast.js';
 import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import { SocketBus } from './SocketBus.js';
@@ -49,10 +48,6 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
-		toast.show(translations.websocket.malformed_message, {
-			error: true,
-			durationMillis: 100000,
-		});
 		console.error(
 			'Received malformed websocket message from the server:',
 			parsedUnvalidatedMessage,
@@ -132,10 +127,10 @@ function onmessage(serverMessage: MessageEvent): void {
 function ongeneralmessage(message: GeneralMessage): void {
 	switch (message.action) {
 		case 'notify':
-			toast.show(message.value);
+			console.log(message.value);
 			break;
 		case 'notifyerror':
-			toast.show(message.value, { error: true, durationMultiplier: 2 });
+			console.error(message.value);
 			break;
 		case 'print':
 			console.log(message.value);

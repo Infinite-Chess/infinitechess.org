@@ -9,7 +9,6 @@
 
 import wsutil from '../../../../../shared/util/wsutil.js';
 
-import toast from '../gui/toast.js';
 import config from '../config.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
@@ -84,10 +83,7 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			socketman.resubAll();
 			break;
 		case 'Unable to identify client IP address':
-			toast.show(
-				`${translations.websocket.unable_to_identify_ip} ${translations.websocket.please_report_bug}`,
-				{ error: true, durationMultiplier: 100 },
-			);
+			console.error('Unable to identify IP when establishing socket.');
 			break;
 		case 'Authentication needed':
 			onAuthenticationNeeded();
@@ -96,30 +92,19 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			validatorama.reloadAfterLogout();
 			break;
 		case 'Too Many Requests. Try again soon.':
-			toast.show(translations.websocket.too_many_requests, {
-				durationMillis: timeToResubAfterTooManyRequestsMillis,
-			});
+			console.error('Too many requests when establishing socket.');
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Message Too Big':
-			toast.show(
-				`${translations.websocket.message_too_big} ${translations.websocket.please_report_bug}`,
-				{ error: true, durationMultiplier: 3 },
-			);
+			console.error('Message too big when establishing socket.');
 			enterTimeout(timeToResubAfterMessageTooBigMillis);
 			break;
 		case 'Too Many Sockets':
-			toast.show(
-				`${translations.websocket.too_many_sockets} ${translations.websocket.please_report_bug}`,
-				{ error: true, durationMultiplier: 3 },
-			);
+			console.error('Too many sockets when establishing socket.');
 			window.setTimeout(() => socketman.resubAll(), timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'Origin Error':
-			toast.show(
-				`${translations.websocket.origin_error} ${translations.websocket.please_report_bug}`,
-				{ error: true, durationMultiplier: 3 },
-			);
+			console.error('Origin error when establishing socket.');
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'No echo heard':
@@ -127,12 +112,8 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 			socketman.resubAll();
 			break;
 		default:
-			toast.show(
-				`${translations.websocket.connection_closed} "${trimmedReason}". Code: ${event.code}. ${translations.websocket.please_report_bug}`,
-				{ error: true, durationMultiplier: 100 },
-			);
 			console.error(
-				'Unknown reason why the WebSocket connection was closed. Not reopening or resubscribing.',
+				`Socket closed unexpectedly. Server message: "${trimmedReason}". Code: ${event.code}.`,
 			);
 	}
 }
@@ -171,7 +152,9 @@ async function onAuthenticationNeeded(): Promise<void> {
 		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
 		// 24 hours
 		if (difference < 1000 * 60 * 60 * 24) {
-			toast.show(translations.websocket.online_play_disabled);
+			console.error(
+				'Cookies not supported on this browser. Cannot establish websocket connection.',
+			);
 			lastTimeWeGotAuthorizationNeededMessage = now;
 			return;
 		}

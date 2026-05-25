@@ -6,7 +6,6 @@
  * Also owns the socket instance and debug toggle.
  */
 
-import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
 import socketsubs from './socketsubs.js';
@@ -49,11 +48,8 @@ let DEBUG = false;
 // Initialization --------------------------------------------------------------
 
 SocketBus.addEventListener('connection-lost', () => {
-	// Displays a toast, notifying the user they lost connection.
 	noConnection = true;
-	toast.show(translations.websocket.no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-	});
+	console.error('No connection.');
 });
 
 // Page navigation handling
@@ -74,7 +70,7 @@ function isDebugEnabled(): boolean {
 /** Toggles debug mode on or off, showing a toast notification. */
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	toast.show(`Toggled websocket latency: ${DEBUG}`);
+	console.log(`Toggled websocket latency: ${DEBUG}`);
 }
 
 // Socket Access ---------------------------------------------------------------
@@ -121,17 +117,14 @@ async function establishSocket(): Promise<boolean> {
 		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
 		if (attemptIndex > 0) {
 			noConnection = true;
-			toast.show(translations.websocket.no_connection, {
-				durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-			});
+			console.error('No connection.');
 			await thread.sleep(delay);
 		}
 		success = await openSocket();
 		attemptIndex++;
 	} while (!success && !socketsubs.zeroSubs());
 
-	if (success && noConnection)
-		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
+	if (success && noConnection) console.log('Reconnected.');
 	noConnection = false;
 
 	openingSocket = false;
@@ -184,9 +177,7 @@ function onReqBack(): void {
 /** Displays "Lost connection" and keeps repeating until we successfully connect. */
 function httpLostConnection(): void {
 	noConnection = true;
-	toast.show(translations.websocket.no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-	});
+	console.error('No connection.');
 	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
