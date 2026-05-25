@@ -6,7 +6,7 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { BaseSeek, InviteVariant, OutSeekVariant } from '../../../shared/types.js';
+import type { BaseSeek, InviteVariant, OutSeek, OutSeekVariant } from '../../../shared/types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
@@ -17,11 +17,6 @@ export interface AuthSeek extends BaseSeek {
 	/** Contains the identifier of the owner of the invite, whether a member or browser. */
 	owner: AuthMemberInfo;
 	variant: InviteVariant;
-}
-
-/** The version of invite seeks sent to the client. */
-export interface OutSeek extends BaseSeek {
-	variant: OutSeekVariant;
 }
 
 //-------------------------------------------------------------------------------------------

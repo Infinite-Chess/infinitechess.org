@@ -12,12 +12,10 @@ import * as z from 'zod';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../../shared/game_version.js';
 
-import toast from '../gui/toast.js';
-import invites from '../misc/invites.js';
 import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
+import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
-import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
 import { MasterSchema } from './socketschemas.js';
 
 // Types -----------------------------------------------------------------------
@@ -50,10 +48,6 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
-		toast.show(translations.websocket.malformed_message, {
-			error: true,
-			durationMillis: 100000,
-		});
 		console.error(
 			'Received malformed websocket message from the server:',
 			parsedUnvalidatedMessage,
@@ -112,10 +106,10 @@ function onmessage(serverMessage: MessageEvent): void {
 			ongeneralmessage(message.contents);
 			break;
 		case 'invites':
-			invites.onmessage(message.contents);
+			SocketBus.dispatch('lobby', message.contents);
 			break;
 		case 'game':
-			onlinegamerouter.routeMessage(message.contents);
+			SocketBus.dispatch('game', message.contents);
 			break;
 		default:
 			console.error(
@@ -133,10 +127,10 @@ function onmessage(serverMessage: MessageEvent): void {
 function ongeneralmessage(message: GeneralMessage): void {
 	switch (message.action) {
 		case 'notify':
-			toast.show(message.value);
+			console.log(message.value);
 			break;
 		case 'notifyerror':
-			toast.show(message.value, { error: true, durationMultiplier: 2 });
+			console.error(message.value);
 			break;
 		case 'print':
 			console.log(message.value);

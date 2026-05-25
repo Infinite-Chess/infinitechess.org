@@ -7,9 +7,9 @@
 import uuid from '../../../../../shared/util/uuid.js';
 import wsutil from '../../../../../shared/util/wsutil.js';
 
-import toast from '../gui/toast.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
+import { SocketBus } from './SocketBus.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ function cancelTimerOfMessageID(ID: number): void {
 
 	// Update the Ping meter with the round-trip time
 	const timeTaken = Date.now() - echoTimer.timeSent;
-	document.dispatchEvent(new CustomEvent('ping', { detail: timeTaken }));
+	SocketBus.dispatch('ping', timeTaken);
 
 	clearTimeout(echoTimer.timeoutID);
 	delete echoTimers[ID];
@@ -204,7 +204,7 @@ async function send(
 	onreplyFunc?: () => void,
 ): Promise<boolean> {
 	if (!(await socketman.establishSocket())) {
-		if (isUserAction) toast.show(translations.websocket.too_many_requests);
+		if (isUserAction) console.error("Too many requests. Can't send socket message.");
 		if (onreplyFunc) onreplyFunc();
 		return false;
 	}

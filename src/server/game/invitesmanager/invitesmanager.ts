@@ -7,14 +7,14 @@
  * and broadcasts changes out to the clients.
  */
 
+import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getActiveGameCount } from '../gamemanager/gamecount.js';
-import { safelyCopyInvite, memberInfoEq, AuthSeek, OutSeek } from './inviteutility.js';
+import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
 	getInviteSubscribers,
 	addSocketToInvitesSubs,
@@ -84,7 +84,7 @@ function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void {
  */
 function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
 	const newInvitesList = getInvitesListSafe();
-	const currentGameCount = getActiveGameCount();
+	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
 
 	const subscribedClients = getInviteSubscribers() as Record<string, CustomWebSocket>;
 	for (const subbedSocket of Object.values(subscribedClients)) {
@@ -94,7 +94,6 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
 		const includedReplyTo = ws === subbedSocket ? replyto : undefined;
 		sendClientInvitesList(subbedSocket, {
 			invitesList: newInvitesListCopy,
-			currentGameCount,
 			replyto: includedReplyTo,
 		});
 	}
@@ -111,11 +110,11 @@ function sendClientInvitesList(
 	ws: CustomWebSocket,
 	{
 		invitesList = getInvitesListSafe(),
-		currentGameCount = getActiveGameCount(),
 		replyto = undefined,
-	}: { replyto?: number; invitesList?: OutSeek[]; currentGameCount?: number } = {},
+	}: { replyto?: number; invitesList?: OutSeek[] } = {},
 ): void {
-	const message = { invitesList, currentGameCount };
+	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
+	const message = { invitesList };
 	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
 

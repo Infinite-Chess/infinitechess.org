@@ -5,6 +5,8 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
+import type { InviteModifier } from '../../../../../shared/types.js';
+
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import variantSelector from './variantSelector.js';
@@ -13,9 +15,6 @@ import variantSelector from './variantSelector.js';
 
 /** Unique identifier for each available game modifier. */
 type ModifierCode = 'slide-limit';
-
-/** The full configuration for a single selected modifier, including any modifier-specific settings. */
-type ModifierConfig = { kind: 'slide-limit'; slideLimit: number };
 
 // Constants ---------------------------------------------
 
@@ -146,12 +145,12 @@ function hasVisibleModifierItems(): boolean {
 }
 
 /** Returns the complete configuration for every currently selected modifier. */
-function getModifierConfigs(): ModifierConfig[] {
-	const configs: ModifierConfig[] = [];
+function getInviteModifiers(): InviteModifier[] {
+	const configs: InviteModifier[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
 		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
-		configs.push({ kind: 'slide-limit', slideLimit });
+		configs.push({ kind: 'slide-limit', value: slideLimit });
 	}
 	return configs;
 }
@@ -161,5 +160,5 @@ function getModifierConfigs(): ModifierConfig[] {
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
-	getModifierConfigs,
+	getInviteModifiers,
 };

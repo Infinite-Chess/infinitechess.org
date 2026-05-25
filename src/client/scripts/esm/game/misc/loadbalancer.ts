@@ -8,7 +8,6 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import stats from '../gui/stats.js';
 import config from '../config.js';
-import invites from './invites.js';
 import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
@@ -26,12 +25,10 @@ let fps = 0;
 /** Estimation of the monitor's refresh rate. */
 let monitorRefreshRate = 0;
 
-let isAFK = false;
 /** Milliseconds of inactivity to pause title screen animation, saving cpu. */
 const timeUntilAFK = { normal: 30_000, dev: 2_000 }; // Default: 30_000
 let AFKTimeoutID: number | undefined;
 
-let isHibernating = false;
 const timeUntilHibernation = 1000 * 60 * 30; // 30 minutes
 // const timeUntilHibernation = 10000; // 10s for dev testing
 /** ID of the timer to declare we are hibernating! */
@@ -39,27 +36,12 @@ let hibernateTimeoutID: number | undefined;
 
 let windowIsVisible = true;
 
-const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 60 * 30; // 30 minutes
-// const timeToDeleteInviteAfterPageHiddenMillis = 1000 * 10; // 10 seconds
 let timeToDeleteInviteTimeoutID: number | undefined;
 
 // Functions -------------------------------------------------------------
 
-/** Millis since the start of the program. */
-function getRunTime(): number {
-	return runTime;
-}
-
 function getTimeUntilAFK(): number {
 	return config.DEV_BUILD ? timeUntilAFK.dev : timeUntilAFK.normal;
-}
-
-function areWeAFK(): boolean {
-	return isAFK;
-}
-
-function areWeHibernating(): boolean {
-	return isHibernating;
 }
 
 function isPageHidden(): boolean {
@@ -110,13 +92,10 @@ function updateAFK(): void {
 }
 
 function onReturnFromAFK(): void {
-	isAFK = false;
-	isHibernating = false;
 	restartAFKTimer();
 	restartHibernateTimer();
 
 	// Make sure we're subbed to invites list if we're on the play page!
-	invites.subscribeToInvites();
 }
 
 function restartAFKTimer(): void {
@@ -130,19 +109,15 @@ function restartHibernateTimer(): void {
 }
 
 function onAFK(): void {
-	isAFK = true;
 	AFKTimeoutID = undefined;
 	//console.log("Set AFK to true!")
 }
 
 function onHibernate(): void {
-	if (invites.doWeHave()) return restartHibernateTimer(); // Don't hibernate if we have an open invite AND the page is visible!
-	isHibernating = true;
 	hibernateTimeoutID = undefined;
 	// console.log("Set hibernating to true!")
 
 	// Unsub from invites list
-	invites.unsubFromInvites();
 }
 
 // The 'focus' and 'blur' event listeners fire the MOST common, when you so much as click a different window on-screen,
@@ -164,10 +139,6 @@ document.addEventListener('visibilitychange', function () {
 		// THIS ALSO UNSUBS US
 		// timeToDeleteInviteTimeoutID = setTimeout(websocket.unsubFromInvites, timeToDeleteInviteAfterPageHiddenMillis)
 		// This ONLY cancels our invite if we have one
-		timeToDeleteInviteTimeoutID = window.setTimeout(
-			invites.cancel,
-			timeToDeleteInviteAfterPageHiddenMillis,
-		);
 	} else {
 		windowIsVisible = true;
 
@@ -190,10 +161,7 @@ function cancelTimerToDeleteInviteAfterLeavingPage(): void {
 // Exports --------------------------------------------------------------------
 
 export default {
-	getRunTime,
 	update,
-	areWeAFK,
-	areWeHibernating,
 	isPageHidden,
 	restartAFKTimer,
 };

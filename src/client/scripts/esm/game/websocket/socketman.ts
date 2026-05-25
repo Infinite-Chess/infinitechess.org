@@ -6,15 +6,13 @@
  * Also owns the socket instance and debug toggle.
  */
 
-import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
-import invites from '../misc/invites.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../../util/validatorama.js';
 import socketrouter from './socketrouter.js';
+import { SocketBus } from './SocketBus.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -49,12 +47,9 @@ let DEBUG = false;
 
 // Initialization --------------------------------------------------------------
 
-document.addEventListener('connection-lost', () => {
-	// Displays a toast, notifying the user they lost connection.
+SocketBus.addEventListener('connection-lost', () => {
 	noConnection = true;
-	toast.show(translations.websocket.no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-	});
+	console.error('No connection.');
 });
 
 // Page navigation handling
@@ -75,7 +70,7 @@ function isDebugEnabled(): boolean {
 /** Toggles debug mode on or off, showing a toast notification. */
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	toast.show(`Toggled websocket latency: ${DEBUG}`);
+	console.log(`Toggled websocket latency: ${DEBUG}`);
 }
 
 // Socket Access ---------------------------------------------------------------
@@ -89,7 +84,7 @@ function getSocket(): WebSocket | undefined {
 
 /** Dispatches a custom event indicating that websocket connection was lost. */
 function dispatchLostConnectionCustomEvent(): void {
-	document.dispatchEvent(new CustomEvent('connection-lost'));
+	SocketBus.dispatch('connection-lost');
 }
 
 // Socket Lifecycle ------------------------------------------------------------
@@ -122,18 +117,14 @@ async function establishSocket(): Promise<boolean> {
 		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
 		if (attemptIndex > 0) {
 			noConnection = true;
-			toast.show(translations.websocket.no_connection, {
-				durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-			});
-			invites.clearIfOnPlayPage();
+			console.error('No connection.');
 			await thread.sleep(delay);
 		}
 		success = await openSocket();
 		attemptIndex++;
 	} while (!success && !socketsubs.zeroSubs());
 
-	if (success && noConnection)
-		toast.show(translations.websocket.reconnected, { durationMillis: 1000 });
+	if (success && noConnection) console.log('Reconnected.');
 	noConnection = false;
 
 	openingSocket = false;
@@ -173,8 +164,7 @@ async function openSocket(): Promise<boolean> {
  * that assumes lost connection if no response arrives.
  */
 function onSocketUpgradeReqLeave(): void {
-	// Dispatches a custom event indicating that a socket connection is being opened.
-	document.dispatchEvent(new CustomEvent('socket-opening'));
+	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
 	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
@@ -187,9 +177,7 @@ function onReqBack(): void {
 /** Displays "Lost connection" and keeps repeating until we successfully connect. */
 function httpLostConnection(): void {
 	noConnection = true;
-	toast.show(translations.websocket.no_connection, {
-		durationMillis: TIME_TO_WAIT_FOR_HTTP_MILLIS,
-	});
+	console.error('No connection.');
 	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
@@ -204,35 +192,12 @@ function closeSocket(): void {
 // Resubscription --------------------------------------------------------------
 
 /**
- * Called when the socket unexpectedly closes. Reopens the socket
- * and resubscribes to everything that was previously subscribed.
+ * Called when the socket unexpectedly closes. Notifies all subs to resubscribe.
+ * Then socketmessages.send() lazily reopens the socket.
  */
-async function resubAll(): Promise<void> {
+function resubAll(): void {
 	if (config.DEV_BUILD) console.log('Resubbing all..');
-
-	if (socketsubs.zeroSubs()) {
-		noConnection = false;
-		console.log('No subs to sub to.');
-		return;
-	} else {
-		if (!(await establishSocket())) return;
-	}
-
-	for (const sub of socketsubs.validSubs) {
-		if (!socketsubs.areSubbedToSub(sub)) continue;
-		switch (sub) {
-			case 'invites':
-				await invites.subscribeToInvites(true);
-				break;
-			case 'game':
-				onlinegame.resyncToGame();
-				break;
-			default:
-				console.error(
-					`Cannot resub to all subs after an unexpected socket closure with strange sub ${sub}!`,
-				);
-		}
-	}
+	SocketBus.dispatch('reconnected');
 }
 
 // Exports --------------------------------------------------------------------

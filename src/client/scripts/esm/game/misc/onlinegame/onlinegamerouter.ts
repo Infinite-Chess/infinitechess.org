@@ -28,6 +28,7 @@ import onlinegame from './onlinegame.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 
@@ -42,6 +43,9 @@ type LoggedGameInfo = {
 };
 
 // Routers --------------------------------------------------------------------------------------
+
+// Listen for incoming messages for the 'game' subscription
+SocketBus.addEventListener('game', (e) => routeMessage(e.detail));
 
 /**
  * Routes a server websocket message with subscription marked `game`.

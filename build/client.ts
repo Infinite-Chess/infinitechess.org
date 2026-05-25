@@ -36,8 +36,10 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index/index.ts',
 
+	// Other
+	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
+
 	// 'src/client/scripts/esm/game/main.ts',
-	// 'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
 	// 'src/client/scripts/esm/components/header/header.ts',
 	// 'src/client/scripts/esm/views/member.ts',
 	// 'src/client/scripts/esm/views/leaderboard.ts',

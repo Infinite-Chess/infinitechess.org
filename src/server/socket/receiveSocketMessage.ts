@@ -13,7 +13,7 @@ import * as z from 'zod';
 import socketUtility from './socketUtility.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
-import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
+import { LobbySchema } from '../game/invitesmanager/invitesrouter.js';
 import { GeneralSchema } from './generalrouter.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
@@ -26,7 +26,7 @@ import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessag
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
-	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: InvitesSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: LobbySchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
 /** Represents all possible types a non-echo incoming websocket message could be! */

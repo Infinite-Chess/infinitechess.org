@@ -4,6 +4,8 @@
  * This script manages the display and updates of the ping meter.
  */
 
+import { SocketBus } from '../../game/websocket/SocketBus.js';
+
 // Document Elements -------------------------------------------------------------------------
 
 const pingMeter = document.querySelector('.ping-meter')!;
@@ -20,10 +22,10 @@ const loadingAnim = document.querySelector('.ping-meter .svg-pawn')!; // Spinnin
 })();
 
 function initEventListeners(): void {
-	document.addEventListener('ping', updatePing); // Custom event. When we receive this event, we know we are connected
-	document.addEventListener('socket-opening', openMeterAndDisplayLoading); // Custom event that is dispatched whenever we start trying to open a new socket upgrade connection request.
-	document.addEventListener('connection-lost', openMeterAndDisplayLoading); // Custom event
-	document.addEventListener('socket-closed', socketClosed); // Custom event
+	SocketBus.addEventListener('ping', updatePing);
+	SocketBus.addEventListener('opening', openMeterAndDisplayLoading);
+	SocketBus.addEventListener('connection-lost', openMeterAndDisplayLoading);
+	SocketBus.addEventListener('closed', socketClosed);
 }
 
 function updatePing(event: CustomEvent): void {
@@ -83,10 +85,10 @@ function openMeterAndDisplayLoading(): void {
  * 1. If the soccer was close by choice, we close the ping meter.
  * 2. If the socket was closed by bad network, we display the loading animation
  */
-function socketClosed(event: CustomEvent): void {
-	const notByChoise = event.detail; // This will be true if the user didn't intend to close the connection, they could have bad network.
+function socketClosed(event: CustomEvent<boolean>): void {
+	const notByChoice = event.detail; // true if the user didn't intend to close, e.g. bad network.
 
-	if (notByChoise)
+	if (notByChoice)
 		openMeterAndDisplayLoading(); // Hide the green bars, show the spinning-pawn loading animation
 	else closeMeter(); // By choice. Just close the ping meter, we are no longer connected
 }

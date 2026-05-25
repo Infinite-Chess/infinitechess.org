@@ -13,9 +13,7 @@ export class DownsamplerNode extends AudioWorkletNode {
 	public static async create(context: AudioContext): Promise<DownsamplerNode> {
 		try {
 			// Load the worklet processor from the specified URL
-			await context.audioWorklet.addModule(
-				'scripts/esm/audio/processors/downsampler/DownsamplerProcessor.js',
-			);
+			await context.audioWorklet.addModule(window.$downsamplerProcessorUrl);
 			// Once loaded, create an instance of the node
 			return new DownsamplerNode(context);
 		} catch (e) {

@@ -211,7 +211,7 @@ export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('custom') }),
 ]);
 
-/** A single game modifier applied to a seek. */
+/** The full configuration for a single game modifier applied to a seek. */
 export type InviteModifier = z.infer<typeof InviteModifierSchema>;
 export const InviteModifierSchema = z.discriminatedUnion('kind', [
 	z.strictObject({
@@ -230,4 +230,10 @@ export const BaseSeekSchema = z.strictObject({
 	time: TimeControlSchema,
 	mode: GameModeSchema,
 	modifiers: z.array(InviteModifierSchema).optional(),
+});
+
+/** The version of seeks broadcast to lobby viewers. */
+export type OutSeek = z.infer<typeof OutSeekSchema>;
+export const OutSeekSchema = BaseSeekSchema.extend({
+	variant: OutSeekVariantSchema,
 });

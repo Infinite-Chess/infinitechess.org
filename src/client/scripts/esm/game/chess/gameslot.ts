@@ -35,11 +35,9 @@ import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import copygame from './copygame.js';
 import miniimage from '../rendering/miniimage.js';
 import pastegame from './pastegame.js';
-import gamesound from '../misc/gamesound.js';
 import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
-import gameloader from './gameloader.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
@@ -156,10 +154,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 	return loadLogical(loadOptions).then(() => {
 		// console.log('Finished loading LOGICAL game stuff.');
 
-		// Play the start game sound once LOGICAL stuff is finished loading,
-		// so that the sound will still play in chrome, with the tab hidden, and
-		// someone accepts your invite. (In that scenario, the graphical loading is blocked)
-		gamesound.playGamestart();
+		console.warn('Game start sound has not been added yet.');
 
 		// Start GRAPHICAL loading immediately and hand its promise to the caller.
 		return { graphical: loadGraphical(loadOptions) };
@@ -310,22 +305,7 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	const victor = gamefile.gameConclusion.victor; // undefined if aborted, null if draw
-	const delayToPlayConcludeSoundSecs = 0.65;
-	if (gameloader.areInLocalGame()) {
-		if (victor !== null && victor !== undefined) {
-			gamesound.playWin(delayToPlayConcludeSoundSecs);
-		} else {
-			gamesound.playDraw(delayToPlayConcludeSoundSecs);
-		}
-	} else {
-		// In online game or engine game
-		const ourRole = gameloader.getOurColor()!;
-		if (victor === ourRole) gamesound.playWin(delayToPlayConcludeSoundSecs);
-		else if (victor === null || victor === undefined)
-			gamesound.playDraw(delayToPlayConcludeSoundSecs);
-		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
-	}
+	console.warn('Game conclude sound has not been added yet.');
 }
 
 /** Undoes the conclusion of the game. */
