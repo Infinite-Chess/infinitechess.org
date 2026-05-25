@@ -5,18 +5,18 @@
  */
 
 import type { TimeControl } from '../../../../../shared/types.js';
-
-import timeutil from '../../../../../shared/util/timeutil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 
+import timeutil from '../../../../../shared/util/timeutil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
-import { type Player, players as p } from '../../../../../shared/chess/util/typeutil.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
+import { players as p, Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from './toast.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
+import { SocketBus } from '../websocket/SocketBus.js';
 import hydrochess_card from '../chess/engines/enginecards/hydrochess_card.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import { engineDictionary } from '../chess/engines/engine.js';
@@ -84,7 +84,7 @@ let acceptInviteButtonIsLocked: boolean = false;
 
 // Events --------------------------------------------------------------------------------
 
-document.addEventListener('socket-closed', () => {
+SocketBus.addEventListener('closed', () => {
 	/**
 	 * This unlocks the create invite and *virtual* accept invite buttons,
 	 * because we can't hope to receive their reply anytime soon, which

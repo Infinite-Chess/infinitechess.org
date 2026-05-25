@@ -14,6 +14,7 @@ import config from '../config.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
 import validatorama from '../../util/validatorama.js';
+import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
 
 // Constants -------------------------------------------------------------------
@@ -61,8 +62,8 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	 * True if we want to show the loading animation.
 	 * If closed not by our choice, but with no subscriptions, close the ping meter anyway.
 	 */
-	const detail = notByChoice && !socketsubs.zeroSubs();
-	document.dispatchEvent(new CustomEvent('socket-closed', { detail }));
+	const unIntentional = notByChoice && !socketsubs.zeroSubs();
+	SocketBus.dispatch('closed', unIntentional);
 
 	// Connection closed unexpectedly (network interrupted) or server is down.
 	// We did nothing wrong on our part, it's okay to instantly try to reconnect!

@@ -73,8 +73,8 @@ const GeneralSchema = z.discriminatedUnion('action', [
 // Invites Schema ---------------------------------------------------------------
 
 /** Represents all possible types an incoming 'invites' route websocket message contents could be. */
-export type InvitesMessage = z.infer<typeof InvitesSchema>;
-const InvitesSchema = z.discriminatedUnion('action', [
+export type LobbyMessage = z.infer<typeof LobbySchema>;
+const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('inviteslist'),
 		value: z.strictObject({
@@ -154,7 +154,7 @@ const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({
 		id: z.number(),
 		route: z.literal('invites'),
-		contents: InvitesSchema,
+		contents: LobbySchema,
 		replyto: z.number().optional(),
 	}),
 	z.strictObject({

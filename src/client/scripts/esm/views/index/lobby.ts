@@ -189,8 +189,8 @@ function accept(seekId: string): void {
 	socketmessages.send('invites', 'acceptinvite', { id: seekId, isPrivate: false }, true);
 }
 
-/** Subscribes to the server's invites list. */
-async function subscribeToInvites(ignoreAlreadySubbed = false): Promise<void> {
+/** Subscribes to the server's lobby subscription list (seeks, live games). */
+async function subscribe(ignoreAlreadySubbed = false): Promise<void> {
 	const alreadySubbed = socketsubs.areSubbedToSub('invites');
 	if (!ignoreAlreadySubbed && alreadySubbed) return;
 	socketsubs.addSub('invites');
@@ -308,6 +308,6 @@ export default {
 	createSeek,
 	cancel,
 	doWeHaveSeek,
-	subscribeToInvites,
+	subscribe,
 	unsubFromInvites,
 };

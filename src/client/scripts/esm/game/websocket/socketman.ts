@@ -9,11 +9,11 @@
 import toast from '../gui/toast.js';
 import config from '../config.js';
 import thread from '../../util/thread.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../../util/validatorama.js';
 import socketrouter from './socketrouter.js';
+import { SocketBus } from './SocketBus.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ let DEBUG = false;
 
 // Initialization --------------------------------------------------------------
 
-document.addEventListener('connection-lost', () => {
+SocketBus.addEventListener('connection-lost', () => {
 	// Displays a toast, notifying the user they lost connection.
 	noConnection = true;
 	toast.show(translations.websocket.no_connection, {
@@ -88,7 +88,7 @@ function getSocket(): WebSocket | undefined {
 
 /** Dispatches a custom event indicating that websocket connection was lost. */
 function dispatchLostConnectionCustomEvent(): void {
-	document.dispatchEvent(new CustomEvent('connection-lost'));
+	SocketBus.dispatch('connection-lost');
 }
 
 // Socket Lifecycle ------------------------------------------------------------
@@ -171,8 +171,7 @@ async function openSocket(): Promise<boolean> {
  * that assumes lost connection if no response arrives.
  */
 function onSocketUpgradeReqLeave(): void {
-	// Dispatches a custom event indicating that a socket connection is being opened.
-	document.dispatchEvent(new CustomEvent('socket-opening'));
+	SocketBus.dispatch('opening');
 	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
@@ -201,44 +200,14 @@ function closeSocket(): void {
 
 // Resubscription --------------------------------------------------------------
 
-/** Called by the page that subscribes to invites to handle reconnection resubscription. */
-let invitesResubHandler: (() => Promise<void>) | null = null;
-
-/** Registers the callback used to resub to invites after a socket reconnection. */
-function setInvitesResubHandler(handler: (() => Promise<void>) | null): void {
-	invitesResubHandler = handler;
-}
-
 /**
- * Called when the socket unexpectedly closes. Reopens the socket
- * and resubscribes to everything that was previously subscribed.
+ * Called when the socket unexpectedly closes. Notifies all subscribers to resubscribe.
+ * Each subscriber hears 'reconnected', sends its own subscribe message, and
+ * socketmessages.send() lazily reopens the socket via establishSocket().
  */
-async function resubAll(): Promise<void> {
+function resubAll(): void {
 	if (config.DEV_BUILD) console.log('Resubbing all..');
-
-	if (socketsubs.zeroSubs()) {
-		noConnection = false;
-		console.log('No subs to sub to.');
-		return;
-	} else {
-		if (!(await establishSocket())) return;
-	}
-
-	for (const sub of socketsubs.validSubs) {
-		if (!socketsubs.areSubbedToSub(sub)) continue;
-		switch (sub) {
-			case 'invites':
-				if (invitesResubHandler) await invitesResubHandler();
-				break;
-			case 'game':
-				onlinegame.resyncToGame();
-				break;
-			default:
-				console.error(
-					`Cannot resub to all subs after an unexpected socket closure with strange sub ${sub}!`,
-				);
-		}
-	}
+	SocketBus.dispatch('reconnected');
 }
 
 // Exports --------------------------------------------------------------------
@@ -248,7 +217,6 @@ export default {
 	establishSocket,
 	closeSocket,
 	resubAll,
-	setInvitesResubHandler,
 	toggleDebug,
 	isDebugEnabled,
 	dispatchLostConnectionCustomEvent,

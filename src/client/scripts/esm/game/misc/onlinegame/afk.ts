@@ -20,6 +20,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import pingManager from '../../../util/pingManager.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
@@ -60,7 +61,7 @@ let timeOpponentLoseFromAFK: number | undefined;
 let displayOpponentAFKTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
 // If we lost connection while displaying toast status messages of when our opponent will disconnect, stop doing that.
-document.addEventListener('connection-lost', () => {
+SocketBus.addEventListener('connection-lost', () => {
 	// Stop saying when the opponent will lose from being afk
 	clearTimeout(displayOpponentAFKTimeoutID);
 });

@@ -13,12 +13,12 @@ import { createInvite, createinviteschem } from './createinvite.js';
 import { cancelInvite, cancelinviteschem } from './cancelinvite.js';
 import { acceptInvite, acceptinviteschem } from './acceptinvite.js';
 
-const InvitesSchema = z.discriminatedUnion('action', [
+const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('createinvite'), value: createinviteschem }),
 	z.strictObject({ action: z.literal('cancelinvite'), value: cancelinviteschem }),
 	z.strictObject({ action: z.literal('acceptinvite'), value: acceptinviteschem }),
 ]);
-type InvitesMessage = z.infer<typeof InvitesSchema>;
+type LobbyMessage = z.infer<typeof LobbySchema>;
 
 /**
  * Routes all incoming websocket messages related to invites.
@@ -27,7 +27,7 @@ type InvitesMessage = z.infer<typeof InvitesSchema>;
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  * @returns
  */
-function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: number): void {
+function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage, id: number): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {
@@ -48,6 +48,6 @@ function routeInvitesMessage(ws: CustomWebSocket, contents: InvitesMessage, id: 
 	}
 }
 
-export { routeInvitesMessage, InvitesSchema };
+export { routeLobbyMessage, LobbySchema };
 
 export type {};

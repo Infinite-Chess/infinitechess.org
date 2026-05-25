@@ -20,6 +20,7 @@ import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
@@ -69,6 +70,11 @@ let playerHasPressedAbortOrResignButton: boolean | undefined;
 let inSync: boolean | undefined;
 
 // Events ------------------------------------------------------------------------------------------------------
+
+SocketBus.addEventListener('reconnected', () => {
+	if (!inOnlineGame) return;
+	resyncToGame();
+});
 
 GameBus.addEventListener('game-concluded', () => {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
@@ -231,8 +237,8 @@ function closeOnlineGame(): void {
 function initEventListeners(): void {
 	// Add the event listeners for when we lose connection or the socket closes,
 	// to set our inSync variable to false
-	document.addEventListener('connection-lost', setInSyncFalse); // Custom event
-	document.addEventListener('socket-closed', setInSyncFalse); // Custom event
+	SocketBus.addEventListener('connection-lost', setInSyncFalse);
+	SocketBus.addEventListener('closed', setInSyncFalse);
 
 	/**
 	 * Leave-game warning popups on every hyperlink.
@@ -246,8 +252,8 @@ function initEventListeners(): void {
 }
 
 function closeEventListeners(): void {
-	document.removeEventListener('connection-lost', setInSyncFalse);
-	document.removeEventListener('socket-closed', setInSyncFalse);
+	SocketBus.removeEventListener('connection-lost', setInSyncFalse);
+	SocketBus.removeEventListener('closed', setInSyncFalse);
 	document.querySelectorAll('a').forEach((link) => {
 		link.removeEventListener('click', confirmNavigationAwayFromGame);
 	});

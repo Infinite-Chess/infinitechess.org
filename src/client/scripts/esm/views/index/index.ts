@@ -2,24 +2,25 @@
 
 /**
  * Entry point for the index (home) page.
- * Wires socket routing to the lobby and subscribes to the invites list.
+ *
+ * Subscribes to lobby updates and resubscribes after socket reconnections.
  */
 
-import type { InvitesMessage } from '../../game/websocket/socketschemas.js';
+import type { LobbyMessage } from '../../game/websocket/socketschemas.js';
 
 import lobby from './lobby.js';
-import socketman from '../../game/websocket/socketman.js';
-import socketrouter from '../../game/websocket/socketrouter.js';
+import { SocketBus } from '../../game/websocket/SocketBus.js';
 
 import './gameSetupModal.js';
 
-// Wire the invites message handler and resub callback before subscribing.
-socketrouter.setInvitesHandler(onInvitesMessage);
-socketman.setInvitesResubHandler(() => lobby.subscribeToInvites(true));
+// Initial setup -----------------------------------------------------
 
-lobby.subscribeToInvites();
+lobby.subscribe();
+SocketBus.addEventListener('reconnected', () => lobby.subscribe(true));
 
-function onInvitesMessage(contents: InvitesMessage): void {
+SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
+
+function onLobbyMessage(contents: LobbyMessage): void {
 	switch (contents.action) {
 		case 'inviteslist':
 			lobby.onSeekListUpdate(contents.value.invitesList);

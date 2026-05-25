@@ -5,7 +5,7 @@
  * based on the subscription type.
  */
 
-import type { GeneralMessage, InvitesMessage } from './socketschemas.js';
+import type { GeneralMessage } from './socketschemas.js';
 
 import * as z from 'zod';
 
@@ -15,8 +15,8 @@ import { GAME_VERSION } from '../../../../../shared/game_version.js';
 import toast from '../gui/toast.js';
 import socketman from './socketman.js';
 import LocalStorage from '../../util/LocalStorage.js';
+import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
-import onlinegamerouter from '../misc/onlinegame/onlinegamerouter.js';
 import { MasterSchema } from './socketschemas.js';
 
 // Types -----------------------------------------------------------------------
@@ -27,16 +27,6 @@ type HardRefreshInfo = {
 	expectedVersion: string;
 	refreshFailed?: boolean;
 };
-
-// Pluggable handlers ----------------------------------------------------------
-
-/** Handler for incoming 'invites' route messages. Set by the page that subscribes to invites. */
-let invitesHandler: ((contents: InvitesMessage) => void) | null = null;
-
-/** Registers the handler for incoming 'invites' route messages. */
-function setInvitesHandler(handler: ((contents: InvitesMessage) => void) | null): void {
-	invitesHandler = handler;
-}
 
 // Routing ---------------------------------------------------------------------
 
@@ -121,10 +111,10 @@ function onmessage(serverMessage: MessageEvent): void {
 			ongeneralmessage(message.contents);
 			break;
 		case 'invites':
-			invitesHandler?.(message.contents);
+			SocketBus.dispatch('lobby', message.contents);
 			break;
 		case 'game':
-			onlinegamerouter.routeMessage(message.contents);
+			SocketBus.dispatch('game', message.contents);
 			break;
 		default:
 			console.error(
@@ -199,5 +189,4 @@ function handleHardRefresh(LATEST_GAME_VERSION: string): void {
 
 export default {
 	onmessage,
-	setInvitesHandler,
 };
