@@ -52,6 +52,7 @@ const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaEle
 const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
 const element_icnErrorText = document.getElementById('icn-error-text') as HTMLElement;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
+const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 
 // State ----------------------------------------------
 
@@ -159,7 +160,7 @@ function initIcnValidation(): void {
 		element_icnErrorText.textContent = '';
 	});
 	element_icnInput.addEventListener('input', () => {
-		icnResult = null;
+		setIcnResult(null);
 	});
 }
 
@@ -373,7 +374,7 @@ function selectCustomSave(
 			if (selection.kind !== kind || selection.name !== name) return;
 			element_variantDisplay.classList.add('invalid');
 			element_icnErrorText.textContent = errorMsg;
-			icnResult = null;
+			setIcnResult(null);
 		});
 }
 
@@ -404,21 +405,30 @@ function applyCustomToSelector(name: string): void {
 
 // Validation ----------------------------------------------
 
+/**
+ * Sets icnResult and syncs the modal submit button's disabled state.
+ * The button is disabled whenever a non-preset selection has no valid resolved position.
+ */
+function setIcnResult(result: typeof icnResult): void {
+	icnResult = result;
+	element_modalSubmit.disabled = selection.kind !== 'preset' && !icnResult?.isValid;
+}
+
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
 	const illegalReason = validatePosition(variantOptions, '');
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = illegalReason;
-		icnResult = { options: variantOptions, isValid: false };
+		setIcnResult({ options: variantOptions, isValid: false });
 	} else {
-		icnResult = { options: variantOptions, isValid: true };
+		setIcnResult({ options: variantOptions, isValid: true });
 	}
 }
 
 /** Clears any saved-position error state from the variant display. */
 function clearSavedPositionError(): void {
-	icnResult = null;
+	setIcnResult(null);
 	element_variantDisplay.classList.remove('invalid');
 	element_icnErrorText.textContent = '';
 }
@@ -429,7 +439,7 @@ async function validateIcnInput(): Promise<void> {
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
-		icnResult = null;
+		setIcnResult(null);
 		return;
 	}
 	try {
@@ -449,16 +459,16 @@ async function validateIcnInput(): Promise<void> {
 		if (illegalReason !== null) {
 			element_icnInputWrap.classList.add('invalid');
 			element_icnErrorText.textContent = illegalReason;
-			icnResult = { options: icnVariantOptions, isValid: false };
+			setIcnResult({ options: icnVariantOptions, isValid: false });
 		} else {
 			element_icnErrorText.textContent = '';
-			icnResult = { options: icnVariantOptions, isValid: true };
+			setIcnResult({ options: icnVariantOptions, isValid: true });
 		}
 	} catch (e) {
 		element_icnInputWrap.classList.add('invalid');
 		element_icnErrorText.textContent = '';
 		console.error('Illegal position:', e instanceof Error ? e.message : e);
-		icnResult = null;
+		setIcnResult(null);
 	}
 }
 
