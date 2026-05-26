@@ -196,6 +196,56 @@ async function openCustomVariantList(): Promise<void> {
 	);
 }
 
+/**
+ * Builds a single save-row VNode for the custom panel's saved positions list.
+ * @param key - Snabbdom key used for efficient list diffing.
+ * @param name - Display text shown in the row.
+ * @param onSelect - Called when the user clicks the row (excluding the preview button).
+ * @param onPreview - Called with the anchor element when the user hovers or clicks the preview icon.
+ */
+function createSaveItemVNode(
+	key: string,
+	name: string,
+	onSelect: () => void,
+	onPreview: (anchor: HTMLElement) => void,
+): VNode {
+	return h(
+		'button.variant-item',
+		{
+			key,
+			on: {
+				click: (e: MouseEvent) => {
+					if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
+					onSelect();
+				},
+			},
+		},
+		[
+			h('span.variant-name', {}, name),
+			h(
+				'svg.svg-eye.preview',
+				{
+					on: {
+						// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
+						pointerenter: (e: PointerEvent) => {
+							if (e.pointerType === 'touch') return;
+							onPreview(e.currentTarget as HTMLElement);
+						},
+						pointerleave: (e: PointerEvent) => {
+							if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
+						},
+						click: (e: MouseEvent) => {
+							e.stopPropagation();
+							onPreview(e.currentTarget as HTMLElement);
+						},
+					},
+				},
+				[h('use', { attrs: { href: '#svg-eye' } })],
+			),
+		],
+	);
+}
+
 /** Builds the snabbdom VNode for the custom panel's dynamic content area. */
 function createCustomContentVNode(
 	cloudSaves: CloudSaveListRecord[],
@@ -218,84 +268,23 @@ function createCustomContentVNode(
 	);
 
 	const cloudRows: VNode[] = sortedCloud.map((s) =>
-		h(
-			'button.variant-item',
-			{
-				key: `cloud-${s.name}`,
-				on: {
-					click: (e: MouseEvent) => {
-						if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
-						selectOnlineCustomSave(s.name);
-					},
-				},
-			},
-			[
-				h('span.variant-name', {}, s.name),
-				h(
-					'svg.svg-eye.preview',
-					{
-						on: {
-							// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
-							pointerenter: (e: PointerEvent) => {
-								if (e.pointerType === 'touch') return;
-								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
-							},
-							pointerleave: (e: PointerEvent) => {
-								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
-							},
-							click: (e: MouseEvent) => {
-								e.stopPropagation();
-								handleCloudSavePreview(e.currentTarget as HTMLElement, s.name);
-							},
-						},
-					},
-					[h('use', { attrs: { href: '#svg-eye' } })],
-				),
-			],
+		createSaveItemVNode(
+			`cloud-${s.name}`,
+			s.name,
+			() =>
+				selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, 'Failed to load cloud save.'), // prettier-ignore
+			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, ecloudstore.readCloud),
 		),
 	);
 
 	const localRows: VNode[] = sortedLocal.map((s) =>
-		h(
-			'button.variant-item',
-			{
-				key: `local-${s.position_name}`,
-				on: {
-					click: (e: MouseEvent) => {
-						if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
-						selectLocalCustomSave(s.position_name);
-					},
-				},
-			},
-			[
-				h('span.variant-name', {}, s.position_name),
-				h(
-					'svg.svg-eye.preview',
-					{
-						on: {
-							// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
-							pointerenter: (e: PointerEvent) => {
-								if (e.pointerType === 'touch') return;
-								handleLocalSavePreview(
-									e.currentTarget as HTMLElement,
-									s.position_name,
-								);
-							},
-							pointerleave: (e: PointerEvent) => {
-								if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
-							},
-							click: (e: MouseEvent) => {
-								e.stopPropagation();
-								handleLocalSavePreview(
-									e.currentTarget as HTMLElement,
-									s.position_name,
-								);
-							},
-						},
-					},
-					[h('use', { attrs: { href: '#svg-eye' } })],
-				),
-			],
+		createSaveItemVNode(
+			`local-${s.position_name}`,
+			s.position_name,
+			() =>
+				selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, 'Failed to load local save.'), // prettier-ignore
+			(anchor) =>
+				handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
 		),
 	);
 
@@ -324,58 +313,42 @@ function openFromICN(name: string): void {
 	element_icnInput.focus();
 }
 
-/** Selects a cloud saved position by name and updates the selector display. */
-function selectOnlineCustomSave(name: string): void {
-	selection = { kind: 'online', name };
+/**
+ * Selects a saved position (cloud or local) by kind and name, updating the selector display.
+ * @param kind - Whether this is a cloud (`'online'`) or local (`'local'`) save.
+ * @param name - Position name used to look up and display the save.
+ * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
+ * @param read - Async function that fetches the full save state by name.
+ * @param errorMsg - Error message shown in the selector if the fetch fails.
+ */
+function selectCustomSave(
+	kind: 'online' | 'local',
+	name: string,
+	cache: Map<string, VariantOptions>,
+	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
+	errorMsg: string,
+): void {
+	selection = kind === 'online' ? { kind: 'online', name } : { kind: 'local', name };
 	applyCustomToSelector(name);
 	clearSavedPositionError();
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
 
-	const cached = cloudPreviewCache.get(name);
+	const cached = cache.get(name);
 	if (cached !== undefined) {
 		validateSavedPosition(cached);
 		return;
 	}
-	ecloudstore
-		.readCloud(name)
+	read(name)
 		.then((s) => {
-			cloudPreviewCache.set(name, s.variantOptions);
-			if (selection.kind !== 'online' || selection.name !== name) return;
+			cache.set(name, s.variantOptions);
+			if (selection.kind !== kind || selection.name !== name) return;
 			validateSavedPosition(s.variantOptions);
 		})
 		.catch(() => {
-			if (selection.kind !== 'online' || selection.name !== name) return;
+			if (selection.kind !== kind || selection.name !== name) return;
 			element_variantDisplay.classList.add('invalid');
-			element_icnErrorText.textContent = 'Failed to load cloud save.';
-			icnResult = null;
-		});
-}
-
-/** Selects a local saved position by name and updates the selector display. */
-function selectLocalCustomSave(name: string): void {
-	selection = { kind: 'local', name };
-	applyCustomToSelector(name);
-	clearSavedPositionError();
-	element_variantCustomSection.classList.add('hidden');
-	closeVariantDropdown();
-
-	const cached = localPreviewCache.get(name);
-	if (cached !== undefined) {
-		validateSavedPosition(cached);
-		return;
-	}
-	editorpositionsdb
-		.readLocal(name)
-		.then((s) => {
-			localPreviewCache.set(name, s.variantOptions);
-			if (selection.kind !== 'local' || selection.name !== name) return;
-			validateSavedPosition(s.variantOptions);
-		})
-		.catch(() => {
-			if (selection.kind !== 'local' || selection.name !== name) return;
-			element_variantDisplay.classList.add('invalid');
-			element_icnErrorText.textContent = 'Failed to load local save.';
+			element_icnErrorText.textContent = errorMsg;
 			icnResult = null;
 		});
 }
@@ -401,41 +374,30 @@ function clearSavedPositionError(): void {
 
 // Preview handlers ----------------------------------------------
 
-/** Fetches a cloud save and shows the preview tooltip anchored to the given element. */
-function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void {
-	const cached = cloudPreviewCache.get(positionName);
+/**
+ * Fetches a save (cloud or local) and shows the preview tooltip anchored to the given element.
+ * @param anchor - Element the tooltip is positioned relative to.
+ * @param positionName - Name of the position to fetch and preview.
+ * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
+ * @param read - Async function that fetches the save state by position name.
+ */
+function handleSavePreview(
+	anchor: HTMLElement,
+	positionName: string,
+	cache: Map<string, VariantOptions>,
+	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
+): void {
+	const cached = cache.get(positionName);
 	if (cached !== undefined) {
 		// Cache hit!
-		// console.log('Cloud preview cache hit for', positionName);
+		// console.log('Preview cache hit for', positionName);
 		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
 		return;
 	}
 	// Request for the first time, cache the result.
-	ecloudstore
-		.readCloud(positionName)
+	read(positionName)
 		.then((saveState) => {
-			cloudPreviewCache.set(positionName, saveState.variantOptions);
-			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
-		})
-		.catch(() => {
-			/* Preview unavailable – silently ignore */
-		});
-}
-
-/** Loads a local save and shows the preview tooltip anchored to the given element. */
-function handleLocalSavePreview(anchor: HTMLElement, positionName: string): void {
-	const cached = localPreviewCache.get(positionName);
-	if (cached !== undefined) {
-		// Cache hit!
-		// console.log('Local preview cache hit for', positionName);
-		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
-		return;
-	}
-	// Request for the first time, cache the result.
-	editorpositionsdb
-		.readLocal(positionName)
-		.then((saveState) => {
-			localPreviewCache.set(positionName, saveState.variantOptions);
+			cache.set(positionName, saveState.variantOptions);
 			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
 		})
 		.catch(() => {
@@ -471,9 +433,9 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	if (selection.kind === 'preset') {
 		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
 	} else if (selection.kind === 'online') {
-		handleCloudSavePreview(anchor, selection.name);
+		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
 	} else if (selection.kind === 'local') {
-		handleLocalSavePreview(anchor, selection.name);
+		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
 		await validateIcnInput();
 		if (icnResult !== null)
