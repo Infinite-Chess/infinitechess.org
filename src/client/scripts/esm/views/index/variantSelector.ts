@@ -76,7 +76,7 @@ const localPreviewCache = new Map<string, VariantOptions>();
 
 const patch = init([attributesModule, classModule, eventListenersModule]);
 
-// Functions ----------------------------------------------
+// Initialization ----------------------------------------------
 
 /** Wires the variant selector open/close and group navigation. */
 function initVariantGroupDropdown(): void {
@@ -151,6 +151,20 @@ function initVariantGroupDropdown(): void {
 	});
 }
 
+/** Wires blur/focus/input listeners to keep the ICN validation state in sync. */
+function initIcnValidation(): void {
+	element_icnInput.addEventListener('blur', validateIcnInput);
+	element_icnInput.addEventListener('focus', () => {
+		element_icnInputWrap.classList.remove('invalid');
+		element_icnErrorText.textContent = '';
+	});
+	element_icnInput.addEventListener('input', () => {
+		icnResult = null;
+	});
+}
+
+// Dropdown navigation ----------------------------------------------
+
 /** Toggles the group dropdown, closing the variant list if it was open instead. */
 function toggleVariantDropdown(): void {
 	const anyOpen =
@@ -195,6 +209,8 @@ async function openCustomVariantList(): Promise<void> {
 		createCustomContentVNode(cloudSaves, localSaves),
 	);
 }
+
+// Custom panel ----------------------------------------------
 
 /**
  * Builds a single save-row VNode for the custom panel's saved positions list.
@@ -313,6 +329,17 @@ function openFromICN(name: string): void {
 	element_icnInput.focus();
 }
 
+// Variant selection ----------------------------------------------
+
+/** Updates the selected variant state and selector button, then closes all panels. */
+function selectVariant(code: VariantCode): void {
+	selection = { kind: 'preset', code };
+	applyVariantToSelector(code);
+	clearSavedPositionError();
+	element_variantCustomSection.classList.add('hidden');
+	closeVariantDropdown();
+}
+
 /**
  * Selects a saved position (cloud or local) by kind and name, updating the selector display.
  * @param kind - Whether this is a cloud (`'online'`) or local (`'local'`) save.
@@ -353,57 +380,7 @@ function selectCustomSave(
 		});
 }
 
-/** Validates a saved position's VariantOptions and applies the result to the variant display. */
-function validateSavedPosition(variantOptions: VariantOptions): void {
-	const illegalReason = validatePosition(variantOptions, '');
-	if (illegalReason !== null) {
-		element_variantDisplay.classList.add('invalid');
-		element_icnErrorText.textContent = illegalReason;
-		icnResult = { options: variantOptions, isValid: false };
-	} else {
-		icnResult = { options: variantOptions, isValid: true };
-	}
-}
-
-/** Clears any saved-position error state from the variant display. */
-function clearSavedPositionError(): void {
-	icnResult = null;
-	element_variantDisplay.classList.remove('invalid');
-	element_icnErrorText.textContent = '';
-}
-
-// Preview handlers ----------------------------------------------
-
-/**
- * Fetches a save (cloud or local) and shows the preview tooltip anchored to the given element.
- * @param anchor - Element the tooltip is positioned relative to.
- * @param positionName - Name of the position to fetch and preview.
- * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
- * @param read - Async function that fetches the save state by position name.
- */
-function handleSavePreview(
-	anchor: HTMLElement,
-	positionName: string,
-	cache: Map<string, VariantOptions>,
-	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
-): void {
-	const cached = cache.get(positionName);
-	if (cached !== undefined) {
-		// Cache hit!
-		// console.log('Preview cache hit for', positionName);
-		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
-		return;
-	}
-	// Request for the first time, cache the result.
-	read(positionName)
-		.then((saveState) => {
-			cache.set(positionName, saveState.variantOptions);
-			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
-		})
-		.catch(() => {
-			/* Preview unavailable – silently ignore */
-		});
-}
+// Selector display ----------------------------------------------
 
 /** Sets the variant selector display button's name text and group icon. */
 function setSelectorDisplay(name: string, iconId: string): void {
@@ -428,28 +405,25 @@ function applyCustomToSelector(name: string): void {
 	setSelectorDisplay(name, 'svg-wrench');
 }
 
-/** Shows the preview tooltip for the currently selected variant in the display button. */
-async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
-	if (selection.kind === 'preset') {
-		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
-	} else if (selection.kind === 'online') {
-		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
-	} else if (selection.kind === 'local') {
-		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
-	} else if (selection.kind === 'icn') {
-		await validateIcnInput();
-		if (icnResult !== null)
-			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnResult.options);
+// Validation ----------------------------------------------
+
+/** Validates a saved position's VariantOptions and applies the result to the variant display. */
+function validateSavedPosition(variantOptions: VariantOptions): void {
+	const illegalReason = validatePosition(variantOptions, '');
+	if (illegalReason !== null) {
+		element_variantDisplay.classList.add('invalid');
+		element_icnErrorText.textContent = illegalReason;
+		icnResult = { options: variantOptions, isValid: false };
+	} else {
+		icnResult = { options: variantOptions, isValid: true };
 	}
 }
 
-/** Updates the selected variant state and selector button, then closes all panels. */
-function selectVariant(code: VariantCode): void {
-	selection = { kind: 'preset', code };
-	applyVariantToSelector(code);
-	clearSavedPositionError();
-	element_variantCustomSection.classList.add('hidden');
-	closeVariantDropdown();
+/** Clears any saved-position error state from the variant display. */
+function clearSavedPositionError(): void {
+	icnResult = null;
+	element_variantDisplay.classList.remove('invalid');
+	element_icnErrorText.textContent = '';
 }
 
 /** Validates the current ICN textarea value, updates the invalid style, and stores resolved VariantOptions. */
@@ -491,16 +465,52 @@ async function validateIcnInput(): Promise<void> {
 	}
 }
 
-/** Wires blur/focus/input listeners to keep the ICN validation state in sync. */
-function initIcnValidation(): void {
-	element_icnInput.addEventListener('blur', validateIcnInput);
-	element_icnInput.addEventListener('focus', () => {
-		element_icnInputWrap.classList.remove('invalid');
-		element_icnErrorText.textContent = '';
-	});
-	element_icnInput.addEventListener('input', () => {
-		icnResult = null;
-	});
+// Preview tooltips ----------------------------------------------
+
+/** Shows the preview tooltip for the currently selected variant in the display button. */
+async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
+	if (selection.kind === 'preset') {
+		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
+	} else if (selection.kind === 'online') {
+		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
+	} else if (selection.kind === 'local') {
+		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
+	} else if (selection.kind === 'icn') {
+		await validateIcnInput();
+		if (icnResult !== null)
+			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnResult.options);
+	}
+}
+
+/**
+ * Fetches a save (cloud or local) and shows the preview tooltip anchored to the given element.
+ * @param anchor - Element the tooltip is positioned relative to.
+ * @param positionName - Name of the position to fetch and preview.
+ * @param cache - Preview cache to read from (cache hit) or write to (after fetch).
+ * @param read - Async function that fetches the save state by position name.
+ */
+function handleSavePreview(
+	anchor: HTMLElement,
+	positionName: string,
+	cache: Map<string, VariantOptions>,
+	read: (n: string) => Promise<{ variantOptions: VariantOptions }>,
+): void {
+	const cached = cache.get(positionName);
+	if (cached !== undefined) {
+		// Cache hit!
+		// console.log('Preview cache hit for', positionName);
+		variantPreviewTooltip.showForPosition(anchor, positionName, cached);
+		return;
+	}
+	// Request for the first time, cache the result.
+	read(positionName)
+		.then((saveState) => {
+			cache.set(positionName, saveState.variantOptions);
+			variantPreviewTooltip.showForPosition(anchor, positionName, saveState.variantOptions);
+		})
+		.catch(() => {
+			/* Preview unavailable – silently ignore */
+		});
 }
 
 /**
