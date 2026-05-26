@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/socketclose.ts
+// src/client/scripts/esm/websocket/socketclose.ts
 
 /**
  * Handles websocket close events and reconnection logic.
@@ -7,12 +7,12 @@
  * including reconnection, timeout, and user notification.
  */
 
-import wsutil from '../../../../../shared/util/wsutil.js';
+import wsutil from '../../../../shared/util/wsutil.js';
 
-import config from '../config.js';
+import config from '../game/config.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
-import validatorama from '../../util/validatorama.js';
+import validatorama from '../util/validatorama.js';
 import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
 

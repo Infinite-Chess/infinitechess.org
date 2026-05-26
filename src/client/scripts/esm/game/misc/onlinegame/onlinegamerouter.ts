@@ -4,7 +4,7 @@ import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js'
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
 import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameMessage, JoinGameMessage } from '../../websocket/socketschemas.js';
+import type { GameMessage, JoinGameMessage } from '../../../websocket/socketschemas.js';
 import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
@@ -25,10 +25,10 @@ import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
-import socketsubs from '../../websocket/socketsubs.js';
+import socketsubs from '../../../websocket/socketsubs.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
+import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
 

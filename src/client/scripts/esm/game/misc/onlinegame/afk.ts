@@ -20,8 +20,8 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import pingManager from '../../../util/pingManager.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import { SocketBus } from '../../../websocket/SocketBus.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 import { listener_document, listener_overlay } from '../../chess/game.js';
 
 // Constants -----------------------------------------------------------------------

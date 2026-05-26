@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/socketsubs.ts
+// src/client/scripts/esm/websocket/socketsubs.ts
 
 /**
  * Manages subscription state for the client websocket system.

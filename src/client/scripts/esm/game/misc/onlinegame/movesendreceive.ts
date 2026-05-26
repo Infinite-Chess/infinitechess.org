@@ -22,11 +22,11 @@ import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
-import socketsubs from '../../websocket/socketsubs.js';
+import socketsubs from '../../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 
 // Events ---------------------------------------------------------------------
 

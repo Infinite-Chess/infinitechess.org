@@ -4,7 +4,7 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { ServerGameInfo } from '../../websocket/socketschemas.js';
+import type { ServerGameInfo } from '../../../websocket/socketschemas.js';
 import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues, ParticipantState, Rating } from '../../../../../../shared/types.js';
 
@@ -14,14 +14,14 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
-import socketsubs from '../../websocket/socketsubs.js';
+import socketsubs from '../../../websocket/socketsubs.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
-import { SocketBus } from '../../websocket/SocketBus.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import { SocketBus } from '../../../websocket/SocketBus.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/SocketBus.ts
+// src/client/scripts/esm/websocket/SocketBus.ts
 
 /**
  * Typed event bus for all websocket-related events.
@@ -8,7 +8,7 @@
 
 import type { LobbyMessage, GameMessage } from './socketschemas.js';
 
-import { EventBus } from '../../../../../shared/util/EventBus.js';
+import { EventBus } from '../../../../shared/util/EventBus.js';
 
 interface SocketBusEvents {
 	// --- Socket lifecycle ---

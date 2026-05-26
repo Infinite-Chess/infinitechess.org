@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/socketrouter.ts
+// src/client/scripts/esm/websocket/socketrouter.ts
 
 /**
  * Routes incoming websocket messages to the appropriate handler
@@ -9,11 +9,11 @@ import type { GeneralMessage } from './socketschemas.js';
 
 import * as z from 'zod';
 
-import timeutil from '../../../../../shared/util/timeutil.js';
-import { GAME_VERSION } from '../../../../../shared/game_version.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+import { GAME_VERSION } from '../../../../shared/game_version.js';
 
 import socketman from './socketman.js';
-import LocalStorage from '../../util/LocalStorage.js';
+import LocalStorage from '../util/LocalStorage.js';
 import { SocketBus } from './SocketBus.js';
 import socketmessages from './socketmessages.js';
 import { MasterSchema } from './socketschemas.js';

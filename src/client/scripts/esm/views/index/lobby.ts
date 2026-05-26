@@ -31,10 +31,10 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 
 import docutil from '../../util/docutil.js';
 import gamesound from '../../game/misc/gamesound.js';
-import socketsubs from '../../game/websocket/socketsubs.js';
+import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
-import socketmessages from '../../game/websocket/socketmessages.js';
+import socketmessages from '../../websocket/socketmessages.js';
 
 const patch = init([attributesModule, classModule]);
 

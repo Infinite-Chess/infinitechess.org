@@ -6,10 +6,10 @@
  * Subscribes to lobby updates and resubscribes after socket reconnections.
  */
 
-import type { LobbyMessage } from '../../game/websocket/socketschemas.js';
+import type { LobbyMessage } from '../../websocket/socketschemas.js';
 
 import lobby from './lobby.js';
-import { SocketBus } from '../../game/websocket/SocketBus.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 
 import './gameSetupModal.js';
 
