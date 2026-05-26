@@ -530,13 +530,7 @@ function getInviteVariant(): InviteVariant | null {
 				fullMove: icnResult.options.fullMove,
 				state_global: icnResult.options.state_global,
 			},
-			{
-				compact: true,
-				spaces: false,
-				comments: false,
-				make_new_lines: false,
-				move_numbers: false,
-			},
+			{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
 		);
 		return { kind: 'icn', content };
 	} else if (selection.kind === 'icn') {
