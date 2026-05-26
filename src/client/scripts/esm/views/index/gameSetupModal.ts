@@ -132,6 +132,7 @@ function handleOnlineSeek(): void {
 	const modifiers = modifierSelector.getInviteModifiers();
 
 	lobby.createSeek({ variant, time, color, mode, modifiers });
+	closeModal();
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
@@ -149,7 +150,6 @@ function openModal(mode: ModalMode): void {
 
 /** Hides the modal. */
 function closeModal(): void {
-	console.error('Modal closing (What causes this when clicking "Create online game"?)');
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();

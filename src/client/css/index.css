@@ -228,6 +228,7 @@ svg.bg-omega {
 .invite-row.ours,
 .invite-row.ours:hover {
 	background: rgba(0, 180, 15, 0.37);
+	color: var(--c-text-emphasis);
 }
 
 /* ============================================================

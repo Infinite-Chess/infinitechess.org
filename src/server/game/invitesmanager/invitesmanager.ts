@@ -23,7 +23,7 @@ import {
 //-------------------------------------------------------------------------------------------
 
 /** Whether to log new invite creations/deletions to the console */
-const printNewInviteCreationsAndDeletions = false;
+const printNewInviteCreationsAndDeletions = true;
 
 /** The number of digits generated invite IDs are. */
 const IDLengthOfInvites = 5;
