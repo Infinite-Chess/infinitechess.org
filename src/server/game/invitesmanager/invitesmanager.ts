@@ -11,8 +11,6 @@ import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
-
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
@@ -88,33 +86,26 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
 
 	const subscribedClients = getInviteSubscribers() as Record<string, CustomWebSocket>;
 	for (const subbedSocket of Object.values(subscribedClients)) {
-		const newInvitesListCopy = jsutil.deepCopyObject(newInvitesList);
 		// Only include the replyto code with the invite list if this socket is
 		// THE SAME SOCKET as the one that triggered this broadcast.
 		const includedReplyTo = ws === subbedSocket ? replyto : undefined;
-		sendClientInvitesList(subbedSocket, {
-			invitesList: newInvitesListCopy,
-			replyto: includedReplyTo,
-		});
+		sendClientInvitesList(subbedSocket, newInvitesList, includedReplyTo);
 	}
 }
 
 /**
- * Sends the invites list to a specified socket, and also sends the current active game count.
+ * Sends the invites list to a specified socket.
  * @param ws - The socket of the player to send the invites list to.
- * @param options.invitesList - The list of invites to send. Defaults to the invites list if not provided.
- * @param options.currentGameCount - The current active game count. Defaults to the current game count if not provided. [getActiveGameCount()]
- * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
+ * @param invitesList - The list of invites to send.
+ * @param replyto - The incoming websocket message ID, to include in the reply, if applicable.
  */
 function sendClientInvitesList(
 	ws: CustomWebSocket,
-	{
-		invitesList = getInvitesListSafe(),
-		replyto = undefined,
-	}: { replyto?: number; invitesList?: OutSeek[] } = {},
+	invitesList: OutSeek[],
+	replyto?: number,
 ): void {
 	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
-	const message = { invitesList };
+	const message = { invitesList, viewerCount: 0 };
 	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
 
@@ -232,7 +223,7 @@ function subToInvitesList(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.invites) return; // Already subscribed. Happens occasionally
 
 	addSocketToInvitesSubs(ws);
-	sendClientInvitesList(ws);
+	sendClientInvitesList(ws, getInvitesListSafe());
 	cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws);
 }
 
