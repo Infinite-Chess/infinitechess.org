@@ -46,7 +46,7 @@ export type LobbySeek = BaseSeek &
 		isOurs: boolean;
 	};
 
-export type CreateSeekOptions = {
+type CreateSeekOptions = {
 	variant: InviteVariant;
 	time: TimeControl;
 	color: Player | null;
@@ -61,7 +61,7 @@ let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 // State ----------------------------------------------
 
-let weHaveSeek = false;
+/** The ID of our current seek, if we have one. */
 let ourSeekId: string | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
@@ -69,6 +69,12 @@ const seekMap = new Map<string, OutSeek>();
 // Init -----------------------------------------------
 
 initLobbyClickHandler();
+
+// Preload sounds
+gamesound.preload('marimba_c2');
+gamesound.preload('marimba_c2_soft');
+gamesound.preload('base_staccato_c2');
+gamesound.preload('viola_staccato_c3');
 
 // Functions ------------------------------------------
 
@@ -100,7 +106,7 @@ function isSeekOurs(seek: OutSeek): boolean {
 		);
 	}
 	const localTag = LocalStorage.loadItem('invite-tag');
-	return !!localTag && seek.tag === localTag;
+	return seek.tag === localTag;
 }
 
 /**
@@ -134,16 +140,15 @@ const trackNewSeekSound = (() => {
 
 /** Called when we receive a fresh seek list from the server. Updates state, map, and renders. */
 function onSeekListUpdate(seeks: OutSeek[]): void {
-	const prevHadSeek = weHaveSeek;
+	const prevHadSeek = ourSeekId !== undefined;
 
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 
 	const ourSeek = seeks.find((s) => isSeekOurs(s));
-	weHaveSeek = !!ourSeek;
 	ourSeekId = ourSeek?.id;
 
-	if (!prevHadSeek && weHaveSeek) {
+	if (!prevHadSeek && ourSeekId !== undefined) {
 		gamesound.playMarimba();
 	} else {
 		trackNewSeekSound(seeks);
@@ -154,36 +159,44 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
 function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
-	const { variant: _variant, ...rest } = seek;
 	const isOurs = isSeekOurs(seek);
 	if (seek.variant.kind === 'preset') {
 		const variant: VariantInfo = {
 			group: variantregistry.getVariantGroup(seek.variant.code),
 			code: seek.variant.code,
 		};
-		return { ...rest, variant, isOurs };
+		return { ...seek, variant, isOurs };
+	} else if (seek.variant.kind === 'custom') {
+		const variant = { group: 'custom', name: 'Custom Variant' } as const;
+		return { ...seek, variant, isOurs };
+	} else {
+		// @ts-ignore
+		throw new Error(`Unknown seek variant kind: ${seek.variant.kind}`);
 	}
-	return { ...rest, variant: { group: 'custom', name: 'Custom Variant' as const }, isOurs };
 }
+
+// Creating/Accepting/Canceling Seeks -------------------------------------------
 
 /** Sends a createinvite message to the server with the given options. */
 function createSeek(options: CreateSeekOptions): void {
-	if (weHaveSeek) return console.error("Already have a seek, can't create another.");
+	if (ourSeekId !== undefined) return console.error("Already have a seek, can't create another.");
 	const tag = generateTag();
 	socketmessages.send('invites', 'createinvite', { ...options, tag }, true);
 }
 
 /** Sends a cancelinvite message for our current seek. */
-function cancel(seekId = ourSeekId): void {
-	if (!weHaveSeek || !seekId) return;
+function cancel(seekId: string): void {
+	if (ourSeekId === undefined) return;
 	LocalStorage.deleteItem('invite-tag');
 	socketmessages.send('invites', 'cancelinvite', seekId, true);
 }
 
 /** Sends an acceptinvite message for an opponent's seek. */
 function accept(seekId: string): void {
-	socketmessages.send('invites', 'acceptinvite', { id: seekId, isPrivate: false }, true);
+	socketmessages.send('invites', 'acceptinvite', seekId, true);
 }
+
+// Subscribing ---------------------------------------------
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(ignoreAlreadySubbed = false): Promise<void> {
@@ -194,7 +207,7 @@ async function subscribe(ignoreAlreadySubbed = false): Promise<void> {
 }
 
 /** Unsubscribes from the invites list and clears the rendered seek list. */
-function unsubFromInvites(): void {
+function unsubscribe(): void {
 	renderSeekList([]);
 	socketsubs.unsubFromSub('invites');
 }
@@ -303,5 +316,5 @@ export default {
 	onSeekListUpdate,
 	createSeek,
 	subscribe,
-	unsubFromInvites,
+	unsubscribe,
 };

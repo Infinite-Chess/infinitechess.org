@@ -79,10 +79,10 @@ const LobbySchema = z.discriminatedUnion('action', [
 		action: z.literal('inviteslist'),
 		value: z.strictObject({
 			invitesList: z.array(OutSeekSchema),
-			currentGameCount: z.number(),
+			viewerCount: z.number().nonnegative(),
 		}),
 	}),
-	z.strictObject({ action: z.literal('gamecount'), value: z.number() }),
+	z.strictObject({ action: z.literal('viewercount'), value: z.number().nonnegative() }),
 ]);
 
 // Game Schema ---------------------------------------------------------------

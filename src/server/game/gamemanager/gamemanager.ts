@@ -36,7 +36,6 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
-import { broadcastGameCountToInviteSubs } from './gamecount.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
@@ -503,7 +502,6 @@ function deleteGame(servergame: ServerGame): void {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
-	broadcastGameCountToInviteSubs();
 
 	// Remove the live game from the persistence database.
 	liveGameValues.onGameDeleted(servergame.match.id);

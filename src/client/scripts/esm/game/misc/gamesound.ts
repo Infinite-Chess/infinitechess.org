@@ -40,6 +40,7 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 /** Pre-fetches and caches a sound without playing it. */
 async function preload(soundName: SoundName): Promise<void> {
 	await getBuffer(soundName);
+	console.log(`Preloaded sound: ${soundName}`);
 }
 
 // Playing Sounds --------------------------------------------------------------------------

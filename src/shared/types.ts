@@ -211,7 +211,7 @@ export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('custom') }),
 ]);
 
-/** A single game modifier applied to a seek. */
+/** The full configuration for a single game modifier applied to a seek. */
 export type InviteModifier = z.infer<typeof InviteModifierSchema>;
 export const InviteModifierSchema = z.discriminatedUnion('kind', [
 	z.strictObject({
