@@ -287,8 +287,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() =>
-				selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, 'Failed to load cloud save.'), // prettier-ignore
+			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, 'Failed to load cloud save.'), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, ecloudstore.readCloud),
 		),
 	);
@@ -297,10 +296,8 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`local-${s.position_name}`,
 			s.position_name,
-			() =>
-				selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, 'Failed to load local save.'), // prettier-ignore
-			(anchor) =>
-				handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
+			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, 'Failed to load local save.'), // prettier-ignore
+			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
 		),
 	);
 
