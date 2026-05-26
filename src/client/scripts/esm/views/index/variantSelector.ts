@@ -58,9 +58,9 @@ const element_customVariantContent = document.getElementById('variant-custom-con
 /** The currently selected variant for the game options modal. */
 let selection: DisplaySelection = { kind: 'preset', code: 'Classical' };
 let customContentVNode: VNode | Element = element_customVariantContent;
-/** The last successfully parsed ICN input. */
+/** The last validated custom position (ICN input or saved position). null while loading or unset. */
 let icnResult: {
-	/** The variantOptions parsed from the ICN input, if it was syntactically valid. */
+	/** The variantOptions for the custom position. */
 	options: VariantOptions;
 	/** Whether the position passes validatePosition() and is legal to play. */
 	isValid: boolean;
@@ -318,6 +318,7 @@ function goToEditor(_name: string): void {
 function openFromICN(name: string): void {
 	selection = { kind: 'icn' };
 	applyCustomToSelector(name);
+	clearSavedPositionError();
 	element_variantCustomSection.classList.remove('hidden');
 	closeVariantDropdown();
 	element_icnInput.focus();
@@ -327,17 +328,78 @@ function openFromICN(name: string): void {
 function selectOnlineCustomSave(name: string): void {
 	selection = { kind: 'online', name };
 	applyCustomToSelector(name);
+	clearSavedPositionError();
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
+
+	const cached = cloudPreviewCache.get(name);
+	if (cached !== undefined) {
+		validateSavedPosition(cached);
+		return;
+	}
+	ecloudstore
+		.readCloud(name)
+		.then((s) => {
+			cloudPreviewCache.set(name, s.variantOptions);
+			if (selection.kind !== 'online' || selection.name !== name) return;
+			validateSavedPosition(s.variantOptions);
+		})
+		.catch(() => {
+			if (selection.kind !== 'online' || selection.name !== name) return;
+			element_variantDisplay.classList.add('invalid');
+			element_icnErrorText.textContent = 'Failed to load cloud save.';
+			icnResult = null;
+		});
 }
 
 /** Selects a local saved position by name and updates the selector display. */
 function selectLocalCustomSave(name: string): void {
 	selection = { kind: 'local', name };
 	applyCustomToSelector(name);
+	clearSavedPositionError();
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
+
+	const cached = localPreviewCache.get(name);
+	if (cached !== undefined) {
+		validateSavedPosition(cached);
+		return;
+	}
+	editorpositionsdb
+		.readLocal(name)
+		.then((s) => {
+			localPreviewCache.set(name, s.variantOptions);
+			if (selection.kind !== 'local' || selection.name !== name) return;
+			validateSavedPosition(s.variantOptions);
+		})
+		.catch(() => {
+			if (selection.kind !== 'local' || selection.name !== name) return;
+			element_variantDisplay.classList.add('invalid');
+			element_icnErrorText.textContent = 'Failed to load local save.';
+			icnResult = null;
+		});
 }
+
+/** Validates a saved position's VariantOptions and applies the result to the variant display. */
+function validateSavedPosition(variantOptions: VariantOptions): void {
+	const illegalReason = validatePosition(variantOptions, '');
+	if (illegalReason !== null) {
+		element_variantDisplay.classList.add('invalid');
+		element_icnErrorText.textContent = illegalReason;
+		icnResult = { options: variantOptions, isValid: false };
+	} else {
+		icnResult = { options: variantOptions, isValid: true };
+	}
+}
+
+/** Clears any saved-position error state from the variant display. */
+function clearSavedPositionError(): void {
+	icnResult = null;
+	element_variantDisplay.classList.remove('invalid');
+	element_icnErrorText.textContent = '';
+}
+
+// Preview handlers ----------------------------------------------
 
 /** Fetches a cloud save and shows the preview tooltip anchored to the given element. */
 function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void {
@@ -423,6 +485,7 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 function selectVariant(code: VariantCode): void {
 	selection = { kind: 'preset', code };
 	applyVariantToSelector(code);
+	clearSavedPositionError();
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
 }
@@ -486,8 +549,10 @@ function getInviteVariant(): InviteVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
 	} else if (selection.kind === 'online') {
+		if (!icnResult?.isValid) return null;
 		return { kind: 'cloudSave', name: selection.name };
 	} else if (selection.kind === 'local') {
+		if (!icnResult?.isValid) return null;
 		// return { kind: 'icn', content: /* Convert local save to ICN */ };
 		throw new Error('Local saves are not supported for online seeks yet');
 	} else if (selection.kind === 'icn') {

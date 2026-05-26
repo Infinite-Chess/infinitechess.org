@@ -437,6 +437,12 @@ svg.bg-omega {
 	border-color: var(--c-text);
 }
 
+.variant-display.invalid,
+.icn-input-wrap.invalid {
+	border-color: #e05555;
+	box-shadow: 0 0 0 3px rgba(224, 85, 85, 0.3);
+}
+
 .variant-group-icon {
 	width: 17px;
 	height: 17px;
@@ -647,11 +653,6 @@ svg.bg-omega {
 	border-color: var(--c-border-2);
 }
 
-.icn-input-wrap.invalid {
-	border-color: #e05555;
-	box-shadow: 0 0 0 3px rgba(224, 85, 85, 0.3);
-}
-
 .icn-input {
 	display: block;
 	width: 100%;
@@ -673,7 +674,6 @@ svg.bg-omega {
 }
 
 .icn-error-text {
-	margin: 4px 2px 0;
 	font-size: 12px;
 	color: #e05555;
 }
