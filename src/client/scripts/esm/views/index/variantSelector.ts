@@ -522,8 +522,23 @@ function getInviteVariant(): InviteVariant | null {
 		return { kind: 'cloudSave', name: selection.name };
 	} else if (selection.kind === 'local') {
 		if (!icnResult?.isValid) return null;
-		// return { kind: 'icn', content: /* Convert local save to ICN */ };
-		throw new Error('Local saves are not supported for online seeks yet');
+		const content = icnconverter.LongToShort_Format(
+			{
+				metadata: {},
+				position: icnResult.options.position,
+				gameRules: icnResult.options.gameRules,
+				fullMove: icnResult.options.fullMove,
+				state_global: icnResult.options.state_global,
+			},
+			{
+				compact: true,
+				spaces: false,
+				comments: false,
+				make_new_lines: false,
+				move_numbers: false,
+			},
+		);
+		return { kind: 'icn', content };
 	} else if (selection.kind === 'icn') {
 		const content = element_icnInput.value;
 		if (!icnResult?.isValid || !content) return null;
