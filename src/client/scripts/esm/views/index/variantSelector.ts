@@ -332,21 +332,17 @@ function selectOnlineCustomSave(name: string): void {
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
 
-	const doValidate = (opts: VariantOptions): void => {
-		if (selection.kind !== 'online' || selection.name !== name) return;
-		applyValidationToDisplay(opts);
-	};
-
 	const cached = cloudPreviewCache.get(name);
 	if (cached !== undefined) {
-		doValidate(cached);
+		validateSavedPosition(cached);
 		return;
 	}
 	ecloudstore
 		.readCloud(name)
 		.then((s) => {
 			cloudPreviewCache.set(name, s.variantOptions);
-			doValidate(s.variantOptions);
+			if (selection.kind !== 'online' || selection.name !== name) return;
+			validateSavedPosition(s.variantOptions);
 		})
 		.catch(() => {
 			if (selection.kind !== 'online' || selection.name !== name) return;
@@ -364,21 +360,17 @@ function selectLocalCustomSave(name: string): void {
 	element_variantCustomSection.classList.add('hidden');
 	closeVariantDropdown();
 
-	const doValidate = (opts: VariantOptions): void => {
-		if (selection.kind !== 'local' || selection.name !== name) return;
-		applyValidationToDisplay(opts);
-	};
-
 	const cached = localPreviewCache.get(name);
 	if (cached !== undefined) {
-		doValidate(cached);
+		validateSavedPosition(cached);
 		return;
 	}
 	editorpositionsdb
 		.readLocal(name)
 		.then((s) => {
 			localPreviewCache.set(name, s.variantOptions);
-			doValidate(s.variantOptions);
+			if (selection.kind !== 'local' || selection.name !== name) return;
+			validateSavedPosition(s.variantOptions);
 		})
 		.catch(() => {
 			if (selection.kind !== 'local' || selection.name !== name) return;
@@ -389,7 +381,7 @@ function selectLocalCustomSave(name: string): void {
 }
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
-function applyValidationToDisplay(variantOptions: VariantOptions): void {
+function validateSavedPosition(variantOptions: VariantOptions): void {
 	const illegalReason = validatePosition(variantOptions, '');
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
@@ -406,6 +398,8 @@ function clearSavedPositionError(): void {
 	element_variantDisplay.classList.remove('invalid');
 	element_icnErrorText.textContent = '';
 }
+
+// Preview handlers ----------------------------------------------
 
 /** Fetches a cloud save and shows the preview tooltip anchored to the given element. */
 function handleCloudSavePreview(anchor: HTMLElement, positionName: string): void {
