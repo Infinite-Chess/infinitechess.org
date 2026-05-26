@@ -11,12 +11,12 @@ import * as z from 'zod';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
 import { subToInvitesList, unsubFromInvitesList } from '../game/invitesmanager/invitesmanager.js';
 
-const validUnsubs = ['invites', 'game'] as const;
+const validUnsubs = ['lobby', 'game'] as const;
 
 type ValidUnsub = (typeof validUnsubs)[number];
 
 const GeneralSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('sub'), value: z.literal(['invites']) }),
+	z.strictObject({ action: z.literal('sub'), value: z.literal(['lobby']) }),
 	z.strictObject({ action: z.literal('unsub'), value: z.literal(validUnsubs) }),
 ]);
 
@@ -45,10 +45,10 @@ function routeGeneralMessage(ws: CustomWebSocket, message: GeneralMessage): void
 
 // Actions -------------------------------------------------------------------
 
-function handleSubbing(ws: CustomWebSocket, value: 'invites'): void {
+function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 	// What are they wanting to subscribe to for updates?
 	switch (value) {
-		case 'invites':
+		case 'lobby':
 			// Subscribe them to the invites list
 			subToInvitesList(ws);
 			break;
@@ -61,7 +61,7 @@ function handleSubbing(ws: CustomWebSocket, value: 'invites'): void {
 function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoice?: boolean): void {
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
-		case 'invites':
+		case 'lobby':
 			// Unsubscribe them from the invites list
 			unsubFromInvitesList(ws, closureNotByChoice);
 			break;

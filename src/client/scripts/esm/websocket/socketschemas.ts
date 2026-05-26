@@ -5,7 +5,7 @@
  *
  * All schemas are centralized here to avoid circular dependency issues.
  *
- * Schemas are organized by route: general, invites, game, and a master schema
+ * Schemas are organized by route: general, lobby, game, and a master schema
  * that combines them all together with echo and reply-only message handling.
  */
 
@@ -72,7 +72,7 @@ const GeneralSchema = z.discriminatedUnion('action', [
 
 // Invites Schema ---------------------------------------------------------------
 
-/** Represents all possible types an incoming 'invites' route websocket message contents could be. */
+/** Represents all possible types an incoming 'lobby' route websocket message contents could be. */
 export type LobbyMessage = z.infer<typeof LobbySchema>;
 const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({
@@ -153,7 +153,7 @@ const MasterSchema = z.discriminatedUnion('route', [
 	}),
 	z.strictObject({
 		id: z.number(),
-		route: z.literal('invites'),
+		route: z.literal('lobby'),
 		contents: LobbySchema,
 		replyto: z.number().optional(),
 	}),

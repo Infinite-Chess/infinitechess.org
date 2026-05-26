@@ -26,7 +26,7 @@ import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessag
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
-	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: LobbySchema }),
+	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: LobbySchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
 /** Represents all possible types a non-echo incoming websocket message could be! */
@@ -34,7 +34,7 @@ export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** This is the id of the message being replied to. */
 const EchoSchema = z.strictObject({
-	/** The route to forward the message to (e.g., "general", "invites", "game"). */
+	/** The route to forward the message to (e.g., "general", "lobby", "game"). */
 	route: z.literal('echo'),
 	/** The contents of the message, for the router to read. */
 	contents: z.int(),

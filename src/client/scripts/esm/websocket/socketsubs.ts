@@ -3,18 +3,18 @@
 /**
  * Manages subscription state for the client websocket system.
  *
- * Tracks which subscriptions (e.g. 'invites', 'game') are currently active,
+ * Tracks which subscriptions (e.g. 'lobby', 'game') are currently active,
  * and provides methods to add, remove, and query subscriptions.
  */
 
 import socketmessages from './socketmessages.js';
 
-const validSubs = ['invites', 'game'];
+const validSubs = ['lobby', 'game'];
 
 type Sub = (typeof validSubs)[number];
 
 const subs: Record<Sub, boolean> = {
-	invites: false,
+	lobby: false,
 	game: false,
 };
 

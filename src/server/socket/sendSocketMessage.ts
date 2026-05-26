@@ -26,7 +26,7 @@ import {
 
 /** Represents an outgoing WebSocket server message. */
 interface WebsocketOutMessage {
-	/** The route to forward the message to (e.g., "general", "invites", "game", "echo").
+	/** The route to forward the message to (e.g., "general", "lobby", "game", "echo").
 	 * Undefined if it's a reply-only message. */
 	route?: string;
 	/** The message contents. For echo messages, this is the message ID being echoed.

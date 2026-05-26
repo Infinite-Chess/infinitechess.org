@@ -105,7 +105,7 @@ function onmessage(serverMessage: MessageEvent): void {
 		case 'general':
 			ongeneralmessage(message.contents);
 			break;
-		case 'invites':
+		case 'lobby':
 			SocketBus.dispatch('lobby', message.contents);
 			break;
 		case 'game':

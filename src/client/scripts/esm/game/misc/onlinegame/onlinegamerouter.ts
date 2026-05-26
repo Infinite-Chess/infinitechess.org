@@ -136,7 +136,7 @@ function routeMessage(contents: GameMessage): void {
  */
 function handleJoinGame(message: JoinGameMessage): void {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
-	socketsubs.deleteSub('invites');
+	socketsubs.deleteSub('lobby');
 	socketsubs.addSub('game');
 	guititle.close();
 	guiplay.close();

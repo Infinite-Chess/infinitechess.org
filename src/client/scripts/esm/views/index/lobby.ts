@@ -181,34 +181,34 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 function createSeek(options: CreateSeekOptions): void {
 	if (ourSeekId !== undefined) return console.error("Already have a seek, can't create another.");
 	const tag = generateTag();
-	socketmessages.send('invites', 'createinvite', { ...options, tag }, true);
+	socketmessages.send('lobby', 'createinvite', { ...options, tag }, true);
 }
 
 /** Sends a cancelinvite message for our current seek. */
 function cancel(seekId: string): void {
 	if (ourSeekId === undefined) return;
 	LocalStorage.deleteItem('invite-tag');
-	socketmessages.send('invites', 'cancelinvite', seekId, true);
+	socketmessages.send('lobby', 'cancelinvite', seekId, true);
 }
 
 /** Sends an acceptinvite message for an opponent's seek. */
 function accept(seekId: string): void {
-	socketmessages.send('invites', 'acceptinvite', seekId, true);
+	socketmessages.send('lobby', 'acceptinvite', seekId, true);
 }
 
 // Subscribing ---------------------------------------------
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(): Promise<void> {
-	if (socketsubs.areSubbedToSub('invites')) return;
-	socketsubs.addSub('invites');
-	socketmessages.send('general', 'sub', 'invites');
+	if (socketsubs.areSubbedToSub('lobby')) return;
+	socketsubs.addSub('lobby');
+	socketmessages.send('general', 'sub', 'lobby');
 }
 
 /** Unsubscribes from the invites list and clears the rendered seek list. */
 function unsubscribe(): void {
 	renderSeekList([]);
-	socketsubs.unsubFromSub('invites');
+	socketsubs.unsubFromSub('lobby');
 }
 
 // Snabbdom Rendering ----------------------------------------------

@@ -36,7 +36,7 @@ function getInviteSubscribers(): typeof subscribedClients {
  */
 function broadcastToAllInviteSubs(action: string, message: any): void {
 	for (const ws of Object.values(subscribedClients)) {
-		sendSocketMessage(ws, 'invites', action, message); // In order: socket, sub, action, value
+		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}
 }
 
@@ -49,7 +49,7 @@ function addSocketToInvitesSubs(ws: CustomWebSocket): void {
 		return console.error('Cannot sub socket to invites list because they already are!');
 
 	subscribedClients[socketID] = ws;
-	ws.metadata.subscriptions.invites = true;
+	ws.metadata.subscriptions.lobby = true;
 
 	if (printSubscriberCount)
 		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
@@ -67,7 +67,7 @@ function removeSocketFromInvitesSubs(ws: CustomWebSocket): void {
 	if (!subscribedClients[socketID]) return; // Cannot unsub socket from invites list because they aren't subbed.
 
 	delete subscribedClients[socketID];
-	delete ws.metadata.subscriptions.invites;
+	delete ws.metadata.subscriptions.lobby;
 
 	if (printSubscriberCount)
 		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);

@@ -106,7 +106,7 @@ function sendClientInvitesList(
 ): void {
 	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
 	const message = { invitesList, viewerCount: 0 };
-	sendSocketMessage(ws, 'invites', 'inviteslist', message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, 'lobby', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
 
 /**
@@ -220,7 +220,7 @@ function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined
  * their socket was previously closed by a network interruption.
  */
 function subToInvitesList(ws: CustomWebSocket): void {
-	if (ws.metadata.subscriptions.invites) return; // Already subscribed. Happens occasionally
+	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
 	addSocketToInvitesSubs(ws);
 	sendClientInvitesList(ws, getInvitesListSafe());
