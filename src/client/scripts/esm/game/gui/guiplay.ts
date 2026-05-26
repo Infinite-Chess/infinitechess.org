@@ -16,7 +16,7 @@ import toast from './toast.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
-import { SocketBus } from '../websocket/SocketBus.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import hydrochess_card from '../chess/engines/enginecards/hydrochess_card.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import { engineDictionary } from '../chess/engines/engine.js';

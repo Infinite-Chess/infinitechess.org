@@ -4,7 +4,7 @@
  * This script manages the display and updates of the ping meter.
  */
 
-import { SocketBus } from '../../game/websocket/SocketBus.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 
 // Document Elements -------------------------------------------------------------------------
 

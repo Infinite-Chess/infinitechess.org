@@ -1,11 +1,11 @@
-// src/client/scripts/esm/game/websocket/socketmessages.ts
+// src/client/scripts/esm/websocket/socketmessages.ts
 
 /**
  * Handles outgoing websocket messages, echo tracking, and on-reply functions.
  */
 
-import uuid from '../../../../../shared/util/uuid.js';
-import wsutil from '../../../../../shared/util/wsutil.js';
+import uuid from '../../../../shared/util/uuid.js';
+import wsutil from '../../../../shared/util/wsutil.js';
 
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';

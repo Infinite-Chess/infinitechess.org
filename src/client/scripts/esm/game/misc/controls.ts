@@ -21,7 +21,7 @@ import docutil from '../../util/docutil.js';
 import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
-import socketman from '../websocket/socketman.js';
+import socketman from '../../websocket/socketman.js';
 import boarddrag from '../rendering/boarddrag.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';

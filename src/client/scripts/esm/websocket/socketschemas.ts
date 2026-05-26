@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/socketschemas.ts
+// src/client/scripts/esm/websocket/socketschemas.ts
 
 /**
  * This script defines all Zod schemas for validating incoming server websocket messages.
@@ -11,7 +11,7 @@
 
 import * as z from 'zod';
 
-import typeschemas from '../../../../../shared/chess/util/typeschemas.js';
+import typeschemas from '../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
@@ -21,7 +21,7 @@ import {
 	OutSeekSchema,
 	PlayerRatingChangeInfoSchema,
 	RatingSchema,
-} from '../../../../../shared/types.js';
+} from '../../../../shared/types.js';
 
 // Invite Helper Schemas ---------------------------------------------------------------
 

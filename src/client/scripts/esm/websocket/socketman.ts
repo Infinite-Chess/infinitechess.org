@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/websocket/socketman.ts
+// src/client/scripts/esm/websocket/socketman.ts
 
 /**
  * Manages the websocket connection lifecycle: opening, closing,
@@ -6,11 +6,11 @@
  * Also owns the socket instance and debug toggle.
  */
 
-import config from '../config.js';
-import thread from '../../util/thread.js';
+import config from '../game/config.js';
+import thread from '../util/thread.js';
 import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
-import validatorama from '../../util/validatorama.js';
+import validatorama from '../util/validatorama.js';
 import socketrouter from './socketrouter.js';
 import { SocketBus } from './SocketBus.js';
 

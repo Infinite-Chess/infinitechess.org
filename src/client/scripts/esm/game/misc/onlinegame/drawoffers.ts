@@ -17,7 +17,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
 
