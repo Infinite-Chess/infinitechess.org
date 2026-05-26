@@ -10,6 +10,7 @@ import type { InviteModifier } from '../../../../../shared/types.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import variantSelector from './variantSelector.js';
+import { syncRatedButton } from './gameSetupModal.js';
 
 // Types -------------------------------------------------
 
@@ -99,6 +100,7 @@ function selectModifier(code: ModifierCode): void {
 	closeModifierDropdown();
 	refreshModifiersSection();
 	refreshModifierAddBtn();
+	syncRatedButton();
 }
 
 /** Removes a modifier from the selection, reveals it in the dropdown, and refreshes the display. */
@@ -109,6 +111,7 @@ function deselectModifier(code: ModifierCode): void {
 		?.classList.remove('hidden');
 	refreshModifiersSection();
 	refreshModifierAddBtn();
+	syncRatedButton();
 }
 
 /** Rebuilds the selected modifier chips and shows/hides modifier-specific sections. */

@@ -13,6 +13,7 @@ import uuid from '../../../shared/util/uuid.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import { isRatedAllowed } from '../../../shared/chess/variants/servervalidation.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -52,18 +53,8 @@ const createinviteschem = z
 		modifiers: z.array(InviteModifierSchema).max(InviteModifierSchema.options.length),
 	})
 	.refine(
-		(val) => {
-			// Additional refinements for cross-property validation
-			if (val.mode === 'rated') {
-				// Rated game validation...
-				if (val.variant.kind !== 'preset') return false; // Custom variants are never allowed for rated games.
-				if (!(val.variant.code in VariantLeaderboards)) return false; // Variant doesn't have a leaderboard
-				if (val.time === '-') return false; // Must be timed
-				if (val.color !== null) return false; // Specific colors aren't allowed for *public* rated games.
-				if (val.modifiers.length > 0) return false; // Modifiers are not allowed for rated games.
-			}
-			return true;
-		},
+		(val) =>
+			val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
 		{ error: 'Invalid invite parameters for a rated game.' },
 	);
 

@@ -8,6 +8,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
+import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 
 import lobby from './lobby.js';
 import timeControls from './timeControls.js';
@@ -40,6 +41,8 @@ const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
 const element_rowGameMode = document.getElementById('row-game-mode')!;
+const element_ratedButton = document.querySelector<HTMLButtonElement>('[data-mode="rated"]')!;
+const element_casualButton = document.querySelector<HTMLButtonElement>('[data-mode="casual"]')!;
 const element_rowStrength = document.getElementById('row-strength')!;
 const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTMLElement>> = {
 	'data-time': document.querySelectorAll<HTMLElement>('[data-time]'),
@@ -64,9 +67,15 @@ function initToggleGroups(): void {
 	// Each [data-time], [data-mode], [data-side], [data-level] button is an exclusive-select group.
 	// Buttons sharing the same data-* attribute key form one group.
 	const groups: [ToggleGroupAttribute, (() => void)?][] = [
-		['data-time', timeControls.onTimeToggle],
+		[
+			'data-time',
+			() => {
+				timeControls.onTimeToggle();
+				syncRatedButton();
+			},
+		],
 		['data-mode'],
-		['data-side'],
+		['data-side', syncRatedButton],
 		['data-level'],
 	];
 	for (const [attr, callback] of groups) {
@@ -113,6 +122,32 @@ function initModal(): void {
 	variantSelector.initVariantGroupDropdown();
 	variantSelector.initIcnValidation();
 	modifierSelector.initModifierSelector();
+	syncRatedButton();
+}
+
+/** Reads current seek options and disables the Rated button if a rated game is not permitted. */
+export function syncRatedButton(): void {
+	const variant = variantSelector.getInviteVariant();
+	const time: TimeControl = timeControls.getTimeControl();
+	const color = getSelectedColor();
+	const modifiers = modifierSelector.getInviteModifiers();
+
+	const allowed = isRatedAllowed(variant, time, color, modifiers);
+	element_ratedButton.disabled = !allowed;
+	if (!allowed && element_ratedButton.classList.contains('active')) {
+		element_ratedButton.classList.remove('active');
+		element_casualButton.classList.add('active');
+	}
+}
+
+/** Returns the color the player has selected, or null for random. */
+function getSelectedColor(): Player | null {
+	const sideBtn = document.querySelector<HTMLElement>('[data-side].active')!;
+	const sideVal = sideBtn.getAttribute('data-side')!;
+	if (sideVal === 'random') return null;
+	if (sideVal === 'white') return players.WHITE;
+	if (sideVal === 'black') return players.BLACK;
+	throw new Error(`Invalid side selection: ${sideVal}`);
 }
 
 /** Reads the online seek form state and sends a createinvite request via the lobby. */
@@ -121,10 +156,7 @@ function handleOnlineSeek(): void {
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)
 
 	const time: TimeControl = timeControls.getTimeControl();
-
-	const sideBtn = document.querySelector<HTMLElement>('[data-side].active');
-	const sideVal = sideBtn?.getAttribute('data-side')!;
-	const color: Player | null = sideVal === 'random' ? null : sideVal === 'white' ? players.WHITE : sideVal === 'black' ? players.BLACK : (() => { throw new Error('Invalid side selection'); })(); // prettier-ignore
+	const color = getSelectedColor();
 
 	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active')!;
 	const mode: GameMode = modeBtn.getAttribute('data-mode') as GameMode;

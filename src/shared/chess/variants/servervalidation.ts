@@ -8,10 +8,13 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
+import type { Player } from '../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
+import type { InviteVariant, TimeControl, InviteModifier } from '../../types.js';
 
 import variantpreviewer from './variantpreviewer.js';
+import { VariantLeaderboards } from './validleaderboard.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -66,9 +69,29 @@ function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
 	return doesVariantSupportServerValidation(variant);
 }
 
+/**
+ * Returns `true` if the given seek options are eligible for a rated game.
+ * Mirrors the server-side invite validation logic to avoid redundant checks.
+ */
+function isRatedAllowed(
+	variant: InviteVariant | null,
+	time: TimeControl,
+	color: Player | null,
+	modifiers: InviteModifier[],
+): boolean {
+	if (variant === null) return false;
+	if (variant.kind !== 'preset') return false; // Custom variants are never rated
+	if (!(variant.code in VariantLeaderboards)) return false; // Variant needs a leaderboard
+	if (time === '-') return false; // Must be timed
+	if (color !== null) return false; // No specific color for rated **public** games
+	if (modifiers.length > 0) return false; // No modifiers for rated
+	return true;
+}
+
 export {
 	POSITION_STRING_THRESHOLD,
 	VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION,
 	doesVariantSupportServerValidation,
 	isGameInstantlyDeleted,
+	isRatedAllowed,
 };

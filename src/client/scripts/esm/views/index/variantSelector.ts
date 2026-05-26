@@ -26,6 +26,7 @@ import ecloudstore from '../../game/editorstores/ecloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import editorSavesAPI from '../../game/editorstores/editorSavesAPI.js';
 import editorpositionsdb from '../../game/editorstores/esavestore.js';
+import { syncRatedButton } from './gameSetupModal.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 // Types -------------------------------------------------
@@ -412,6 +413,7 @@ function applyCustomToSelector(name: string): void {
 function setIcnResult(result: typeof icnResult): void {
 	icnResult = result;
 	element_modalSubmit.disabled = selection.kind !== 'preset' && !icnResult?.isValid;
+	syncRatedButton();
 }
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
