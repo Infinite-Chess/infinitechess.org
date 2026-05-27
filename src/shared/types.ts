@@ -229,10 +229,18 @@ export const InviteModifierSchema = z.discriminatedUnion('kind', [
 	}),
 ]);
 
+/** The number of digits generated invite/seek IDs are. */
+export const IDLengthOfInvites = 5;
+/** Seek/invite ID: Base36 alphanumeric, fixed length of 5. */
+export const SeekIdSchema = z
+	.string()
+	.length(IDLengthOfInvites)
+	.regex(/^[0-9a-z]+$/);
+
 /** Shared info for all lobby game invite seek types. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 export const BaseSeekSchema = z.strictObject({
-	id: z.string(),
+	id: SeekIdSchema,
 	tag: z.string(),
 	player: ServerUsernameContainerSchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),

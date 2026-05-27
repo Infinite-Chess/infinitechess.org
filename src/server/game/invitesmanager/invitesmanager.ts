@@ -11,6 +11,8 @@ import type { OutSeek } from '../../../shared/types.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
+import { IDLengthOfInvites } from '../../../shared/types.js';
+
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
@@ -24,9 +26,6 @@ import {
 
 /** Whether to log new invite creations/deletions to the console */
 const printNewInviteCreationsAndDeletions = true;
-
-/** The number of digits generated invite IDs are. */
-const IDLengthOfInvites = 5;
 
 /** The list of all active invites. */
 const invites: AuthSeek[] = [];
