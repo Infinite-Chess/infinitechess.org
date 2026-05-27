@@ -83,10 +83,10 @@ export const editorLoadLimiter = rateLimit({
 
 /**
  * Seek Preview Limiter
- * Rule: Max 60 preview requests per 1 minute per IP
+ * Rule: Max 20 seek previews per 1 minute per IP
  */
 export const seekPreviewLimiter = rateLimit({
 	windowMs: 1000 * 60,
-	max: 60,
+	max: 20,
 	...default_options,
 });

@@ -1,4 +1,4 @@
-// src/server/socket/wsRateLimiter.ts
+// dev-utils/scripts/wsRateLimiter.ts
 
 /**
  * Factory for creating per-socket in-process rate limiters for websocket actions.
