@@ -32,7 +32,6 @@ import editorSavesManager from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { AuthMemberInfo, SignedInMemberInfo } from '../../types.js';
 import {
 	existingInviteHasID,
 	userHasInvite,
