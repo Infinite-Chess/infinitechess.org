@@ -210,7 +210,7 @@ async function subscribe(): Promise<void> {
 
 /** Unsubscribes from the invites list and clears the rendered seek list. */
 function unsubscribe(): void {
-	renderSeekList([]);
+	clearSeekList();
 	socketsubs.unsubFromSub('lobby');
 }
 
@@ -235,6 +235,11 @@ function getVariantIcon(group: VariantGroup | 'custom'): string {
 /** Patches the lobby table body with the latest seek rows. */
 function renderSeekList(seeks: LobbySeek[]): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks));
+}
+
+/** Clears the seek list display. */
+function clearSeekList(): void {
+	renderSeekList([]);
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
@@ -340,6 +345,7 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 
 export default {
 	renderSeekList,
+	clearSeekList,
 	onSeekListUpdate,
 	createSeek,
 	subscribe,

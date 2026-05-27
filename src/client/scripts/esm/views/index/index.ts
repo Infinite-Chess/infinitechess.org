@@ -17,6 +17,7 @@ import './gameSetupModal.js';
 
 lobby.subscribe();
 SocketBus.addEventListener('reconnected', () => lobby.subscribe());
+SocketBus.addEventListener('closed', () => lobby.clearSeekList());
 
 SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
