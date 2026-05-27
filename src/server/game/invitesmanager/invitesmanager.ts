@@ -106,7 +106,7 @@ function sendClientInvitesList(
 ): void {
 	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
 	const message = { invitesList, viewerCount: 0 };
-	sendSocketMessage(ws, 'lobby', 'seekslist', message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, 'lobby', 'inviteslist', message, replyto); // In order: socket, sub, action, value
 }
 
 /**

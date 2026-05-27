@@ -187,26 +187,17 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 
 // Invite / Seek Helper Schemas ---------------------------------------------------------------
 
-/**
- * The variant kinds that a fully-resolved seek can have.
- * CloudSave seeks are converted to 'icn' at creation time and never stored as 'cloudSave'.
- */
-export type AuthSeekVariant = z.infer<typeof AuthSeekVariantSchema>;
-export const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
-	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
-	z.strictObject({
-		kind: z.literal('icn'),
-		content: z.string().min(1).max(POSITION_STRING_THRESHOLD),
-	}),
-]);
-
 /** The full variant selection as sent by the client when creating a seek. */
 export type InviteVariant = z.infer<typeof InviteVariantSchema>;
 export const InviteVariantSchema = z.discriminatedUnion('kind', [
-	...AuthSeekVariantSchema.options,
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
 	z.strictObject({
 		kind: z.literal('cloudSave'),
 		name: z.string().min(1).max(editorutil.MAX_POSITION_NAME_LENGTH),
+	}),
+	z.strictObject({
+		kind: z.literal('icn'),
+		content: z.string().min(1).max(POSITION_STRING_THRESHOLD),
 	}),
 ]);
 
