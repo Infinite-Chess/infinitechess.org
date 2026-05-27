@@ -22,7 +22,7 @@ SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
 function onLobbyMessage(contents: LobbyMessage): void {
 	switch (contents.action) {
-		case 'inviteslist':
+		case 'seekslist':
 			lobby.onSeekListUpdate(contents.value.invitesList);
 			break;
 		case 'viewercount':

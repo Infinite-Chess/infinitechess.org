@@ -29,6 +29,7 @@ import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
+import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
@@ -54,6 +55,7 @@ import {
 	forgotPasswordLimiter,
 	editorSaveLimiter,
 	editorLoadLimiter,
+	seekPreviewLimiter,
 } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
@@ -220,6 +222,8 @@ export function configureMiddleware(app: Express): void {
 		const contributors = getContributors();
 		res.send(JSON.stringify(contributors));
 	});
+
+	app.get('/api/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
 
 	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 	app.post('/api/prepare-restart', handlePrepareRestart);

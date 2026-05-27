@@ -4,7 +4,7 @@
  * Client-side wrappers for the editor saves server API endpoints.
  */
 
-import type { CompressionMode } from '../../util/compression';
+import type { CompressionMode } from '../../../../../shared/util/compression';
 
 import validatorama from '../../util/validatorama';
 
