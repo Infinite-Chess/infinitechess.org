@@ -13,7 +13,7 @@ declare global {
 /** Information to identify a specific user, logged in or not. */
 type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
 
-type SignedInMemberInfo = {
+export type SignedInMemberInfo = {
 	signedIn: true;
 	user_id: number;
 	username: string;

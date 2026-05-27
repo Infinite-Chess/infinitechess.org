@@ -1,4 +1,4 @@
-// src/client/scripts/esm/util/compression.ts
+// src/shared/util/compression.ts
 
 /**
  * General-purpose string compression utilities using the Web Streams

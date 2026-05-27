@@ -76,7 +76,7 @@ const GeneralSchema = z.discriminatedUnion('action', [
 export type LobbyMessage = z.infer<typeof LobbySchema>;
 const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({
-		action: z.literal('inviteslist'),
+		action: z.literal('seekslist'),
 		value: z.strictObject({
 			invitesList: z.array(OutSeekSchema),
 			viewerCount: z.number().nonnegative(),

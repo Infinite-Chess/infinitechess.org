@@ -14,6 +14,7 @@ import clockutil from '../../../shared/chess/util/clockutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import { isRatedAllowed } from '../../../shared/chess/variants/servervalidation.js';
+import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
@@ -27,9 +28,11 @@ import {
 
 import { AuthSeek } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
+import editorSavesManager from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { AuthMemberInfo, SignedInMemberInfo } from '../../types.js';
 import {
 	existingInviteHasID,
 	userHasInvite,
@@ -66,11 +69,11 @@ const createinviteschem = z
  * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
  * @param replyto - The incoming websocket message ID, to include in the reply
  */
-function createInvite(
+async function createInvite(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
 	replyto?: number,
-): void {
+): Promise<void> {
 	// invite: { id, owner, variant, clock, color, rated }
 	if (isSocketInAnActiveGame(ws))
 		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
@@ -88,7 +91,19 @@ function createInvite(
 		return;
 	}
 
-	const invite = getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
+	// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
+	if (messageContents.variant.kind === 'cloudSave' && !ws.metadata.memberInfo.signedIn) {
+		sendSocketMessage(
+			ws,
+			'general',
+			'notify',
+			'Must be signed in to create a seek from a cloud save.',
+			replyto,
+		);
+		return;
+	}
+
+	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
 	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
 	// Invite has all legal parameters!
@@ -99,17 +114,8 @@ function createInvite(
 			'server.javascript.ws-rated_invite_verification_needed',
 			ws.metadata.cookies?.i18next,
 		);
-		return sendSocketMessage(ws, 'general', 'notify', message, replyto);
-	}
-	// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
-	if (invite.variant.kind === 'cloudSave' && !ws.metadata.memberInfo.signedIn) {
-		return sendSocketMessage(
-			ws,
-			'general',
-			'notify',
-			'Must be signed in to create a seek from a cloud save.',
-			replyto,
-		);
+		sendSocketMessage(ws, 'general', 'notify', message, replyto);
+		return;
 	}
 
 	// Create the invite now ...
@@ -125,11 +131,11 @@ function createInvite(
  * @param replyto - The incoming websocket message ID, to include in the reply
  * @returns The Invite object, or void it the message contents were invalid.
  */
-function getInviteFromWebsocketMessageContents(
+async function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
 	replyto?: number,
-): AuthSeek | void {
+): Promise<AuthSeek | void> {
 	// Verify their invite contains the required properties...
 
 	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
@@ -166,11 +172,32 @@ function getInviteFromWebsocketMessageContents(
 		rating,
 	};
 
+	// Resolve cloudSave seeks to plain ICN
+	let variant = messageContents.variant;
+	if (variant.kind === 'cloudSave') {
+		if (!owner.signedIn) return; // Already checked before calling this function
+		const record = editorSavesManager.getSavedPositionICN(variant.name, owner.user_id);
+		if (record === undefined) {
+			return sendSocketMessage(
+				ws,
+				'general',
+				'notify',
+				`Cloud save "${variant.name}" not found.`,
+				replyto,
+			);
+		}
+		const content = await compression.decompressString(
+			record.icn,
+			record.compression as CompressionMode,
+		);
+		variant = { kind: 'icn', content };
+	}
+
 	return {
 		id,
 		owner,
 		player,
-		variant: messageContents.variant,
+		variant,
 		time: messageContents.time,
 		mode: messageContents.mode,
 		color: messageContents.color,
