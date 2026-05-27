@@ -4,17 +4,17 @@
  * "5D Chess" 4D variant.
  */
 
-import type { Movesets } from '../../../logic/movesets';
-import type { CoordsKey } from '../../../util/coordutil';
-import type { GameRuleModifications } from '../variantutil';
-import type { RawType, RawTypeGroup } from '../../../util/typeutil';
-import type { SpecialMoveFunction, SpecialVicinity } from '../../../logic/specialmove';
+import type { Movesets } from '../../../logic/movesets.js';
+import type { CoordsKey } from '../../../util/coordutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
+import type { RawType, RawTypeGroup } from '../../../util/typeutil.js';
+import type { SpecialMoveFunction, SpecialVicinity } from '../../../logic/specialmove.js';
 
-import gen4DPosition from '../gen4DPosition';
-import fourdimensionalmoves from '../../../logic/fourdimensionalmoves';
-import fourdimensionalloader from '../fourdimensionalloader';
-import { CLASSICAL_POSITION_STRING } from '../classicalPositionString';
-import { players as p, rawTypes as r } from '../../../util/typeutil';
+import gen4DPosition from '../gen4DPosition.js';
+import fourdimensionalmoves from '../../../logic/fourdimensionalmoves.js';
+import fourdimensionalloader from '../fourdimensionalloader.js';
+import { CLASSICAL_POSITION_STRING } from '../classicalPositionString.js';
+import { players as p, rawTypes as r } from '../../../util/typeutil.js';
 
 export function getPosition(): { position: Map<CoordsKey, number> } {
 	return { position: gen4DPosition.gen(8n, 8n, 9n, CLASSICAL_POSITION_STRING) };

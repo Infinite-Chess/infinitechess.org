@@ -4,12 +4,12 @@
  * "Space Classic" standard variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil';
-import type { GameRuleModifications } from '../variantutil';
+import type { CoordsKey } from '../../../util/coordutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
 
-import variantutil from '../variantutil';
-import icnconverter from '../../../logic/icn/icnconverter';
-import { players as p } from '../../../util/typeutil';
+import variantutil from '../variantutil.js';
+import icnconverter from '../../../logic/icn/icnconverter.js';
+import { players as p } from '../../../util/typeutil.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// March 12, 2024, 12:00 AM - Swapped black king & queen so they are on the same side as white king & queen.

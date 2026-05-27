@@ -4,12 +4,12 @@
  * "Pawn Horde" horde variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil';
-import type { GameRuleModifications } from '../variantutil';
+import type { CoordsKey } from '../../../util/coordutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
 
-import variantutil from '../variantutil';
-import icnconverter from '../../../logic/icn/icnconverter';
-import { players as p } from '../../../util/typeutil';
+import variantutil from '../variantutil.js';
+import icnconverter from '../../../logic/icn/icnconverter.js';
+import { players as p } from '../../../util/typeutil.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// UTC Jan 25, 2024, 4:00 AM - 1 pawn removed on the sides, for a total of 2 added.

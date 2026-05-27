@@ -4,11 +4,11 @@
  * "Omega^4" showcase variant.
  */
 
-import type { RawType } from '../../../util/typeutil';
-import type { GameRuleModifications } from '../variantutil';
+import type { RawType } from '../../../util/typeutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
 
-import coordutil, { Coords, CoordsKey } from '../../../util/coordutil';
-import { ext as e, players as p, rawTypes as r } from '../../../util/typeutil';
+import coordutil, { Coords, CoordsKey } from '../../../util/coordutil.js';
+import { ext as e, players as p, rawTypes as r } from '../../../util/typeutil.js';
 
 export function getPosition(): { position: Map<CoordsKey, number> } {
 	return { position: genPositionOfOmegaFourth() };

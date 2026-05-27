@@ -4,10 +4,10 @@
  * "Pawndard" standard variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil';
+import type { CoordsKey } from '../../../util/coordutil.js';
 
-import variantutil from '../variantutil';
-import icnconverter from '../../../logic/icn/icnconverter';
+import variantutil from '../variantutil.js';
+import icnconverter from '../../../logic/icn/icnconverter.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// UTC March 31, 2026 - Kings are no longer given special rights.

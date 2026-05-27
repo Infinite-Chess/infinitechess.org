@@ -4,13 +4,13 @@
  * "Chess on an Infinite Plane - Knightriders Option" standard variant.
  */
 
-import type { CoordsKey } from '../../../util/coordutil';
-import type { GameRuleModifications } from '../variantutil';
+import type { CoordsKey } from '../../../util/coordutil.js';
+import type { GameRuleModifications } from '../variantutil.js';
 
-import variantutil from '../variantutil';
-import icnconverter from '../../../logic/icn/icnconverter';
-import { rawTypes as r } from '../../../util/typeutil';
-import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions';
+import variantutil from '../variantutil.js';
+import icnconverter from '../../../logic/icn/icnconverter.js';
+import { rawTypes as r } from '../../../util/typeutil.js';
+import { DEFAULT_PROMOTION_PIECES } from '../defaultPromotions.js';
 
 const POSITION_STRINGS: Record<number, string> = {
 	// 6:43 PM Dec 24, 2025, MST - Knightriders can no longer give a discovered check on move one.
