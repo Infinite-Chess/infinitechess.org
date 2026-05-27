@@ -7,6 +7,7 @@
 import type { CompressionMode } from '../../../../../shared/util/compression';
 
 import validatorama from '../../util/validatorama';
+import { fetchWithDeduplication } from '../../util/fetchDeduplicator.js';
 
 // Types ----------------------------------------------------------------------------
 
@@ -106,10 +107,13 @@ async function savePosition(
  */
 async function getPosition(position_name: string): Promise<CloudPositionRecord> {
 	const headers = await buildAuthHeaders();
-	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
-		method: 'GET',
-		headers,
-	});
+	const response = await fetchWithDeduplication(
+		`/api/editor-saves/${encodeURIComponent(position_name)}`,
+		{
+			method: 'GET',
+			headers,
+		},
+	);
 	if (!response.ok) {
 		const errorData = (await response.json()) as { error?: string };
 		throw new Error(errorData.error || 'Unknown error');
