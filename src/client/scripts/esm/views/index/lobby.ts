@@ -35,6 +35,7 @@ import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from '../../websocket/socketmessages.js';
+import seekPreviewCache from './seekPreviewCache.js';
 
 const patch = init([attributesModule, classModule]);
 
@@ -144,6 +145,7 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
+	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
 
 	const ourSeek = seeks.find((s) => isSeekOurs(s));
 	ourSeekId = ourSeek?.id;

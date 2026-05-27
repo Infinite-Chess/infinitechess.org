@@ -11,9 +11,9 @@ import type { EditorSaveState } from '../boardeditor/editortypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
 import editorutil from '../../../../../shared/util/editorutil';
+import compression from '../../../../../shared/util/compression';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
 
-import compression from '../../util/compression';
 import editorSavesAPI from './editorSavesAPI';
 
 // Error classes --------------------------------------------------------------
