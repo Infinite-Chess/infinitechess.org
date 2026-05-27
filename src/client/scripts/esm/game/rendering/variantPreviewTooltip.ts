@@ -179,7 +179,7 @@ async function showForVariantCode(
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
-	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement);
+	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement, code);
 }
 
 /** Hides the tooltip. */
@@ -197,9 +197,10 @@ async function showForBoard(
 	token: number,
 	isPreset: boolean,
 	placement: 'left' | 'below',
+	variantCode?: VariantCode,
 ): Promise<void> {
 	element_name.textContent = name;
-	await populateRules(gameRules, boardsim, isPreset);
+	await populateRules(gameRules, boardsim, isPreset, variantCode);
 	await ensureReady(boardsim);
 
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
@@ -279,8 +280,14 @@ async function populateRules(
 	gameRules: GameRules,
 	boardsim: BoardPreview,
 	isPreset: boolean,
+	variantCode?: VariantCode,
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];
+
+	// 4D movement — first
+	if (variantCode !== undefined && variantregistry.getVariantGroup(variantCode) === '4D') {
+		items.push('Pieces travel four-dimensionally');
+	}
 
 	// Turn order — show if not standard [White, Black]
 	const defaultTurnOrder = [players.WHITE, players.BLACK];
