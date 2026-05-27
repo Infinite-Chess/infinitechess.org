@@ -101,18 +101,7 @@ function initVariantGroupDropdown(): void {
 	// Set up variant preview tooltip listener on hovering the preview (eye) icon
 	const element_displayPreviewAnchor =
 		element_variantDisplay.querySelector<HTMLElement>('.preview')!;
-	// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
-	element_displayPreviewAnchor.addEventListener('pointerenter', (e) => {
-		if (e.pointerType === 'touch') return;
-		handleDisplayPreviewHover(element_displayPreviewAnchor);
-	});
-	element_displayPreviewAnchor.addEventListener('pointerleave', (e) => {
-		if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
-	});
-	element_displayPreviewAnchor.addEventListener('click', (e) => {
-		e.stopPropagation();
-		handleDisplayPreviewHover(element_displayPreviewAnchor);
-	});
+	variantPreviewTooltip.attachAnchor(element_displayPreviewAnchor, handleDisplayPreviewHover);
 
 	// Wire up group buttons
 	document.querySelectorAll<HTMLElement>('button[data-group]').forEach((item) => {
@@ -135,19 +124,9 @@ function initVariantGroupDropdown(): void {
 				if ((e.target as HTMLElement).closest('.preview')) return; // They clicked the preview button
 				selectVariant(code);
 			});
-			// Set up variant preview tooltip listener on hovering the preview (eye) icon.
-			// pointerenter (not mouseenter) so we can skip touch — touch is handled by the click handler below.
-			const preview = btn.querySelector<SVGElement>('.preview')!;
-			preview.addEventListener('pointerenter', (e) => {
-				if (e.pointerType === 'touch') return;
-				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
-			});
-			preview.addEventListener('pointerleave', (e) => {
-				if (e.pointerType !== 'touch') variantPreviewTooltip.hide();
-			});
-			preview.addEventListener('click', (e) => {
-				e.stopPropagation();
-				variantPreviewTooltip.showForVariantCode(e.currentTarget as HTMLElement, code);
+			const preview = btn.querySelector<HTMLElement>('.preview')!;
+			variantPreviewTooltip.attachAnchor(preview, (anchor) => {
+				variantPreviewTooltip.showForVariantCode(anchor, code, 'left');
 			});
 		});
 	});
@@ -479,7 +458,7 @@ async function validateIcnInput(): Promise<void> {
 /** Shows the preview tooltip for the currently selected variant in the display button. */
 async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	if (selection.kind === 'preset') {
-		variantPreviewTooltip.showForVariantCode(anchor, selection.code);
+		variantPreviewTooltip.showForVariantCode(anchor, selection.code, 'left');
 	} else if (selection.kind === 'online') {
 		handleSavePreview(anchor, selection.name, cloudPreviewCache, ecloudstore.readCloud);
 	} else if (selection.kind === 'local') {

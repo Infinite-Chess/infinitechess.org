@@ -36,6 +36,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import seekPreviewCache from './seekPreviewCache.js';
+import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 const patch = init([attributesModule, classModule]);
 
@@ -276,12 +277,26 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 				]),
 			]),
 			h('div.lobby-cell', [
-				h('div.cell-flex', [
-					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
-						h('use', { attrs: { href: `#${variantIcon}` } }),
-					]),
-					h('span', variantName),
-				]),
+				h(
+					'div.cell-flex.seek-variant-anchor',
+					{
+						attrs: { title: '' }, // Overrides seek's title
+						hook: {
+							insert: (vnode) => {
+								variantPreviewTooltip.attachAnchor(
+									vnode.elm as HTMLElement,
+									(anchor) => handleVariantPreviewHover(anchor, seek),
+								);
+							},
+						},
+					},
+					[
+						h('svg.cell-icon', { class: { [variantIcon]: true } }, [
+							h('use', { attrs: { href: `#${variantIcon}` } }),
+						]),
+						h('span', variantName),
+					],
+				),
 			]),
 			h('div.lobby-cell', [
 				h('div.cell-flex', [
@@ -294,6 +309,17 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
 		],
 	);
+}
+
+/** Fetches and shows the variant preview tooltip for a seek row's variant cell. */
+async function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): Promise<void> {
+	if (seek.variant.group === 'custom') {
+		const variantOptions = await seekPreviewCache.getSeekPreview(seek.id);
+		if (variantOptions === undefined) return;
+		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below'); // prettier-ignore
+	} else {
+		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below');
+	}
 }
 
 /** Creates the optional rating vnode shown beside usernames. */

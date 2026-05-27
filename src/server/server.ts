@@ -18,8 +18,11 @@ import socketServer from './socket/socketServer.js';
 import { prepGamesForShutdown, restoreLiveGames } from './game/gamemanager/gamemanager.js';
 import { getCertOptions } from './config/certOptions.js';
 import { logServerStarted, logServerStopped } from './utility/startupLogger.js';
+import variantcache from '../shared/chess/variants/variantcache.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
+
+variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
 restoreLiveGames();

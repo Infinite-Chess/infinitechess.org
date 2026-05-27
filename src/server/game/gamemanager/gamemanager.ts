@@ -52,7 +52,7 @@ import {
 // Constants ----------------------------------------------------------------------------------
 
 /** Whether to log all new and ending games to the console. */
-const PRINT_GAMES = false;
+const PRINT_GAMES = true;
 
 // State --------------------------------------------------------------------------------------
 

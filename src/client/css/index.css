@@ -187,7 +187,7 @@ svg.bg-omega {
 }
 
 .lobby-cell {
-	padding: 0.667em 0.3em;
+	padding: 0.3335em 0.3em;
 	overflow: hidden;
 }
 
@@ -204,6 +204,16 @@ svg.bg-omega {
 	display: flex;
 	gap: 0.4em;
 	align-items: center;
+}
+
+.seek-variant-anchor {
+	border-radius: 0.5em;
+	padding: 0.333em 0.7em 0.333em 0.417em;
+	width: fit-content;
+}
+
+.seek-variant-anchor:hover {
+	background-color: var(--c-hover-brighten);
 }
 
 .invite-row .lobby-cell:nth-child(2) .cell-flex span {
@@ -593,6 +603,7 @@ svg.bg-omega {
 #variant-preview-tooltip {
 	position: fixed;
 	z-index: 1000;
+	pointer-events: none;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;

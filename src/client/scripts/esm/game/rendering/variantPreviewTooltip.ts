@@ -47,9 +47,13 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 const PREVIEW_ENTITY_WIDTH_VPIXELS = 20;
 
 /** Natural (max) width of the tooltip in px — must match the CSS max-width. */
+
 const TOOLTIP_MAX_WIDTH = 400;
 /** Horizontal gap in px between the tooltip and its anchor element. */
 const TOOLTIP_OFFSET_X = 12;
+/** Vertical gap in px between the tooltip and its anchor element (below placement). */
+const TOOLTIP_OFFSET_Y = 8;
+
 /** Minimum gap in px between the tooltip and the viewport edge. */
 const EDGE_PAD = 8;
 
@@ -143,6 +147,7 @@ async function showForPosition(
 	anchor: HTMLElement,
 	name: string,
 	variantOptions: VariantOptions,
+	placement: 'left' | 'below' = 'left',
 ): Promise<void> {
 	const token = ++showToken;
 	const boardsim = boardpreviewer.initBoardPreview(
@@ -150,7 +155,7 @@ async function showForPosition(
 		undefined,
 		variantOptions,
 	);
-	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false);
+	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false, placement);
 }
 
 /**
@@ -158,7 +163,11 @@ async function showForPosition(
  * @param anchor - The element the tooltip should appear beside.
  * @param code - The variant code (e.g. 'Classical').
  */
-async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promise<void> {
+async function showForVariantCode(
+	anchor: HTMLElement,
+	code: VariantCode,
+	placement: 'left' | 'below',
+): Promise<void> {
 	const token = ++showToken;
 	const variantName = variantregistry.getVariantName(code);
 	await variantcache.ensureVariantLoaded(code);
@@ -170,7 +179,7 @@ async function showForVariantCode(anchor: HTMLElement, code: VariantCode): Promi
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
-	await showForBoard(anchor, variantName, boardsim, gameRules, token, true);
+	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement);
 }
 
 /** Hides the tooltip. */
@@ -187,6 +196,7 @@ async function showForBoard(
 	gameRules: GameRules,
 	token: number,
 	isPreset: boolean,
+	placement: 'left' | 'below',
 ): Promise<void> {
 	element_name.textContent = name;
 	await populateRules(gameRules, boardsim, isPreset);
@@ -194,23 +204,27 @@ async function showForBoard(
 
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
 
-	positionTooltip(anchor);
+	positionTooltip(anchor, placement);
 	renderBoard(boardsim, gameRules);
 	element_tooltip.classList.remove('visibility-hidden');
 }
 
-/** Positions the tooltip immediately to the left of the anchor. */
-function positionTooltip(anchor: HTMLElement): void {
+/** Positions the tooltip relative to the anchor. */
+function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void {
 	const rect = anchor.getBoundingClientRect();
 
-	const left = Math.max(rect.left - TOOLTIP_MAX_WIDTH - TOOLTIP_OFFSET_X, EDGE_PAD);
-	element_tooltip.style.left = `${left}px`;
-	element_tooltip.style.right = `${EDGE_PAD}px`;
+	const preferredLeft =
+		placement === 'below'
+			? rect.left + rect.width / 2 - TOOLTIP_MAX_WIDTH / 2
+			: rect.left - TOOLTIP_MAX_WIDTH - TOOLTIP_OFFSET_X;
+	const preferredTop = placement === 'below' ? rect.bottom + TOOLTIP_OFFSET_Y : rect.top;
 
+	// Clamp to viewport edges.
+	element_tooltip.style.left = `${Math.max(preferredLeft, EDGE_PAD)}px`;
+	element_tooltip.style.right = `${EDGE_PAD}px`;
 	// Read natural height after horizontal constraints are applied (canvas shrinks with width via aspect-ratio).
 	const tooltipH = element_tooltip.offsetHeight;
-	const top = Math.min(rect.top, window.innerHeight - tooltipH - EDGE_PAD);
-	element_tooltip.style.top = `${top}px`;
+	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
 
 	camera.resyncCanvasBuffer();
 }
@@ -385,9 +399,30 @@ function containsNode(node: Node): boolean {
 	return element_tooltip.contains(node);
 }
 
+/**
+ * Wires the standard preview-anchor interaction onto an element:
+ * mouse hover shows the tooltip, leave hides it, click (touch or mouse) shows it.
+ * @param element - The anchor element to attach listeners to.
+ * @param show - Called with the anchor element whenever the tooltip should be shown.
+ */
+function attachAnchor(element: HTMLElement, show: (anchor: HTMLElement) => void): void {
+	element.addEventListener('pointerenter', (e) => {
+		if (e.pointerType === 'touch') return;
+		show(element);
+	});
+	element.addEventListener('pointerleave', (e) => {
+		if (e.pointerType !== 'touch') hide();
+	});
+	element.addEventListener('click', (e) => {
+		e.stopPropagation();
+		show(element);
+	});
+}
+
 export default {
 	showForPosition,
 	showForVariantCode,
 	hide,
 	containsNode,
+	attachAnchor,
 };
