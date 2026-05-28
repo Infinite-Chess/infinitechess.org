@@ -83,6 +83,11 @@ element_tooltip.classList.add('visibility-hidden');
  */
 let suppressSynthesizedEventsUntil = 0;
 
+// Hide the tooltip on screen resize to avoid it being squished into odd positions.
+window.addEventListener('resize', () => {
+	if (!element_tooltip.classList.contains('visibility-hidden')) hide();
+});
+
 // On touch devices, any finger-down anywhere immediately dismisses the tooltip.
 document.addEventListener(
 	'touchstart',
