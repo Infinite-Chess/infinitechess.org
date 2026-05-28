@@ -61,6 +61,8 @@ async function playSoundEffect(
 		bypassDownsampler?: boolean;
 	} = {},
 ): Promise<void> {
+	if (!audioCache.has(soundName))
+		return console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would inquire a delay to fetch
 	const buffer = await getBuffer(soundName);
 	if (!buffer) return; // Sound failed to load
 
