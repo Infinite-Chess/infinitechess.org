@@ -126,7 +126,7 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 
 	// --- Rule 6: Checkmate incompatibility ---
 	const checkmateUsed = uniquePlayers.some((player) =>
-		gameRules.winConditions[player]!.includes('checkmate'),
+		(gameRules.winConditions[player] ?? []).includes('checkmate'),
 	);
 	if (checkmateUsed) {
 		// In 2-player mode, if any player gets 2+ turns in a row, king capture is possible

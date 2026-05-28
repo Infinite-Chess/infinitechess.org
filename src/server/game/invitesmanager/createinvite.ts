@@ -11,14 +11,19 @@ import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import { isRatedAllowed } from '../../../shared/chess/variants/servervalidation.js';
+import { validatePosition } from '../../../shared/chess/variants/positionvalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
+import {
+	isRatedAllowed,
+	POSITION_STRING_THRESHOLD,
+} from '../../../shared/chess/variants/servervalidation.js';
 import {
 	InviteVariantSchema,
 	InviteModifierSchema,
@@ -185,11 +190,23 @@ async function getInviteFromWebsocketMessageContents(
 				replyto,
 			);
 		}
+		// Skip decompression if the compressed payload is already too large to be a legal.
+		if (record.icn.length > POSITION_STRING_THRESHOLD) {
+			return sendSocketMessage(ws, 'general', 'notify', 'Position is too large.', replyto);
+		}
 		const content = await compression.decompressString(
 			record.icn,
 			record.compression as CompressionMode,
 		);
 		variant = { kind: 'icn', content };
+	}
+
+	// Validate the resolved ICN's position is legal
+	if (variant.kind === 'icn') {
+		const illegalReason = validateIcnSeekContent(variant.content);
+		if (illegalReason !== null) {
+			return sendSocketMessage(ws, 'general', 'notify', illegalReason, replyto);
+		}
 	}
 
 	return {
@@ -203,6 +220,32 @@ async function getInviteFromWebsocketMessageContents(
 		modifiers: messageContents.modifiers,
 		tag: messageContents.tag,
 	};
+}
+
+/**
+ * Parses an ICN seek's content and runs position legality checks.
+ * @returns `null` if the ICN is legal, or a human-readable rejection reason.
+ */
+function validateIcnSeekContent(content: string): string | null {
+	let longFormat;
+	try {
+		longFormat = icnconverter.ShortToLong_Format(content);
+	} catch {
+		return 'Invalid ICN.';
+	}
+	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
+		return 'ICN must include a position.';
+	}
+	const variantOptions = {
+		position: longFormat.position,
+		gameRules: longFormat.gameRules,
+		state_global: {
+			...longFormat.state_global,
+			specialRights: longFormat.state_global.specialRights,
+		},
+		fullMove: 1,
+	};
+	return validatePosition(variantOptions, content);
 }
 
 export { createInvite, createinviteschem };
