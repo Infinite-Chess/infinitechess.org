@@ -73,6 +73,8 @@ function onclose(event: CloseEvent): void {
 		return;
 	}
 
+	if (event.code === 1001) return; // "going away": Page unloaded
+
 	switch (trimmedReason) {
 		case 'Connection expired':
 			socketman.resubAll();
