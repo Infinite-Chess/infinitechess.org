@@ -228,6 +228,12 @@ a.header-donate:hover {
 .settings .slider::-webkit-slider-thumb {
 	background: var(--c-surface-2);
 }
+.settings .slider::-moz-range-track {
+	background: var(--c-surface);
+}
+.settings .slider::-moz-range-thumb {
+	background: var(--c-surface-2);
+}
 
 .gear {
 	transition: transform 0.25s cubic-bezier(0.22, 0.85, 0.4, 1);
