@@ -8,6 +8,11 @@
 
 import type { TimeControl } from '../../types.js';
 
+// Types --------------------------------------------------
+
+/** The speed category of a game, based on its time control. */
+export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
+
 // Constants -----------------------------------------------
 
 /** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
@@ -108,22 +113,31 @@ function splitTimeControl(time_control: TimeControl): {
 }
 
 /**
- * Returns the SVG symbol ID of the speed icon for the
- * given time control, or `undefined` if the game is untimed.
- * Estimates total game seconds as `base_time + 40 × increment` to determine
- * the speed category, matching lichess's classification ranges.
+ * Estimates total game seconds as `base_time + 40 × increment`, matching
+ * lichess's classification ranges, and returns the speed category.
  */
-function getSpeedIconId(time_control: TimeControl): string {
-	if (isClockValueInfinite(time_control)) return 'svg-speed-infinite';
+function getSpeedCategory(time_control: TimeControl): SpeedCategory {
+	if (isClockValueInfinite(time_control)) return 'infinite';
 	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
 	const estimate = base_time_seconds! + 40 * increment_seconds!;
-	// if (estimate < 30) return 'svg-speed-ultra-bullet'; // For now we don't have time controls < 1m
-	if (estimate < 180) return 'svg-speed-bullet';
-	if (estimate < 480) return 'svg-speed-blitz';
-	if (estimate < 1500) return 'svg-speed-rapid';
-	if (estimate < 21600) return 'svg-speed-classical';
-	// return 'svg-speed-correspondence';
-	return 'svg-speed-classical'; // This is the max for now
+	// if (estimate < 30) return 'ultra-bullet'; // For now we don't have time controls < 1m
+	if (estimate < 180) return 'bullet';
+	if (estimate < 480) return 'blitz';
+	if (estimate < 1500) return 'rapid';
+	if (estimate < 21600) return 'classical';
+	// return 'correspondence';
+	return 'classical'; // This is the max for now
+}
+
+/** Returns the human-readable speed name (e.g. `"Blitz"`) for the given time control. */
+function getSpeedName(time_control: TimeControl): string {
+	const speedCategory = getSpeedCategory(time_control);
+	return speedCategory.charAt(0).toUpperCase() + speedCategory.slice(1);
+}
+
+/** Returns the SVG symbol ID of the speed icon for the given time control. */
+function getSpeedIconId(time_control: TimeControl): string {
+	return `svg-speed-${getSpeedCategory(time_control)}`;
 }
 
 export default {
@@ -136,5 +150,6 @@ export default {
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
+	getSpeedName,
 	getSpeedIconId,
 };

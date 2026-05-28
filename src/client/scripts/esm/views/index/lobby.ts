@@ -264,6 +264,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			? seek.variant.name
 			: variantregistry.getVariantName(seek.variant.code);
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
+	const speedTitle = clockutil.getSpeedName(seek.time);
 
 	return h(
 		'div.invite-row',
@@ -314,9 +315,11 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			]),
 			h('div.lobby-cell', [
 				h('div.cell-flex', [
-					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
-						h('use', { attrs: { href: `#${speedIcon}` } }),
-					]),
+					h(
+						'svg.cell-icon',
+						{ class: { [speedIcon]: true }, attrs: { title: speedTitle } },
+						[h('use', { attrs: { href: `#${speedIcon}` } })],
+					),
 					getClockLabel(seek.time),
 				]),
 			]),
