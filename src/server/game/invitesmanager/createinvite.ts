@@ -95,18 +95,6 @@ async function createInvite(
 		return;
 	}
 
-	// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
-	if (messageContents.variant.kind === 'cloudSave' && !ws.metadata.memberInfo.signedIn) {
-		sendSocketMessage(
-			ws,
-			'general',
-			'notify',
-			'Must be signed in to create a seek from a cloud save.',
-			replyto,
-		);
-		return;
-	}
-
 	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
 	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
@@ -179,7 +167,17 @@ async function getInviteFromWebsocketMessageContents(
 	// Resolve cloudSave seeks to plain ICN
 	let variant = messageContents.variant;
 	if (variant.kind === 'cloudSave') {
-		if (!owner.signedIn) return; // Already checked before calling this function
+		// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
+		if (!owner.signedIn) {
+			sendSocketMessage(
+				ws,
+				'general',
+				'notify',
+				'Must be signed in to create a seek from a cloud save.',
+				replyto,
+			);
+			return;
+		}
 		const record = editorSavesManager.getSavedPositionICN(variant.name, owner.user_id);
 		if (record === undefined) {
 			return sendSocketMessage(
