@@ -72,16 +72,13 @@ const createinviteschem = z
  * Creates a new invite from their websocket message.
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
- * @param replyto - The incoming websocket message ID, to include in the reply
  */
 async function createInvite(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
-	replyto?: number,
 ): Promise<void> {
 	// invite: { id, owner, variant, clock, color, rated }
-	if (isSocketInAnActiveGame(ws))
-		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto }); // Can't create invite because they are already in a game
+	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
 
 	// Make sure they don't already have an existing invite
 	if (userHasInvite(ws)) {
@@ -90,7 +87,6 @@ async function createInvite(
 			'general',
 			'printerror',
 			"Can't create an invite when you have one already.",
-			replyto,
 		);
 		console.error("Player already has existing invite, can't create another!");
 		return;
@@ -105,14 +101,14 @@ async function createInvite(
 			'server.javascript.ws-rated_invite_verification_needed',
 			ws.metadata.cookies?.i18next,
 		);
-		sendSocketMessage(ws, 'general', 'notify', message, replyto);
+		sendSocketMessage(ws, 'general', 'notify', message);
 		return;
 	}
 
-	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
+	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents);
 	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
-	addInvite(ws, invite, replyto);
+	addInvite(invite);
 }
 
 /**
@@ -123,7 +119,6 @@ async function createInvite(
 async function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
 	messageContents: CreateInviteMessage,
-	replyto?: number,
 ): Promise<AuthSeek | void> {
 	// Verify their invite contains the required properties...
 
@@ -135,7 +130,6 @@ async function getInviteFromWebsocketMessageContents(
 			'general',
 			'printerror',
 			'Cannot create invite when incoming socket message body is not an object!',
-			replyto,
 		);
 
 	let id: string;
@@ -171,7 +165,6 @@ async function getInviteFromWebsocketMessageContents(
 				'general',
 				'notify',
 				'Must be signed in to create a seek from a cloud save.',
-				replyto,
 			);
 			return;
 		}
@@ -182,12 +175,11 @@ async function getInviteFromWebsocketMessageContents(
 				'general',
 				'notify',
 				`Cloud save "${variant.name}" not found.`,
-				replyto,
 			);
 		}
 		// Skip decompression if the compressed payload is already too large to be a legal seek.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
-			return sendSocketMessage(ws, 'general', 'notify', 'Position is too large.', replyto);
+			return sendSocketMessage(ws, 'general', 'notify', 'Position is too large.');
 		}
 		const content = await compression.decompressString(
 			record.icn,
@@ -200,7 +192,7 @@ async function getInviteFromWebsocketMessageContents(
 	if (variant.kind === 'icn') {
 		const illegalReason = validateIcnSeekContent(variant.content);
 		if (illegalReason !== null) {
-			return sendSocketMessage(ws, 'general', 'notify', illegalReason, replyto);
+			return sendSocketMessage(ws, 'general', 'notify', illegalReason);
 		}
 	}
 

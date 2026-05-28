@@ -66,29 +66,22 @@ function getInvitesListSafe(): OutSeek[] {
 
 /**
  * Call when an invite is added or deleted.
- * @param ws - The websocket that trigerred this invites change.
- * @param replyto - The ID of the incoming websocket message that triggered this method
  */
-function onPublicInvitesChange(ws?: CustomWebSocket, replyto?: number): void {
+function onPublicInvitesChange(): void {
 	// The message that this broadcast is the reply to
-	broadcastInvites(ws, replyto);
+	broadcastInvites();
 }
 
 /**
  * Broadcasts the invites list out to all subbed clients.
- * @param ws - The websocket that trigerred this broadcast. Used to include the replyto id for ONLY THEIR message.
- * @param replyto - The ID of the incoming websocket message that triggered this broadcast
  */
-function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
+function broadcastInvites(): void {
 	const newInvitesList = getInvitesListSafe();
 	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
 
 	const subscribedClients = getInviteSubscribers() as Record<string, CustomWebSocket>;
 	for (const subbedSocket of Object.values(subscribedClients)) {
-		// Only include the replyto code with the invite list if this socket is
-		// THE SAME SOCKET as the one that triggered this broadcast.
-		const includedReplyTo = ws === subbedSocket ? replyto : undefined;
-		sendClientInvitesList(subbedSocket, newInvitesList, includedReplyTo);
+		sendClientInvitesList(subbedSocket, newInvitesList);
 	}
 }
 
@@ -96,29 +89,22 @@ function broadcastInvites(ws?: CustomWebSocket, replyto?: number): void {
  * Sends the invites list to a specified socket.
  * @param ws - The socket of the player to send the invites list to.
  * @param invitesList - The list of invites to send.
- * @param replyto - The incoming websocket message ID, to include in the reply, if applicable.
  */
-function sendClientInvitesList(
-	ws: CustomWebSocket,
-	invitesList: OutSeek[],
-	replyto?: number,
-): void {
+function sendClientInvitesList(ws: CustomWebSocket, invitesList: OutSeek[]): void {
 	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
 	const message = { invitesList, viewerCount: 0 };
-	sendSocketMessage(ws, 'lobby', 'seekslist', message, replyto); // In order: socket, sub, action, value
+	sendSocketMessage(ws, 'lobby', 'seekslist', message); // In order: socket, sub, action, value
 }
 
 /**
  * Adds a new invite to the list of active invites.
  * Typically called when an invite is created. Sends the new invites list to the socket.
- * @param ws - The socket of the player that created this invite. Used to send them the new invites list with their invite.
  * @param invite - The invite to sdd
- * @param replyto - The incoming websocket message ID, to include in the reply, if applicable
  */
-function addInvite(ws: CustomWebSocket, invite: AuthSeek, replyto?: number): void {
+function addInvite(invite: AuthSeek): void {
 	invites.push(invite);
 
-	onPublicInvitesChange(ws, replyto);
+	onPublicInvitesChange();
 
 	if (printNewInviteCreationsAndDeletions)
 		console.log(`Created invite for user ${JSON.stringify(invite.owner)}`);
@@ -127,21 +113,15 @@ function addInvite(ws: CustomWebSocket, invite: AuthSeek, replyto?: number): voi
 /**
  * Deletes an invite from the list of active invites.
  * Typically called when an invite is canceled. Sends the updated invites list to the socket.
- * @param ws - The socket of the player that canceled this invite. Used to send them the updated invites list.
  * @param seek - The invite object to cancel. Contains details about the invite and its owner.
  * @param index - The index of the invite in the invites array. This is found using {@link getInviteAndIndexByID}.
  * @param options.dontBroadcast - If true, prevents broadcasting the changes to all clients. [false]
- * @param options.replyto - The incoming websocket message ID, to include in the reply, if applicable.
  * @returns true if there was an invite change
  */
 function deleteInviteByIndex(
-	ws: CustomWebSocket,
 	seek: AuthSeek,
 	index: number,
-	{
-		dontBroadcast = false,
-		replyto = undefined,
-	}: { dontBroadcast?: boolean; replyto?: number } = {},
+	{ dontBroadcast = false }: { dontBroadcast?: boolean } = {},
 ): boolean {
 	if (index > invites.length - 1) {
 		console.error(
@@ -151,7 +131,7 @@ function deleteInviteByIndex(
 	}
 	invites.splice(index, 1); // Delete the invite
 
-	if (!dontBroadcast) onPublicInvitesChange(ws, replyto);
+	if (!dontBroadcast) onPublicInvitesChange();
 
 	if (printNewInviteCreationsAndDeletions)
 		console.log(`Deleted invite for user ${JSON.stringify(seek.owner)}`);

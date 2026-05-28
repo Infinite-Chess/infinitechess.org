@@ -23,7 +23,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 			routeGeneralMessage(ws, message.contents);
 			break;
 		case 'lobby':
-			routeLobbyMessage(ws, message.contents, message.id);
+			routeLobbyMessage(ws, message.contents);
 			break;
 		case 'game':
 			routeGameMessage(ws, message.contents, message.id);

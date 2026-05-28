@@ -37,20 +37,14 @@ type AcceptInviteMessage = z.infer<typeof acceptinviteschem>;
  * Attempts to accept an invite of given id.
  * @param ws - The socket performing this action
  * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
- * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function acceptInvite(
-	ws: CustomWebSocket,
-	messageContents: AcceptInviteMessage,
-	replyto?: number,
-): void {
+function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage): void {
 	// { id, isPrivate }
-	if (isSocketInAnActiveGame(ws))
-		return sendNotify(ws, 'server.javascript.ws-already_in_game', { replyto });
+	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
 
 	// Does the invite still exist?
 	const inviteAndIndex = getInviteAndIndexByID(messageContents);
-	if (!inviteAndIndex) return informThemGameAborted(ws, messageContents, replyto);
+	if (!inviteAndIndex) return informThemGameAborted(ws);
 
 	const { seek, index } = inviteAndIndex;
 
@@ -58,7 +52,7 @@ function acceptInvite(
 
 	// Make sure they are not accepting their own.
 	if (memberInfoEq(user, seek.owner)) {
-		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own invite!', replyto);
+		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own invite!');
 		console.error(
 			`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
 		);
@@ -75,7 +69,6 @@ function acceptInvite(
 				'server.javascript.ws-rated_invite_verification_needed',
 				ws.metadata.cookies?.i18next,
 			),
-			replyto,
 		);
 	}
 
@@ -83,7 +76,7 @@ function acceptInvite(
 
 	let hadPublicInvite = false;
 	// Delete the invite accepted.
-	if (deleteInviteByIndex(ws, seek, index, { dontBroadcast: true })) hadPublicInvite = true;
+	if (deleteInviteByIndex(seek, index, { dontBroadcast: true })) hadPublicInvite = true;
 	// Delete their existing invites
 	if (deleteUsersExistingInvite(user, { broadCastNewInvites: false })) hadPublicInvite = true;
 
@@ -114,7 +107,7 @@ function acceptInvite(
 	if (invite_accepter === undefined)
 		throw Error("Invite accepter doesn't exist on accepted 2 player invite");
 
-	createGame(seek, assignments, invite_accepter, replyto);
+	createGame(seek, assignments);
 
 	// Unsubscribe them both from the invites subscription list.
 	if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally
@@ -129,11 +122,10 @@ function acceptInvite(
  * Called when a player clicks to accept an invite that gets deleted right before.
  * This tells them the game was aborted, or that the code
  * was invalid, if they entered a private invite code.
- * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function informThemGameAborted(ws: CustomWebSocket, inviteID: string, replyto?: number): void {
+function informThemGameAborted(ws: CustomWebSocket): void {
 	const errString = 'server.javascript.ws-game_aborted';
-	return sendNotify(ws, errString, { replyto });
+	return sendNotify(ws, errString);
 }
 
 export { acceptInvite, acceptinviteschem };

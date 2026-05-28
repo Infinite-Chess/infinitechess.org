@@ -293,13 +293,12 @@ function assignWhiteBlackPlayersFromInvite(
  * @param playerColor - What color they are playing in this game. p.NEU
  * @param options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
  * @param options.sendGameInfo
- * @param options.replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function subscribeClientToGame(
 	servergame: ServerGame,
 	playerSocket: CustomWebSocket,
 	playerColor: Player,
-	{ sendGameInfo = true, replyto }: { sendGameInfo?: boolean; replyto?: number } = {},
+	{ sendGameInfo = true }: { sendGameInfo?: boolean } = {},
 ): void {
 	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
@@ -323,7 +322,7 @@ function subscribeClientToGame(
 
 	// 3. Send the game information, unless this is a reconnection,
 	// at which point we verify if they are in sync
-	if (sendGameInfo) sendGameInfoToPlayer(servergame, playerSocket, playerColor, replyto);
+	if (sendGameInfo) sendGameInfoToPlayer(servergame, playerSocket, playerColor);
 }
 
 /**
@@ -349,13 +348,11 @@ function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
  * @param servergame - The game they're in.
  * @param playerSocket - Their websocket
  * @param playerColor - The color they are.
- * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
 function sendGameInfoToPlayer(
 	servergame: ServerGame,
 	playerSocket: CustomWebSocket,
 	playerColor: Player,
-	replyto?: number,
 ): void {
 	const ratings = getRatingDataForGamePlayers(
 		servergame.match.playerData,
@@ -375,7 +372,7 @@ function sendGameInfoToPlayer(
 		...gameUpdateContents,
 	};
 
-	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents, replyto);
+	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents);
 }
 
 /**

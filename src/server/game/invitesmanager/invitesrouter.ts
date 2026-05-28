@@ -24,21 +24,20 @@ type LobbyMessage = z.infer<typeof LobbySchema>;
  * Routes all incoming websocket messages related to invites.
  * @param ws
  * @param contents
- * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  * @returns
  */
-function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage, id: number): void {
+function routeLobbyMessage(ws: CustomWebSocket, contents: LobbyMessage): void {
 	// data: { route, action, value, id }
 	// Route them according to their action
 	switch (contents.action) {
 		case 'createinvite':
-			createInvite(ws, contents.value, id);
+			createInvite(ws, contents.value);
 			break;
 		case 'cancelinvite':
-			cancelInvite(ws, contents.value, id);
+			cancelInvite(ws, contents.value);
 			break;
 		case 'acceptinvite':
-			acceptInvite(ws, contents.value, id);
+			acceptInvite(ws, contents.value);
 			break;
 		default:
 			console.error(

@@ -23,20 +23,15 @@ type CancelInviteMessage = z.infer<typeof cancelinviteschem>;
  * Cancels/deletes the specified invite.
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that is the ID of the invite to be cancelled!
- * @param replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
  */
-function cancelInvite(
-	ws: CustomWebSocket,
-	messageContents: CancelInviteMessage,
-	replyto?: number,
-): void {
+function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage): void {
 	// Value should be the ID of the invite to cancel!
 	const id = messageContents; // id of invite to delete
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { seek, index } | undefined
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
 	// The client is expecting a response from us, even if empty, so it knows to unlock the create invite button again!
-	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined, replyto);
+	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined);
 
 	const { seek, index } = inviteAndIndex;
 
@@ -50,11 +45,10 @@ function cancelInvite(
 			'general',
 			'printerror',
 			'You are forbidden to delete this invite.',
-			replyto,
 		);
 	}
 
-	deleteInviteByIndex(ws, seek, index, { replyto });
+	deleteInviteByIndex(seek, index);
 }
 
 export { cancelInvite, cancelinviteschem };

@@ -72,14 +72,10 @@ const activeGames: Record<number, ServerGame> = {};
  * Auto-subscribes the players to receive game updates.
  * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
- * @param actingPlayer - The color of the player that started the game and sent the socket message
- * @param replyto - The ID of the incoming socket message of the player that started the game. This is used for the `replyto` property on our response.
  */
 function createGame(
 	invite: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
-	actingPlayer: Player,
-	replyto?: number,
 ): void {
 	const ratinginfo: typeof assignments & PlayerGroup<{ rating?: Rating }> = {};
 	for (const [color, data] of Object.entries(assignments)) {
@@ -125,13 +121,7 @@ function createGame(
 	);
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		if (socket)
-			gameutility.subscribeClientToGame(
-				servergame,
-				socket,
-				player,
-				actingPlayer === player ? { replyto } : {},
-			);
+		if (socket) gameutility.subscribeClientToGame(servergame, socket, player);
 		else startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
 	}
 
