@@ -227,7 +227,8 @@ function positionTooltip(anchor: HTMLElement, placement: 'left' | 'below'): void
 	const tooltipH = element_tooltip.offsetHeight;
 	element_tooltip.style.top = `${Math.min(preferredTop, window.innerHeight - tooltipH - EDGE_PAD)}px`;
 
-	camera.resyncCanvasBuffer();
+	// Sync canvas dimensions to the potential new preview dimensions
+	camera.syncCanvasDimensions();
 }
 
 /** Initializes WebGL once and loads any not-yet-cached images and textures for the board. */

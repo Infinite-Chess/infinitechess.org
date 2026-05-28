@@ -316,11 +316,19 @@ function resyncCanvasBuffer(): void {
 function syncCanvasDimensions(): void {
 	// Get the canvas element's bounding rectangle
 	const rect = canvas.getBoundingClientRect();
+	if (rect.width <= 0 || rect.height <= 0) {
+		// Prevent NaN's (from dividing by zero) from propogating the system.
+		// Can happen when the screen is resized so the last known preview tooltip position squishes the preview to nothing.
+		// console.warn(`Canvas has zero area dimensions.`);
+		return;
+	}
+
 	canvasWidthVirtualPixels = rect.width;
 	canvasHeightVirtualPixels = rect.height;
 
 	resyncCanvasBuffer();
-	recalcCanvasVariables(); // Recalculate canvas-dependant variables
+	recalcCanvasVariables(); // Recalculate canvas-dependant variables (aspect, screenBoundingBox)
+	initPerspective(); // Projection matrix must stay in sync with the updated aspect ratio
 
 	// Dispatch event to notify other application code of the new canvas dimensions
 	const detail = { width: canvas.width, height: canvas.height };
@@ -407,8 +415,7 @@ function initScreenBoundingBox(): void {
 
 function onScreenResize(): void {
 	// Keep canvas buffer in sync with its CSS size when the window is resized, zoomed, or moved between monitors (The DPI changes)
-	syncCanvasDimensions(); // Also updates viewport
-	initPerspective(); // The projection matrix needs to be recalculated every screen resize
+	syncCanvasDimensions(); // Also updates viewport, aspect, screenBoundingBox, and projMatrix
 	frametracker.onVisualChange(); // Visual change. Render the screen this frame.
 	// console.log('Resized window.')
 }
@@ -479,4 +486,5 @@ export default {
 	getScaleWhenZoomedOut,
 	getCanvas,
 	resyncCanvasBuffer,
+	syncCanvasDimensions,
 };
