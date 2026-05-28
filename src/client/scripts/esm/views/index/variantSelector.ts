@@ -47,6 +47,10 @@ const element_variantSelector = document.getElementById('variant-selector')!;
 const element_variantDisplay = document.getElementById('variant-display')!;
 const element_variantGroupDropdown = document.getElementById('variant-dropdown')!;
 const element_variantListPanels = document.querySelectorAll<HTMLElement>('.variant-list-panel');
+/** Variant-list panels indexed by `data-group` for O(1) lookup. */
+const element_variantListPanelByGroup = new Map<GroupType, HTMLElement>(
+	[...element_variantListPanels].map((p) => [p.getAttribute('data-group') as GroupType, p]),
+);
 const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
@@ -177,13 +181,13 @@ function closeVariantDropdown(): void {
 /** Switches from the group list to the pre-rendered variant list for the given group. */
 function openVariantList(group: VariantGroup): void {
 	element_variantGroupDropdown.classList.remove('open');
-	document.querySelector(`.variant-list-panel[data-group="${group}"]`)!.classList.add('open');
+	element_variantListPanelByGroup.get(group)!.classList.add('open');
 }
 
 /** Opens the custom variant panel and refreshes saved positions. */
 async function openCustomVariantList(): Promise<void> {
 	element_variantGroupDropdown.classList.remove('open');
-	document.querySelector('.variant-list-panel[data-group="custom"]')!.classList.add('open');
+	element_variantListPanelByGroup.get('custom')!.classList.add('open');
 
 	const [cloudResult, localResult] = await Promise.allSettled([
 		validatorama.areWeLoggedIn() ? editorSavesAPI.getSavedPositions() : Promise.resolve([]),
