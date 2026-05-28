@@ -45,9 +45,8 @@ function isInTimeout(): boolean {
  * Cancels echo timers and on-reply functions, then handles reconnection
  * based on the closure reason.
  * @param event - The 'close' event fired.
- * @param socketWasDefined - Whether the socket was fully open before closing.
  */
-function onclose(event: CloseEvent, socketWasDefined: boolean): void {
+function onclose(event: CloseEvent): void {
 	if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
 
 	socketmessages.cancelAllEchoTimers();
@@ -68,10 +67,9 @@ function onclose(event: CloseEvent, socketWasDefined: boolean): void {
 	socketsubs.clearAllSubs();
 
 	// Connection closed unexpectedly (network interrupted) or server is down.
-	// We did nothing wrong on our part, it's okay to instantly try to reconnect!
-	// But don't if the connection wasn't fully open or this creates spamming!
+	// Schedule a reconnect — delay and resubAll() are handled inside scheduleReconnect().
 	if (event.code === 1006) {
-		if (socketWasDefined) socketman.resubAll();
+		socketman.scheduleReconnect();
 		return;
 	}
 

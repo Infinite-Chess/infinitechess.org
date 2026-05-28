@@ -8,7 +8,6 @@
 
 import config from '../game/config.js';
 import thread from '../util/thread.js';
-import socketsubs from './socketsubs.js';
 import socketclose from './socketclose.js';
 import validatorama from '../util/validatorama.js';
 import socketrouter from './socketrouter.js';
@@ -19,9 +18,8 @@ import { SocketBus } from './SocketBus.js';
 /** Time to wait for HTTP connection before assuming lost connection. */
 const TIME_TO_WAIT_FOR_HTTP_MILLIS = 5000;
 /**
- * Delays in milliseconds between reconnection attempts after network loss.
- * The first element is used before the first attempt (0 = instant),
- * and the last element repeats indefinitely.
+ * Delays in milliseconds to wait before each reconnection attempt.
+ * Indexed by consecutive failure count; the last element repeats indefinitely.
  */
 const RECONNECT_DELAY_MILLIS = [0, 2500, 5000] as const;
 
@@ -41,6 +39,10 @@ let reqOut: false | number = false;
  * we'll display "Reconnected."
  */
 let noConnection = false;
+/** Number of consecutive failed connection attempts, used to determine reconnect delay. */
+let consecutiveFailures = 0;
+/** The timer ID for a pending scheduleReconnect() call, or undefined if none is pending. */
+let reconnectTimerId: number | undefined;
 
 /** Enables simulated websocket latency and prints all sent and received messages. */
 let DEBUG = false;
@@ -90,14 +92,35 @@ function dispatchLostConnectionCustomEvent(): void {
 // Socket Lifecycle ------------------------------------------------------------
 
 /**
- * Repeatedly tries to open a websocket to the server until successful,
- * unless we are in timeout. Never opens more than one socket at a time.
+ * Schedules a reconnection attempt after the appropriate backoff delay.
+ * Calls resubAll() only once the delay has elapsed, so the application
+ * is never told to reconnect before we're actually ready to attempt it.
+ */
+function scheduleReconnect(): void {
+	if (reconnectTimerId !== undefined) return;
+	if (consecutiveFailures > 0) noConnection = true;
+	const cappedIndex = Math.min(consecutiveFailures, RECONNECT_DELAY_MILLIS.length - 1);
+	const delay = RECONNECT_DELAY_MILLIS[cappedIndex]!;
+	reconnectTimerId = window.setTimeout(() => {
+		reconnectTimerId = undefined;
+		resubAll();
+	}, delay);
+}
+
+/**
+ * Tries once to open a websocket to the server.
+ * Retries are driven externally: a failed attempt fires onclose,
+ * which calls scheduleReconnect(), which calls resubAll() after a delay.
  * @returns Whether a socket was successfully opened.
  */
 async function establishSocket(): Promise<boolean> {
 	if (socketclose.isInTimeout()) return false;
 
-	while (openingSocket || (socket && socket.readyState !== WebSocket.OPEN)) {
+	while (
+		openingSocket ||
+		reconnectTimerId !== undefined ||
+		(socket && socket.readyState !== WebSocket.OPEN)
+	) {
 		if (config.DEV_BUILD) console.log('Waiting for the socket to be established or closed..');
 		await thread.sleep(100);
 	}
@@ -108,24 +131,15 @@ async function establishSocket(): Promise<boolean> {
 	// Await validatorama because it may be refreshing our session cookies
 	await validatorama.waitUntilInitialRequestBack();
 
-	let success = false;
-	let attemptIndex = 0;
+	const success = await openSocket();
 
-	// Always attempt at least once (even with zero subs), then retry while subs exist.
-	do {
-		const cappedAttemptIndex = Math.min(attemptIndex, RECONNECT_DELAY_MILLIS.length - 1);
-		const delay = RECONNECT_DELAY_MILLIS[cappedAttemptIndex]!;
-		if (attemptIndex > 0) {
-			noConnection = true;
-			console.error('No connection.');
-			await thread.sleep(delay);
-		}
-		success = await openSocket();
-		attemptIndex++;
-	} while (!success && !socketsubs.zeroSubs());
-
-	if (success && noConnection) console.log('Reconnected.');
-	noConnection = false;
+	if (success) {
+		consecutiveFailures = 0;
+		if (noConnection) console.log('Reconnected.');
+		noConnection = false;
+	} else {
+		consecutiveFailures++;
+	}
 
 	openingSocket = false;
 	return success;
@@ -152,9 +166,8 @@ async function openSocket(): Promise<boolean> {
 		};
 		ws.onmessage = (event: MessageEvent) => socketrouter.onmessage(event);
 		ws.onclose = (event: CloseEvent) => {
-			const wasFullyOpen = socket !== undefined;
 			socket = undefined;
-			socketclose.onclose(event, wasFullyOpen);
+			socketclose.onclose(event);
 		};
 	});
 }
@@ -165,20 +178,16 @@ async function openSocket(): Promise<boolean> {
  */
 function onSocketUpgradeReqLeave(): void {
 	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
-	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
+	reqOut = window.setTimeout(() => {
+		noConnection = true;
+		console.error('No connection.');
+	}, TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Cancels the timer that assumes lost connection. */
 function onReqBack(): void {
 	if (typeof reqOut !== 'boolean') clearTimeout(reqOut);
 	reqOut = false;
-}
-
-/** Displays "Lost connection" and keeps repeating until we successfully connect. */
-function httpLostConnection(): void {
-	noConnection = true;
-	console.error('No connection.');
-	reqOut = window.setTimeout(() => httpLostConnection(), TIME_TO_WAIT_FOR_HTTP_MILLIS);
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
@@ -206,6 +215,7 @@ export default {
 	getSocket,
 	establishSocket,
 	closeSocket,
+	scheduleReconnect,
 	resubAll,
 	toggleDebug,
 	isDebugEnabled,
