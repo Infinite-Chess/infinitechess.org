@@ -30,11 +30,6 @@ let socket: WebSocket | undefined;
 /** True if currently attempting to create a socket connection. */
 let openingSocket = false;
 /**
- * The timeout ID of the timer to display lost connection
- * if we don't hear back after attempting to open a socket.
- */
-let reqOut: false | number = false;
-/**
  * True if we are having trouble connecting. If true, and we reconnect,
  * we'll display "Reconnected."
  */
@@ -150,18 +145,23 @@ async function establishSocket(): Promise<boolean> {
  * @returns Whether the socket was opened successfully.
  */
 async function openSocket(): Promise<boolean> {
-	onSocketUpgradeReqLeave();
+	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
+	const noResponseTimer = window.setTimeout(() => {
+		noConnection = true;
+		console.error('No connection.');
+	}, TIME_TO_WAIT_FOR_HTTP_MILLIS);
+
 	return new Promise((resolve, _reject) => {
 		let url = `wss://${window.location.hostname}`;
 		if (window.location.port !== '443') url += `:${window.location.port}`;
 		const ws = new WebSocket(url);
 		ws.onopen = () => {
-			onReqBack();
+			clearTimeout(noResponseTimer);
 			socket = ws;
 			resolve(true);
 		};
 		ws.onerror = (_event) => {
-			onReqBack();
+			clearTimeout(noResponseTimer);
 			resolve(false);
 		};
 		ws.onmessage = (event: MessageEvent) => socketrouter.onmessage(event);
@@ -170,24 +170,6 @@ async function openSocket(): Promise<boolean> {
 			socketclose.onclose(event);
 		};
 	});
-}
-
-/**
- * Dispatches a socket-opening event and starts a timer
- * that assumes lost connection if no response arrives.
- */
-function onSocketUpgradeReqLeave(): void {
-	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
-	reqOut = window.setTimeout(() => {
-		noConnection = true;
-		console.error('No connection.');
-	}, TIME_TO_WAIT_FOR_HTTP_MILLIS);
-}
-
-/** Cancels the timer that assumes lost connection. */
-function onReqBack(): void {
-	if (typeof reqOut !== 'boolean') clearTimeout(reqOut);
-	reqOut = false;
 }
 
 /** Closes the socket. Called when it's no longer in use (no active subscriptions). */
