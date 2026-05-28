@@ -396,7 +396,17 @@ function setIcnResult(result: typeof icnResult): void {
 
 /** Validates a saved position's VariantOptions and applies the result to the variant display. */
 function validateSavedPosition(variantOptions: VariantOptions): void {
-	const illegalReason = validatePosition(variantOptions, '');
+	const icnString = icnconverter.LongToShort_Format(
+		{
+			metadata: {},
+			position: variantOptions.position,
+			gameRules: variantOptions.gameRules,
+			fullMove: variantOptions.fullMove,
+			state_global: variantOptions.state_global,
+		},
+		{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
+	);
+	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
 		element_icnErrorText.textContent = illegalReason;
