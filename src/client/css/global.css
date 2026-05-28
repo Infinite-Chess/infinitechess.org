@@ -142,6 +142,11 @@ body {
 	cursor: not-allowed;
 }
 
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}
+
 .scrollbar-thin {
 	scrollbar-width: thin;
 	scrollbar-color: var(--c-border) transparent;

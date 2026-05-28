@@ -940,6 +940,11 @@ svg.bg-omega {
 	color: var(--c-text);
 }
 
+.option-btn:disabled:hover {
+	background: var(--c-surface-2);
+	color: var(--c-text-muted);
+}
+
 /* Side-group buttons stack icon + label vertically */
 .option-group.icons .option-btn {
 	display: flex;
