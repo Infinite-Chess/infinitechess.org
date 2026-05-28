@@ -22,7 +22,7 @@ import variantcache from '../shared/chess/variants/variantcache.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 
-variantcache.loadAllVariants();
+await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
 restoreLiveGames();
