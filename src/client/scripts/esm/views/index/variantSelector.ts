@@ -53,6 +53,10 @@ const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaEle
 const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
 const element_icnErrorText = document.getElementById('icn-error-text') as HTMLElement;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
+const element_btnCustomCreate = document.getElementById('btn-custom-create')!;
+const element_btnCustomFromICN = document.getElementById('btn-custom-from-icn')!;
+const element_btnCustomFromICNName =
+	element_btnCustomFromICN.querySelector<HTMLElement>('.group-name')!;
 const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
 
 // State ----------------------------------------------
@@ -113,8 +117,8 @@ function initVariantGroupDropdown(): void {
 	});
 
 	// Wire up the static custom-panel action buttons (Create + From ICN).
-	document.getElementById('btn-custom-create')!.addEventListener('click', goToEditor);
-	document.getElementById('btn-custom-from-icn')!.addEventListener('click', openFromICN);
+	element_btnCustomCreate.addEventListener('click', goToEditor);
+	element_btnCustomFromICN.addEventListener('click', openFromICN);
 
 	// Wire up variant buttons
 	element_variantListPanels.forEach((panel) => {
@@ -289,10 +293,10 @@ function goToEditor(): void {
 	window.location.href = '/editor';
 }
 
-/** Shows the ICN input section and updates the selector to the "From ICN" display name. */
+/** Shows the ICN input section and updates the selector to the From-ICN button's display name. */
 function openFromICN(): void {
 	selection = { kind: 'icn' };
-	applyCustomToSelector('From ICN');
+	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 	clearSavedPositionError();
 	element_variantCustomSection.classList.remove('hidden');
 	closeVariantDropdown();
