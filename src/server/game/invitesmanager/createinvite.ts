@@ -95,13 +95,11 @@ async function createInvite(
 		return;
 	}
 
-	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
-	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
-
-	// Invite has all legal parameters!
-
-	// Check if user tries creating a rated game despite not being allowed to
-	if (invite.mode === 'rated' && !(ws.metadata.memberInfo.signedIn && ws.metadata.verified)) {
+	// Reject rated seeks from unverified/signed-out users
+	if (
+		messageContents.mode === 'rated' &&
+		!(ws.metadata.memberInfo.signedIn && ws.metadata.verified)
+	) {
 		const message = getTranslation(
 			'server.javascript.ws-rated_invite_verification_needed',
 			ws.metadata.cookies?.i18next,
@@ -110,18 +108,16 @@ async function createInvite(
 		return;
 	}
 
-	// Create the invite now ...
+	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents, replyto);
+	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
 	addInvite(ws, invite, replyto);
 }
 
 /**
- * Makes sure the socket message is an object, and strips it of all non-variant related properties.
- * STILL DO EXPLOIT checks on the specific invite values after this!!
- * @param ws
- * @param messageContents - The incoming websocket message contents (separate from route and action)
- * @param replyto - The incoming websocket message ID, to include in the reply
- * @returns The Invite object, or void it the message contents were invalid.
+ * Builds an {@link AuthSeek} from the client's createinvite message, resolving
+ * cloudSave variants to ICN and validating ICN positions for legality.
+ * Returns `void` after sending an error to the client if any check fails.
  */
 async function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
@@ -188,7 +184,7 @@ async function getInviteFromWebsocketMessageContents(
 				replyto,
 			);
 		}
-		// Skip decompression if the compressed payload is already too large to be a legal.
+		// Skip decompression if the compressed payload is already too large to be a legal seek.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
 			return sendSocketMessage(ws, 'general', 'notify', 'Position is too large.', replyto);
 		}
