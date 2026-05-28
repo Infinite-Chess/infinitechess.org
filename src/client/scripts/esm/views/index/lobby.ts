@@ -112,20 +112,22 @@ function isSeekOurs(seek: OutSeek): boolean {
 }
 
 /**
- * Plays a sound when a new opponent's seek appears in the list.
- * Uses a closure to track which seeks and users we've already reacted to.
+ * Tracks new seeks across updates: returns the IDs that just appeared (for animation)
+ * and plays the opponent-arrival sound for fresh non-own seeks (unless suppressed).
  */
-const trackNewSeekSound = (() => {
+const trackNewSeeks = (() => {
 	const COOLDOWN_SECS = 10;
 	const recentUsers: Record<string, boolean> = {};
 	let idsInLastList = new Set<string>();
 
-	return function (seekList: OutSeek[]): void {
+	return function (seekList: OutSeek[]): Set<string> {
 		let played = false;
 		const newIds = new Set<string>();
+		const idsToAnimate = new Set<string>();
 		for (const seek of seekList) {
 			newIds.add(seek.id);
 			if (idsInLastList.has(seek.id)) continue;
+			idsToAnimate.add(seek.id);
 			if (isSeekOurs(seek)) continue;
 			const name = seek.player.username;
 			if (recentUsers[name]) continue;
@@ -137,6 +139,7 @@ const trackNewSeekSound = (() => {
 			played = true;
 		}
 		idsInLastList = newIds;
+		return idsToAnimate;
 	};
 })();
 
@@ -151,13 +154,10 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	const ourSeek = seeks.find((s) => isSeekOurs(s));
 	ourSeekId = ourSeek?.id;
 
-	if (!prevHadSeek && ourSeekId !== undefined) {
-		gamesound.playMarimba();
-	} else {
-		trackNewSeekSound(seeks);
-	}
+	const newSeekIds = trackNewSeeks(seeks);
+	if (!prevHadSeek && ourSeekId !== undefined) gamesound.playMarimba();
 
-	renderSeekList(seeks.map(outSeekToLobbySeek));
+	renderSeekList(seeks.map(outSeekToLobbySeek), newSeekIds);
 }
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
@@ -233,8 +233,8 @@ function getVariantIcon(group: VariantGroup | 'custom'): string {
 }
 
 /** Patches the lobby table body with the latest seek rows. */
-function renderSeekList(seeks: LobbySeek[]): void {
-	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks));
+function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): void {
+	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
 }
 
 /** Clears the seek list display. */
@@ -243,15 +243,19 @@ function clearSeekList(): void {
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
-function createSeekListVNode(seeks: LobbySeek[]): VNode {
+function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<string>): VNode {
 	return h(
 		'div#lobby-tbody',
-		seeks.map((s) => createSeekRowVNode(s)),
+		seeks.map((s) => createSeekRowVNode(s, newSeekIds.has(s.id))),
 	);
 }
 
-/** Builds one lobby row vnode from a seek object. */
-function createSeekRowVNode(seek: LobbySeek): VNode {
+/**
+ * Builds one lobby row vnode from a seek object.
+ * @param seek - The seek to render.
+ * @param isNew - Whether this seek just appeared in the list (for animation).
+ */
+function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
 	const variantIcon = getVariantIcon(seek.variant.group);
@@ -270,6 +274,11 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 				title: seek.isOurs ? 'Cancel seek' : 'Accept invite',
 				'data-seek-id': seek.id,
 			},
+			hook: isNew
+				? {
+						insert: (vnode) => spawnSeekPulse(vnode.elm as HTMLElement, seek.isOurs),
+					}
+				: undefined,
 		},
 		[
 			h('div.lobby-cell', [
@@ -314,6 +323,25 @@ function createSeekRowVNode(seek: LobbySeek): VNode {
 			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
 		],
 	);
+}
+
+/** Spawns a body-level overlay aligned to the row that pulses outward and fades. */
+function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
+	requestAnimationFrame(() => {
+		const rect = row.getBoundingClientRect();
+		if (rect.width === 0 || rect.height === 0) return;
+		const overlay = document.createElement('div');
+		overlay.className = 'seek-pulse-overlay';
+		overlay.style.left = `${rect.left}px`;
+		overlay.style.top = `${rect.top}px`;
+		overlay.style.width = `${rect.width}px`;
+		overlay.style.height = `${rect.height}px`;
+		const box = document.createElement('div');
+		box.className = isOurs ? 'seek-pulse-box ours' : 'seek-pulse-box';
+		overlay.appendChild(box);
+		document.body.appendChild(overlay);
+		box.addEventListener('animationend', () => overlay.remove(), { once: true });
+	});
 }
 
 /** Fetches and shows the variant preview tooltip for a seek row's variant cell. */
