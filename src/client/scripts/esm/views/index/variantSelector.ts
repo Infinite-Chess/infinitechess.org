@@ -424,7 +424,7 @@ function clearSavedPositionError(): void {
 }
 
 /** Validates the current ICN textarea value, updates the invalid style, and stores resolved VariantOptions. */
-async function validateIcnInput(): Promise<void> {
+function validateIcnInput(): void {
 	const value = element_icnInput.value;
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
@@ -475,7 +475,7 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	} else if (selection.kind === 'local') {
 		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
-		await validateIcnInput();
+		validateIcnInput();
 		if (icnResult !== null)
 			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnResult.options);
 	}
