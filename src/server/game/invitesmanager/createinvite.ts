@@ -11,6 +11,7 @@ import * as z from 'zod';
 
 import uuid from '../../../shared/util/uuid.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
@@ -230,15 +231,7 @@ function validateIcnSeekContent(content: string): string | null {
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
 		return 'ICN must include a position.';
 	}
-	const variantOptions = {
-		position: longFormat.position,
-		gameRules: longFormat.gameRules,
-		state_global: {
-			...longFormat.state_global,
-			specialRights: longFormat.state_global.specialRights,
-		},
-		fullMove: 1,
-	};
+	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
 	return validatePosition(variantOptions, content);
 }
 

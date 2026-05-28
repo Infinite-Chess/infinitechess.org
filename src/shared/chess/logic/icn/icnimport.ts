@@ -9,7 +9,7 @@
 import type { CoordsKey } from '../../util/coordutil.js';
 import type { VariantCode } from '../../variants/variantregistry.js';
 import type { LongFormatOut } from './icnconverter.js';
-import type { LoadedVariant } from '../gamefile.js';
+import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
 import metadatautil from '../../util/metadatautil.js';
 import variantcache from '../../variants/variantcache.js';
@@ -44,6 +44,31 @@ async function getPositionAndSpecialRightsFromLongFormat(
 	}
 }
 
+/**
+ * Constructs a {@link VariantOptions} object from a parsed ICN long format.
+ * Defaults `position` to an empty map and `specialRights` to an empty set if absent.
+ * Pass `overrides` to supply externally resolved values or to override `fullMove`.
+ */
+function variantOptionsFromLongFormat(
+	longFormat: LongFormatOut,
+	overrides?: {
+		position?: Map<CoordsKey, number>;
+		specialRights?: Set<CoordsKey>;
+		fullMove?: number;
+	},
+): VariantOptions {
+	const position = overrides?.position ?? longFormat.position ?? new Map();
+	const specialRights =
+		overrides?.specialRights ?? longFormat.state_global.specialRights ?? new Set();
+	return {
+		position,
+		gameRules: longFormat.gameRules,
+		state_global: { ...longFormat.state_global, specialRights },
+		fullMove: overrides?.fullMove ?? longFormat.fullMove,
+	};
+}
+
 export default {
 	getPositionAndSpecialRightsFromLongFormat,
+	variantOptionsFromLongFormat,
 };

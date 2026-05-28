@@ -6,10 +6,10 @@
 
 import type { MetaData } from '../../../../../shared/types';
 import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter';
-import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile';
 import type { EditorSaveState } from '../boardeditor/editortypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import editorutil from '../../../../../shared/util/editorutil';
 import compression from '../../../../../shared/util/compression';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter';
@@ -71,15 +71,7 @@ export async function parseCloudPosition(
 		console.error('Failed to parse cloud position ICN:', err);
 		throw new ICNParseError();
 	}
-	const variantOptions: VariantOptions = {
-		position: longFormOut.position ?? new Map(),
-		gameRules: longFormOut.gameRules,
-		state_global: {
-			...longFormOut.state_global,
-			specialRights: longFormOut.state_global.specialRights ?? new Set(),
-		},
-		fullMove: longFormOut.fullMove,
-	};
+	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormOut);
 	return {
 		position_name,
 		timestamp: cloudPosition.timestamp,

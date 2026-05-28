@@ -394,13 +394,10 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
 	// If it contains no moves, then we skip all that, thus saving time
 	if (longformOut.moves && longformOut.moves.length !== 0) {
-		const state_global = { ...longformOut.state_global, specialRights };
-		const variantOptions: VariantOptions = {
+		const variantOptions = icnimport.variantOptionsFromLongFormat(longformOut, {
 			position,
-			state_global,
-			fullMove: longformOut.fullMove,
-			gameRules: longformOut.gameRules,
-		};
+			specialRights,
+		});
 		const additional: Additional = {
 			variantOptions,
 			moves: longformOut.moves.map((m: MoveParsed) => {
@@ -416,7 +413,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		);
 		const gamestate: SimplifiedGameState = {
 			position,
-			state_global,
+			state_global: variantOptions.state_global,
 			fullMove: longformOut.fullMove,
 			turnOrder: longformOut.gameRules.turnOrder,
 		};

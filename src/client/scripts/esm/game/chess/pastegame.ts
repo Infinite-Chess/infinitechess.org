@@ -6,9 +6,9 @@
 
 import type { MetaData } from '../../../../../shared/types.js';
 import type { MovePacket } from '../../../../../shared/types.js';
+import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
-import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
@@ -132,15 +132,10 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 
 	// The variant options passed into the variant loader needs to contain the following properties:
 	// `fullMove`, `enpassant`, `moveRuleState`, `position`, `specialRights`, `gameRules`.
-	const variantOptions: VariantOptions = {
-		fullMove: longformOut.fullMove,
-		gameRules: longformOut.gameRules,
+	const variantOptions = icnimport.variantOptionsFromLongFormat(longformOut, {
 		position,
-		state_global: {
-			...longformOut.state_global,
-			specialRights,
-		},
-	};
+		specialRights,
+	});
 
 	const additional: Additional = { variantOptions };
 	if (longformOut.moves) {

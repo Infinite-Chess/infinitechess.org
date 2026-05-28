@@ -17,6 +17,7 @@ import type {
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
@@ -437,16 +438,10 @@ function validateIcnInput(): void {
 		element_icnInputWrap.classList.remove('invalid');
 		// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
 		// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
-		const position = longFormat.position ?? new Map();
-		const specialRights = longFormat.state_global.specialRights ?? new Set();
-
-		const icnVariantOptions = {
-			position,
-			gameRules: longFormat.gameRules,
-			state_global: { ...longFormat.state_global, specialRights },
-			// fullMove: longFormat.fullMove,
-			fullMove: 1, // For now, games can only start from a fullMove of 1
-		};
+		// For now, games can only start from a fullMove of 1.
+		const icnVariantOptions = icnimport.variantOptionsFromLongFormat(longFormat, {
+			fullMove: 1,
+		});
 		const illegalReason = validatePosition(icnVariantOptions, value);
 		if (illegalReason !== null) {
 			element_icnInputWrap.classList.add('invalid');

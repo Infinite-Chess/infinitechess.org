@@ -7,6 +7,7 @@
 
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import { fetchWithDeduplication } from '../../util/fetchDeduplicator.js';
@@ -34,17 +35,7 @@ async function getSeekPreview(seekId: string): Promise<VariantOptions | undefine
 
 		const longFormat = icnconverter.ShortToLong_Format(icn);
 		// Seeks are server-validated to always include an explicit position; no metadata fallback.
-		const position = longFormat.position ?? new Map();
-		const specialRights = longFormat.state_global.specialRights ?? new Set();
-		const variantOptions: VariantOptions = {
-			position,
-			gameRules: longFormat.gameRules,
-			state_global: {
-				...longFormat.state_global,
-				specialRights,
-			},
-			fullMove: longFormat.fullMove,
-		};
+		const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat);
 		seekPreviewCache.set(seekId, variantOptions);
 		return variantOptions;
 	} catch (err) {
