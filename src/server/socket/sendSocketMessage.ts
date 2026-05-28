@@ -16,11 +16,7 @@ import wsutil from '../../shared/util/wsutil.js';
 import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
 import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
-import {
-	addTimeoutToEchoTimers,
-	deleteEchoTimerForMessageID,
-	timeToWaitForEchoMillis,
-} from './echoTracker.js';
+import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTracker.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -126,11 +122,11 @@ function sendSocketMessage(
 		const timeout = setTimeout(() => {
 			ws.close(1014, 'No echo heard');
 			deleteEchoTimerForMessageID(payload.id!);
-		}, timeToWaitForEchoMillis); // We pass in an arrow function so it doesn't lose scope of ws.
+		}, wsutil.ECHO_TIMEOUT); // We pass in an arrow function so it doesn't lose scope of ws.
 		//console.log(`Set timer of message id "${id}"`)
 		addTimeoutToEchoTimers(payload.id!, timeout);
 
-		rescheduleRenewConnection(ws);
+		rescheduleHeartbeatTimer(ws);
 	}
 }
 
@@ -165,34 +161,34 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys):
 	);
 }
 
-// Renewing Connection if we haven't sent a message in a while ----------------------------------------------------------
+// Heartbeat Ping-Pong ----------------------------------------------------------
 
 /**
  * Reschedule the timer to send an empty message to the client
  * to verify they are still connected and responding.
  */
-function rescheduleRenewConnection(ws: CustomWebSocket): void {
-	cancelRenewConnectionTimer(ws);
+function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
+	cancelHeartbeatTimer(ws);
 	// Only reset the timer if they have at least one subscription!
 	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
 
-	ws.metadata.renewConnectionTimeoutID = setTimeout(
-		() => renewConnection(ws),
-		wsutil.timeOfInactivityToRenewConnection,
+	ws.metadata.heartbeatTimerID = setTimeout(
+		() => sendHeartbeatPing(ws),
+		wsutil.heartbeatIntervalMillis,
 	);
 }
 
-function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
-	clearTimeout(ws.metadata.renewConnectionTimeoutID);
-	ws.metadata.renewConnectionTimeoutID = undefined;
+function cancelHeartbeatTimer(ws: CustomWebSocket): void {
+	clearTimeout(ws.metadata.heartbeatTimerID);
+	ws.metadata.heartbeatTimerID = undefined;
 }
 
 /**
  * Send an empty message to the client, expecting an echo
  * within five seconds to make sure they are still connected.
  */
-function renewConnection(ws: CustomWebSocket): void {
-	sendSocketMessage(ws, 'general', 'renewconnection');
+function sendHeartbeatPing(ws: CustomWebSocket): void {
+	sendSocketMessage(ws, 'general', 'ping');
 }
 
-export { sendSocketMessage, sendNotify, sendNotifyError, rescheduleRenewConnection };
+export { sendSocketMessage, sendNotify, sendNotifyError, rescheduleHeartbeatTimer };

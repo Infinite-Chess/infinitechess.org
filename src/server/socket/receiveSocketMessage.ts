@@ -19,7 +19,7 @@ import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
-import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
+import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// console.log('Received message: ' + rawMessage);
 
-	rescheduleRenewConnection(ws); // We know they are connected, so reset this
+	rescheduleHeartbeatTimer(ws); // We know they are connected, so reset this
 
 	routeIncomingSocketMessage(ws, message);
 }

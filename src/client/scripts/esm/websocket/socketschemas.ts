@@ -66,7 +66,7 @@ const GeneralSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('notifyerror'), value: z.string() }),
 	z.strictObject({ action: z.literal('print'), value: z.string() }),
 	z.strictObject({ action: z.literal('printerror'), value: z.string() }),
-	z.strictObject({ action: z.literal('renewconnection') }),
+	z.strictObject({ action: z.literal('ping') }),
 	z.strictObject({ action: z.literal('gameversion'), value: z.string() }),
 ]);
 

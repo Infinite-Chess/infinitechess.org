@@ -44,7 +44,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	// Any incoming message proves the connection is alive.
 	// Reschedule the inactivity timer that detects silent disconnections.
-	socketmessages.rescheduleInactivityTimer();
+	socketmessages.rescheduleHeartbeatTimer();
 
 	const zod_result = MasterSchema.safeParse(parsedUnvalidatedMessage);
 	if (!zod_result.success) {
@@ -138,8 +138,8 @@ function ongeneralmessage(message: GeneralMessage): void {
 		case 'printerror':
 			console.error(message.value);
 			break;
-		case 'renewconnection':
-			// Server sends this expecting an echo, to verify we're still connected.
+		case 'ping':
+			// Server sends this expecting a pong (echo), to verify we're still connected.
 			break;
 		case 'gameversion':
 			if (message.value !== GAME_VERSION) handleHardRefresh(message.value);

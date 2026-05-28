@@ -29,10 +29,8 @@ type OutgoingPayload = {
 
 // Constants -------------------------------------------------------------------
 
-/** Time to wait for echo before assuming disconnection. */
-const timeToWaitForEchoMillis = 5000;
-/** Time the websocket remains open without subscriptions. */
-const cushionBeforeAutoCloseMillis = 10000;
+/** Time the websocket remains open without subscriptions, in milliseconds. */
+const cushionBeforeAutoClose = 10000;
 /** Simulated websocket latency in debug mode. */
 const simulatedWebsocketLatencyMillis_Debug = 1000;
 /** Whether to also print incoming echos in debug mode. */
@@ -54,7 +52,7 @@ let timeoutIDToAutoClose: number;
  * If no message is received within the expected window, the client
  * assumes the connection is dead and closes the socket.
  */
-let inactivityTimerID: number | undefined;
+let heartbeatTimerID: number | undefined;
 
 // Echo Tracking ---------------------------------------------------------------
 
@@ -81,14 +79,14 @@ function cancelTimerOfMessageID(ID: number): void {
  * Closes the current websocket when an echo hasn't been heard.
  * Called a few seconds after not hearing a server echo.
  */
-function renewConnection(messageID: MessageID): void {
+function onEchoTimeout(messageID: MessageID): void {
 	if (messageID) {
 		delete echoTimers[messageID];
 	}
 	const socket = socketman.getSocket();
 	if (!socket) return;
 	console.log(
-		`Renewing connection after we haven't received an echo for ${timeToWaitForEchoMillis} milliseconds...`,
+		`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} milliseconds...`,
 	);
 	socketman.dispatchLostConnectionCustomEvent();
 	socket.close(1000, 'Connection closed by client. Renew.');
@@ -141,7 +139,7 @@ function resetTimerToCloseSocket(): void {
 	if (socketsubs.zeroSubs()) {
 		timeoutIDToAutoClose = window.setTimeout(
 			() => socketman.closeSocket(),
-			cushionBeforeAutoCloseMillis,
+			cushionBeforeAutoClose,
 		);
 	}
 }
@@ -153,20 +151,20 @@ function resetTimerToCloseSocket(): void {
  * If no message is received within a certain time frame, the client
  * assumes the connection is dead and closes the socket.
  */
-function rescheduleInactivityTimer(): void {
-	cancelInactivityTimer();
+function rescheduleHeartbeatTimer(): void {
+	cancelHeartbeatTimer();
 	if (socketsubs.zeroSubs()) return;
-	inactivityTimerID = window.setTimeout(
-		onInactivityTimeout,
-		wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis,
+	heartbeatTimerID = window.setTimeout(
+		onHeartbeatTimeout,
+		wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT,
 	);
 }
 
 /** Cancels the inactivity timer. Called when the socket closes. */
-function cancelInactivityTimer(): void {
-	if (inactivityTimerID !== undefined) {
-		clearTimeout(inactivityTimerID);
-		inactivityTimerID = undefined;
+function cancelHeartbeatTimer(): void {
+	if (heartbeatTimerID !== undefined) {
+		clearTimeout(heartbeatTimerID);
+		heartbeatTimerID = undefined;
 	}
 }
 
@@ -174,12 +172,12 @@ function cancelInactivityTimer(): void {
  * Called when no message has been received within the expected time frame.
  * Closes the socket and dispatches a lost connection event.
  */
-function onInactivityTimeout(): void {
-	inactivityTimerID = undefined;
+function onHeartbeatTimeout(): void {
+	heartbeatTimerID = undefined;
 	const socket = socketman.getSocket();
 	if (!socket) return;
 	console.log(
-		`No message received for ${wsutil.timeOfInactivityToRenewConnection + timeToWaitForEchoMillis}ms. Assuming connection lost.`,
+		`No message received for ${wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
 	);
 	socketman.dispatchLostConnectionCustomEvent();
 	socket.close(1000, 'Connection closed by client. Renew.');
@@ -240,10 +238,7 @@ async function send(
 		// Set a timer to assume disconnection if echo not received
 		echoTimers[payload.id!] = {
 			timeSent: Date.now(),
-			timeoutID: window.setTimeout(
-				() => renewConnection(payload.id!),
-				timeToWaitForEchoMillis,
-			),
+			timeoutID: window.setTimeout(() => onEchoTimeout(payload.id!), wsutil.ECHO_TIMEOUT),
 		};
 
 		scheduleOnreplyFunc(payload.id!, onreplyFunc);
@@ -272,7 +267,7 @@ export default {
 	cancelAllEchoTimers,
 	executeOnreplyFunc,
 	resetOnreplyFuncs,
-	rescheduleInactivityTimer,
-	cancelInactivityTimer,
+	rescheduleHeartbeatTimer,
+	cancelHeartbeatTimer,
 	alsoPrintIncomingEchos,
 };
