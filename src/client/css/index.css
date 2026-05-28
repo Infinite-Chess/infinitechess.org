@@ -930,14 +930,14 @@ svg.bg-omega {
 	border-right: none;
 }
 
+.option-btn:hover {
+	background: var(--c-surface);
+	color: var(--c-text);
+}
+
 .option-btn.active {
 	background: var(--c-brand);
 	color: #fff;
-}
-
-.option-btn:not(.active):hover {
-	background: var(--c-surface);
-	color: var(--c-text);
 }
 
 .option-btn:disabled:hover {
