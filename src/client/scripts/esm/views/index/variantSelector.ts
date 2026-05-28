@@ -17,7 +17,6 @@ import type {
 
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
-import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { validatePosition } from '../../../../../shared/chess/variants/positionvalidation.js';
@@ -426,8 +425,10 @@ async function validateIcnInput(): Promise<void> {
 	try {
 		const longFormat = icnconverter.ShortToLong_Format(value);
 		element_icnInputWrap.classList.remove('invalid');
-		const variantCode = variantregistry.resolveVariantCode(longFormat.metadata.Variant);
-		const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longFormat, variantCode); // prettier-ignore
+		// Only accept positions explicitly defined in the ICN. Variant metadata is ignored here so
+		// users can't smuggle in massive preset positions (e.g. Omega^2) via a tiny metadata-only string.
+		const position = longFormat.position ?? new Map();
+		const specialRights = longFormat.state_global.specialRights ?? new Set();
 
 		const icnVariantOptions = {
 			position,
