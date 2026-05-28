@@ -11,12 +11,12 @@
 {# ── Macros ───────────────────────────────────────────────────────────────── #}
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
 
-{% macro variantGroupItem(group, iconId, name, description) %}
-<button class="variant-group-item" data-group="{{ group }}">
+{% macro variantGroupItem(group, iconId, name, description, arrow=true, id=none) %}
+<button class="variant-group-item"{% if group %} data-group="{{ group }}"{% endif %}{% if id %} id="{{ id }}"{% endif %}>
 	<svg class="group-icon {{ iconId }}"><use href="#{{ iconId }}"/></svg>
 	<span class="group-name">{{ name }}</span>
 	<span class="group-desc">{{ description }}</span>
-	<svg class="group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+	{% if arrow %}<svg class="group-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>{% endif %}
 </button>
 {% endmacro %}
 
@@ -154,6 +154,8 @@
 					{% endfor %}
 					<div class="variant-dropdown variant-list-panel" data-group="custom" id="variant-custom-panel">
 						{{ variantListBack("svg-wrench", "Custom", "Your own position, your own rules.") }}
+						{{ variantGroupItem(none, "svg-pencil",    "Create",   "Go to the board editor.",       arrow=false, id="btn-custom-create") }}
+						{{ variantGroupItem(none, "svg-clipboard", "From ICN", "Paste an accessible ICN code.", arrow=false, id="btn-custom-from-icn") }}
 						<div id="variant-custom-content"></div>
 					</div>
 					<div class="variant-dropdown modifier-dropdown" id="modifier-dropdown">

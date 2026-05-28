@@ -112,6 +112,10 @@ function initVariantGroupDropdown(): void {
 		});
 	});
 
+	// Wire up the static custom-panel action buttons (Create + From ICN).
+	document.getElementById('btn-custom-create')!.addEventListener('click', goToEditor);
+	document.getElementById('btn-custom-from-icn')!.addEventListener('click', openFromICN);
+
 	// Wire up variant buttons
 	element_variantListPanels.forEach((panel) => {
 		panel.querySelector('.variant-list-back')!.addEventListener('click', () => {
@@ -243,26 +247,13 @@ function createSaveItemVNode(
 	);
 }
 
-/** Builds the snabbdom VNode for the custom panel's dynamic content area. */
+/** Builds the snabbdom VNode for the custom panel's dynamic saved-positions list. */
 function createCustomContentVNode(
 	cloudSaves: CloudSaveListRecord[],
 	localSaves: Array<{ position_name: string; timestamp: number }>,
 ): VNode {
 	const sortedCloud = [...cloudSaves].sort((a, b) => b.timestamp - a.timestamp);
 	const sortedLocal = [...localSaves].sort((a, b) => b.timestamp - a.timestamp);
-
-	const actions: Array<{ iconId: string; name: string; desc: string; onClick: (name: string) => void }> = [
-		{ iconId: 'svg-pencil',    name: 'Create',   desc: 'Go to the board editor.',       onClick: goToEditor },
-		{ iconId: 'svg-clipboard', name: 'From ICN', desc: 'Paste an accessible ICN code.', onClick: openFromICN },
-	]; // prettier-ignore
-
-	const actionRows: VNode[] = actions.map(({ iconId, name, desc, onClick }) =>
-		h('button.variant-group-item', { on: { click: () => onClick(name) } }, [
-			h(`svg.group-icon.${iconId}`, {}, [h('use', { attrs: { href: `#${iconId}` } })]),
-			h('span.group-name', {}, name),
-			h('span.group-desc', {}, desc),
-		]),
-	);
 
 	const cloudRows: VNode[] = sortedCloud.map((s) =>
 		createSaveItemVNode(
@@ -284,23 +275,24 @@ function createCustomContentVNode(
 
 	const saveRows = [...cloudRows, ...localRows];
 
-	return h('div#variant-custom-content', {}, [
-		...actionRows,
-		...(saveRows.length > 0
+	return h(
+		'div#variant-custom-content',
+		{},
+		saveRows.length > 0
 			? [h('div.custom-saves-heading', {}, 'Saved positions'), ...saveRows]
-			: []),
-	]);
+			: [],
+	);
 }
 
 /** Navigates to the board editor page. */
-function goToEditor(_name: string): void {
+function goToEditor(): void {
 	window.location.href = '/editor';
 }
 
-/** Shows the ICN input section and updates the selector to the row's display name. */
-function openFromICN(name: string): void {
+/** Shows the ICN input section and updates the selector to the "From ICN" display name. */
+function openFromICN(): void {
 	selection = { kind: 'icn' };
-	applyCustomToSelector(name);
+	applyCustomToSelector('From ICN');
 	clearSavedPositionError();
 	element_variantCustomSection.classList.remove('hidden');
 	closeVariantDropdown();
