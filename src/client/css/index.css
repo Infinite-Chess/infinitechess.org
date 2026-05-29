@@ -45,6 +45,65 @@ main {
 }
 
 /* ============================================================
+   Home hero title
+   ============================================================ */
+
+.home-hero {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: clamp(36px, 5vw, 56px) 16px 50px;
+}
+
+.hero-glyph {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: clamp(135px, 19vw, 180px);
+	height: clamp(135px, 19vw, 180px);
+	color: var(--c-text-emphasis);
+	transform: translate(-50%, -55%);
+	opacity: 0.09;
+	pointer-events: none;
+	z-index: -1;
+}
+
+.hero-glyph-aura {
+	opacity: 0.05;
+	filter: blur(14px);
+	transform: translate(-50%, -55%) scale(1.15);
+}
+
+.hero-title {
+	font-size: clamp(2.4em, 7vw, 4.25em);
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	line-height: 1.05;
+	background: linear-gradient(180deg, var(--c-text-emphasis) 0%, var(--c-text-muted) 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	text-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+}
+
+.hero-tagline {
+	margin: 0.4em 0 0;
+	font-size: clamp(0.75em, 1.6vw, 1em);
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--c-text-muted);
+}
+
+/* Opt-out for glyphs whose meaning changes when capitalized (e.g. ω vs Ω) */
+.hero-tagline .lc {
+	text-transform: none;
+}
+
+/* ============================================================
    Lobby layout: buttons + open-challenges section
    ============================================================ */
 
