@@ -252,15 +252,11 @@ svg.bg-omega {
 	position: absolute;
 	inset: 0;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.4em;
-	background: var(--c-surface);
-	cursor: pointer;
+	background: var(--c-surface-transparent);
 	z-index: 1;
 	text-align: center;
-	padding: 1em;
 }
 
 .lobby-idle-overlay p {
