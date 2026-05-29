@@ -330,7 +330,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const speedTitle = clockutil.getSpeedName(seek.time);
 
 	return h(
-		'div.invite-row',
+		'div.seek-row',
 		{
 			key: seek.id,
 			class: { ours: seek.isOurs },

@@ -340,7 +340,7 @@ svg.bg-omega {
 	display: contents;
 }
 
-.invite-row {
+.seek-row {
 	display: grid;
 	grid-column: 1 / -1;
 	grid-template-columns: subgrid;
@@ -382,7 +382,7 @@ svg.bg-omega {
 	background-color: var(--c-hover-brighten);
 }
 
-.invite-row .lobby-cell:nth-child(2) .cell-flex span {
+.seek-row .lobby-cell:nth-child(2) .cell-flex span {
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
 	line-clamp: 2;
@@ -405,17 +405,17 @@ svg.bg-omega {
 	align-items: center;
 }
 
-.invite-row:hover {
+.seek-row:hover {
 	color: var(--c-text-emphasis);
 	background: rgb(255 88 0 / 40%);
 }
 
-.invite-row.ours {
+.seek-row.ours {
 	background: rgba(0, 180, 15, 0.37);
 	color: var(--c-text-emphasis);
 }
 
-.invite-row.ours:hover {
+.seek-row.ours:hover {
 	background: rgba(0, 220, 18, 0.37);
 }
 
@@ -486,7 +486,7 @@ svg.bg-omega {
 	border-style: solid;
 }
 
-.invite-row:hover .side-dot {
+.seek-row:hover .side-dot {
 	background: var(--c-text-emphasis);
 }
 
@@ -496,7 +496,7 @@ svg.bg-omega {
 	flex-shrink: 0;
 }
 
-.invite-row:hover .side-dot.black {
+.seek-row:hover .side-dot.black {
 	background: transparent;
 	border-color: var(--c-text-emphasis);
 }
@@ -507,7 +507,7 @@ svg.bg-omega {
 		border-color: var(--c-text);
 	}
 
-	.invite-row:hover .side-dot {
+	.seek-row:hover .side-dot {
 		background: transparent;
 		border-color: var(--c-text-emphasis);
 	}
@@ -516,7 +516,7 @@ svg.bg-omega {
 		background: var(--c-text);
 	}
 
-	.invite-row:hover .side-dot.black {
+	.seek-row:hover .side-dot.black {
 		background: var(--c-text-emphasis);
 	}
 }
