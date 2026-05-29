@@ -87,7 +87,7 @@ body {
 	/* Raised face: top → bottom of a "lit-from-above" elevated surface (buttons, cards).
 	   In both themes the *top* stop is brighter than the bottom so the gradient
 	   direction reads consistently regardless of theme. */
-	--c-elev-face: rgb(55, 55, 55);
+	--c-elev-face: rgb(50, 50, 50);
 	--c-elev-face-2: rgb(35, 35, 35);
 	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
 	--c-shadow-elev: rgba(0, 0, 0, 0.5);
@@ -128,7 +128,7 @@ body {
 	--c-hover-brighten: rgb(255 255 255 / 24%);
 
 	--c-elev-face: rgb(255, 255, 255);
-	--c-elev-face-2: rgb(240, 240, 240);
+	--c-elev-face-2: rgb(236, 236, 236);
 	--c-shadow-elev: rgba(0, 0, 0, 0.22);
 	--c-elev-highlight: rgba(255, 255, 255, 0.8);
 	--c-hover-overlay: rgba(0, 0, 0, 0.06);
