@@ -73,6 +73,13 @@ const WIN_CONDITION_LABELS: Partial<Record<GameruleWinCondition, string>> = {
 let glInitialized = false;
 /** Incremented on every show/hide; compared after async work to discard stale renders. */
 let showToken = 0;
+/** The anchor element of the currently visible tooltip, if any. */
+let currentAnchor: HTMLElement | null = null;
+
+// Hide the tooltip if its anchor is removed from the DOM — otherwise pointerleave never fires and the tooltip is stranded.
+new MutationObserver(() => {
+	if (currentAnchor && !currentAnchor.isConnected) hide();
+}).observe(document.body, { childList: true, subtree: true });
 
 // DOM elements created once and reused
 
@@ -195,6 +202,7 @@ async function showForVariantCode(
 function hide(): void {
 	showToken++;
 	element_tooltip.classList.add('visibility-hidden');
+	currentAnchor = null;
 }
 
 /** Core show logic: positions the tooltip, renders the board, populates rules. */
@@ -218,6 +226,7 @@ async function showForBoard(
 	positionTooltip(anchor, placement);
 	renderBoard(boardsim, gameRules);
 	element_tooltip.classList.remove('visibility-hidden');
+	currentAnchor = anchor;
 }
 
 /** Positions the tooltip relative to the anchor. */
