@@ -72,17 +72,26 @@ const GeneralSchema = z.discriminatedUnion('action', [
 
 // Invites Schema ---------------------------------------------------------------
 
+const InvitesListSchema = z.array(OutSeekSchema);
+const ViewerCountSchema = z.number().nonnegative();
+
 /** Represents all possible types an incoming 'lobby' route websocket message contents could be. */
 export type LobbyMessage = z.infer<typeof LobbySchema>;
 const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({
-		action: z.literal('seekslist'),
+		action: z.literal('lobbysnapshot'),
 		value: z.strictObject({
-			invitesList: z.array(OutSeekSchema),
-			viewerCount: z.number().nonnegative(),
+			seekslist: InvitesListSchema,
+			viewercount: ViewerCountSchema,
 		}),
 	}),
-	z.strictObject({ action: z.literal('viewercount'), value: z.number().nonnegative() }),
+	z.strictObject({
+		action: z.literal('seekslist'),
+		value: z.strictObject({
+			invitesList: InvitesListSchema,
+		}),
+	}),
+	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
 ]);
 
 // Game Schema ---------------------------------------------------------------

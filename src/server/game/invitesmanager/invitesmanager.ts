@@ -17,6 +17,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
 	getInviteSubscribers,
+	getSubscriberCount,
 	addSocketToInvitesSubs,
 	removeSocketFromInvitesSubs,
 	doesUserHaveActiveConnection,
@@ -72,28 +73,38 @@ function onPublicInvitesChange(): void {
 	broadcastInvites();
 }
 
-/**
- * Broadcasts the invites list out to all subbed clients.
- */
+/** Broadcasts a live seek list update to all subbed clients. */
 function broadcastInvites(): void {
-	const newInvitesList = getInvitesListSafe();
-	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
-
-	const subscribedClients = getInviteSubscribers() as Record<string, CustomWebSocket>;
-	for (const subbedSocket of Object.values(subscribedClients)) {
-		sendClientInvitesList(subbedSocket, newInvitesList);
+	const invitesList = getInvitesListSafe();
+	const message = { invitesList };
+	for (const subbedSocket of Object.values(getInviteSubscribers())) {
+		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', message);
 	}
 }
 
 /**
- * Sends the invites list to a specified socket.
- * @param ws - The socket of the player to send the invites list to.
- * @param invitesList - The list of invites to send.
+ * Sends the full lobby snapshot state (seeks list + current viewer count) to a single client.
+ * Called once when a socket first subscribes.
+ * @param ws - The socket of the player to send the snapshot to.
+ * @param seekslist - The current list of invites.
  */
-function sendClientInvitesList(ws: CustomWebSocket, invitesList: OutSeek[]): void {
-	// TODO: Track the viewer count (number of unique sockets subbed to the invites list)
-	const message = { invitesList, viewerCount: 0 };
-	sendSocketMessage(ws, 'lobby', 'seekslist', message); // In order: socket, sub, action, value
+function sendClientLobbySnapshot(ws: CustomWebSocket, seekslist: OutSeek[]): void {
+	const viewercount = getSubscriberCount();
+	const message = { seekslist, viewercount };
+	sendSocketMessage(ws, 'lobby', 'lobbysnapshot', message); // In order: socket, sub, action, value
+}
+
+/**
+ * Broadcasts the current viewer count to all subscribed clients.
+ * Called when the subscriber count changes (i.e. on sub/unsub), not on seek changes.
+ * @param skipWs - Optional socket to exclude from the broadcast (e.g. the socket that just subscribed, who already received the count in their lobbysnapshot).
+ */
+function broadcastViewerCount(skipWs?: CustomWebSocket): void {
+	const count = getSubscriberCount();
+	for (const ws of Object.values(getInviteSubscribers())) {
+		if (ws === skipWs) continue;
+		sendSocketMessage(ws, 'lobby', 'viewercount', count);
+	}
 }
 
 /**
@@ -202,7 +213,8 @@ function subToInvitesList(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
 	addSocketToInvitesSubs(ws);
-	sendClientInvitesList(ws, getInvitesListSafe());
+	sendClientLobbySnapshot(ws, getInvitesListSafe());
+	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count
 	cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws);
 }
 
@@ -210,6 +222,7 @@ function subToInvitesList(ws: CustomWebSocket): void {
 function unsubFromInvitesList(ws: CustomWebSocket, closureNotByChoice?: boolean): void {
 	// data: { route, action, value, id }
 	removeSocketFromInvitesSubs(ws);
+	broadcastViewerCount(); // Notify remaining subscribers of the decremented count
 
 	const owner = ws.metadata.memberInfo;
 

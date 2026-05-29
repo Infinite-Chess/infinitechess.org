@@ -73,6 +73,11 @@ function removeSocketFromInvitesSubs(ws: CustomWebSocket): void {
 		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
 }
 
+/** Returns the number of sockets currently subscribed to the invites list. */
+function getSubscriberCount(): number {
+	return Object.keys(subscribedClients).length;
+}
+
 /**
  * Checks if a member or browser ID has at least one active connection.
  * @returns true if the member or browser ID has at least one active connection, false otherwise.
@@ -85,6 +90,7 @@ function doesUserHaveActiveConnection(info: AuthMemberInfo): boolean {
 
 export {
 	getInviteSubscribers,
+	getSubscriberCount,
 	broadcastToAllInviteSubs,
 	addSocketToInvitesSubs,
 	removeSocketFromInvitesSubs,

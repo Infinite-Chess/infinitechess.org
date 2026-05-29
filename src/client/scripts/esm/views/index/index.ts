@@ -23,11 +23,15 @@ SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
 
 function onLobbyMessage(contents: LobbyMessage): void {
 	switch (contents.action) {
+		case 'lobbysnapshot':
+			lobby.onSeekListUpdate(contents.value.seekslist);
+			lobby.onViewerCountUpdate(contents.value.viewercount);
+			break;
 		case 'seekslist':
 			lobby.onSeekListUpdate(contents.value.invitesList);
 			break;
 		case 'viewercount':
-			console.error('Viewer count display not implemented yet.');
+			lobby.onViewerCountUpdate(contents.value);
 			break;
 		default:
 			// @ts-ignore

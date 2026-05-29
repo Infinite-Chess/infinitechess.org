@@ -160,6 +160,12 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	renderSeekList(seeks.map(outSeekToLobbySeek), newSeekIds);
 }
 
+/** Called when the server sends an updated lobby viewer count. */
+function onViewerCountUpdate(count: number): void {
+	// TODO: Display viewer count in the UI
+	console.log(`Lobby viewer count: ${count}`);
+}
+
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
 function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 	const isOurs = isSeekOurs(seek);
@@ -378,6 +384,7 @@ export default {
 	renderSeekList,
 	clearSeekList,
 	onSeekListUpdate,
+	onViewerCountUpdate,
 	createSeek,
 	subscribe,
 	unsubscribe,
