@@ -372,11 +372,10 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			]),
 			h('div.lobby-cell', [
 				h('div.cell-flex', [
-					h(
-						'svg.cell-icon',
-						{ class: { [speedIcon]: true }, attrs: { title: speedTitle } },
-						[h('use', { attrs: { href: `#${speedIcon}` } })],
-					),
+					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
+						h('title', speedTitle),
+						h('use', { attrs: { href: `#${speedIcon}` } }),
+					]),
 					getClockLabel(seek.time),
 				]),
 			]),
