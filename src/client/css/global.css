@@ -96,6 +96,11 @@ body {
 	/* Hover-state overlay for opaque surfaces: brightens on dark, darkens on light.
 	   Different from --c-hover-brighten, which only ever lightens. */
 	--c-hover-overlay: rgba(255, 255, 255, 0.08);
+
+	/* Raised-text gradient stops. Direction stays consistent per theme so a
+	   top→bottom linear gradient always reads as "lit from above" / outset. */
+	--c-text-elev-top: rgb(220, 220, 220);
+	--c-text-elev-bottom: rgb(135, 135, 135);
 }
 
 /* ============================================================
@@ -127,6 +132,9 @@ body {
 	--c-shadow-elev: rgba(0, 0, 0, 0.22);
 	--c-elev-highlight: rgba(255, 255, 255, 0.8);
 	--c-hover-overlay: rgba(0, 0, 0, 0.06);
+
+	--c-text-elev-top: rgb(100, 100, 100);
+	--c-text-elev-bottom: rgb(0, 0, 0);
 }
 
 /* ============================================================
