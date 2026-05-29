@@ -188,7 +188,7 @@ a.header-donate:hover {
 	outline: none;
 }
 
-.header-icon-btn svg {
+.header-icon-btn > svg {
 	width: 22px;
 	height: 22px;
 	display: block;
