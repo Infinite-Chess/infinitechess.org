@@ -403,7 +403,7 @@ svg.bg-omega {
 
 .invite-row:hover {
 	color: var(--c-text-emphasis);
-	background: rgb(255 88 0 / 37%);
+	background: rgb(255 88 0 / 40%);
 }
 
 .invite-row.ours {
