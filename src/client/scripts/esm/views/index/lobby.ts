@@ -367,7 +367,10 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 							},
 						},
 					},
-					[...createVariantCellIconVNodes(variantIcon, seek), h('span', variantName)],
+					[
+						h('div.variant-icons', createVariantCellIconVNodes(variantIcon, seek)),
+						h('span', variantName),
+					],
 				),
 			]),
 			h('div.lobby-cell', [
@@ -401,7 +404,7 @@ function createVariantCellIconVNodes(variantIcon: string, seek: LobbySeek): VNod
 			: []),
 		...modifiers.map((m) => {
 			const iconId = modutil.getModifierIconId(m.kind);
-			return h('svg.cell-icon', { class: { [iconId]: true } }, [
+			return h('svg.cell-icon.modifier-icon', { class: { [iconId]: true } }, [
 				h('use', { attrs: { href: `#${iconId}` } }),
 			]);
 		}),

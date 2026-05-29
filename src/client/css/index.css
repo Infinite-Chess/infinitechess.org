@@ -230,6 +230,15 @@ svg.bg-omega {
 	flex-shrink: 0;
 }
 
+.cell-icon.modifier-icon {
+	width: 1.5em;
+}
+
+.variant-icons {
+	display: flex;
+	align-items: center;
+}
+
 .invite-row:hover {
 	color: var(--c-text-emphasis);
 	background: rgb(255 88 0 / 37%);
