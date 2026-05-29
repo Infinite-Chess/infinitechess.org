@@ -184,10 +184,18 @@ html[data-home-prompt='dismissed'] .new-prompt {
    Lobby layout: buttons + open-challenges section
    ============================================================ */
 
+/* Fixed height with scroll; seek rows size naturally to their content */
 .lobby-wrap {
+	position: relative;
+	overflow-x: hidden;
+	overflow-y: auto;
+	height: 25em;
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 0.5em;
 	box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25);
+	container-type: size;
 }
-
 /* Contains lobby and create game action buttons */
 .lobby-home {
 	display: flex;
@@ -276,18 +284,6 @@ html[data-home-prompt='dismissed'] .new-prompt {
 .lobby-viewers-eye {
 	width: 1em;
 	height: 1em;
-}
-
-/* Fixed height with scroll; seek rows size naturally to their content */
-.lobby-wrap {
-	position: relative;
-	overflow-x: hidden;
-	overflow-y: auto;
-	height: 25em;
-	background: var(--c-surface);
-	border: 1px solid var(--c-border);
-	border-radius: 0.5em;
-	container-type: size;
 }
 
 /* Sticky zero-height anchor keeps the omega pinned to the visible area while scrolling */
