@@ -1,9 +1,8 @@
-// src/server/game/invitesmanager/invitesmanager.ts
+// src/server/game/invitesmanager/lobbymanager.ts
 
 /**
- * This script manages our list of all active invites,
- * subscribes and unsubs sockets to and from the invites
- * subscription list,
+ * This script manages our list of all active seeks,
+ * subscribes and unsubs sockets to and from the lobby,
  * and broadcasts changes out to the clients.
  */
 
@@ -16,12 +15,12 @@ import { IDLengthOfInvites } from '../../../shared/types.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { safelyCopyInvite, memberInfoEq, AuthSeek } from './inviteutility.js';
 import {
-	getInviteSubscribers,
+	getLobbySubscribers,
 	getSubscriberCount,
-	addSocketToInvitesSubs,
-	removeSocketFromInvitesSubs,
+	addSocketToLobbySubs,
+	removeSocketFromLobbySubs,
 	doesUserHaveActiveConnection,
-} from './invitessubscribers.js';
+} from './lobbysubscribers.js';
 
 //-------------------------------------------------------------------------------------------
 
@@ -77,7 +76,7 @@ function onPublicInvitesChange(): void {
 function broadcastInvites(): void {
 	const invitesList = getInvitesListSafe();
 	const message = { invitesList };
-	for (const subbedSocket of getInviteSubscribers()) {
+	for (const subbedSocket of getLobbySubscribers()) {
 		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', message);
 	}
 }
@@ -101,7 +100,7 @@ function sendClientLobbySnapshot(ws: CustomWebSocket, seekslist: OutSeek[]): voi
  */
 function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	const count = getSubscriberCount();
-	for (const ws of getInviteSubscribers()) {
+	for (const ws of getLobbySubscribers()) {
 		if (ws === skipWs) continue;
 		sendSocketMessage(ws, 'lobby', 'viewercount', count);
 	}
@@ -191,35 +190,33 @@ function getInviteAndIndexByID(id: string): { seek: AuthSeek; index: number } | 
  */
 function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined {
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
-	for (const ws of getInviteSubscribers()) {
+	for (const ws of getLobbySubscribers()) {
 		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
 
-	console.log(
-		`Unable to find a socket subbed to the invites list that belongs to ${JSON.stringify(owner)}!`,
-	);
+	console.log(`Unable to find a lobby subscriber that belongs to ${JSON.stringify(owner)}!`);
 	return undefined;
 }
 
 /**
- * Subscribes a socket to the invites subscription list,
+ * Subscribes a socket to the lobby,
  * sends them the list of active invites,
  * and cancels any active timers to delete their invites if
  * their socket was previously closed by a network interruption.
  */
-function subToInvitesList(ws: CustomWebSocket): void {
+function subToLobby(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
-	addSocketToInvitesSubs(ws);
+	addSocketToLobbySubs(ws);
 	sendClientLobbySnapshot(ws, getInvitesListSafe());
 	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count
 	cancelTimerToDeleteUsersInvitesFromNetworkInterruption(ws);
 }
 
 // Set closureNotByChoice to true if you don't immediately want to delete their invite, but say after 5 seconds.
-function unsubFromInvitesList(ws: CustomWebSocket, closureNotByChoice?: boolean): void {
+function unsubFromLobby(ws: CustomWebSocket, closureNotByChoice?: boolean): void {
 	// data: { route, action, value, id }
-	removeSocketFromInvitesSubs(ws);
+	removeSocketFromLobbySubs(ws);
 	broadcastViewerCount(); // Notify remaining subscribers of the decremented count
 
 	const owner = ws.metadata.memberInfo;
@@ -301,8 +298,8 @@ function deleteUsersExistingInvite(
 //-------------------------------------------------------------------------------------------
 
 export {
-	subToInvitesList,
-	unsubFromInvitesList,
+	subToLobby,
+	unsubFromLobby,
 	existingInviteHasID,
 	userHasInvite,
 	addInvite,

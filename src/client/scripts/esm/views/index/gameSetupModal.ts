@@ -150,7 +150,7 @@ function getSelectedColor(): Player | null {
 	throw new Error(`Invalid side selection: ${sideVal}`);
 }
 
-/** Reads the online seek form state and sends a createinvite request via the lobby. */
+/** Reads the online seek form state and sends a createseek request via the lobby. */
 function handleOnlineSeek(): void {
 	const variant = variantSelector.getInviteVariant();
 	if (variant === null) return; // Invalid selection (e.g. unparsable icn or illegal position)

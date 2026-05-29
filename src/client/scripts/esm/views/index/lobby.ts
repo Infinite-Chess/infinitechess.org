@@ -186,23 +186,23 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 
 // Creating/Accepting/Canceling Seeks -------------------------------------------
 
-/** Sends a createinvite message to the server with the given options. */
+/** Sends a createseek message to the server with the given options. */
 function createSeek(options: CreateSeekOptions): void {
 	if (ourSeekId !== undefined) return console.error("Already have a seek, can't create another.");
 	const tag = generateTag();
-	socketmessages.send('lobby', 'createinvite', { ...options, tag }, true);
+	socketmessages.send('lobby', 'createseek', { ...options, tag }, true);
 }
 
-/** Sends a cancelinvite message for our current seek. */
+/** Sends a cancelseek message for our current seek. */
 function cancel(seekId: string): void {
 	if (ourSeekId === undefined) return;
 	LocalStorage.deleteItem('invite-tag');
-	socketmessages.send('lobby', 'cancelinvite', seekId, true);
+	socketmessages.send('lobby', 'cancelseek', seekId, true);
 }
 
-/** Sends an acceptinvite message for an opponent's seek. */
+/** Sends an acceptseek message for an opponent's seek. */
 function accept(seekId: string): void {
-	socketmessages.send('lobby', 'acceptinvite', seekId, true);
+	socketmessages.send('lobby', 'acceptseek', seekId, true);
 }
 
 // Subscribing ---------------------------------------------

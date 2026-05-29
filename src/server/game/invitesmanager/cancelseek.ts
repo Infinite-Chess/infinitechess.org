@@ -1,4 +1,4 @@
-// src/server/game/invitesmanager/cancelinvite.ts
+// src/server/game/invitesmanager/cancelseek.ts
 
 /**
  * This script handles invite cancelation.
@@ -11,26 +11,26 @@ import * as z from 'zod';
 import socketUtility from '../../socket/socketUtility.js';
 import { memberInfoEq } from './inviteutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './invitesmanager.js';
+import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './lobbymanager.js';
 
-/** The zod schema for validating the contents of the cancelinvite message. */
-const cancelinviteschem = z.string().length(IDLengthOfInvites);
+/** The zod schema for validating the contents of the cancelseek message. */
+const cancelseekschem = z.string().length(IDLengthOfInvites);
 
-/** This is also the id of the invite to delete */
-type CancelInviteMessage = z.infer<typeof cancelinviteschem>;
+/** This is also the id of the seek to delete */
+type CancelSeekMessage = z.infer<typeof cancelseekschem>;
 
 /**
- * Cancels/deletes the specified invite.
+ * Cancels/deletes the specified seek.
  * @param ws - Their socket
- * @param messageContents - The incoming socket message that is the ID of the invite to be cancelled!
+ * @param messageContents - The incoming socket message that is the ID of the seek to be cancelled!
  */
-function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage): void {
-	// Value should be the ID of the invite to cancel!
-	const id = messageContents; // id of invite to delete
+function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): void {
+	// Value should be the ID of the seek to cancel!
+	const id = messageContents; // id of seek to delete
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { seek, index } | undefined
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
-	// The client is expecting a response from us, even if empty, so it knows to unlock the create invite button again!
+	// The client is expecting a response from us, even if empty, so it knows to unlock the create seek button again!
 	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined);
 
 	const { seek, index } = inviteAndIndex;
@@ -51,4 +51,4 @@ function cancelInvite(ws: CustomWebSocket, messageContents: CancelInviteMessage)
 	deleteInviteByIndex(seek, index);
 }
 
-export { cancelInvite, cancelinviteschem };
+export { cancelSeek, cancelseekschem };

@@ -1,8 +1,8 @@
-// src/server/game/invitesmanager/invitessubscribers.ts
+// src/server/game/invitesmanager/lobbysubscribers.ts
 
 /*
  * This script stores the list of websockets currently subscribed
- * to the invites list.
+ * to the lobby.
  *
  * On demand, it broadcasts stuff out to the players.
  */
@@ -13,59 +13,59 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import { memberInfoEq } from './inviteutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
-/** Set of clients currently subscribed to invites list events. */
+/** Set of clients currently subscribed to the lobby. */
 const subscribedClients: Set<CustomWebSocket> = new Set();
 
 const printSubscriberCount = false;
 
 /**
- * Returns an iterator over all sockets currently subscribed to the invites list.
+ * Returns an iterator over all sockets currently subscribed to the lobby.
  */
-function getInviteSubscribers(): SetIterator<CustomWebSocket> {
+function getLobbySubscribers(): SetIterator<CustomWebSocket> {
 	return subscribedClients.values();
 }
 
 /**
- * Broadcasts a message to all invites subscribers.
- * @param action - The action of the socket message (i.e. "inviteslist")
+ * Broadcasts a message to all lobby subscribers.
+ * @param action - The action of the socket message
  * @param message - The message contents
  */
-function broadcastToAllInviteSubs(action: string, message: any): void {
+function broadcastToAllLobbySubs(action: string, message: any): void {
 	for (const ws of subscribedClients) {
 		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}
 }
 
 /**
- * Adds a new socket to the invite subscriber list.
+ * Adds a new socket to the lobby subscriber list.
  */
-function addSocketToInvitesSubs(ws: CustomWebSocket): void {
+function addSocketToLobbySubs(ws: CustomWebSocket): void {
 	if (subscribedClients.has(ws))
-		return console.error('Cannot sub socket to invites list because they already are!');
+		return console.error('Cannot sub socket to lobby because they already are!');
 
 	subscribedClients.add(ws);
 	ws.metadata.subscriptions.lobby = true;
 
-	if (printSubscriberCount) console.log(`Invites subscriber count: ${subscribedClients.size}`);
+	if (printSubscriberCount) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
 /**
- * Removes a socket from the invite subscriber list.
+ * Removes a socket from the lobby subscriber list.
  * DOES NOT delete any of their existing invites! That should be done before.
  */
-function removeSocketFromInvitesSubs(ws: CustomWebSocket): void {
+function removeSocketFromLobbySubs(ws: CustomWebSocket): void {
 	if (!ws)
-		return console.error("Can't remove socket from invites subs list because it's undefined!");
+		return console.error("Can't remove socket from lobby subs list because it's undefined!");
 
-	if (!subscribedClients.has(ws)) return; // Cannot unsub socket from invites list because they aren't subbed.
+	if (!subscribedClients.has(ws)) return; // Cannot unsub socket from lobby because they aren't subbed.
 
 	subscribedClients.delete(ws);
 	delete ws.metadata.subscriptions.lobby;
 
-	if (printSubscriberCount) console.log(`Invites subscriber count: ${subscribedClients.size}`);
+	if (printSubscriberCount) console.log(`Lobby subscriber count: ${subscribedClients.size}`);
 }
 
-/** Returns the number of sockets currently subscribed to the invites list. */
+/** Returns the number of sockets currently subscribed to the lobby. */
 function getSubscriberCount(): number {
 	return subscribedClients.size;
 }
@@ -82,10 +82,10 @@ function doesUserHaveActiveConnection(info: AuthMemberInfo): boolean {
 }
 
 export {
-	getInviteSubscribers,
+	getLobbySubscribers,
 	getSubscriberCount,
-	broadcastToAllInviteSubs,
-	addSocketToInvitesSubs,
-	removeSocketFromInvitesSubs,
+	broadcastToAllLobbySubs,
+	addSocketToLobbySubs,
+	removeSocketFromLobbySubs,
 	doesUserHaveActiveConnection,
 };

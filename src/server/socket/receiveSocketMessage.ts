@@ -13,7 +13,7 @@ import * as z from 'zod';
 import socketUtility from './socketUtility.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
-import { LobbySchema } from '../game/invitesmanager/invitesrouter.js';
+import { LobbySchema } from '../game/invitesmanager/lobbyrouter.js';
 import { GeneralSchema } from './generalrouter.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';

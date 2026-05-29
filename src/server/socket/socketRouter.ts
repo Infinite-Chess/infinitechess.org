@@ -11,7 +11,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 import type { WebsocketInMessage } from './receiveSocketMessage.js';
 
 import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
-import { routeLobbyMessage } from '../game/invitesmanager/invitesrouter.js';
+import { routeLobbyMessage } from '../game/invitesmanager/lobbyrouter.js';
 import { routeGeneralMessage } from './generalrouter.js';
 
 // Functions ---------------------------------------------------------------------------

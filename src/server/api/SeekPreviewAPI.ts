@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 
 import { SeekIdSchema } from '../../shared/types.js';
 
-import { getInviteAndIndexByID } from '../game/invitesmanager/invitesmanager.js';
+import { getInviteAndIndexByID } from '../game/invitesmanager/lobbymanager.js';
 
 function getSeekPreview(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;

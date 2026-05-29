@@ -8,8 +8,8 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
 
+import { subToLobby, unsubFromLobby } from '../game/invitesmanager/lobbymanager.js';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
-import { subToInvitesList, unsubFromInvitesList } from '../game/invitesmanager/invitesmanager.js';
 
 const validUnsubs = ['lobby', 'game'] as const;
 
@@ -49,8 +49,7 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 	// What are they wanting to subscribe to for updates?
 	switch (value) {
 		case 'lobby':
-			// Subscribe them to the invites list
-			subToInvitesList(ws);
+			subToLobby(ws);
 			break;
 		default:
 			console.error(`UNKNOWN subscription list to subscribe client to! "${value}"`);
@@ -62,8 +61,7 @@ function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoic
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case 'lobby':
-			// Unsubscribe them from the invites list
-			unsubFromInvitesList(ws, closureNotByChoice);
+			unsubFromLobby(ws, closureNotByChoice);
 			break;
 		case 'game':
 			// If the unsub is not by choice (network interruption instead of closing tab), then we give them

@@ -1,4 +1,4 @@
-// src/server/game/invitesmanager/createinvite.ts
+// src/server/game/invitesmanager/createseek.ts
 
 /**
  * This script handles invite creation, making sure that the invites have valid properties.
@@ -43,13 +43,13 @@ import {
 	userHasInvite,
 	addInvite,
 	IDLengthOfInvites,
-} from './invitesmanager.js';
+} from './lobbymanager.js';
 
 // Schemas ---------------------------------------------------------------------------
 
-export type CreateInviteMessage = z.infer<typeof createinviteschem>;
-/** The zod schema for validating the contents of the createinvite message. */
-const createinviteschem = z
+export type CreateSeekMessage = z.infer<typeof createseekschem>;
+/** The zod schema for validating the contents of the createseek message. */
+const createseekschem = z
 	.strictObject({
 		tag: z.string().length(8),
 		variant: InviteVariantSchema,
@@ -73,10 +73,7 @@ const createinviteschem = z
  * @param ws - Their socket
  * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
  */
-async function createInvite(
-	ws: CustomWebSocket,
-	messageContents: CreateInviteMessage,
-): Promise<void> {
+async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): Promise<void> {
 	// invite: { id, owner, variant, clock, color, rated }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
 
@@ -112,13 +109,13 @@ async function createInvite(
 }
 
 /**
- * Builds an {@link AuthSeek} from the client's createinvite message, resolving
+ * Builds an {@link AuthSeek} from the client's createseek message, resolving
  * cloudSave variants to ICN and validating ICN positions for legality.
  * Returns `void` after sending an error to the client if any check fails.
  */
 async function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
-	messageContents: CreateInviteMessage,
+	messageContents: CreateSeekMessage,
 ): Promise<AuthSeek | void> {
 	// Verify their invite contains the required properties...
 
@@ -129,7 +126,7 @@ async function getInviteFromWebsocketMessageContents(
 			ws,
 			'general',
 			'printerror',
-			'Cannot create invite when incoming socket message body is not an object!',
+			'Cannot create seek when incoming socket message body is not an object!',
 		);
 
 	let id: string;
@@ -227,4 +224,4 @@ function validateIcnSeekContent(content: string): string | null {
 	return validatePosition(variantOptions, content);
 }
 
-export { createInvite, createinviteschem };
+export { createSeek, createseekschem };

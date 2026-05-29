@@ -1,4 +1,4 @@
-// src/server/game/invitesmanager/acceptinvite.ts
+// src/server/game/invitesmanager/acceptseek.ts
 
 /**
  * This script handles invite acceptance,
@@ -17,7 +17,7 @@ import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { removeSocketFromInvitesSubs } from './invitessubscribers.js';
+import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	getInviteAndIndexByID,
@@ -26,19 +26,19 @@ import {
 	findSocketFromOwner,
 	onPublicInvitesChange,
 	IDLengthOfInvites,
-} from './invitesmanager.js';
+} from './lobbymanager.js';
 
-/** The zod schema for validating the contents of the acceptinvite message. */
-const acceptinviteschem = z.string().length(IDLengthOfInvites);
+/** The zod schema for validating the contents of the acceptseek message. */
+const acceptseekschem = z.string().length(IDLengthOfInvites);
 
-type AcceptInviteMessage = z.infer<typeof acceptinviteschem>;
+type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
 
 /**
- * Attempts to accept an invite of given id.
+ * Attempts to accept a seek of given id.
  * @param ws - The socket performing this action
- * @param messageContents - The incoming socket message that SHOULD look like: `{ id, isPrivate }`
+ * @param messageContents - The incoming socket message containing the seek id
  */
-function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage): void {
+function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): void {
 	// { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
 
@@ -109,9 +109,9 @@ function acceptInvite(ws: CustomWebSocket, messageContents: AcceptInviteMessage)
 
 	createGame(seek, assignments);
 
-	// Unsubscribe them both from the invites subscription list.
-	if (player1Socket) removeSocketFromInvitesSubs(player1Socket); // Could be undefined occasionally
-	removeSocketFromInvitesSubs(player2Socket);
+	// Unsubscribe them both from the lobby.
+	if (player1Socket) removeSocketFromLobbySubs(player1Socket); // Could be undefined occasionally
+	removeSocketFromLobbySubs(player2Socket);
 
 	// Broadcast the invites list change after creating the game,
 	// because the new game ups the game count.
@@ -128,4 +128,4 @@ function informThemGameAborted(ws: CustomWebSocket): void {
 	return sendNotify(ws, errString);
 }
 
-export { acceptInvite, acceptinviteschem };
+export { acceptSeek, acceptseekschem };
