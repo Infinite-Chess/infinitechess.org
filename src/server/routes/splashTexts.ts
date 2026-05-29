@@ -121,7 +121,7 @@ const splashTexts: string[] = [
 	'Can you find the edge?',
 	'The edge of an edgeless chessboard',
 	"It doesn't matter moving far is not strategic",
-	"In 5D Chess it's bad to time travel.",
+	"In 5D Chess it's bad to time travel",
 	'Sponsored by Add Loot Studios',
 	"Look around, maybe you'll find a coin",
 	'Now with more Chess!',
