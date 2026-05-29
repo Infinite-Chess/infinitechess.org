@@ -158,10 +158,16 @@ function getInviteModifiers(): InviteModifier[] {
 	return configs;
 }
 
+/** Returns the SVG symbol ID for the icon representing the given modifier. */
+function getModifierIconId(modifier: InviteModifier): string {
+	return MODIFIER_ICON_IDS[modifier.kind];
+}
+
 // Exports -----------------------------------------------
 
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
 	getInviteModifiers,
+	getModifierIconId,
 };

@@ -36,6 +36,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import seekPreviewCache from './seekPreviewCache.js';
+import modifierSelector from './modifierSelector.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 const patch = init([attributesModule, classModule]);
@@ -311,12 +312,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 							},
 						},
 					},
-					[
-						h('svg.cell-icon', { class: { [variantIcon]: true } }, [
-							h('use', { attrs: { href: `#${variantIcon}` } }),
-						]),
-						h('span', variantName),
-					],
+					[...createVariantCellIconVNodes(variantIcon, seek), h('span', variantName)],
 				),
 			]),
 			h('div.lobby-cell', [
@@ -332,6 +328,30 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
 		],
 	);
+}
+
+/**
+ * Returns the icon vnodes for the variant cell.
+ * For standard-group seeks with modifiers, only the modifier icons are shown (group icon omitted).
+ */
+function createVariantCellIconVNodes(variantIcon: string, seek: LobbySeek): VNode[] {
+	const modifiers = seek.modifiers ?? [];
+	const showGroupIcon = !(seek.variant.group === 'standard' && modifiers.length > 0);
+	return [
+		...(showGroupIcon
+			? [
+					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
+						h('use', { attrs: { href: `#${variantIcon}` } }),
+					]),
+				]
+			: []),
+		...modifiers.map((m) => {
+			const iconId = modifierSelector.getModifierIconId(m);
+			return h('svg.cell-icon', { class: { [iconId]: true } }, [
+				h('use', { attrs: { href: `#${iconId}` } }),
+			]);
+		}),
+	];
 }
 
 /** Spawns a body-level overlay aligned to the row that pulses outward and fades. */
@@ -358,9 +378,9 @@ async function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): 
 	if (seek.variant.group === 'custom') {
 		const variantOptions = await seekPreviewCache.getSeekPreview(seek.id);
 		if (variantOptions === undefined) return;
-		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below'); // prettier-ignore
+		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below', seek.modifiers); // prettier-ignore
 	} else {
-		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below');
+		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below', seek.modifiers); // prettier-ignore
 	}
 }
 
