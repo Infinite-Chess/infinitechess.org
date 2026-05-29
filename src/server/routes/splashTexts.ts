@@ -131,6 +131,7 @@ const splashTexts: string[] = [
 	"It's not complete without infinitely many pieces",
 	'Check out the videos!',
 	'Your chess variant can fit in mine',
+	'Kudos Joel David Hamkins',
 ];
 
 /** Returns a randomly chosen splash text. */
