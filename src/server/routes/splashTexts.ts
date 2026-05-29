@@ -32,6 +32,7 @@ const splashTexts: string[] = [
 	'Almost infinite',
 	'May as well be considered infinite',
 	'Vickalan where are you?',
+	'Bring back the veterans',
 	'Totally, most definitely, 100% infinite',
 	"It's infinite as far as you're concerned",
 	'If I cannot win, I will make you suffer',
