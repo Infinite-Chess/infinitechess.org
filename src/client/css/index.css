@@ -71,6 +71,10 @@ main {
 	z-index: -1;
 }
 
+[data-theme='light'] .hero-glyph {
+	opacity: 0.13;
+}
+
 .hero-glyph-aura {
 	opacity: 0.05;
 	filter: blur(14px);
