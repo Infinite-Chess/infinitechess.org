@@ -140,8 +140,10 @@ const trackNewSeeks = (() => {
 		for (const seek of seekList) {
 			newIds.add(seek.id);
 			if (idsInLastList.has(seek.id)) continue;
-			idsToAnimate.add(seek.id);
-			if (isSeekOurs(seek)) continue;
+			if (isSeekOurs(seek)) {
+				idsToAnimate.add(seek.id);
+				continue;
+			}
 			const name = seek.player.username;
 			if (recentUsers[name]) continue;
 			recentUsers[name] = true;
@@ -150,6 +152,7 @@ const trackNewSeeks = (() => {
 			if (docutil.isMouseSupported()) gamesound.playBase();
 			else gamesound.playViola_c3();
 			played = true;
+			idsToAnimate.add(seek.id);
 		}
 		idsInLastList = newIds;
 		return idsToAnimate;
