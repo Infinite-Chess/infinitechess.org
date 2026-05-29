@@ -170,7 +170,10 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	const newSeekIds = trackNewSeeks(seeks);
 	if (!prevHadSeek && ourSeekId !== undefined) gamesound.playMarimba();
 
-	renderSeekList(seeks.map(outSeekToLobbySeek), newSeekIds);
+	renderSeekList(
+		seeks.map((s) => outSeekToLobbySeek(s)),
+		newSeekIds,
+	);
 }
 
 /** Called when the server sends an updated lobby viewer count. */
@@ -293,9 +296,9 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): voi
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
 }
 
-/** Clears the seek list display. */
+/** Clears the seek list display and resets all tracked seek state. */
 function clearSeekList(): void {
-	renderSeekList([]);
+	onSeekListUpdate([]);
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
