@@ -30,7 +30,6 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
-import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
@@ -163,8 +162,6 @@ const trackNewSeeks = (() => {
 
 /** Called when we receive a fresh seek list from the server. Updates state, map, and renders. */
 function onSeekListUpdate(seeks: OutSeek[]): void {
-	const prevHadSeek = ourSeekId !== undefined;
-
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
@@ -173,7 +170,7 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	ourSeekId = ourSeek?.id;
 
 	const newSeekIds = trackNewSeeks(seeks);
-	if (!prevHadSeek && ourSeekId !== undefined) gamesound.playMarimba();
+	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
 
 	renderSeekList(
 		seeks.map((s) => outSeekToLobbySeek(s)),
@@ -208,7 +205,6 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 
 /** Sends a createseek message to the server with the given options. */
 function createSeek(options: CreateSeekOptions): void {
-	if (ourSeekId !== undefined) return toast.show('You already have a seek created.');
 	const tag = generateTag();
 	socketmessages.send('lobby', 'createseek', { ...options, tag }, true);
 }

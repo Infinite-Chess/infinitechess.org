@@ -40,7 +40,7 @@ import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	existingInviteHasID,
-	userHasInvite,
+	deleteUsersExistingInvite,
 	addInvite,
 	IDLengthOfInvites,
 } from './lobbymanager.js';
@@ -77,18 +77,6 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 	// invite: { id, owner, variant, clock, color, rated }
 	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
 
-	// Make sure they don't already have an existing invite
-	if (userHasInvite(ws)) {
-		sendSocketMessage(
-			ws,
-			'general',
-			'printerror',
-			"Can't create an invite when you have one already.",
-		);
-		console.error("Player already has existing invite, can't create another!");
-		return;
-	}
-
 	// Reject rated seeks from unverified/signed-out users
 	if (
 		messageContents.mode === 'rated' &&
@@ -104,6 +92,9 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 
 	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents);
 	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
+
+	// Replace any existing invite this user owns — the subsequent addInvite() broadcasts the new state.
+	deleteUsersExistingInvite(ws.metadata.memberInfo, { broadCastNewInvites: false });
 
 	addInvite(invite);
 }
