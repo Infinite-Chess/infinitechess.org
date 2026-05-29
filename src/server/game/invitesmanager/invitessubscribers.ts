@@ -17,16 +17,15 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
  * List of clients currently subscribed to invites list events, with their
  * socket id for the keys, and their socket for the value.
  */
-const subscribedClients: Record<string, CustomWebSocket> = {}; // { id: ws }
+const subscribedClients: Map<string, CustomWebSocket> = new Map();
 
 const printSubscriberCount = false;
 
 /**
- * Returns the object containing all sockets currently subscribed to the invites list,
- * with their socket id for the keys, and their socket for the value.
+ * Returns an iterator over all sockets currently subscribed to the invites list.
  */
-function getInviteSubscribers(): typeof subscribedClients {
-	return subscribedClients;
+function getInviteSubscribers(): MapIterator<CustomWebSocket> {
+	return subscribedClients.values();
 }
 
 /**
@@ -35,7 +34,7 @@ function getInviteSubscribers(): typeof subscribedClients {
  * @param message - The message contents
  */
 function broadcastToAllInviteSubs(action: string, message: any): void {
-	for (const ws of Object.values(subscribedClients)) {
+	for (const ws of subscribedClients.values()) {
 		sendSocketMessage(ws, 'lobby', action, message); // In order: socket, sub, action, value
 	}
 }
@@ -45,14 +44,13 @@ function broadcastToAllInviteSubs(action: string, message: any): void {
  */
 function addSocketToInvitesSubs(ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
-	if (subscribedClients[socketID])
+	if (subscribedClients.has(socketID))
 		return console.error('Cannot sub socket to invites list because they already are!');
 
-	subscribedClients[socketID] = ws;
+	subscribedClients.set(socketID, ws);
 	ws.metadata.subscriptions.lobby = true;
 
-	if (printSubscriberCount)
-		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
+	if (printSubscriberCount) console.log(`Invites subscriber count: ${subscribedClients.size}`);
 }
 
 /**
@@ -64,18 +62,17 @@ function removeSocketFromInvitesSubs(ws: CustomWebSocket): void {
 		return console.error("Can't remove socket from invites subs list because it's undefined!");
 
 	const socketID = ws.metadata.id;
-	if (!subscribedClients[socketID]) return; // Cannot unsub socket from invites list because they aren't subbed.
+	if (!subscribedClients.has(socketID)) return; // Cannot unsub socket from invites list because they aren't subbed.
 
-	delete subscribedClients[socketID];
+	subscribedClients.delete(socketID);
 	delete ws.metadata.subscriptions.lobby;
 
-	if (printSubscriberCount)
-		console.log(`Invites subscriber count: ${Object.keys(subscribedClients).length}`);
+	if (printSubscriberCount) console.log(`Invites subscriber count: ${subscribedClients.size}`);
 }
 
 /** Returns the number of sockets currently subscribed to the invites list. */
 function getSubscriberCount(): number {
-	return Object.keys(subscribedClients).length;
+	return subscribedClients.size;
 }
 
 /**
@@ -83,9 +80,10 @@ function getSubscriberCount(): number {
  * @returns true if the member or browser ID has at least one active connection, false otherwise.
  */
 function doesUserHaveActiveConnection(info: AuthMemberInfo): boolean {
-	return Object.values(subscribedClients).some((ws) => {
-		return memberInfoEq(ws.metadata.memberInfo, info);
-	});
+	for (const ws of subscribedClients.values()) {
+		if (memberInfoEq(ws.metadata.memberInfo, info)) return true;
+	}
+	return false;
 }
 
 export {

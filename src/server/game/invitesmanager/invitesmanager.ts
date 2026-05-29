@@ -77,7 +77,7 @@ function onPublicInvitesChange(): void {
 function broadcastInvites(): void {
 	const invitesList = getInvitesListSafe();
 	const message = { invitesList };
-	for (const subbedSocket of Object.values(getInviteSubscribers())) {
+	for (const subbedSocket of getInviteSubscribers()) {
 		sendSocketMessage(subbedSocket, 'lobby', 'seekslist', message);
 	}
 }
@@ -101,7 +101,7 @@ function sendClientLobbySnapshot(ws: CustomWebSocket, seekslist: OutSeek[]): voi
  */
 function broadcastViewerCount(skipWs?: CustomWebSocket): void {
 	const count = getSubscriberCount();
-	for (const ws of Object.values(getInviteSubscribers())) {
+	for (const ws of getInviteSubscribers()) {
 		if (ws === skipWs) continue;
 		sendSocketMessage(ws, 'lobby', 'viewercount', count);
 	}
@@ -190,10 +190,8 @@ function getInviteAndIndexByID(id: string): { seek: AuthSeek; index: number } | 
  * @returns The websocket, if found, otherwise undefined.
  */
 function findSocketFromOwner(owner: AuthMemberInfo): CustomWebSocket | undefined {
-	// { member/browser }
 	// Iterate through all sockets, until you find one that matches the authentication of our invite owner
-	const subscribedClients = getInviteSubscribers(); // { id: ws }
-	for (const ws of Object.values(subscribedClients)) {
+	for (const ws of getInviteSubscribers()) {
 		if (memberInfoEq(owner, ws.metadata.memberInfo)) return ws;
 	}
 
