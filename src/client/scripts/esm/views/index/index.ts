@@ -11,6 +11,7 @@ import type { LobbyMessage } from '../../websocket/socketschemas.js';
 import lobby from './lobby.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 
+import './newPrompt.js';
 import './gameSetupModal.js';
 
 // Initial setup -----------------------------------------------------

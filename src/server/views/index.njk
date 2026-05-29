@@ -6,6 +6,17 @@
 <link rel="stylesheet" href="{{ manifest['css/index.css'] }}" />
 {% endblock %}
 
+{% block head %}
+{# Reads the dismissed flag from localStorage and marks <html> so the CSS hides
+   the new-player prompt before first paint. #}
+<script>
+    if (localStorage.getItem('home-prompt-dismissed') === '1') {
+		// The 'home-prompt-dismissed' key MUST stay in sync with STORAGE_KEY in newPrompt.ts
+        document.documentElement.setAttribute('data-home-prompt', 'dismissed');
+    }
+</script>
+{% endblock %}
+
 {% block body %}
 
 {# ── Macros ───────────────────────────────────────────────────────────────── #}
@@ -43,6 +54,15 @@
 			<h1 class="hero-title">Infinite Chess</h1>
 			<p class="hero-tagline">{{ splashText | safe }}</p>
 		</header>
+
+		{# -- New-player prompt --------------------------------------------------- #}
+		<section class="new-prompt" id="new-prompt">
+			<span class="new-prompt-label">New?</span>
+			<div class="new-prompt-actions">
+				<a class="new-prompt-btn primary" id="new-prompt-tutorial" href="/tutorial">Take the tutorial</a>
+				<button class="new-prompt-btn" id="new-prompt-dismiss">I'm experienced</button>
+			</div>
+		</section>
 
 		{# -- Lobby home: buttons + open challenges ------------------------------- #}
 		<div class="lobby-home">

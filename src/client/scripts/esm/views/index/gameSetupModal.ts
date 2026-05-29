@@ -11,6 +11,7 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalidation.js';
 
 import lobby from './lobby.js';
+import toast from '../../components/toast.js';
 import timeControls from './timeControls.js';
 import variantSelector from './variantSelector.js';
 import modifierSelector from './modifierSelector.js';
@@ -109,9 +110,9 @@ function initModal(): void {
 	element_modalSubmit.addEventListener('click', () => {
 		if (currentMode === 'online') handleOnlineSeek();
 		else if (currentMode === 'friend')
-			console.error('Friend challenge flow not implemented yet');
+			toast.show('Friend challenge flow not implemented yet', { error: true });
 		else if (currentMode === 'computer')
-			console.error('Computer game flow not implemented yet');
+			toast.show('Computer game flow not implemented yet', { error: true });
 		else console.error('Invalid modal mode:', currentMode);
 	});
 

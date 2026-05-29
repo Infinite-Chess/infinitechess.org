@@ -104,6 +104,83 @@ main {
 }
 
 /* ============================================================
+   New-player prompt
+   ============================================================ */
+
+.new-prompt {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75em 1em;
+	padding: 0.75em 1em;
+	margin-bottom: 0.5em;
+	font-size: 15px;
+	color: var(--c-text-emphasis);
+	max-height: 200px;
+	transition:
+		max-height 0.35s ease,
+		padding 0.35s ease,
+		margin 0.35s ease,
+		opacity 0.25s ease;
+}
+
+.new-prompt-label {
+	font-size: 1.2em;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.new-prompt-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5em;
+}
+
+.new-prompt-btn {
+	justify-content: center;
+	padding: 0.5em 1em;
+	border-radius: 0.4em;
+	font: inherit;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	text-decoration: none;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.new-prompt-btn:hover {
+	background: rgb(255 88 0 / 45%);
+}
+
+.new-prompt-btn.primary {
+	background: rgb(255 88 0 / 70%);
+	border-color: transparent;
+}
+
+.new-prompt-btn.primary:hover {
+	background: rgb(255 108 20 / 85%);
+}
+
+.new-prompt.collapsed {
+	max-height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-bottom: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Returning visitors: hide instantly on first paint, no animation. Set by the
+   inline head script in index.njk based on the localStorage flag. */
+html[data-home-prompt='dismissed'] .new-prompt {
+	display: none;
+}
+
+/* ============================================================
    Lobby layout: buttons + open-challenges section
    ============================================================ */
 
