@@ -63,6 +63,7 @@ type CreateSeekOptions = {
 
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
 const element_lobbyIdleOverlay = document.getElementById('lobby-idle-overlay')!;
+const element_lobbyViewerCount = document.getElementById('lobby-viewer-count')!;
 let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 // Constants -----------------------------------------
@@ -180,10 +181,9 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	);
 }
 
-/** Called when the server sends an updated lobby viewer count. */
+/** Called when the server sends an updated lobby viewer count. Displays count minus ourself. */
 function onViewerCountUpdate(count: number): void {
-	// TODO: Display viewer count in the UI
-	console.log(`Lobby viewer count: ${count}`);
+	element_lobbyViewerCount.textContent = String(count - 1);
 }
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
@@ -300,9 +300,13 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): voi
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
 }
 
-/** Clears the seek list display and resets all tracked seek state. */
+/**
+ * Clears the seek list display upon a socket closure
+ * and resets all tracked seek state and viewer count.
+ */
 function clearSeekList(): void {
 	onSeekListUpdate([]);
+	element_lobbyViewerCount.textContent = '0';
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */

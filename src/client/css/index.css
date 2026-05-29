@@ -104,12 +104,29 @@ main {
    ============================================================ */
 
 .lobby h2 {
-	padding: 0.693em 1.067em;
+	display: flex;
+	align-items: center;
 	justify-content: center;
+	gap: 0.667em;
+	padding: 0.693em 1.067em;
 	font-size: 15px;
 	color: var(--c-text-muted);
 	letter-spacing: 0.07em;
 	text-align: center;
+}
+
+.lobby-viewers {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.267em;
+	font-weight: normal;
+	letter-spacing: 0;
+	user-select: none;
+}
+
+.lobby-viewers-eye {
+	width: 1em;
+	height: 1em;
 }
 
 /* Fixed height with scroll; seek rows size naturally to their content */

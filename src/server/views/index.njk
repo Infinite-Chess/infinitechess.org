@@ -55,7 +55,13 @@
 
 			{# -- Open challenges (lobby) ----------------------------------------- #}
 			<section class="lobby">
-				<h2>Lobby</h2>
+				<h2>
+					<span>Lobby</span>
+					<span class="lobby-viewers" title="Viewer count">
+						<svg class="lobby-viewers-eye"><use href="#svg-eye"></use></svg>
+						<span id="lobby-viewer-count">0</span>
+					</span>
+				</h2>
 				<div class="lobby-wrap scrollbar-thin unselectable">
 					{# Idle overlay - shown after prolonged inactivity #}
 					<div id="lobby-idle-overlay" class="lobby-idle-overlay hidden">
