@@ -5,31 +5,16 @@
  * the modifier dropdown, selected modifiers display, and per-modifier settings (e.g. Slide Limit).
  */
 
+import type { ModifierCode } from '../../../../../shared/util/modutil.js';
 import type { InviteModifier } from '../../../../../shared/types.js';
 
+import modutil from '../../../../../shared/util/modutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import variantSelector from './variantSelector.js';
 import { syncRatedButton } from './gameSetupModal.js';
 
-// Types -------------------------------------------------
-
-/** Unique identifier for each available game modifier. */
-type ModifierCode = 'slide-limit';
-
 // Constants ---------------------------------------------
-
-/** Display name for each modifier code. */
-const MODIFIER_NAMES: Record<ModifierCode, string> = {
-	'slide-limit': 'Slide Limit',
-};
-
-/** SVG symbol ID for each modifier code's icon. */
-const MODIFIER_ICON_IDS: Record<ModifierCode, string> = {
-	'slide-limit': 'svg-slide-limit',
-};
-
-// Slide Limit Modifier Constants -------------------------
 
 /** Default slide limit distance in squares. */
 const SLIDE_LIMIT_DEFAULT = 7;
@@ -125,8 +110,8 @@ function refreshModifiersSection(): void {
 }
 
 function createModifierChip(code: ModifierCode): HTMLElement {
-	const name = MODIFIER_NAMES[code];
-	const iconId = MODIFIER_ICON_IDS[code];
+	const name = modutil.getModifierName(code);
+	const iconId = modutil.getModifierIconId(code);
 	const chip = document.createElement('div');
 	chip.className = 'modifier-chip';
 	chip.dataset['modifier'] = code;
@@ -158,16 +143,10 @@ function getInviteModifiers(): InviteModifier[] {
 	return configs;
 }
 
-/** Returns the SVG symbol ID for the icon representing the given modifier. */
-function getModifierIconId(modifier: InviteModifier): string {
-	return MODIFIER_ICON_IDS[modifier.kind];
-}
-
 // Exports -----------------------------------------------
 
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
 	getInviteModifiers,
-	getModifierIconId,
 };

@@ -14,6 +14,7 @@ import type { InviteModifier } from '../../../../../shared/types.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
+import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
@@ -386,7 +387,7 @@ async function populateRules(
 
 	// Modifiers — last
 	for (const modifier of modifiers ?? []) {
-		items.push(getModifierDescription(modifier));
+		items.push(modutil.getModifierDescription(modifier));
 	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);
@@ -400,14 +401,6 @@ async function populateRules(
 			element_rulesBody.append(suffix);
 		}
 	});
-}
-
-/** Returns a human-readable tooltip description for a seek modifier. */
-function getModifierDescription(modifier: InviteModifier): string {
-	if (modifier.kind === 'slide-limit') {
-		return `Pieces can't slide more than ${modifier.value} squares`;
-	}
-	throw new Error(`Unknown modifier kind: ${modifier.kind}`);
 }
 
 /** Returns a human-readable label for a win condition code. */

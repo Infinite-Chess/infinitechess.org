@@ -24,6 +24,7 @@ import type {
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import uuid from '../../../../../shared/util/uuid.js';
+import modutil from '../../../../../shared/util/modutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
@@ -36,7 +37,6 @@ import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from '../../websocket/socketmessages.js';
 import seekPreviewCache from './seekPreviewCache.js';
-import modifierSelector from './modifierSelector.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
 const patch = init([attributesModule, classModule]);
@@ -346,7 +346,7 @@ function createVariantCellIconVNodes(variantIcon: string, seek: LobbySeek): VNod
 				]
 			: []),
 		...modifiers.map((m) => {
-			const iconId = modifierSelector.getModifierIconId(m);
+			const iconId = modutil.getModifierIconId(m.kind);
 			return h('svg.cell-icon', { class: { [iconId]: true } }, [
 				h('use', { attrs: { href: `#${iconId}` } }),
 			]);
