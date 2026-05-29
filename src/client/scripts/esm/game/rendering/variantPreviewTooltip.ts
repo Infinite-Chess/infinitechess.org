@@ -10,9 +10,11 @@ import type { Mesh } from '../../game/rendering/piecemodels.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
+import type { InviteModifier } from '../../../../../shared/types.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
+import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
@@ -153,6 +155,7 @@ async function showForPosition(
 	name: string,
 	variantOptions: VariantOptions,
 	placement: 'left' | 'below' = 'left',
+	modifiers?: InviteModifier[],
 ): Promise<void> {
 	const token = ++showToken;
 	const boardsim = boardpreviewer.initBoardPreview(
@@ -160,7 +163,7 @@ async function showForPosition(
 		undefined,
 		variantOptions,
 	);
-	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false, placement);
+	await showForBoard(anchor, name, boardsim, variantOptions.gameRules, token, false, placement, undefined, modifiers); // prettier-ignore
 }
 
 /**
@@ -172,6 +175,7 @@ async function showForVariantCode(
 	anchor: HTMLElement,
 	code: VariantCode,
 	placement: 'left' | 'below',
+	modifiers?: InviteModifier[],
 ): Promise<void> {
 	const token = ++showToken;
 	const variantName = variantregistry.getVariantName(code);
@@ -184,7 +188,7 @@ async function showForVariantCode(
 	};
 	const gameRules = variantpreviewer.getGameRulesOfVariant(loadedVariant);
 	const boardsim = boardpreviewer.initBoardPreview(gameRules, loadedVariant);
-	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement, code);
+	await showForBoard(anchor, variantName, boardsim, gameRules, token, true, placement, code, modifiers); // prettier-ignore
 }
 
 /** Hides the tooltip. */
@@ -203,9 +207,10 @@ async function showForBoard(
 	isPreset: boolean,
 	placement: 'left' | 'below',
 	variantCode?: VariantCode,
+	modifiers?: InviteModifier[],
 ): Promise<void> {
 	element_name.textContent = name;
-	await populateRules(gameRules, boardsim, isPreset, variantCode);
+	await populateRules(gameRules, boardsim, isPreset, variantCode, modifiers);
 	await ensureReady(boardsim);
 
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
@@ -287,6 +292,7 @@ async function populateRules(
 	boardsim: BoardPreview,
 	isPreset: boolean,
 	variantCode?: VariantCode,
+	modifiers?: InviteModifier[],
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];
 
@@ -377,6 +383,11 @@ async function populateRules(
 	// Game state: move rule counter
 	if (moveRuleState !== undefined && moveRuleState !== 0) {
 		items.push(`${moveRuleState} plies passed since last capture or pawn push`);
+	}
+
+	// Modifiers — last
+	for (const modifier of modifiers ?? []) {
+		items.push(modutil.getModifierDescription(modifier));
 	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);

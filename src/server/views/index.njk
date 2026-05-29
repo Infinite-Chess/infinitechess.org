@@ -57,6 +57,10 @@
 			<section class="lobby">
 				<h2>Lobby</h2>
 				<div class="lobby-wrap scrollbar-thin unselectable">
+					{# Idle overlay - shown after prolonged inactivity #}
+					<div id="lobby-idle-overlay" class="lobby-idle-overlay hidden">
+						<p>Hover to reconnect.</p>
+					</div>
 					{# Faint omega background - references symbol already defined in header.njk #}
 					<div class="omega-anchor">
 						<svg class="bg-omega" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>

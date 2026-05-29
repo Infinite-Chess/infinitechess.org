@@ -24,12 +24,14 @@ import type {
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import uuid from '../../../../../shared/util/uuid.js';
+import modutil from '../../../../../shared/util/modutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import docutil from '../../util/docutil.js';
+import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
@@ -59,7 +61,14 @@ type CreateSeekOptions = {
 // Constants ------------------------------------------
 
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
+const element_lobbyIdleOverlay = document.getElementById('lobby-idle-overlay')!;
 let tbodyVNode: VNode | Element = element_lobbyTbody;
+
+// Constants -----------------------------------------
+
+/** How long, in milliseconds, without page interaction before the user is unsubbed from the lobby. */
+const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+// const IDLE_TIMEOUT = 10 * 1000; // Testing: 10 seconds
 
 // State ----------------------------------------------
 
@@ -68,9 +77,13 @@ let ourSeekId: string | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
 
+/** Whether the user is currently idle (lobby unsubbed, overlay visible). */
+let isIdle = false;
+
 // Init -----------------------------------------------
 
 initLobbyClickHandler();
+initIdleDetection();
 
 // Preload sounds
 gamesound.preload('marimba_c2');
@@ -127,8 +140,10 @@ const trackNewSeeks = (() => {
 		for (const seek of seekList) {
 			newIds.add(seek.id);
 			if (idsInLastList.has(seek.id)) continue;
-			idsToAnimate.add(seek.id);
-			if (isSeekOurs(seek)) continue;
+			if (isSeekOurs(seek)) {
+				idsToAnimate.add(seek.id);
+				continue;
+			}
 			const name = seek.player.username;
 			if (recentUsers[name]) continue;
 			recentUsers[name] = true;
@@ -137,6 +152,7 @@ const trackNewSeeks = (() => {
 			if (docutil.isMouseSupported()) gamesound.playBase();
 			else gamesound.playViola_c3();
 			played = true;
+			idsToAnimate.add(seek.id);
 		}
 		idsInLastList = newIds;
 		return idsToAnimate;
@@ -157,7 +173,10 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	const newSeekIds = trackNewSeeks(seeks);
 	if (!prevHadSeek && ourSeekId !== undefined) gamesound.playMarimba();
 
-	renderSeekList(seeks.map(outSeekToLobbySeek), newSeekIds);
+	renderSeekList(
+		seeks.map((s) => outSeekToLobbySeek(s)),
+		newSeekIds,
+	);
 }
 
 /** Called when the server sends an updated lobby viewer count. */
@@ -209,6 +228,7 @@ function accept(seekId: string): void {
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(): Promise<void> {
+	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
 	if (socketsubs.areSubbedToSub('lobby')) return;
 	socketsubs.addSub('lobby');
 	socketmessages.send('general', 'sub', 'lobby');
@@ -218,6 +238,42 @@ async function subscribe(): Promise<void> {
 function unsubscribe(): void {
 	clearSeekList();
 	socketsubs.unsubFromSub('lobby');
+}
+
+// Idle detection ---------------------------------------------
+
+/** Registers the idle listener that will unsub from the lobby after inactivity. */
+function initIdleDetection(): void {
+	idleness.addListener(IDLE_TIMEOUT, onLobbyIdle);
+}
+
+/**
+ * Called when the user has been idle for {@link IDLE_TIMEOUT}.
+ * If they have an active seek we stay subscribed so they can still be
+ * notified when someone accepts it.
+ */
+function onLobbyIdle(): void {
+	if (isIdle) return; // Already idle (timer can re-fire after subsequent activity bursts)
+	if (ourSeekId !== undefined) return; // Keep subbed so seek-acceptance sounds reach them
+	isIdle = true;
+	unsubscribe();
+	showIdleOverlay();
+}
+
+/** Shows the pre-existing idle overlay element, wiring up pointer listeners to dismiss it. */
+function showIdleOverlay(): void {
+	element_lobbyIdleOverlay.classList.remove('hidden');
+
+	const controller = new AbortController();
+	const onReturn = (): void => {
+		controller.abort(); // Removes both listeners at once
+		element_lobbyIdleOverlay.classList.add('hidden');
+		isIdle = false;
+		subscribe();
+	};
+	const opts = { signal: controller.signal };
+	element_lobbyIdleOverlay.addEventListener('pointerenter', onReturn, opts);
+	element_lobbyIdleOverlay.addEventListener('pointerdown', onReturn, opts);
 }
 
 // Snabbdom Rendering ----------------------------------------------
@@ -243,9 +299,9 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): voi
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
 }
 
-/** Clears the seek list display. */
+/** Clears the seek list display and resets all tracked seek state. */
 function clearSeekList(): void {
-	renderSeekList([]);
+	onSeekListUpdate([]);
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
@@ -312,26 +368,47 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 						},
 					},
 					[
-						h('svg.cell-icon', { class: { [variantIcon]: true } }, [
-							h('use', { attrs: { href: `#${variantIcon}` } }),
-						]),
+						h('div.variant-icons', createVariantCellIconVNodes(variantIcon, seek)),
 						h('span', variantName),
 					],
 				),
 			]),
 			h('div.lobby-cell', [
 				h('div.cell-flex', [
-					h(
-						'svg.cell-icon',
-						{ class: { [speedIcon]: true }, attrs: { title: speedTitle } },
-						[h('use', { attrs: { href: `#${speedIcon}` } })],
-					),
+					h('svg.cell-icon', { class: { [speedIcon]: true } }, [
+						h('title', speedTitle),
+						h('use', { attrs: { href: `#${speedIcon}` } }),
+					]),
 					getClockLabel(seek.time),
 				]),
 			]),
 			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
 		],
 	);
+}
+
+/**
+ * Returns the icon vnodes for the variant cell.
+ * For standard-group seeks with modifiers, only the modifier icons are shown (group icon omitted).
+ */
+function createVariantCellIconVNodes(variantIcon: string, seek: LobbySeek): VNode[] {
+	const modifiers = seek.modifiers ?? [];
+	const showGroupIcon = !(seek.variant.group === 'standard' && modifiers.length > 0);
+	return [
+		...(showGroupIcon
+			? [
+					h('svg.cell-icon', { class: { [variantIcon]: true } }, [
+						h('use', { attrs: { href: `#${variantIcon}` } }),
+					]),
+				]
+			: []),
+		...modifiers.map((m) => {
+			const iconId = modutil.getModifierIconId(m.kind);
+			return h('svg.cell-icon.modifier-icon', { class: { [iconId]: true } }, [
+				h('use', { attrs: { href: `#${iconId}` } }),
+			]);
+		}),
+	];
 }
 
 /** Spawns a body-level overlay aligned to the row that pulses outward and fades. */
@@ -358,9 +435,9 @@ async function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): 
 	if (seek.variant.group === 'custom') {
 		const variantOptions = await seekPreviewCache.getSeekPreview(seek.id);
 		if (variantOptions === undefined) return;
-		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below'); // prettier-ignore
+		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below', seek.modifiers); // prettier-ignore
 	} else {
-		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below');
+		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below', seek.modifiers); // prettier-ignore
 	}
 }
 

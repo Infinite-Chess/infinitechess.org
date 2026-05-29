@@ -230,6 +230,15 @@ svg.bg-omega {
 	flex-shrink: 0;
 }
 
+.cell-icon.modifier-icon {
+	width: 1.5em;
+}
+
+.variant-icons {
+	display: flex;
+	align-items: center;
+}
+
 .invite-row:hover {
 	color: var(--c-text-emphasis);
 	background: rgb(255 88 0 / 37%);
@@ -242,6 +251,26 @@ svg.bg-omega {
 
 .invite-row.ours:hover {
 	background: rgba(0, 220, 18, 0.37);
+}
+
+/* ============================================================
+   Lobby idle overlay
+   ============================================================ */
+
+.lobby-idle-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--c-surface-transparent);
+	z-index: 1;
+	text-align: center;
+}
+
+.lobby-idle-overlay p {
+	color: var(--c-text-muted);
+	font-size: 1.3em;
 }
 
 /* ============================================================
