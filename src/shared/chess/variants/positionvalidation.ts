@@ -96,7 +96,7 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 		} else {
 			// Reject pieces with invalid player IDs (> GREEN).
 			if (color !== p.WHITE && color !== p.BLACK && !FOUR_PLAYER_COLORS.includes(color)) {
-				return `Piece has an invalid player ID.`;
+				return `At least one piece has an invalid player ID.`;
 			}
 			// Non-neutral piece colors must be in the turn order. Otherwise this indicates a 2/4-player mode mismatch.
 			if (!turnOrderSet.has(color)) {
@@ -113,14 +113,14 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	// --- Rule 5: Per-player post-checks ---
 	for (const player of uniquePlayers) {
 		if (!playersWithPieces.has(player)) {
-			return `Each player must have pieces.`;
+			return `Each player must have at least one piece.`;
 		}
 		const playerWinCons = gameRules.winConditions[player] ?? [];
 		const playerRequiresRoyal = playerWinCons.some((wc) =>
 			WIN_CONDITIONS_REQUIRING_ROYAL.includes(wc),
 		);
 		if (playerRequiresRoyal && !playersWithRoyals.has(player)) {
-			return `Player must have a royal.`;
+			return `At least one player is missing a royal.`;
 		}
 	}
 
@@ -131,10 +131,10 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	if (checkmateUsed) {
 		// In 2-player mode, if any player gets 2+ turns in a row, king capture is possible
 		if (!isFourPlayerMode && moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
-			return 'Player cannot have consecutive turns with checkmate.';
+			return 'Players cannot have consecutive turns when using checkmate.';
 		}
 		if (royalCount > winconutil.royalCountToDisableCheckmate) {
-			return 'Too many royals for checkmate.';
+			return 'Too many royals for using checkmate.';
 		}
 		// King capture must not be possible on turn 1
 		const secondPlayer = gameRules.turnOrder[1]!;
