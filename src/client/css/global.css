@@ -83,6 +83,19 @@ body {
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.14);
 	--c-bg-overlay: rgba(0, 0, 0, 0.88);
 	--c-hover-brighten: rgb(255 255 255 / 8%);
+
+	/* Raised face: top → bottom of a "lit-from-above" elevated surface (buttons, cards).
+	   In both themes the *top* stop is brighter than the bottom so the gradient
+	   direction reads consistently regardless of theme. */
+	--c-elev-face: rgb(55, 55, 55);
+	--c-elev-face-2: rgb(35, 35, 35);
+	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
+	--c-shadow-elev: rgba(0, 0, 0, 0.5);
+	/* Inset top-edge highlight on the same raised face. */
+	--c-elev-highlight: rgba(255, 255, 255, 0.06);
+	/* Hover-state overlay for opaque surfaces: brightens on dark, darkens on light.
+	   Different from --c-hover-brighten, which only ever lightens. */
+	--c-hover-overlay: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================================
@@ -108,6 +121,12 @@ body {
 	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.12);
 	--c-bg-overlay: rgba(255, 255, 255, 0.68);
 	--c-hover-brighten: rgb(255 255 255 / 24%);
+
+	--c-elev-face: rgb(255, 255, 255);
+	--c-elev-face-2: rgb(240, 240, 240);
+	--c-shadow-elev: rgba(0, 0, 0, 0.22);
+	--c-elev-highlight: rgba(255, 255, 255, 0.8);
+	--c-hover-overlay: rgba(0, 0, 0, 0.06);
 }
 
 /* ============================================================
