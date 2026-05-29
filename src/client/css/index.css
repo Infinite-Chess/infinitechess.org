@@ -297,7 +297,7 @@ svg.bg-omega {
 .seek-pulse-overlay {
 	position: fixed;
 	pointer-events: none;
-	z-index: 1000;
+	z-index: 1;
 }
 
 .seek-pulse-box {
