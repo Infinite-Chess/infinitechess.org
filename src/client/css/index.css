@@ -245,6 +245,30 @@ svg.bg-omega {
 }
 
 /* ============================================================
+   Lobby idle overlay
+   ============================================================ */
+
+.lobby-idle-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+	background: var(--c-surface);
+	cursor: pointer;
+	z-index: 1;
+	text-align: center;
+	padding: 1em;
+}
+
+.lobby-idle-overlay p {
+	color: var(--c-text-muted);
+	font-size: 1.3em;
+}
+
+/* ============================================================
    Seek pulse animation
    ============================================================ */
 

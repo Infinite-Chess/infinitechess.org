@@ -37,7 +37,7 @@ function onActivity(): void {
 			reg.onActive?.();
 		}
 		clearTimeout(reg.timerID);
-		reg.timerID = setTimeout(() => onIdleForReg(reg), reg.idleAfterMs);
+		reg.timerID = window.setTimeout(() => onIdleForReg(reg), reg.idleAfterMs);
 	}
 }
 
@@ -83,7 +83,7 @@ function addListener(
 		onIdle,
 		onActive,
 		isIdle: false,
-		timerID: setTimeout(() => onIdleForReg(reg), idleAfterMs),
+		timerID: window.setTimeout(() => onIdleForReg(reg), idleAfterMs),
 	};
 	registrations.add(reg);
 	attachListeners();

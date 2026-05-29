@@ -31,6 +31,7 @@ import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 import docutil from '../../util/docutil.js';
+import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
@@ -60,7 +61,14 @@ type CreateSeekOptions = {
 // Constants ------------------------------------------
 
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
+const element_lobbyIdleOverlay = document.getElementById('lobby-idle-overlay')!;
 let tbodyVNode: VNode | Element = element_lobbyTbody;
+
+// Constants -----------------------------------------
+
+/** How long, in milliseconds, without page interaction before the user is unsubbed from the lobby. */
+// const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const IDLE_TIMEOUT = 10 * 1000; // Testing: 10 seconds
 
 // State ----------------------------------------------
 
@@ -69,9 +77,13 @@ let ourSeekId: string | undefined;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
 
+/** Whether the user is currently idle (lobby unsubbed, overlay visible). */
+let isIdle = false;
+
 // Init -----------------------------------------------
 
 initLobbyClickHandler();
+initIdleDetection();
 
 // Preload sounds
 gamesound.preload('marimba_c2');
@@ -210,6 +222,7 @@ function accept(seekId: string): void {
 
 /** Subscribes to the server's lobby subscription list (seeks, live games). */
 async function subscribe(): Promise<void> {
+	if (isIdle) return; // Don't resubscribe while idle; the user must interact with the lobby to reconnect
 	if (socketsubs.areSubbedToSub('lobby')) return;
 	socketsubs.addSub('lobby');
 	socketmessages.send('general', 'sub', 'lobby');
@@ -219,6 +232,42 @@ async function subscribe(): Promise<void> {
 function unsubscribe(): void {
 	clearSeekList();
 	socketsubs.unsubFromSub('lobby');
+}
+
+// Idle detection ---------------------------------------------
+
+/** Registers the idle listener that will unsub from the lobby after inactivity. */
+function initIdleDetection(): void {
+	idleness.addListener(IDLE_TIMEOUT, onLobbyIdle);
+}
+
+/**
+ * Called when the user has been idle for {@link IDLE_TIMEOUT}.
+ * If they have an active seek we stay subscribed so they can still be
+ * notified when someone accepts it.
+ */
+function onLobbyIdle(): void {
+	if (isIdle) return; // Already idle (timer can re-fire after subsequent activity bursts)
+	if (ourSeekId !== undefined) return; // Keep subbed so seek-acceptance sounds reach them
+	isIdle = true;
+	unsubscribe();
+	showIdleOverlay();
+}
+
+/** Shows the pre-existing idle overlay element, wiring up pointer listeners to dismiss it. */
+function showIdleOverlay(): void {
+	element_lobbyIdleOverlay.classList.remove('hidden');
+
+	const controller = new AbortController();
+	const onReturn = (): void => {
+		controller.abort(); // Removes both listeners at once
+		element_lobbyIdleOverlay.classList.add('hidden');
+		isIdle = false;
+		subscribe();
+	};
+	const opts = { signal: controller.signal };
+	element_lobbyIdleOverlay.addEventListener('pointerenter', onReturn, opts);
+	element_lobbyIdleOverlay.addEventListener('pointerdown', onReturn, opts);
 }
 
 // Snabbdom Rendering ----------------------------------------------
