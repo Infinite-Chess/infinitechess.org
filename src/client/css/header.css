@@ -338,14 +338,12 @@ a.header-donate:hover {
    Settings dropdown
    =================================================================== */
 
-.settings .svg-pawn {
+.ping-meter .spinny-pawn {
 	position: relative;
-	height: 65%;
-	aspect-ratio: 1;
+	width: 25px;
+	height: 25px;
+	bottom: 2px;
 	color: var(--c-text-muted);
-}
-
-.spinny-pawn {
 	transform-origin: 50% 60%;
 	animation: spin 0.65s linear infinite;
 }
