@@ -221,7 +221,7 @@ async function showForBoard(
 	await populateRules(gameRules, boardsim, isPreset, variantCode, modifiers);
 	await ensureReady(boardsim);
 
-	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
+	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
 
 	positionTooltip(anchor, placement);
 	renderBoard(boardsim, gameRules);
