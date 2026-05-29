@@ -92,7 +92,7 @@ const splashTexts: string[] = [
 	'XXXXXXXXXXXXXXL Chess',
 	'What was I thinking?',
 	'Bigger than 76807781446622169137644619301308596225 squares!',
-	'7.05e646,456,993 square chess!',
+	'7.05e646,456,993-square chess!',
 	"After all this, it's still not a googolplex",
 	'Uncountably Infinite Chess, next?',
 	'5D Infinite Chess with Multiverse Time Travel?',
