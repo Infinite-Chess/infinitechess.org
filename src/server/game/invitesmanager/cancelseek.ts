@@ -30,8 +30,7 @@ function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): vo
 
 	const inviteAndIndex = getInviteAndIndexByID(id); // { seek, index } | undefined
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
-	// The client is expecting a response from us, even if empty, so it knows to unlock the create seek button again!
-	if (!inviteAndIndex) return sendSocketMessage(ws, undefined, undefined, undefined);
+	if (!inviteAndIndex) return;
 
 	const { seek, index } = inviteAndIndex;
 

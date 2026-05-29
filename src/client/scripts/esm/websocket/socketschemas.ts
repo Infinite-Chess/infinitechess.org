@@ -147,12 +147,6 @@ const MasterSchema = z.discriminatedUnion('route', [
 		route: z.literal('echo'),
 		contents: z.number(),
 	}),
-	// Reply-only messages (no route property, only exist to execute on-reply functions)
-	z.strictObject({
-		id: z.number(),
-		route: z.undefined(),
-		replyto: z.number(),
-	}),
 	// Routed messages
 	z.strictObject({
 		id: z.number(),

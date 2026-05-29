@@ -69,22 +69,7 @@ function onmessage(serverMessage: MessageEvent): void {
 
 	if (message.route === 'echo') return socketmessages.cancelTimerOfMessageID(message.contents);
 
-	// Handle reply-only messages (no route property).
-	// These exist only to execute on-reply functions.
-	if (message.route === undefined) {
-		// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
-		if (message.id === undefined) {
-			console.error(
-				'Received reply-only message without id field. This should not happen after Zod validation. Message:',
-				JSON.stringify(message),
-			);
-		}
-		socketmessages.send('general', 'echo', message.id);
-		socketmessages.executeOnreplyFunc(message.replyto);
-		return;
-	}
-
-	// Not an echo or reply-only...
+	// Not an echo...
 
 	// Send our echo — we always echo every message EXCEPT echos themselves
 	// TEMPORARY. TO HELP DEBUG why zod errors are happening all the time on the server!
