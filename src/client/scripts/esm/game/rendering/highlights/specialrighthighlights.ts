@@ -11,7 +11,7 @@ import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../../gui/toast.js';
+import toast from '../../../components/toast.js';
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';

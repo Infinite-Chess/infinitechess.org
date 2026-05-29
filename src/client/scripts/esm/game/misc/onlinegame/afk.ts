@@ -15,7 +15,7 @@
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
-import toast from '../../gui/toast.js';
+import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';

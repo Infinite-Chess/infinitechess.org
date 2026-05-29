@@ -7,7 +7,7 @@
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION } from '../../../../../shared/chess/variants/servervalidation.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';

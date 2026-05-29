@@ -11,7 +11,7 @@ import bd from '@naviary/bigdecimal';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
 
-import toast from './toast.js';
+import toast from '../../components/toast.js';
 import boardpos from '../rendering/boardpos.js';
 import guititle from './guititle.js';
 import loadbalancer from '../misc/loadbalancer.js';

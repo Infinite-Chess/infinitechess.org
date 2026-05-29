@@ -20,7 +20,7 @@ import icnconverter, {
 	LongFormatOut,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import clientmetadatautil from './clientmetadatautil.js';

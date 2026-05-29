@@ -45,7 +45,7 @@ import icnconverter, {
 	LongFormatOut,
 } from '../../../../../../shared/chess/logic/icn/icnconverter';
 
-import toast from '../../gui/toast';
+import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil';
 import gameslot from '../../chess/gameslot';
 import pastegame from '../../chess/pastegame';

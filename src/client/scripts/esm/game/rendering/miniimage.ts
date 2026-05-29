@@ -21,7 +21,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import boardutil, { Piece } from '../../../../../shared/chess/util/boardutil.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import space from '../misc/space.js';
 import mouse from '../../util/mouse.js';
 import camera from './camera.js';

@@ -25,6 +25,9 @@
     {# Site-wide header stylesheet #}
     <link rel="stylesheet" href="{{ manifest['css/header.css'] }}" />
 
+    {# Site-wide toast notification stylesheet #}
+    <link rel="stylesheet" href="{{ manifest['css/toast.css'] }}" />
+
     {# Site-wide footer stylesheet #}
     <link rel="stylesheet" href="{{ manifest['css/footer.css'] }}" />
 
@@ -43,6 +46,9 @@
 <body>
 
     {% block body %}{% endblock %}
+
+    {# Site-wide toast notification. Runtime: scripts/esm/components/toast.ts #}
+    {% include "components/toast/toast.njk" %}
 
     {# Site-wide header script #}
     <script type="module" src="{{ manifest['scripts/esm/components/header/header.ts'] }}"></script>

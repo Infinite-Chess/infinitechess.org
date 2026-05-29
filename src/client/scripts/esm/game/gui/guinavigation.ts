@@ -11,7 +11,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
-import toast from './toast.js';
+import toast from '../../components/toast.js';
 import stats from './stats.js';
 import mouse from '../../util/mouse.js';
 import space from '../misc/space.js';

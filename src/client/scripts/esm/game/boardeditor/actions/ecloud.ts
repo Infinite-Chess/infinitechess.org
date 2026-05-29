@@ -8,7 +8,7 @@
 import type { EditorSaveState } from '../editortypes';
 import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI';
 
-import toast from '../../gui/toast';
+import toast from '../../../components/toast.js';
 import esave from './esave';
 import eactions from './eactions';
 import eautosave from './eautosave';

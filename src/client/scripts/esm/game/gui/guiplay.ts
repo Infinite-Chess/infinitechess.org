@@ -12,7 +12,7 @@ import variantregistry from '../../../../../shared/chess/variants/variantregistr
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
 import { players as p, Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from './toast.js';
+import toast from '../../components/toast.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';

@@ -10,7 +10,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import snapping from '../rendering/highlights/snapping.js';

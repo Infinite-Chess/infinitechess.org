@@ -17,7 +17,7 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import meshes from './meshes.js';
 import camera from './camera.js';
 import splines from '../../util/splines.js';

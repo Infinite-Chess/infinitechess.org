@@ -30,6 +30,7 @@ const ESMEntryPoints = [
 	'src/client/css/global.css',
 	'src/client/css/header.css',
 	'src/client/css/footer.css',
+	'src/client/css/toast.css',
 	'src/client/css/index.css',
 
 	// Scripts

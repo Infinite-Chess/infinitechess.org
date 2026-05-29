@@ -30,6 +30,7 @@ import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
+import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import idleness from '../../util/idleness.js';
 import gamesound from '../../game/misc/gamesound.js';
@@ -207,7 +208,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 
 /** Sends a createseek message to the server with the given options. */
 function createSeek(options: CreateSeekOptions): void {
-	if (ourSeekId !== undefined) return console.error("Already have a seek, can't create another.");
+	if (ourSeekId !== undefined) return toast.show('You already have a seek created.');
 	const tag = generateTag();
 	socketmessages.send('lobby', 'createseek', { ...options, tag }, true);
 }

@@ -6,7 +6,7 @@
 
 import type { EditorSaveState } from '../editortypes';
 
-import toast from '../../gui/toast';
+import toast from '../../../components/toast.js';
 import eactions from './eactions';
 import eautosave from './eautosave';
 import egamerules from '../egamerules';

@@ -11,7 +11,7 @@
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
-import toast from '../../gui/toast.js';
+import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
 

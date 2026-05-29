@@ -14,7 +14,7 @@ import gamefileutility from '../../../../../../shared/chess/util/gamefileutility
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import afk from './afk.js';
-import toast from '../../gui/toast.js';
+import toast from '../../../components/toast.js';
 import guiplay from '../../gui/guiplay.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';

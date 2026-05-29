@@ -1965,59 +1965,6 @@ button.practicemenu {
 	grid-column: 1 / 3;
 }
 
-/* Status text showing alerts and errors */
-
-.toastmessage {
-	position: absolute;
-	bottom: 84px;
-	left: 0;
-	right: 0;
-	padding: 1em 8%;
-	z-index: 1;
-	pointer-events: none;
-}
-
-.toastmessage .toast {
-	margin: 0 auto;
-	padding: 0.4em 3em;
-	width: fit-content;
-	font-size: 18px;
-	text-align: center;
-	opacity: 0;
-	white-space: pre-wrap;
-	line-height: 1.5;
-}
-
-.toast.ok {
-	opacity: 1;
-	color: black;
-	--color: white;
-	background: linear-gradient(
-		to right,
-		transparent,
-		var(--color),
-		var(--color),
-		var(--color),
-		var(--color),
-		transparent
-	);
-}
-
-.toast.error {
-	opacity: 1;
-	color: white;
-	--color: rgb(255, 0, 0);
-	background: linear-gradient(
-		to right,
-		transparent,
-		var(--color),
-		var(--color),
-		var(--color),
-		var(--color),
-		transparent
-	);
-}
-
 /* Status messages along the top-right showing detailed information (move count, fps meter) */
 
 #stats {

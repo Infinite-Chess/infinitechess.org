@@ -12,6 +12,7 @@ import * as z from 'zod';
 import timeutil from '../../../../shared/util/timeutil.js';
 import { GAME_VERSION } from '../../../../shared/game_version.js';
 
+import toast from '../components/toast.js';
 import socketman from './socketman.js';
 import LocalStorage from '../util/LocalStorage.js';
 import { SocketBus } from './SocketBus.js';
@@ -112,10 +113,10 @@ function onmessage(serverMessage: MessageEvent): void {
 function ongeneralmessage(message: GeneralMessage): void {
 	switch (message.action) {
 		case 'notify':
-			console.log(message.value);
+			toast.show(message.value);
 			break;
 		case 'notifyerror':
-			console.error(message.value);
+			toast.show(message.value, { error: true });
 			break;
 		case 'print':
 			console.log(message.value);
