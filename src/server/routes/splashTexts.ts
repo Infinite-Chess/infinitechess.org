@@ -132,6 +132,7 @@ const splashTexts: string[] = [
 	'Check out the videos!',
 	'Your chess variant can fit in mine',
 	'Kudos Joel David Hamkins',
+	'Walls? Overrated',
 ];
 
 /** Returns a randomly chosen splash text. */
