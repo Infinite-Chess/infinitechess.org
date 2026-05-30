@@ -30,7 +30,9 @@ export interface ClientTranslations {
 			};
 		};
 	};
-	responses: {};
+	responses: {
+		example: string;
+	};
 	shared: {
 		user_status: {
 			guest_indicator: string;
