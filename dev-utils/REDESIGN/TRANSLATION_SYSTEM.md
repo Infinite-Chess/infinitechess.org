@@ -127,7 +127,7 @@ The system today runs **alongside** the legacy i18next system. The redesign road
 - **Legacy type files deleted.** `src/types/translations.ts` is removed. `../types/**/*` is removed from the `include` arrays of the server and client tsconfigs. Unused global declarations are pruned from `src/client/types/globals.d.ts`.
 - **Legacy monolith TOMLs deleted.** All `translation/<lang>.toml` files at the top level are removed once their keys have been migrated into per-component folders (or judged not worth migrating).
 - **`translation/` contains only component folders** (plus `responses/` and `news/`) after the cleanup.
-- `componentTranslationLoader.ts`s (or its renamed successor) xss_options need to be tightened to only those that actually appear in template strings.
+- `componentTranslationLoader.ts`s (or its renamed successor) xss_options need to be tightened to only those html tags that actually appear in template strings.
 
 When working on this refactor, the migration approach in todo.md is: localize each new page by creating its component TOML, deleting the migrated keys from the old monolith, and only deleting the legacy infrastructure once nothing references it.
 
