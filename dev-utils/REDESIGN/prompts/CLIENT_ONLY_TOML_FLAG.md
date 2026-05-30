@@ -2,7 +2,7 @@
 
 ## Context
 
-The per-component translation system (see [TRANSLATION_SYSTEM.md](./TRANSLATION_SYSTEM.md)) splits each TOML into two halves: everything under `[client]` is shipped to the browser via `clientT()`/`window.t`; everything outside `[client]` stays server-side via `templateT()`.
+The per-component translation system (see [TRANSLATION_SYSTEM.md](../TRANSLATION_SYSTEM.md)) splits each TOML into two halves: everything under `[client]` is shipped to the browser via `clientT()`/`window.t`; everything outside `[client]` stays server-side via `templateT()`.
 
 When a component is entirely client-side (e.g. `translation/shared/en-US.toml`, and likely most page-specific TOMLs going forward), every subtable header must be prefixed with `client.`:
 
@@ -46,7 +46,7 @@ description = "Pieces can't slide more than {n} squares"
 
 ## Implementation
 
-### 1. Loader — [src/server/config/componentTranslationLoader.ts](../../src/server/config/componentTranslationLoader.ts)
+### 1. Loader — [src/server/config/componentTranslationLoader.ts](../../../src/server/config/componentTranslationLoader.ts)
 
 Find the function that splits a parsed component's data into `{ template, client }` for regular (non-`responses`) components. Today it pulls out the `client` subtable and routes everything else to `template`. Modify it:
 
@@ -58,27 +58,27 @@ Find the function that splits a parsed component's data into `{ template, client
 
 The function should still apply the XSS filter and `deepMerge` English fallback the same way.
 
-### 2. Type generator — [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts)
+### 2. Type generator — [scripts/generate-component-translation-types.ts](../../../scripts/generate-component-translation-types.ts)
 
 `generateClientTranslations()` currently reads each component's English TOML and looks for `parsed['client']`. Update it: if `parsed['client_only'] === true`, treat the rest of the parsed object (excluding the `client_only` flag) as the client block. Else: existing behavior (look for `parsed['client']`).
 
 The emitted `ClientTranslations` interface shape stays identical in both cases.
 
-### 3. Documentation — [dev-utils/REDESIGN/TRANSLATION_SYSTEM.md](./TRANSLATION_SYSTEM.md)
+### 3. Documentation — [dev-utils/REDESIGN/TRANSLATION_SYSTEM.md](../TRANSLATION_SYSTEM.md)
 
 Add a short section under "On-disk layout" or "Per-request usage in templates" describing the `client_only = true` shorthand. Mention it's optional and backwards-compatible.
 
 ### 4. Migrate existing client-only TOMLs
 
 After the loader and generator support the flag, simplify any TOMLs that are currently entirely under `[client]`. As of this writing, that's at least:
-- [translation/shared/en-US.toml](../../translation/shared/en-US.toml)
+- [translation/shared/en-US.toml](../../../translation/shared/en-US.toml)
 - Likely several page-specific TOMLs added since (grep for `[client.` to find candidates).
 
 For each: add `client_only = true` at the top, then unindent every section header by removing the `client.` prefix.
 
 ## Verification
 
-1. `npm run generate:types` — confirm no diff in the generated [client-translations.d.ts](../../src/client/types/client-translations.d.ts) after migrating an existing file to the flag form. The interface shape must stay byte-identical.
+1. `npm run generate:types` — confirm no diff in the generated [client-translations.d.ts](../../../src/client/types/client-translations.d.ts) after migrating an existing file to the flag form. The interface shape must stay byte-identical.
 2. `npm run type-check --silent` — clean.
 3. `npm run lint --silent` — clean.
 4. Restart dev server. Load `/`. Verify:

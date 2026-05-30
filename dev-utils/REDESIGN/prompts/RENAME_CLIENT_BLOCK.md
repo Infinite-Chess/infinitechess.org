@@ -49,9 +49,9 @@ This rename is the most invasive of the translation refactor docs because it tou
 
 1. **Loader**: replace every `parsed['client']` and `(...)?.client` with the new name. The split logic itself doesn't change.
 2. **Type generator**: replace the `parsed['client']` check and the comment referring to `[client] table`. Rename the emitted interface (`ClientTranslations` → new name) and the generated file (`client-translations.d.ts` → new name to match). The interface property *contents* are unaffected (e.g. `t.shared.foo` stays `t.shared.foo` — only the TOML section header and the wrapping interface name change).
-3. **Loader getter**: rename `getClientTranslation` to match the new vocabulary, in [componentTranslationLoader.ts](../../src/server/config/componentTranslationLoader.ts).
-4. **Middleware helper**: rename `clientT` in [root.ts](../../src/server/routes/root.ts) and update every Nunjucks template that calls it. Grep `clientT(` to find usage sites.
-5. **Global `t` declaration**: update `declare const t: ClientTranslations` in [globals.d.ts](../../src/client/types/globals.d.ts) and any triple-slash reference path to match the renamed file.
+3. **Loader getter**: rename `getClientTranslation` to match the new vocabulary, in [componentTranslationLoader.ts](../../../src/server/config/componentTranslationLoader.ts).
+4. **Middleware helper**: rename `clientT` in [root.ts](../../../src/server/routes/root.ts) and update every Nunjucks template that calls it. Grep `clientT(` to find usage sites.
+5. **Global `t` declaration**: update `declare const t: ClientTranslations` in [globals.d.ts](../../../src/client/types/globals.d.ts) and any triple-slash reference path to match the renamed file.
 6. **Loader flag (if landed)**: rename the `client_only` boolean to match the new vocabulary.
 7. **Migrate every TOML**: rewrite each `[client...]` table header (and dotted variants). A scripted find-and-replace handles this if the new name doesn't collide with existing top-level keys.
 8. **Docs**: update the translation system reference and any other doc using the old term.

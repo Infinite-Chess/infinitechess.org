@@ -2,7 +2,7 @@
 
 ## Context
 
-[getClientTranslation](../../src/server/config/componentTranslationLoader.ts) returns `Record<string, any>`, so server-side reads of client-component translations are unchecked. The trigger to do this work is in [createseek.ts](../../src/server/game/invitesmanager/createseek.ts) (the `localizePositionError` helper): a typo in the cast `as { position_errors?: Record<string, string> }` would silently fall through to the runtime fallback.
+[getClientTranslation](../../../src/server/config/componentTranslationLoader.ts) returns `Record<string, any>`, so server-side reads of client-component translations are unchecked. The trigger to do this work is in [createseek.ts](../../../src/server/game/invitesmanager/createseek.ts) (the `localizePositionError` helper): a typo in the cast `as { position_errors?: Record<string, string> }` would silently fall through to the runtime fallback.
 
 This change makes `getClientTranslation` typed via the same generated `ClientTranslations` interface the client already uses. The browser's global `t` stays client-only — the server can never accidentally reference `t` directly, only its narrow `getClientTranslation('component', lang)` typed access.
 
@@ -15,13 +15,13 @@ The generated artifact splits in two:
 
 ## Changes
 
-### 1. [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts)
+### 1. [scripts/generate-component-translation-types.ts](../../../scripts/generate-component-translation-types.ts)
 
 - Change `CLIENT_OUTPUT_FILE` from `src/client/types/client-translations.d.ts` to `src/shared/types/client-translations.d.ts`.
 - Emit `export interface ClientTranslations { ... }` (add `export`).
 - Drop the `declare const t: ClientTranslations;` line from the generated file — that declaration moves to `globals.d.ts` (which is hand-maintained, not generated).
 
-### 2. [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts)
+### 2. [src/client/types/globals.d.ts](../../../src/client/types/globals.d.ts)
 
 Add at the bottom (or wherever fits):
 ```ts
@@ -31,7 +31,7 @@ declare const t: ClientTranslations;
 
 (Use triple-slash reference rather than `import type` so the file stays a script and `declare const` remains a true global. If the file is already a module, wrap in `declare global { ... }`.)
 
-### 3. [src/server/config/componentTranslationLoader.ts](../../src/server/config/componentTranslationLoader.ts)
+### 3. [src/server/config/componentTranslationLoader.ts](../../../src/server/config/componentTranslationLoader.ts)
 
 Make `getClientTranslation` generic:
 ```ts
@@ -47,11 +47,11 @@ export function getClientTranslation<C extends keyof ClientTranslations>(
 
 The runtime body stays the same — only the signature tightens.
 
-### 4. [src/server/routes/root.ts](../../src/server/routes/root.ts)
+### 4. [src/server/routes/root.ts](../../../src/server/routes/root.ts)
 
 The `clientT` middleware currently has signature `(component: string) => ...`. Update to match the new generic signature so templates keep working (`templateT` doesn't change).
 
-### 5. [src/server/game/invitesmanager/createseek.ts](../../src/server/game/invitesmanager/createseek.ts)
+### 5. [src/server/game/invitesmanager/createseek.ts](../../../src/server/game/invitesmanager/createseek.ts)
 
 Tighten the existing cast in `localizePositionError`:
 - Drop the `as { position_errors?: Record<string, string> }` cast.

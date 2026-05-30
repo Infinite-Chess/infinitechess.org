@@ -38,17 +38,17 @@ not_found = "..."
 
 Repeat for every `translation/responses/<lang>.toml` file. No translator-facing strings change; only the table prefix.
 
-### 2. Loader — [componentTranslationLoader.ts](../../src/server/config/componentTranslationLoader.ts)
+### 2. Loader — [componentTranslationLoader.ts](../../../src/server/config/componentTranslationLoader.ts)
 
 - Delete `responsesStore` and any responses-specific load path. `responses` becomes a regular component loaded into the same `componentStore` map as everything else.
 - Delete `getResponseTranslation` entirely.
 - Verify `loadComponentTranslations` no longer branches on `RESPONSES_COMPONENT`.
 
-### 3. Config — [translationconfig.ts](../../src/server/config/translationconfig.ts)
+### 3. Config — [translationconfig.ts](../../../src/server/config/translationconfig.ts)
 
 - Delete the `RESPONSES_COMPONENT` constant and its export. No callers should remain after step 2.
 
-### 4. Type generator — [generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts)
+### 4. Type generator — [generate-component-translation-types.ts](../../../scripts/generate-component-translation-types.ts)
 
 - Delete `generateResponseTranslations()` and any flat-dot/dotted-union logic.
 - Delete the `RESPONSE_OUTPUT_FILE` constant and its emission.
@@ -92,7 +92,7 @@ Use `git grep getResponseTranslation` to find every site. The migration is mecha
 
 ### 6. Tighten the `localizePositionError` call site
 
-[createseek.ts](../../src/server/game/invitesmanager/createseek.ts) currently uses `getClientTranslation('shared', lang) as { position_errors?: ... }`. With `getClientTranslation` typed (per the prerequisite), the cast is already gone. Nothing extra needed here — flagged only so the agent doesn't re-add a cast by reflex.
+[createseek.ts](../../../src/server/game/invitesmanager/createseek.ts) currently uses `getClientTranslation('shared', lang) as { position_errors?: ... }`. With `getClientTranslation` typed (per the prerequisite), the cast is already gone. Nothing extra needed here — flagged only so the agent doesn't re-add a cast by reflex.
 
 ### 7. Runtime missing-key behavior
 

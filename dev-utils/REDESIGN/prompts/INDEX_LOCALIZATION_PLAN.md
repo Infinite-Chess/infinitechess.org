@@ -2,13 +2,13 @@
 
 ## Context
 
-The home/index page needs every English string localized through the per-component translation system documented in [TRANSLATION_SYSTEM.md](./TRANSLATION_SYSTEM.md). Strings on the home page come from three places:
+The home/index page needs every English string localized through the per-component translation system documented in [TRANSLATION_SYSTEM.md](../TRANSLATION_SYSTEM.md). Strings on the home page come from three places:
 
-1. The Nunjucks template ([src/server/views/index.njk](../../src/server/views/index.njk)).
-2. Client-side TypeScript in [src/client/scripts/esm/views/index/](../../src/client/scripts/esm/views/index/).
-3. Server-side splash texts hardcoded in [src/server/routes/splashTexts.ts](../../src/server/routes/splashTexts.ts) (~130 entries, randomly picked per request and passed to the template as `splashText`).
+1. The Nunjucks template ([src/server/views/index.njk](../../../src/server/views/index.njk)).
+2. Client-side TypeScript in [src/client/scripts/esm/views/index/](../../../src/client/scripts/esm/views/index/).
+3. Server-side splash texts hardcoded in [src/server/routes/splashTexts.ts](../../../src/server/routes/splashTexts.ts) (~130 entries, randomly picked per request and passed to the template as `splashText`).
 
-The legacy `[index]` block in [translation/en-US.toml](../../translation/en-US.toml) is orphaned (it describes a "what is it / how to / about" page layout that no longer exists in the current template).
+The legacy `[index]` block in [translation/en-US.toml](../../../translation/en-US.toml) is orphaned (it describes a "what is it / how to / about" page layout that no longer exists in the current template).
 
 **Assumed already in place** (delivered by a separate infrastructure pass):
 - A `translation/shared/<lang>.toml` component that is auto-injected into every page via `layout.njk`. It contains:
@@ -21,9 +21,9 @@ The legacy `[index]` block in [translation/en-US.toml](../../translation/en-US.t
   - `[client.modifiers.<code>]` — `name` and parameterized `description`
   - `[client.variant_preview]` — narrative phrasing for the variant preview tooltip's rules list
 - A `src/shared/util/format.ts` interpolation helper: `format(template, vars)` substitutes `{key}` placeholders.
-- The variant registry ([src/shared/chess/variants/variantregistry.ts](../../src/shared/chess/variants/variantregistry.ts)) no longer carries variant descriptions, group names, or group descriptions in code (English variant **names** stay for ICN metadata).
-- The modifier registry ([src/shared/util/modutil.ts](../../src/shared/util/modutil.ts)) no longer carries `name` or `getDescription` in its entries; the helpers `getModifierName(code)` and `getModifierDescription(modifier)` read from `t.shared.modifiers.<code>` and `format()` the description.
-- [variantPreviewTooltip.ts](../../src/client/scripts/esm/game/rendering/variantPreviewTooltip.ts) reads all narrative + win-condition labels from `t.shared.variant_preview.*` and `t.shared.win_conditions.*`.
+- The variant registry ([src/shared/chess/variants/variantregistry.ts](../../../src/shared/chess/variants/variantregistry.ts)) no longer carries variant descriptions, group names, or group descriptions in code (English variant **names** stay for ICN metadata).
+- The modifier registry ([src/shared/util/modutil.ts](../../../src/shared/util/modutil.ts)) no longer carries `name` or `getDescription` in its entries; the helpers `getModifierName(code)` and `getModifierDescription(modifier)` read from `t.shared.modifiers.<code>` and `format()` the description.
+- [variantPreviewTooltip.ts](../../../src/client/scripts/esm/game/rendering/variantPreviewTooltip.ts) reads all narrative + win-condition labels from `t.shared.variant_preview.*` and `t.shared.win_conditions.*`.
 - `t.shared` and `window.t.shared` are populated on every page (including the index).
 
 This plan covers the home-page-specific work: creating two new TOMLs (`splashes` and `index`), wiring `index.njk` and the index-page client scripts to use them, and cleaning up legacy keys.
@@ -134,11 +134,11 @@ label = "Modifiers:"
 - The "+" separator between minutes and increment
 
 **Intentionally skipped** (out of scope until the underlying features land):
-- The two "X not implemented yet" toast errors in [gameSetupModal.ts](../../src/client/scripts/esm/views/index/gameSetupModal.ts) — friend challenge and computer game flows. These strings disappear when those features ship.
+- The two "X not implemented yet" toast errors in [gameSetupModal.ts](../../../src/client/scripts/esm/views/index/gameSetupModal.ts) — friend challenge and computer game flows. These strings disappear when those features ship.
 
 ## Splash texts wiring
 
-### [splashTexts.ts](../../src/server/routes/splashTexts.ts)
+### [splashTexts.ts](../../../src/server/routes/splashTexts.ts)
 
 Replace the hardcoded array with a per-request read from the splashes component for the resolved language. The TOML stores entries under `[splashes]` as a table; the server takes `Object.values(...)` to get the list. Pattern (concrete API depends on what the loader exposes):
 
@@ -156,11 +156,11 @@ export function getRandomSplashText(req: express.Request): string {
 
 If the loader's current API doesn't expose a getter for non-`[client]` components by language, add one (mirroring `getResponseTranslation`'s shape). The English-fallback path is already handled by `deepMerge` at boot, so a `de-DE` request with no `de-DE` splashes TOML still returns an English splash without extra code.
 
-### [root.ts](../../src/server/routes/root.ts)
+### [root.ts](../../../src/server/routes/root.ts)
 
 Whichever route renders `index.njk` already calls `getRandomSplashText()` and passes the result to the template as `splashText`. The signature changes (takes `req` now), but the call site is a one-line edit. No template change needed since the template still receives a single `splashText` string.
 
-## Template wiring — [index.njk](../../src/server/views/index.njk)
+## Template wiring — [index.njk](../../../src/server/views/index.njk)
 
 1. At the top of the body block, add:
    ```njk
@@ -207,9 +207,9 @@ Whichever route renders `index.njk` already calls `getRandomSplashText()` and pa
 
 4. After changes: run the page in a browser and inspect the rendered HTML to confirm no English strings slipped through.
 
-## JS swaps in [src/client/scripts/esm/views/index/](../../src/client/scripts/esm/views/index/)
+## JS swaps in [src/client/scripts/esm/views/index/](../../../src/client/scripts/esm/views/index/)
 
-### [gameSetupModal.ts](../../src/client/scripts/esm/views/index/gameSetupModal.ts)
+### [gameSetupModal.ts](../../../src/client/scripts/esm/views/index/gameSetupModal.ts)
 
 - **Delete** the `SUBMIT_LABELS` constant (currently lines 30–34).
 - The function that opens the modal and sets the lobby button label needs to read from `t.index.lobby_buttons` instead. The three modal-mode keys map to:
@@ -218,7 +218,7 @@ Whichever route renders `index.njk` already calls `getRandomSplashText()` and pa
   - `'play-computer'` → `t.index.lobby_buttons.play_computer`
 - The two "...not implemented yet" toast errors stay hardcoded — out of scope.
 
-### [variantSelector.ts](../../src/client/scripts/esm/views/index/variantSelector.ts)
+### [variantSelector.ts](../../../src/client/scripts/esm/views/index/variantSelector.ts)
 
 - "Saved positions" header in the snabbdom VNode (around line 290): replace the hardcoded string with `t.index.variant_selector.saved_positions`.
 - "Failed to load cloud save." (around line 270): replace with `t.index.variant_selector.cloud_load_failed`.
@@ -226,7 +226,7 @@ Whichever route renders `index.njk` already calls `getRandomSplashText()` and pa
 
 ### Other index scripts
 
-- [index.ts](../../src/client/scripts/esm/views/index/index.ts), [newPrompt.ts](../../src/client/scripts/esm/views/index/newPrompt.ts), [timeControls.ts](../../src/client/scripts/esm/views/index/timeControls.ts), [modifierSelector.ts](../../src/client/scripts/esm/views/index/modifierSelector.ts), [lobby.ts](../../src/client/scripts/esm/views/index/lobby.ts), [seekPreviewCache.ts](../../src/client/scripts/esm/views/index/seekPreviewCache.ts): no user-facing English strings to migrate (verify with a grep — anything found should go to `t.index.<section>.<key>`).
+- [index.ts](../../../src/client/scripts/esm/views/index/index.ts), [newPrompt.ts](../../../src/client/scripts/esm/views/index/newPrompt.ts), [timeControls.ts](../../../src/client/scripts/esm/views/index/timeControls.ts), [modifierSelector.ts](../../../src/client/scripts/esm/views/index/modifierSelector.ts), [lobby.ts](../../../src/client/scripts/esm/views/index/lobby.ts), [seekPreviewCache.ts](../../../src/client/scripts/esm/views/index/seekPreviewCache.ts): no user-facing English strings to migrate (verify with a grep — anything found should go to `t.index.<section>.<key>`).
 
 ## Legacy cleanup
 
@@ -234,16 +234,16 @@ Whichever route renders `index.njk` already calls `getRandomSplashText()` and pa
    - `index.title`, `index.secondary_title`, `index.what_is_it_title`, `index.what_is_it_pargaraphs` (note the typo), `index.how_to_title`, `index.how_to_paragraph`, `index.about_title`, `index.about_paragraphs`, `index.patreon_title`, `index.github_title`, `index.javascript.contribution_count_singular`, `index.javascript.contribution_count_plural`.
    
    If zero references, delete the `[index]` (and `[index.javascript]`) block from:
-   - [translation/en-US.toml](../../translation/en-US.toml)
+   - [translation/en-US.toml](../../../translation/en-US.toml)
    - All sibling language files: `de-DE.toml`, `el-GR.toml`, `es-ES.toml`, `fi-FI.toml`, `fr-FR.toml`, `pl-PL.toml`, `pt-BR.toml`, `ru-RU.toml`, `zh-CN.toml`, `zh-TW.toml`.
    
-   Per [CLAUDE.md](../../CLAUDE.md), only the English file is actively maintained — but the orphan blocks should be removed from non-English files too so they don't carry dead keys forward.
+   Per [CLAUDE.md](../../../CLAUDE.md), only the English file is actively maintained — but the orphan blocks should be removed from non-English files too so they don't carry dead keys forward.
 
 2. Do **not** touch the legacy variant/modifier/speed translation blocks here — those were removed by the infrastructure pass.
 
 ## Type generation
 
-After all the above, run `npm run generate:types`. The generated [client-translations.d.ts](../../src/client/types/client-translations.d.ts) will gain a `t.index.*` namespace. (`splashes` has no `[client]` table → no type entry, which is intentional.)
+After all the above, run `npm run generate:types`. The generated [client-translations.d.ts](../../../src/client/types/client-translations.d.ts) will gain a `t.index.*` namespace. (`splashes` has no `[client]` table → no type entry, which is intentional.)
 
 ## Verification
 
@@ -280,12 +280,12 @@ After all the above, run `npm run generate:types`. The generated [client-transla
 - `translation/index/en-US.toml`
 
 **Modified:**
-- [src/server/views/index.njk](../../src/server/views/index.njk) — `templateT('index')`, head-block `window.t.index` injection, every English string replaced with translation references, lobby buttons emitted with empty text content, variant section consumes shared variant/group strings via the macro.
-- [src/server/routes/splashTexts.ts](../../src/server/routes/splashTexts.ts) — read splash table entries from the `splashes` component instead of a hardcoded list; signature gains the request.
-- [src/server/routes/root.ts](../../src/server/routes/root.ts) — pass `req` to `getRandomSplashText()` (one-line edit).
-- [src/client/scripts/esm/views/index/gameSetupModal.ts](../../src/client/scripts/esm/views/index/gameSetupModal.ts) — drop `SUBMIT_LABELS`; read button labels from `t.index.lobby_buttons.*`.
-- [src/client/scripts/esm/views/index/variantSelector.ts](../../src/client/scripts/esm/views/index/variantSelector.ts) — swap "Saved positions" and the two load-failure messages to `t.index.variant_selector.*`.
-- [translation/en-US.toml](../../translation/en-US.toml) plus all sibling `translation/<lang>.toml` files — delete the orphaned `[index]` and `[index.javascript]` blocks.
+- [src/server/views/index.njk](../../../src/server/views/index.njk) — `templateT('index')`, head-block `window.t.index` injection, every English string replaced with translation references, lobby buttons emitted with empty text content, variant section consumes shared variant/group strings via the macro.
+- [src/server/routes/splashTexts.ts](../../../src/server/routes/splashTexts.ts) — read splash table entries from the `splashes` component instead of a hardcoded list; signature gains the request.
+- [src/server/routes/root.ts](../../../src/server/routes/root.ts) — pass `req` to `getRandomSplashText()` (one-line edit).
+- [src/client/scripts/esm/views/index/gameSetupModal.ts](../../../src/client/scripts/esm/views/index/gameSetupModal.ts) — drop `SUBMIT_LABELS`; read button labels from `t.index.lobby_buttons.*`.
+- [src/client/scripts/esm/views/index/variantSelector.ts](../../../src/client/scripts/esm/views/index/variantSelector.ts) — swap "Saved positions" and the two load-failure messages to `t.index.variant_selector.*`.
+- [translation/en-US.toml](../../../translation/en-US.toml) plus all sibling `translation/<lang>.toml` files — delete the orphaned `[index]` and `[index.javascript]` blocks.
 
 ## Open questions to resolve during implementation
 
