@@ -14,6 +14,7 @@
 
 import type { Request } from 'express';
 import type { CustomWebSocket } from '../socket/socketUtility.js';
+import type { ClientTranslations } from '../../shared/types/client-translations.js';
 import type { ResponseTranslationKeys } from '../types/response-translations.js';
 
 import fs from 'fs';
@@ -161,11 +162,15 @@ export function getTemplateTranslation(component: string, lang: string): Record<
  * @param component - The component name, e.g. "leaderboard"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getClientTranslation(component: string, lang: string): Record<string, any> {
+export function getClientTranslation<C extends keyof ClientTranslations>(
+	component: C,
+	lang: string,
+): ClientTranslations[C] {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
-	return (langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.client ?? {};
+	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.client ??
+		{}) as ClientTranslations[C];
 }
 
 /**

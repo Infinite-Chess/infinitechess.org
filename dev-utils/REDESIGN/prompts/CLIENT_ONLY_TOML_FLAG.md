@@ -78,7 +78,7 @@ For each: add `client_only = true` at the top, then unindent every section heade
 
 ## Verification
 
-1. `npm run generate:types` — confirm no diff in the generated [client-translations.d.ts](../../../src/client/types/client-translations.d.ts) after migrating an existing file to the flag form. The interface shape must stay byte-identical.
+1. `npm run generate:types` — confirm no diff in the generated [client-translations.d.ts](../../../src/shared/types/client-translations.d.ts) after migrating an existing file to the flag form. The interface shape must stay byte-identical.
 2. `npm run type-check --silent` — clean.
 3. `npm run lint --silent` — clean.
 4. Restart dev server. Load `/`. Verify:

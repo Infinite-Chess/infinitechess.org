@@ -227,19 +227,11 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	return validatePosition(variantOptions, content);
 }
 
-/**
- * Localizes a position/ICN error code for the websocket's `notify` channel.
- * TODO: getClientTranslation returns Record<string, any>, so the cast below is
- * unchecked — if a TOML key moves or renames, the runtime fallback to the raw
- * code is the only signal. Tighten this when getClientTranslation gets a typed
- * API (or when the codes-over-the-wire approach is adopted instead).
- */
+/** Localizes a position/ICN error code for the websocket's `notify` channel. */
 function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
 	const lang = ws.metadata.cookies.i18next ?? tconfig.DEFAULT_LANGUAGE;
-	const shared = getClientTranslation('shared', lang) as {
-		position_errors?: Record<string, string>;
-	};
-	return shared.position_errors?.[code] ?? code;
+	const shared = getClientTranslation('shared', lang);
+	return shared.position_errors[code] ?? code;
 }
 
 export { createSeek, createseekschem };

@@ -1,5 +1,7 @@
 // src/server/routes/root.ts
 
+import type { ClientTranslations } from '../../shared/types/client-translations.js';
+
 import express, { NextFunction, Request, Response } from 'express';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
@@ -26,7 +28,8 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 	const lang = getLanguageToServe(req);
 	res.locals['lang'] = lang;
 	res.locals['templateT'] = (component: string) => getTemplateTranslation(component, lang);
-	res.locals['clientT'] = (component: string) => getClientTranslation(component, lang);
+	res.locals['clientT'] = <C extends keyof ClientTranslations>(component: C) =>
+		getClientTranslation(component, lang);
 	res.locals['memberInfo'] = req.memberInfo;
 	next();
 });

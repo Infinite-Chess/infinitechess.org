@@ -1,14 +1,16 @@
 // src/client/types/globals.d.ts
 
 import type { TranslationsObject } from '../../types/translations.js';
+import type { ClientTranslations } from '../../shared/types/client-translations.js';
 
 /**
- * Client-side translations subset.
- * Nunjucks templates spread nested translation objects into the global translations namespace.
- * For example, `...t('play.javascript', {returnObjects: true})` spreads all properties
- * from `play.javascript` directly into the global translations object.
+ * Legacy i18next-era client translations. Backs the global `translations` object
+ * injected by EJS templates of pages not yet migrated to Nunjucks/per-component TOMLs.
+ * Remove this type (and the `translations` global) once every page has been migrated
+ * and the legacy flat-file translation system is deleted — see
+ * dev-utils/REDESIGN/TRANSLATION_SYSTEM.md "Target end state".
  */
-type ClientTranslations = TranslationsObject['play']['javascript'] &
+type LegacyClientTranslations = TranslationsObject['play']['javascript'] &
 	TranslationsObject['play']['play-menu'] &
 	TranslationsObject['member']['javascript'] &
 	TranslationsObject['login']['javascript'] &
@@ -19,11 +21,18 @@ type ClientTranslations = TranslationsObject['play']['javascript'] &
 
 declare global {
 	/**
-	 * Global translations object injected by Nunjucks templates.
+	 * Legacy global translations object injected by EJS templates.
 	 * Contains flattened translation properties from various sections.
 	 * The actual shape varies by page, but this represents the union of all possible translations.
 	 */
-	const translations: ClientTranslations;
+	const translations: LegacyClientTranslations;
+
+	/**
+	 * Per-component client translations, injected into the page as
+	 * `window.t` by the Nunjucks SSR layout (see TRANSLATION_SYSTEM.md).
+	 * Only components included on the current page are populated at runtime.
+	 */
+	const t: ClientTranslations;
 
 	/** htmlscript injected inline inside the game page. It handles the loading animation. */
 	var htmlscript: {

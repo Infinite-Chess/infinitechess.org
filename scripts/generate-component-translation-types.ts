@@ -5,7 +5,9 @@
  *
  * 1. Client translations: A ClientTranslations interface (one property per component
  *    that has a [client] sub-table).
- *    Output: src/client/types/client-translations.d.ts
+ *    Output: src/shared/types/client-translations.d.ts
+ *    Lives in shared/ so the server can type getClientTranslation() against the same
+ *    shape the client consumes via the global `t`.
  *
  * 2. Response translations: A ResponseTranslationKeys flat dot-notation union type
  *    derived from the "responses" component.
@@ -24,7 +26,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Constants -----------------------------------------------------------------
 
-const CLIENT_OUTPUT_FILE = path.join(__dirname, '../src/client/types/client-translations.d.ts');
+const CLIENT_OUTPUT_FILE = path.join(__dirname, '../src/shared/types/client-translations.d.ts');
 const RESPONSE_OUTPUT_FILE = path.join(__dirname, '../src/server/types/response-translations.ts');
 
 // Functions -----------------------------------------------------------------------
@@ -69,15 +71,15 @@ function generateClientTranslations(): void {
  * Do NOT edit manually!
  */
 
-interface ClientTranslations {
+/**
+ * Shape of all client-shipped translation tables, keyed by component name.
+ * Client scripts access these via the global \`t\` declared in
+ * src/client/types/globals.d.ts; the server reads them through the typed
+ * \`getClientTranslation(component, lang)\` helper.
+ */
+export interface ClientTranslations {
 ${properties.join('\n')}
 }
-
-/**
- * Client-side translations. The only component actually available
- * will be what is included on the page the script is running on.
- */
-declare const t: ClientTranslations;
 `;
 
 	fs.mkdirSync(path.dirname(CLIENT_OUTPUT_FILE), { recursive: true });
