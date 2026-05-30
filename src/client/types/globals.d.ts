@@ -8,8 +8,7 @@ import type { TranslationsObject } from '../../types/translations.js';
  * For example, `...t('play.javascript', {returnObjects: true})` spreads all properties
  * from `play.javascript` directly into the global translations object.
  */
-type ClientTranslations = TranslationsObject['index']['javascript'] &
-	TranslationsObject['play']['javascript'] &
+type ClientTranslations = TranslationsObject['play']['javascript'] &
 	TranslationsObject['play']['play-menu'] &
 	TranslationsObject['member']['javascript'] &
 	TranslationsObject['login']['javascript'] &

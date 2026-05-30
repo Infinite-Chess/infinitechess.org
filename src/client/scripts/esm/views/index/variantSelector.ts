@@ -267,7 +267,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`cloud-${s.name}`,
 			s.name,
-			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, 'Failed to load cloud save.'), // prettier-ignore
+			() => selectCustomSave( 'online', s.name, cloudPreviewCache, ecloudstore.readCloud, t.index.modal.variant_selector.cloud_load_failed), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.name, cloudPreviewCache, ecloudstore.readCloud),
 		),
 	);
@@ -276,7 +276,7 @@ function createCustomContentVNode(
 		createSaveItemVNode(
 			`local-${s.position_name}`,
 			s.position_name,
-			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, 'Failed to load local save.'), // prettier-ignore
+			() => selectCustomSave('local', s.position_name, localPreviewCache, editorpositionsdb.readLocal, t.index.modal.variant_selector.local_load_failed), // prettier-ignore
 			(anchor) => handleSavePreview(anchor, s.position_name,  localPreviewCache, editorpositionsdb.readLocal), // prettier-ignore
 		),
 	);
@@ -287,7 +287,14 @@ function createCustomContentVNode(
 		'div#variant-custom-content',
 		{},
 		saveRows.length > 0
-			? [h('div.custom-saves-heading', {}, 'Saved positions'), ...saveRows]
+			? [
+					h(
+						'div.custom-saves-heading',
+						{},
+						t.index.modal.variant_selector.saved_positions,
+					),
+					...saveRows,
+				]
 			: [],
 	);
 }
@@ -472,7 +479,11 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	} else if (selection.kind === 'icn') {
 		validateIcnInput();
 		if (icnResult !== null)
-			variantPreviewTooltip.showForPosition(anchor, 'Custom Variant', icnResult.options);
+			variantPreviewTooltip.showForPosition(
+				anchor,
+				t.shared.variant_groups.custom.display_label,
+				icnResult.options,
+			);
 	}
 }
 

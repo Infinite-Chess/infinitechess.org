@@ -26,11 +26,11 @@ type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-leve
 
 // Constants ------------------------------------------
 
-/** Labels for the modal submit button based on the active mode. */
+/** Submit-button labels per active mode. */
 const SUBMIT_LABELS: Record<ModalMode, string> = {
-	online: 'Create online game',
-	friend: 'Challenge a friend',
-	computer: 'Play against computer',
+	online: t.index.lobby_buttons.create_online,
+	friend: t.index.lobby_buttons.challenge_friend,
+	computer: t.index.lobby_buttons.play_computer,
 };
 
 // Elements ----------------------------------------------

@@ -55,9 +55,19 @@ const xss_options: IFilterXSSOptions = {
 		b: [],
 		i: [],
 		br: [],
+		// accepts a `class` attribute so styling hooks like `.lc` (lowercase-glyph
+		// opt-out from uppercase text-transform) survive sanitization.
+		span: ['class'],
 	},
 };
 const custom_xss = new FilterXSS(xss_options);
+
+/**
+ * Pseudo-localization debug flag. When `true`, every translated string
+ * is wrapped in ⟦…⟧ brackets at load time. Anything still showing plain
+ * English in the page is hardcoded and was missed by the translation pass.
+ */
+const PSEUDO_LOC = false;
 
 // State ---------------------------------------------------------------------
 
@@ -228,7 +238,8 @@ function html_escape(value: any): any {
 		return escaped;
 	}
 	if (typeof value === 'string') {
-		return custom_xss.process(value);
+		const sanitized = custom_xss.process(value);
+		return PSEUDO_LOC ? `⟦${sanitized}⟧` : sanitized;
 	}
 	return value; // numbers, booleans, etc.
 }

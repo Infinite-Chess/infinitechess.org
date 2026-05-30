@@ -46,7 +46,7 @@ const patch = init([attributesModule, classModule]);
 
 /** The structure for a single seek in the lobby, with client-side rendering info. */
 export type LobbySeek = BaseSeek &
-	({ variant: VariantInfo } | { variant: { group: 'custom'; name: 'Custom Variant' } }) & {
+	({ variant: VariantInfo } | { variant: { group: 'custom' } }) & {
 		isOurs: boolean;
 	};
 
@@ -193,7 +193,7 @@ function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 		};
 		return { ...seek, variant, isOurs };
 	} else if (seek.variant.kind === 'custom') {
-		const variant = { group: 'custom', name: 'Custom Variant' } as const;
+		const variant = { group: 'custom' as const };
 		return { ...seek, variant, isOurs };
 	} else {
 		// @ts-ignore
@@ -323,10 +323,17 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const sideDot = createSideDotVNode(seek.color);
 	const variantIcon = getVariantIcon(seek.variant.group);
 	const variantName =
-		seek.variant.group === 'custom' ? seek.variant.name : t.shared.variants[seek.variant.code];
+		seek.variant.group === 'custom'
+			? t.shared.variant_groups.custom.display_label
+			: t.shared.variants[seek.variant.code];
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 	const speedCategory = clockutil.getSpeedCategory(seek.time);
 	const speedTitle = t.shared.speeds[speedCategory];
+	const displayName = seek.isOurs
+		? t.shared.user_status.you_indicator
+		: seek.player.type === 'guest'
+			? t.shared.user_status.guest_indicator
+			: seek.player.username;
 
 	return h(
 		'div.seek-row',
@@ -334,7 +341,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			key: seek.id,
 			class: { ours: seek.isOurs },
 			attrs: {
-				title: seek.isOurs ? 'Cancel seek' : 'Accept invite',
+				title: seek.isOurs ? t.index.lobby.cancel_seek : t.index.lobby.accept_invite,
 				'data-seek-id': seek.id,
 			},
 			hook: isNew
@@ -347,7 +354,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			h('div.lobby-cell', [
 				h('div.cell-flex.text-fade', [
 					h('span.username-embed', [
-						h('span.username', seek.player.username),
+						h('span.username', displayName),
 						...(playerRating ? [playerRating] : []),
 					]),
 					...(sideDot ? [sideDot] : []),
@@ -382,7 +389,10 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 					getClockLabel(seek.time),
 				]),
 			]),
-			h('div.lobby-cell', seek.mode === 'rated' ? 'Rated' : 'Casual'),
+			h(
+				'div.lobby-cell',
+				seek.mode === 'rated' ? t.shared.game_modes.rated : t.shared.game_modes.casual,
+			),
 		],
 	);
 }
@@ -435,7 +445,7 @@ async function handleVariantPreviewHover(anchor: HTMLElement, seek: LobbySeek): 
 	if (seek.variant.group === 'custom') {
 		const variantOptions = await seekPreviewCache.getSeekPreview(seek.id);
 		if (variantOptions === undefined) return;
-		variantPreviewTooltip.showForPosition(anchor, seek.variant.name, variantOptions, 'below', seek.modifiers); // prettier-ignore
+		variantPreviewTooltip.showForPosition(anchor, t.shared.variant_groups.custom.display_label, variantOptions, 'below', seek.modifiers); // prettier-ignore
 	} else {
 		variantPreviewTooltip.showForVariantCode(anchor, seek.variant.code, 'below', seek.modifiers); // prettier-ignore
 	}

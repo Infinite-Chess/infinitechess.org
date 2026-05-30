@@ -15,10 +15,16 @@
         document.documentElement.setAttribute('data-home-prompt', 'dismissed');
     }
 </script>
+{# Ship the index component's [client] strings to the browser, preserving the existing window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { index: {{ clientT('index') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 
+{# Page-specific translations #}
+{% set t = templateT('index') %}
+{# Client-bound strings for the same component — also injected into window.t.index for JS. #}
+{% set tc = clientT('index') %}
 {# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
 {% set s = clientT('shared') %}
 
@@ -54,16 +60,16 @@
 		<header class="home-hero">
 			<svg class="hero-glyph" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
 			<svg class="hero-glyph hero-glyph-aura" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
-			<h1 class="hero-title">Infinite Chess</h1>
+			<h1 class="hero-title">{{ t.hero.title }}</h1>
 			<p class="hero-tagline">{{ splashText | safe }}</p>
 		</header>
 
 		{# -- New-player prompt --------------------------------------------------- #}
 		<section class="new-prompt" id="new-prompt">
-			<span class="new-prompt-label">New?</span>
+			<span class="new-prompt-label">{{ t.new_player_prompt.label }}</span>
 			<div class="new-prompt-actions">
-				<a class="new-prompt-btn primary" id="new-prompt-tutorial" href="/tutorial">Take the tutorial</a>
-				<button class="new-prompt-btn" id="new-prompt-dismiss">I'm experienced</button>
+				<a class="new-prompt-btn primary" id="new-prompt-tutorial" href="/tutorial">{{ t.new_player_prompt.tutorial_button }}</a>
+				<button class="new-prompt-btn" id="new-prompt-dismiss">{{ t.new_player_prompt.dismiss_button }}</button>
 			</div>
 		</section>
 
@@ -72,23 +78,23 @@
 			<div class="lobby-actions">
 				<button class="lobby-btn" id="btn-create-game">
 					<svg class="btn-icon svg-globe"><use href="#svg-globe"></use></svg>
-					Create online game
+					{{ tc.lobby_buttons.create_online }}
 				</button>
 				<button class="lobby-btn" id="btn-challenge-friend">
 					<svg class="btn-icon"><use href="#svg-profile"></use></svg>
-					Challenge a friend
+					{{ tc.lobby_buttons.challenge_friend }}
 				</button>
 				<button class="lobby-btn" id="btn-play-ai">
 					<svg class="btn-icon svg-engine"><use href="#svg-engine"></use></svg>
-					Play against computer
+					{{ tc.lobby_buttons.play_computer }}
 				</button>
 			</div>
 
 			{# -- Open challenges (lobby) ----------------------------------------- #}
 			<section class="lobby">
 				<h2>
-					<span>Lobby</span>
-					<span class="lobby-viewers" title="Viewer count">
+					<span>{{ t.lobby.title }}</span>
+					<span class="lobby-viewers" title="{{ t.lobby.viewer_count }}">
 						<svg class="lobby-viewers-eye"><use href="#svg-eye"></use></svg>
 						<span id="lobby-viewer-count">0</span>
 					</span>
@@ -96,7 +102,7 @@
 				<div class="lobby-wrap scrollbar-thin unselectable">
 					{# Idle overlay - shown after prolonged inactivity #}
 					<div id="lobby-idle-overlay" class="lobby-idle-overlay hidden">
-						<p>Hover to reconnect.</p>
+						<p>{{ t.lobby.idle_overlay }}</p>
 					</div>
 					{# Faint omega background - references symbol already defined in header.njk #}
 					<div class="omega-anchor">
@@ -104,10 +110,10 @@
 					</div>
 					<div class="lobby-grid">
 						<div class="lobby-header">
-							<div>Player</div>
-							<div>Variant</div>
-							<div>Time</div>
-							<div>Mode</div>
+							<div>{{ t.lobby.table.player }}</div>
+							<div>{{ t.lobby.table.variant }}</div>
+							<div>{{ t.lobby.table.time }}</div>
+							<div>{{ t.lobby.table.mode }}</div>
 						</div>
 						{# Open seeks are listed in here #}
 						<div id="lobby-tbody">
@@ -154,7 +160,7 @@
 
 		<div class="modal-header">
 			<div class="modal-header-gap"></div>
-			<h2 class="modal-title">Game options</h2>
+			<h2 class="modal-title">{{ t.modal.title }}</h2>
 			<button class="modal-close" id="modal-close">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
 				     stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -165,14 +171,14 @@
 
 			{# ── Variant ─────────────────────────────────────────────────── #}
 			<div class="modal-row">
-				<span class="model-label">Variant</span>
+				<span class="model-label">{{ t.modal.variant_selector.label }}</span>
 				{# Variant selector #}
 				<div class="variant-selector" id="variant-selector">
 					<button class="variant-display" id="variant-display">
 						<svg class="variant-group-icon" id="variant-group-icon"><use></use></svg>
 						<span id="variant-name" class="variant-name"></span>
-						<svg class="modifier-add tooltip-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" data-tooltip="Add a fun modifier"><line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
-						<svg class="svg-pencil tooltip-d" data-tooltip="Edit position and gamerules"><use href="#svg-pencil"></use></svg>
+						<svg class="modifier-add tooltip-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" data-tooltip="{{ t.modal.variant_selector.add_modifier_tooltip }}"><line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+						<svg class="svg-pencil tooltip-d" data-tooltip="{{ t.modal.variant_selector.edit_tooltip }}"><use href="#svg-pencil"></use></svg>
 						{{ eyeIcon() }}
 						<svg class="selector-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</button>
@@ -195,15 +201,15 @@
 					{% endfor %}
 					<div class="variant-dropdown variant-list-panel" data-group="custom" id="variant-custom-panel">
 						{{ variantListBack("svg-wrench", s.variant_groups.custom.name, s.variant_groups.custom.description) }}
-						{{ variantGroupItem(none, "svg-pencil",    "Create",   "Go to the board editor.",       arrow=false, id="btn-custom-create") }}
-						{{ variantGroupItem(none, "svg-clipboard", "From ICN", "Paste an accessible ICN code.", arrow=false, id="btn-custom-from-icn") }}
+						{{ variantGroupItem(none, "svg-pencil",    t.modal.variant_selector.custom_create_name,   t.modal.variant_selector.custom_create_desc,   arrow=false, id="btn-custom-create") }}
+						{{ variantGroupItem(none, "svg-clipboard", t.modal.variant_selector.custom_from_icn_name, t.modal.variant_selector.custom_from_icn_desc, arrow=false, id="btn-custom-from-icn") }}
 						<div id="variant-custom-content"></div>
 					</div>
 					<div class="variant-dropdown modifier-dropdown" id="modifier-dropdown">
 						<button class="variant-group-item" data-modifier="slide-limit">
 							<svg class="group-icon svg-slide-limit"><use href="#svg-slide-limit"></use></svg>
-							<span class="group-name">Slide Limit</span>
-							<span class="group-desc">All pieces have a maximum distance they can slide in one move.</span>
+							<span class="group-name">{{ s.modifiers["slide-limit"].name }}</span>
+							<span class="group-desc">{{ s.modifiers["slide-limit"].description }}</span>
 						</button>
 					</div>
 				</div>
@@ -211,18 +217,18 @@
 				<div id="variant-custom-section" class="hidden">
 					<div class="icn-input-wrap">
 						<textarea class="icn-input" id="icn-input"
-						          placeholder="Paste ICN text here" rows="1"></textarea>
+						          placeholder="{{ t.modal.variant_selector.icn_placeholder }}" rows="1"></textarea>
 					</div>
 				</div>
 				<p id="icn-error-text" class="icn-error-text"></p>
 				{# Modifiers - revealed when at least one modifier is selected #}
 				<div id="modifiers-section" class="hidden">
 					<div class="modifiers-row">
-						<span class="modifiers-label">Modifiers:</span>
+						<span class="modifiers-label">{{ t.modal.modifiers_section.label }}</span>
 						<div class="modifiers-list" id="modifiers-list"></div>
 					</div>
 					<div id="slide-limit-section" class="slide-limit-section hidden">
-						<span class="slide-limit-name">Slide Limit</span>
+						<span class="slide-limit-name">{{ s.modifiers["slide-limit"].name }}</span>
 						<input type="range" class="slider" id="slider-slide-limit" min="0" max="25" step="1">
 						<span class="slider-value" id="slide-limit-display"></span>
 					</div>
@@ -232,10 +238,10 @@
 			{# ── Time control ─────────────────────────────────────────────── #}
 			<div>
 				<div class="modal-row">
-					<span class="model-label">Time control</span>
+					<span class="model-label">{{ t.modal.time_control.label }}</span>
 					<div class="option-group">
-						<button class="option-btn active" data-time="timed">Timed</button>
-						<button class="option-btn" data-time="infinite">Infinite</button>
+						<button class="option-btn active" data-time="timed">{{ t.modal.time_control.timed }}</button>
+						<button class="option-btn" data-time="infinite">{{ t.modal.time_control.infinite }}</button>
 					</div>
 				</div>
 
@@ -244,13 +250,13 @@
 					<div class="time-sliders">
 						<div class="time-sliders-grid">
 							<div class="slider-header">
-								<label class="slider-label left" for="slider-minutes">Minutes per side</label>
+								<label class="slider-label left" for="slider-minutes">{{ t.modal.time_control.minutes_per_side }}</label>
 								<span class="slider-value" id="minutes-display"></span>
 							</div>
 							<div class="slider-separator">+</div>
 							<div class="slider-header">
 								<span class="slider-value" id="increment-display"></span>
-								<label class="slider-label right" for="slider-increment">Increment in seconds</label>
+								<label class="slider-label right" for="slider-increment">{{ t.modal.time_control.increment_seconds }}</label>
 							</div>
 							<input type="range" class="slider" id="slider-minutes" min="0" max="25" step="1">
 							<div></div>
@@ -272,36 +278,36 @@
 
 			{# ── Game mode (hidden for "Play against computer") ──────────── #}
 			<div class="modal-row" id="row-game-mode">
-				<span class="model-label">Game mode</span>
+				<span class="model-label">{{ t.modal.game_mode.label }}</span>
 				<div class="option-group">
-					<button class="option-btn active" data-mode="casual">Casual</button>
-					<button class="option-btn" data-mode="rated">Rated</button>
+					<button class="option-btn active" data-mode="casual">{{ s.game_modes.casual }}</button>
+					<button class="option-btn" data-mode="rated">{{ s.game_modes.rated }}</button>
 				</div>
 			</div>
 
 			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
 			<div class="modal-row">
-				<span class="model-label">Side</span>
+				<span class="model-label">{{ t.modal.side.label }}</span>
 				<div class="option-group icons">
 					<button class="option-btn" data-side="white">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-rule="evenodd" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M22.5 11.63V6M20 8h5" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0"/></g></svg>
-						White
+						{{ s.sides.white }}
 					</button>
 					<button class="option-btn active" data-side="random">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450"><defs><clipPath id="a"><path d="M0 0h225v450H0"/></clipPath><clipPath id="b"><path d="M225 0H450v450H225"/></clipPath></defs><g stroke-linejoin="round" stroke-width="15" clip-path="url(#a)"><g fill="#000" stroke="#000"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><g fill="none" stroke="#FFF" stroke-linecap="round"><path d="M225 200s32.5-30 20-55c0 0-5-15-20-15s-20 15-20 15c-12.5 25 20 55 20 55" stroke-linecap="square"/><path d="M320 295s85-40 60.3-96.5C341.5 140 250 180 225 245l.1 21-.1-21C200 180 99 140 70 198.5c-25 56.5 48.5 90 48.5 90"/><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0"/></g></g><g stroke="#000" stroke-width="15" clip-path="url(#b)"><g fill="#FFF" stroke-linejoin="round"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0" fill="none" stroke-linecap="round"/></g></svg>
 
-						Random
+						{{ s.sides.random }}
 					</button>
 					<button class="option-btn" data-side="black">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"><g fill="none" fill-opacity="1" fill-rule="evenodd" stroke="#000" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="4" stroke-opacity="1" stroke-width="1.5"><path d="M22.5 11.63V6" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#000" fill-opacity="1" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7" fill="#000" stroke="#000"/><path d="M20 8h5" fill="none" stroke="#000" stroke-linejoin="miter"/><path d="M32 29.5s8.5-4 6.03-9.65C34.15 14 25 18 22.5 24.5v2.1-2.1C20 18 10.85 14 6.97 19.85 4.5 25.5 13 29.5 13 29.5" fill="none" stroke="#fff"/><path d="M12.5 30c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0m-20 3.5c5.5-3 14.5-3 20 0" fill="none" stroke="#fff"/></g></svg>
-						Black
+						{{ s.sides.black }}
 					</button>
 				</div>
 			</div>
 
 			{# ── Strength (only for "Play against computer") ─────────────── #}
 			<div class="modal-row hidden" id="row-strength">
-				<span class="model-label">Strength</span>
+				<span class="model-label">{{ t.modal.strength.label }}</span>
 				<div class="option-group">
 					<button class="option-btn" data-level="1">1</button>
 					<button class="option-btn" data-level="2">2</button>
@@ -317,7 +323,8 @@
 		</div>{# .modal-body #}
 
 		<div class="modal-footer">
-			<button class="submit-btn" id="modal-submit">Create Game</button>
+			{# Default label — JS overwrites this in openModal() based on the active modal mode. #}
+			<button class="submit-btn" id="modal-submit"></button>
 		</div>
 
 	</div>{# .modal #}

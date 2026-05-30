@@ -4,6 +4,10 @@
 # categories, game modes, sides, win conditions, modifiers, and the narrative
 # phrasing used in the variant preview tooltip.
 
+[client.user_status] # Identity placeholders shown in place of a real username.
+guest_indicator = "(Guest)"
+you_indicator = "(You)"
+
 [client.variants] # Display names for each variant.
 # Group "standard"
 Classical = "Classical"
@@ -57,6 +61,7 @@ description = "Mate in omega, and greater, forced checkmate positions."
 [client.variant_groups.custom] # Pseudo-group for the user's own custom positions
 name = "Custom"
 description = "Your own position, your own rules."
+display_label = "Custom Variant" # label for all custom seeks
 
 [client.speeds] # Time control "Speed" category labels
 bullet = "Bullet"
@@ -78,6 +83,10 @@ blue = "Blue"
 yellow = "Yellow"
 green = "Green"
 neutral = "Neutral"
+
+[client.modifiers.slide-limit]
+name = "Slide Limit"
+description = "All pieces have a maximum distance they can slide in one move."
 
 [client.position_errors]
 invalid_icn = "Invalid ICN."
@@ -107,6 +116,9 @@ no_move_rule = "No 50-move rule."
 move_rule = "Move rule: {plies} plies."
 en_passant = "En passant square: ({x},{y})."
 plies_since_capture = "{n} plies passed since last capture or pawn push."
+# Parameterized rule-list phrasing for the active slide-limit modifier.
+# Other modifiers' rule-list lines can likely reuse [client.modifiers.<code>].description directly.
+slide_limit_rule = "Pieces can't slide more than {n} squares."
 
 [client.variant_preview.win_conditions]
 # Display labels for non-checkmate win conditions
@@ -116,7 +128,3 @@ royalcapture = "royal capture"
 allroyalscaptured = "capturing all royals"
 allpiecescaptured = "capturing all pieces"
 koth = "reaching the center"
-
-[client.modifiers.slide-limit]
-name = "Slide Limit"
-description = "Pieces can't slide more than {n} squares."

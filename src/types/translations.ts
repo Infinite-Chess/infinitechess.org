@@ -48,18 +48,6 @@ export type TranslationKeys =
 	| 'leaderboard.inactive_players'
 	| 'leaderboard.your_global_ranking'
 	| 'leaderboard.show_more'
-	| 'index.title'
-	| 'index.secondary_title'
-	| 'index.what_is_it_title'
-	| 'index.what_is_it_pargaraphs'
-	| 'index.how_to_title'
-	| 'index.how_to_paragraph'
-	| 'index.about_title'
-	| 'index.about_paragraphs'
-	| 'index.patreon_title'
-	| 'index.github_title'
-	| 'index.javascript.contribution_count_singular'
-	| 'index.javascript.contribution_count_plural'
 	| 'credits.title'
 	| 'credits.copyright'
 	| 'credits.variants_heading'
@@ -617,22 +605,6 @@ export interface TranslationsObject {
 		inactive_players: string[];
 		your_global_ranking: string;
 		show_more: string;
-	};
-	index: {
-		title: string;
-		secondary_title: string;
-		what_is_it_title: string;
-		what_is_it_pargaraphs: string[];
-		how_to_title: string;
-		how_to_paragraph: string[];
-		about_title: string;
-		about_paragraphs: string[];
-		patreon_title: string;
-		github_title: string;
-		javascript: {
-			contribution_count_singular: string[];
-			contribution_count_plural: string[];
-		};
 	};
 	credits: {
 		title: string;

@@ -1,143 +1,19 @@
 // src/server/routes/splashTexts.ts
 
 /**
- * Fun splash texts shown as the tagline on the home page.
- * One is picked at random per request in root.ts.
- *
- * Strings may contain HTML, which is rendered via `| safe` in the template.
- * Wrap glyphs whose meaning changes when capitalized (e.g. ω vs Ω)
- * in `<span class="lc">…</span>` so the tagline's text-transform: uppercase
- * skips them.
+ * For the index / home page. Picks out a random splash text for the hero tagline,
+ * in the user's language, from the splashes translation component.
  */
-const splashTexts: string[] = [
-	'Chess without borders',
-	'Chess on an infinite plane',
-	'Open world Chess!',
-	'Chess 2.0',
-	'Finite Chess',
-	'Games on an integer lattice',
-	'Mate in omega',
-	'Checkmate in <span class="lc">ω</span>³·27 + <span class="lc">ω</span>²·3006 + <span class="lc">ω</span>·4 + 78,350,543 moves',
-	'Mate in Ω-1',
-	'How do we go past omega one?',
-	'You will die before it ends',
-	"Don't mind the checks",
-	'Check! Check! Check! Check!',
-	'Draw by indefinite play',
-	'I resign.',
-	'How do pawns promote?',
-	'Never-ending infinite sandbox game?',
-	"Don't let anyone tell you otherwise",
-	"SHHHHHHH don't tell anyone",
-	'Almost infinite',
-	'May as well be considered infinite',
-	'Vickalan where are you?',
-	'Bring back the veterans',
-	'Totally, most definitely, 100% infinite',
-	"It's infinite as far as you're concerned",
-	'If I cannot win, I will make you suffer',
-	"Don't zoom out too far",
-	"You couldn't reach the edge if you tried",
-	'What could be out there?',
-	'OGs have been to rainbow land',
-	"You're unusually fascinated with zooming out",
-	'Definitely not exaggerated',
-	'An extremely large chessboard',
-	'See footnote',
-	"We don't sell boards",
-	'I like this game',
-	"Won't you try it?",
-	"Don't go",
-	'Stay a while',
-	'Avoid the monsters in the farlands',
-	"It's not a variant",
-	'The superset of all chess variants',
-	'The beefier computer auto-wins',
-	"I didn't see the bishop",
-	'THE ROOOOOOOOOOOOK!!!!!!',
-	'Yessss tell all your friends',
-	'The engine that runs all chess',
-	'Claim your freedom',
-	'Break the walls of captivity',
-	'Ordinals, not cardinals',
-	'Receive your own unique position!',
-	"Don't ask how gravity works",
-	'Do you know the lore?',
-	'The entire chess universe',
-	"I literally can't make it bigger",
-	'Don\'t try the "Chess" variant',
-	'I dare you to play out the "Omega^4" variant',
-	'Resigning is against the rules',
-	'You will accept my seek, and not resign.',
-	"Pieces don't only have to move in 2D",
-	"Play rated, don't be shy!",
-	'Create an account, now',
-	'Oooh look, a shiny queen!',
-	'Lots and lots of splash texts!',
-	'Or is it infinity squared?',
-	"It's not an amount, it's a position",
-	'Subscribe!',
-	'Donate... perhaps?',
-	'Look at that shiny gold button in the header!',
-	'The omega one of chess',
-	'Engines may struggle',
-	'Stockfish is weak here',
-	"It's not no clock, it's infinite time!",
-	"Chess wasn't big enough",
-	"It's still too small",
-	"It's not big enough",
-	'You asked, we delivered',
-	'Because who asked?',
-	'Because I need to move my queen farther',
-	'XXXXXXXXXXXXXXL Chess',
-	'What was I thinking?',
-	'Bigger than 76807781446622169137644619301308596225 squares!',
-	'7.05e646,456,993-square chess!',
-	"After all this, it's still not a googolplex",
-	'Uncountably Infinite Chess, next?',
-	'5D Infinite Chess with Multiverse Time Travel?',
-	'What about Infinitesimal Chess?',
-	'Infinite Checkers?',
-	'Infinite Go?',
-	'Chess variants forums',
-	'But uncountably infinitely many possibilities!',
-	'Is that a bad name?',
-	'So many sleepless nights',
-	'Far Lands, Far Lands, Far Lands',
-	'Larger than Minecraft!',
-	'0% of infinity',
-	'Just ladder checkmate them',
-	"No, chess engines don't explode",
-	'Bishop sniper from the opposite end of the universe',
-	"What's your definition of infinity?",
-	'Spirit dimension I choose you!',
-	'This universe is too limited',
-	'Just an obsessed guy with a passion',
-	'Now open source!',
-	'Free forever',
-	'No ads',
-	'Nearing 10,000 hours',
-	"Solo dev'ing is so slow",
-	"I'm definitely not poor",
-	'Can you find the edge?',
-	'The edge of an edgeless chessboard',
-	"It doesn't matter moving far is not strategic",
-	"In 5D Chess it's bad to time travel",
-	'Sponsored by Add Loot Studios',
-	"Look around, maybe you'll find a coin",
-	'Now with more Chess!',
-	'Added loot',
-	'What is loot?',
-	"It's not complete without infinitely many pieces",
-	'Check out the videos!',
-	'Your chess variant can fit in mine',
-	'Kudos Joel David Hamkins',
-	'Walls? Overrated',
-	"Don't worry, most games don't last forever",
-	'Checkmate is only a little trickier',
-];
 
-/** Returns a randomly chosen splash text. */
-export function getRandomSplashText(): string {
-	return splashTexts[Math.floor(Math.random() * splashTexts.length)]!;
+import type { Request } from 'express';
+
+import { getLanguageToServe } from '../utility/translate.js';
+import { getTemplateTranslation } from '../config/componentTranslationLoader.js';
+
+/** Returns a randomly chosen splash text in the request's resolved language. */
+export function getRandomSplashText(req: Request): string {
+	const lang = getLanguageToServe(req);
+	const splashes = getTemplateTranslation('splashes', lang) as Record<string, string>;
+	const values = Object.values(splashes);
+	return values[Math.floor(Math.random() * values.length)]!;
 }

@@ -6,7 +6,29 @@
  */
 
 interface ClientTranslations {
+	index: {
+		lobby_buttons: {
+			create_online: string;
+			challenge_friend: string;
+			play_computer: string;
+		};
+		lobby: {
+			cancel_seek: string;
+			accept_invite: string;
+		};
+		modal: {
+			variant_selector: {
+				saved_positions: string;
+				local_load_failed: string;
+				cloud_load_failed: string;
+			};
+		};
+	};
 	shared: {
+		user_status: {
+			guest_indicator: string;
+			you_indicator: string;
+		};
 		variants: {
 			Classical: string;
 			Core: string;
@@ -56,6 +78,7 @@ interface ClientTranslations {
 			custom: {
 				name: string;
 				description: string;
+				display_label: string;
 			};
 		};
 		speeds: {
@@ -78,6 +101,12 @@ interface ClientTranslations {
 			yellow: string;
 			green: string;
 			neutral: string;
+		};
+		modifiers: {
+			'slide-limit': {
+				name: string;
+				description: string;
+			};
 		};
 		position_errors: {
 			invalid_icn: string;
@@ -105,18 +134,13 @@ interface ClientTranslations {
 			move_rule: string;
 			en_passant: string;
 			plies_since_capture: string;
+			slide_limit_rule: string;
 			win_conditions: {
 				checkmate: string;
 				royalcapture: string;
 				allroyalscaptured: string;
 				allpiecescaptured: string;
 				koth: string;
-			};
-		};
-		modifiers: {
-			'slide-limit': {
-				name: string;
-				description: string;
 			};
 		};
 	};

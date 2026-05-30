@@ -23,8 +23,8 @@ type ModifierRegistryEntry = {
 export type ModifierCode = keyof typeof MODIFIER_REGISTRY;
 
 /**
- * Variables used to interpolate a modifier's description
- * template from `t.shared.modifiers.<code>.description`.
+ * Variables used to interpolate a modifier's parameterized rule-list phrasing
+ * in the variant preview tooltip (e.g. `t.shared.variant_preview.slide_limit_rule`).
  */
 type ModifierDescriptionVars = Record<string, string | number>;
 
@@ -46,7 +46,9 @@ function getModifierIconId(code: ModifierCode): string {
 /**
  * Returns the variables used to interpolate the description of a modifier.
  * They MUST match the variables in the respective translation template
- * in the 'shared' component in the client.modifiers object.
+ * in the 'shared' component under client.variant_preview.modifier_descs.
+ * Modifiers that don't need an active-value parameter should reuse their
+ * static `t.shared.modifiers.<code>.description` directly with no vars.
  */
 function getModifierDescriptionVars(modifier: InviteModifier): ModifierDescriptionVars {
 	switch (modifier.kind) {

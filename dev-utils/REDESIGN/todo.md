@@ -33,7 +33,11 @@
 
 - Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
 
-- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
+- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field. It should also include info about retaining any xss-whitelisted html tags they should not modify in strings, UNLESS wherever html tags are in use in strings, those templates are commented to clearly explain their presence and the need to preserve them.
+
+- Once all pages are localized: Setup Weblate.
+
+- Rewrite the translation guide in `docs/TRANSLATIONS.md` to reflect the new system and Weblate. It should cover how to use Weblate, and also contain pointers for fast-tracking translation via AI by translating whole components at once.
 
 ---
 

@@ -35,7 +35,7 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 const variantGroups = variantregistry.getVariantGroupsWithVariants();
 
 // Regular pages
-router.get('^/$|/index(.html)?', (_req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText() })); // prettier-ignore
+router.get('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 router.get('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 router.get('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
 router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));

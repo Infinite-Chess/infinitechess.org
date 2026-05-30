@@ -393,8 +393,12 @@ async function populateRules(
 
 	// Modifiers — last
 	for (const modifier of modifiers ?? []) {
-		const template = t.shared.modifiers[modifier.kind].description;
-		items.push(format(template, modutil.getModifierDescriptionVars(modifier)));
+		if (modifier.kind === 'slide-limit') {
+			const descVars = modutil.getModifierDescriptionVars(modifier);
+			items.push(format(t.shared.variant_preview.slide_limit_rule, descVars));
+		} else {
+			throw new Error(`Unknown modifier kind ${modifier.kind}`);
+		}
 	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);
