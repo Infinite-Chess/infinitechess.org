@@ -2,9 +2,9 @@
 
 ## Context
 
-The per-component translation system (see [TRANSLATION_SYSTEM.md](../TRANSLATION_SYSTEM.md)) splits each TOML into two halves: everything under `[client]` is shipped to the browser via `clientT()`/`window.t`; everything outside `[client]` stays server-side via `templateT()`.
+The per-component translation system (see [TRANSLATION_SYSTEM.md](../TRANSLATION_SYSTEM.md)) splits each TOML into two halves: everything under `[client]` is shipped to the browser via `clientT()`/`window.t` or used on the server side to send translated responses to Express requests; everything outside `[client]` stays server-side via `templateT()`.
 
-When a component is entirely client-side (e.g. `translation/shared/en-US.toml`, and likely most page-specific TOMLs going forward), every subtable header must be prefixed with `client.`:
+When a component is entirely client-side (e.g. `translation/shared/en-US.toml`, `translation/responses/en-US.toml`, and likely most page-specific TOMLs going forward), every subtable header must be prefixed with `client.`:
 
 ```toml
 [client.variants]
@@ -90,4 +90,4 @@ For each: add `client_only = true` at the top, then unindent every section heade
 ## Out of scope
 
 - This is a quality-of-life refactor of the TOML authoring experience only. Do not change any translation strings, file structure, or runtime behavior beyond the parsing split.
-- Do not change `responses` handling (it's already special-cased).
+- Ignore the misleading "client" naming convention even though those types of components are technically both sent to the client and used on the server for sending translated responses. That will be looked at later.
