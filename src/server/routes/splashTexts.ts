@@ -133,6 +133,8 @@ const splashTexts: string[] = [
 	'Your chess variant can fit in mine',
 	'Kudos Joel David Hamkins',
 	'Walls? Overrated',
+	"Don't worry, most games don't last forever",
+	'Checkmate is only a little trickier',
 ];
 
 /** Returns a randomly chosen splash text. */
