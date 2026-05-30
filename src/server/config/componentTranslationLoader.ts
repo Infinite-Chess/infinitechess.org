@@ -9,13 +9,11 @@
  *
  * The [client] sub-table (if present) is excluded from the server-side object —
  * it is injected into the page separately via getClientTranslation().
- * The responses component (tconfig.RESPONSES_COMPONENT) is stored separately.
  */
 
 import type { Request } from 'express';
 import type { CustomWebSocket } from '../socket/socketUtility.js';
 import type { ClientTranslations } from '../../shared/types/client-translations.js';
-import type { ResponseTranslationKeys } from '../types/response-translations.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -24,7 +22,6 @@ import { WebSocket } from 'ws';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
-import { logEvents } from '../middleware/logEvents.js';
 import { getLanguageToServe } from '../utility/translate.js';
 
 // Types ---------------------------------------------------------------------
@@ -74,8 +71,6 @@ const PSEUDO_LOC = false;
 
 /** Module-level store. */
 let componentStore: ComponentStore | null = null;
-/** Response translations by language. */
-let responsesStore: Map<string, Record<string, any>> | null = null;
 
 // Loading Translations ------------------------------------------------------------
 
@@ -98,47 +93,29 @@ export function loadComponentTranslations(): void {
 
 		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
 
-		if (componentName === tconfig.RESPONSES_COMPONENT) {
-			// Responses component -> store separately
-			const responses: Map<string, Record<string, any>> = new Map();
+		const englishTemplateObj = withoutClientTable(englishRaw);
+		const englishClientObj: Record<string, any> = englishRaw['client'] ?? {};
 
-			responses.set(tconfig.DEFAULT_LANGUAGE, englishRaw);
-			for (const file of tomlFiles) {
-				const langCode = file.replace('.toml', '');
-				if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
-				responses.set(
-					langCode,
-					deepMerge(englishRaw, parseToml(path.join(componentDir, file))),
-				);
-			}
+		const langMap = new Map<string, ComponentEntry>();
+		langMap.set(tconfig.DEFAULT_LANGUAGE, {
+			template: englishTemplateObj,
+			client: englishClientObj,
+		});
 
-			responsesStore = responses;
-		} else {
-			// Regular component -> store template and client parts separately
-			const englishTemplateObj = withoutClientTable(englishRaw);
-			const englishClientObj: Record<string, any> = englishRaw['client'] ?? {};
-
-			const langMap = new Map<string, ComponentEntry>();
-			langMap.set(tconfig.DEFAULT_LANGUAGE, {
-				template: englishTemplateObj,
-				client: englishClientObj,
+		for (const file of tomlFiles) {
+			const langCode = file.replace('.toml', '');
+			if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
+			const raw = parseToml(path.join(componentDir, file));
+			const templateObj = withoutClientTable(raw);
+			const clientObj: Record<string, any> = raw['client'] ?? {};
+			// Deep-merge English fallback so missing keys are always present
+			langMap.set(langCode, {
+				template: deepMerge(englishTemplateObj, templateObj),
+				client: deepMerge(englishClientObj, clientObj),
 			});
-
-			for (const file of tomlFiles) {
-				const langCode = file.replace('.toml', '');
-				if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
-				const raw = parseToml(path.join(componentDir, file));
-				const templateObj = withoutClientTable(raw);
-				const clientObj: Record<string, any> = raw['client'] ?? {};
-				// Deep-merge English fallback so missing keys are always present
-				langMap.set(langCode, {
-					template: deepMerge(englishTemplateObj, templateObj),
-					client: deepMerge(englishClientObj, clientObj),
-				});
-			}
-
-			componentStore.set(componentName, langMap);
 		}
+
+		componentStore.set(componentName, langMap);
 	}
 }
 
@@ -174,34 +151,19 @@ export function getClientTranslation<C extends keyof ClientTranslations>(
 }
 
 /**
- * Retrieves a translated server response string for the given key.
- * @param key - Dot-notation key from translation/responses/en-US.toml
- * @param reqOrWs - The Express request or WebSocket connection. Language is determined automatically.
+ * Same as {@link getClientTranslation}, but resolves the language from an Express request
+ * or a WebSocket connection. Convenience for runtime-emitted server strings where
+ * the caller has a req/ws rather than a pre-resolved language code.
  */
-export function getResponseTranslation(
-	key: ResponseTranslationKeys,
+export function getClientTranslationsForReq<C extends keyof ClientTranslations>(
+	component: C,
 	reqOrWs: Request | CustomWebSocket,
-): string {
-	if (!responsesStore) throw new Error('loadComponentTranslations() has not been called yet.');
-
+): ClientTranslations[C] {
 	const lang =
 		(reqOrWs instanceof WebSocket
 			? reqOrWs.metadata.cookies.i18next
 			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
-	const translations = responsesStore.get(lang) ?? responsesStore.get(tconfig.DEFAULT_LANGUAGE)!;
-	const parts = key.split('.');
-	let value: any = translations;
-	for (const part of parts) {
-		value = value?.[part];
-	}
-	if (typeof value !== 'string') {
-		logEvents(
-			`Missing response translation for key "${key}" in language "${lang}"`,
-			'errLog.txt',
-		);
-		return key;
-	}
-	return value;
+	return getClientTranslation(component, lang);
 }
 
 // Utility ---------------------------------------------------------------------
