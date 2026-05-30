@@ -25,13 +25,13 @@ title = "Game options"
 
 [modal.variant_selector]
 label = "Variant"
+add_modifier = "Add a fun modifier"
+edit = "Edit position and gamerules"
 custom_create_name = "Create"
 custom_create_desc = "Go to the board editor."
 custom_from_icn_name = "From ICN"
 custom_from_icn_desc = "Paste an accessible ICN code."
 icn_placeholder = "Paste ICN text here"
-add_modifier_tooltip = "Add a fun modifier"
-edit_tooltip = "Edit position and gamerules"
 
 [modal.time_control]
 label = "Time control"
