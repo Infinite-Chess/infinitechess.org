@@ -16,6 +16,7 @@ import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/
 
 import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import { format } from '../../../../../shared/util/format.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -58,14 +59,6 @@ const TOOLTIP_OFFSET_Y = 8;
 
 /** Minimum gap in px between the tooltip and the viewport edge. */
 const EDGE_PAD = 8;
-
-/** Human-readable labels for known non-checkmate win conditions. */
-const WIN_CONDITION_LABELS: Partial<Record<GameruleWinCondition, string>> = {
-	royalcapture: 'royal capture',
-	allroyalscaptured: 'capturing all royals',
-	allpiecescaptured: 'capturing all pieces',
-	koth: 'reaching the center',
-};
 
 // State -------------------------------------------------------------------
 
@@ -185,7 +178,7 @@ async function showForVariantCode(
 	modifiers?: InviteModifier[],
 ): Promise<void> {
 	const token = ++showToken;
-	const variantName = variantregistry.getVariantName(code);
+	const variantName = t.shared.variants[code];
 	await variantcache.ensureVariantLoaded(code);
 	if (token !== showToken) return; // They have since left hover, or hovered over another tooltip anchor.
 	const loadedVariant: LoadedVariant = {
@@ -304,10 +297,12 @@ async function populateRules(
 	modifiers?: InviteModifier[],
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];
+	/** Reference to the variant preview translations. */
+	const tp = t.shared.variant_preview;
 
 	// 4D movement — first
 	if (variantCode !== undefined && variantregistry.getVariantGroup(variantCode) === '4D') {
-		items.push('Pieces travel four-dimensionally');
+		items.push(tp.four_d_movement);
 	}
 
 	// Turn order — show if not standard [White, Black]
@@ -317,10 +312,12 @@ async function populateRules(
 	if (!turnOrderIsDefault) {
 		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
 		if (isBlackFirst) {
-			items.push('Black moves first');
+			items.push(tp.black_moves_first);
 		} else {
-			const order = gameRules.turnOrder.map((p) => ext_inverted[p]).join(', ');
-			items.push(`Turn order: ${order}`);
+			const order = gameRules.turnOrder
+				.map((p) => t.shared.sides[ext_inverted[p] as keyof typeof t.shared.sides])
+				.join(', ');
+			items.push(format(tp.turn_order, { order }));
 		}
 	}
 
@@ -343,13 +340,12 @@ async function populateRules(
 			const label = formatWinCondition(cond);
 			if (condPlayers.length === playerCount) {
 				// All players share this win condition
-				items.push(`Win by ${label}`);
+				items.push(format(tp.win_by, { label }));
 			} else {
 				// Only specific players have this win condition
 				for (const player of condPlayers) {
 					const color = typeutil.strcolors[player];
-					const colorStr = color.charAt(0).toUpperCase() + color.slice(1); // Capitalize first letter
-					items.push(`${colorStr} wins by ${label}`);
+					items.push(format(tp.color_wins_by, { color: t.shared.sides[color], label }));
 				}
 			}
 		}
@@ -359,62 +355,60 @@ async function populateRules(
 	// always explicitly set and don't need enumerating); still show "No promotion"
 	// when absent. For custom positions, always show the full promotion info.
 	if (gameRules.promotion === undefined) {
-		items.push('No promotion');
+		items.push(tp.no_promotion);
 	} else if (!isPreset) {
 		const span = document.createElement('span');
 		span.className = 'preview-tooltip-promotion-icons';
-		span.append('Promotion: '); // Use a non-breaking space to ensure spacing between the label and icons.
+		span.append(tp.promotion_prefix);
 		for (const raw of gameRules.promotion.pieces) {
 			const silhouetteSVG = await svgcache.getSilhouetteSVG(raw);
 			span.appendChild(silhouetteSVG);
 		}
+		// The promotion line ends with SVG icons, so its terminating period
+		// can't live in the translation string — append it here.
+		span.append('.');
 		items.push(span);
 	}
 
 	// Move rule — show if not default (100)
 	if (gameRules.moveRule !== 100) {
-		if (gameRules.moveRule === undefined) items.push('No 50-move rule');
-		else items.push(`Move rule: ${gameRules.moveRule} plies`);
+		if (gameRules.moveRule === undefined) items.push(tp.no_move_rule);
+		else items.push(format(tp.move_rule, { plies: gameRules.moveRule }));
 	}
 
-	// Slide limit — show if set
-	if (gameRules.slideLimit !== undefined) {
-		items.push(`Slide limit: ${gameRules.slideLimit}`);
-	}
+	// Slide limit gamerule - SKIP. Covered below as a modifier.
+	// Plus, currently the modifier isn't transferred to variant preview gameRules.
 
 	// Game state: enpassant square
 	const { enpassant, moveRuleState } = boardsim.startSnapshot.state_global;
 	if (enpassant !== undefined) {
 		const [x, y] = enpassant.square;
-		items.push(`En passant square: (${x},${y})`);
+		items.push(format(tp.en_passant, { x: String(x), y: String(y) }));
 	}
 
 	// Game state: move rule counter
 	if (moveRuleState !== undefined && moveRuleState !== 0) {
-		items.push(`${moveRuleState} plies passed since last capture or pawn push`);
+		items.push(format(tp.plies_since_capture, { n: moveRuleState }));
 	}
 
 	// Modifiers — last
 	for (const modifier of modifiers ?? []) {
-		items.push(modutil.getModifierDescription(modifier));
+		const template = t.shared.modifiers[modifier.kind].description;
+		items.push(format(template, modutil.getModifierDescriptionVars(modifier)));
 	}
 
 	element_rules.classList.toggle('hidden', items.length === 0);
 	element_rulesBody.replaceChildren();
 	items.forEach((item, i) => {
-		const suffix = i < items.length - 1 ? '. ' : '.';
-		if (typeof item === 'string') {
-			element_rulesBody.append(item + suffix);
-		} else {
-			element_rulesBody.appendChild(item);
-			element_rulesBody.append(suffix);
-		}
+		if (i > 0) element_rulesBody.append(' ');
+		if (typeof item === 'string') element_rulesBody.append(item);
+		else element_rulesBody.appendChild(item);
 	});
 }
 
 /** Returns a human-readable label for a win condition code. */
 function formatWinCondition(cond: GameruleWinCondition): string {
-	return WIN_CONDITION_LABELS[cond] ?? cond;
+	return t.shared.variant_preview.win_conditions[cond] ?? cond;
 }
 
 /** Whether the turn order in gameRules matches the given order. */

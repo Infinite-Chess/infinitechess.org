@@ -15,12 +15,15 @@ import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import { validatePosition } from '../../../shared/chess/variants/positionvalidation.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
+import {
+	validatePosition,
+	PositionErrorCode,
+} from '../../../shared/chess/variants/positionvalidation.js';
 import {
 	isRatedAllowed,
 	POSITION_STRING_THRESHOLD,
@@ -32,9 +35,11 @@ import {
 	GameModeSchema,
 } from '../../../shared/types.js';
 
+import tconfig from '../../config/translationconfig.js';
 import { AuthSeek } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
 import editorSavesManager from '../../database/editorSavesManager.js';
+import { getClientTranslation } from '../../config/componentTranslationLoader.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -44,6 +49,11 @@ import {
 	addInvite,
 	IDLengthOfInvites,
 } from './lobbymanager.js';
+
+// Types -------------------------------------------------------------------------------
+
+/** Codes returned by {@link validateIcnSeekContent}; superset of {@link PositionErrorCode}. */
+type IcnSeekErrorCode = PositionErrorCode | 'invalid_icn' | 'icn_missing_position';
 
 // Schemas ---------------------------------------------------------------------------
 
@@ -167,7 +177,8 @@ async function getInviteFromWebsocketMessageContents(
 		}
 		// Skip decompression if the compressed payload is already too large to be a legal seek.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
-			return sendSocketMessage(ws, 'general', 'notify', 'Position is too large.');
+			const message = localizePositionError('position_too_large', ws);
+			return sendSocketMessage(ws, 'general', 'notify', message);
 		}
 		const content = await compression.decompressString(
 			record.icn,
@@ -180,7 +191,8 @@ async function getInviteFromWebsocketMessageContents(
 	if (variant.kind === 'icn') {
 		const illegalReason = validateIcnSeekContent(variant.content);
 		if (illegalReason !== null) {
-			return sendSocketMessage(ws, 'general', 'notify', illegalReason);
+			const message = localizePositionError(illegalReason, ws);
+			return sendSocketMessage(ws, 'general', 'notify', message);
 		}
 	}
 
@@ -199,20 +211,35 @@ async function getInviteFromWebsocketMessageContents(
 
 /**
  * Parses an ICN seek's content and runs position legality checks.
- * @returns `null` if the ICN is legal, or a human-readable rejection reason.
+ * @returns `null` if the ICN is legal, or an {@link IcnSeekErrorCode} describing the failure.
  */
-function validateIcnSeekContent(content: string): string | null {
+function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 	let longFormat;
 	try {
 		longFormat = icnconverter.ShortToLong_Format(content);
 	} catch {
-		return 'Invalid ICN.';
+		return 'invalid_icn';
 	}
 	if (longFormat.position === undefined || longFormat.state_global.specialRights === undefined) {
-		return 'ICN must include a position.';
+		return 'icn_missing_position';
 	}
 	const variantOptions = icnimport.variantOptionsFromLongFormat(longFormat, { fullMove: 1 });
 	return validatePosition(variantOptions, content);
+}
+
+/**
+ * Localizes a position/ICN error code for the websocket's `notify` channel.
+ * TODO: getClientTranslation returns Record<string, any>, so the cast below is
+ * unchecked — if a TOML key moves or renames, the runtime fallback to the raw
+ * code is the only signal. Tighten this when getClientTranslation gets a typed
+ * API (or when the codes-over-the-wire approach is adopted instead).
+ */
+function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
+	const lang = ws.metadata.cookies.i18next ?? tconfig.DEFAULT_LANGUAGE;
+	const shared = getClientTranslation('shared', lang) as {
+		position_errors?: Record<string, string>;
+	};
+	return shared.position_errors?.[code] ?? code;
 }
 
 export { createSeek, createseekschem };

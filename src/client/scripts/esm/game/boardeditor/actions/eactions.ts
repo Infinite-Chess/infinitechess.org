@@ -299,7 +299,7 @@ function getValidatedPosition(): VariantOptions | null {
 	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		// The position is illegal
-		toast.show(illegalReason, { error: true });
+		toast.show(t.shared.position_errors[illegalReason], { error: true });
 		return null;
 	}
 	return variantOptions;

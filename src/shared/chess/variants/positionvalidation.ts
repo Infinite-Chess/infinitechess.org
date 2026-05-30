@@ -33,6 +33,24 @@ const WIN_CONDITIONS_REQUIRING_ROYAL: string[] = [
 /** All colored players required in a complete 4-player game's turn order. */
 const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
 
+// Types -------------------------------------------------------------------------------
+
+/**
+ * Codes returned by {@link validatePosition} when a position is illegal.
+ * Callers look up the display label via `t.shared.position_errors[code]`.
+ */
+export type PositionErrorCode =
+	| 'mixed_player_modes'
+	| 'incomplete_turn_order'
+	| 'position_too_large'
+	| 'gargoyles_not_allowed'
+	| 'invalid_player_id'
+	| 'player_missing_pieces'
+	| 'player_missing_royal'
+	| 'consecutive_turns_with_checkmate'
+	| 'too_many_royals_for_checkmate'
+	| 'king_capture_on_turn_1';
+
 // Functions -------------------------------------------------------------------------
 
 /**
@@ -50,9 +68,12 @@ const FOUR_PLAYER_COLORS: number[] = [p.RED, p.BLUE, p.YELLOW, p.GREEN];
  *
  * @param variantOptions - The position and game rules to validate.
  * @param icnString - The ICN string representation of the position, used to check its length.
- * @returns `null` if valid, or a string describing the reason the position is illegal.
+ * @returns `null` if valid, or a {@link PositionErrorCode} describing the failure.
  */
-export function validatePosition(variantOptions: VariantOptions, icnString: string): string | null {
+export function validatePosition(
+	variantOptions: VariantOptions,
+	icnString: string,
+): PositionErrorCode | null {
 	const { position, gameRules } = variantOptions;
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder);
 	const turnOrderSet = new Set<number>(uniquePlayers);
@@ -60,22 +81,22 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	// --- Rule 1: Mode mutual exclusivity (white/black vs colored) ---
 	const hasColoredPlayers = uniquePlayers.some((up) => FOUR_PLAYER_COLORS.includes(up));
 	const hasTwoPlayerColors = uniquePlayers.some((up) => up === p.WHITE || up === p.BLACK);
-	if (hasColoredPlayers && hasTwoPlayerColors) return 'Cannot mix 2-player and 4-player.';
+	if (hasColoredPlayers && hasTwoPlayerColors) return 'mixed_player_modes';
 
 	const isFourPlayerMode = hasColoredPlayers;
 
 	// --- Rule 2: Mode completeness ---
 	if (isFourPlayerMode) {
 		for (const up of FOUR_PLAYER_COLORS) {
-			if (!turnOrderSet.has(up)) return 'All players need a turn.';
+			if (!turnOrderSet.has(up)) return 'incomplete_turn_order';
 		}
 	} else if (!turnOrderSet.has(p.WHITE) || !turnOrderSet.has(p.BLACK)) {
-		return 'All players need a turn.';
+		return 'incomplete_turn_order';
 	}
 
 	// --- Rule 3: ICN string length limit ---
 	if (icnString.length > POSITION_STRING_THRESHOLD) {
-		return `Position is too large.`;
+		return 'position_too_large';
 	}
 
 	// --- Rule 4: Piece color and turn order consistency ---
@@ -91,16 +112,16 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 		if (color === p.NEUTRAL) {
 			// In 2-player mode, only void and obstacle neutrals are allowed; no gargoyles.
 			if (!isFourPlayerMode && !neutralExemptRawTypes.has(rawType)) {
-				return `No gargoyles allowed.`;
+				return 'gargoyles_not_allowed';
 			}
 		} else {
 			// Reject pieces with invalid player IDs (> GREEN).
 			if (color !== p.WHITE && color !== p.BLACK && !FOUR_PLAYER_COLORS.includes(color)) {
-				return `At least one piece has an invalid player ID.`;
+				return 'invalid_player_id';
 			}
 			// Non-neutral piece colors must be in the turn order. Otherwise this indicates a 2/4-player mode mismatch.
 			if (!turnOrderSet.has(color)) {
-				return 'Cannot mix 2-player and 4-player.';
+				return 'mixed_player_modes';
 			}
 			playersWithPieces.add(color);
 			if (royalRawTypes.has(rawType)) {
@@ -113,14 +134,14 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	// --- Rule 5: Per-player post-checks ---
 	for (const player of uniquePlayers) {
 		if (!playersWithPieces.has(player)) {
-			return `Each player must have at least one piece.`;
+			return 'player_missing_pieces';
 		}
 		const playerWinCons = gameRules.winConditions[player] ?? [];
 		const playerRequiresRoyal = playerWinCons.some((wc) =>
 			WIN_CONDITIONS_REQUIRING_ROYAL.includes(wc),
 		);
 		if (playerRequiresRoyal && !playersWithRoyals.has(player)) {
-			return `At least one player is missing a royal.`;
+			return 'player_missing_royal';
 		}
 	}
 
@@ -131,17 +152,17 @@ export function validatePosition(variantOptions: VariantOptions, icnString: stri
 	if (checkmateUsed) {
 		// In 2-player mode, if any player gets 2+ turns in a row, king capture is possible
 		if (!isFourPlayerMode && moveutil.doesAnyPlayerGet2TurnsInARow(gameRules)) {
-			return 'Players cannot have consecutive turns when using checkmate.';
+			return 'consecutive_turns_with_checkmate';
 		}
 		if (royalCount > winconutil.royalCountToDisableCheckmate) {
-			return 'Too many royals for using checkmate.';
+			return 'too_many_royals_for_checkmate';
 		}
 		// King capture must not be possible on turn 1
 		const secondPlayer = gameRules.turnOrder[1]!;
 		const boardsim = boardinit.initBoard(gameRules, undefined, variantOptions);
 		const checkResult = checkdetection.detectCheck(boardsim, secondPlayer, false);
 		if (checkResult.check) {
-			return `King capture possible on turn 1.`;
+			return 'king_capture_on_turn_1';
 		}
 	}
 

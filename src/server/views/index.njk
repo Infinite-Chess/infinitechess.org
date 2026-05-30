@@ -19,6 +19,9 @@
 
 {% block body %}
 
+{# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
+{% set s = clientT('shared') %}
+
 {# ── Macros ───────────────────────────────────────────────────────────────── #}
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
 
@@ -175,23 +178,23 @@
 					</button>
 					<div class="variant-dropdown" id="variant-dropdown">
 						{% for g in variantGroups %}
-						{{ variantGroupItem(g.group, g.iconId, g.name, g.description) }}
+						{{ variantGroupItem(g.group, g.iconId, s.variant_groups[g.group].name, s.variant_groups[g.group].description) }}
 						{% endfor %}
-						{{ variantGroupItem("custom", "svg-wrench", "Custom", "Your own position, your own rules.") }}
+						{{ variantGroupItem("custom", "svg-wrench", s.variant_groups.custom.name, s.variant_groups.custom.description) }}
 					</div>
 					{% for g in variantGroups %}
 					<div class="variant-dropdown variant-list-panel" data-group="{{ g.group }}">
-						{{ variantListBack(g.iconId, g.name, g.description) }}
+						{{ variantListBack(g.iconId, s.variant_groups[g.group].name, s.variant_groups[g.group].description) }}
 						{% for v in g.variants %}
 						<button class="variant-item" data-code="{{ v.code }}">
-							<span class="variant-name">{{ v.name }}</span>
+							<span class="variant-name">{{ s.variants[v.code] }}</span>
 							{{ eyeIcon() }}
 						</button>
 						{% endfor %}
 					</div>
 					{% endfor %}
 					<div class="variant-dropdown variant-list-panel" data-group="custom" id="variant-custom-panel">
-						{{ variantListBack("svg-wrench", "Custom", "Your own position, your own rules.") }}
+						{{ variantListBack("svg-wrench", s.variant_groups.custom.name, s.variant_groups.custom.description) }}
 						{{ variantGroupItem(none, "svg-pencil",    "Create",   "Go to the board editor.",       arrow=false, id="btn-custom-create") }}
 						{{ variantGroupItem(none, "svg-clipboard", "From ICN", "Paste an accessible ICN code.", arrow=false, id="btn-custom-from-icn") }}
 						<div id="variant-custom-content"></div>

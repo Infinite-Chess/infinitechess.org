@@ -129,12 +129,6 @@ function getSpeedCategory(time_control: TimeControl): SpeedCategory {
 	return 'classical'; // This is the max for now
 }
 
-/** Returns the human-readable speed name (e.g. `"Blitz"`) for the given time control. */
-function getSpeedName(time_control: TimeControl): string {
-	const speedCategory = getSpeedCategory(time_control);
-	return speedCategory.charAt(0).toUpperCase() + speedCategory.slice(1);
-}
-
 /** Returns the SVG symbol ID of the speed icon for the given time control. */
 function getSpeedIconId(time_control: TimeControl): string {
 	return `svg-speed-${getSpeedCategory(time_control)}`;
@@ -150,6 +144,6 @@ export default {
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
-	getSpeedName,
+	getSpeedCategory,
 	getSpeedIconId,
 };

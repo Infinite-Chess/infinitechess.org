@@ -323,11 +323,10 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const sideDot = createSideDotVNode(seek.color);
 	const variantIcon = getVariantIcon(seek.variant.group);
 	const variantName =
-		seek.variant.group === 'custom'
-			? seek.variant.name
-			: variantregistry.getVariantName(seek.variant.code);
+		seek.variant.group === 'custom' ? seek.variant.name : t.shared.variants[seek.variant.code];
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
-	const speedTitle = clockutil.getSpeedName(seek.time);
+	const speedCategory = clockutil.getSpeedCategory(seek.time);
+	const speedTitle = t.shared.speeds[speedCategory];
 
 	return h(
 		'div.seek-row',

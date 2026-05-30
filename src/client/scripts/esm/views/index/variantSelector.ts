@@ -373,7 +373,7 @@ function setSelectorDisplay(name: string, iconId: string): void {
 function applyVariantToSelector(code: VariantCode): void {
 	const variantGroup = variantregistry.getVariantGroup(code);
 	setSelectorDisplay(
-		variantregistry.getVariantName(code),
+		t.shared.variants[code],
 		variantregistry.getVariantGroupIconId(variantGroup),
 	);
 }
@@ -410,7 +410,7 @@ function validateSavedPosition(variantOptions: VariantOptions): void {
 	const illegalReason = validatePosition(variantOptions, icnString);
 	if (illegalReason !== null) {
 		element_variantDisplay.classList.add('invalid');
-		element_icnErrorText.textContent = illegalReason;
+		element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
 		setIcnResult({ options: variantOptions, isValid: false });
 	} else {
 		setIcnResult({ options: variantOptions, isValid: true });
@@ -445,7 +445,7 @@ function validateIcnInput(): void {
 		const illegalReason = validatePosition(icnVariantOptions, value);
 		if (illegalReason !== null) {
 			element_icnInputWrap.classList.add('invalid');
-			element_icnErrorText.textContent = illegalReason;
+			element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
 			setIcnResult({ options: icnVariantOptions, isValid: false });
 		} else {
 			element_icnErrorText.textContent = '';

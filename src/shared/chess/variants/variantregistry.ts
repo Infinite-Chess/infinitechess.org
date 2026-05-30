@@ -17,8 +17,6 @@ export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
 
 /** Entry in the variant group registry. */
 export type GroupRegistryEntry = {
-	name: string;
-	description: string;
 	iconId: string;
 };
 
@@ -34,7 +32,10 @@ export type VariantInfo = {
 export type VariantRegistryEntry = {
 	/** The variant's group categorization. */
 	group: VariantGroup;
-	/** The English display name. */
+	/**
+	 * The English display name. Kept for ICN metadata
+	 * serialization; display labels come from t.shared.variants.
+	 */
 	name: string;
 	/** Dynamically imports the script for this variant. */
 	loadVariant: () => Promise<VariantModule>;
@@ -45,26 +46,10 @@ export type VariantRegistryEntry = {
 // ================================ VARIANT GROUP REGISTRY ================================
 
 const VARIANT_GROUP_REGISTRY = {
-	standard: {
-		name: 'Standard',
-		description: 'Normal rules apply.',
-		iconId: 'svg-pawn',
-	},
-	horde: {
-		name: 'Horde',
-		description: 'One side has a large number of pawns, the other has a normal army.',
-		iconId: 'svg-keypad',
-	},
-	'4D': {
-		name: '4D',
-		description: 'Pieces can travel four-dimensionally.',
-		iconId: 'svg-tesseract',
-	},
-	showcase: {
-		name: 'Showcase',
-		description: 'Mate in omega, and greater, forced checkmate positions.',
-		iconId: 'svg-trophy',
-	},
+	standard: { iconId: 'svg-pawn' },
+	horde: { iconId: 'svg-keypad' },
+	'4D': { iconId: 'svg-tesseract' },
+	showcase: { iconId: 'svg-trophy' },
 } satisfies Record<VariantGroup, GroupRegistryEntry>;
 
 /** An array of all valid variant groups. */
@@ -274,24 +259,19 @@ function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule
 }
 
 /**
- * Returns all variant groups in display order, each with their metadata
- * and the list of non-hidden variants belonging to that group.
+ * Returns all variant groups in display order, each with their icon and the list
+ * of non-hidden variant codes belonging to that group.
  * Used for SSR'ing the index page.
  */
 function getVariantGroupsWithVariants(): {
 	group: VariantGroup;
-	name: string;
-	description: string;
 	iconId: string;
-	variants: Array<{ code: string; name: string }>;
+	variants: Array<{ code: VariantCode }>;
 }[] {
 	return VARIANT_GROUPS.map((group) => ({
 		group,
-		...VARIANT_GROUP_REGISTRY[group],
-		variants: getVariantsForGroup(group).map((code) => ({
-			code,
-			name: VARIANT_REGISTRY[code].name,
-		})),
+		iconId: VARIANT_GROUP_REGISTRY[group].iconId,
+		variants: getVariantsForGroup(group).map((code) => ({ code })),
 	}));
 }
 

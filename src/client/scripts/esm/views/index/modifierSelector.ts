@@ -110,7 +110,7 @@ function refreshModifiersSection(): void {
 }
 
 function createModifierChip(code: ModifierCode): HTMLElement {
-	const name = modutil.getModifierName(code);
+	const name = t.shared.modifiers[code].name;
 	const iconId = modutil.getModifierIconId(code);
 	const chip = document.createElement('div');
 	chip.className = 'modifier-chip';

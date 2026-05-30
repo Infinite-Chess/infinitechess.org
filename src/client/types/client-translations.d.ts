@@ -5,7 +5,122 @@
  * Do NOT edit manually!
  */
 
-interface ClientTranslations {}
+interface ClientTranslations {
+	shared: {
+		variants: {
+			Classical: string;
+			Core: string;
+			Standarch: string;
+			Space_Classic: string;
+			CoaIP: string;
+			Space: string;
+			Obstocean: string;
+			Chess: string;
+			Confined_Classical: string;
+			Classical_Plus: string;
+			Pawndard: string;
+			Knightline: string;
+			Palace: string;
+			CoaIP_HO: string;
+			CoaIP_RO: string;
+			CoaIP_NO: string;
+			Knighted_Chess: string;
+			Abundance: string;
+			Amazon_Chandelier: string;
+			Containment: string;
+			Pawn_Horde: string;
+			'4x4x4x4_Chess': string;
+			'5D_Chess': string;
+			Omega: string;
+			Omega_Squared: string;
+			Omega_Cubed: string;
+			Omega_Fourth: string;
+		};
+		variant_groups: {
+			standard: {
+				name: string;
+				description: string;
+			};
+			horde: {
+				name: string;
+				description: string;
+			};
+			'4D': {
+				name: string;
+				description: string;
+			};
+			showcase: {
+				name: string;
+				description: string;
+			};
+			custom: {
+				name: string;
+				description: string;
+			};
+		};
+		speeds: {
+			bullet: string;
+			blitz: string;
+			rapid: string;
+			classical: string;
+			infinite: string;
+		};
+		game_modes: {
+			casual: string;
+			rated: string;
+		};
+		sides: {
+			random: string;
+			white: string;
+			black: string;
+			red: string;
+			blue: string;
+			yellow: string;
+			green: string;
+			neutral: string;
+		};
+		position_errors: {
+			invalid_icn: string;
+			icn_missing_position: string;
+			mixed_player_modes: string;
+			incomplete_turn_order: string;
+			position_too_large: string;
+			gargoyles_not_allowed: string;
+			invalid_player_id: string;
+			player_missing_pieces: string;
+			player_missing_royal: string;
+			consecutive_turns_with_checkmate: string;
+			too_many_royals_for_checkmate: string;
+			king_capture_on_turn_1: string;
+		};
+		variant_preview: {
+			four_d_movement: string;
+			black_moves_first: string;
+			turn_order: string;
+			win_by: string;
+			color_wins_by: string;
+			no_promotion: string;
+			promotion_prefix: string;
+			no_move_rule: string;
+			move_rule: string;
+			en_passant: string;
+			plies_since_capture: string;
+			win_conditions: {
+				checkmate: string;
+				royalcapture: string;
+				allroyalscaptured: string;
+				allpiecescaptured: string;
+				koth: string;
+			};
+		};
+		modifiers: {
+			'slide-limit': {
+				name: string;
+				description: string;
+			};
+		};
+	};
+}
 
 /**
  * Client-side translations. The only component actually available
