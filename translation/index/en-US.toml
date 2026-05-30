@@ -63,7 +63,7 @@ play_computer = "Play against computer"
 
 [client.lobby]
 cancel_seek = "Cancel seek"
-accept_invite = "Accept invite"
+accept_seek = "Accept seek"
 
 [client.modal.variant_selector]
 saved_positions = "Saved positions"

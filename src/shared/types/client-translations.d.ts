@@ -20,7 +20,7 @@ export interface ClientTranslations {
 		};
 		lobby: {
 			cancel_seek: string;
-			accept_invite: string;
+			accept_seek: string;
 		};
 		modal: {
 			variant_selector: {

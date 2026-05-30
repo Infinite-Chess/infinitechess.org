@@ -341,7 +341,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 			key: seek.id,
 			class: { ours: seek.isOurs },
 			attrs: {
-				title: seek.isOurs ? t.index.lobby.cancel_seek : t.index.lobby.accept_invite,
+				title: seek.isOurs ? t.index.lobby.cancel_seek : t.index.lobby.accept_seek,
 				'data-seek-id': seek.id,
 			},
 			hook: isNew
