@@ -30,6 +30,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 - **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
 - When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
 - **Rendering:** When asked to add new complex graphics or visuals to the game (webgl canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
+- **Translation system:** For any work involving localization or the TOML-based translation pipeline, `dev-utils/REDESIGN/TRANSLATION_SYSTEM.md` provides a detailed guide.
 
 ## VS Code Tool Notes
 
