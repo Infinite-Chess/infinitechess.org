@@ -1,4 +1,5 @@
 # Translation component: home / index page.
+# Source template: src/server/views/index.njk
 
 # Note: The splash texts are all located in a separate component
 
@@ -8,7 +9,7 @@ tutorial_button = "Take the tutorial"
 dismiss_button = "I'm experienced"
 
 [lobby]
-title = "Lobby"
+title = "Lobby" 
 viewer_count = "Viewer count"
 idle_overlay = "Hover to reconnect."
 
