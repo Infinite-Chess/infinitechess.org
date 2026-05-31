@@ -33,6 +33,8 @@
 
 - Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
 
+- Add a request/connection-bound translator so server code reads strings as ergonomically as the client global `t`: `req.t` (Express) and `ws.t` (socket), each a `ScriptTranslations`-typed Proxy built once from the resolved language, used component-first and fully typed — e.g. `req.t.responses.auth.invalid_token`. Build it on top of a `makeScriptTranslator(lang)` Proxy factory delegating to `getScriptTranslations`. Migrate the `getTranslation`/`getTranslationForReq` call sites (and the two existing `getScriptTranslations` callers) onto it, then **delete `getScriptTranslationsForReq`** (fully superseded). Keep `getScriptTranslations(component, lang)` exported as the bare-language escape hatch (e.g. a future queued email sender resolving language from the DB). Sequencing: `ws.t` has no collision and can land anytime; **`req.t` is blocked until i18next is dropped above**, since `i18next-http-middleware` already augments the Express request with a conflicting `t`.
+
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. 
 
 - Once all pages are localized: Setup Weblate.
