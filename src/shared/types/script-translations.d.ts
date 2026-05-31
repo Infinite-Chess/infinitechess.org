@@ -41,7 +41,12 @@ export interface ScriptTranslations {
 		};
 	};
 	responses: {
-		example: string;
+		seeks: {
+			already_in_game: string;
+			rated_requires_verified: string;
+			cloud_requires_sign_in: string;
+			cloud_not_found: string;
+		};
 	};
 	shared: {
 		user_status: {

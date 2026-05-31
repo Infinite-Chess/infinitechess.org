@@ -35,14 +35,12 @@ import {
 	GameModeSchema,
 } from '../../../shared/types.js';
 
-import tconfig from '../../config/translationconfig.js';
 import { AuthSeek } from './inviteutility.js';
-import { getTranslation } from '../../utility/translate.js';
 import editorSavesManager from '../../database/editorSavesManager.js';
-import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
+import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	existingInviteHasID,
 	deleteUsersExistingInvite,
@@ -85,18 +83,19 @@ const createseekschem = z
  */
 async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): Promise<void> {
 	// invite: { id, owner, variant, clock, color, rated }
-	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game'); // Can't create invite because they are already in a game
+	if (isSocketInAnActiveGame(ws)) {
+		// Can't create invite because they are already in a game
+		const t = getScriptTranslationsForReq('responses', ws);
+		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
+	}
 
 	// Reject rated seeks from unverified/signed-out users
 	if (
 		messageContents.mode === 'rated' &&
 		!(ws.metadata.memberInfo.signedIn && ws.metadata.verified)
 	) {
-		const message = getTranslation(
-			'server.javascript.ws-rated_invite_verification_needed',
-			ws.metadata.cookies?.i18next,
-		);
-		sendSocketMessage(ws, 'general', 'notify', message);
+		const t = getScriptTranslationsForReq('responses', ws);
+		sendSocketMessage(ws, 'general', 'notify', t.seeks.rated_requires_verified);
 		return;
 	}
 
@@ -119,16 +118,6 @@ async function getInviteFromWebsocketMessageContents(
 	messageContents: CreateSeekMessage,
 ): Promise<AuthSeek | void> {
 	// Verify their invite contains the required properties...
-
-	// Is it an object? (This may pass if it is an array, but arrays won't crash when accessing property names, so it doesn't matter. It will be rejected because it doesn't have the required properties.)
-	// We have to separately check for null because JAVASCRIPT has a bug where  typeof null => 'object'
-	if (typeof messageContents !== 'object' || messageContents === null)
-		return sendSocketMessage(
-			ws,
-			'general',
-			'printerror',
-			'Cannot create seek when incoming socket message body is not an object!',
-		);
 
 	let id: string;
 	do {
@@ -158,22 +147,14 @@ async function getInviteFromWebsocketMessageContents(
 	if (variant.kind === 'cloudSave') {
 		// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
 		if (!owner.signedIn) {
-			sendSocketMessage(
-				ws,
-				'general',
-				'notify',
-				'Must be signed in to create a seek from a cloud save.',
-			);
+			const t = getScriptTranslationsForReq('responses', ws);
+			sendSocketMessage(ws, 'general', 'notifyerror', t.seeks.cloud_requires_sign_in);
 			return;
 		}
 		const record = editorSavesManager.getSavedPositionICN(variant.name, owner.user_id);
 		if (record === undefined) {
-			return sendSocketMessage(
-				ws,
-				'general',
-				'notify',
-				`Cloud save "${variant.name}" not found.`,
-			);
+			const t = getScriptTranslationsForReq('responses', ws);
+			return sendSocketMessage(ws, 'general', 'notifyerror', t.seeks.cloud_not_found);
 		}
 		// Skip decompression if the compressed payload is already too large to be a legal seek.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
@@ -229,8 +210,7 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */
 function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
-	const lang = ws.metadata.cookies.i18next ?? tconfig.DEFAULT_LANGUAGE;
-	const shared = getScriptTranslations('shared', lang);
+	const shared = getScriptTranslationsForReq('shared', ws);
 	return shared.position_errors[code] ?? code;
 }
 

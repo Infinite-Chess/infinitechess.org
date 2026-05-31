@@ -15,9 +15,9 @@ import gameutility from '../gamemanager/gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from './inviteutility.js';
-import { getTranslation } from '../../utility/translate.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
+import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	getInviteAndIndexByID,
@@ -40,7 +40,10 @@ type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
  */
 function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): void {
 	// { id, isPrivate }
-	if (isSocketInAnActiveGame(ws)) return sendNotify(ws, 'server.javascript.ws-already_in_game');
+	if (isSocketInAnActiveGame(ws)) {
+		const t = getScriptTranslationsForReq('responses', ws);
+		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
+	}
 
 	// Does the invite still exist?
 	const inviteAndIndex = getInviteAndIndexByID(messageContents);
@@ -61,15 +64,8 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
 	if (seek.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
-		return sendSocketMessage(
-			ws,
-			'general',
-			'notify',
-			getTranslation(
-				'server.javascript.ws-rated_invite_verification_needed',
-				ws.metadata.cookies?.i18next,
-			),
-		);
+		const t = getScriptTranslationsForReq('responses', ws);
+		return sendSocketMessage(ws, 'general', 'notify', t.seeks.rated_requires_verified);
 	}
 
 	// Accept the invite!
