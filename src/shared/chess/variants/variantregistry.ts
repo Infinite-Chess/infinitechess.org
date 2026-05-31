@@ -259,12 +259,12 @@ function getVariantLoader(variantCode: VariantCode): () => Promise<VariantModule
 function getVariantGroupsWithVariants(): {
 	group: VariantGroup;
 	iconId: string;
-	variants: Array<{ code: VariantCode }>;
+	variants: VariantCode[];
 }[] {
 	return VARIANT_GROUPS.map((group) => ({
 		group,
 		iconId: VARIANT_GROUP_ICONS[group],
-		variants: getVariantsForGroup(group).map((code) => ({ code })),
+		variants: getVariantsForGroup(group),
 	}));
 }
 

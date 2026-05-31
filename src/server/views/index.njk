@@ -192,8 +192,8 @@
 					<div class="variant-dropdown variant-list-panel" data-group="{{ g.group }}">
 						{{ variantListBack(g.iconId, s.variant_groups[g.group].name, s.variant_groups[g.group].description) }}
 						{% for v in g.variants %}
-						<button class="variant-item" data-code="{{ v.code }}">
-							<span class="variant-name">{{ s.variants[v.code] }}</span>
+						<button class="variant-item" data-code="{{ v }}">
+							<span class="variant-name">{{ s.variants[v] }}</span>
 							{{ eyeIcon() }}
 						</button>
 						{% endfor %}
