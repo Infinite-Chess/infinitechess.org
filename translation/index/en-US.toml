@@ -1,8 +1,6 @@
 # Translation component: home / index page.
 
-[hero]
-title = "Infinite Chess"
-# splash tagline texts are all located in a separate component
+# Note: The splash texts are all located in a separate component
 
 [new_player_prompt]
 label = "New?"
