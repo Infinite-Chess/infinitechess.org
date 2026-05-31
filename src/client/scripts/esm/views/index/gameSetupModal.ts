@@ -170,6 +170,8 @@ function handleOnlineSeek(): void {
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
 function openModal(mode: ModalMode): void {
+	lobby.exitIdle();
+
 	currentMode = mode;
 	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
 

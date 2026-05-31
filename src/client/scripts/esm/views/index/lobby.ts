@@ -264,13 +264,19 @@ function showIdleOverlay(): void {
 	const controller = new AbortController();
 	const onReturn = (): void => {
 		controller.abort(); // Removes both listeners at once
-		element_lobbyIdleOverlay.classList.add('hidden');
-		isIdle = false;
-		subscribe();
+		exitIdle();
 	};
 	const opts = { signal: controller.signal };
 	element_lobbyIdleOverlay.addEventListener('pointerenter', onReturn, opts);
 	element_lobbyIdleOverlay.addEventListener('pointerdown', onReturn, opts);
+}
+
+/** Exits the idle state: hides the overlay and resubscribes to the lobby. */
+function exitIdle(): void {
+	if (!isIdle) return;
+	element_lobbyIdleOverlay.classList.add('hidden');
+	isIdle = false;
+	subscribe();
 }
 
 // Snabbdom Rendering ----------------------------------------------
@@ -475,4 +481,5 @@ export default {
 	createSeek,
 	subscribe,
 	unsubscribe,
+	exitIdle,
 };
