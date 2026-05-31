@@ -8,12 +8,12 @@
 import type { Request } from 'express';
 
 import { getLanguageToServe } from '../utility/translate.js';
-import { getTemplateTranslation } from '../config/componentTranslationLoader.js';
+import { getTemplateTranslations } from '../config/componentTranslationLoader.js';
 
 /** Returns a randomly chosen splash text in the request's resolved language. */
 export function getRandomSplashText(req: Request): string {
 	const lang = getLanguageToServe(req);
-	const splashes = getTemplateTranslation('splashes', lang) as Record<string, string>;
+	const splashes = getTemplateTranslations('splashes', lang) as Record<string, string>;
 	const values = Object.values(splashes);
 	return values[Math.floor(Math.random() * values.length)]!;
 }

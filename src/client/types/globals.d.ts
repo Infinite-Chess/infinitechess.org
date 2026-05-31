@@ -1,7 +1,7 @@
 // src/client/types/globals.d.ts
 
 import type { TranslationsObject } from '../../types/translations.js';
-import type { ClientTranslations } from '../../shared/types/client-translations.js';
+import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 /**
  * Legacy i18next-era client translations. Backs the global `translations` object
@@ -28,11 +28,11 @@ declare global {
 	const translations: LegacyClientTranslations;
 
 	/**
-	 * Per-component client translations, injected into the page as
+	 * Per-component script-facing translations, injected into the page as
 	 * `window.t` by the Nunjucks SSR layout (see TRANSLATION_SYSTEM.md).
 	 * Only components included on the current page are populated at runtime.
 	 */
-	const t: ClientTranslations;
+	const t: ScriptTranslations;
 
 	/** htmlscript injected inline inside the game page. It handles the loading animation. */
 	var htmlscript: {

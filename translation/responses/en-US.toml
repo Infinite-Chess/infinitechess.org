@@ -1,6 +1,6 @@
 # Translation component: server response strings
 # These are the ONLY translations the server sends directly in HTTP/WebSocket responses.
-client_only = true
+script_only = true
 
 # Place templates here as they are migrated
 example = "Delete after adding first real key."

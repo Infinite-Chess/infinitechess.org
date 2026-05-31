@@ -7,15 +7,15 @@
  * All components are loaded once at startup by loadComponentTranslations().
  * Retrieve them per request.
  *
- * The [client] sub-table (if present) is excluded from the server-side object —
- * it is injected into the page separately via getClientTranslation(). Components
- * that are entirely client-side can opt in to the `client_only = true` shorthand
- * to skip the `client.` prefix on every subtable header.
+ * The [script] sub-table (if present) is excluded from the server-side template object —
+ * it is injected into the page separately via getScriptTranslations(). Components
+ * whose keys are entirely script-facing can opt in to the `script_only = true` shorthand
+ * to skip the `script.` prefix on every subtable header.
  */
 
 import type { Request } from 'express';
 import type { CustomWebSocket } from '../socket/socketUtility.js';
-import type { ClientTranslations } from '../../shared/types/client-translations.js';
+import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -37,10 +37,10 @@ type ComponentStore = Map<string, Map<string, ComponentEntry>>;
 
 /** A single component's translations for one language. */
 type ComponentEntry = {
-	/** The TOML object with [client] removed — used by SSR templates. */
+	/** The TOML object with [script] removed — used by SSR templates. */
 	template: Record<string, any>;
-	/** The [client] sub-table of the TOML, or {} if not present — served to browser JS. */
-	client: Record<string, any>;
+	/** The [script] sub-table of the TOML, or {} if not present — read by browser/server JS. */
+	script: Record<string, any>;
 };
 
 // Constants -----------------------------------------------------------------
@@ -95,23 +95,23 @@ export function loadComponentTranslations(): void {
 
 		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
 
-		const { template: englishTemplateObj, client: englishClientObj } = splitParsed(englishRaw);
+		const { template: englishTemplateObj, script: englishScriptObj } = splitParsed(englishRaw);
 
 		const langMap = new Map<string, ComponentEntry>();
 		langMap.set(tconfig.DEFAULT_LANGUAGE, {
 			template: englishTemplateObj,
-			client: englishClientObj,
+			script: englishScriptObj,
 		});
 
 		for (const file of tomlFiles) {
 			const langCode = file.replace('.toml', '');
 			if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
 			const raw = parseToml(path.join(componentDir, file));
-			const { template: templateObj, client: clientObj } = splitParsed(raw);
+			const { template: templateObj, script: scriptObj } = splitParsed(raw);
 			// Deep-merge English fallback so missing keys are always present
 			langMap.set(langCode, {
 				template: deepMerge(englishTemplateObj, templateObj),
-				client: deepMerge(englishClientObj, clientObj),
+				script: deepMerge(englishScriptObj, scriptObj),
 			});
 		}
 
@@ -125,7 +125,7 @@ export function loadComponentTranslations(): void {
  * @param component - The component name, e.g. "header"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getTemplateTranslation(component: string, lang: string): Record<string, any> {
+export function getTemplateTranslations(component: string, lang: string): Record<string, any> {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
@@ -133,37 +133,37 @@ export function getTemplateTranslation(component: string, lang: string): Record<
 }
 
 /**
- * Returns the [client] sub-table of a component for the requested language, promoted one
- * level up (i.e. the keys of [client] become the top-level keys of the returned object).
- * Returns an empty object if the component has no [client] section.
+ * Returns the [script] sub-table of a component for the requested language, promoted one
+ * level up (i.e. the keys of [script] become the top-level keys of the returned object).
+ * Returns an empty object if the component has no [script] section.
  * @param component - The component name, e.g. "leaderboard"
  * @param lang - The language code, e.g. "de-DE"
  */
-export function getClientTranslation<C extends keyof ClientTranslations>(
+export function getScriptTranslations<C extends keyof ScriptTranslations>(
 	component: C,
 	lang: string,
-): ClientTranslations[C] {
+): ScriptTranslations[C] {
 	if (!componentStore) throw new Error('loadComponentTranslations() has not been called yet.');
 	const langMap = componentStore.get(component);
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
-	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.client ??
-		{}) as ClientTranslations[C];
+	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.script ??
+		{}) as ScriptTranslations[C];
 }
 
 /**
- * Same as {@link getClientTranslation}, but resolves the language from an Express request
+ * Same as {@link getScriptTranslations}, but resolves the language from an Express request
  * or a WebSocket connection. Convenience for runtime-emitted server strings where
  * the caller has a req/ws rather than a pre-resolved language code.
  */
-export function getClientTranslationsForReq<C extends keyof ClientTranslations>(
+export function getScriptTranslationsForReq<C extends keyof ScriptTranslations>(
 	component: C,
 	reqOrWs: Request | CustomWebSocket,
-): ClientTranslations[C] {
+): ScriptTranslations[C] {
 	const lang =
 		(reqOrWs instanceof WebSocket
 			? reqOrWs.metadata.cookies.i18next
 			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
-	return getClientTranslation(component, lang);
+	return getScriptTranslations(component, lang);
 }
 
 // Utility ---------------------------------------------------------------------
@@ -212,24 +212,24 @@ function html_escape(value: any): any {
 }
 
 /**
- * Splits a parsed TOML object into `{ template, client }` halves.
+ * Splits a parsed TOML object into `{ template, script }` halves.
  *
  * Two modes:
- * - `client_only = true` shorthand: the entire object (minus the flag itself) is treated
- *   as the client half. The template half is empty. Lets authors of fully client-side
- *   components skip prefixing every subtable header with `client.`.
- * - Otherwise: the `[client]` subtable becomes the client half, everything else is template.
+ * - `script_only = true` shorthand: the entire object (minus the flag itself) is treated
+ *   as the script half. The template half is empty. Lets authors of fully script-facing
+ *   components skip prefixing every subtable header with `script.`.
+ * - Otherwise: the `[script]` subtable becomes the script half, everything else is template.
  */
 function splitParsed(parsed: Record<string, any>): {
 	template: Record<string, any>;
-	client: Record<string, any>;
+	script: Record<string, any>;
 } {
-	if (parsed['client_only'] === true) {
-		const { client_only: _flag, ...rest } = parsed;
-		return { template: {}, client: rest };
+	if (parsed['script_only'] === true) {
+		const { script_only: _flag, ...rest } = parsed;
+		return { template: {}, script: rest };
 	}
-	const { client: clientTable, ...rest } = parsed;
-	return { template: rest, client: clientTable ?? {} };
+	const { script: scriptTable, ...rest } = parsed;
+	return { template: rest, script: scriptTable ?? {} };
 }
 
 /**

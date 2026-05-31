@@ -39,7 +39,7 @@ import tconfig from '../../config/translationconfig.js';
 import { AuthSeek } from './inviteutility.js';
 import { getTranslation } from '../../utility/translate.js';
 import editorSavesManager from '../../database/editorSavesManager.js';
-import { getClientTranslation } from '../../config/componentTranslationLoader.js';
+import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -230,7 +230,7 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */
 function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
 	const lang = ws.metadata.cookies.i18next ?? tconfig.DEFAULT_LANGUAGE;
-	const shared = getClientTranslation('shared', lang);
+	const shared = getScriptTranslations('shared', lang);
 	return shared.position_errors[code] ?? code;
 }
 

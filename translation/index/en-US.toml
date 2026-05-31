@@ -56,16 +56,16 @@ label = "Modifiers:"
 # Strings shipped to the browser. JS reads these from `t.index.*`.
 # ──────────────────────────────────────────────────────────────────────────────
 
-[client.lobby_buttons]
+[script.lobby_buttons]
 create_online = "Create online game"
 challenge_friend = "Challenge a friend"
 play_computer = "Play against computer"
 
-[client.lobby]
+[script.lobby]
 cancel_seek = "Cancel seek"
 accept_seek = "Accept seek"
 
-[client.modal.variant_selector]
+[script.modal.variant_selector]
 saved_positions = "Saved positions"
 local_load_failed = "Failed to load local save."
 cloud_load_failed = "Failed to load cloud save."

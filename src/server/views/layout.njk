@@ -34,9 +34,9 @@
     {# Page-specific stylesheet #}
     {% block style %}{% endblock %}
 
-    {# Client translations for site-wide components, injected as a global `t` object.
+    {# Script-facing translations for site-wide components, injected as a global `t` object.
        Page-specific components should extend it via `Object.assign(window.t, ...)` in their own head block. #}
-    <script>window.t = { header: {{ clientT('header') | json | safe }}, shared: {{ clientT('shared') | json | safe }} };</script>
+    <script>window.t = { header: {{ scriptT('header') | json | safe }}, shared: {{ scriptT('shared') | json | safe }} };</script>
 
     {# Hashed URL for the downsampler audio worklet processor. #}
     <script>window.$downsamplerProcessorUrl = "{{ manifest['scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts'] }}";</script>

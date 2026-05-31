@@ -15,18 +15,18 @@
         document.documentElement.setAttribute('data-home-prompt', 'dismissed');
     }
 </script>
-{# Ship the index component's [client] strings to the browser, preserving the existing window.t from layout.njk. #}
-<script>window.t = Object.assign(window.t || {}, { index: {{ clientT('index') | json | safe }} });</script>
+{# Ship the index component's [script] strings to the browser, preserving the existing window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { index: {{ scriptT('index') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 
 {# Page-specific translations #}
 {% set t = templateT('index') %}
-{# Client-bound strings for the same component — also injected into window.t.index for JS. #}
-{% set tc = clientT('index') %}
+{# Script-facing strings for the same component — also injected into window.t.index for JS. #}
+{% set tc = scriptT('index') %}
 {# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
-{% set s = clientT('shared') %}
+{% set s = scriptT('shared') %}
 
 {# ── Macros ───────────────────────────────────────────────────────────────── #}
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
