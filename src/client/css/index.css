@@ -917,8 +917,14 @@ svg.bg-omega {
 }
 
 .icn-error-text {
+	margin-top: -5px;
 	font-size: 12px;
 	color: #e05555;
+}
+
+/* Prevent it from requiring flex gap betw it and prev sibling */
+.icn-error-text:empty {
+	display: none;
 }
 
 /* ============================================================
