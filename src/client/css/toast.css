@@ -117,3 +117,9 @@
 		transform: translateX(110%);
 	}
 }
+
+/* Recommended for specificity, because `display: grid` in .toast overwrites the .hidden
+   class from global.css. Without this, the empty toast animates in on every page load. */
+.hidden {
+	display: none;
+}
