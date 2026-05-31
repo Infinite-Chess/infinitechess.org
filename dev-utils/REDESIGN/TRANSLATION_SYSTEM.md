@@ -16,7 +16,7 @@ translation/
 └── <lang>.toml              legacy flat i18next files (separate system)
 ```
 
-A component's TOML may include a top-level `[script]` sub-table. Everything **outside** `[script]` is for server-side templating only; the `[script]` block is the **only** part shipped to the browser. A component whose keys are *all* script-facing can set top-level `script_only = true` and write subtable headers without the `script.` prefix — see [translation/shared/en-US.toml](../../translation/shared/en-US.toml).
+A component's TOML may include a top-level `[script]` sub-table. Everything **outside** `[script]` is for server-side templating only; the `[script]` block is the **only** part that can be shipped to the browser. A component whose keys are *all* script-facing can set top-level `script_only = true` and write subtable headers without the `script.` prefix — see [translation/shared/en-US.toml](../../translation/shared/en-US.toml).
 
 Config lives in [src/server/config/translationconfig.ts](../../src/server/config/translationconfig.ts) (`DEFAULT_LANGUAGE`, `TRANSLATION_FOLDER`, `EXCLUDED_DIRS`).
 

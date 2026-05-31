@@ -25,7 +25,7 @@
 
 ## Translation System Refactor
 
-- Localize each page. All keys should be well organized in their respective components. Keys needing to be accessible by the js should be put in the `[script]` object of the TOML, and can be accessed via the global `t` variable. Server-side keys needed for sending translated responses should be placed into the `[script]` table of the `responses` component TOML, and can be accessed via `getScriptTranslationsForReq('responses', reqOrWs)`. As we create each new component TOML, delete related keys out of the old monolith English TOML.
+- Localize each page. All keys should be well organized in their respective components. Keys needing to be accessible by the js should be put in the `[script]` object of the TOML, and can be accessed via the global `t` variable. Server-side keys needed for sending translated responses should be placed into the `responses` component TOML (which is `script_only`, so its keys live at the top level rather than under a `[script]` table), and can be accessed via `getScriptTranslationsForReq('responses', reqOrWs)`. As we create each new component TOML, delete related keys out of the old monolith English TOML.
 
 - Analyze the remaining keys in the old monolith English TOML determine whether the stragglers should be deleted or migrated into new components. Delete all old monolith TOMLs.
 
