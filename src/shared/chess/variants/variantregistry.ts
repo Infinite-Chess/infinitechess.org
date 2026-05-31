@@ -15,11 +15,6 @@ import type { VariantModule } from './variant_scripts/variantutil.js';
 /** All valid variant group names. Does not include custom variants. */
 export type VariantGroup = 'standard' | 'horde' | '4D' | 'showcase';
 
-/** Entry in the variant group registry. */
-export type GroupRegistryEntry = {
-	iconId: string;
-};
-
 /** Union of all valid variant codes, derived from the keys of {@link VARIANT_REGISTRY}. */
 export type VariantCode = (typeof VARIANT_CODES)[number];
 
@@ -45,17 +40,15 @@ export type VariantRegistryEntry = {
 
 // ================================ VARIANT GROUP REGISTRY ================================
 
-const VARIANT_GROUP_REGISTRY = {
-	standard: { iconId: 'svg-pawn' },
-	horde: { iconId: 'svg-keypad' },
-	'4D': { iconId: 'svg-tesseract' },
-	showcase: { iconId: 'svg-trophy' },
-} satisfies Record<VariantGroup, GroupRegistryEntry>;
+const VARIANT_GROUP_ICONS: Record<VariantGroup, string> = {
+	standard: 'svg-pawn',
+	horde: 'svg-keypad',
+	'4D': 'svg-tesseract',
+	showcase: 'svg-trophy',
+};
 
 /** An array of all valid variant groups. */
-const VARIANT_GROUPS = Object.keys(
-	VARIANT_GROUP_REGISTRY,
-) as (keyof typeof VARIANT_GROUP_REGISTRY)[];
+const VARIANT_GROUPS = Object.keys(VARIANT_GROUP_ICONS) as VariantGroup[];
 
 // ================================ VARIANT REGISTRY ================================
 
@@ -213,7 +206,7 @@ const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REG
 
 /** Returns the id for the icon of the given variant group. */
 function getVariantGroupIconId(group: VariantGroup): string {
-	return VARIANT_GROUP_REGISTRY[group].iconId;
+	return VARIANT_GROUP_ICONS[group];
 }
 
 /**
@@ -270,7 +263,7 @@ function getVariantGroupsWithVariants(): {
 }[] {
 	return VARIANT_GROUPS.map((group) => ({
 		group,
-		iconId: VARIANT_GROUP_REGISTRY[group].iconId,
+		iconId: VARIANT_GROUP_ICONS[group],
 		variants: getVariantsForGroup(group).map((code) => ({ code })),
 	}));
 }
