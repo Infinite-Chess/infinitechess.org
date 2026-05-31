@@ -13,6 +13,7 @@ import type { IncomingMessage } from 'http';
  * We read Cloudflare's `cf-connecting-ip` header, which Cloudflare overwrites on
  * every request with a single, trusted client IP (any client-supplied value is
  * stripped). This cannot be forged, unless traffic doesn't come through Cloudflare.
+ *`req.ip` isn't available for raw websocket upgrade requests.
  * @param req - The incoming HTTP request or websocket upgrade request.
  * @returns The client IP as a string, or `undefined` if it can't be determined (e.g. closed socket).
  */
