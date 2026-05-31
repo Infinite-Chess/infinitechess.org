@@ -680,7 +680,8 @@ svg.bg-omega {
 }
 
 .variant-display.invalid,
-.icn-input-wrap.invalid {
+.icn-input-wrap.invalid,
+.icn-input-wrap.invalid:focus-within {
 	border-color: #e05555;
 	box-shadow: 0 0 0 3px rgba(224, 85, 85, 0.3);
 }

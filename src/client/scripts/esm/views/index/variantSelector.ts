@@ -144,7 +144,7 @@ function initVariantGroupDropdown(): void {
 	});
 }
 
-/** Wires blur/focus/input listeners to keep the ICN validation state in sync. */
+/** Wires blur/focus/input/paste listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
 	element_icnInput.addEventListener('blur', validateIcnInput);
 	element_icnInput.addEventListener('focus', () => {
@@ -153,6 +153,11 @@ function initIcnValidation(): void {
 	});
 	element_icnInput.addEventListener('input', () => {
 		setIcnResult(null);
+	});
+	// Instantly validate input when a code is pasted, don't wait for blur.
+	element_icnInput.addEventListener('paste', () => {
+		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
+		setTimeout(() => validateIcnInput(), 0);
 	});
 }
 
