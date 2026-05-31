@@ -13,14 +13,8 @@ import type { InviteModifier } from '../types.js';
 
 // Types -----------------------------------------------------------------------
 
-/** Entry in the modifier registry. */
-type ModifierRegistryEntry = {
-	/** SVG symbol ID for the modifier's icon. */
-	iconId: string;
-};
-
-/** Union of all valid modifier kind strings, derived from the keys of {@link MODIFIER_REGISTRY}. */
-export type ModifierCode = keyof typeof MODIFIER_REGISTRY;
+/** Union of all valid modifier kind strings, derived from the keys of {@link MODIFIER_ICONS}. */
+export type ModifierCode = keyof typeof MODIFIER_ICONS;
 
 /**
  * Variables used to interpolate a modifier's parameterized rule-list phrasing
@@ -30,17 +24,15 @@ type ModifierDescriptionVars = Record<string, string | number>;
 
 // ================================ MODIFIER REGISTRY ================================
 
-const MODIFIER_REGISTRY = {
-	'slide-limit': {
-		iconId: 'svg-slide-limit',
-	},
-} satisfies Record<InviteModifier['kind'], ModifierRegistryEntry>;
+const MODIFIER_ICONS: Record<InviteModifier['kind'], string> = {
+	'slide-limit': 'svg-slide-limit',
+};
 
 // Functions -------------------------------------------------------------------
 
 /** Returns the SVG symbol ID for the icon of the given modifier code. */
 function getModifierIconId(code: ModifierCode): string {
-	return MODIFIER_REGISTRY[code].iconId;
+	return MODIFIER_ICONS[code];
 }
 
 /**
