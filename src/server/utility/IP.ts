@@ -5,26 +5,22 @@
  * requests and websocket connection requests.
  */
 
-import type { Request } from 'express';
+import type { IncomingMessage } from 'http';
 
 /**
- * Reads the IP address attached to the incoming request.
- * It prioritizes the 'x-forwarded-for' header, which is commonly used by
- * reverse proxies and load balancers like Cloudflare to convey the original client IP.
+ * Reads the client IP address attached to the incoming request.
  *
- * @param req - The Express request object.
- * @returns The IP address of the request as a string, or `undefined` if not present.
+ * We read Cloudflare's `cf-connecting-ip` header, which Cloudflare overwrites on
+ * every request with a single, trusted client IP (any client-supplied value is
+ * stripped). This cannot be forged, unless traffic doesn't come through Cloudflare.
+ * @param req - The incoming HTTP request or websocket upgrade request.
+ * @returns The client IP as a string, or `undefined` if it can't be determined (e.g. closed socket).
  */
-export function getClientIP(req: Request): string | undefined {
-	const forwardedFor = req.headers['x-forwarded-for'];
+export function getClientIP(req: IncomingMessage): string | undefined {
+	const cfConnectingIP = req.headers['cf-connecting-ip'];
+	if (typeof cfConnectingIP === 'string') return cfConnectingIP;
 
-	if (typeof forwardedFor === 'string') {
-		// The 'x-forwarded-for' header can be a comma-separated list of IPs.
-		// The first one is the original client IP.
-		return forwardedFor.split(',')[0]!.trim();
-	}
-
-	// Fallback to req.ip, which is derived from req.socket.remoteAddress
-	// (and should match the first entry in 'x-forwarded-for' if behind a proxy)
-	return req.ip;
+	// Fallback for non-Cloudflare contexts (e.g. local development),
+	// where the raw socket peer IS the client.
+	return req.socket.remoteAddress;
 }
