@@ -482,12 +482,14 @@ svg.bg-omega {
 	margin-left: 0.417em;
 	border-radius: 50%;
 	background: var(--c-text);
+	border-color: var(--c-text);
 	border-width: 2px;
 	border-style: solid;
 }
 
 .seek-row:hover .side-dot {
 	background: var(--c-text-emphasis);
+	border-color: var(--c-text-emphasis);
 }
 
 .side-dot.black {
