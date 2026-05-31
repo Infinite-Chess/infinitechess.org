@@ -16,7 +16,7 @@ translation/
 └── <lang>.toml              legacy flat i18next files (separate system)
 ```
 
-A component's TOML may include a top-level `[client]` sub-table. Everything **outside** `[client]` is for server-side templating only; the `[client]` block is the **only** part shipped to the browser.
+A component's TOML may include a top-level `[client]` sub-table. Everything **outside** `[client]` is for server-side templating only; the `[client]` block is the **only** part shipped to the browser. A component whose keys are *all* client-side can set top-level `client_only = true` and write subtable headers without the `client.` prefix — see [translation/shared/en-US.toml](../../translation/shared/en-US.toml).
 
 By convention, strings the server itself emits in HTTP/WS response bodies (auth errors, system messages, etc.) live in the `responses` component under its `[client]` table. Nothing about `responses` is special-cased in the loader — it's a regular component that just happens never to be injected into any page's `window.t`, so its strings stay server-side at runtime even though they're typed under `[client]`. See [Server-emitted response strings](#server-emitted-response-strings).
 
@@ -28,7 +28,7 @@ Config lives in [src/server/config/translationconfig.ts](../../src/server/config
 
 1. Scans `translation/` for subdirectories (skipping `EXCLUDED_DIRS`).
 2. Parses every `<lang>.toml` and runs all string values through an XSS filter that whitelists only `em / strong / b / i / br / span[class]`.
-3. Splits each language's parsed object into `{ template, client }` (the `[client]` table is moved into `client`, everything else into `template`).
+3. Splits each language's parsed object into `{ template, client }`.
 4. **Fills missing keys from English** via `deepMerge` (so `en-US` keys absent in `de-DE` appear as English). Stale (out-of-date) translations are rendered **as-is** — Weblate is the source of truth for staleness.
 5. Caches everything in a module-level `Map<component, Map<lang, ComponentEntry>>`.
 
@@ -72,7 +72,7 @@ Because the data is baked into the HTML at request time, the user's language is 
 
 ## Server-emitted response strings
 
-When the server itself (not a Nunjucks template) needs to emit a translated string — error responses, socket replies, validation messages — put the string in the `[client]` table of `translation/responses/<lang>.toml` and fetch it with `getClientTranslationsForReq(component, reqOrWs)`:
+When the server itself (not a Nunjucks template) needs to emit a translated string — error responses, socket replies, validation messages — put the string in `translation/responses/<lang>.toml` and fetch it with `getClientTranslationsForReq(component, reqOrWs)`:
 
 ```ts
 import { getClientTranslationsForReq } from '../config/componentTranslationLoader.js';
@@ -85,22 +85,22 @@ The second argument can be either an `express.Request` or a `CustomWebSocket` �
 
 When the caller already has a resolved language code (e.g. SSR template-render code), use the lower-level primitive `getClientTranslation(component, lang)` instead — `getClientTranslationsForReq` is sugar on top of it for the req/ws case.
 
-There's nothing structurally special about `responses` — any component's `[client]` table is reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
+There's nothing structurally special about `responses` — any component's client-shipped strings are reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
 
 ## Type generation
 
-`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts), which produces **[src/shared/types/client-translations.d.ts](../../src/shared/types/client-translations.d.ts)** — `export interface ClientTranslations`, one property per component that has a `[client]` table. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts); the server reads it through the typed `getClientTranslation<C>(component, lang): ClientTranslations[C]` (or its req/ws sibling `getClientTranslationsForReq`).
+`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts), which produces **[src/shared/types/client-translations.d.ts](../../src/shared/types/client-translations.d.ts)** — `export interface ClientTranslations`, one property per component with client-shipped strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts); the server reads it through the typed `getClientTranslation<C>(component, lang): ClientTranslations[C]` (or its req/ws sibling `getClientTranslationsForReq`).
 
-Re-run `npm run generate:types` whenever you add a key to a `[client]` table.
+Re-run `npm run generate:types` whenever you add a client-shipped key.
 
 ## Adding a new component
 
-1. Create `translation/<component>/en-US.toml`. Use `[table]` sub-tables for grouping; put any browser-side keys under a single top-level `[client]` table.
+1. Create `translation/<component>/en-US.toml`. Use `[table]` sub-tables for grouping; put any browser-side keys under a single top-level `[client]` table (or set `client_only = true` if every key is browser-side).
 2. In the relevant Nunjucks template:
    ```njk
    {% set t = templateT('<component>') %}
    ```
-3. If it has a `[client]` table, inject it into `window.t` in the page's `<head>`:
+3. If it ships any client strings, inject them into `window.t` in the page's `<head>`:
    ```njk
    <script>window.t = Object.assign(window.t || {}, { <component>: {{ clientT('<component>') | json | safe }} });</script>
    ```

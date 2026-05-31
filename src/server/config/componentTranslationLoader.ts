@@ -8,7 +8,9 @@
  * Retrieve them per request.
  *
  * The [client] sub-table (if present) is excluded from the server-side object —
- * it is injected into the page separately via getClientTranslation().
+ * it is injected into the page separately via getClientTranslation(). Components
+ * that are entirely client-side can opt in to the `client_only = true` shorthand
+ * to skip the `client.` prefix on every subtable header.
  */
 
 import type { Request } from 'express';
@@ -93,8 +95,7 @@ export function loadComponentTranslations(): void {
 
 		const englishRaw = parseToml(path.join(componentDir, englishTOMLName));
 
-		const englishTemplateObj = withoutClientTable(englishRaw);
-		const englishClientObj: Record<string, any> = englishRaw['client'] ?? {};
+		const { template: englishTemplateObj, client: englishClientObj } = splitParsed(englishRaw);
 
 		const langMap = new Map<string, ComponentEntry>();
 		langMap.set(tconfig.DEFAULT_LANGUAGE, {
@@ -106,8 +107,7 @@ export function loadComponentTranslations(): void {
 			const langCode = file.replace('.toml', '');
 			if (langCode === tconfig.DEFAULT_LANGUAGE) continue; // Already loaded English
 			const raw = parseToml(path.join(componentDir, file));
-			const templateObj = withoutClientTable(raw);
-			const clientObj: Record<string, any> = raw['client'] ?? {};
+			const { template: templateObj, client: clientObj } = splitParsed(raw);
 			// Deep-merge English fallback so missing keys are always present
 			langMap.set(langCode, {
 				template: deepMerge(englishTemplateObj, templateObj),
@@ -211,10 +211,25 @@ function html_escape(value: any): any {
 	return value; // numbers, booleans, etc.
 }
 
-/** Returns a shallow copy of a parsed TOML object with the top-level [client] key removed. */
-function withoutClientTable(parsed: Record<string, any>): Record<string, any> {
-	const { client: _omit, ...rest } = parsed;
-	return rest;
+/**
+ * Splits a parsed TOML object into `{ template, client }` halves.
+ *
+ * Two modes:
+ * - `client_only = true` shorthand: the entire object (minus the flag itself) is treated
+ *   as the client half. The template half is empty. Lets authors of fully client-side
+ *   components skip prefixing every subtable header with `client.`.
+ * - Otherwise: the `[client]` subtable becomes the client half, everything else is template.
+ */
+function splitParsed(parsed: Record<string, any>): {
+	template: Record<string, any>;
+	client: Record<string, any>;
+} {
+	if (parsed['client_only'] === true) {
+		const { client_only: _flag, ...rest } = parsed;
+		return { template: {}, client: rest };
+	}
+	const { client: clientTable, ...rest } = parsed;
+	return { template: rest, client: clientTable ?? {} };
 }
 
 /**

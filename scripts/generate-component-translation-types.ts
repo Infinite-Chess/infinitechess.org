@@ -41,10 +41,8 @@ function generateClientTranslations(): void {
 			throw new Error(`Component "${componentName}" is missing the English source.`);
 
 		const parsed = parse(fs.readFileSync(englishTomlPath, 'utf-8'));
-		const clientTable = parsed['client'];
+		const clientTable = extractClientTable(parsed, componentName);
 		if (!clientTable) continue; // This component doesn't have client translations, skip.
-		if (typeof clientTable !== 'object' || Array.isArray(clientTable))
-			throw new Error(`Component "${componentName}" [client] table should be an object.`);
 
 		const body = generateNestedType(clientTable, 2);
 		properties.push(`\t${componentName}: {\n${body}\n\t};`);
@@ -74,6 +72,24 @@ ${properties.join('\n')}
 	console.log(
 		`[generate-component-translation-types] Generated ClientTranslations with ${properties.length} component(s).`,
 	);
+}
+
+/**
+ * Returns the client-shipped subtree of a parsed component TOML, or `undefined`
+ * if the component ships no client translations. Mirrors the loader's split:
+ * `client_only = true` promotes the whole file (minus the flag); otherwise the
+ * `[client]` subtable is the client half.
+ */
+function extractClientTable(parsed: TomlTable, componentName: string): TomlTable | undefined {
+	if (parsed['client_only'] === true) {
+		const { client_only: _flag, ...rest } = parsed;
+		return rest;
+	}
+	const clientTable = parsed['client'];
+	if (!clientTable) return undefined;
+	if (typeof clientTable !== 'object' || Array.isArray(clientTable))
+		throw new Error(`Component "${componentName}" [client] table should be an object.`);
+	return clientTable as TomlTable;
 }
 
 /** Generates a TypeScript type body from a nested object structure. */
