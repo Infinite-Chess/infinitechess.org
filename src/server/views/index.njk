@@ -24,7 +24,7 @@
 {# Page-specific translations #}
 {% set t = templateT('index') %}
 {# Script-facing strings for the same component — also injected into window.t.index for JS. #}
-{% set tc = scriptT('index') %}
+{% set ts = scriptT('index') %}
 {# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
 {% set s = scriptT('shared') %}
 
@@ -78,15 +78,15 @@
 			<div class="lobby-actions">
 				<button class="lobby-btn" id="btn-create-game">
 					<svg class="btn-icon svg-globe"><use href="#svg-globe"></use></svg>
-					{{ tc.lobby_buttons.create_online }}
+					{{ ts.lobby_buttons.create_online }}
 				</button>
 				<button class="lobby-btn" id="btn-challenge-friend">
 					<svg class="btn-icon"><use href="#svg-profile"></use></svg>
-					{{ tc.lobby_buttons.challenge_friend }}
+					{{ ts.lobby_buttons.challenge_friend }}
 				</button>
 				<button class="lobby-btn" id="btn-play-ai">
 					<svg class="btn-icon svg-engine"><use href="#svg-engine"></use></svg>
-					{{ tc.lobby_buttons.play_computer }}
+					{{ ts.lobby_buttons.play_computer }}
 				</button>
 			</div>
 
