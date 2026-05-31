@@ -226,44 +226,19 @@ function getAttribInfo(
 
 /**
  * Returns the attribute information for the vertex and instance data arrays,
- * provided whether the vertex data contains color information,
- * and whether the instance data contains texture coordinates.
+ * provided whether the vertex data contains color and/or texture coordinate information.
  */
 function getAttribInfo_Instanced(
 	usingColor: boolean,
 	usingTexture: boolean,
 ): AttributeInfoInstanced {
-	if (usingColor && usingTexture) {
-		return {
-			vertexDataAttribInfo: [
-				{ name: 'a_position', numComponents: 2 },
-				{ name: 'a_color', numComponents: 4 },
-			],
-			instanceDataAttribInfo: [
-				{ name: 'a_instanceposition', numComponents: 2 },
-				{ name: 'a_instancetexcoord', numComponents: 2 },
-			],
-		};
-	} else if (usingColor) {
-		return {
-			vertexDataAttribInfo: [
-				{ name: 'a_position', numComponents: 2 },
-				{ name: 'a_color', numComponents: 4 },
-			],
-			instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
-		};
-	} else if (usingTexture) {
-		return {
-			vertexDataAttribInfo: [{ name: 'a_position', numComponents: 2 }],
-			instanceDataAttribInfo: [
-				{ name: 'a_instanceposition', numComponents: 2 },
-				{ name: 'a_instancetexcoord', numComponents: 2 },
-			],
-		};
-	} else
-		throw new Error(
-			'Well we must be using ONE of either color or texcoord in our vertex data..',
-		);
+	const vertexDataAttribInfo: AttributeInfo = [{ name: 'a_position', numComponents: 2 }];
+	if (usingTexture) vertexDataAttribInfo.push({ name: 'a_texturecoord', numComponents: 2 });
+	if (usingColor) vertexDataAttribInfo.push({ name: 'a_color', numComponents: 4 });
+	return {
+		vertexDataAttribInfo,
+		instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
+	};
 }
 
 /**

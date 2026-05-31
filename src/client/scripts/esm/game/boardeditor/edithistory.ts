@@ -99,10 +99,7 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
-	if (
-		pieceCount > miniimage.pieceCountToDisableMiniImages ||
-		pieceCount > arrows.pieceCountToDisableArrows
-	) {
+	if (pieceCount > miniimage.pieceCountToDisableMiniImages || pieceCount > arrows.MAX_PIECES) {
 		miniimage.disable();
 		arrows.setMode(0);
 	}

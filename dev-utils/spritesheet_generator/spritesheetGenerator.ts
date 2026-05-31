@@ -1,8 +1,8 @@
-// src/client/scripts/esm/chess/rendering/spritesheetGenerator.ts
+// dev-utils/spritesheet_generator/spritesheetGenerator.ts
 
 /**
  * This script takes a list of images, and converts it into a renderable
- * spritesheet, also returning the textue locations of each image.
+ * spritesheet, also returning the texture locations of each image.
  */
 
 import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js';

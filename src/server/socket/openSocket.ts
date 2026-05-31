@@ -13,6 +13,7 @@ import { GAME_VERSION } from '../../shared/game_version.js';
 import { onclose } from './closeSocket.js';
 import socketUtility from './socketUtility.js';
 import { onmessage } from './receiveSocketMessage.js';
+import { getClientIP } from '../utility/IP.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
@@ -110,7 +111,7 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
-	const IP = socketUtility.getIPFromWebsocketUpgradeRequest(req);
+	const IP = getClientIP(req);
 	if (IP === undefined) {
 		logEvents('Unable to identify IP address from websocket connection!', 'hackLog.txt');
 		socket.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation

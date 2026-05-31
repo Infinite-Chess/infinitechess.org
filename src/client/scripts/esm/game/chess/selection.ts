@@ -376,7 +376,7 @@ function canSelectPieceType(basegame: Game, type: number | undefined): 0 | 1 | 2
 	if (player === p.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(basegame, type)) return 1; // Can select opponent pieces, but not draggable..
 	// It is our piece type...
-	const isOurTurn = gameloader.isItOurTurn(player);
+	const isOurTurn = gameloader.isItOurTurn();
 	if (!isOurTurn && !preferences.getPremoveEnabled()) return 1; // Can select our piece when it's not our turn, but not draggable.
 	return dragEnabled ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
@@ -389,7 +389,7 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!.basegame, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	// It is our piece type...
-	const isOurTurn = gameloader.areInLocalGame() || gameloader.isItOurTurn();
+	const isOurTurn = gameloader.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
 	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
 }
@@ -513,7 +513,7 @@ function initSelectedPieceInfo(gamefile: FullGame, mesh: Mesh | undefined, piece
 	pieceSelected = piece;
 
 	isOpponentPiece = isOpponentType(gamefile.basegame, piece.type);
-	isPremove = !isOpponentPiece && !gameloader.areInLocalGame() && !gameloader.isItOurTurn();
+	isPremove = !isOpponentPiece && !gameloader.isItOurTurn();
 
 	// Calculate the legal moves it has...
 

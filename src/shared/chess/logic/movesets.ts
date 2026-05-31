@@ -39,7 +39,7 @@ interface RawPieceMoveset {
 	 *
 	 * The *key* is the step amount of each skip, and the *value* is the skip limit in the -x and +x directions (-y and +y if it's vertical).
 	 *
-	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!!
+	 * THE X-KEY SHOULD NEVER BE NEGATIVE!!! And if it's 0, then Y should be positive.
 	 */
 	sliding?: SlidingMoves;
 	/**

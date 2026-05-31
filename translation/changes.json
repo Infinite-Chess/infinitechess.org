@@ -1,4 +1,7 @@
 {
+  "99": {
+    "note": "Renamed selection, selection-drag, selection-premove, selection-animations, selection-lingering_annotations on lines 27-31 to gameplay, gameplay-drag, gameplay-premove, gameplay-animations, gameplay-lingering_annotations. Added gameplay-fast_transitions on line 32."
+  },
   "98": {
     "note": "Added appearance-coordinates on line 21."
   },

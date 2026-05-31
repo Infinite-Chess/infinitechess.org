@@ -18,6 +18,7 @@ import space from '../../misc/space.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
+import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../frametracker.js';
 import draganimation from './draganimation.js';
 
@@ -117,16 +118,16 @@ function shiftArrows(): void {
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrows.deleteArrow(capturedPieceThisFrame.coords);
+		arrowshifts.deleteArrow(capturedPieceThisFrame.coords);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
 	if (newLocationOfSelectedPiece)
-		arrows.moveArrow(selectedPiece.coords, newLocationOfSelectedPiece);
+		arrowshifts.moveArrow(selectedPiece.coords, newLocationOfSelectedPiece);
 	// Or just delete if there's no new integer destination
-	else arrows.deleteArrow(selectedPiece.coords);
+	else arrowshifts.deleteArrow(selectedPiece.coords);
 }
 
 /**

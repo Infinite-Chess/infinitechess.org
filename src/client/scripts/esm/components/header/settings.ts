@@ -7,11 +7,11 @@ import themes from '../../../../../shared/components/header/themes.js';
 
 import style from '../../game/gui/style.js';
 import preferences from './preferences.js';
-import boarddropdown from './dropdowns/boarddropdown.js';
 import sounddropdown from './dropdowns/sounddropdown.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
+import gameplaydropdown from './dropdowns/gameplaydropdown.js';
 import legalmovedropdown from './dropdowns/legalmovedropdown.js';
-import selectiondropdown from './dropdowns/selectiondropdown.js';
+import appearancedropdown from './dropdowns/appearancedropdown.js';
 import perspectivedropdown from './dropdowns/perspectivedropdown.js';
 
 import './pingmeter.js'; // Only imported so its code runs
@@ -24,25 +24,25 @@ const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
 // All buttons to open nested dropdowns
 const languageDropdownSelection = document.getElementById('language-settings-dropdown-item')!;
-const boardDropdownSelection = document.getElementById('board-settings-dropdown-item')!;
+const appearanceDropdownSelection = document.getElementById('appearance-settings-dropdown-item')!;
 const legalmoveDropdownSelection = document.getElementById('legalmove-settings-dropdown-item')!;
 const mouseDropdownSelection = document.getElementById('perspective-settings-dropdown-item')!;
-const selectionDropdownSelection = document.getElementById('selection-settings-dropdown-item')!;
+const gameplayDropdownSelection = document.getElementById('gameplay-settings-dropdown-item')!;
 const soundDropdownSelection = document.getElementById('sound-settings-dropdown-item')!;
 
 // All nested dropdowns
 const languageDropdown = document.querySelector('.language-dropdown')!;
-const boardDropdown = document.querySelector('.board-dropdown')!;
+const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
 const legalmoveDropdown = document.querySelector('.legalmove-dropdown')!;
 const perspectiveDropdown = document.querySelector('.perspective-dropdown')!;
-const selectionDropdown = document.querySelector('.selection-dropdown')!;
+const gameplayDropdown = document.querySelector('.gameplay-dropdown')!;
 const soundDropdown = document.querySelector('.sound-dropdown')!;
 const allSettingsDropdownsExceptMainOne = [
 	languageDropdown,
-	boardDropdown,
+	appearanceDropdown,
 	legalmoveDropdown,
 	perspectiveDropdown,
-	selectionDropdown,
+	gameplayDropdown,
 	soundDropdown,
 ];
 
@@ -95,9 +95,9 @@ function closeMainSettingsDropdown(): void {
 }
 function closeAllSettingsDropdownsExceptMainOne(): void {
 	languagedropdown.close();
-	boarddropdown.close();
+	appearancedropdown.close();
 	legalmovedropdown.close();
-	selectiondropdown.close();
+	gameplaydropdown.close();
 	perspectivedropdown.close();
 	sounddropdown.close();
 }
@@ -105,28 +105,31 @@ function closeAllSettingsDropdownsExceptMainOne(): void {
 function initSettingsListeners(): void {
 	languageDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	languageDropdownSelection.addEventListener('click', languagedropdown.open);
-	boardDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	boardDropdownSelection.addEventListener('click', boarddropdown.open);
+	appearanceDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	appearanceDropdownSelection.addEventListener('click', appearancedropdown.open);
 	legalmoveDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	legalmoveDropdownSelection.addEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
-	selectionDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	selectionDropdownSelection.addEventListener('click', selectiondropdown.open);
+	gameplayDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	gameplayDropdownSelection.addEventListener('click', gameplaydropdown.open);
 	soundDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	soundDropdownSelection.addEventListener('click', sounddropdown.open);
 }
 function closeSettingsListeners(): void {
 	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	languageDropdownSelection.removeEventListener('click', languagedropdown.open);
-	boardDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	boardDropdownSelection.removeEventListener('click', boarddropdown.open);
+	appearanceDropdownSelection.removeEventListener(
+		'click',
+		closeAllSettingsDropdownsExceptMainOne,
+	);
+	appearanceDropdownSelection.removeEventListener('click', appearancedropdown.open);
 	legalmoveDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
 	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	selectionDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	selectionDropdownSelection.removeEventListener('click', selectiondropdown.open);
+	gameplayDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
+	gameplayDropdownSelection.removeEventListener('click', gameplaydropdown.open);
 	soundDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
 	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
 }

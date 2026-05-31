@@ -184,6 +184,8 @@ function validateTermination(
 	const conditionMappings: Record<string, string> = {
 		Checkmate: 'checkmate',
 		'All pieces captured': 'allpiecescaptured',
+		'Royal capture': 'royalcapture',
+		'All royals captured': 'allroyalscaptured',
 		Stalemate: 'stalemate',
 		'Threefold repetition': 'repetition',
 		'50-move rule': 'moverule',

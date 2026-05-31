@@ -1,9 +1,11 @@
 // src/client/scripts/esm/game/rendering/highlights/snapping.ts
 
 /**
- * This script initiates teleports to all mini images and square annotes clicked.
- *
- * It also manages all renderd entities when zoomed out.
+ * This script:
+ * * Enables mouse-ray snapping to pieces, square annotes, and other rays when zoomed out,
+ * making it easy to line up long distance shots without having to do big number math.
+ * * Manages all renderd entities when zoomed out.
+ * * Initiates teleports to all mini images and square annotes clicked.
  */
 
 import type { Line } from './highlightline.js';
@@ -25,19 +27,21 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
+import meshes from '../meshes.js';
 import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
 import miniimage from '../miniimage.js';
 import { Mouse } from '../../input.js';
+import movehints from './movehints.js';
 import Transition from '../transitions/Transition.js';
 import primitives from '../primitives.js';
 import perspective from '../perspective.js';
 import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
-import spritesheet from '../spritesheet.js';
 import preferences from '../../../components/header/preferences.js';
+import texturecache from '../../../chess/rendering/texturecache.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
@@ -91,11 +95,8 @@ function getEntityWidthWorld(): number {
 
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		false,
-	).squares;
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
 }
 
@@ -116,11 +117,8 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 	let closestEntity: ClosestEntity | undefined = undefined;
 
 	const imagesHovered = miniimage.getImagesBelowWorld(world, true);
-	const highlightsHovered = drawsquares.getSquaresBelowWorld(
-		annotations.getSquares(),
-		world,
-		true,
-	);
+	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
+	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, true);
 
 	// Pieces
 	for (let i = 0; i < imagesHovered.images.length; i++) {
@@ -130,7 +128,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 			closestEntity = { coords, dist, type: 'miniimage', index: i };
 	}
 
-	// Square Highlights
+	// Square Highlights and Individual legal move hints
 	for (let i = 0; i < highlightsHovered.squares.length; i++) {
 		const coords = highlightsHovered.squares[i]!;
 		const dist = highlightsHovered.dists![i]!;
@@ -321,8 +319,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// Minimal snapping vectors
 	// prettier-ignore
 	const searchVectors = boardsim.pieces.hippogonalsPresent ? [
-				...vectors.VECTORS_ORTHOGONAL,
-				...vectors.VECTORS_DIAGONAL,
+		...vectors.VECTORS_ORTHOGONAL,
+		...vectors.VECTORS_DIAGONAL,
 		...vectors.VECTORS_HIPPOGONAL
 	] : [
 		...vectors.VECTORS_ORTHOGONAL,
@@ -561,12 +559,10 @@ function render(): void {
 	}
 }
 
-/** TODO: Dont use the spritesheet */
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 	const dataGhost: number[] = [];
 
-	const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = spritesheet.getTexDataOfType(type, rotation);
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;
@@ -587,7 +583,7 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 		'TRIANGLES',
 		'colorTexture',
 		true,
-		spritesheet.getSpritesheet(),
+		texturecache.getTexture(type),
 	);
 }
 

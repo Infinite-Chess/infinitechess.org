@@ -18,11 +18,11 @@ import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../gui/toast.js';
-import arrows from './arrows/arrows.js';
 import meshes from './meshes.js';
 import splines from '../../util/splines.js';
 import boardpos from './boardpos.js';
 import gamesound from '../misc/gamesound.js';
+import arrowshifts from './arrows/arrowshifts.js';
 import piecemodels from './piecemodels.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
@@ -364,18 +364,18 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation): void {
 	const segmentInfo = getCurrentSegment(animation);
 	// Delete the arrows of the hidden pieces
 	forEachActiveKeyframe(animation.hideKeyframes, segmentInfo.segmentNum, (coords) =>
-		coords.forEach((c) => arrows.deleteArrow(c)),
+		coords.forEach((c) => arrowshifts.deleteArrow(c)),
 	);
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segmentInfo);
 	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
-	arrows.animateArrow(
+	arrowshifts.animateArrow(
 		animation.path[animation.path.length - 1]!,
 		animationCurrentCoords,
 		animation.type,
 	);
 	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
 	forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, (pieces) =>
-		pieces.forEach((p) => arrows.addArrow(p.type, p.coords)),
+		pieces.forEach((p) => arrowshifts.addArrow(p.type, p.coords)),
 	);
 }
 

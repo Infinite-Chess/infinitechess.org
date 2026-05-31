@@ -32,6 +32,7 @@ import guigameinfo from '../gui/guigameinfo.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
+import arrowscalculator from './arrows/arrowscalculator.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 import { ATLAS_DESCENDER_FRACTION } from './text/glyphatlas.js';
 
@@ -173,7 +174,7 @@ function render(): void {
 
 	// Pre-compute arrow indicator hitboxes for this frame to skip overlapping labels.
 	const arrowHalfWidth =
-		arrows.getArrowIndicatorHalfWidth() +
+		arrowscalculator.getArrowIndicatorHalfWidth() +
 		space.convertPixelsToWorldSpace_Virtual(LABEL_ARROW_PADDING_PX);
 	const arrowLocations = arrows.getAllArrowWorldLocations();
 

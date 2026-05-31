@@ -227,7 +227,8 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			if (width !== undefined) cloned.setAttribute('width', width.toString());
 			if (height !== undefined) cloned.setAttribute('height', height.toString());
 
-			tintSVG(cloned, tint);
+			// Tint if non-white
+			if (tint.some((channel) => channel !== 1)) tintSVG(cloned, tint);
 
 			svgs.push(cloned);
 			continue l;

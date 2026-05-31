@@ -40,11 +40,14 @@ import maskedDraw from '../../../webgl/maskedDraw.js';
 import primitives from '../primitives.js';
 import droparrows from './droparrows.js';
 import guigameinfo from '../../gui/guigameinfo.js';
+import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../frametracker.js';
 import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
 import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
+import arrowscalculator from '../arrows/arrowscalculator.js';
+import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
 import { createRenderable } from '../../../webgl/Renderable.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -59,7 +62,7 @@ interface CandidateArrow {
 	/** The type of the off-screen piece the arrow points to. */
 	pieceType: number;
 	/** The direction vector of the arrow indicator. */
-	vector: Vec2;
+	direction: Vec2;
 	/** The input pointer ID holding the mouse button down. */
 	pointerId: string;
 }
@@ -207,6 +210,7 @@ function detectCandidateArrow(): void {
 	if (hoveredArrowsList.length === 0) return;
 
 	// Claim the mouse down for any arrow hover to prevent board drag.
+	// Mouse down for move hint arrow indicators must be claimed separately.
 	mouse.claimMouseDown(Mouse.LEFT);
 
 	// Early exit on dragging disabled now, since the mouse down has been claimed.
@@ -226,7 +230,7 @@ function detectCandidateArrow(): void {
 		candidate = {
 			pieceCoords,
 			pieceType,
-			vector: hoveredArrow.vector,
+			direction: hoveredArrow.direction,
 			pointerId,
 		};
 		// console.log('Set candidate');
@@ -249,7 +253,7 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
 		const hCoords = bdcoords.coordsToBigInt(h.piece.coords);
 		return (
 			coordutil.areCoordsEqual(hCoords, candidate!.pieceCoords) &&
-			coordutil.areCoordsEqual(h.vector, candidate!.vector)
+			coordutil.areCoordsEqual(h.direction, candidate!.direction)
 		);
 	});
 }
@@ -260,10 +264,10 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
  */
 function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	// Slide zone depth in world space units
-	const slideZoneDepth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const slideZoneDepth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
-	const dir = candidate!.vector;
+	const dir = candidate!.direction;
 
 	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
 	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
@@ -293,7 +297,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 
 	const mouseBDCoords: BDCoords = space.convertWorldSpaceToCoords(mouseWorld);
 	const pieceBDCoords: BDCoords = bdcoords.FromCoords(candidate!.pieceCoords);
-	const arrowDir = candidate!.vector;
+	const arrowDir = candidate!.direction;
 	const perpDir = vectors.getPerpendicularVector(arrowDir);
 
 	// Line 1: through mouse in arrow direction.
@@ -315,7 +319,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 
 	// Queue arrow shifts — animateArrow handles deletion of the original arrow and places
 	// animated arrows (for each applicable slide direction) at the intersection.
-	arrows.animateArrow(candidate!.pieceCoords, intersectionBD, candidate!.pieceType);
+	arrowshifts.animateArrow(candidate!.pieceCoords, intersectionBD, candidate!.pieceType);
 }
 
 /** Mouse is outside the slide zone — piece follows mouse normally, original arrow removed. */
@@ -324,7 +328,7 @@ function updateOnScreenDrag(): void {
 	// droparrows has already queued a moveArrow shift — don't overwrite it with a deleteArrow.
 	if (droparrows.getCaptureCoords() !== undefined) return;
 	// Delete the original arrow. Normal drag rendering takes over.
-	arrows.deleteArrow(candidate!.pieceCoords);
+	arrowshifts.deleteArrow(candidate!.pieceCoords);
 }
 
 // Cleanup -----------------------------------------------------------------------------
@@ -351,7 +355,7 @@ function render(): void {
 
 /**
  * Renders two animated arrowhead triangles on either side of the candidate arrow indicator,
- * perpendicular to the arrow direction, while awaiting drag activation.
+ * parallel to the edge of the screen the arrow is next to, while awaiting drag activation.
  */
 function renderCandidateArrows(): void {
 	if (!candidate || isDragActive) return;
@@ -359,8 +363,8 @@ function renderCandidateArrows(): void {
 	const worldLocation = findCandidateHoveredArrow()?.worldLocation;
 	if (!worldLocation) return;
 
-	const halfWidth = arrows.getArrowIndicatorHalfWidth();
-	const size = halfWidth * 0.3; // Same proportions as the standard small arrows
+	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
+	const size = halfWidth * ARROW_SIZE_RATIO;
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
 	// the raw world-space distance to each edge pair. The indicator sits on whichever edge is closer.
@@ -427,8 +431,8 @@ function renderSlideZone(): void {
 
 	const screenBox = camera.getScreenBoundingBox(false);
 	// Slide zone depth in world space units
-	const depth = 2.0 * arrows.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
-	const dir = candidate.vector;
+	const depth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
 	const maskData: number[] = [];
@@ -437,14 +441,11 @@ function renderSlideZone(): void {
 	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
 		guigameinfo.getHeightOfGameInfoBar(),
 	);
-	// prettier-ignore
-	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor));
-	// prettier-ignore
-	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor));
+
+	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor)); // prettier-ignore
 
 	if (maskData.length === 0) return;
 
@@ -494,7 +495,7 @@ function renderSlideMoveHighlights(): void {
 	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, pieceType);
 
 	// Find the canonical moveset sliding key (x-component is never negative in moveset keys)
-	const normalizedVec: Vec2 = vectors.absVector(candidate.vector);
+	const normalizedVec: Vec2 = vectors.absVector(candidate.direction);
 	const lineKey: Vec2Key = vectors.getKeyFromVec2(normalizedVec);
 
 	// If the slide direction is orthogonal, skip. The entire orthogonal lines are already outlined in draganimation.ts
