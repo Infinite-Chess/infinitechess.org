@@ -12,6 +12,16 @@
  * `getScriptTranslations(component, lang)` helper.
  */
 export interface ScriptTranslations {
+	header: {
+		settings: {
+			appearance_dropdown: {
+				theme_light: string;
+				theme_dark: string;
+				legal_moves_squares: string;
+				legal_moves_dots: string;
+			};
+		};
+	};
 	index: {
 		lobby_buttons: {
 			create_online: string;

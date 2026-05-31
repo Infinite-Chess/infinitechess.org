@@ -50,25 +50,31 @@ type Theme = typeof THEME_DARK | typeof THEME_LIGHT;
 })();
 
 function initThemeToggle(): void {
-	themeIndicator.textContent = getCurrentTheme() === THEME_DARK ? 'Dark' : 'Light';
+	const td = t.header.settings.appearance_dropdown;
+	themeIndicator.textContent = getCurrentTheme() === THEME_DARK ? td.theme_dark : td.theme_light;
 	themeToggleContainer.addEventListener('click', () => {
 		const next: Theme = getCurrentTheme() === THEME_DARK ? THEME_LIGHT : THEME_DARK;
 		document.documentElement.setAttribute('data-theme', next);
 		localStorage.setItem(THEME_KEY, next);
-		themeIndicator.textContent = next === THEME_DARK ? 'Dark' : 'Light';
+		themeIndicator.textContent = next === THEME_DARK ? td.theme_dark : td.theme_light;
 	});
 }
 
 function initLegalMoveToggle(): void {
+	const td = t.header.settings.appearance_dropdown;
 	legalMoveIndicator.textContent =
-		preferences.getLegalMovesShape() === 'squares' ? 'Squares' : 'Dots';
+		preferences.getLegalMovesShape() === 'squares'
+			? td.legal_moves_squares
+			: td.legal_moves_dots;
 	legalMoveToggleContainer.addEventListener('click', toggleLegalMoveShape);
 }
 
 function toggleLegalMoveShape(): void {
+	const td = t.header.settings.appearance_dropdown;
 	const next = preferences.getLegalMovesShape() === 'squares' ? 'dots' : 'squares';
 	preferences.setLegalMovesShape(next);
-	legalMoveIndicator.textContent = next === 'squares' ? 'Squares' : 'Dots';
+	legalMoveIndicator.textContent =
+		next === 'squares' ? td.legal_moves_squares : td.legal_moves_dots;
 	document.dispatchEvent(new CustomEvent('legalmove-shape-change'));
 }
 

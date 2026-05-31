@@ -37,15 +37,17 @@ sound = "Sound"
 [settings.appearance_dropdown]
 # "Appearance" sub-panel
 theme = "Theme"
-theme_light = "Light"
-theme_dark = "Dark"
 legal_moves = "Legal Moves" # Legal-move shape selector
-legal_moves_squares = "Squares"
-legal_moves_dots = "Dots"
 coordinates = "Coordinates" # Shows file/rank labels
 starfield = "Starfield" # The Starfield space animation underneath void
 advanced_effects = "Advanced Effects" # Post processing and board tile effects at extreme distances
 board_tiles = "Board Tiles" # Color of the board
+
+[script.settings.appearance_dropdown]
+theme_light = "Light"
+theme_dark = "Dark"
+legal_moves_squares = "Squares"
+legal_moves_dots = "Dots"
 
 [settings.gameplay_dropdown]
 # "Gameplay" sub-panel
