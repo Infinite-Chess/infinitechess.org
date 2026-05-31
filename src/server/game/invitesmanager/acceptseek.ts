@@ -15,10 +15,10 @@ import gameutility from '../gamemanager/gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from './inviteutility.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
 import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
-import { sendNotify, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import {
 	getInviteAndIndexByID,
 	deleteInviteByIndex,
@@ -47,7 +47,11 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 
 	// Does the invite still exist?
 	const inviteAndIndex = getInviteAndIndexByID(messageContents);
-	if (!inviteAndIndex) return informThemGameAborted(ws);
+	if (!inviteAndIndex) {
+		const t = getScriptTranslationsForReq('responses', ws);
+		sendSocketMessage(ws, 'general', 'notify', t.seeks.game_aborted);
+		return;
+	}
 
 	const { seek, index } = inviteAndIndex;
 
@@ -112,16 +116,6 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	// Broadcast the invites list change after creating the game,
 	// because the new game ups the game count.
 	if (hadPublicInvite) onPublicInvitesChange(); // Broadcast to all invites list subscribers!
-}
-
-/**
- * Called when a player clicks to accept an invite that gets deleted right before.
- * This tells them the game was aborted, or that the code
- * was invalid, if they entered a private invite code.
- */
-function informThemGameAborted(ws: CustomWebSocket): void {
-	const errString = 'server.javascript.ws-game_aborted';
-	return sendNotify(ws, errString);
 }
 
 export { acceptSeek, acceptseekschem };

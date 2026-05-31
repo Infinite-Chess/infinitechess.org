@@ -44,6 +44,7 @@ export interface ScriptTranslations {
 		seeks: {
 			already_in_game: string;
 			rated_requires_verified: string;
+			game_aborted: string;
 			cloud_requires_sign_in: string;
 			cloud_not_found: string;
 		};
