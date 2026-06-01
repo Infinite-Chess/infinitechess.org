@@ -13,6 +13,8 @@ import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
+import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type {
@@ -29,6 +31,7 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
+import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 
@@ -523,6 +526,13 @@ function pushRay(
 
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
 
+	// The cheapest way to test whether a piece occupies each square of this ray.
+	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(
+		gamefile.boardsim.pieces,
+		step,
+		startCoords,
+	);
+
 	// Recursively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
@@ -536,42 +546,7 @@ function pushRay(
 					break legal;
 			}
 
-			/*
-			 * When camera transitioning to a selected piece that is massive distances away (1e700+)
-			 * and zooming out and into it, these isPieceOnCoords() incur significant hitches,
-			 * sometimes up to a few seconds in length. It is expensive for isPieceOnCoords() to
-			 * convert the coordinates to CoordsKey strings for looking up whether a piece exists
-			 * on that coordinate or not, and it has sometimes convert numbers this large THOUSANDS
-			 * of times if iterationCount is over 1000, it can be at that size if we're JUST below
-			 * the threshold that would consider us zoomed out, but we're still zoomed in, just with
-			 * a lot of squares visible on screen.
-			 *
-			 * Luckily there's an optimization. Pieces are organized by lines already, not just by coordinate.
-			 * The thing about pieces at massive distances is they tend to be the only one out there, so
-			 * the probability of isPieceOnCoords() hitting a positive is very low (but still possible and
-			 * needs to be accounted for). For that reason, another option we have other than checking each
-			 * coordinate individually is to instead grab the line of pieces along the ray, and iterate through
-			 * those to see if any of theme are on the same square. We can check that via coordutil.areCoordsEqual(),
-			 * eliminating converting the coordinate to a string entirely.
-			 *
-			 * Before starting iteration: Grab the line of pieces. Then perform a check to figure out which method
-			 * would be more optimal, the og way, or the piece line way. Think carefully and logically about
-			 * what should be the switchover threshold. If there's hundreds of pieces on the line, sure, we
-			 * don't have to do any string conversion, but we will still have to iterate through hundreds of them
-			 * and perform a coordinate comparison for each one, cheaper, but its still a lot of iterating. On the
-			 * other hand, isPieceOnCoords() would be cheap if the start coordinate is small, because there's not
-			 * many digits to convert into a string for the isPieceOnCoords() check. One thing is for sure when you
-			 * determine the switchover threshold, only consider the number of digits of the *start coords*, not
-			 * any coords iterated to in the for loop, this is because the maximum times it could possible iterate
-			 * while we're still under the zoom out threshold is about 2000, which worst case scenario can only
-			 * add 3 digits to convert to a string, completely negligible, so the switchover threshold should
-			 * only take into consideration the start coords. Depending on which method is deemed to be more
-			 * optimal, use that instead to check whether a piece is on the coords, to know whether to push
-			 * it to the capture or non-capture instance data.
-			 */
-
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, targetCoords);
-			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
+			if (isPieceOnCoords(targetCoords)) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
 
@@ -581,6 +556,37 @@ function pushRay(
 		startCoordsOffset[0] += step[0];
 		startCoordsOffset[1] += step[1];
 	}
+}
+
+/**
+ * Returns the cheapest function for testing whether a piece occupies a square along a ray.
+ * Picks between a coords-map string lookup and a direct scan of the line's pieces, whichever
+ * does less work per square. The latter avoids per-square BigInt→string conversion, which is
+ * what causes multi-second hitches for selected pieces at massive distances (e.g. 1e1000).
+ * @param step - The direction of the ray (may be negated; the line is direction-agnostic).
+ * @param startCoords - The first square the ray starts on.
+ */
+function getOptimalPieceOnCoordsChecker(
+	o: OrganizedPieces,
+	step: Vec2,
+	startCoords: Coords,
+): (coords: Coords) => boolean {
+	// Pieces are organized by canonical (non-negative dx) line direction.
+	const lineDir: Vec2 = vectors.absVector(step);
+	const lineGroup = o.lines.get(vectors.getKeyFromVec2(lineDir));
+	// All pieces on this exact line (empty if the line has no pieces at all).
+	const piecesLine: number[] = lineGroup?.get(organizedpieces.getKeyFromLine(lineDir, startCoords)) ?? []; // prettier-ignore
+	const digitCount: number =
+		bimath.countDigits(startCoords[0]) + bimath.countDigits(startCoords[1]);
+
+	// Per-square cost: map lookup ≈ digitCount² (BigInt→string is quadratic), line scan ≈ piece
+	// count (each comparison early-exits). The squares iterated cancel out, so we compare those two.
+	return piecesLine.length < digitCount * digitCount
+		? // Line scan: compare coords directly against pieces on the line, no string conversion.
+			(c: Coords): boolean =>
+				piecesLine.some((idx) => o.XPositions[idx] === c[0] && o.YPositions[idx] === c[1])
+		: // Map lookup: build a CoordsKey string and look it up in the coords map.
+			(c: Coords): boolean => boardutil.isPieceOnCoords(o, c);
 }
 
 /**
