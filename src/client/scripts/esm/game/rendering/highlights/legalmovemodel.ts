@@ -570,10 +570,7 @@ function pushRay(
 			 * it to the capture or non-capture instance data.
 			 */
 
-			const isPieceOnCoords = boardutil.isPieceOnCoords(
-				gamefile.boardsim.pieces,
-				targetCoords,
-			);
+			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, targetCoords);
 			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
