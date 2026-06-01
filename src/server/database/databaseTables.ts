@@ -255,6 +255,7 @@ function generateTables(): void {
 			user_id INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
 			created_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
 			expires_at INTEGER NOT NULL,   -- Unix timestamp (milliseconds)
+			is_persistent INTEGER NOT NULL DEFAULT 0 CHECK (is_persistent IN (0, 1)), -- "Keep me logged in" flag
 			consumed_at INTEGER,           -- Allows a grace period for using old tokens when renewing sessions
 			ip_address TEXT
 		);
@@ -308,7 +309,6 @@ function generateTables(): void {
 			time_ended            INTEGER,
 			afk_resign_time       INTEGER,
 			delete_time           INTEGER,
-			position_pasted       BOOLEAN NOT NULL DEFAULT 0 CHECK (position_pasted IN (0, 1)),
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
 		);
 	`);
@@ -352,9 +352,42 @@ function generateTables(): void {
 
 function initDatabase(): void {
 	generateTables();
+	dropLegacyLiveGamesPosPastedColumnIfPresent();
+	addIsPersistentColumnToRefreshTokens();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
+}
+
+/**
+ * One-off migration: adds the `is_persistent` column to the `refresh_tokens` table if it's missing.
+ * Fresh databases already get the column from `generateTables()`; this only patches existing
+ * databases (e.g. production) that predate the "keep me logged in" feature.
+ *
+ * SAFE TO DELETE once it has run a single time on production.
+ */
+function addIsPersistentColumnToRefreshTokens(): void {
+	if (db.columnExists('refresh_tokens', 'is_persistent')) return; // Already present, nothing to do.
+	db.run(
+		`ALTER TABLE refresh_tokens ADD COLUMN is_persistent INTEGER NOT NULL DEFAULT 0 CHECK (is_persistent IN (0, 1));`,
+	);
+	console.log('Added the "is_persistent" column to the refresh_tokens table.');
+}
+
+/**
+ * TEMPORARY MIGRATION: Remove this function (and its call in initDatabase) once it has run in production.
+ *
+ * The `position_pasted` column used to exist on `live_games` and needs to be removed from old DBs.
+ * This only logs when the column is found and deleted.
+ */
+function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
+	const liveGamesColumns = db.all<{ name: string }>("PRAGMA table_info('live_games')");
+	const hasPosPastedColumn = liveGamesColumns.some((column) => column.name === 'position_pasted');
+
+	if (!hasPosPastedColumn) return;
+
+	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
+	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

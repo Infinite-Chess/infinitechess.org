@@ -11,7 +11,7 @@
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
-import toast from '../../gui/toast.js';
+import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
 
@@ -62,7 +62,7 @@ function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean):
 	const opponent_disconnectedOrLostConnection = wasByChoice
 		? translations.onlinegame.opponent_disconnected
 		: translations.onlinegame.opponent_lost_connection;
-	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!.basegame)
+	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!)
 		? translations.onlinegame.auto_resigning_in
 		: translations.onlinegame.auto_aborting_in;
 	// The "You are AFK" message should overwrite, be on top of, this message,

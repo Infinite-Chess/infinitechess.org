@@ -1,0 +1,1 @@
+Sounds are compressed to opus format, using stereo (or original), 48000Hz, and 64kbps Bitrate.

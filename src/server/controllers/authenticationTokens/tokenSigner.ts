@@ -6,6 +6,8 @@
  *
  * The benefit of signing access tokens with information is when we verify the tokens,
  * we don't have to do a database lookup to know who they are!
+ *
+ * Sessions are sliding: as long as the token is used before it expires, it gets renewed.
  */
 
 import type { Role } from '../roles.js';
@@ -30,8 +32,15 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 // Session tokens expiry times ------------------------------------------------------
 
-const refreshTokenExpiryMillis = 1000 * 60 * 60 * 24 * 5; // 5 days
-// const refreshTokenExpiryMillis = 1000 * 20; // 20 seconds, for testing purposes.
+/** The lifetime of a standard session refresh token, if never renewed. */
+const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 2; // 48 hours
+// const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 20; // 20 seconds, for testing purposes.
+
+/**
+ * The lifetime of an extended session refresh token,
+ * when "keep me logged in" is checked, if never renewed.
+ */
+const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 90; // 90 days
 
 /** The window where a "consumed" token is still accepted. */
 const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
@@ -50,10 +59,16 @@ function signAccessToken(user_id: number, username: string, roles: Role[] | null
 /**
  * Signs and generates a refresh token for the user.
  * The refresh token is long-lived (hours-days) and should be stored in an httpOnly cookie (not accessible via JS).
+ * @param expiryMillis - How long, in milliseconds, the token should remain valid.
  */
-function signRefreshToken(user_id: number, username: string, roles: Role[] | null): string {
+function signRefreshToken(
+	user_id: number,
+	username: string,
+	roles: Role[] | null,
+	expiryMillis: number,
+): string {
 	const payload = generatePayload(user_id, username, roles);
-	const refreshTokenExpirySecs = refreshTokenExpiryMillis / 1000;
+	const refreshTokenExpirySecs = expiryMillis / 1000;
 	return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenExpirySecs }); // Longer-lived, stored in an httpOnly cookie.
 }
 
@@ -63,7 +78,8 @@ function generatePayload(user_id: number, username: string, roles: Role[] | null
 }
 
 export {
-	refreshTokenExpiryMillis,
+	DEFAULT_SESSION_EXPIRY_MILLIS,
+	EXTENDED_SESSION_EXPIRY_MILLIS,
 	refreshTokenGracePeriodMillis,
 	signAccessToken,
 	signRefreshToken,

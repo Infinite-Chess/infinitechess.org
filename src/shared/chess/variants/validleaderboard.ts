@@ -1,10 +1,10 @@
 // src/shared/chess/variants/validleaderboard.ts
 
+import { VariantCode } from './variantregistry';
+
 /**
  * This script stores all global variables related to our leaderboards.
  */
-
-import type { VariantCode } from './variantdictionary.js';
 
 const Leaderboards = {
 	/**

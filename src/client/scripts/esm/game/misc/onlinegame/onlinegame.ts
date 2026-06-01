@@ -4,7 +4,7 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { ServerGameInfo } from '../../websocket/socketschemas.js';
+import type { ServerGameInfo } from '../../../websocket/socketschemas.js';
 import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { ClockValues, ParticipantState, Rating } from '../../../../../../shared/types.js';
 
@@ -14,14 +14,14 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
-import IndexedDB from '../../../util/IndexedDB.js';
-import socketsubs from '../../websocket/socketsubs.js';
+import socketsubs from '../../../websocket/socketsubs.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import tabnameflash from './tabnameflash.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import { SocketBus } from '../../../websocket/SocketBus.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -30,11 +30,6 @@ let inOnlineGame: boolean = false;
 
 /** The id of the online game we are in, if we are in one. */
 let id: number | undefined;
-
-/**
- * Whether the game is a private one (joined from an invite code).
- */
-let isPrivate: boolean | undefined;
 
 /**
  * Whether the game is rated.
@@ -53,13 +48,13 @@ let ourColor: Player | undefined;
 let playerRatings: PlayerGroup<Rating> | undefined;
 
 /**
- * Different from gamefile.basegame.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
+ * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
  * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
  */
 let serverHasConcludedGame: boolean | undefined;
 
 /**
- * Different from gamefile.basegame.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
+ * Different from gamefile.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
  * and NOT if the SERVER tells us that the game is concluded.
  */
 let playerHasPressedAbortOrResignButton: boolean | undefined;
@@ -76,13 +71,17 @@ let inSync: boolean | undefined;
 
 // Events ------------------------------------------------------------------------------------------------------
 
+SocketBus.addEventListener('reconnected', () => {
+	if (!inOnlineGame) return;
+	resyncToGame();
+});
+
 GameBus.addEventListener('game-concluded', () => {
 	if (!inOnlineGame) return; // The game concluded wasn't an online game.
 
 	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
 	afk.onGameClose();
 	tabnameflash.onGameClose();
-	deleteCustomVariantOptions();
 	drawoffers.onGameClose();
 	requestRemovalFromPlayersInActiveGames();
 });
@@ -98,12 +97,6 @@ function getGameID(): number {
 	if (!inOnlineGame)
 		throw Error("Cannot get id of online game when we're not in an online game.");
 	return id!;
-}
-
-function getIsPrivate(): boolean {
-	if (!inOnlineGame)
-		throw Error("Cannot get isPrivate of online game when we're not in an online game.");
-	return isPrivate!;
 }
 
 function isRated(): boolean {
@@ -139,7 +132,7 @@ function areWeColorInOnlineGame(color: Player): boolean {
 function isItOurTurn(): boolean {
 	if (!inOnlineGame)
 		throw Error("Cannot get isItOurTurn of online game when we're not in an online game.");
-	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
+	return gameslot.getGamefile()!.whosTurn === ourColor;
 }
 
 /** Whether we have pressed the Abort/Resign game button this game. NOT when it says main menu. */
@@ -193,7 +186,6 @@ function initOnlineGame(options: {
 	// Set static game properties that never change
 	id = options.gameInfo.id;
 	rated = options.gameInfo.rated;
-	isPrivate = options.gameInfo.publicity === 'private';
 	playerRatings = options.gameInfo.playerRatings;
 
 	ourColor = options.youAreColor;
@@ -230,7 +222,6 @@ function set_DrawOffers_DisconnectInfo_AutoAFKResign(participantState?: Particip
 function closeOnlineGame(): void {
 	inOnlineGame = false;
 	id = undefined;
-	isPrivate = undefined;
 	rated = undefined;
 	ourColor = undefined;
 	inSync = undefined;
@@ -246,8 +237,8 @@ function closeOnlineGame(): void {
 function initEventListeners(): void {
 	// Add the event listeners for when we lose connection or the socket closes,
 	// to set our inSync variable to false
-	document.addEventListener('connection-lost', setInSyncFalse); // Custom event
-	document.addEventListener('socket-closed', setInSyncFalse); // Custom event
+	SocketBus.addEventListener('connection-lost', setInSyncFalse);
+	SocketBus.addEventListener('closed', setInSyncFalse);
 
 	/**
 	 * Leave-game warning popups on every hyperlink.
@@ -261,8 +252,8 @@ function initEventListeners(): void {
 }
 
 function closeEventListeners(): void {
-	document.removeEventListener('connection-lost', setInSyncFalse);
-	document.removeEventListener('socket-closed', setInSyncFalse);
+	SocketBus.removeEventListener('connection-lost', setInSyncFalse);
+	SocketBus.removeEventListener('closed', setInSyncFalse);
 	document.querySelectorAll('a').forEach((link) => {
 		link.removeEventListener('click', confirmNavigationAwayFromGame);
 	});
@@ -278,7 +269,7 @@ function closeEventListeners(): void {
 function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) return;
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?');
 	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -306,6 +297,7 @@ function update(): void {
 function resyncToGame(): void {
 	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
+	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	socketmessages.send('game', 'resync', id!);
 }
 
@@ -319,7 +311,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 
 function reportOpponentsMove(reason: string): void {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = gameslot.getGamefile()!.basegame.moves.length + 1;
+	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
 
 	const message = {
 		reason,
@@ -338,7 +330,7 @@ function onAbortOrResignButtonPress(): void {
 	playerHasPressedAbortOrResignButton = true;
 
 	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile.basegame)) socketmessages.send('game', 'resign');
+	if (moveutil.isGameResignable(gamefile)) socketmessages.send('game', 'resign');
 	else socketmessages.send('game', 'abort');
 }
 
@@ -358,14 +350,6 @@ function onMainMenuButtonPress(): void {
 	socketsubs.unsubFromSub('game');
 }
 
-function deleteCustomVariantOptions(): void {
-	// Delete any custom pasted position in a private game.
-	if (isPrivate) {
-		const storageKey = getKeyForOnlineGameVariantOptions(id!);
-		IndexedDB.deleteItem(storageKey);
-	}
-}
-
 /**
  * Lets the server know we have seen the game conclusion, and would
  * like to be allowed to join a new game if we leave quickly.
@@ -383,8 +367,8 @@ function requestRemovalFromPlayersInActiveGames(): void {
 	}
 
 	// Don't send this request if the server will have deleted this game instantly.
-	const { basegame, boardsim } = gameslot.getGamefile()!;
-	if (isGameInstantlyDeleted(boardsim.variant, basegame.dateTimestamp, isPrivate!)) return;
+	const gamefile = gameslot.getGamefile()!;
+	if (isGameInstantlyDeleted(gamefile.variant)) return;
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
@@ -419,20 +403,11 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	return clockValues;
 }
 
-/**
- * Returns the key that's put in local storage to store the variant options
- * of the current online game, if we have pasted a position in a private match.
- */
-function getKeyForOnlineGameVariantOptions(gameID: number): string {
-	return `online-game-variant-options${gameID}`;
-}
-
 // Exports -------------------------------------------------------------------------
 
 export default {
 	onmessage,
 	getGameID,
-	getIsPrivate,
 	isRated,
 	doWeHaveRole,
 	getOurColor,
@@ -454,5 +429,4 @@ export default {
 	areInOnlineGame,
 	areWeColorInOnlineGame,
 	adjustClockValuesForPing,
-	getKeyForOnlineGameVariantOptions,
 };

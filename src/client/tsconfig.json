@@ -1,0 +1,11 @@
+// src/client/tsconfig.json
+
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true, // Prevents error in this file
+    "tsBuildInfoFile": "../../dist/tsconfig.client.tsbuildinfo"
+  },
+  "include": ["./**/*", "../shared/**/*", "../types/**/*"]
+}

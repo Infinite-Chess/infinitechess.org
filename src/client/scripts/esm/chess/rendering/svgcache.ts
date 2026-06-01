@@ -8,8 +8,8 @@
 import type { Color } from '../../../../../shared/util/math/math.js';
 import type { RawType, Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import pieceThemes from '../../../../../shared/components/header/pieceThemes.js';
+import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 
 import preferences from '../../components/header/preferences.js';
 
@@ -205,7 +205,7 @@ function getNeededSVGLocations(types: number[]): Set<string> {
  * @param types - An array of piece type numbers to get SVGs for.
  * @param [width] - Optional width to set on the SVG elements.
  * @param [height] - Optional height to set on the SVG elements.
- * @returns An array of cloned and prepared SVG elements.
+ * @returns An array of cloned and prepared SVG elements. Their id is now the integer id of the piece.
  */
 function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
 	let failed: boolean = false;
@@ -214,14 +214,14 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 		const tint = preferences.getTintColorOfType(type);
 		const [raw, c] = typeutil.splitType(type);
 		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const checks: string[] = getSVGColorPriority(c);
-		for (const c of checks) {
+		const colorExts: string[] = getSVGColorPriority(c);
+		for (const c of colorExts) {
 			const id = baseId + c;
 			if (!(id in cachedPieceSVGs)) continue;
 			// Clone the SVG element
 			const cloned = cachedPieceSVGs[id]!.cloneNode(true) as SVGElement;
 
-			cloned.id = String(type);
+			cloned.id = String(type); // Override 'pawn-white' with the integer piece type
 
 			// Set width and height if specified
 			if (width !== undefined) cloned.setAttribute('width', width.toString());
@@ -234,12 +234,54 @@ function getSVGIDs(types: number[], width?: number, height?: number): SVGElement
 			continue l;
 		}
 		console.error(
-			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${checks} for ${baseId}`,
+			`SVG at path "${pieceThemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`,
 		);
 		failed = true;
 	}
 	if (failed) throw Error('SVG theme is missing ids for pieces');
 	return svgs;
+}
+
+/**
+ * Returns a cloned SVG element for the given raw piece type rendered as a monochrome
+ * silhouette. All fill/stroke color values are replaced with `currentColor`, so the
+ * silhouette color is controlled entirely by the CSS `color` property of its container.
+ * @param rawType - The raw piece type (without color extension).
+ */
+async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
+	const type = typeutil.buildType(rawType, players.BLACK);
+	const locations = getNeededSVGLocations([type]);
+	if (locations.size > 0) await fetchMissingTypes(locations);
+
+	const baseId = typeutil.getRawTypeStr(rawType);
+	const colorExts = getSVGColorPriority(players.BLACK);
+	let source: SVGElement | undefined;
+	for (const ext of colorExts) {
+		const id = baseId + ext;
+		if (id in cachedPieceSVGs) {
+			source = cachedPieceSVGs[id];
+			break;
+		}
+	}
+	if (source === undefined) throw new Error(`No SVG found for raw piece type ${rawType}`);
+
+	const clone = source.cloneNode(true) as SVGElement;
+	clone.removeAttribute('id');
+	recolorToCurrentColor(clone);
+	return clone;
+}
+
+/**
+ * Recursively replaces all explicit fill and stroke color values on an SVG element
+ * and its descendants with "currentColor", leaving "none" values untouched.
+ * This converts the SVG into a monochrome silhouette driven by the CSS `color` property.
+ */
+function recolorToCurrentColor(element: Element): void {
+	const fill = element.getAttribute('fill');
+	if (fill !== 'none') element.setAttribute('fill', 'currentColor');
+	const stroke = element.getAttribute('stroke');
+	if (stroke !== null && stroke !== 'none') element.setAttribute('stroke', 'currentColor');
+	for (const child of element.children) recolorToCurrentColor(child);
 }
 
 /**
@@ -256,5 +298,6 @@ function showCache(): void {
 
 export default {
 	getSVGElements,
+	getSilhouetteSVG,
 	showCache,
 };

@@ -11,8 +11,8 @@ import type { CustomWebSocket } from './socketUtility.js';
 import type { WebsocketInMessage } from './receiveSocketMessage.js';
 
 import { routeGameMessage } from '../game/gamemanager/gamerouter.js';
+import { routeLobbyMessage } from '../game/invitesmanager/lobbyrouter.js';
 import { routeGeneralMessage } from './generalrouter.js';
-import { routeInvitesMessage } from '../game/invitesmanager/invitesrouter.js';
 
 // Functions ---------------------------------------------------------------------------
 
@@ -22,8 +22,8 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 		case 'general':
 			routeGeneralMessage(ws, message.contents);
 			break;
-		case 'invites':
-			routeInvitesMessage(ws, message.contents, message.id);
+		case 'lobby':
+			routeLobbyMessage(ws, message.contents);
 			break;
 		case 'game':
 			routeGameMessage(ws, message.contents, message.id);

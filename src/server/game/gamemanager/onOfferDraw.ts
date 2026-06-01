@@ -30,10 +30,10 @@ import {
  */
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log('Client offers a draw.');
-	const { match, basegame } = servergame;
+	const match = servergame.match;
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
 
-	if (gameutility.isGameOver(basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error('Client offered a draw when the game is already over. Ignoring.');
 	if (isDrawOfferOpen(match))
 		return console.error(
@@ -41,7 +41,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 		);
 	if (hasColorOfferedDrawTooFast(servergame, color))
 		return console.error('Client tried to offer a draw too fast.');
-	if (!gameutility.isGameResignable(basegame))
+	if (!gameutility.isGameResignable(servergame))
 		return console.error('Client tried to offer a draw on the first 2 moves');
 
 	// Extend the draw offer!
@@ -63,7 +63,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log('Client accepts a draw.');
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
 
-	if (gameutility.isGameOver(servergame.basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error('Client accepted a draw when the game is already over. Ignoring.');
 	if (!isDrawOfferOpen(servergame.match))
 		return console.error("Client tried to accept a draw offer when there isn't one.");
@@ -91,7 +91,7 @@ function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	// console.log('Client declines a draw.');
 
-	if (gameutility.isGameOver(servergame.basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error('Client declined a draw when the game is already over. Ignoring.');
 
 	// Decline the draw!

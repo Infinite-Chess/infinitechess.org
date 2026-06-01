@@ -11,7 +11,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import state from '../../../../../shared/chess/logic/state.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
@@ -29,6 +29,7 @@ import { GameBus } from '../GameBus.js';
 import boardeditor from './boardeditor.js';
 import movesequence from '../chess/movesequence.js';
 import guinavigation from '../gui/guinavigation.js';
+import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ----------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ function reset(): void {
 // Running Edits --------------------------------------------------------------
 
 /** Runs both logical and graphical changes. */
-function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = true): void {
+function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = true): void {
 	// Pieces must be unselected before they are modified
 	selection.unselectPiece();
 
@@ -95,11 +96,14 @@ function runEdit(gamefile: FullGame, mesh: Mesh, edit: Edit, forward: boolean = 
 	GameBus.dispatch('physical-move');
 
 	// Run graphical changes
-	movesequence.runMeshChanges(gamefile.boardsim, mesh, edit, forward);
+	movesequence.runMeshChanges(gamefile, mesh, edit, forward);
 
 	// If the piece count is now high enough, disable icons and arrows.
-	const pieceCount = boardutil.getPieceCountOfGame(gamefile.boardsim.pieces);
-	if (pieceCount > miniimage.pieceCountToDisableMiniImages || pieceCount > arrows.MAX_PIECES) {
+	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
+	if (
+		pieceCount > miniimagerenderer.pieceCountToDisableMiniImages ||
+		pieceCount > arrows.MAX_PIECES
+	) {
 		miniimage.disable();
 		arrows.setMode(0);
 	}
@@ -210,7 +214,7 @@ function canRedo(): boolean {
 // Queuing Edits --------------------------------------------------------------
 
 /** Queues the deletion of a piece, including its special rights, if present, to the edit changes. */
-function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
+function queueRemovePiece(gamefile: GameFile, edit: Edit, piece: Piece): void {
 	boardchanges.queueDeletePiece(edit.changes, false, piece);
 	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
@@ -220,7 +224,7 @@ function queueRemovePiece(gamefile: FullGame, edit: Edit, piece: Piece): void {
  * If specialrights is left undefined, it is set according to the game rules
  */
 function queueAddPiece(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	edit: Edit,
 	coords: Coords,
 	type: number,
@@ -232,9 +236,9 @@ function queueAddPiece(
 }
 
 /** Queues the addition/removal of a specialright at the specified coordinates. */
-function queueSpecialRights(gamefile: FullGame, edit: Edit, coords: Coords, add: boolean): void {
+function queueSpecialRights(gamefile: GameFile, edit: Edit, coords: Coords, add: boolean): void {
 	const coordsKey = coordutil.getKeyFromCoords(coords);
-	const current = gamefile.boardsim.state.global.specialRights.has(coordsKey);
+	const current = gamefile.state.global.specialRights.has(coordsKey);
 	state.createSpecialRightsState(edit, coordsKey, current, add);
 }
 

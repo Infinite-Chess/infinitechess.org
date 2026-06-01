@@ -1,0 +1,20 @@
+{# Site-wide toast notification. Included once by the layout. #}
+{# Runtime: src/client/scripts/esm/components/toast.ts #}
+<div id="toast" class="toast hidden" role="status">
+	<span class="toast-icon">
+		<svg class="toast-icon-info" viewBox="0 0 24 24">
+			<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+			<path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+		</svg>
+		<svg class="toast-icon-error" viewBox="0 0 24 24">
+			<path d="M12 3l10 18H2L12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+			<path d="M12 10v5M12 17.5v.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+		</svg>
+	</span>
+	<p class="toast-text"></p>
+	<button class="toast-close">
+		<svg viewBox="0 0 24 24">
+			<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+		</svg>
+	</button>
+</div>

@@ -8,9 +8,13 @@
  * generator-based variants are excluded to avoid server hitches on legal move gen.
  */
 
-import type { VariantCode } from './variantdictionary.js';
+import type { Player } from '../util/typeutil.js';
+import type { VariantCode } from './variantregistry.js';
+import type { LoadedVariant } from '../logic/gamefile.js';
+import type { InviteVariant, TimeControl, InviteModifier } from '../../types.js';
 
-import variant from './variant.js';
+import variantpreviewer from './variantpreviewer.js';
+import { VariantLeaderboards } from './validleaderboard.js';
 
 // Constants -----------------------------------------------------------------
 
@@ -22,42 +26,72 @@ import variant from './variant.js';
  */
 const POSITION_STRING_THRESHOLD = 2500;
 
+/**
+ * Variants whose starting position is too large to
+ * include in an ICN string or to generate server-side.
+ * Auto-reject these variants for seeks.
+ */
+const VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION: VariantCode[] = [
+	'Omega_Squared',
+	'Omega_Cubed',
+	'Omega_Fourth',
+	'5D_Chess',
+];
+
 // Functions -----------------------------------------------------------------
 
 /**
  * Returns `true` if the given variant supports server-side move legality validation.
  * Variants whose position string exceeds {@link POSITION_STRING_THRESHOLD} characters,
  * or that use position generators, are not supported.
- * @param variantCode - The variant code, if available.
- * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param variant - The loaded variant, if available.
  */
-function doesVariantSupportServerValidation(
-	variantCode: VariantCode | null,
-	timestamp: number,
-): boolean {
-	if (variantCode === null) return false;
-	const positionString = variant.getVariantPositionString(variantCode, timestamp);
-	if (positionString === undefined) return false; // Generator-based variant
-	return positionString.length <= POSITION_STRING_THRESHOLD;
+function doesVariantSupportServerValidation(variant: LoadedVariant | undefined): boolean {
+	if (variant === undefined) return false;
+	const positionStringLength = variantpreviewer.getVariantPositionStringLength(variant);
+	if (positionStringLength === undefined) return false; // Generator-based variant
+	return positionStringLength <= POSITION_STRING_THRESHOLD;
 }
 
 /**
+ * DELETE UNNECESSARY WRAPPER once the `private` game flag has been unused for a while.
+ *
  * Returns `true` if the game is deleted instantly on conclusion — meaning the server
  * either validated every move (cheating is impossible) or it's a private game (cheat
  * reports are not allowed). In both cases:
  * - The server removes players from the active-games list immediately.
  * - Clients do not need to send `removefromplayersinactivegames`.
  * - Clients should not send cheat reports.
- * @param variantCode - The variant code, if available.
- * @param timestamp - The game's start timestamp in ms since epoch.
+ * @param variant - The loaded variant, if available.
  * @param isPrivate - Whether the game is a private match.
  */
-function isGameInstantlyDeleted(
-	variantCode: VariantCode | null,
-	timestamp: number,
-	isPrivate: boolean,
-): boolean {
-	return isPrivate || doesVariantSupportServerValidation(variantCode, timestamp);
+function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
+	return doesVariantSupportServerValidation(variant);
 }
 
-export { doesVariantSupportServerValidation, isGameInstantlyDeleted };
+/**
+ * Returns `true` if the given seek options are eligible for a rated game.
+ * Mirrors the server-side invite validation logic to avoid redundant checks.
+ */
+function isRatedAllowed(
+	variant: InviteVariant | null,
+	time: TimeControl,
+	color: Player | null,
+	modifiers: InviteModifier[],
+): boolean {
+	if (variant === null) return false;
+	if (variant.kind !== 'preset') return false; // Custom variants are never rated
+	if (!(variant.code in VariantLeaderboards)) return false; // Variant needs a leaderboard
+	if (time === '-') return false; // Must be timed
+	if (color !== null) return false; // No specific color for rated **public** games
+	if (modifiers.length > 0) return false; // No modifiers for rated
+	return true;
+}
+
+export {
+	POSITION_STRING_THRESHOLD,
+	VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION,
+	doesVariantSupportServerValidation,
+	isGameInstantlyDeleted,
+	isRatedAllowed,
+};

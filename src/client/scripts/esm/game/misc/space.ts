@@ -15,9 +15,9 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/chess
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import board from '../rendering/boardtiles.js';
 import camera from '../rendering/camera.js';
 import boardpos from '../rendering/boardpos.js';
+import boardtiles from '../rendering/boardtiles.js';
 
 const HALF: BigDecimal = bd.fromNumber(0.5);
 
@@ -52,7 +52,7 @@ function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
 
 /** Returns the integer coordinate that contains the floating point coordinate provided. */
 function roundCoord(coord: BigDecimal): bigint {
-	const squareCenter = board.getSquareCenter();
+	const squareCenter = boardtiles.getSquareCenter();
 	return bd.toBigInt(bd.floor(bd.add(coord, squareCenter)));
 }
 
@@ -67,7 +67,7 @@ function convertCoordToWorldSpace(
 	position: BDCoords = boardpos.getBoardPos(),
 	scale: BigDecimal = boardpos.getBoardScale(),
 ): DoubleCoords {
-	const squareCenter = board.getSquareCenter();
+	const squareCenter = boardtiles.getSquareCenter();
 
 	const halfMinusSquareCenter = bd.subtract(HALF, squareCenter);
 

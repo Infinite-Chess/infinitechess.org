@@ -2,8 +2,6 @@
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
-import camera from './camera.js';
-
 /**
  * This script stores our global WebGL rendering context,
  * and other utility methods.
@@ -56,12 +54,10 @@ function setClearColor(newClearColor: Vec3): void {
 	clearColor = newClearColor;
 }
 
-/**
- * Initiate the WebGL context. This is our web-based render engine.
- */
-function init(): void {
+/** Initiate the WebGL context. This is our web-based render engine. */
+function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	// Without alpha in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	const newContext = camera.canvas.getContext('webgl2', {
+	const newContext = canvasElement.getContext('webgl2', {
 		alpha: false,
 		stencil: true,
 		preserveDrawingBuffer: true, // Reduces likelihood of context lost?
@@ -70,11 +66,11 @@ function init(): void {
 		// WebGL2 not supported
 		alert(translations.webgl_unsupported);
 		throw new Error('WebGL2 not supported by browser.');
-		// gl = camera.canvas.getContext('webgl', { alpha: false });
+		// gl = canvasElement.getContext('webgl', { alpha: false });
 	}
 	// if (!gl) { // Init WebGL experimental
 	// 	console.log("Browser doesn't support WebGL-1, falling back on experiment-webgl.");
-	// 	gl = camera.canvas.getContext('experimental-webgl', { alpha: false});
+	// 	gl = canvasElement.getContext('experimental-webgl', { alpha: false});
 	// }
 	// if (!gl) { // Experimental also failed to init
 	// 	alert(translations.webgl_unsupported);
@@ -100,6 +96,8 @@ function init(): void {
 	}
 
 	gl.clearStencil(0); // Good practice, although 0 is the default
+
+	return gl;
 }
 
 /**
@@ -278,4 +276,5 @@ export default {
 	disableDepthTest,
 };
 
+// TODO: Don't export this, but rather pass the gl returned from init() to all scripts that need it.
 export { gl };

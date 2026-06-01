@@ -1,0 +1,10 @@
+# Translation component: server response strings
+# These are the ONLY translations the server sends directly in HTTP/WebSocket responses.
+script_only = true
+
+[seeks]
+already_in_game = "You are already in a game."
+rated_requires_verified = "To play ranked, you need to be signed in with a verified account."
+game_aborted = "Game aborted."
+cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
+cloud_not_found = "Cloud save not found."

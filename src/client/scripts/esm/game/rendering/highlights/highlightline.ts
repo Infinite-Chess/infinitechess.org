@@ -13,6 +13,7 @@ import type { LineCoefficients } from '../../../../../../shared/util/math/vector
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import space from '../../misc/space.js';
+import camera from '../camera.js';
 import boardpos from '../boardpos.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
@@ -51,18 +52,21 @@ function getRenderRange(): BoundingBoxBD {
 	} else {
 		// Perspective mode
 
-		const distToRenderBoardBD: BigDecimal = bd.fromNumber(perspective.distToRenderBoard);
+		const DIST_TO_RENDER_BOARD_BD: BigDecimal = bd.fromNumber(camera.DIST_TO_RENDER_BOARD);
 		const scale: BigDecimal = boardpos.getBoardScale();
 		const position = boardpos.getBoardPos();
 
-		const distToRenderBoard_Tiles: BigDecimal = bd.divideFloating(distToRenderBoardBD, scale);
+		const DIST_TO_RENDER_BOARD_TILES: BigDecimal = bd.divideFloating(
+			DIST_TO_RENDER_BOARD_BD,
+			scale,
+		);
 
 		// Shift the box based on our current board position
 		return {
-			left: bd.subtract(position[0], distToRenderBoard_Tiles),
-			right: bd.add(position[0], distToRenderBoard_Tiles),
-			bottom: bd.subtract(position[1], distToRenderBoard_Tiles),
-			top: bd.add(position[1], distToRenderBoard_Tiles),
+			left: bd.subtract(position[0], DIST_TO_RENDER_BOARD_TILES),
+			right: bd.add(position[0], DIST_TO_RENDER_BOARD_TILES),
+			bottom: bd.subtract(position[1], DIST_TO_RENDER_BOARD_TILES),
+			top: bd.add(position[1], DIST_TO_RENDER_BOARD_TILES),
 		};
 	}
 }

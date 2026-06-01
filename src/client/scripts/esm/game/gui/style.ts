@@ -26,23 +26,7 @@ interface HSLColor {
 /** SVG default namespace */
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Elements  -------------------------------------------------------------
-
-const element_style = document.getElementById('style')!; // The in-html-doc style element containing css stylings
-
-// Variables  -------------------------------------------------------------
-
-// What things require styling that our javascript changes?
-// * The navigation bar, when the theme changes.
-let navigationStyle: string;
-
 // Functions -------------------------------------------------------------
-
-function setNavStyle(cssStyle: string): void {
-	navigationStyle = cssStyle;
-	// Update the style element
-	element_style.innerHTML = navigationStyle; // Other styles can be appended here later
-}
 
 /**
  * Finds the index of an element within its parent.
@@ -161,7 +145,6 @@ function hslToCssString(hsl: HSLColor): string {
 export default {
 	SVG_NS,
 
-	setNavStyle,
 	arrayToCssColor,
 	getElementIndexWithinItsParent,
 	getChildByIndexInParent,

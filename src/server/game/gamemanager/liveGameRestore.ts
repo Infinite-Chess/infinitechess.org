@@ -12,7 +12,7 @@
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
-import type { VariantCode } from '../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
@@ -26,13 +26,13 @@ import type {
 	WinCondition,
 } from '../../../shared/chess/util/winconutil.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
-import movepiece from '../../../shared/chess/logic/movepiece.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
+import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
+import gameutility from './gameutility.js';
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
@@ -132,7 +132,7 @@ function restoreSingleGame(
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
 	// 2. Reconstruct MetaData
-	const gameMetadata = reconstructMetadata(gameRow, playerRows, playerIdentities);
+	const game = reconstructMetadata(gameRow, playerRows, playerIdentities);
 
 	// 3. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
@@ -140,14 +140,16 @@ function restoreSingleGame(
 	// 4. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 8. Reconstruct MatchInfo
-	const matchInfo = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
-
-	// 5. Create the basegame
-	const basegame = gamefile.initGame(
-		gameMetadata,
+	// 5. Create the game (also computes gameRules)
+	const variant: LoadedVariant = {
+		code: gameRow.variant as VariantCode,
+		mod: variantcache.getModule(gameRow.variant as VariantCode),
+		dateTimestamp: gameRow.time_created,
+	};
+	const gameWithRules = gamefile.initGame(
+		game,
 		gameRow.time_created,
-		matchInfo.variant,
+		variant,
 		gameConclusion,
 		clockValues,
 	);
@@ -155,32 +157,20 @@ function restoreSingleGame(
 	// Note: clock state (ticking color, timeAtTurnStart) is already set correctly
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
-	const servergame: ServerGame = { match: matchInfo, basegame };
+	// 8. Reconstruct MatchInfo
+	const match = reconstructMatchInfo(gameRow, playerRows, playerIdentities);
 
-	// 6. Parse & replay moves, conditionally constructing boardsim
+	// 9. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
+	const validateMoves = Boolean(gameRow.validate_moves);
 
-	if (gameRow.validate_moves) {
-		const boardsim = gamefile.initBoard(
-			basegame.gameRules,
-			matchInfo.variant,
-			basegame.dateTimestamp,
-		);
-		servergame.boardsim = boardsim;
-		// Pushes moves to BOTH the basegame and boardsim
-		movepiece.makeAllMovesInGame({ basegame, boardsim }, moves);
-	} else {
-		// Push all the moves to JUST the basegame
-		for (const move of moves) {
-			basegame.moves.push(jsutil.deepCopyObject(move));
-		}
-
-		// Update whosTurn based on move count
-		basegame.whosTurn =
-			basegame.gameRules.turnOrder[
-				basegame.moves.length % basegame.gameRules.turnOrder.length
-			]!;
-	}
+	const servergame: ServerGame = gameutility.initServerGame(
+		gameWithRules,
+		match,
+		validateMoves,
+		variant,
+		moves,
+	);
 
 	// 9. Compute pending timers
 	const pendingTimers = computePendingTimers(gameRow, playerRows, servergame);
@@ -366,14 +356,12 @@ function reconstructMatchInfo(
 		variant: gameRow.variant as VariantCode,
 		timeCreated: gameRow.time_created,
 		timeEnded: gameRow.time_ended ?? undefined,
-		publicity: gameRow.private === 1 ? 'private' : 'public',
 		rated: gameRow.rated === 1,
 		clock: gameRow.clock as TimeControl,
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
 		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
-		positionPasted: gameRow.position_pasted === 1,
 	};
 }
 
@@ -412,9 +400,8 @@ function computePendingTimers(
 	}
 
 	// Auto time loss timer for timed, ongoing games
-	if (!servergame.basegame.untimed && gameRow.color_ticking !== null) {
-		const tickingTime =
-			servergame.basegame.clocks.currentTime[gameRow.color_ticking as Player]!;
+	if (!servergame.untimed && gameRow.color_ticking !== null) {
+		const tickingTime = servergame.clocks.currentTime[gameRow.color_ticking as Player]!;
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 

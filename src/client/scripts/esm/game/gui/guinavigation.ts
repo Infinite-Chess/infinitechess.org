@@ -11,11 +11,10 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
-import toast from './toast.js';
+import toast from '../../components/toast.js';
 import stats from './stats.js';
 import mouse from '../../util/mouse.js';
 import space from '../misc/space.js';
-import guipause from './guipause.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -58,7 +57,6 @@ const element_moveRewind = document.getElementById('move-left')!;
 const element_moveForward = document.getElementById('move-right')!;
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
-const element_pause = document.getElementById('pause')!;
 
 const timeToHoldMillis = 250; // After holding the button this long, moves will fast-rewind or edits will fast undo/redo
 const intervalToRepeat = 40; // Default 40. How quickly moves will fast-rewind or edits will fast undo/redo
@@ -270,7 +268,6 @@ function initListeners_Navigation(): void {
 	element_Annotations.addEventListener('click', callback_Annotations);
 	element_Erase.addEventListener('click', callback__Collapse);
 	element_Collapse.addEventListener('click', callback__Collapse);
-	element_pause.addEventListener('click', callback_Pause);
 
 	element_CoordsX.addEventListener('change', callback_CoordsXChange);
 	element_CoordsY.addEventListener('change', callback_CoordsYChange);
@@ -319,7 +316,6 @@ function closeListeners_Navigation(): void {
 	element_Annotations.removeEventListener('click', callback_Annotations);
 	element_Erase.removeEventListener('click', callback__Collapse);
 	element_Collapse.removeEventListener('click', callback__Collapse);
-	element_Back.removeEventListener('click', callback_Pause);
 
 	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
 	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
@@ -407,7 +403,7 @@ function callback_Back(): void {
 
 function callback_Expand(): void {
 	const box: Partial<BoundingBox> =
-		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces) ?? {};
+		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces) ?? {};
 
 	// Add the square annotation highlights, too.
 
@@ -438,7 +434,7 @@ function callback_Expand(): void {
 }
 
 function recenter(): void {
-	Transition.zoomToCoordsBox(gameslot.getGamefile()!.boardsim.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
+	Transition.zoomToCoordsBox(gameslot.getGamefile()!.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 }
 
 // Annotations Buttons ======================================
@@ -491,10 +487,6 @@ function getHeightOfNavBar(): number {
 	return element_Navigation.getBoundingClientRect().height;
 }
 
-function callback_Pause(): void {
-	guipause.open();
-}
-
 /** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
 function update(): void {
 	if (!guiboardeditor.isOpen()) {
@@ -532,8 +524,8 @@ function isItOkayToRewindOrForward(): boolean {
  */
 function update_MoveButtons(): void {
 	const gamefile = gameslot.getGamefile()!;
-	const decrementingLegal = moveutil.isDecrementingLegal(gamefile.boardsim);
-	const incrementingLegal = moveutil.isIncrementingLegal(gamefile.boardsim);
+	const decrementingLegal = moveutil.isDecrementingLegal(gamefile);
+	const incrementingLegal = moveutil.isIncrementingLegal(gamefile);
 
 	if (decrementingLegal) element_moveRewind.classList.remove('opacity-0_5');
 	else element_moveRewind.classList.add('opacity-0_5');
@@ -687,7 +679,7 @@ function rewindMove(): void {
 	// If we had premoves to cancel, just cancel them, don't rewind a move this time.
 	if (hadAtleastOnePremove) return;
 
-	if (!moveutil.isDecrementingLegal(gamefile.boardsim)) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
 
 	frametracker.onVisualChange();
 
@@ -703,7 +695,7 @@ function forwardMove(): void {
 
 	premoves.cancelPremoves(gamefile, mesh);
 
-	if (!moveutil.isIncrementingLegal(gamefile.boardsim)) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
 
 	movesequence.navigateMove(gamefile, mesh, true);
 }
@@ -867,7 +859,6 @@ export default {
 	updateElement_Coords,
 	update_MoveButtons,
 	update_EditButtons,
-	callback_Pause,
 	callback_Expand,
 	lockRewind,
 	update,

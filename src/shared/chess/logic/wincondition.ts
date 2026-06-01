@@ -6,61 +6,71 @@
  * conditions except for checkmate, stalemate, and repetition.
  */
 
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
+import type { GameFile } from './gamefile.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { Board, FullGame } from './gamefile.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
+import winconutil from '../util/winconutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil, { RawType } from '../util/typeutil.js';
 import { detectRepetitionDraw } from './repetition.js';
 import { rawTypes as r, Player } from '../util/typeutil.js';
 import { detectInsufficientMaterial } from './insufficientmaterial.js';
-import {
-	detectCheckmateOrStalemate,
-	pieceCountToDisableCheckmate,
-	royalCountToDisableCheckmate,
-} from './checkmate.js';
+import { detectCheckmateOrStalemate } from './checkmate.js';
 
 // The squares in KOTH where if you get your king to you WIN
 // prettier-ignore
 const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
 
 /**
+ * Tests if the game is over by the used win condition, and if so,
+ * sets the `gameConclusion` property according to how the game was terminated,
+ * and adds the respective mate flag on the last move played.
+ */
+function doGameOverChecks(gamefile: GameFile): void {
+	const conclusion = getGameConclusion(gamefile);
+	gamefileutility.setConclusion(gamefile, conclusion);
+	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
+		moveutil.flagLastMoveAsMate(gamefile);
+}
+
+/**
  * Tests if the game is over by the win condition used, and if so,
- * returns the `gameConclusion` property of the gamefile.
+ * returns the `gameConclusion` property of the boardsim.
  * For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @returns The conclusion object, if the game is over. For example, `{ victor: 1, condition: 'checkmate' }`, or `{ victor: 0, condition: 'stalemate' }`. If the game isn't over, this returns *undefined*.
  */
-function getGameConclusion(gamefile: FullGame): GameConclusion | undefined {
-	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim))
+function getGameConclusion(boardsim: Board): GameConclusion | undefined {
+	if (!moveutil.areWeViewingLatestMove(boardsim))
 		throw new Error("Cannot perform game over checks when we're not on the last move.");
 
 	return (
-		detectAllpiecescaptured(gamefile) ||
-		detectRoyalCapture(gamefile) ||
-		detectAllroyalscaptured(gamefile) ||
-		detectKoth(gamefile) ||
-		detectRepetitionDraw(gamefile) ||
-		detectCheckmateOrStalemate(gamefile) ||
+		detectAllpiecescaptured(boardsim) ||
+		detectRoyalCapture(boardsim) ||
+		detectAllroyalscaptured(boardsim) ||
+		detectKoth(boardsim) ||
+		detectRepetitionDraw(boardsim) ||
+		detectCheckmateOrStalemate(boardsim) ||
 		// This needs to be last so that a draw isn't enforced in a true win
-		detectMoveRule(gamefile) || // 50-move-rule
-		detectInsufficientMaterial(gamefile.basegame.gameRules, gamefile.boardsim) ||
+		detectMoveRule(boardsim) || // 50-move-rule
+		detectInsufficientMaterial(boardsim) ||
 		undefined
 	); // No win condition passed. No game conclusion!
 }
 
-function detectRoyalCapture({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'royalcapture'))
+function detectRoyalCapture(boardsim: Board): GameConclusion | undefined {
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'royalcapture'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move capturing a royal piece?
 	if (wasLastMoveARoyalCapture(boardsim)) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'royalcapture' };
@@ -69,11 +79,11 @@ function detectRoyalCapture({ boardsim, basegame }: FullGame): GameConclusion | 
 	return undefined;
 }
 
-function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
+function detectAllroyalscaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			basegame,
-			basegame.whosTurn,
+			boardsim,
+			boardsim.whosTurn,
 			'allroyalscaptured',
 		)
 	)
@@ -84,12 +94,12 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusi
 	// Remember that whosTurn has already been flipped since the last move.
 	const royalCount: Coords[] = boardutil.getRoyalCoordsOfColor(
 		boardsim.pieces,
-		basegame.whosTurn,
+		boardsim.whosTurn,
 	);
 
 	if (royalCount.length === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allroyalscaptured' };
@@ -98,22 +108,22 @@ function detectAllroyalscaptured({ boardsim, basegame }: FullGame): GameConclusi
 	return undefined;
 }
 
-function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusion | undefined {
+function detectAllpiecescaptured(boardsim: Board): GameConclusion | undefined {
 	if (
 		!gamefileutility.isOpponentUsingWinCondition(
-			basegame,
-			basegame.whosTurn,
+			boardsim,
+			boardsim.whosTurn,
 			'allpiecescaptured',
 		)
 	)
 		return undefined; // Not using this gamerule
 
 	// If the player who's turn it is now has zero pieces left, win!
-	const count: number = boardutil.getPieceCountOfColor(boardsim.pieces, basegame.whosTurn);
+	const count: number = boardutil.getPieceCountOfColor(boardsim.pieces, boardsim.whosTurn);
 
 	if (count === 0) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'allpiecescaptured' };
@@ -122,8 +132,8 @@ function detectAllpiecescaptured({ boardsim, basegame }: FullGame): GameConclusi
 	return undefined;
 }
 
-function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (!gamefileutility.isOpponentUsingWinCondition(basegame, basegame.whosTurn, 'koth'))
+function detectKoth(boardsim: Board): GameConclusion | undefined {
+	if (!gamefileutility.isOpponentUsingWinCondition(boardsim, boardsim.whosTurn, 'koth'))
 		return undefined; // Not using this gamerule
 
 	// Was the last move a king move?
@@ -146,7 +156,7 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 
 	if (kingInCenter) {
 		const colorThatWon: Player = moveutil.getColorThatPlayedMoveIndex(
-			basegame,
+			boardsim,
 			boardsim.moves.length - 1,
 		);
 		return { victor: colorThatWon, condition: 'koth' };
@@ -157,12 +167,12 @@ function detectKoth({ boardsim, basegame }: FullGame): GameConclusion | undefine
 
 /**
  * Detects if the game is over by, for example, the 50-move rule.
- * @param gamefile - The gamefile
+ * @param boardsim - The boardsim
  * @returns `{ victor: 0, condition: 'moverule' }`, if the game is over by the move-rule, otherwise *undefined*.
  */
-function detectMoveRule({ boardsim, basegame }: FullGame): GameConclusion | undefined {
-	if (basegame.gameRules.moveRule === undefined) return undefined; // No move-rule being used
-	if (boardsim.state.global.moveRuleState === basegame.gameRules.moveRule) {
+function detectMoveRule(boardsim: Board): GameConclusion | undefined {
+	if (boardsim.gameRules.moveRule === undefined) return undefined; // No move-rule being used
+	if (boardsim.state.global.moveRuleState === boardsim.gameRules.moveRule) {
 		return { victor: null, condition: 'moverule' };
 	}
 	return undefined;
@@ -192,27 +202,7 @@ function wasLastMoveARoyalCapture(boardsim: Board): boolean | undefined {
 	return false;
 }
 
-/**
- * If the game is multiplayer, or if anyone gets multiple turns in a row, then that allows capturing
- * of the kings no matter the win conditions, by way of one person opening a discovered on turn 1, and
- * another person capturing the king on turn 2 => CHECKMATE NOT COMPATIBLE!
- *
- * Checkmate is also not compatible with games with colinear lines present, because the logic surrounding
- * making opening discovered attacks illegal is a nightmare.
- * @param gamefile
- * @returns true if the gamefile is checkmate compatible
- */
-function isCheckmateCompatibleWithGame({ boardsim, basegame }: FullGame): boolean {
-	if (boardsim.editor) return false; // This prevents legal move calculation respecting check in the editor.
-	if (boardutil.getPieceCountOfGame(boardsim.pieces) > pieceCountToDisableCheckmate) return false; // Too many pieces (checkmate algorithm takes too long)
-	if (boardsim.pieces.slides.length > 16) return false; // If the game has more lines than this, then checkmate creates lag spikes.
-	if (gamefileutility.getPlayerCount(basegame) > 2) return false; // 3+ Players allows for 1 player to open a discovered and a 2nd to capture a king. CHECKMATE NOT COMPATIBLE
-	if (moveutil.doesAnyPlayerGet2TurnsInARow(basegame)) return false; // This also allows the capture of the king.
-	if (boardutil.getRoyalCountOfGame(boardsim.pieces) > royalCountToDisableCheckmate) return false; // Too many royals (check & checkmate algorithm takes too long)
-	return true; // Checkmate compatible!
-}
-
 export default {
 	getGameConclusion,
-	isCheckmateCompatibleWithGame,
+	doGameOverChecks,
 };

@@ -29,10 +29,10 @@ const element_loadingErrorText = document.querySelector('.game-loading-screen .l
 })();
 
 function initColorOfLoadingBackground(): void {
-	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
+	const boardColor = preferences.getBoardColor();
+	const lightTiles = themes.getPropertyOfTheme(boardColor, 'lightTiles');
 	lightTiles[3] = 1;
-	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
+	const darkTiles = themes.getPropertyOfTheme(boardColor, 'darkTiles');
 	darkTiles[3] = 1;
 
 	for (let i = 0; i < 3; i++) {

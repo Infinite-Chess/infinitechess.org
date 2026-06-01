@@ -7,7 +7,7 @@
  * selection tool transformations or the game notation actions.
  */
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import eactions from './actions/eactions.js';
 import gameloader from '../chess/gameloader.js';

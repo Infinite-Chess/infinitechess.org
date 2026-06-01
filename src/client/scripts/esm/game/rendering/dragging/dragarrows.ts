@@ -34,6 +34,7 @@ import meshes from '../meshes.js';
 import arrows from '../arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import keybinds from '../../misc/keybinds.js';
+import deltatime from '../../misc/deltatime.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
 import maskedDraw from '../../../webgl/maskedDraw.js';
@@ -42,7 +43,6 @@ import droparrows from './droparrows.js';
 import guigameinfo from '../../gui/guigameinfo.js';
 import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../frametracker.js';
-import loadbalancer from '../../misc/loadbalancer.js';
 import draganimation from './draganimation.js';
 import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
@@ -139,7 +139,7 @@ function update(): void {
 		if (isDragActive) {
 			// Update the phase of the slide zone gradient to create a moving effect
 			slideZonePhase =
-				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * loadbalancer.getDeltaTime()) %
+				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * deltatime.get()) %
 				(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
 			frametracker.onVisualChange(); // Render this frame (slide zone is being animated)
 		}
@@ -184,7 +184,7 @@ function updateCandidate(): void {
 	// Threshold crossed — initiate drag of the off-screen piece.
 	const gamefile = gameslot.getGamefile()!;
 	const piece: Piece | undefined = boardutil.getPieceFromCoords(
-		gamefile.boardsim.pieces,
+		gamefile.pieces,
 		candidate!.pieceCoords,
 	);
 	if (!piece) {
@@ -222,7 +222,7 @@ function detectCandidateArrow(): void {
 		if (hoveredArrow.piece.floating) continue; // Ignore animated arrows.
 		if (!hoveredArrow.ownsSlide) continue; // Piece can't slide in this direction.
 		const pieceType = hoveredArrow.piece.type;
-		if (selection.canSelectPieceType(gamefile.basegame, pieceType) !== 2) continue; // Not own draggable piece.
+		if (selection.canSelectPieceType(gamefile, pieceType) !== 2) continue; // Not own draggable piece.
 
 		const pieceCoords = bdcoords.coordsToBigInt(hoveredArrow.piece.coords);
 		const pointerId = mouse.getRelevantListener().getMouseId(Mouse.LEFT)!;
@@ -492,7 +492,7 @@ function renderSlideMoveHighlights(): void {
 	const pieceType = candidate.pieceType;
 
 	// Get the piece's moveset
-	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, pieceType);
+	const moveset = legalmoves.getPieceMoveset(gamefile, pieceType);
 
 	// Find the canonical moveset sliding key (x-component is never negative in moveset keys)
 	const normalizedVec: Vec2 = vectors.absVector(candidate.direction);
@@ -506,10 +506,7 @@ function renderSlideMoveHighlights(): void {
 
 	// For pieces that skip squares (e.g. knightriders), the hovered square may not be
 	// a valid landing spot for the piece from its actual position. Skip in that case.
-	const draggedPiece = boardutil.getPieceFromCoords(
-		gamefile.boardsim.pieces,
-		candidate.pieceCoords,
-	)!;
+	const draggedPiece = boardutil.getPieceFromCoords(gamefile.pieces, candidate.pieceCoords)!;
 	const legalMoves: LegalMoves = legalmoves.getEmptyLegalMoves(moveset);
 	legalmoves.appendPotentialMoves(draggedPiece, moveset, legalMoves); // Appending potential is enough
 	if (!legalmoves.doSlideRangesContainSquare(legalMoves, candidate.pieceCoords, hoveredCoords))
@@ -523,8 +520,7 @@ function renderSlideMoveHighlights(): void {
 	const moves: LegalMoves = legalmoves.getEmptyLegalMoves(moveset);
 	moves.sliding[lineKey] = moveset.sliding[lineKey]!;
 	legalmoves.removeObstructedMoves(
-		gamefile.boardsim,
-		gamefile.basegame.gameRules.worldBorder,
+		gamefile,
 		piece,
 		moveset,
 		moves,

@@ -16,7 +16,6 @@ import type {
 	LivePlayerGamesRecord,
 } from '../../database/livePlayerGamesManager.js';
 
-import { Game } from '../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 
@@ -34,13 +33,12 @@ import {
  * Uses the ICN compact format: `1,2>3,4{[%clk 0:09:56.7]}|5,6>7,8=Q{[%clk 0:09:45.2]}`
  */
 function getMovesString(servergame: ServerGame): string {
-	const { basegame } = servergame;
-	if (basegame.moves.length === 0) return '';
+	if (servergame.moves.length === 0) return '';
 
-	return icnconverter.getShortFormMovesFromMoves(basegame.moves, {
+	return icnconverter.getShortFormMovesFromMoves(servergame.moves, {
 		compact: true,
 		spaces: false,
-		comments: !basegame.untimed,
+		comments: !servergame.untimed,
 		move_numbers: false,
 	});
 }
@@ -48,13 +46,13 @@ function getMovesString(servergame: ServerGame): string {
 /**
  * Extracts the elo display string for a player from game metadata.
  */
-function getPlayerEloString(basegame: Game, player: Player): string | null {
+function getPlayerEloString(servergame: ServerGame, player: Player): string | null {
 	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
 	// prettier-ignore
 	const eloKey = player === p.WHITE ? 'WhiteElo' :
 				   player === p.BLACK ? 'BlackElo' :
 				   (() => { throw new Error(`Invalid player ${player} when getting elo string`); })();
-	return basegame.metadata[eloKey] ?? null;
+	return servergame.metadata[eloKey] ?? null;
 }
 
 /**
@@ -74,12 +72,11 @@ function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDiscon
  * No-op for untimed games.
  */
 function persistCurrentClockTimes(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-	if (basegame.untimed) return;
-	for (const playerStr of Object.keys(match.playerData)) {
+	if (servergame.untimed) return;
+	for (const playerStr of Object.keys(servergame.match.playerData)) {
 		const player = Number(playerStr) as Player;
-		updateLivePlayerGame(match.id, player, {
-			time_remaining_ms: basegame.clocks.currentTime[player] ?? null,
+		updateLivePlayerGame(servergame.match.id, player, {
+			time_remaining_ms: servergame.clocks.currentTime[player] ?? null,
 		});
 	}
 }
@@ -91,7 +88,7 @@ function buildPlayerRecord(
 	game_id: number,
 	player: Player,
 	playerData: PlayerData,
-	basegame: Game,
+	servergame: ServerGame,
 ): LivePlayerGamesRecord {
 	const { identifier, disconnect } = playerData;
 
@@ -100,9 +97,11 @@ function buildPlayerRecord(
 		player_number: player,
 		user_id: identifier.signedIn ? identifier.user_id : null,
 		browser_id: identifier.browser_id,
-		elo: getPlayerEloString(basegame, player),
+		elo: getPlayerEloString(servergame, player),
 		last_draw_offer_ply: playerData.lastOfferPly ?? null,
-		time_remaining_ms: basegame.untimed ? null : (basegame.clocks.currentTime[player] ?? null),
+		time_remaining_ms: servergame.untimed
+			? null
+			: (servergame.clocks.currentTime[player] ?? null),
 		...getDisconnectColumnData(disconnect),
 	};
 }
@@ -113,7 +112,7 @@ function buildPlayerRecord(
  * Called when a new game is created. Inserts the full initial state into both tables.
  */
 function onGameCreated(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
+	const match = servergame.match;
 
 	const record: LiveGamesRecord = {
 		game_id: match.id,
@@ -121,7 +120,7 @@ function onGameCreated(servergame: ServerGame): void {
 		variant: match.variant,
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
-		private: match.publicity === 'private' ? 1 : 0,
+		private: 0, // All games are public for now, even "Challenge a friend" games.
 		moves: '',
 		color_ticking: null,
 		clock_snapshot_time: null,
@@ -131,8 +130,7 @@ function onGameCreated(servergame: ServerGame): void {
 		time_ended: null,
 		afk_resign_time: null,
 		delete_time: null,
-		position_pasted: 0,
-		validate_moves: servergame.boardsim !== undefined ? 1 : 0,
+		validate_moves: servergame.validateMoves ? 1 : 0,
 	};
 
 	insertLiveGame(record);
@@ -140,7 +138,7 @@ function onGameCreated(servergame: ServerGame): void {
 	// Insert one row per player
 	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
 		const player = Number(playerStr) as Player;
-		const playerRecord = buildPlayerRecord(match.id, player, playerData, basegame);
+		const playerRecord = buildPlayerRecord(match.id, player, playerData, servergame);
 		insertLivePlayerGame(playerRecord);
 	}
 }
@@ -150,18 +148,16 @@ function onGameCreated(servergame: ServerGame): void {
  * Updates the moves string, clock state, and per-player time.
  */
 function onMoveSubmitted(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-
 	const gameUpdates: Partial<LiveGameData> = {
 		moves: getMovesString(servergame),
 	};
 
-	if (!basegame.untimed) {
-		gameUpdates.color_ticking = basegame.clocks.colorTicking ?? null;
-		gameUpdates.clock_snapshot_time = basegame.clocks.timeAtTurnStart ?? null;
+	if (!servergame.untimed) {
+		gameUpdates.color_ticking = servergame.clocks.colorTicking ?? null;
+		gameUpdates.clock_snapshot_time = servergame.clocks.timeAtTurnStart ?? null;
 	}
 
-	updateLiveGame(match.id, gameUpdates);
+	updateLiveGame(servergame.match.id, gameUpdates);
 
 	persistCurrentClockTimes(servergame);
 }
@@ -171,26 +167,25 @@ function onMoveSubmitted(servergame: ServerGame): void {
  * Updates conclusion columns and sets the delete timer target.
  */
 function onGameConcluded(servergame: ServerGame): void {
-	const { basegame, match } = servergame;
-	const conclusion = basegame.gameConclusion!;
+	const conclusion = servergame.gameConclusion!;
 
 	const gameUpdates: Partial<LiveGameData> = {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
-		time_ended: match.timeEnded!,
-		delete_time: match.timeEnded! + timeBeforeGameDeletionMillis,
+		time_ended: servergame.match.timeEnded!,
+		delete_time: servergame.match.timeEnded! + timeBeforeGameDeletionMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
 		afk_resign_time: null, // AFK timers are cancelled on conclusion
 	};
 
 	// Stop clock state
-	if (!basegame.untimed) {
+	if (!servergame.untimed) {
 		// Both color ticking and timeAtTurnStart are set to null on game end
 		gameUpdates.color_ticking = null;
 		gameUpdates.clock_snapshot_time = null;
 	}
 
-	updateLiveGame(match.id, gameUpdates);
+	updateLiveGame(servergame.match.id, gameUpdates);
 
 	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
 	persistCurrentClockTimes(servergame);
@@ -257,16 +252,6 @@ function onPlayerAFKReturn(servergame: ServerGame): void {
 }
 
 /**
- * Called when a position is pasted. Sets position_pasted and clears validate_moves.
- */
-function onPositionPasted(servergame: ServerGame): void {
-	updateLiveGame(servergame.match.id, {
-		position_pasted: 1,
-		validate_moves: 0,
-	});
-}
-
-/**
  * Called when a game is fully deleted/logged. Removes the live game from the database.
  */
 function onGameDeleted(game_id: number): void {
@@ -286,6 +271,5 @@ export default {
 	onPlayerReconnected,
 	onPlayerAFK,
 	onPlayerAFKReturn,
-	onPositionPasted,
 	onGameDeleted,
 };

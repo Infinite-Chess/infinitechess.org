@@ -1,36 +1,34 @@
 // src/shared/chess/logic/gamefile.ts
 
+import type { Board } from './boardinit.js';
 import type { CoordsKey } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../types.js';
 import type { BoundingBox } from '../../util/math/bounds.js';
-import type { VariantCode } from '../variants/variantdictionary.js';
-import type { PieceMoveset } from './movesets.js';
+import type { VariantCode } from '../variants/variantregistry.js';
+import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
-import type { VariantOptions } from './initvariant.js';
-import type { OrganizedPieces } from './organizedpieces.js';
-import type { SpecialMoveFunction } from './specialmove.js';
-import type { MoveFull, MoveRecord } from './movepiece.js';
+import type { GlobalGameState } from './state.js';
 import type { ClockValues, MetaData } from '../../types.js';
-import type { GameState, GlobalGameState } from './state.js';
-import type { Player, RawType, RawTypeGroup } from '../util/typeutil.js';
 
 import clock from './clock.js';
-import jsutil from '../../util/jsutil.js';
-import variant from '../variants/variant.js';
-import typeutil from '../util/typeutil.js';
-import boardutil from '../util/boardutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
-import legalmoves from './legalmoves.js';
-import initvariant from './initvariant.js';
+import boardinit from './boardinit.js';
+import winconutil from '../util/winconutil.js';
 import wincondition from './wincondition.js';
+import variantcache from '../variants/variantcache.js';
 import checkdetection from './checkdetection.js';
-import organizedpieces from './organizedpieces.js';
 import gamefileutility from '../util/gamefileutility.js';
+import variantpreviewer from '../variants/variantpreviewer.js';
 
-interface Snapshot {
+// Types ----------------------------------------------------
+
+/** A variant code paired with its loaded module and the game's creation timestamp. */
+export type LoadedVariant = { code: VariantCode; mod: VariantModule; dateTimestamp: number };
+
+export interface Snapshot {
 	/** In key format 'x,y':'type' */
 	position: Map<CoordsKey, number>;
 	/** The global state of the game beginning */
@@ -42,24 +40,43 @@ interface Snapshot {
 }
 
 /**
- * Purely game data
- * Used on both sides
+ * Variant options that can be used to load a custom game,
+ * whether local or online, instead of one of the default variants.
  */
-type Game = {
+export interface VariantOptions {
+	/**
+	 * The full move number of the turn at the provided position. Default: 1.
+	 * Can be higher if you copy just the positional information in a game with some moves played already.
+	 */
+	fullMove: number;
+	gameRules: GameRules;
+	/**
+	 * The starting position object, containing the pieces organized by key.
+	 * The key of the object is the coordinates of the piece as a string,
+	 * and the value is the type of piece on that coordinate (e.g. [22] pawn (neutral))
+	 */
+	position: Map<CoordsKey, number>;
+	/** The 3 global game states */
+	state_global: GlobalGameState;
+}
+
+/**
+ * Pure game metadata — display info, clock data, and conclusion.
+ * Contains no game state (moves, turn, pieces). Used as the non-board
+ * portion of {@link GameFile}.
+ */
+export type Game = {
 	/** Information about the game */
 	metadata: MetaData;
 	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
 	dateTimestamp: number;
-	moves: MoveRecord[];
-	gameRules: GameRules;
-	whosTurn: Player;
 	gameConclusion?: GameConclusion;
 } & ClockDependant;
 
 /**
  * The Game variables that depend on the clock.
  */
-type ClockDependant =
+export type ClockDependant =
 	| {
 			untimed: true;
 			clocks: undefined;
@@ -69,54 +86,12 @@ type ClockDependant =
 			clocks: ClockData;
 	  };
 
-/**
- * Game data used for simulating game logic and board state
- * Use by client always, may not be used by the server.
- */
-type Board = {
-	/** An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']` */
-	existingTypes: number[];
-	/** An array of all RAW piece types that are in this game. */
-	existingRawTypes: RawType[];
-
-	moves: MoveFull[];
-	pieces: OrganizedPieces;
-	state: GameState;
-
-	pieceMovesets: RawTypeGroup<() => PieceMoveset>;
-	specialMoves: RawTypeGroup<SpecialMoveFunction>;
-
-	specialVicinity: Record<CoordsKey, RawType[]>;
-	vicinity: Record<CoordsKey, RawType[]>;
-
-	/** Whether the gamefile is for the board editor. If true, the piece list will contain MUCH more undefined placeholders, and for every single type of piece, as pieces are added commonly in that! */
-	editor: boolean;
-
-	/**
-	 * The variant code. Null for custom/pasted positions without a known variant.
-	 * Is used to infer variant-specific game rules, such as piece movesets.
-	 */
-	variant: VariantCode | null;
-
-	/**
-	 * Information about the beginning snapshot of the game (position, positionString, specialRights, turn)
-	 */
-	startSnapshot: Snapshot;
-};
-
-/**
- * Both game data AND board state used on the client-side,
- * and in the future *sometimes* used on the server-side,
- * when the server starts doing legal move validation.
- */
-type FullGame = {
-	basegame: Game;
-	boardsim: Board;
-};
+/** The complete client-side game object: full board state plus game metadata. */
+export type GameFile = Game & Board;
 
 /** Additional options that may go into the gamefile constructor.
  * Typically used if we're pasting a game, or reloading an online one. */
-interface Additional {
+export interface Additional {
 	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online game or pasting a game. */
 	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
@@ -133,26 +108,26 @@ interface Additional {
 	worldBorder?: BoundingBox;
 }
 
-/** Creates a new {@link Game} object from provided arguments */
+// Functions -------------------------------------------------------------
+
+/** Creates a new {@link Game} object from provided arguments. */
 function initGame(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode: VariantCode | null,
+	variant: LoadedVariant | undefined,
 	gameConclusion?: GameConclusion,
 	clockValues?: ClockValues,
 	variantOptions?: VariantOptions,
-): Game {
-	const gameRules = initvariant.getVariantGamerules(variantCode, dateTimestamp, variantOptions);
+): Game & { gameRules: GameRules } {
+	const gameRules = variantOptions?.gameRules ?? variantpreviewer.getGameRulesOfVariant(variant);
+
 	const clockDependantVars: ClockDependant = clock.init(
-		new Set(gameRules.turnOrder),
+		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
 		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
 	);
 	const game: Game = {
 		metadata,
 		dateTimestamp,
-		moves: [],
-		gameRules,
-		whosTurn: gameRules.turnOrder[0]!,
 		...clockDependantVars,
 	};
 
@@ -164,177 +139,84 @@ function initGame(
 		clock.edit(game.clocks, clockValues);
 	}
 
-	gamefileutility.setConclusion(game, gameConclusion);
+	const gameWithRules = { ...game, gameRules };
 
-	return game;
-}
+	gamefileutility.setConclusion(gameWithRules, gameConclusion);
 
-/** Creates a new {@link Board} object from provided arguments */
-function initBoard(
-	gameRules: GameRules,
-	variantCode: VariantCode | null,
-	dateTimestamp: number,
-	variantOptions?: VariantOptions,
-	editor: boolean = false,
-	/** Only has an effect if the `worldBorder` gamerule is not present. */
-	worldBorderDist?: bigint,
-): Board {
-	const { position, state_global, fullMove } = initvariant.getVariantVariantOptions(
-		gameRules,
-		variantCode,
-		dateTimestamp,
-		variantOptions,
-	);
-
-	const state: GameState = {
-		local: {
-			moveIndex: -1,
-			inCheck: false,
-			checks: [],
-		},
-		global: jsutil.deepCopyObject(state_global),
-	};
-
-	const { pieceMovesets, specialMoves } = initvariant.getPieceMovesets(
-		variantCode,
-		dateTimestamp,
-		gameRules.slideLimit,
-	);
-
-	const { pieces, existingTypes, existingRawTypes } = organizedpieces.processInitialPosition(
-		position,
-		pieceMovesets,
-		gameRules.turnOrder,
-		editor,
-		gameRules.promotionsAllowed,
-	);
-
-	typeutil.deleteUnusedFromRawTypeGroup(existingRawTypes, specialMoves);
-
-	let startingPositionBox = boardutil.getBoundingBoxOfAllPieces(pieces);
-	// Fallback if no pieces present
-	if (startingPositionBox === undefined)
-		startingPositionBox = { left: 1n, right: 8n, bottom: 1n, top: 8n };
-
-	// worldBorder: Receives the smaller of the two, if either the variant property or the override are defined.
-	let worldBorderProperty: bigint | undefined = variant.getVariantWorldBorder(variantCode);
-	if (worldBorderDist !== undefined) {
-		if (worldBorderProperty === undefined)
-			worldBorderProperty = worldBorderDist; // Use the provided world border if the variant doesn't have one.
-		else if (worldBorderDist < worldBorderProperty) worldBorderProperty = worldBorderDist; // Use the smaller of the two if both exist.
-	}
-
-	if (gameRules.worldBorder === undefined && worldBorderProperty !== undefined) {
-		// No override for exact world border dimensions provided, calculate it using the provided distance.
-		gameRules.worldBorder = {
-			left: startingPositionBox.left - worldBorderProperty,
-			right: startingPositionBox.right + worldBorderProperty,
-			bottom: startingPositionBox.bottom - worldBorderProperty,
-			top: startingPositionBox.top + worldBorderProperty,
-		};
-	}
-
-	const startSnapshot: Snapshot = {
-		position,
-		state_global,
-		fullMove,
-		box: startingPositionBox,
-	};
-
-	const vicinity = legalmoves.genVicinity(pieceMovesets);
-	const specialVicinity = legalmoves.genSpecialVicinity(
-		variantCode,
-		dateTimestamp,
-		existingRawTypes,
-	);
-
-	const moves: MoveFull[] = [];
-
-	return {
-		pieces,
-		existingTypes,
-		existingRawTypes,
-		state,
-		moves,
-		vicinity,
-		specialVicinity,
-		pieceMovesets,
-		specialMoves,
-		editor,
-		variant: variantCode,
-		startSnapshot,
-	};
+	return gameWithRules;
 }
 
 /**
- * Attaches a board to a specific game. Used for loading a game after it was started.
+ * Combines a board and game into a flat {@link GameFile}. Used for loading a game when it starts.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 function loadGameWithBoard(
-	basegame: Game,
+	game: Game,
 	boardsim: Board,
 	moves: MovePacket[] = [],
 	validateMoves?: boolean,
-): FullGame {
-	const gamefile = { basegame, boardsim };
+): GameFile {
+	const gamefile: GameFile = { ...game, ...boardsim };
 
 	// Do we need to convert any checkmate win conditions to royalcapture?
-	if (!wincondition.isCheckmateCompatibleWithGame(gamefile))
-		gamerules.swapCheckmateForRoyalCapture(basegame.gameRules);
+	if (!winconutil.isCheckmateCompatibleWithGame(gamefile))
+		gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
 	{
 		// Set the game's `inCheck` and `checks` properties at the front of the game.
 		const trackChecks = gamefileutility.isOpponentUsingWinCondition(
-			basegame,
-			basegame.whosTurn,
+			gamefile,
+			gamefile.whosTurn,
 			'checkmate',
 		);
-		const checkResults = checkdetection.detectCheck(gamefile, basegame.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
-		boardsim.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
-		if (trackChecks) boardsim.state.local.checks = checkResults.checks ?? [];
+		const checkResults = checkdetection.detectCheck(gamefile, gamefile.whosTurn, trackChecks); // { check: boolean, royalsInCheck: Coords[], checks?: CheckInfo[] }
+		gamefile.state.local.inCheck = checkResults.check ? checkResults.royalsInCheck : false;
+		if (trackChecks) gamefile.state.local.checks = checkResults.checks ?? [];
 	}
 
 	movepiece.makeAllMovesInGame(gamefile, moves, validateMoves);
 	// Do not overwrite pre-existing server conclusion, if present.
-	if (basegame.gameConclusion === undefined) gamefileutility.doGameOverChecks(gamefile);
+	if (gamefile.gameConclusion === undefined) wincondition.doGameOverChecks(gamefile);
 	return gamefile;
 }
 
 /**
- * Initiates both the base game and board of the FullGame at the same time.
- * Used on just the client.
+ * Initiates both the base game and board of the GameFile at the same time.
+ * **Asynchronous** because variant modules must be loaded. Used on just the client.
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
-function initFullGame(
+async function initGameFile(
 	metadata: MetaData,
 	dateTimestamp: number,
-	variantCode: VariantCode | null,
+	variantCode: VariantCode | undefined,
 	additional: Additional = {},
 	validateMoves?: true,
-): FullGame {
-	const basegame = initGame(
+): Promise<GameFile> {
+	let variant: LoadedVariant | undefined;
+	if (variantCode !== undefined) {
+		await variantcache.ensureVariantLoaded(variantCode);
+		variant = { code: variantCode, mod: variantcache.getModule(variantCode), dateTimestamp };
+	}
+
+	const gameWithRules = initGame(
 		metadata,
 		dateTimestamp,
-		variantCode,
+		variant,
 		additional.gameConclusion,
 		additional.clockValues,
 		additional.variantOptions,
 	);
-	const boardsim = initBoard(
-		basegame.gameRules,
-		variantCode,
-		dateTimestamp,
+	const boardsim = boardinit.initBoard(
+		gameWithRules.gameRules,
+		variant,
 		additional.variantOptions,
 		additional.editor,
 		additional.worldBorderDist,
 	);
-	return loadGameWithBoard(basegame, boardsim, additional.moves, validateMoves);
+	return loadGameWithBoard(gameWithRules, boardsim, additional.moves, validateMoves);
 }
-
-export type { Game, Board, FullGame, Snapshot, ClockDependant, Additional };
 
 export default {
 	initGame,
-	initBoard,
-	initFullGame,
+	initGameFile,
 };

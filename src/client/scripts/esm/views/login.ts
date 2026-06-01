@@ -185,12 +185,15 @@ async function sendLogin(username: string, password: string): Promise<void> {
 	toggleButtonState(element_submitButton, false);
 	clearMessage();
 
+	// TODO: Tie this up with a "Keep my logged in" checkbox!
+	const keepLoggedIn = false;
+
 	try {
 		const response = await fetch('/auth', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
 			credentials: 'same-origin',
-			body: JSON.stringify({ username, password }),
+			body: JSON.stringify({ username, password, keepLoggedIn }),
 		});
 
 		const result = (await response.json()) as { message: string };

@@ -9,7 +9,6 @@
  */
 
 import { setupEnv } from './env';
-import { buildViews } from './views';
 import { buildClient } from './client';
 import { buildServer } from './server';
 import { setupEngineWasm } from './engine-wasm';
@@ -35,8 +34,5 @@ await setupEngineWasm();
 // Build both client and server scripts
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
-
-// Generate Static Views (HTML)
-await buildViews();
 
 // console.log('Build process finished.');

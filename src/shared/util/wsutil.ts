@@ -7,11 +7,10 @@
 
 // Constants ---------------------------------------------------------------------------------
 
-/**
- * After this much time of no messages sent, the server sends a
- * 'renewconnection' keepalive expecting an echo back.
- */
-const timeOfInactivityToRenewConnection = 10000;
+/** How long the server waits without sending a message before sending a heartbeat ping. */
+const heartbeatIntervalMillis = 10000;
+/** How long to wait for an echo before assuming the connection is dead. */
+const ECHO_TIMEOUT = 5000;
 
 // Variables ---------------------------------------------------------------------------------
 
@@ -99,6 +98,7 @@ function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean
 // -----------------------------------------------------------------------------------------
 
 export default {
-	timeOfInactivityToRenewConnection,
+	heartbeatIntervalMillis,
+	ECHO_TIMEOUT,
 	wasSocketClosureNotByTheirChoice,
 };

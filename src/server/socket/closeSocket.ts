@@ -33,12 +33,12 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	// Unsubbing them from their game will start their auto-resignation timer.
 	unsubSocketFromAllSubs(ws, closureNotByChoice);
 
-	cancelRenewConnectionTimer(ws);
+	cancelHeartbeatTimer(ws);
 }
 
-function cancelRenewConnectionTimer(ws: CustomWebSocket): void {
-	clearTimeout(ws.metadata.renewConnectionTimeoutID);
-	ws.metadata.renewConnectionTimeoutID = undefined;
+function cancelHeartbeatTimer(ws: CustomWebSocket): void {
+	clearTimeout(ws.metadata.heartbeatTimerID);
+	ws.metadata.heartbeatTimerID = undefined;
 }
 
 export { onclose };

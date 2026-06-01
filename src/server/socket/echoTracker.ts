@@ -16,12 +16,6 @@
  */
 const echoTimers: { [messageID: number]: NodeJS.Timeout | number } = {};
 
-/**
- * The time, after which we don't hear an expected echo from a websocket,
- * in which it be assumed disconnected, and auto terminated, in milliseconds.
- */
-const timeToWaitForEchoMillis: number = 5000; // 5 seconds until we assume we've disconnected!
-
 // Functions ---------------------------------------------------------------------------
 
 function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number): void {
@@ -42,4 +36,4 @@ function deleteEchoTimerForMessageID(messageIDEchoIsFor: number): boolean {
 	return true; // Valid echo
 }
 
-export { addTimeoutToEchoTimers, deleteEchoTimerForMessageID, timeToWaitForEchoMillis };
+export { addTimeoutToEchoTimers, deleteEchoTimerForMessageID };

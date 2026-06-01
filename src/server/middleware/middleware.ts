@@ -29,6 +29,7 @@ import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
+import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
@@ -54,6 +55,7 @@ import {
 	forgotPasswordLimiter,
 	editorSaveLimiter,
 	editorLoadLimiter,
+	seekPreviewLimiter,
 } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
@@ -158,8 +160,22 @@ export function configureMiddleware(app: Express): void {
 	// Sets the req.cookies property
 	app.use(cookieParser());
 
-	// Serve public assets. (e.g. css, scripts, images, audio)
-	app.use(express.static(path.join(__dirname, '../../client'))); // Serve public assets
+	// Serve public assets. (e.g. scripts, css, images, audio)
+	app.use(
+		express.static(path.join(__dirname, '../../client'), {
+			setHeaders(res, filePath) {
+				if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+					// All JS and CSS files are content-hashed by esbuild (e.g. index-D3TD6A64.js).
+					// The hash changes when content changes, so cached URLs never go stale.
+					res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+				} else {
+					// Other static assets (images, svgs, audio, fonts) are cached for 1 year
+					// but not immutable — bump ?v=N in templates to bust the cache when they change.
+					res.setHeader('Cache-Control', 'public, max-age=31536000');
+				}
+			},
+		}),
+	);
 
 	// Every request beyond this point will not be for a resource like a script or image,
 	// but it will be a request for an HTML or API
@@ -183,9 +199,9 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.post('/createaccount', createAccountLimiter, createNewMember); // "/createaccount" POST request
-	app.get('/createaccount/username/:username', checkUsernameAvailable);
-	app.get('/createaccount/email/:email', checkEmailValidity);
+	app.post('/register', createAccountLimiter, createNewMember); // "register" POST request
+	app.get('/register/username/:username', checkUsernameAvailable);
+	app.get('/register/email/:email', checkEmailValidity);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
@@ -206,6 +222,8 @@ export function configureMiddleware(app: Express): void {
 		const contributors = getContributors();
 		res.send(JSON.stringify(contributors));
 	});
+
+	app.get('/api/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
 
 	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 	app.post('/api/prepare-restart', handlePrepareRestart);

@@ -8,8 +8,8 @@ import type { Mat4 } from './camera';
 
 import mat4 from './gl-matrix.js';
 import camera from './camera';
+import deltatime from '../misc/deltatime.js';
 import { GameBus } from '../GameBus.js';
-import loadbalancer from '../misc/loadbalancer.js';
 import frametracker from './frametracker.js';
 
 // Constants -----------------------------------------------------------------------
@@ -60,7 +60,7 @@ function clear(): void {
 function update(): void {
 	if (trauma === 0) return;
 	// Decrease trauma over time
-	const deltaTimeSecs = loadbalancer.getDeltaTime();
+	const deltaTimeSecs = deltatime.get();
 	trauma = Math.max(trauma - deltaTimeSecs * TRAUMA_DECAY, 0);
 	frametracker.onVisualChange(); // Request an animation frame
 	camera.onPositionChange(); // Camera will update its view matrix

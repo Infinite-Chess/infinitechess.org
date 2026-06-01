@@ -4,25 +4,23 @@
  * This script takes an ICN, or a compressed abridged gamefile, and constructs a full gamefile from them.
  */
 
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MovePacket } from '../../../../../shared/types.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	MovePreprint,
 	LongFormatIn,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
-import variant from '../../../../../shared/chess/variants/variant.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
-
-import clientmetadatautil from './clientmetadatautil.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 
 /**
  * Formulates a whole gamefile from a smaller simpler abridged one.
  * @param longformIn - The return value of gamecompressor.compressGamefile()
  * @param validateMoves - Optional flag to validate move legality during formulation, throwing an error if any move is illegal.
  */
-function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame {
+async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Promise<GameFile> {
 	if (longformIn.position === undefined || longformIn.state_global.specialRights === undefined) {
 		throw Error(
 			'Invalid longformIn when formulating game: Missing position or special rights.',
@@ -48,13 +46,13 @@ function formulateGame(longformIn: LongFormatIn, validateMoves?: true): FullGame
 		},
 	};
 
-	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
 		longformIn.metadata.UTCDate,
 		longformIn.metadata.UTCTime,
 	);
-	const resolvedVariant = variant.resolveVariantCode(longformIn.metadata.Variant);
+	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
-	return gamefile.initFullGame(
+	return gamefile.initGameFile(
 		longformIn.metadata,
 		resolvedTimestamp,
 		resolvedVariant,

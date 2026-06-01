@@ -32,21 +32,21 @@ const durationOfAutoResignTimerMillis = 1000 * 20; // 20 seconds.
  * @param servergame - The game they are in.
  */
 function onAFK(ws: CustomWebSocket, servergame: ServerGame): void {
-	const { match, basegame } = servergame;
+	const match = servergame.match;
 
 	// console.log("Client alerted us they are AFK.")
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
 
-	if (gameutility.isGameOver(basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error(
 			'Client submitted they are afk when the game is already over. Ignoring.',
 		);
 
 	// Verify it's their turn (can't lose by afk if not)
-	if (basegame.whosTurn !== color)
+	if (servergame.whosTurn !== color)
 		return console.error("Client submitted they are afk when it's not their turn. Ignoring.");
 
-	if (!basegame.untimed && gameutility.isGameResignable(basegame))
+	if (!servergame.untimed && gameutility.isGameResignable(servergame))
 		return console.error(
 			'Client submitted they are afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.',
 		);
@@ -87,18 +87,18 @@ function onAFK_Return(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log("Client alerted us they no longer AFK.")
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws);
 
-	if (gameutility.isGameOver(servergame.basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error(
 			'Client submitted they are back from being afk when the game is already over. Ignoring.',
 		);
 
 	// Verify it's their turn (can't lose by afk if not)
-	if (servergame.basegame.whosTurn !== color)
+	if (servergame.whosTurn !== color)
 		return console.error(
 			"Client submitted they are back from being afk when it's not their turn. Ignoring.",
 		);
 
-	if (!servergame.basegame.untimed && gameutility.isGameResignable(servergame.basegame))
+	if (!servergame.untimed && gameutility.isGameResignable(servergame))
 		return console.error(
 			'Client submitted they are back from being afk in a timed, resignable game. There is no afk auto-resign timers in timed games anymore.',
 		);
