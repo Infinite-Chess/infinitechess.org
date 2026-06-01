@@ -5,7 +5,7 @@
  * * Enables mouse-ray snapping to pieces, square annotes, and other rays when zoomed out,
  * making it easy to line up long distance shots without having to do big number math.
  * * Manages all renderd entities when zoomed out.
- * * Initiates teleports to all mini images and square annotes clicked.
+ * * Initiates transitions to all mini images and square annotes clicked.
  */
 
 import type { Line } from './highlightline.js';
@@ -71,6 +71,7 @@ const GHOST_IMAGE_OPACITY = 1;
  */
 const THRESHOLD_TO_SNAP_PIECES = 5_000;
 
+/** A point the pointer has snapped to, along with how to render it. */
 type Snap = {
 	/** A snap could potentially be between squares, so we need floating precision. */
 	coords: BDCoords;
@@ -80,6 +81,29 @@ type Snap = {
 	type?: number;
 	/** The source that eminated the line we are snapping to, if we are snapping. */
 	source?: BDCoords;
+};
+
+/** The shared per-pointer snapping state: the lines it can snap to, and the closest of them. */
+type SnapContext = {
+	pointerCoords: BDCoords;
+	snapDistSquares: BigDecimal;
+	/** All highlight line segments the pointer is close enough to snap to. */
+	closeLines: LineSnapPoint[];
+	/** The closest point on any line to the pointer. */
+	closestSnap: LineSnapPoint;
+};
+
+/** A highlight line paired with the closest point on it to the pointer. */
+type LineSnapPoint = {
+	line: Line;
+	snapPoint: { coords: BDCoords; distance: BigDecimal };
+};
+
+/** Represents the intersection point of two highlight lines. */
+type Intersection = {
+	coords: BDCoords;
+	line1: Line;
+	line2: Line;
 };
 
 // Entity Hovering ---------------------------------------------------------
@@ -93,6 +117,7 @@ function getEntityWidthWorld(): number {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
+/** Returns all entities (pieces and squares highlights) under the given world coordinates. */
 function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const imagesHovered = miniimage.getImagesBelowWorld(world, false).images;
 	const allSquares: Coords[] = [...annotations.getSquares(), ...movehints.getSquares()];
@@ -139,33 +164,6 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 	return closestEntity;
 }
 
-/**
- * Calculates what entities are below the click location.
- * Teleports to them, claiming the click.
- */
-function teleportToEntitiesIfClicked(): void {
-	if (!isSnappingEnabledThisFrame()) return;
-
-	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only teleport if clicked
-
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
-	if (!mouseWorld) return; // Maybe looking into sky?
-
-	const allEntitiesHovered = getAllEntitiesWorldHovers(mouseWorld);
-
-	// console.log("Hovered entities:", jsutil.deepCopyObject(allEntitiesHovered));
-
-	if (allEntitiesHovered.length === 0) return; // No images to teleport to
-
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
-		Transition.singleZoomToCoordsList(allEntitiesHovered);
-	} else if (mouse.isMouseDown(Mouse.LEFT)) {
-		// Allows second finger to grab the board
-		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-	}
-}
-
 // Snapping --------------------------------------------------------------------
 
 /** We do not snap when zoomed in. */
@@ -186,46 +184,35 @@ function getWorldSnapCoords(world: DoubleCoords): Coords | undefined {
 	else return space.roundCoords(snap.coords);
 }
 
-type LineSnapPoint = {
-	line: Line;
-	snapPoint: { coords: BDCoords; distance: BigDecimal };
-};
-
 /**
- * Reads all calculated highlights lines (selected piece legal moves, drawn Rays),
- * eminates lines in all directions from all entities and calculates where those
- * intersect any of the highlight lines, calculating where we should snap the mouse to,
- * and teleporting if clicked.
+ * Gathers the snapping context shared by {@link snapPointerWorld} and {@link getHoveredRaySnaps}:
+ * the highlight lines (drawn/preset rays, selected piece legal moves) the pointer is close enough
+ * to snap to, and the closest point on any of them. Returns undefined if not close to any line.
  */
-function snapPointerWorld(world: DoubleCoords): Snap | undefined {
-	const pointerCoords = space.convertWorldSpaceToCoords(world);
-	const { boardsim } = gameslot.getGamefile()!;
-
-	const drawnRays = annotations.getRays();
-	const presetRays = drawrays.getPresetRays();
+function getSnapContext(world: DoubleCoords): SnapContext | undefined {
 	/** All rays / selected piece legal move lines converted to SEGMENTS. */
-	const allLines: Line[] = getAllLinesSegmented(drawnRays, presetRays);
-	if (allLines.length === 0) return; // No lines to have snap
+	const allLines: Line[] = getAllLinesSegmented(annotations.getRays(), drawrays.getPresetRays());
+	if (allLines.length === 0) return undefined; // No lines to snap to
 
-	const snapDistVPixels = ENTITY_WIDTH_VPIXELS * 0.5;
-	/** THe minimum distance from a snap point, in world space, for our mouse to snap to it. */
+	const pointerCoords = space.convertWorldSpaceToCoords(world);
+
+	/** The minimum distance from a snap point, in world space, for our mouse to snap to it. */
 	const snapDistWorld: BigDecimal = bd.fromNumber(
-		space.convertPixelsToWorldSpace_Virtual(snapDistVPixels),
+		space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS * 0.5),
 	);
-	/** The mimimum distance from a snap point, in squares, for our mouse to snap to it. */
+	/** The minimum distance from a snap point, in squares, for our mouse to snap to it. */
 	const snapDistSquares: BigDecimal = bd.divideFloating(snapDistWorld, boardpos.getBoardScale());
 
-	// First see if the pointer is even CLOSE to any of these lines,
-	// as otherwise we can't snap to anything anyway.
-	const linesSnapPoints: LineSnapPoint[] = allLines.map((line) => {
-		const snapPoint = geometry.closestPointOnLineSegment(
+	// Closest point on each line to the pointer
+	const linesSnapPoints: LineSnapPoint[] = allLines.map((line) => ({
+		line,
+		snapPoint: geometry.closestPointOnLineSegment(
 			line.coefficients,
 			line.start,
 			line.end,
 			pointerCoords,
-		);
-		return { line, snapPoint };
-	});
+		),
+	}));
 
 	let closestSnap: LineSnapPoint = linesSnapPoints[0]!;
 	for (const lineSnapPoint of linesSnapPoints) {
@@ -233,31 +220,19 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 			closestSnap = lineSnapPoint;
 	}
 
-	if (bd.compare(closestSnap.snapPoint.distance, snapDistSquares) > 0) {
-		// console.log("pointer no close snap");
-		return; // No line close enough for the pointer to snap to anything
-	}
+	// Is the pointer even CLOSE to any line? Otherwise we can't snap to anything.
+	if (bd.compare(closestSnap.snapPoint.distance, snapDistSquares) > 0) return undefined;
 
-	// At this point we know we WILL be snapping to something.
-
-	// Filter out lines which the mouse is too far away from
+	// Filter out lines which the pointer is too far away from
 	const closeLines = linesSnapPoints.filter(
 		(lsp) => bd.compare(lsp.snapPoint.distance, snapDistSquares) <= 0,
 	);
 
-	/**
-	 * Next, calculate all intersection points of all highlight lines (drawn rays, preset rays, and legal moves),
-	 * and see if the mouse is close enough to snap to them.
-	 *
-	 * If so, those take priority.
-	 */
+	return { pointerCoords, snapDistSquares, closeLines, closestSnap };
+}
 
-	type Intersection = {
-		coords: BDCoords;
-		line1: Line;
-		line2: Line;
-	};
-
+/** Calculates all the intersection points between every pair of the given lines. */
+function getLineIntersections(closeLines: LineSnapPoint[]): Intersection[] {
 	const line_intersections: Intersection[] = [];
 	for (let a = 0; a < closeLines.length - 1; a++) {
 		const line1 = closeLines[a]!;
@@ -269,42 +244,76 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 			if (intsect === undefined) continue; // Don't intersect
 			// Push it to the intersections, preventing duplicates
 			if (!line_intersections.some((i) => coordutil.areBDCoordsEqual(i.coords, intsect)))
-				line_intersections.push({
-					coords: intsect,
-					line1: line1.line,
-					line2: line2.line,
-				});
+				line_intersections.push({ coords: intsect, line1: line1.line, line2: line2.line });
 		}
 	}
+	return line_intersections;
+}
 
-	// Calculate closest one to the pointer
+/**
+ * Constructs a Snap at a line intersection point.
+ * Has no `source`, so it renders as a glow dot / mini image without a snap line.
+ */
+function snapFromIntersection(intersection: Intersection): Snap {
+	// If one of the lines `piece` is defined, set the snap's type to that piece.
+	const type = intersection.line1.piece ?? intersection.line2.piece;
 
-	let closestIntsect: { intersection: Intersection; dist: BigDecimal } | undefined;
-	for (const i of line_intersections) {
-		// Calculate distance to mouse
-		const dist = vectors.euclideanDistanceBD(i.coords, pointerCoords);
-		if (closestIntsect === undefined || bd.compare(dist, closestIntsect.dist) < 0)
-			closestIntsect = { intersection: i, dist };
+	// Blend the colors of the two lines
+	const color1 = intersection.line1.color;
+	const color2 = intersection.line2.color;
+	const color: Color = [
+		(color1[0] + color2[0]) / 2,
+		(color1[1] + color2[1]) / 2,
+		(color1[2] + color2[2]) / 2,
+		(color1[3] + color2[3]) / 2,
+	];
+
+	return { coords: intersection.coords, color, type };
+}
+
+/**
+ * Returns a snap for every ray / line intersection point within snapping distance
+ * of the pointer, paired with that intersection's distance to the pointer.
+ */
+function getHoveredIntersectionSnaps(ctx: SnapContext): { snap: Snap; dist: BigDecimal }[] {
+	const result: { snap: Snap; dist: BigDecimal }[] = [];
+	for (const intersection of getLineIntersections(ctx.closeLines)) {
+		const dist = vectors.euclideanDistanceBD(intersection.coords, ctx.pointerCoords);
+		if (bd.compare(dist, ctx.snapDistSquares) <= 0)
+			result.push({ snap: snapFromIntersection(intersection), dist });
+	}
+	return result;
+}
+
+/**
+ * Snaps the pointer to the single nearest snappable point on the
+ * calculated highlight lines (selected piece legal moves, drawn & preset
+ * rays), or returns undefined if the pointer isn't close to any line.
+ */
+function snapPointerWorld(world: DoubleCoords): Snap | undefined {
+	const ctx = getSnapContext(world);
+	if (ctx === undefined) return; // Not close to any line
+
+	// At this point we know we WILL be snapping to something.
+	const { pointerCoords, snapDistSquares, closeLines, closestSnap } = ctx;
+	const { boardsim } = gameslot.getGamefile()!;
+
+	/**
+	 * All intersection points of the highlight lines (drawn rays, preset rays, and legal moves)
+	 * within snapping distance of the mouse. If any, the closest takes priority.
+	 */
+
+	const hoveredIntersections = getHoveredIntersectionSnaps(ctx);
+
+	let closestIntsect: { snap: Snap; dist: BigDecimal } | undefined;
+	for (const i of hoveredIntersections) {
+		if (closestIntsect === undefined || bd.compare(i.dist, closestIntsect.dist) < 0)
+			closestIntsect = i;
 	}
 
-	if (closestIntsect !== undefined && bd.compare(closestIntsect.dist, snapDistSquares) <= 0) {
+	if (closestIntsect !== undefined) {
 		// SNAP to this line intersection, and exit! It takes priority
-
-		// If one of the lines `piece` is defined, set the snap's type to that piece.
-		const type =
-			closestIntsect.intersection.line1.piece ?? closestIntsect.intersection.line2.piece;
-
-		// Blend the colors of the two lines
-		const color1 = closestIntsect.intersection.line1.color;
-		const color2 = closestIntsect.intersection.line2.color;
-		const color: Color = [
-			(color1[0] + color2[0]) / 2,
-			(color1[1] + color2[1]) / 2,
-			(color1[2] + color2[2]) / 2,
-			(color1[3] + color2[3]) / 2,
-		];
-
-		return { coords: closestIntsect.intersection.coords, color, type };
+		return closestIntsect.snap;
 	}
 
 	/**
@@ -383,20 +392,50 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	};
 }
 
-function teleportToSnapIfClicked(): void {
-	if (!isSnappingEnabledThisFrame()) return;
+/**
+ * Returns a snap for every ray / line intersection point currently below the pointer.
+ * Does not include eminated blue line snap points.
+ */
+function getHoveredRaySnaps(world: DoubleCoords): Snap[] {
+	if (!isSnappingEnabledThisFrame()) return [];
 
-	if (mouse.isMouseClicked(Mouse.LEFT) || mouse.isMouseDown(Mouse.LEFT)) {
-		const world = mouse.getMouseWorld(Mouse.LEFT);
-		if (!world) return; // Maybe looking into sky?
+	const ctx = getSnapContext(world);
+	if (ctx === undefined) return []; // Not close to any line
+
+	return getHoveredIntersectionSnaps(ctx).map((i) => i.snap);
+}
+
+/**
+ * Transitions to all hovered entities and ray intersections if clicked.
+ * If only pressed down on them, at least claims the click so board dragging doesn't claim it.
+ */
+function transitionToHoveredIfClicked(): void {
+	if (!isSnappingEnabledThisFrame()) return;
+	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only transition if clicked
+
+	const world = mouse.getMouseWorld(Mouse.LEFT);
+	if (!world) return; // Maybe looking into sky?
+
+	// The hovered group: all entities AND all ray intersections below the pointer.
+	const groupHovered: Coords[] = [
+		...getAllEntitiesWorldHovers(world),
+		...getHoveredRaySnaps(world).map((snap) => space.roundCoords(snap.coords)),
+	];
+
+	// Transition to the whole group if non-empty, otherwise to the single snapped point.
+	let transition: (() => void) | undefined;
+	if (groupHovered.length > 0) transition = () => Transition.singleZoomToCoordsList(groupHovered);
+	else {
 		const snap = snapPointerWorld(world);
-		if (snap === undefined) return; // No snap to teleport to
-		if (mouse.isMouseClicked(Mouse.LEFT)) {
-			mouse.claimMouseClick(Mouse.LEFT);
-			Transition.singleZoomToBDCoords(snap.coords);
-		} else if (mouse.isMouseDown(Mouse.LEFT)) {
-			mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
-		}
+		if (snap !== undefined) transition = () => Transition.singleZoomToBDCoords(snap.coords);
+	}
+	if (transition === undefined) return; // Nothing to transition to
+
+	if (mouse.isMouseClicked(Mouse.LEFT)) {
+		mouse.claimMouseClick(Mouse.LEFT);
+		transition();
+	} else if (mouse.isMouseDown(Mouse.LEFT)) {
+		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
 
@@ -514,7 +553,15 @@ function render(): void {
 			continue; // Don't snap the physical pointer that is currently drawing a ray
 		const pointerWorld = mouse.getPhysicalPointerWorld(physicalPointerId);
 		if (!pointerWorld) continue; // This pointer may be in the sky?
-		if (getAllEntitiesWorldHovers(pointerWorld).length > 0) continue; // Don't snap if this pointer is hovering over an entity
+
+		// If the pointer is over any entity or ray intersection, render a glow dot / mini image
+		// at EVERY hovered ray intersection (entities are rendered fully opaque elsewhere).
+		// No eminated snapping (requiring blue snap lines) happens in this case.
+		const raySnaps = getHoveredRaySnaps(pointerWorld);
+		if (raySnaps.length > 0 || getAllEntitiesWorldHovers(pointerWorld).length > 0) {
+			allSnaps.push(...raySnaps);
+			continue;
+		}
 		const snap = snapPointerWorld(pointerWorld);
 		if (snap !== undefined) allSnaps.push(snap);
 	}
@@ -523,7 +570,6 @@ function render(): void {
 
 	for (const snap of allSnaps) {
 		// Render a single line between the snap point and its source
-
 		if (snap.source !== undefined) {
 			const [r, g, b, a] = SNAP_LINE_COLOR;
 			const start = space.convertCoordToWorldSpace(snap.source);
@@ -593,10 +639,9 @@ export default {
 	getEntityWidthWorld,
 
 	getClosestEntityToWorld,
-	teleportToEntitiesIfClicked,
 	getAnnoteSnapPoints,
 
 	getWorldSnapCoords,
-	teleportToSnapIfClicked,
+	transitionToHoveredIfClicked,
 	render,
 };

@@ -194,8 +194,7 @@ function update(): void {
 	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
 	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
-	snapping.teleportToEntitiesIfClicked(); // AFTER snapping.updateEntitiesHovered()
-	snapping.teleportToSnapIfClicked();
+	snapping.transitionToHoveredIfClicked();
 	premoves.update(gamefile, mesh); // BEFORE annotations update(), since if right click cancels premoves, we don't want to draw arrows.
 	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
 	annotations.update();
