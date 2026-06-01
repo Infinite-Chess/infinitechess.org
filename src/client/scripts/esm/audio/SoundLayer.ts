@@ -22,15 +22,15 @@ export interface LayerConfig {
 }
 
 /** The configuration for the audio source of a layer. */
-type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
+export type SourceConfig = NoiseSourceConfig | OscillatorSourceConfig;
 
 /** Configuration for a noise source. */
-interface NoiseSourceConfig {
+export interface NoiseSourceConfig {
 	type: 'noise';
 }
 
 /** Configuration for an oscillator source with optional LFO modulation. */
-interface OscillatorSourceConfig {
+export interface OscillatorSourceConfig {
 	type: 'oscillator';
 	wave: 'sine' | 'square' | 'sawtooth' | 'triangle';
 	freq: ModulatedParamConfig;
@@ -38,7 +38,7 @@ interface OscillatorSourceConfig {
 }
 
 /** Configuration for a BiquadFilterNode with optional LFO modulation. */
-interface FilterConfig {
+export interface FilterConfig {
 	/** The type of BiquadFilter to create. */
 	type: BiquadFilterType;
 	/** Where on the frequency spectrum the filter should work. */

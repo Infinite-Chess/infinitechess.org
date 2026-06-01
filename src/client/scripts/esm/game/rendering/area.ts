@@ -17,11 +17,7 @@ import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js
 import space from '../misc/space.js';
 import camera from './camera.js';
 import meshes from './meshes.js';
-import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import guinavigation from '../gui/guinavigation.js';
-import Transition, { ZoomTransition } from './transitions/Transition.js';
 
 /**
  * An area object, containing the information {@link Transition} needs
@@ -38,13 +34,21 @@ export interface Area {
 
 const TWO = bd.fromNumber(2.0);
 
-const padding: number = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
-const paddingMiniimage: number = 0.2; // The padding to use when miniimages are visible (zoomed out far)
+/**
+ * Padding between an area's pieces and the edge of thes creen,
+ * as a percentage of the screen WIDTH/HEIGHT.
+ */
+const padding: number = 0.03;
+/** The padding to use when miniimages are visible (zoomed out far) */
+const paddingMiniimage: number = 0.03; // Default: 0.2
+
+/** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
+const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(100);
 /**
  * The minimum number of squares that should be visible when transitioning somewhere.
- * This is so that it doesn't zoom too close-up on a single piece or small group.
+ * Prevents variant preview tooltips from being too zoomed in.
  */
-const areaMinHeightSquares: number = 17; // Divided by screen width
+const AREA_MIN_HEIGHT_SQUARES: number = 10; // Divided by screen width
 
 // Just the action of adding padding, changes the required scale to have that amount of padding,
 // so we need to iterate it a few times for more accuracy.
@@ -62,10 +66,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 
 	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
-	const topNavHeight = guinavigation.getHeightOfNavBar();
-	const bottomNavHeight = guigameinfo.getHeightOfGameInfoBar();
-	const navHeight = topNavHeight + bottomNavHeight;
-	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels() - navHeight;
+	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels();
 
 	/** Start with a copy with zero padding. */
 	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
@@ -76,7 +77,7 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 		const paddingToUse: number =
 			bd.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0 ? paddingMiniimage : padding;
 		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
-		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
+		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse;
 
 		const paddingHorzWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels),
@@ -158,10 +159,19 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD): BigDecimal {
 	const yScale = bd.divideFloating(screenBoundingBoxBD.top, yHalfLength);
 	const screenHeight = screenBoundingBox.top - screenBoundingBox.bottom;
 	// Can afterward cast to BigDecimal since they are small numbers.
-	const capScale = bd.fromNumber(screenHeight / areaMinHeightSquares);
 
 	let newScale = bd.min(xScale, yScale);
-	newScale = bd.min(newScale, capScale); // Cap the scale to not zoom in too close for comfort
+
+	// Cap the scale to areaMinHeightSquares
+	const capScale = bd.fromNumber(screenHeight / AREA_MIN_HEIGHT_SQUARES);
+	newScale = bd.min(newScale, capScale);
+
+	// Also cap the scale if squares would be too large visibly on screen
+	const tileWidthPixels = boardtiles.getTileWidthPixels(false, newScale);
+	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
+		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
+		newScale = bd.multiplyFloating(newScale, scaleFactor);
+	}
 
 	return newScale;
 }
@@ -191,63 +201,7 @@ function calculateFromUnpaddedBox(box: BoundingBoxBD): Area {
 	return calculateFromBox(paddedBox);
 }
 
-/**
- * High level function that initaties one or two zoom transitions
- * with the goal of getting the target Area on screen.
- * @param thisArea - The Area object to get on screen.
- * @param [ignoreHistory] Whether to skip adding this teleport to the teleport history.
- */
-function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
-	const thisAreaBox = thisArea.boundingBox;
-
-	const startCoords = boardpos.getBoardPos();
-	const endCoords = thisArea.coords;
-
-	const currentBoardBoundingBox = boardtiles.gboundingBoxFloat(); // Tile/board space, NOT world-space
-
-	// Will a teleport to this area be a zoom out or in?
-	const isAZoomOut = bd.compare(thisArea.scale, boardpos.getBoardScale()) < 0;
-
-	let firstArea: Area | undefined;
-
-	if (isAZoomOut) {
-		// If our current screen isn't within the final area, create new area to teleport to first
-		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
-			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
-			firstArea = calculateFromUnpaddedBox(thisAreaBox);
-		}
-		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
-		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
-		//     firstArea = calculateFromBox(mergedBoxes);
-		// }
-	} else {
-		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
-		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
-			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
-			firstArea = calculateFromUnpaddedBox(currentBoardBoundingBox);
-		}
-		// Version that fits the entire screen on the zoom out
-		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
-		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
-		//     firstArea = calculateFromBox(mergedBoxes);
-		// }
-	}
-
-	const trans1: ZoomTransition | undefined = firstArea
-		? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale }
-		: undefined;
-	const trans2: ZoomTransition = {
-		destinationCoords: thisArea.coords,
-		destinationScale: thisArea.scale,
-	};
-
-	if (trans1) Transition.startZoomTransition(trans1, trans2, ignoreHistory);
-	else Transition.startZoomTransition(trans2, undefined, ignoreHistory);
-}
-
 export default {
 	calculateFromCoordsList,
 	calculateFromUnpaddedBox,
-	initTransitionFromArea,
 };

@@ -8,8 +8,14 @@
 
 import * as z from 'zod';
 
-import typeutil from './chess/util/typeutil.js';
 import winconutil from './chess/util/winconutil.js';
+import editorutil from './util/editorutil.js';
+import gameconfig from './util/gameconfig.js';
+import typeschemas from './chess/util/typeschemas.js';
+import variantregistry from './chess/variants/variantregistry.js';
+import { POSITION_STRING_THRESHOLD } from './chess/variants/servervalidation.js';
+
+import './chess/util/typeutil.js';
 
 // Common Helper Schemas ---------------------------------------------------------------
 
@@ -27,11 +33,15 @@ export const RatingSchema = z.strictObject({
  */
 export type TimeControl = z.infer<typeof TimeControlSchema>;
 export const TimeControlSchema = z.union([
-	z.templateLiteral([z.number(), '+', z.number()]),
+	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
 	z.literal('-'),
 ]);
 
 // Invite Helper Schemas ---------------------------------------------------------------
+
+/** Whether a game is casual or rated. */
+export type GameMode = z.infer<typeof GameModeSchema>;
+export const GameModeSchema = z.enum(['casual', 'rated']);
 
 /** The username container of an invite sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
@@ -48,13 +58,13 @@ export const ServerUsernameContainerSchema = z.strictObject({
 export type ClockValues = z.infer<typeof ClockValuesSchema>;
 export const ClockValuesSchema = z.strictObject({
 	/** Each color's remaining time in milliseconds, keyed by player number. */
-	clocks: typeutil.GenPlayerGroupSchema(z.number()),
+	clocks: typeschemas.GenPlayerGroupSchema(z.number()),
 	/**
 	 * If a player's timer is currently counting down, this should be specified.
 	 * No clock is ticking if less than 2 moves are played, or if the game is over.
 	 * The color specified should have their time immediately accommodated for ping.
 	 */
-	colorTicking: typeutil.PlayerSchema.optional(),
+	colorTicking: typeschemas.PlayerSchema.optional(),
 	/**
 	 * The timestamp the color ticking (if there is one) will lose by timeout.
 	 * This should be calculated AFTER we adjust the clock values for ping.
@@ -173,4 +183,74 @@ export type PlayerRatingChangeInfo = z.infer<typeof PlayerRatingChangeInfoSchema
 export const PlayerRatingChangeInfoSchema = z.strictObject({
 	newRating: RatingSchema,
 	change: z.number(),
+});
+
+// Invite / Seek Helper Schemas ---------------------------------------------------------------
+
+/**
+ * The variant kinds that a fully-resolved seek can have.
+ * CloudSave seeks are converted to 'icn' at creation time and never stored as 'cloudSave'.
+ */
+export type AuthSeekVariant = z.infer<typeof AuthSeekVariantSchema>;
+export const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
+	z.strictObject({
+		kind: z.literal('icn'),
+		content: z.string().min(1).max(POSITION_STRING_THRESHOLD),
+	}),
+]);
+
+/** The full variant selection as sent by the client when creating a seek. */
+export type InviteVariant = z.infer<typeof InviteVariantSchema>;
+export const InviteVariantSchema = z.discriminatedUnion('kind', [
+	...AuthSeekVariantSchema.options,
+	z.strictObject({
+		kind: z.literal('cloudSave'),
+		name: z.string().min(1).max(editorutil.MAX_POSITION_NAME_LENGTH),
+	}),
+]);
+
+/**
+ * The variant as broadcast to lobby viewers. ICN seeks omit the content so the
+ * full ICN text is not sent to every connected client.
+ */
+export type OutSeekVariant = z.infer<typeof OutSeekVariantSchema>;
+export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
+	z.strictObject({ kind: z.literal('custom') }),
+]);
+
+/** The full configuration for a single game modifier applied to a seek. */
+export type InviteModifier = z.infer<typeof InviteModifierSchema>;
+export const InviteModifierSchema = z.discriminatedUnion('kind', [
+	z.strictObject({
+		kind: z.literal('slide-limit'),
+		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
+	}),
+]);
+
+/** The number of digits generated invite/seek IDs are. */
+export const IDLengthOfInvites = 5;
+/** Seek/invite ID: Base36 alphanumeric, fixed length of 5. */
+export const SeekIdSchema = z
+	.string()
+	.length(IDLengthOfInvites)
+	.regex(/^[0-9a-z]+$/);
+
+/** Shared info for all lobby game invite seek types. (excludes variant) */
+export type BaseSeek = z.infer<typeof BaseSeekSchema>;
+export const BaseSeekSchema = z.strictObject({
+	id: SeekIdSchema,
+	tag: z.string(),
+	player: ServerUsernameContainerSchema,
+	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
+	time: TimeControlSchema,
+	mode: GameModeSchema,
+	modifiers: z.array(InviteModifierSchema).optional(),
+});
+
+/** The version of seeks broadcast to lobby viewers. */
+export type OutSeek = z.infer<typeof OutSeekSchema>;
+export const OutSeekSchema = BaseSeekSchema.extend({
+	variant: OutSeekVariantSchema,
 });

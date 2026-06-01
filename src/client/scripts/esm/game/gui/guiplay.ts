@@ -5,19 +5,18 @@
  */
 
 import type { TimeControl } from '../../../../../shared/types.js';
-import type { InviteOptions } from '../misc/invites.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 
-import variant from '../../../../../shared/chess/variants/variant.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { VariantLeaderboards } from '../../../../../shared/chess/variants/validleaderboard.js';
+import { players as p, Player } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from './toast.js';
-import invites from '../misc/invites.js';
-import docutil from '../../util/docutil.js';
+import toast from '../../components/toast.js';
 import guititle from './guititle.js';
 import gameloader from '../chess/gameloader.js';
 import LocalStorage from '../../util/LocalStorage.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import hydrochess_card from '../chess/engines/enginecards/hydrochess_card.js';
 import usernamecontainer from '../../util/usernamecontainer.js';
 import { engineDictionary } from '../chess/engines/engine.js';
@@ -85,7 +84,7 @@ let acceptInviteButtonIsLocked: boolean = false;
 
 // Events --------------------------------------------------------------------------------
 
-document.addEventListener('socket-closed', () => {
+SocketBus.addEventListener('closed', () => {
 	/**
 	 * This unlocks the create invite and *virtual* accept invite buttons,
 	 * because we can't hope to receive their reply anytime soon, which
@@ -127,7 +126,6 @@ function open(): void {
 	element_menuExternalLinks.classList.remove('hidden');
 	changePlayMode('online');
 	initListeners();
-	invites.subscribeToInvites(); // Subscribe to the invites list subscription service!
 }
 
 function close(): void {
@@ -137,9 +135,6 @@ function close(): void {
 	element_textboxPrivate.value = ''; // clear invite code
 	hideElement_inviteCode();
 	closeListeners();
-	// This will auto-cancel our existing invite
-	// IT ALSO clears the existing invites in the document!
-	invites.unsubFromInvites();
 }
 
 function initListeners(): void {
@@ -179,7 +174,6 @@ function changePlayMode(mode: typeof modeSelected): void {
 
 	// online / local / computer
 	if (mode === 'online' && createInviteButtonIsLocked) disableCreateInviteButton(); // Disable it immediately, it's still locked from the last time we clicked it (we quickly clicked "Local" then "Online" again before we heard back from the server)
-	if (mode !== 'online' && invites.doWeHave()) element_createInvite.click(); // Simulate clicking to cancel our invite, BEFORE we switch modes (because if the mode is local it will just start the game)
 
 	modeSelected = mode;
 	if (mode === 'online') {
@@ -194,8 +188,6 @@ function changePlayMode(mode: typeof modeSelected): void {
 		element_optionCardColor.classList.remove('hidden');
 		element_optionCardRated.classList.remove('hidden');
 		element_optionCardPrivate.classList.remove('hidden');
-		// Patches bugs on some browsers where invite creations are sometimes sent with a blank "" private field.
-		if (!element_optionPrivate.value) element_optionPrivate.value = 'public';
 		const localStorageClock = LocalStorage.loadItem('preferred_online_clock_invite_value');
 		element_optionCardClock.classList.remove('hidden');
 		element_optionClock.selectedIndex =
@@ -298,12 +290,9 @@ function callback_createInvite(): void {
 			variant: inviteOptions.variant,
 			timeControl: inviteOptions.clock,
 		});
-	} else if (modeSelected === 'online') {
-		if (invites.doWeHave()) invites.cancel();
-		else invites.create(inviteOptions);
 	} else if (modeSelected === 'computer') {
 		close(); // Close the invite creation screen
-		const variantName = variant.getVariantName(inviteOptions.variant);
+		const variantName = variantregistry.getVariantName(inviteOptions.variant);
 		const ourColor = inviteOptions.color ?? (Math.random() > 0.5 ? p.WHITE : p.BLACK);
 		const { strengthLevel } = getEngineDifficultyConfig();
 		const currentEngine = 'hydrochess';
@@ -326,17 +315,21 @@ function callback_createInvite(): void {
  * Returns an object containing the values of each of
  * the invite options on the invite creation screen.
  */
-function getInviteOptions(): InviteOptions {
+function getInviteOptions(): {
+	variant: VariantCode;
+	clock: TimeControl;
+	color: Player | null;
+	rated: 'casual' | 'rated';
+} {
 	const strcolor = element_optionColor.value;
 	const color = strcolor === 'White' ? p.WHITE : strcolor === 'Black' ? p.BLACK : null;
 	const selectedVariant = element_optionVariant.value;
-	if (!variant.isVariantValid(selectedVariant))
+	if (!variantregistry.isVariantValid(selectedVariant))
 		throw Error(`Invite option variant "${selectedVariant}" is not a valid variant.`);
 	return {
 		variant: selectedVariant,
 		clock: element_optionClock.value as TimeControl,
 		color,
-		private: element_optionPrivate.value as 'public' | 'private',
 		rated: element_optionRated.value as 'casual' | 'rated',
 	};
 }
@@ -368,13 +361,8 @@ function callback_updateOptions(): void {
 	const variantValue = element_optionVariant.value;
 	const clockValue = element_optionClock.value;
 	const colorValue = element_optionColor.value;
-	const privateValue = element_optionPrivate.value;
 	// conditions for enabling Rated games:
-	if (
-		variantValue in VariantLeaderboards &&
-		clockValue !== '-' &&
-		(colorValue === 'Random' || privateValue === 'private')
-	) {
+	if (variantValue in VariantLeaderboards && clockValue !== '-' && colorValue === 'Random') {
 		element_optionRatedYes.disabled = false;
 	} else {
 		element_optionRated.value = 'casual';
@@ -406,9 +394,6 @@ function callback_joinPrivate(): void {
 	if (code.length !== 5) return toast.show(translations.invite_error_digits);
 
 	element_joinPrivateMatch.disabled = true; // Re-enable when the code is changed
-
-	const isPrivate = true;
-	invites.accept(code, isPrivate);
 }
 
 function callback_textboxPrivateEnter(event: KeyboardEvent): void {
@@ -419,15 +404,7 @@ function callback_textboxPrivateEnter(event: KeyboardEvent): void {
 }
 
 function callback_copyInviteCode(): void {
-	if (!modeSelected.includes('online')) return;
-	if (!invites.doWeHave()) return;
-
-	// Copy our private invite code.
-
-	const code = invites.gelement_iCodeCode().textContent;
-
-	docutil.copyToClipboard(code);
-	toast.show(translations.invite_copied);
+	// Invite codes not available in the redesigned lobby.
 }
 
 function initListeners_Invites(): void {
@@ -463,8 +440,6 @@ function callback_inviteClicked(event: Event): void {
 		// console.log('Clicked on a username embed, ignoring click');
 		return;
 	}
-
-	invites.click((event as MouseEvent).currentTarget as HTMLElement);
 }
 
 /**

@@ -12,13 +12,12 @@ import type { DrawOfferInfo } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
-import toast from '../../gui/toast.js';
-import guipause from '../../gui/guipause.js';
+import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import onlinegame from './onlinegame.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
 
@@ -45,7 +44,7 @@ let isAcceptingDraw: boolean = false;
 function isOfferingDrawLegal(): boolean {
 	const gamefile = gameslot.getGamefile()!;
 	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
-	if (!moveutil.isGameResignable(gamefile.basegame)) return false; // Not at least 2+ moves
+	if (!moveutil.isGameResignable(gamefile)) return false; // Not at least 2+ moves
 	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
@@ -59,7 +58,7 @@ function isTooSoonToOfferDraw(): boolean {
 	const gamefile = gameslot.getGamefile()!;
 	if (plyOfLastOfferedDraw === undefined) return false; // We have made zero offers so far this game
 
-	const movesSinceLastOffer = gamefile.basegame.moves.length - plyOfLastOfferedDraw;
+	const movesSinceLastOffer = gamefile.moves.length - plyOfLastOfferedDraw;
 	if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
 	return false;
 }
@@ -76,7 +75,6 @@ function onOpponentExtendedOffer(): void {
 	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
 	guidrawoffer.open();
 	gamesound.playBase();
-	guipause.updateDrawOfferButton();
 }
 
 /** Is called when our opponent declines our draw offer */
@@ -91,9 +89,8 @@ function onOpponentDeclinedOffer(): void {
 function extendOffer(): void {
 	socketmessages.send('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
-	plyOfLastOfferedDraw = gamefile.basegame.moves.length;
+	plyOfLastOfferedDraw = gamefile.moves.length;
 	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
-	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -104,7 +101,6 @@ function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
 	socketmessages.send('game', 'acceptdraw');
 	guidrawoffer.close();
-	guipause.updateDrawOfferButton();
 }
 
 /**
@@ -159,7 +155,6 @@ function onGameClose(): void {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
 	guidrawoffer.close();
-	guipause.updateDrawOfferButton();
 }
 
 export default {

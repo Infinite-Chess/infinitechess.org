@@ -1,0 +1,20 @@
+// src/server/tsconfig.json
+
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "../../dist/tsconfig.server.tsbuildinfo"
+  },
+
+  "include": [
+    "./**/*",
+    "../tests/**/*",
+    "../shared/**/*",
+    "../types/**/*",
+    // scripts/ and build/ directories were chosen to be included here because
+    // they import server scripts, and otherwise wouldn't be type-checked.
+    "../../scripts/**/*",
+    "../../build/**/*"
+  ]
+}

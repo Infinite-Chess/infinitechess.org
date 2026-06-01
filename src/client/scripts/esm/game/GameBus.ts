@@ -15,13 +15,13 @@ interface GameBusEvents {
 	'piece-unselected': void;
 	// /** Dispatched immediately before legal move generation. */
 	// 'pre-move-gen': {
-	// 	gamefile: FullGame;
+	// 	gamefile: GameFile;
 	// 	piece: Piece;
 	// 	/** Mod scripts should define this if they would like to totally override normal legal move gen. */
 	// 	moveOverrides: LegalMoves | undefined;
 	// };
 	// /** Dispatched immediately after legal move gen. Mods may add additional legal moves. */
-	// 'post-move-gen': { gamefile: FullGame; piece: Piece; legalMoves: LegalMoves };
+	// 'post-move-gen': { gamefile: GameFile; piece: Piece; legalMoves: LegalMoves };
 	/** Dispatched when a physical (not premove or simulated) move is made by us, NOT our opponent. */
 	'user-move-played': void;
 	/** Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit. */

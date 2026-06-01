@@ -66,7 +66,7 @@ const default_fast_transitions_enabled: boolean = false;
 const default_animations: boolean = true;
 const default_perspective_sensitivity: number = 100;
 const default_perspective_fov: number = 90;
-const default_lingering_annotations: boolean = false;
+const default_lingering_annotations: boolean = true;
 const default_coordinates_enabled: boolean = false;
 const default_starfield_enabled: boolean = true;
 const default_advanced_effects_enabled: boolean = true;
@@ -181,13 +181,13 @@ function preparePrefs(): ServerSidePreferences {
 	return prefsCopy;
 }
 
-function getTheme(): string {
+function getBoardColor(): string {
 	return preferences.theme || themes.defaultTheme;
 }
 
-function setTheme(theme: string): void {
-	preferences.theme = theme;
-	console.log('Set theme');
+function setBoardColor(boardColor: string): void {
+	preferences.theme = boardColor;
+	// console.log('Set theme');
 	onChangeMade();
 	savePreferences();
 }
@@ -353,13 +353,13 @@ function setAmbienceEnabled(ambience_enabled: boolean): void {
 // Getters for our current theme properties --------------------------------------------------------
 
 function getColorOfLightTiles(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'lightTiles');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'lightTiles');
 }
 
 function getColorOfDarkTiles(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'darkTiles');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'darkTiles');
 }
 
 function getLegalMoveHighlightColor({
@@ -369,37 +369,37 @@ function getLegalMoveHighlightColor({
 	isOpponentPiece: boolean;
 	isPremove: boolean;
 }): Color {
-	const themeName: string = getTheme();
+	const boardColorName: string = getBoardColor();
 	if (isOpponentPiece)
-		return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Opponent');
+		return themes.getPropertyOfTheme(boardColorName, 'legalMovesHighlightColor_Opponent');
 	else if (isPremove)
-		return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Premove');
-	else return themes.getPropertyOfTheme(themeName, 'legalMovesHighlightColor_Friendly');
+		return themes.getPropertyOfTheme(boardColorName, 'legalMovesHighlightColor_Premove');
+	else return themes.getPropertyOfTheme(boardColorName, 'legalMovesHighlightColor_Friendly');
 }
 
 function getLastMoveHighlightColor(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'lastMoveHighlightColor');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'lastMoveHighlightColor');
 }
 
 function getCheckHighlightColor(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'checkHighlightColor');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'checkHighlightColor');
 }
 
 function getBoxOutlineColor(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'boxOutlineColor');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'boxOutlineColor');
 }
 
 function getAnnoteSquareColor(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'annoteSquareColor');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'annoteSquareColor');
 }
 
 function getAnnoteArrowColor(): Color {
-	const themeName: string = getTheme();
-	return themes.getPropertyOfTheme(themeName, 'annoteArrowColor');
+	const boardColorName: string = getBoardColor();
+	return themes.getPropertyOfTheme(boardColorName, 'annoteArrowColor');
 }
 
 /** Returns the tint color for a piece of the given type, according to our current theme. */
@@ -408,9 +408,9 @@ function getTintColorOfType(type: number): Color {
 
 	const baseColor: Color = pieceThemes.getBaseColorForType(r, p);
 
-	const themeName: string = getTheme();
+	const boardColorName: string = getBoardColor();
 	const themePieceColors: Partial<PieceColorGroup> = themes.getPropertyOfTheme(
-		themeName,
+		boardColorName,
 		'pieceTheme',
 	);
 	const tint: Color = themePieceColors[p] ?? [1, 1, 1, 1];
@@ -554,8 +554,8 @@ function getTintColorOfType(type: number): Color {
 // Exports -----------------------------------------------------------------------------------------
 
 export default {
-	getTheme,
-	setTheme,
+	getBoardColor,
+	setBoardColor,
 	getCoordinatesEnabled,
 	setCoordinatesEnabled,
 	getStarfieldMode,

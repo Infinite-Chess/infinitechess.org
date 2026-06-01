@@ -10,6 +10,7 @@
 import type { Player } from './typeutil.js';
 import type { MetaData, Rating } from '../../types.js';
 
+import timeutil from '../../util/timeutil.js';
 import { players as p } from './typeutil.js';
 
 // Types --------------------------------------------------------------------------
@@ -23,6 +24,16 @@ export type MetadataKey = keyof MetaData;
 const GUEST_NAME_ICN_METADATA = '(Guest)' as const;
 
 // Functions -----------------------------------------------------------------------
+
+/**
+ * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
+ * Falls back to the current time if UTCDate is not provided.
+ * If UTCDate is provided but UTCTime is not, midnight (00:00:00) is assumed.
+ */
+function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
+	if (UTCDate !== undefined) return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
+	return Date.now();
+}
 
 /**
  * Returns the value of the game's Result metadata, depending on the victor.
@@ -55,6 +66,7 @@ function getWhiteBlackRatingDiff(eloChange: number): string {
 
 export default {
 	GUEST_NAME_ICN_METADATA,
+	resolveTimestampFromMetadata,
 	getResultFromVictor,
 	getFormattedElo,
 	getWhiteBlackRatingDiff,

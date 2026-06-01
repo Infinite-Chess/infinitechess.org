@@ -8,6 +8,7 @@
 import editorutil from '../../../../../../../../shared/util/editorutil';
 
 import esave from '../../../../boardeditor/actions/esave';
+import esavestore from '../../../../editorstores/esavestore';
 import boardeditor from '../../../../boardeditor/boardeditor';
 import guifloatingwindow from '../../guifloatingwindow';
 import guiloadpositionmodal from './guiloadpositionmodal';
@@ -124,7 +125,7 @@ async function onSaveButtonPress(): Promise<void> {
 	}
 
 	// If a local save already exists, ask to overwrite it locally
-	if (await esave.localSaveExists(positionname)) {
+	if (await esavestore.localSaveExists(positionname)) {
 		guiloadpositionmodal.openModal('overwrite_save', positionname, async () => {
 			await esave.saveLocal(positionname);
 			boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });

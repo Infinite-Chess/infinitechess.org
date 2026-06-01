@@ -69,21 +69,21 @@ try {
  * @param servergame - The game to log
  * @returns
  */
-function logGame({ basegame, match }: ServerGame): void {
+function logGame(servergame: ServerGame): void {
 	// Only log the game if at least 2 moves were played! (resignable)
 	// Black-moves-first games are logged if at least 1 move is played!
-	if (basegame.moves.length < 2) return;
+	if (servergame.moves.length < 2) return;
 
 	// What is the current month?
 	const month = timeutil.getCurrentMonth(); // 'yyyy-mm'
 	// What is the current day?
 	const day = timeutil.getCurrentDay(); // 'yyyy-mm-dd'
 	// What variant was played?
-	const variant = match.variant;
+	const variant = servergame.match.variant;
 
 	// Now record the number of moves played
 
-	const plyCount = basegame.moves.length;
+	const plyCount = servergame.moves.length;
 	if (stats.moveCount['all'] === undefined) stats.moveCount['all'] = 0;
 	stats.moveCount['all'] += plyCount;
 	if (stats.moveCount[variant] === undefined) stats.moveCount[variant] = 0;

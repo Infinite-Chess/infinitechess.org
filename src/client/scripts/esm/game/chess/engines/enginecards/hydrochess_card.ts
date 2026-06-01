@@ -1,6 +1,6 @@
 // src/client/scripts/esm/game/chess/engines/enginecards/hydrochess_card.ts
 
-import type { VariantOptions } from '../../../../../../../shared/chess/logic/initvariant';
+import type { VariantOptions } from '../../../../../../../shared/chess/logic/gamefile';
 
 import bimath from '../../../../../../../shared/util/math/bimath';
 import bounds from '../../../../../../../shared/util/math/bounds';
@@ -93,8 +93,8 @@ function isPositionSupported(variantOptions: VariantOptions): SupportedResult {
 	}
 
 	// 4. Maximum of one promotion line per player.
-	if (variantOptions.gameRules.promotionRanks) {
-		for (const playerRanks of Object.values(variantOptions.gameRules.promotionRanks)) {
+	if (variantOptions.gameRules.promotion) {
+		for (const playerRanks of Object.values(variantOptions.gameRules.promotion.ranks)) {
 			if (playerRanks.length > 1) {
 				return {
 					supported: false,

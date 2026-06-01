@@ -7,18 +7,13 @@
  * is limited to 30fps to save GPU resources.
  */
 
-import gameloader from '../chess/gameloader.js';
-
 // Variables -------------------------------------------------
 
 /**
- * Target framerate when not in a game.
- *
- * I cannot actually tell a difference between 30fps and 240fps there.
+ * The target FPS limit, or `null` for unlimited.
+ * Defaults to 30 fps (title-screen throttle) until game code explicitly sets it.
  */
-const TARGET_FPS_TITLE_SCREEN = 30;
-
-// State -----------------------------------------------------
+let limitedFps: number | null = null;
 
 /** Timestamp of the last frame that was actually rendered */
 let lastFrameTime = 0;
@@ -36,15 +31,25 @@ document.addEventListener('canvas_resize', () => (canvasResized = true));
 // Functions -------------------------------------------------
 
 /**
- * Request an animation frame, with throttling applied when on the title screen.
+ * Sets the FPS limit for the render loop.
+ * Pass a number to throttle to that many frames per second (e.g. 30 on the title screen),
+ * or `null` to run at full speed (e.g. when inside a game).
+ */
+function setFpsLimit(fps: number | null): void {
+	limitedFps = fps;
+}
+
+// Functions -------------------------------------------------
+
+/**
+ * Request an animation frame, with throttling applied according to {@link limitedFps}.
  * This is a wrapper for calls to requestAnimationFrame().
  * @param callback - The callback function to execute on the next frame
  */
 function requestFrame(callback: FrameRequestCallback): void {
-	// Not in a game (title screen), throttle.
 	const throttledCallback = (timestamp: number): void => {
-		// If we're in a game, or canvas was resized, run at full speed.
-		if (gameloader.areInAGame() || canvasResized) {
+		// If unlimited, or canvas was resized, run at full speed.
+		if (limitedFps === null || canvasResized) {
 			canvasResized = false;
 			lastFrameTime = timestamp;
 			callback(timestamp);
@@ -61,7 +66,7 @@ function requestFrame(callback: FrameRequestCallback): void {
 		const elapsed = timestamp - lastFrameTime;
 
 		// If enough time has passed, execute the callback
-		const millisPerFrame = 1000 / TARGET_FPS_TITLE_SCREEN;
+		const millisPerFrame = 1000 / limitedFps;
 		if (elapsed >= millisPerFrame) {
 			// Instead of resetting lastFrameTime to the current 'timestamp',
 			// we advance it by a fixed interval. This creates a steady "tick"
@@ -82,4 +87,5 @@ function requestFrame(callback: FrameRequestCallback): void {
 
 export default {
 	requestFrame,
+	setFpsLimit,
 };

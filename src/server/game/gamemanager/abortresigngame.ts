@@ -22,19 +22,19 @@ import { setGameConclusion } from './gamemanager.js';
 function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(servergame.basegame)) {
+	if (gameutility.isGameOver(servergame)) {
 		// Return if game is already over
 		console.log(
 			`Player tried to abort game ${servergame.match.id} when the game is already over!`,
 		);
 		return;
-	} else if (gameutility.isGameBorderlineResignable(servergame.basegame)) {
+	} else if (gameutility.isGameBorderlineResignable(servergame)) {
 		// A player might try to abort a game after his opponent has just played the second move due to latency issues...
 		// In doubt, be lenient and allow him to abort here. DO NOT RETURN
 		console.log(
 			`Player tried to abort game ${servergame.match.id} when there's been exactly 2 moves played! Aborting game anyways...`,
 		);
-	} else if (gameutility.isGameResignable(servergame.basegame)) {
+	} else if (gameutility.isGameResignable(servergame)) {
 		// Return if player tries to abort when he does not have the right
 		console.error(
 			`Player tried to abort game ${servergame.match.id} when there's been at least 3 moves played!`,
@@ -54,13 +54,13 @@ function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 	// Is it legal?...
 
-	if (gameutility.isGameOver(servergame.basegame)) {
+	if (gameutility.isGameOver(servergame)) {
 		// Return if game is already over
 		console.log(
 			`Player resign to resign game ${servergame.match.id} when the game is already over!`,
 		);
 		return;
-	} else if (!gameutility.isGameResignable(servergame.basegame)) {
+	} else if (!gameutility.isGameResignable(servergame)) {
 		// Return if player tries to resign when he does not have the right
 		console.error(
 			`Player tried to resign game ${servergame.match.id} when there's less than 2 moves played! Ignoring..`,

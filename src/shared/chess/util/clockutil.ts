@@ -8,6 +8,47 @@
 
 import type { TimeControl } from '../../types.js';
 
+// Types --------------------------------------------------
+
+/** The speed category of a game, based on its time control. */
+export type SpeedCategory = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'infinite';
+
+// Constants -----------------------------------------------
+
+/** Valid base time values in minutes, matching the game setup modal's base-time slider ticks. */
+const VALID_BASE_MINUTES = [
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+/** Valid increment values in seconds, matching the game setup modal's increment slider ticks. */
+export const VALID_INCREMENT_SECS = [
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	25, 30, 35, 40, 45,
+	60,
+]; // prettier-ignore
+
+// Functions -----------------------------------------------
+
+/**
+ * Returns true if the time control string is valid for a lobby seek.
+ * Untimed ("-") is always valid. Timed controls must have a base that is
+ * a multiple of 60 whose minute-value is in {@link VALID_BASE_MINUTES},
+ * and an increment in {@link VALID_INCREMENT_SECS}.
+ */
+function isTimedControlValid(time: TimeControl): boolean {
+	if (time === '-') return true;
+	const parsed = splitTimeControl(time);
+	if (parsed.base_time_seconds === null || parsed.increment_seconds === null) return false;
+	const baseTimeMinutes = parsed.base_time_seconds / 60;
+	return (
+		Number.isInteger(baseTimeMinutes) &&
+		VALID_BASE_MINUTES.includes(baseTimeMinutes) &&
+		VALID_INCREMENT_SECS.includes(parsed.increment_seconds)
+	);
+}
+
 function getTextContentFromTimeRemain(time: number): string {
 	let seconds = Math.ceil(time / 1000);
 	let minutes = 0;
@@ -27,18 +68,6 @@ function getTextContentFromTimeRemain(time: number): string {
  */
 function isClockValueInfinite(clock: TimeControl): boolean {
 	return clock === '-';
-}
-
-/**
- * Returns the clock in a slightly more human-readable format: `10m+5s`
- * @param key - The clock string: `600+5`, where the left is the start time in seconds, right is increment in seconds.
- * @returns
- */
-function getClockFromKey(key: TimeControl): string {
-	// ssss+ss  converted to  15m+15s
-	const minutesAndIncrement = getMinutesAndIncrementFromClock(key);
-	if (minutesAndIncrement === null) return translations['no_clock'];
-	return `${minutesAndIncrement.minutes}m+${minutesAndIncrement.increment}s`;
 }
 
 /**
@@ -83,10 +112,38 @@ function splitTimeControl(time_control: TimeControl): {
 	return { base_time_seconds, increment_seconds };
 }
 
+/**
+ * Estimates total game seconds as `base_time + 40 × increment`, matching
+ * lichess's classification ranges, and returns the speed category.
+ */
+function getSpeedCategory(time_control: TimeControl): SpeedCategory {
+	if (isClockValueInfinite(time_control)) return 'infinite';
+	const { base_time_seconds, increment_seconds } = splitTimeControl(time_control);
+	const estimate = base_time_seconds! + 40 * increment_seconds!;
+	// if (estimate < 30) return 'ultra-bullet'; // For now we don't have time controls < 1m
+	if (estimate < 180) return 'bullet';
+	if (estimate < 480) return 'blitz';
+	if (estimate < 1500) return 'rapid';
+	if (estimate < 21600) return 'classical';
+	// return 'correspondence';
+	return 'classical'; // This is the max for now
+}
+
+/** Returns the SVG symbol ID of the speed icon for the given time control. */
+function getSpeedIconId(time_control: TimeControl): string {
+	return `svg-speed-${getSpeedCategory(time_control)}`;
+}
+
 export default {
+	// Constants
+	VALID_BASE_MINUTES,
+	VALID_INCREMENT_SECS,
+	// Functions
+	isTimedControlValid,
 	getTextContentFromTimeRemain,
 	isClockValueInfinite,
-	getClockFromKey,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
+	getSpeedCategory,
+	getSpeedIconId,
 };

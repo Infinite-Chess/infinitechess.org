@@ -16,10 +16,10 @@ import jsutil from '../../shared/util/jsutil.js';
 interface CustomWebSocket extends WebSocket {
 	/** Our custom-entered information about this websocket. */
 	metadata: {
-		/** What subscription lists they are subscribed to. Possible: "invites" / "game" */
+		/** What subscription lists they are subscribed to. Possible: "lobby" / "game" */
 		subscriptions: {
-			/** Whether they are subscribed to the invites list. */
-			invites?: boolean;
+			/** Whether they are subscribed to the lobby (invites/spectating) list. */
+			lobby?: boolean;
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {
 				/** The id of the game they're in. */
@@ -42,9 +42,8 @@ interface CustomWebSocket extends WebSocket {
 		/** The timeout ID that can be used to cancel the timer that will
 		 * expire the socket connection. This is useful if it closes early. */
 		clearafter?: NodeJS.Timeout;
-		/** The timeout ID to cancel the timer that will send an empty
-		 * message to this socket just to verify they are alive and thinking. */
-		renewConnectionTimeoutID?: NodeJS.Timeout;
+		/** The timeout ID to cancel the timer that sends a heartbeat ping to verify the client is alive. */
+		heartbeatTimerID?: NodeJS.Timeout;
 	};
 }
 

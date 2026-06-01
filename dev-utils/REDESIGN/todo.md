@@ -2,79 +2,44 @@
 
 ---
 
-## Build Pipeline
+## Page Redesigns
 
-- Add `entryNames: '[dir]/[name]-[hash]'` to the esbuild client build options in `build/client.ts` so JS and CSS output filenames are content-hashed.
+*Each page: new Nunjucks template extending `layout.njk`, new CSS file in `src/client/css/`, updated route handler with full SSR context, and updated/new TS where needed. Add shared CSS rules to `global.css` as you encounter the need for them.*
 
-- Add `metafile: true` to the esbuild client build and write a `writeManifest()` post-build function that reads esbuild's input→output map and writes `dist/manifest.json`.
+**Working with pages during the redesign:**
+- **Redesigning a page** — replace its placeholder `.njk` stub with the real template; add a CSS file in `src/client/css/` and an esbuild entry point.
+- **Removing a page** — delete its `.njk`, its CSS, and its entry point together; remove the route from `root.ts`.
+- **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a CSS file in `src/client/css/`, add an esbuild entry point.
 
-- At server startup, load `dist/manifest.json` and expose the hashed filenames to the Nunjucks render context so templates can reference them.
+- Redesign the **home (index)** page.
 
-- Update static asset middleware: serve hashed JS/CSS with `Cache-Control: immutable, max-age=31536000`; serve HTML with `Cache-Control: no-store`; serve images/fonts with `Cache-Control: max-age=31536000` (without `immutable`).
+- Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
 
-- Add to the Pull Request Requirements and Guidelines that whenever an image or font asset changes, we must append a `?v=2` manually in the template so browsers know to fetch the new version instead of using the cached one. (Not needed for JS/CSS since those are content-hashed).
+- Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
 
----
+- Add the **Privacy Policy** page — English only, same approach as ToS.
 
-## Nunjucks Migration
-
-- Install `nunjucks` and `@types/nunjucks`; configure the Nunjucks environment in the Express app (set views directory, autoescape, etc.).
-
-- Create `layout.njk` — the full HTML shell (`<html>`, `<head>`, `<body>`) with `{% block %}` slots for: page title, extra `<head>` tags, page stylesheet, body content, and page script.
-
-- Delete `build/views.ts`; remove the `copy:views` script from `package.json`; remove `src/client/views` from `nodemon.json`'s watch list.
-
-- Migrate all existing route handlers from `res.sendFile()` to `res.render()`, pointing each to a minimal placeholder `.njk` file that extends `layout.njk`. This keeps the site functional while individual pages are redesigned.
-
----
-
-## CSS Foundation
-
-- Create the shared stylesheet (`src/client/css/global.css`) with some CSS custom property variables for both `[data-theme="dark"]` and `[data-theme="light"]` (e.g. `--c-bg`, `--c-surface`, `--c-text`, `--c-brand`, `--c-border`).
-
-- Add the inline `<script>` to `layout.njk <head>` that reads `localStorage` and sets `data-theme` on `<html>` before any CSS loads, preventing a flash of the wrong theme.
-
-- Create a `@font-face` declaration for Noto Sans and the font-stack CSS into the shared stylesheet.
-
-- Ensure our middleware is capable of serving fonts, with the same cache-control as other static assets.
-
-- Add other CSS rules we think will be shared across all pages.
+- Delete all old ejs documents, stylesheets, and scripts related to the old pages.
 
 ---
 
 ## Translation System Refactor
 
-- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. Do away with the `version` field.
+- Localize each page. All keys should be well organized in their respective components. Keys needing to be accessible by the js should be put in the `[script]` object of the TOML, and can be accessed via the global `t` variable. Server-side keys needed for sending translated responses should be placed into the `responses` component TOML (which is `script_only`, so its keys live at the top level rather than under a `[script]` table), and can be accessed via `getScriptTranslationsForReq('responses', reqOrWs)`. As we create each new component TOML, delete related keys out of the old monolith English TOML.
 
-- Update `loadTranslations()` to remove versioning support entirely; delete `removeOutdated()`. Keep `deepMerge()` (fallback to English for missing keys).
+- Analyze the remaining keys in the old monolith English TOML determine whether the stragglers should be deleted or migrated into new components. Delete all old monolith TOMLs.
 
----
+- Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (remove that from `generate:types` script, too). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
 
-## Shared Components
+- Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
 
-*All page redesigns depend on these being done first.*
+- Add a request/connection-bound translator so server code reads strings as ergonomically as the client global `t`: `req.t` (Express) and `ws.t` (socket), each a `ScriptTranslations`-typed Proxy built once from the resolved language, used component-first and fully typed — e.g. `req.t.responses.auth.invalid_token`. Build it on top of a `makeScriptTranslator(lang)` Proxy factory delegating to `getScriptTranslations`. Migrate the `getTranslation`/`getTranslationForReq` call sites (and the two existing `getScriptTranslations` callers) onto it, then **delete `getScriptTranslationsForReq`** (fully superseded). Keep `getScriptTranslations(component, lang)` exported as the bare-language escape hatch (e.g. a future queued email sender resolving language from the DB). Sequencing: `ws.t` has no collision and can land anytime; **`req.t` is blocked until i18next is dropped above**, since `i18next-http-middleware` already augments the Express request with a conflicting `t`.
 
-- Redesign and implement the shared header component (`src/client/components/header/`) — Nunjucks partial, CSS (CSS-only responsive layout, no JS measurement), and TS. Server receives auth state via `req.memberInfo` and passes it to the template.
+- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. 
 
-- Redesign and implement the shared footer component — Nunjucks partial and CSS.
+- Once all pages are localized: Setup Weblate.
 
-- Implement logout-in-another-tab handling: on all socket-connected pages, call `window.location.reload()` when the socket logout event is received so the server re-renders the correct logged-out state.
-
-- Install `snabbdom` — required before any page that uses it for reactive lists.
-
----
-
-## Page Redesigns
-
-*Each page: new Nunjucks template extending `layout.njk`, new colocated CSS file, updated route handler with full SSR context, and updated/new TS where needed.*
-
-- Redesign the **home (index)** page.
-
-- Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initla batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
-
-- Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
-
-- Add the **Privacy Policy** page — English only, same approach as ToS.
+- Rewrite the translation guide in `docs/TRANSLATIONS.md` to reflect the new system and Weblate. It should cover how to use Weblate, and also contain pointers for fast-tracking translation via AI by translating whole components at once. It should also include info about retaining any xss-whitelisted html tags they should not modify in strings, UNLESS wherever html tags are in use in strings, those templates are commented to clearly explain their presence and the need to preserve them, then they don't have to explicitly be explained in the guide, to keep it simpler.
 
 ---
 
@@ -86,8 +51,14 @@
 
 ## Late-Stage Polish
 
+- Delete any unused theme-specific css variables in global.css
+
+- Delete any unused css rules in all stylesheets.
+
+- Double check sure any straggling unused files - scripts, stylesheets, templates, etc. related to the old system are deleted.
+
 - Add `<link rel="modulepreload">` for each page's JS entry points in its Nunjucks template. *(Do last, once every page's import graph is finalized)*
 
 - Consider `@view-transition` if there's white flashes between page loads.
 
-- Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).
+- Optional: Implement the audio autoplay fallback: detect when the browser has blocked audio before the first user gesture and display a muted indicator in the header (similar to Lichess's approach).

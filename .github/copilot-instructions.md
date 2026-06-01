@@ -1,53 +1,37 @@
 # Copilot Instructions for infinitechess.org
 
-### ABOVE ALL: Follow the requirements and guidelines for pull requests found in `docs/GUIDELINES.md`!
+Each non-local session (working directory contains /home/runner/ or /github/) requires installing dependancies via `npm i --silent` first.
 
-Each non-local session requires installing dependancies via `npm i --silent`. Check the working directory: if it contains Users, it's local; if it contains /home/runner/ or /github/, it's a GitHub Actions runner.
-
-BEFORE commiting any new changes, and before responding to review feedback, always ensure all workflow checks pass: `npm run lint --silent`, `npx tsc --noEmit`, and `npm test`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors.
+When you finish making any new changes to scripts, always ensure these checks pass: `npm run type-check --silent`, `npm run lint --silent`. You must repeat each of these commands, even if you only made a minor code change since your last check to fix one of their errors. If there's an existing lint warning unrelated to your changes, fix it for bonus points.
 
 ## Key Guidelines
 
 1. Follow industry standards and best code practices of today.
 2. Maintain existing code structure, organization, and consistency.
-3. Perform testing for new complex functions to ensure their output is as expected.
-4. Actual unit/integration tests are not required, unless explicitly asked for.
-5. Remember before committing changes, that all pull requests must follow the guidelines in `docs/GUIDELINES.md`.
-6. No types should ever be re-exported inside scripts. All imports of a type should reference the source.
+3. Never re-exported types from inside scripts, always reference the source. Never use the Omit or Exclude utility types. Instead, have one type extend the other.
+4. Avoid redundancy like the plague for maximum maintainability, scalability, and bug-avoidance. After implementing a change, always ask if there now exists redundancy with it or the rest of the code.
+5. Unit/integration tests are not required for new features.
 
 ## Project Architecture
 
-- **Frontend:** TS, CSS, and assets in `src/client`. No major frameworks detected; uses vanilla and modular scripts.
-- **Backend:** Node.js server in `src/server/server.js`, with API, game logic, and socket communication.
-
-## Key Files & Directories
-
-- `src/client/` — Frontend code
-- `src/server/` — Backend code
-- `src/shared/` — Shared utilities and chess logic
-- `dev-utils/` — Depricated code. Do not maintain. It is not imported by the source code.
-- `translation/` — Localization
-
-## Conventions & Patterns
-
-- **Translations:** TOML files in `translation/` for i18n. News per locale in `translation/news/`. Any modification to the en-US.toml requires you update the version number at the top of the file, and reflect the change in `translation/changes.json`. Change notes in `changes.json` should be clear and concise, not containing more information than necessary, and always indicate the line numbers of the removed/added keys.
-- **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
-- **Rendering:** When asked to add new graphics and visuals to the game (canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
-- When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
-
-## Integration Points
-
+- **Frontend:** TS, CSS, and assets in `src/client`. No major frameworks detected; uses vanilla and modular scripts. Bundled with **esbuild** (not Vite).
+- **Backend:** Node.js server in `src/server/server.js`, with API, game logic, and socket communication. Every html is SSR'd via Nunjucks. The old system used EJS and is being migrated away from during the website redesign.
+- `src/` is split into three: `client/` (only client scripts may import), `server/` (only server scripts may import), and `shared/` both sides may import. Sometimes, refactors may call for migrating code from either side into `shared/`.
 - **Database:** Uses SQLite via the `better-sqlite3` package.
-- **Socket Communication:** Real-time features via `src/server/socket/`.
+- `dev-utils/` — Archived code. Do not maintain. No source code imports anything from here.
+- `translation/` — Localization. Only maintain english TOMLs, not any other language.
+
+## Useful Notes
+
+- All scripts have their file path on line 1. This is automatic via hook, you don't have to bother maintaining it.
+- Almost all scripts have a brief description of their purpose on lines 3-7+. Useful for gaining a quick understanding of them without bloating the context window.
+- All typescript files' indentation is in tabs, not spaces.
+- prettier automatically enforces consistent styling.
+- **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.
+- When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
+- **Rendering:** When asked to add new complex graphics or visuals to the game (webgl canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
+- **Translation system:** For any work involving localization or the TOML-based translation pipeline, `dev-utils/REDESIGN/TRANSLATION_SYSTEM.md` provides a detailed guide.
 
 ## VS Code Tool Notes
 
 - **Rename Symbol:** To rename a symbol across all files that import it, point the rename symbol tool at the symbol's name inside a named `export { }` or `export type { }` block — this works for named exports only; `export default { }` object-style exports require manual renaming of all external call sites regardless of where the rename is applied.
-
-## Integrated Browser
-
-- **Game interaction:** The infinite chess game board & pieces are on a canvas, which contents is only visible to you in screenshots. drag_element won't work on the canvas as it requires a DOM ref. Use run_playwright_code to probe board coordinates: hover page.mouse.move(sx, sy) at candidate screen positions and read await page.locator('#x').inputValue() / await page.locator('#y').inputValue() to map screen pixels to board squares.
-
-- **Moving pieces:** Use explicit mouse.down()+mouse.up() pairs, not page.mouse.click() — the game's input loop polls isKeyDown per frame and click() is too fast. After clicking "Start Game" to start a local game, wait at least 2000ms before making any moves — the canvas game loop needs time to initialize.
-
-- **Reading the board position:** press Digit5 (hold down for ~200ms so the game loop detects it) to trigger a clipboard copy of the ICN position string. Intercept it via: (1) inject `window._capturedClipboard=null; const orig=navigator.clipboard.writeText.bind(navigator.clipboard); navigator.clipboard.writeText=async(t)=>{window._capturedClipboard=t;navigator.clipboard.writeText=orig;return orig(t);}` into the page before pressing the key, then (2) `await page.keyboard.down('Digit5'); await page.waitForTimeout(200); await page.keyboard.up('Digit5');`, then (3) read `await page.evaluate(()=>window._capturedClipboard)`. navigator.clipboard.readText() will fail with permission denied — do not use it.

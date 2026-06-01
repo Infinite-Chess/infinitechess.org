@@ -225,7 +225,7 @@ function setSelection(corner1: Coords, corner2: Coords): void {
 function selectAll(): void {
 	etoolmanager.setTool('selection-tool'); // Switch if we're not already using
 
-	const box = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.boardsim.pieces);
+	const box = boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces);
 
 	if (box === undefined) {
 		// No pieces, cancel selection

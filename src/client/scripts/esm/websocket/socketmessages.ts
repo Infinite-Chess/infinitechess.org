@@ -1,0 +1,273 @@
+// src/client/scripts/esm/websocket/socketmessages.ts
+
+/**
+ * Handles outgoing websocket messages, echo tracking, and on-reply functions.
+ */
+
+import uuid from '../../../../shared/util/uuid.js';
+import wsutil from '../../../../shared/util/wsutil.js';
+
+import socketman from './socketman.js';
+import socketsubs from './socketsubs.js';
+import { SocketBus } from './SocketBus.js';
+
+// Types -----------------------------------------------------------------------
+
+type MessageID = number;
+
+type WebsocketMessageValue = MessageEvent['data'];
+
+/** The shape of an outgoing websocket payload sent to the server. */
+type OutgoingPayload = {
+	route: string;
+	contents: {
+		action: string;
+		value: WebsocketMessageValue;
+	};
+	id?: number;
+};
+
+// Constants -------------------------------------------------------------------
+
+/** Time the websocket remains open without subscriptions, in milliseconds. */
+const cushionBeforeAutoClose = 10000;
+/** Simulated websocket latency in debug mode. */
+const simulatedWebsocketLatencyMillis_Debug = 1000;
+/** Whether to also print incoming echos in debug mode. */
+const alsoPrintIncomingEchos = false;
+
+// Variables -------------------------------------------------------------------
+
+/** Echo timers for sent messages awaiting acknowledgement. */
+let echoTimers: Record<string, { timeSent: number; timeoutID: number }> = {};
+
+/** Functions to execute when we get a specific reply back. */
+let onreplyFuncs: { [key: MessageID]: Function } = {};
+
+/** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
+let timeoutIDToAutoClose: number;
+
+/**
+ * The timeout ID for detecting server inactivity.
+ * If no message is received within the expected window, the client
+ * assumes the connection is dead and closes the socket.
+ */
+let heartbeatTimerID: number | undefined;
+
+// Echo Tracking ---------------------------------------------------------------
+
+/**
+ * Called when we hear a server echo. Cancels the timer that assumes
+ * disconnection, and updates the ping display.
+ */
+function cancelTimerOfMessageID(ID: number): void {
+	const echoTimer = echoTimers[ID];
+	if (!echoTimer) {
+		console.error('Could not find echo timer for message.');
+		return;
+	}
+
+	// Update the Ping meter with the round-trip time
+	const timeTaken = Date.now() - echoTimer.timeSent;
+	SocketBus.dispatch('ping', timeTaken);
+
+	clearTimeout(echoTimer.timeoutID);
+	delete echoTimers[ID];
+}
+
+/**
+ * Closes the current websocket when an echo hasn't been heard.
+ * Called a few seconds after not hearing a server echo.
+ */
+function onEchoTimeout(messageID: MessageID): void {
+	if (messageID) {
+		delete echoTimers[messageID];
+	}
+	const socket = socketman.getSocket();
+	if (!socket) return;
+	console.log(
+		`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} milliseconds...`,
+	);
+	socketman.dispatchLostConnectionCustomEvent();
+	socket.close(1000, 'Connection closed by client. Renew.');
+}
+
+/**
+ * Cancels all timers that assume disconnection.
+ * Called when the socket connection is terminated.
+ */
+function cancelAllEchoTimers(): void {
+	for (const echoTimerEntry of Object.values(echoTimers)) {
+		clearTimeout(echoTimerEntry.timeoutID);
+	}
+	echoTimers = {};
+}
+
+// On-Reply Functions ----------------------------------------------------------
+
+/**
+ * Flags an outgoing message to execute a function when the server replies.
+ * @param messageID - The ID of the outgoing message
+ * @param onreplyFunc - The function to execute on reply
+ */
+function scheduleOnreplyFunc(messageID: MessageID, onreplyFunc?: () => void): void {
+	if (!onreplyFunc) return;
+	onreplyFuncs[messageID] = onreplyFunc;
+}
+
+/**
+ * When we receive a message with the `replyto` property,
+ * executes the on-reply function for that sent message.
+ */
+function executeOnreplyFunc(id: number | undefined): void {
+	if (id === undefined) return;
+	if (!onreplyFuncs[id]) return;
+	onreplyFuncs[id]();
+	delete onreplyFuncs[id];
+}
+
+/** Erases all on-reply functions. Called when the socket is terminated. */
+function resetOnreplyFuncs(): void {
+	onreplyFuncs = {};
+}
+
+// Timer Management ------------------------------------------------------------
+
+/** If we have zero subscriptions, resets the timer to auto-close the socket. */
+function resetTimerToCloseSocket(): void {
+	clearTimeout(timeoutIDToAutoClose);
+	if (socketsubs.zeroSubs()) {
+		timeoutIDToAutoClose = window.setTimeout(
+			() => socketman.closeSocket(),
+			cushionBeforeAutoClose,
+		);
+	}
+}
+
+// Inactivity Detection --------------------------------------------------------
+
+/**
+ * Reschedules the inactivity timer. Called on every incoming message.
+ * If no message is received within a certain time frame, the client
+ * assumes the connection is dead and closes the socket.
+ */
+function rescheduleHeartbeatTimer(): void {
+	cancelHeartbeatTimer();
+	if (socketsubs.zeroSubs()) return;
+	heartbeatTimerID = window.setTimeout(
+		onHeartbeatTimeout,
+		wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT,
+	);
+}
+
+/** Cancels the inactivity timer. Called when the socket closes. */
+function cancelHeartbeatTimer(): void {
+	if (heartbeatTimerID !== undefined) {
+		clearTimeout(heartbeatTimerID);
+		heartbeatTimerID = undefined;
+	}
+}
+
+/**
+ * Called when no message has been received within the expected time frame.
+ * Closes the socket and dispatches a lost connection event.
+ */
+function onHeartbeatTimeout(): void {
+	heartbeatTimerID = undefined;
+	const socket = socketman.getSocket();
+	if (!socket) return;
+	console.log(
+		`No message received for ${wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
+	);
+	socketman.dispatchLostConnectionCustomEvent();
+	socket.close(1000, 'Connection closed by client. Renew.');
+}
+
+// Sending Messages ------------------------------------------------------------
+
+/**
+ * Sends a message to the server with the provided route, action, and values.
+ * @param route - Where the server needs to forward this to. general/invites/game
+ * @param action - What action to take within the route.
+ * @param value - The contents of the message
+ * @param isUserAction - Whether this message is a direct result of a user action. Default: false
+ * @param onreplyFunc - Optional function to execute when we receive the server's response.
+ * @returns *true* if the message was able to send.
+ */
+async function send(
+	route: string,
+	action: string,
+	value?: WebsocketMessageValue,
+	isUserAction?: boolean,
+	onreplyFunc?: () => void,
+): Promise<boolean> {
+	// Guard: messages to a subscription route require an active subscription.
+	if (socketsubs.validSubs.includes(route) && !socketsubs.areSubbedToSub(route)) {
+		console.error(`Can't send route '${route}' action '${action}' while not subscribed.`);
+		onreplyFunc?.();
+		return false;
+	}
+
+	if (!(await socketman.establishSocket())) {
+		if (isUserAction) console.error("Too many requests. Can't send socket message.");
+		onreplyFunc?.();
+		return false;
+	}
+
+	resetTimerToCloseSocket();
+
+	let payload: OutgoingPayload;
+	if (action === 'echo') {
+		payload = {
+			route: 'echo',
+			contents: value,
+		};
+	} else {
+		// Not an echo, attach an ID and expect an echo back.
+		payload = {
+			route,
+			contents: {
+				action,
+				value,
+			},
+			id: uuid.generateNumbID(10),
+		};
+
+		if (socketman.isDebugEnabled()) console.log(`Sending: ${JSON.stringify(payload)}`);
+
+		// Set a timer to assume disconnection if echo not received
+		echoTimers[payload.id!] = {
+			timeSent: Date.now(),
+			timeoutID: window.setTimeout(() => onEchoTimeout(payload.id!), wsutil.ECHO_TIMEOUT),
+		};
+
+		scheduleOnreplyFunc(payload.id!, onreplyFunc);
+	}
+
+	const socket = socketman.getSocket();
+	if (!socket || socket.readyState !== WebSocket.OPEN) return false; // Closed state, can't send message.
+
+	const stringifiedMessage = JSON.stringify(payload);
+
+	if (socketman.isDebugEnabled()) {
+		window.setTimeout(
+			() => socket.send(stringifiedMessage),
+			simulatedWebsocketLatencyMillis_Debug,
+		);
+	} else socket.send(stringifiedMessage); // Send immediately
+
+	return true;
+}
+
+// Exports --------------------------------------------------------------------
+
+export default {
+	send,
+	cancelTimerOfMessageID,
+	cancelAllEchoTimers,
+	executeOnreplyFunc,
+	resetOnreplyFuncs,
+	rescheduleHeartbeatTimer,
+	cancelHeartbeatTimer,
+	alsoPrintIncomingEchos,
+};

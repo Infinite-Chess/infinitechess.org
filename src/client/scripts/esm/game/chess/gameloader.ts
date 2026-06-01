@@ -12,14 +12,13 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { ValidEngine } from './engines/engine.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { VariantOptions } from '../../../../../shared/chess/logic/initvariant.js';
-import type { ServerGameInfo } from '../websocket/socketschemas.js';
+import type { ServerGameInfo } from '../../websocket/socketschemas.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
+import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	ClockValues,
 	MetaData,
@@ -29,15 +28,14 @@ import type {
 } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import variant from '../../../../../shared/chess/variants/variant.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
-import guiclock from '../gui/guiclock.js';
-import IndexedDB from '../../util/IndexedDB.js';
 import Transition from '../rendering/transitions/Transition.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
@@ -48,6 +46,7 @@ import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
+import frameratelimiter from '../rendering/frameratelimiter.js';
 import clientmetadatautil from './clientmetadatautil.js';
 import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
 
@@ -63,6 +62,15 @@ let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
  * If so, the spinny pawn loading animation will be open.
  */
 let gameLoading: boolean = false;
+
+// Constants ---------------------------------------------------------------------
+
+/**
+ * Target framerate when not in a game (title screen).
+ *
+ * I cannot actually tell a difference between 30fps and 240fps there.
+ */
+const TARGET_FPS_TITLE_SCREEN = 30;
 
 // Getters --------------------------------------------------------------------
 
@@ -136,7 +144,7 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const variantName = variant.getVariantName(options.variant);
+	const variantName = variantregistry.getVariantName(options.variant);
 	const dateTimestamp = Date.now();
 	const metadata = clientmetadatautil.buildBaseGameMetadata(
 		`Casual local ${variantName} infinite chess game`,
@@ -145,15 +153,18 @@ async function startLocalGame(options: {
 	);
 	metadata.Variant = variantName;
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			metadata,
 			variant: options.variant,
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -183,31 +194,37 @@ async function startOnlineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const storageKey = onlinegame.getKeyForOnlineGameVariantOptions(options.gameInfo.id);
 	const additional: Additional = {
 		moves: options.moves,
-		variantOptions: await IndexedDB.loadItem<VariantOptions>(storageKey),
 		gameConclusion: options.gameConclusion,
 		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
 		clockValues: options.clockValues,
 	};
 
-	const resolvedVariant = variant.resolveVariantCode(options.metadata.Variant);
-	const resolvedTimestamp = clientmetadatautil.resolveTimestampFromMetadata(
+	const resolvedVariant = variantregistry.resolveVariantCode(options.metadata.Variant);
+	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
 		options.metadata.UTCDate,
 		options.metadata.UTCTime,
 	);
+
+	const viewWhitePerspective =
+		options.youAreColor === undefined || options.youAreColor === p.WHITE; // Spectators view from white perspective
 
 	gameslot
 		.loadGamefile({
 			metadata: options.metadata,
 			variant: resolvedVariant,
 			dateTimestamp: resolvedTimestamp,
-			viewWhitePerspective: options.youAreColor === p.WHITE,
+			viewWhitePerspective,
 			allowEditCoords: false,
 			additional,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => {
+			// Logical loaded, return graphical promise
+
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	onlinegame.initOnlineGame({
@@ -215,12 +232,6 @@ async function startOnlineGame(options: {
 		youAreColor: options.youAreColor,
 		participantState: options.participantState,
 	});
-
-	// We need this here because otherwise if we reconnect to the page after refreshing, the sound effects don't play.
-	// IF THIS DOES NOT COME AFTER onlinegame.initOnlineGame(), then guiclock inaccurately thinks it's a local game,
-	// THUS playing the drum sound effect for our opponent.
-	const basegame = gameslot.getGamefile()!.basegame;
-	if (!basegame.untimed) guiclock.rescheduleSoundEffects(basegame.clocks);
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -236,7 +247,7 @@ async function startEngineGame(options: {
 	timeControl: TimeControl;
 	/** If it's not a practice checkmate, this is the variant code.
 	 * MUTUALLY EXCLUSIVE with variantOptions. */
-	variant: VariantCode | null;
+	variant: VariantCode | undefined;
 	/** MUTUALLY EXCLUSIVE with Variant. */
 	variantOptions?: VariantOptions;
 	youAreColor: Player;
@@ -268,7 +279,7 @@ async function startEngineGame(options: {
 		options.timeControl,
 		dateTimestamp,
 	);
-	if (options.variant) metadata.Variant = variant.getVariantName(options.variant);
+	if (options.variant) metadata.Variant = variantregistry.getVariantName(options.variant);
 	metadata.White =
 		options.youAreColor === p.WHITE
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
@@ -278,30 +289,29 @@ async function startEngineGame(options: {
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
 			: formattedEngineName;
 
-	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata,
-		variant: options.variant,
-		dateTimestamp,
-		viewWhitePerspective: options.youAreColor === p.WHITE,
-		allowEditCoords: false,
-		additional: {
-			variantOptions: options.variantOptions,
-			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
-		},
-	});
+	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
-	/** A promise that resolves when the engine script has been fetched. */
-	const enginePromise: Promise<void> = enginegame
-		.initEngineGame(options)
-		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+	gameslot
+		.loadGamefile({
+			metadata,
+			variant: options.variant,
+			dateTimestamp,
+			viewWhitePerspective,
+			allowEditCoords: false,
+			additional: {
+				variantOptions: options.variantOptions,
+				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
+			},
+		})
+		.then(async ({ graphical }) => {
+			// Logical loaded, return graphical promise
 
-	/**
-	 * This resolves when BOTH the graphical and engine promises resolve,
-	 * OR rejects immediately when one of them rejects!
-	 */
-	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading())
+			/** A promise that resolves when the engine script has been fetched. */
+			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -321,14 +331,16 @@ async function startBoardEditor(): Promise<void> {
 		dateTimestamp,
 	);
 	const variantCode: VariantCode = 'Classical';
-	metadata.Variant = variant.getVariantName(variantCode);
+	metadata.Variant = variantregistry.getVariantName(variantCode);
+
+	const viewWhitePerspective = true;
 
 	gameslot
 		.loadGamefile({
 			metadata,
 			variant: variantCode,
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 			/**
 			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
@@ -339,7 +351,8 @@ async function startBoardEditor(): Promise<void> {
 			 */
 			additional: { editor: true },
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	await guipalette.initUI();
@@ -367,16 +380,19 @@ async function startCustomLocalGame(options: {
 		dateTimestamp,
 	);
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			...options,
 			metadata,
 			dateTimestamp,
-			variant: null, // Not specified for custom position
-			viewWhitePerspective: true,
+			variant: undefined, // Not specified for custom position
+			viewWhitePerspective,
 			allowEditCoords: true,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -424,30 +440,29 @@ async function startCustomEngineGame(options: {
 			? clientmetadatautil.YOU_NAME_ICN_METADATA
 			: formattedEngineName;
 
-	/** A promise that resolves when the GRAPHICAL (spritesheet) part of the game has finished loading. */
-	const graphicalPromise: Promise<void> = gameslot.loadGamefile({
-		metadata,
-		variant: null, // Not specified for custom position
-		dateTimestamp,
-		viewWhitePerspective: options.youAreColor === p.WHITE,
-		allowEditCoords: false,
-		additional: {
-			variantOptions: options.additional.variantOptions,
-			worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
-		},
-	});
+	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
-	/** A promise that resolves when the engine script has been fetched. */
-	const enginePromise: Promise<void> = enginegame
-		.initEngineGame(options)
-		.then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+	gameslot
+		.loadGamefile({
+			metadata,
+			variant: undefined, // Not specified for custom position
+			dateTimestamp,
+			viewWhitePerspective,
+			allowEditCoords: false,
+			additional: {
+				variantOptions: options.additional.variantOptions,
+				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
+			},
+		})
+		.then(async ({ graphical }) => {
+			// Logical loaded, return graphical promise
 
-	/**
-	 * This resolves when BOTH the graphical and engine promises resolve,
-	 * OR rejects immediately when one of them rejects!
-	 */
-	Promise.all([graphicalPromise, enginePromise])
-		.then((_results: any[]) => onFinishedLoading())
+			/** A promise that resolves when the engine script has been fetched. */
+			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+
+			return graphical;
+		})
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
@@ -485,18 +500,21 @@ async function startBoardEditorFromCustomPosition(
 	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
 	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
 
+	const viewWhitePerspective = true;
+
 	gameslot
 		.loadGamefile({
 			metadata,
-			variant: null, // Not specified for custom position
+			variant: undefined, // Not specified for custom position
 			dateTimestamp,
-			viewWhitePerspective: true,
+			viewWhitePerspective,
 			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed
 			additional: { ...options.additional, editor: true },
 			presetAnnotes: options.presetAnnotes,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -511,7 +529,7 @@ async function startBoardEditorFromCustomPosition(
  */
 async function pasteGame(options: {
 	metadata: MetaData;
-	variant: VariantCode | null;
+	variant: VariantCode | undefined;
 	dateTimestamp: number;
 	additional: Additional;
 	presetAnnotes?: PresetAnnotes;
@@ -538,7 +556,8 @@ async function pasteGame(options: {
 			presetAnnotes: options.presetAnnotes,
 			additional: options.additional,
 		})
-		.then((_result: any) => onFinishedLoading())
+		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
+		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
 		.catch((err: Error) => onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
@@ -551,9 +570,13 @@ async function pasteGame(options: {
  * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
  * This hides the spinny pawn loading animation that covers the board.
  */
-function onFinishedLoading(): void {
+function onFinishedLoading(viewWhitePerspective: boolean): void {
 	// console.log('COMPLETELY finished loading game!');
 	gameLoading = false;
+
+	perspective.setViewSide(viewWhitePerspective);
+
+	frameratelimiter.setFpsLimit(null); // Run at full speed while in a game
 
 	// We can now close the loading screen.
 
@@ -582,7 +605,7 @@ function openGameinfoBarAndConcludeGameIfOver(
 	showGameControlButtons: boolean = false,
 ): void {
 	guigameinfo.open(metadata, showGameControlButtons);
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!.basegame)) gameslot.concludeGame();
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
 function unloadLogicalAndRendering(): void {
@@ -599,11 +622,13 @@ function unloadGame(): void {
 	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
 	else if (typeOfGameWeAreIn === 'editor') boardeditor.closeBoardEditor();
 
+	perspective.resetRotations();
 	guinavigation.close();
 	guigameinfo.close();
 	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
 	unloadLogicalAndRendering();
+	frameratelimiter.setFpsLimit(TARGET_FPS_TITLE_SCREEN); // Return to title-screen throttle on game exit
 	typeOfGameWeAreIn = undefined;
 
 	gui.prepareForOpen();

@@ -1,0 +1,10 @@
+# Translation component: site-wide footer
+# Source template: src/server/views/components/footer/footer.njk
+
+[links] # Footer navigation links
+about = "About Infinite Chess"
+contact = "Contact"
+terms = "Terms of Service"
+privacy = "Privacy"
+credits = "Credits"
+# GitHub, Discord, YouTube, and Patreon are proper nouns and are not localized.

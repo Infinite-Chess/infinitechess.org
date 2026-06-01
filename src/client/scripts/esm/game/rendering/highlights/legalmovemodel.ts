@@ -8,7 +8,9 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
@@ -281,7 +283,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 	const gamefile = gameslot.getGamefile()!;
 
 	// Data of short range moves within 3 tiles
-	pushIndividual(instanceData_NonCapture, instanceData_Capture, legalMoves, gamefile.boardsim);
+	pushIndividual(instanceData_NonCapture, instanceData_Capture, legalMoves, gamefile);
 	// Potentially infinite data on sliding moves...
 	pushSliding(
 		instanceData_NonCapture,
@@ -330,9 +332,9 @@ function generateModelForSlideHighlightOutlines(
 	const gamefile = gameslot.getGamefile()!;
 
 	// Pass the same array for both capture and non-capture — the outline looks identical for both.
-	pushIndividual(instanceData, instanceData, legalMoves, gamefile.boardsim);
+	pushIndividual(instanceData, instanceData, legalMoves, gamefile);
 	// prettier-ignore
-	pushSliding(instanceData, instanceData, coords, legalMoves, gamefile, gamefile.basegame.whosTurn);
+	pushSliding(instanceData, instanceData, coords, legalMoves, gamefile, gamefile.whosTurn);
 
 	return createRenderable_Instanced(
 		vertexData,
@@ -386,7 +388,7 @@ function pushSliding(
 	instanceData_Capture: bigint[],
 	coords: Coords,
 	legalMoves: LegalMoves,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 ): void {
 	for (const [lineKey, limits] of Object.entries(legalMoves.sliding)) {
@@ -433,7 +435,7 @@ function pushSlide(
 	intsect2: IntersectionPoint,
 	limits: SlideLimits,
 	ignoreFunc: IgnoreFunction,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 	brute?: boolean,
 ): void {
@@ -511,7 +513,7 @@ function pushRay(
 	intsect2: IntersectionPoint,
 	limit: bigint | null,
 	ignoreFunc: IgnoreFunction,
-	gamefile: FullGame,
+	gamefile: GameFile,
 	friendlyColor: Player,
 	brute?: boolean,
 	startStep: bigint = 1n,

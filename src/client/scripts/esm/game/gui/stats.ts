@@ -34,6 +34,11 @@ let visibilityWeight = 0;
 /** Whether FPS display is enabled. */
 let fps = false;
 
+// Listeners -------------------------------------------------------------
+
+// Reposition stats panel when the canvas is resized
+document.addEventListener('canvas_resize', updateStatsCSS);
+
 // Move Number -------------------------------------------------------------
 
 /**
@@ -57,8 +62,8 @@ function hideMoves(): void {
 }
 
 function updateTextContentOfMoves(): void {
-	const currentPly = gameslot.getGamefile()!.boardsim.state.local.moveIndex + 1;
-	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile()!.boardsim.moves);
+	const currentPly = gameslot.getGamefile()!.state.local.moveIndex + 1;
+	const totalPlyCount = moveutil.getPlyCount(gameslot.getGamefile()!.moves);
 
 	elementStatusMoves.textContent = `${translations.move_counter} ${currentPly}/${totalPlyCount}`;
 }

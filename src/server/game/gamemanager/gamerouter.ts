@@ -9,7 +9,6 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { onPaste } from './pastereport.js';
 import { onJoinGame } from './joingame.js';
 import { resyncToGame } from './resync.js';
 import { onAFK, onAFK_Return } from './onAFK.js';
@@ -30,7 +29,6 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame') }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
-	z.strictObject({ action: z.literal('paste') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
 	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
 ]);
@@ -95,9 +93,6 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 			break;
 		case 'report':
 			onReport(ws, servergame, contents.value);
-			break;
-		case 'paste':
-			onPaste(ws, servergame);
 			break;
 		default:
 			// @ts-ignore

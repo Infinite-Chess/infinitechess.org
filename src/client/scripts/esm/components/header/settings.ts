@@ -10,7 +10,6 @@ import preferences from './preferences.js';
 import sounddropdown from './dropdowns/sounddropdown.js';
 import languagedropdown from './dropdowns/languagedropdown.js';
 import gameplaydropdown from './dropdowns/gameplaydropdown.js';
-import legalmovedropdown from './dropdowns/legalmovedropdown.js';
 import appearancedropdown from './dropdowns/appearancedropdown.js';
 import perspectivedropdown from './dropdowns/perspectivedropdown.js';
 
@@ -22,34 +21,47 @@ import './pingmeter.js'; // Only imported so its code runs
 const settings = document.getElementById('settings')!;
 const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
-// All buttons to open nested dropdowns
-const languageDropdownSelection = document.getElementById('language-settings-dropdown-item')!;
-const appearanceDropdownSelection = document.getElementById('appearance-settings-dropdown-item')!;
-const legalmoveDropdownSelection = document.getElementById('legalmove-settings-dropdown-item')!;
-const mouseDropdownSelection = document.getElementById('perspective-settings-dropdown-item')!;
-const gameplayDropdownSelection = document.getElementById('gameplay-settings-dropdown-item')!;
-const soundDropdownSelection = document.getElementById('sound-settings-dropdown-item')!;
-
-// All nested dropdowns
-const languageDropdown = document.querySelector('.language-dropdown')!;
-const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
-const legalmoveDropdown = document.querySelector('.legalmove-dropdown')!;
-const perspectiveDropdown = document.querySelector('.perspective-dropdown')!;
-const gameplayDropdown = document.querySelector('.gameplay-dropdown')!;
-const soundDropdown = document.querySelector('.sound-dropdown')!;
+/** The buttons in the settings dropdown that open the sub-dropdowns */
 const allSettingsDropdownsExceptMainOne = [
-	languageDropdown,
-	appearanceDropdown,
-	legalmoveDropdown,
-	perspectiveDropdown,
-	gameplayDropdown,
-	soundDropdown,
+	document.querySelector('.language-dropdown')!,
+	document.querySelector('.appearance-dropdown')!,
+	document.querySelector('.perspective-dropdown')!,
+	document.querySelector('.gameplay-dropdown')!,
+	document.querySelector('.sound-dropdown')!,
+];
+
+// Each sub-dropdown's navigation item paired with its module, for listener registration
+const subDropdowns: { selection: Element; module: { open(): void; close(): void } }[] = [
+	{
+		selection: document.getElementById('language-settings-dropdown-item')!,
+		module: languagedropdown,
+	},
+	{
+		selection: document.getElementById('appearance-settings-dropdown-item')!,
+		module: appearancedropdown,
+	},
+	{
+		selection: document.getElementById('perspective-settings-dropdown-item')!,
+		module: perspectivedropdown,
+	},
+	{
+		selection: document.getElementById('gameplay-settings-dropdown-item')!,
+		module: gameplaydropdown,
+	},
+	{ selection: document.getElementById('sound-settings-dropdown-item')!, module: sounddropdown },
 ];
 
 // Variables ---------------------------------------------------------------------------------
 
 const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
+const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
 let settingsIsOpen = settings.classList.contains('open');
+
+/** Pre-built handlers for opening each sub-dropdown and hiding the main settings panel. */
+const openHandlers = subDropdowns.map(({ module }) => () => {
+	module.open();
+	hideMainSettingsPanel();
+});
 
 // Functions ---------------------------------------------------------------------------------
 
@@ -77,61 +89,41 @@ function toggleSettingsDropdown(): void {
 function openSettingsDropdown(): void {
 	// Opens the initial settings dropdown
 	settings.classList.add('open');
-	settingsDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	settingsDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initSettingsListeners();
 	settingsIsOpen = true;
 }
 function closeAllSettingsDropdowns(): void {
 	// Closes all dropdowns that may be open
 	settings.classList.remove('open');
-	closeMainSettingsDropdown();
-	closeAllSettingsDropdownsExceptMainOne();
-	settingsIsOpen = false;
-}
-function closeMainSettingsDropdown(): void {
-	settingsDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+
+	settingsDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeSettingsListeners();
 	preferences.sendPrefsToServer();
+
+	subDropdowns.forEach(({ module }) => module.close());
+
+	settingsIsOpen = false;
 }
-function closeAllSettingsDropdownsExceptMainOne(): void {
-	languagedropdown.close();
-	appearancedropdown.close();
-	legalmovedropdown.close();
-	gameplaydropdown.close();
-	perspectivedropdown.close();
-	sounddropdown.close();
+
+function hideMainSettingsPanel(): void {
+	settingsDropdown.classList.add('hidden');
+}
+function showMainSettingsPanel(): void {
+	settingsDropdown.classList.remove('hidden');
 }
 
 function initSettingsListeners(): void {
-	languageDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	languageDropdownSelection.addEventListener('click', languagedropdown.open);
-	appearanceDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	appearanceDropdownSelection.addEventListener('click', appearancedropdown.open);
-	legalmoveDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	legalmoveDropdownSelection.addEventListener('click', legalmovedropdown.open);
-	mouseDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	mouseDropdownSelection.addEventListener('click', perspectivedropdown.open);
-	gameplayDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	gameplayDropdownSelection.addEventListener('click', gameplaydropdown.open);
-	soundDropdownSelection.addEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	soundDropdownSelection.addEventListener('click', sounddropdown.open);
+	subDropdowns.forEach(({ selection }, i) =>
+		selection.addEventListener('click', openHandlers[i]!),
+	);
+	allBackButtons.forEach((btn) => btn.addEventListener('click', showMainSettingsPanel));
 }
 function closeSettingsListeners(): void {
-	languageDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	languageDropdownSelection.removeEventListener('click', languagedropdown.open);
-	appearanceDropdownSelection.removeEventListener(
-		'click',
-		closeAllSettingsDropdownsExceptMainOne,
+	subDropdowns.forEach(({ selection }, i) =>
+		selection.removeEventListener('click', openHandlers[i]!),
 	);
-	appearanceDropdownSelection.removeEventListener('click', appearancedropdown.open);
-	legalmoveDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	legalmoveDropdownSelection.removeEventListener('click', legalmovedropdown.open);
-	mouseDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	mouseDropdownSelection.removeEventListener('click', perspectivedropdown.open);
-	gameplayDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	gameplayDropdownSelection.removeEventListener('click', gameplaydropdown.open);
-	soundDropdownSelection.removeEventListener('click', closeAllSettingsDropdownsExceptMainOne);
-	soundDropdownSelection.removeEventListener('click', sounddropdown.open);
+	allBackButtons.forEach((btn) => btn.removeEventListener('click', showMainSettingsPanel));
 }
 
 function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): void {
@@ -153,11 +145,11 @@ function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 	return clickedDropdown;
 }
 
-/** Updates the stylesheet colors --background-theme-color and --switch-on-color based on the current theme. */
+/** Updates the stylesheet colors --c-tile and --c-tile-2 based on the current theme. */
 function updateBackgroundColor(): void {
-	const theme = preferences.getTheme();
-	const lightTiles = themes.getPropertyOfTheme(theme, 'lightTiles');
-	const darkTiles = themes.getPropertyOfTheme(theme, 'darkTiles');
+	const boardColor = preferences.getBoardColor();
+	const lightTiles = themes.getPropertyOfTheme(boardColor, 'lightTiles');
+	const darkTiles = themes.getPropertyOfTheme(boardColor, 'darkTiles');
 
 	const AvgR = (lightTiles[0] + darkTiles[0]) / 2;
 	const AvgG = (lightTiles[1] + darkTiles[1]) / 2;
@@ -169,7 +161,7 @@ function updateBackgroundColor(): void {
 
 	const cssSwitch = style.rgbToCssString(switchR, switchG, switchB);
 
-	// Also set the --background-theme-color property, which is just a slightly brightened version!
+	// Also set the --c-tile-2 property, which is just a slightly brightened version!
 	// The board editor uses this for the background of selected tools.
 
 	// Convert to HSL Color
@@ -186,8 +178,8 @@ function updateBackgroundColor(): void {
 	// Set CSS properties
 
 	const root = document.documentElement;
-	root.style.setProperty('--switch-on-color', cssSwitch);
-	root.style.setProperty('--background-theme-color', cssBackground);
+	root.style.setProperty('--c-tile', cssSwitch);
+	root.style.setProperty('--c-tile-2', cssBackground);
 }
 
 export default {};

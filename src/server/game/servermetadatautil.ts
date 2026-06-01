@@ -4,12 +4,12 @@
  * Server-side helpers for building ICN game metadata.
  */
 
-import type { VariantCode } from '../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../shared/chess/variants/variantregistry.js';
 import type { MetaData, TimeControl } from '../../shared/types.js';
 
 import uuid from '../../shared/util/uuid.js';
-import variant from '../../shared/chess/variants/variant.js';
 import timeutil from '../../shared/util/timeutil.js';
+import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 // Types --------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ function buildGameMetadata(
 	white: PlayerMetaInput,
 	black: PlayerMetaInput,
 ): MetaData {
-	const variantEnglishName = variant.getVariantName(variantCode);
+	const variantEnglishName = variantregistry.getVariantName(variantCode);
 	const RatedOrCasual = rated ? 'Rated' : 'Casual';
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
 

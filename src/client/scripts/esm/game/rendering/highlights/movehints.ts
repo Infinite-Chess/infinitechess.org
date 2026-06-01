@@ -17,10 +17,9 @@ import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 
+import snapping from './snapping.js';
 import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
-import guipause from '../../gui/guipause.js';
-import snapping from './snapping.js';
 import selection from '../../chess/selection.js';
 import gameloader from '../../chess/gameloader.js';
 import drawsquares from './annotations/drawsquares.js';
@@ -57,7 +56,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 	if (
 		selection.isOpponentPieceSelected() ||
 		!gameloader.isItOurTurn() ||
-		!gamefileutility.isCurrentViewedPositionInCheck(gamefile.boardsim)
+		!gamefileutility.isCurrentViewedPositionInCheck(gamefile)
 	) {
 		clearIndividualMoves();
 		return;
@@ -65,7 +64,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 
 	const piece = selection.getPieceSelected()!;
 	selectedPieceCoords = piece.coords;
-	const moveset = legalmoves.getPieceMoveset(gamefile.boardsim, piece.type);
+	const moveset = legalmoves.getPieceMoveset(gamefile, piece.type);
 	individualMoves = legalMoves.individual.filter((hintSquare) => {
 		const diff = coordutil.subtractCoords(hintSquare, selectedPieceCoords!);
 		const dir = vectors.absVector(vectors.normalizeVector(diff));
@@ -95,7 +94,7 @@ function getSquares(): Coords[] {
 
 /** [Zoomed out] Renders the individual legal move hint squares as green entity squares. */
 function render(): void {
-	if (individualMoves.length === 0 || !boardpos.areZoomedOut() || guipause.areWePaused()) return;
+	if (individualMoves.length === 0 || !boardpos.areZoomedOut()) return;
 
 	const color: Color = preferences.getLegalMoveHighlightColor({
 		isOpponentPiece: false,

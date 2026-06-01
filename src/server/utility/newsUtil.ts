@@ -6,13 +6,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-/** The code of the language that is gauranteed to contain all current news posts. */
-const language_code = 'en-US';
+import tconfig from '../config/translationconfig.js';
 
 /**
  * Gets the date of the latest news post by reading filenames from the news directory.
@@ -20,10 +15,10 @@ const language_code = 'en-US';
  * @returns The date string of the latest news post (e.g., '2025-11-01'), or null if no news posts exist
  */
 function getLatestNewsDate(): string | null {
-	const newsPath = path.join(__dirname, '../../../translation/news', language_code);
+	const newsPath = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
 
 	if (!fs.existsSync(newsPath)) {
-		console.error(`News directory ${language_code} not found`);
+		console.error(`News directory ${tconfig.DEFAULT_LANGUAGE} not found`);
 		return null;
 	}
 
@@ -47,7 +42,7 @@ function getLatestNewsDate(): string | null {
  * @returns Array of date strings sorted from oldest to newest
  */
 function getAllNewsDates(): string[] {
-	const newsPath = path.join(__dirname, '../../../translation/news', language_code);
+	const newsPath = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
 
 	if (!fs.existsSync(newsPath)) {
 		return [];

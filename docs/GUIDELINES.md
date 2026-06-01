@@ -112,3 +112,9 @@ When writing names, keep context in mind. For example, a script whos responsibil
 **Constants**: Use UpperSnakeCase (e.g. `SOUND_OFFSET`).
 
 **Variables**: Use either CamelCase (e.g. `playerColor`) or SnakeCase (e.g. `player_color`), depending on what the script you are working on is using more apparently. Remaining consistent is trump: if many other scripts create a local variable named `timeoutId`, choose that for your local variable name instead of `timeout_id`.
+
+## Static Asset Cache Busting
+
+JS and CSS files emitted by esbuild are content-hashed (e.g. `index-D3TD6A64.js`, `global-A1B2C3D4.css`) and served with `Cache-Control: immutable`. The hash changes automatically whenever the file content changes, so browsers always fetch the latest version.
+
+All other static assets — images, svgs, fonts, and audio — are served with `Cache-Control: max-age=31536000` (no `immutable`). **When any of these files change, you must append or bump a `?v=N` query string on every reference to that file in Nunjucks templates** (e.g. `<img src="/img/logo.png?v=2">`). This forces browsers to treat it as a new URL and fetch the updated file instead of using their cached copy.

@@ -4,24 +4,16 @@
  * This script handles copying games
  */
 
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
-
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION } from '../../../../../shared/chess/variants/servervalidation.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
-
-const variantsTooBigToCopyPositionToICN: VariantCode[] = [
-	'Omega_Squared',
-	'Omega_Cubed',
-	'Omega_Fourth',
-	'5D_Chess',
-];
 
 /**
  * Copies the current game to the clipboard in ICN notation.
@@ -32,7 +24,7 @@ function copyGame(copySinglePosition: boolean): void {
 	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
 
 	const gamefile = gameslot.getGamefile()!;
-	const variantCode = gamefile.boardsim.variant;
+	const variantCode = gamefile.variant?.code;
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
 	const preset_squares = drawsquares.getPresetOverrides();
@@ -51,7 +43,7 @@ function copyGame(copySinglePosition: boolean): void {
 	);
 
 	const largeGame: boolean =
-		variantCode !== null && variantsTooBigToCopyPositionToICN.includes(variantCode);
+		variantCode !== undefined && VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION.includes(variantCode);
 	// Also specify the position if we're copying a single position, so the starting position will be different.
 	const skipPosition: boolean = largeGame && !copySinglePosition;
 	const shortformat: string = icnconverter.LongToShort_Format(longformatIn, {

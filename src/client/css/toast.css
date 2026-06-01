@@ -1,0 +1,125 @@
+/* src/client/css/toast.css */
+
+/*
+ * Site-wide toast notification, loaded on every page.
+ * Single element pinned to the top-right; sliding in/out with class changes.
+ * See src/client/scripts/esm/components/toast.ts for the runtime.
+ */
+
+.toast {
+	position: fixed;
+	top: 1em;
+	right: 1em;
+	max-width: min(400px, calc(100vw - 2em));
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 0.7em;
+	padding: 0.7em 0.85em 0.7em 0.95em;
+	border-radius: 10px;
+	border: 1px solid var(--toast-border, var(--c-border));
+	background-color: var(--c-surface);
+	color: var(--c-text-emphasis);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+	overflow: hidden;
+	z-index: 10000;
+	animation: toast-enter 280ms cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
+}
+
+/* Accent strip on the left edge */
+.toast::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	background-color: var(--toast-accent);
+}
+
+.toast-info {
+	--toast-accent: hsl(205, 80%, 55%);
+}
+
+.toast-error {
+	--toast-accent: hsl(0, 70%, 55%);
+	--toast-border: hsl(0, 50%, 38%);
+}
+
+[data-theme='light'] .toast-error {
+	--toast-border: hsl(0, 55%, 60%);
+}
+
+.toast-icon {
+	width: 20px;
+	height: 20px;
+	color: var(--toast-accent);
+}
+
+/* Show only the icon matching the current variant. */
+.toast-info .toast-icon-error,
+.toast-error .toast-icon-info {
+	display: none;
+}
+
+.toast-text {
+	margin: 0;
+	font-size: 0.9em;
+	line-height: 1.35;
+}
+
+.toast-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--c-text-muted);
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.toast-close:hover {
+	background-color: var(--c-hover-brighten);
+	color: var(--c-text-emphasis);
+}
+
+.toast-close svg {
+	width: 14px;
+	height: 14px;
+}
+
+.toast-leaving {
+	/* Duration must match EXIT_ANIMATION_MS in toast.ts. */
+	animation: toast-leave 280ms ease-in forwards;
+}
+
+@keyframes toast-enter {
+	from {
+		opacity: 0;
+		transform: translateX(110%);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes toast-leave {
+	from {
+		opacity: 1;
+		transform: translateX(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateX(110%);
+	}
+}
+
+/* Recommended for specificity, because `display: grid` in .toast overwrites the .hidden
+   class from global.css. Without this, the empty toast animates in on every page load. */
+.hidden {
+	display: none;
+}

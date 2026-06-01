@@ -9,9 +9,7 @@ import type { TranslationKeys } from '../../types/translations.js';
 
 import i18next from 'i18next';
 
-// Constnats -----------------------------------------------------------------
-
-const DEFAULT_LANGUAGE = 'en-US';
+import tconfig from '../config/translationconfig.js';
 
 // Functions -----------------------------------------------------------------
 
@@ -32,6 +30,7 @@ const DEFAULT_LANGUAGE = 'en-US';
  */
 function getLanguageToServe(req: Request): string {
 	const cookies = req.cookies;
+	if (!cookies) throw new Error('Request cookies were not set');
 
 	const supportedLngs = i18next.options.supportedLngs;
 	if (!(supportedLngs instanceof Array)) {
@@ -41,7 +40,7 @@ function getLanguageToServe(req: Request): string {
 	let language = req.query['lng'] || cookies['i18next'] || req.i18n.resolvedLanguage;
 	if (!supportedLngs.includes(language)) language = cookies['i18next']; // Query param language not supported
 	if (!supportedLngs.includes(language)) language = req.i18n.resolvedLanguage; // Cookie language not supported
-	if (!supportedLngs.includes(language)) language = DEFAULT_LANGUAGE; // Resolved language from i18next not supported
+	if (!supportedLngs.includes(language)) language = tconfig.DEFAULT_LANGUAGE; // Resolved language from i18next not supported
 	return language;
 }
 
@@ -52,7 +51,7 @@ function getLanguageToServe(req: Request): string {
  * @param options - Additional i18next options (e.g., returnObjects for array translations)
  * @returns The translated string or object.
  */
-function getTranslation(key: TranslationKeys, language: string = DEFAULT_LANGUAGE): string {
+function getTranslation(key: TranslationKeys, language: string = tconfig.DEFAULT_LANGUAGE): string {
 	const options = { lng: language };
 	return i18next.t(key, options);
 }
@@ -70,4 +69,4 @@ function getTranslationForReq(key: TranslationKeys, req: Request): string {
 
 // Exports -------------------------------------------------------------------
 
-export { DEFAULT_LANGUAGE, getLanguageToServe, getTranslation, getTranslationForReq };
+export { getLanguageToServe, getTranslation, getTranslationForReq };

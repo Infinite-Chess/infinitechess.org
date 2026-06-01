@@ -10,7 +10,6 @@ import type { Request } from 'express';
 import db from './database.js';
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { refreshTokenExpiryMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 
 /**
  * Represents a record in the `refresh_tokens` database table.
@@ -29,6 +28,8 @@ export type RefreshTokenRecord = {
 	 * Allow a small grace period for using old tokens when renewing sessions.
 	 */
 	consumed_at: number | null;
+	/** 1 if this is a persistent ("keep me logged in") session. */
+	is_persistent: 0 | 1;
 };
 
 /**
@@ -39,7 +40,7 @@ export type RefreshTokenRecord = {
  */
 export function findRefreshToken(token: string): RefreshTokenRecord | undefined {
 	const query = `
-        SELECT token, user_id, created_at, expires_at, consumed_at, ip_address
+        SELECT token, user_id, created_at, expires_at, is_persistent, consumed_at, ip_address
         FROM refresh_tokens
         WHERE token = ?
     `;
@@ -82,13 +83,21 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
  * @param req - The Express request object to get the IP address.
  * @param userId - The ID of the user the token belongs to.
  * @param token - The new JWT refresh token string.
+ * @param expiryMillis - How long, in milliseconds, until the token expires.
+ * @param isPersistent - Whether this is a persistent ("keep me logged in") session.
  * @throws {Error} Throws a generic error if a database error occurs.
  */
-export function addRefreshToken(req: Request, userId: number, token: string): void {
+export function addRefreshToken(
+	req: Request,
+	userId: number,
+	token: string,
+	expiryMillis: number,
+	isPersistent: boolean,
+): void {
 	const now = Date.now();
 	const query = `
-        INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, ip_address)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, is_persistent, ip_address)
+        VALUES (?, ?, ?, ?, ?, ?)
 	`;
 	const ip_address = getClientIP(req) || null;
 	try {
@@ -96,7 +105,8 @@ export function addRefreshToken(req: Request, userId: number, token: string): vo
 			token,
 			userId,
 			now, // created_at
-			now + refreshTokenExpiryMillis, // expires_at
+			now + expiryMillis, // expires_at
+			isPersistent ? 1 : 0,
 			ip_address,
 		]);
 	} catch (error: unknown) {

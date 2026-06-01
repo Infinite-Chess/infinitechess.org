@@ -53,7 +53,10 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		// The roles fetched from the database is a stringified json string array, parse it here!
 		const parsedRoles = record.roles !== null ? JSON.parse(record.roles) : null;
 
-		createNewSession(req, res, record.user_id, record.username, parsedRoles);
+		/** Whether the user checked "keep me logged in". */
+		const keepLoggedIn = req.body.keepLoggedIn === true;
+
+		createNewSession(req, res, record.user_id, record.username, parsedRoles, keepLoggedIn);
 
 		res.status(200).json({ message: 'Logged in successfully.' });
 

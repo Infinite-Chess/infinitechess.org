@@ -18,7 +18,7 @@ interface WorkerMessage {
 }
 
 // Listen for the main thread to send data
-self.onmessage = (e: MessageEvent<WorkerMessage>) => {
+self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 	const { chunkId, games } = e.data;
 
 	const localResults = {
@@ -76,7 +76,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 			// Stage 2: Formulate (No validation)
 			let game: any;
 			try {
-				game = gameformulator.formulateGame(longFormat);
+				game = await gameformulator.formulateGame(longFormat);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				localResults.formulatorErrors++;
@@ -93,7 +93,7 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 
 			// Stage 3: Validate Moves
 			try {
-				gameformulator.formulateGame(longFormat, true);
+				await gameformulator.formulateGame(longFormat, true);
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				localResults.illegalMoveErrors++;
@@ -143,7 +143,15 @@ self.onmessage = (e: MessageEvent<WorkerMessage>) => {
 		}
 
 		// Report progress every 50 games (optional optimization to keep UI responsive)
-		if (localResults.successfulCount % 10 === 0) {
+		if (
+			(localResults.successfulCount +
+				localResults.icnconverterErrors +
+				localResults.formulatorErrors +
+				localResults.illegalMoveErrors +
+				localResults.terminationMismatchErrors) %
+				10 ===
+			0
+		) {
 			self.postMessage({ type: 'progress', chunkId, count: 10 });
 		}
 	}

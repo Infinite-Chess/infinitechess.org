@@ -132,7 +132,6 @@ function init(): void {
 
 	// Update when login state changes
 	document.addEventListener('login', updateNotificationBadge);
-	document.addEventListener('logout', () => removeNotificationBadge());
 
 	// Listen for custom event when news is marked as read
 	document.addEventListener('news-marked-read', () => {
@@ -141,8 +140,3 @@ function init(): void {
 }
 
 init();
-
-export default {
-	updateNotificationBadge,
-	removeNotificationBadge,
-};

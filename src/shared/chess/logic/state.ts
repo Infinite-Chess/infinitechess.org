@@ -5,9 +5,10 @@
  * to the gamefile when a Move is created, and executed.
  */
 
+import type { Edit } from './movepiece.js';
 import type { Coords } from '../util/coordutil.js';
 import type { CoordsKey } from '../util/coordutil.js';
-import type { Edit, MoveSpecialTags } from './movepiece.js';
+import type { MoveSpecialTags } from '../util/moveutil.js';
 
 // Types -----------------------------------------------------------------------------------------------
 

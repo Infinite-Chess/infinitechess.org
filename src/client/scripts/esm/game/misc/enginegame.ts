@@ -10,11 +10,11 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
-import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
+import boardpos from '../rendering/boardpos.js';
 import selection from '../chess/selection.js';
 import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
@@ -77,7 +77,7 @@ function getOurColor(): Player | undefined {
 function isItOurTurn(): boolean {
 	if (!inEngineGame)
 		throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
-	return gameslot.getGamefile()!.basegame.whosTurn === ourColor;
+	return gameslot.getGamefile()!.whosTurn === ourColor;
 }
 
 function getCurrentEngine(): string | undefined {
@@ -170,9 +170,9 @@ function onMovePlayed(): void {
 	if (!inEngineGame) return; // Don't do anything if it's not an engine game
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
-	if (gamefile.basegame.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
+	if (gamefile.whosTurn !== engineColor) return; // Don't do anything if it's our turn (not the engines)
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
-	if (gamefile.basegame.gameConclusion) return; // Don't do anything if the game is over
+	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
 	requestMovesForCurrentPosition(); // Request generated moves for debugging FIRST
 
@@ -188,7 +188,7 @@ function onMovePlayed(): void {
 	let btime: number | undefined;
 	let winc: number | undefined;
 	let binc: number | undefined;
-	const basegame = gamefile.basegame;
+	const basegame = gamefile;
 	const clocks = basegame.clocks;
 	if (!basegame.untimed && clocks) {
 		wtime = clocks.currentTime[p.WHITE];
@@ -263,10 +263,7 @@ function makeEngineMove(tokenMove: unknown): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefileutility.setConclusion(gamefile.basegame, {
-			condition: 'resignation',
-			victor: ourColor!,
-		});
+		gamefileutility.setConclusion(gamefile, { condition: 'resignation', victor: ourColor! });
 		gameslot.concludeGame();
 		return;
 	}
@@ -322,7 +319,7 @@ function requestMovesForCurrentPosition(): void {
 	if (!inEngineGame || !move_gen_debug) return;
 
 	const gamefile = gameslot.getGamefile()!;
-	const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
+	const currentMoveIndex = gamefile.state.local.moveIndex;
 	if (moveHistoryLegalMoves.has(currentMoveIndex)) return; // Already have move gen for this position
 
 	// Add a new move gen request to pending queue
@@ -350,7 +347,7 @@ function render(): void {
 
 	// Get the moves for the current position
 	const gamefile = gameslot.getGamefile()!;
-	const currentMoveIndex = gamefile.boardsim.state.local.moveIndex;
+	const currentMoveIndex = gamefile.state.local.moveIndex;
 	const currentMoves = moveHistoryLegalMoves.get(currentMoveIndex) || [];
 
 	if (currentMoves.length === 0) return; // No moves to render

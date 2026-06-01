@@ -10,9 +10,9 @@
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { MetaData } from '../../../../../shared/types.js';
-import type { VariantCode } from '../../../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { Additional, FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import bd from '@naviary/bigdecimal';
 
@@ -21,11 +21,11 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../rendering/area.js';
-import board from '../rendering/boardtiles.js';
 import arrows from '../rendering/arrows/arrows.js';
 import meshes from '../rendering/meshes.js';
 import { gl } from '../rendering/webgl.js';
@@ -35,15 +35,12 @@ import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import copygame from './copygame.js';
 import miniimage from '../rendering/miniimage.js';
 import pastegame from './pastegame.js';
-import gamesound from '../misc/gamesound.js';
 import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
-import gameloader from './gameloader.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
 import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -51,6 +48,7 @@ import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import guinavigation from '../gui/guinavigation.js';
 import { animateMove } from './graphicalchanges.js';
+import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -58,8 +56,8 @@ import { animateMove } from './graphicalchanges.js';
 interface LoadOptions {
 	/** The metadata of the game */
 	metadata: MetaData;
-	/** The variant code. Pass null for custom/unknown positions. */
-	variant: VariantCode | null;
+	/** The variant code. Pass undefined for custom/unknown positions. */
+	variant: VariantCode | undefined;
 	/** The game's start timestamp in milliseconds since epoch. */
 	dateTimestamp: number;
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
@@ -74,7 +72,7 @@ interface LoadOptions {
 // Variables ---------------------------------------------------------------
 
 /** The currently loaded game. */
-let loadedGamefile: FullGame | undefined;
+let loadedGamefile: GameFile | undefined;
 
 /** The mesh of the gamefile, if it is loaded. */
 let mesh: Mesh | undefined;
@@ -93,10 +91,29 @@ let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
  */
 const delayOfLatestMoveAnimationOnRejoinMillis = 150;
 
+// Listeners ---------------------------------------------------------------
+
+// Regenerate piece textures and rebuild the promotion UI whenever the theme changes.
+document.addEventListener('theme-change', () => {
+	const gamefile = loadedGamefile;
+	if (!gamefile) return;
+	imagecache.deleteImageCache();
+	// texturecache.deleteTextureCache(gl);
+	imagecache.initImagesForGame(gamefile).then(() => {
+		// Regenerate piece textures with the new tinted images
+		texturecache.initTexturesForGame(gl, gamefile);
+		piecemodels.regenAll(gamefile, mesh!);
+	});
+	// Reinit the promotion UI
+	guipromotion.resetUI();
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder);
+	guipromotion.initUI(gamefile.gameRules.promotion?.pieces, uniquePlayers);
+});
+
 // Functions ---------------------------------------------------------------
 
 /**  Returns the gamefile currently loaded */
-function getGamefile(): FullGame | undefined {
+function getGamefile(): GameFile | undefined {
 	return loadedGamefile;
 }
 
@@ -119,41 +136,34 @@ function isLoadedGameViewingWhitePerspective(): boolean {
 
 /**
  * Loads a gamefile onto the board.
+ * Returns a promise that resolves once the LOGICAL stuff is finished loading.
+ * The resolved value is `{ graphical }` — a second promise that resolves when
+ * the GRAPHICAL stuff (piece textures, mesh generation, etc.) finishes.
  *
- * This loads the logical stuff first, then returns a PROMISE that resolves
- * when the GRAPHICAL stuff is finished loading (such as piece textures).
+ * Note: Returning a plain object `{ graphical }` rather than returning the inner
+ * promise directly is intentional — JavaScript automatically flattens a promise
+ * resolved *with* another promise, collapsing the two stages into one.
  */
-function loadGamefile(loadOptions: LoadOptions): Promise<void> {
+function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<void> }> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
 	// console.log("Loading gamefile...");
 
-	// console.log('Started loading game...');
+	// The game should be considered loaded once the LOGICAL stuff is finished.
+	// Any canvas loading animation should close only when thre GRAPHICAL stuff is finished.
 
-	// The game should be considered loaded once the LOGICAL stuff is finished,
-	// but the loading animation should only be closed when
-	// both the LOGICAL and GRAPHICAL stuff are finished.
+	return loadLogical(loadOptions).then(() => {
+		// console.log('Finished loading LOGICAL game stuff.');
 
-	// First load the LOGICAL stuff...
-	loadLogical(loadOptions);
-	// console.log('Finished loading LOGICAL game stuff.');
+		console.warn('Game start sound has not been added yet.');
 
-	// Play the start game sound once LOGICAL stuff is finished loading,
-	// so that the sound will still play in chrome, with the tab hidden, and
-	// someone accepts your invite. (In that scenario, the graphical loading is blocked)
-	gamesound.playGamestart();
-
-	/**
-	 * Next start loading the GRAPHICAL stuff...
-	 *
-	 * This returns a promise that resolves when it's fully loaded,
-	 * since the graphics loading is asynchronious.
-	 */
-	return loadGraphical(loadOptions);
+		// Start GRAPHICAL loading immediately and hand its promise to the caller.
+		return { graphical: loadGraphical(loadOptions) };
+	});
 }
 
 /** Loads all of the logical components of a game */
-function loadLogical(loadOptions: LoadOptions): void {
-	loadedGamefile = gamefile.initFullGame(
+async function loadLogical(loadOptions: LoadOptions): Promise<void> {
+	loadedGamefile = await gamefile.initGameFile(
 		loadOptions.metadata,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,
@@ -162,14 +172,11 @@ function loadLogical(loadOptions: LoadOptions): void {
 
 	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.boardsim.pieces);
+	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
 	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimage.pieceCountToDisableMiniImages) miniimage.disable();
+	if (pieceCount > miniimagerenderer.pieceCountToDisableMiniImages) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
-	if (
-		pieceCount > arrows.MAX_PIECES ||
-		loadedGamefile.boardsim.pieces.slides.length > arrows.MAX_LINES
-	)
+	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);
 
 	initCopyPastGameListeners();
@@ -187,17 +194,19 @@ function loadLogical(loadOptions: LoadOptions): void {
 async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
 	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
-	guiclock.set(loadedGamefile!.basegame);
-	perspective.resetRotations(loadOptions.viewWhitePerspective);
+	guiclock.set(loadedGamefile!);
 
-	await imagecache.initImagesForGame(loadedGamefile!.boardsim);
-	texturecache.initTexturesForGame(gl, loadedGamefile!.boardsim);
+	await imagecache.initImagesForGame(loadedGamefile!);
+	texturecache.initTexturesForGame(gl, loadedGamefile!);
 
 	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
-	guipromotion.initUI(loadedGamefile!.basegame.gameRules.promotionsAllowed);
+	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
+		loadedGamefile!.gameRules.turnOrder,
+	);
+	guipromotion.initUI(loadedGamefile!.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
-	const lastmove = moveutil.getLastMove(loadedGamefile!.boardsim.moves);
+	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 
 	// Initialize the mesh empty
@@ -208,13 +217,13 @@ async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
 	};
 
 	// Generate the mesh of every piece type
-	piecemodels.regenAll(loadedGamefile!.boardsim, mesh);
+	piecemodels.regenAll(loadedGamefile!, mesh);
 
 	// NEEDS TO BE AFTER generating the mesh, since this makes a graphical change.
 	if (lastmove !== undefined)
 		animateLastMoveTimeoutID = setTimeout(() => {
 			// A small delay to animate the most recently played move.
-			if (moveutil.areWeViewingLatestMove(loadedGamefile!.boardsim)) return; // Already viewing the lastest move
+			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
 			movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
 			animateMove(lastmove.changes, true);
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
@@ -247,7 +256,7 @@ function unloadGame(): void {
  */
 function startStartingTransition(): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-		loadedGamefile!.boardsim.startSnapshot.box,
+		loadedGamefile!.startSnapshot.box,
 	);
 	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
 	boardpos.setBoardPos(centerArea.coords);
@@ -286,38 +295,22 @@ function callbackCopy(_event: Event): void {
  */
 function concludeGame(): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	const basegame = loadedGamefile.basegame;
-	if (basegame.gameConclusion === undefined)
+	const gamefile = loadedGamefile;
+	if (gamefile.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
 
-	clock.endGame(basegame);
-	guiclock.stopClocks(basegame);
-	guigameinfo.gameEnd(basegame.gameConclusion);
+	clock.endGame(gamefile);
+	guiclock.stopClocks(gamefile);
+	guigameinfo.gameEnd(gamefile.gameConclusion);
 
 	GameBus.dispatch('game-concluded');
 
-	const victor = basegame.gameConclusion.victor; // undefined if aborted, null if draw
-	const delayToPlayConcludeSoundSecs = 0.65;
-	if (gameloader.areInLocalGame()) {
-		if (victor !== null && victor !== undefined) {
-			gamesound.playWin(delayToPlayConcludeSoundSecs);
-		} else {
-			gamesound.playDraw(delayToPlayConcludeSoundSecs);
-		}
-	} else {
-		// In online game or engine game
-		const ourRole = gameloader.getOurColor()!;
-		if (victor === ourRole) gamesound.playWin(delayToPlayConcludeSoundSecs);
-		else if (victor === null || victor === undefined)
-			gamesound.playDraw(delayToPlayConcludeSoundSecs);
-		else gamesound.playLoss(delayToPlayConcludeSoundSecs);
-	}
+	console.warn('Game conclude sound has not been added yet.');
 }
 
 /** Undoes the conclusion of the game. */
 function unConcludeGame(): void {
-	gamefileutility.setConclusion(loadedGamefile!.basegame, undefined);
-	board.resetColor();
+	gamefileutility.setConclusion(loadedGamefile!, undefined);
 }
 
 export default {

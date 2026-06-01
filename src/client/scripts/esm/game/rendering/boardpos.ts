@@ -14,10 +14,7 @@ import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import camera from './camera.js';
-import guipause from '../gui/guipause.js';
-import Transition from './transitions/Transition.js';
-import perspective from './perspective.js';
-import loadbalancer from '../misc/loadbalancer.js';
+import deltatime from '../misc/deltatime.js';
 import frametracker from './frametracker.js';
 
 // BigDecimal Constants ---------------------------------------------------
@@ -44,14 +41,13 @@ let boardScale: BigDecimal = bd.fromBigInt(1n); // Default: 1
 /** The current board scale (zoom) velocity. */
 let scaleVel: number = 0;
 
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 2D mode. */
-const panVelCap2D = 22.0; // Default: 22
-/** The hypotenuse of the x & y pan velocities cannot exceed this value in 3D mode. */
-const panVelCap3D = 16.0; // Default: 16
-
 /** The furthest we can be zoomed IN. */
 const maximumScale = bd.fromBigInt(5n); // Default: 5.0
 const limitToDampScale = 0.000_01; // We need to soft limit the scale so the game doesn't break
+
+// Listeners -----------------------------------------------------
+
+document.addEventListener('transition-start', eraseMomentum);
 
 // Getters -------------------------------------------------------
 
@@ -77,10 +73,6 @@ function getBoardScaleAsNumber(): number {
 
 function getPanVel(): DoubleCoords {
 	return [...panVel]; // Copies
-}
-
-function getRelativePanVelCap(): number {
-	return perspective.getEnabled() ? panVelCap3D : panVelCap2D;
 }
 
 function getScaleVel(): number {
@@ -177,10 +169,6 @@ function isScaleSmallForInvisibleTiles(): boolean {
 
 // Called from game.updateBoard()
 function update(): void {
-	if (guipause.areWePaused()) return; // Exit if paused
-	if (Transition.areTransitioning()) return; // Exit if we are teleporting
-	if (loadbalancer.areWeAFK()) return; // Exit if we're AFK. Save our CPU!
-
 	panBoard();
 	recalcScale();
 }
@@ -196,7 +184,7 @@ function panBoard(): void {
 	const baseYChange = bd.divide(panVelBD[1], boardScale);
 
 	// Account for delta time
-	const deltaTimeBD: BigDecimal = bd.fromNumber(loadbalancer.getDeltaTime());
+	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
 	const actualXChange = bd.multiply(baseXChange, deltaTimeBD);
 	const actualYChange = bd.multiply(baseYChange, deltaTimeBD);
 
@@ -212,7 +200,7 @@ function recalcScale(): void {
 	if (scaleVel === 0) return; // Exit if we're not zooming
 
 	const scaleVelBD: BigDecimal = bd.fromNumber(scaleVel);
-	const deltaTimeBD: BigDecimal = bd.fromNumber(loadbalancer.getDeltaTime());
+	const deltaTimeBD: BigDecimal = bd.fromNumber(deltatime.get());
 
 	let product = bd.multiply(scaleVelBD, deltaTimeBD); // scaleVel * deltaTime
 	product = bd.clamp(product, bd.fromNumber(-0.5), bd.fromNumber(0.5)); // Prevent extreme zoom changes from low lps
@@ -230,7 +218,6 @@ export default {
 	getBoardScale,
 	getBoardScaleAsNumber,
 	getPanVel,
-	getRelativePanVelCap,
 	getScaleVel,
 	glimitToDampScale,
 	// Setters

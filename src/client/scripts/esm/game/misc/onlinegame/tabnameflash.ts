@@ -11,7 +11,7 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
 import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
-import gamesound from '../gamesound.js';
+import movesound from '../movesound.js';
 import loadbalancer from '../loadbalancer.js';
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
@@ -75,11 +75,11 @@ function cancelFlashTabTimer(): void {
 
 function scheduleMoveSound_timeoutID(): void {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
-	if (!moveutil.isGameResignable(gameslot.getGamefile()!.basegame)) return;
+	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
 	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	const ZERO = bd.fromBigInt(0n);
 	moveSound_timeoutID = setTimeout(
-		() => gamesound.playMove(ZERO, false, false),
+		() => movesound.playMove(ZERO, false, false),
 		timeNextSoundFromNow,
 	);
 }
