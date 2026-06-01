@@ -536,7 +536,44 @@ function pushRay(
 					break legal;
 			}
 
-			const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, targetCoords);
+			/*
+			 * When camera transitioning to a selected piece that is massive distances away (1e700+)
+			 * and zooming out and into it, these isPieceOnCoords() incur significant hitches,
+			 * sometimes up to a few seconds in length. It is expensive for isPieceOnCoords() to
+			 * convert the coordinates to CoordsKey strings for looking up whether a piece exists
+			 * on that coordinate or not, and it has sometimes convert numbers this large THOUSANDS
+			 * of times if iterationCount is over 1000, it can be at that size if we're JUST below
+			 * the threshold that would consider us zoomed out, but we're still zoomed in, just with
+			 * a lot of squares visible on screen.
+			 *
+			 * Luckily there's an optimization. Pieces are organized by lines already, not just by coordinate.
+			 * The thing about pieces at massive distances is they tend to be the only one out there, so
+			 * the probability of isPieceOnCoords() hitting a positive is very low (but still possible and
+			 * needs to be accounted for). For that reason, another option we have other than checking each
+			 * coordinate individually is to instead grab the line of pieces along the ray, and iterate through
+			 * those to see if any of theme are on the same square. We can check that via coordutil.areCoordsEqual(),
+			 * eliminating converting the coordinate to a string entirely.
+			 *
+			 * Before starting iteration: Grab the line of pieces. Then perform a check to figure out which method
+			 * would be more optimal, the og way, or the piece line way. Think carefully and logically about
+			 * what should be the switchover threshold. If there's hundreds of pieces on the line, sure, we
+			 * don't have to do any string conversion, but we will still have to iterate through hundreds of them
+			 * and perform a coordinate comparison for each one, cheaper, but its still a lot of iterating. On the
+			 * other hand, isPieceOnCoords() would be cheap if the start coordinate is small, because there's not
+			 * many digits to convert into a string for the isPieceOnCoords() check. One thing is for sure when you
+			 * determine the switchover threshold, only consider the number of digits of the *start coords*, not
+			 * any coords iterated to in the for loop, this is because the maximum times it could possible iterate
+			 * while we're still under the zoom out threshold is about 2000, which worst case scenario can only
+			 * add 3 digits to convert to a string, completely negligible, so the switchover threshold should
+			 * only take into consideration the start coords. Depending on which method is deemed to be more
+			 * optimal, use that instead to check whether a piece is on the coords, to know whether to push
+			 * it to the capture or non-capture instance data.
+			 */
+
+			const isPieceOnCoords = boardutil.isPieceOnCoords(
+				gamefile.boardsim.pieces,
+				targetCoords,
+			);
 			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}

@@ -93,8 +93,8 @@ function update(arrows: Arrow[]): void {
 					// Snap to nearest hovered entity
 					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
 				} else {
-					// Snap to the current snap
-					drag_start = [...snapCoords!];
+					// Snap to the current eminated (blue line) snap
+					drag_start = coordutil.copyCoords(snapCoords!);
 				}
 			} else {
 				// No snap
