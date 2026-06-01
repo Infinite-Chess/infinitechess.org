@@ -12,8 +12,10 @@ import { configureMiddleware } from './middleware/middleware.js';
 
 const app = express();
 
-// This ensures that req.ip will give us the real user's IP instead of the Cloudflare proxy's IP.
-app.set('trust proxy', 1); // '1' means trust the first proxy hop (Cloudflare)
+// Trust 1 proxy hop (Cloudflare) so req.ip reflects the real client.
+// This number must match the actual proxy count, AND all traffic
+// must reach the origin only through Cloudflare. See utility/IP.ts.
+app.set('trust proxy', 1);
 app.disable('x-powered-by'); // This removes the 'x-powered-by' header from all responses.
 
 // Configure Nunjucks as the view engine.

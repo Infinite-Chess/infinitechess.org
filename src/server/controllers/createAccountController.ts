@@ -19,6 +19,7 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { handleLogin } from './loginController.js';
+import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
@@ -66,7 +67,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (recoveryEmail.length > 0) {
 		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
 		logEventsAndPrint(
-			`Bot signup detected! IP: ${req.ip}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
+			`Bot signup detected! IP: ${getClientIP(req)}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
 			'newMemberLog.txt',
 		);
 		// Return a normal-looking success so bot doesn't adapt
