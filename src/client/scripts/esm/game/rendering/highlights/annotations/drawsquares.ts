@@ -110,7 +110,7 @@ function update(highlights: Square[]): void {
 		if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
 			// Zoomed out & snapping one thing => Snapping behavior
 			if (closestEntityToWorld) {
-				// Now that we have the closest hovered entity, toggle the highlight on its coords.
+				// Snap to nearest hovered entity. Toggle the highlight on its coords.
 				const index = highlights.findIndex((coords) =>
 					coordutil.areCoordsEqual(coords, closestEntityToWorld.coords),
 				);
@@ -118,7 +118,7 @@ function update(highlights: Square[]): void {
 					highlights.splice(index, 1); // Already highlighted, Remove
 				else highlights.push(closestEntityToWorld.coords); // Add
 			} else if (snapCoords) {
-				// Toggle the highlight on its coords.
+				// Snap to the current eminated (blue line) snap. Toggle the highlight on its coords.
 				const index = highlights.findIndex((coords) =>
 					coordutil.areCoordsEqual(coords, snapCoords),
 				);
@@ -127,7 +127,7 @@ function update(highlights: Square[]): void {
 						'Snap is present, but the highlight already exists. If it exists than it should have been snapped to.',
 					);
 				highlights.push(snapCoords); // Add
-			} else throw Error('Snapping behavior but no snapCoords or hovered entity found.');
+			}
 		} else {
 			// Zoomed in OR zoomed out with no snap => Normal behavior
 			// Check if the square is already highlighted

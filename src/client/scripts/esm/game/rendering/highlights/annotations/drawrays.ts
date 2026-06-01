@@ -92,12 +92,14 @@ function update(rays: Ray[]): void {
 			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
 
-			if ((boardpos.areZoomedOut() && closestEntityToWorld) || snapCoords) {
-				if (snapCoords) drag_start = coordutil.copyCoords(snapCoords);
-				else if (closestEntityToWorld) {
+			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
+				if (closestEntityToWorld) {
 					// Snap to nearest hovered entity
 					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
-				} else throw Error('How did we get here?');
+				} else {
+					// Snap to the current eminated (blue line) snap
+					drag_start = coordutil.copyCoords(snapCoords!);
+				}
 			} else {
 				// No snap
 				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
