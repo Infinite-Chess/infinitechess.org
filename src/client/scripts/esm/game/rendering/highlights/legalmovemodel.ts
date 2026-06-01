@@ -12,6 +12,7 @@ import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
 import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type {
@@ -28,6 +29,7 @@ import bdcoords from '../../../../../../shared/chess/util/bdcoords.js';
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/util/boardutil.js';
 import checkresolver from '../../../../../../shared/chess/logic/checkresolver.js';
+import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import geometry, { IntersectionPoint } from '../../../../../../shared/util/math/geometry.js';
 import bounds, { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 
@@ -522,6 +524,13 @@ function pushRay(
 
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
 
+	// The cheapest way to test whether a piece occupies each square of this ray.
+	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(
+		gamefile.boardsim.pieces,
+		step,
+		startCoords,
+	);
+
 	// Recursively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
@@ -535,11 +544,7 @@ function pushRay(
 					break legal;
 			}
 
-			const isPieceOnCoords = boardutil.isPieceOnCoords(
-				gamefile.boardsim.pieces,
-				targetCoords,
-			);
-			if (isPieceOnCoords) instanceData_Capture.push(...startCoordsOffset);
+			if (isPieceOnCoords(targetCoords)) instanceData_Capture.push(...startCoordsOffset);
 			else instanceData_NonCapture.push(...startCoordsOffset);
 		}
 
@@ -549,6 +554,37 @@ function pushRay(
 		startCoordsOffset[0] += step[0];
 		startCoordsOffset[1] += step[1];
 	}
+}
+
+/**
+ * Returns the cheapest function for testing whether a piece occupies a square along a ray.
+ * Picks between a coords-map string lookup and a direct scan of the line's pieces, whichever
+ * does less work per square. The latter avoids per-square BigInt→string conversion, which is
+ * what causes multi-second hitches for selected pieces at massive distances (e.g. 1e1000).
+ * @param step - The direction of the ray (may be negated; the line is direction-agnostic).
+ * @param startCoords - The first square the ray starts on.
+ */
+function getOptimalPieceOnCoordsChecker(
+	o: OrganizedPieces,
+	step: Vec2,
+	startCoords: Coords,
+): (coords: Coords) => boolean {
+	// Pieces are organized by canonical (non-negative dx) line direction.
+	const lineDir: Vec2 = vectors.absVector(step);
+	const lineGroup = o.lines.get(vectors.getKeyFromVec2(lineDir));
+	// All pieces on this exact line (empty if the line has no pieces at all).
+	const piecesLine: number[] = lineGroup?.get(organizedpieces.getKeyFromLine(lineDir, startCoords)) ?? []; // prettier-ignore
+	const digitCount: number =
+		bimath.countDigits(startCoords[0]) + bimath.countDigits(startCoords[1]);
+
+	// Per-square cost: map lookup ≈ digitCount² (BigInt→string is quadratic), line scan ≈ piece
+	// count (each comparison early-exits). The squares iterated cancel out, so we compare those two.
+	return piecesLine.length < digitCount * digitCount
+		? // Line scan: compare coords directly against pieces on the line, no string conversion.
+			(c: Coords): boolean =>
+				piecesLine.some((idx) => o.XPositions[idx] === c[0] && o.YPositions[idx] === c[1])
+		: // Map lookup: build a CoordsKey string and look it up in the coords map.
+			(c: Coords): boolean => boardutil.isPieceOnCoords(o, c);
 }
 
 /**
