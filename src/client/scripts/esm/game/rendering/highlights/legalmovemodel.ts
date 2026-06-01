@@ -8,12 +8,10 @@
  */
 
 import type { Color } from '../../../../../../shared/util/math/math.js';
-import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { IgnoreFunction } from '../../../../../../shared/chess/logic/movesets.js';
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organizedpieces.js';
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
@@ -352,13 +350,13 @@ function generateModelForSlideHighlightOutlines(
  * @param instanceData_NonCapture - The running array of instance data for the NON-CAPTURING legal moves highlights mesh.
  * @param instanceData_Capture - The running array of instance data for the CAPTURING legal moves highlights mesh.
  * @param legalMoves - The piece legal moves to highlight
- * @param boardsim - A reference to the current loaded gamefile's board
+ * @param gamefile - A reference to the current loaded gamefile's board
  */
 function pushIndividual(
 	instanceData_NonCapture: bigint[],
 	instanceData_Capture: bigint[],
 	legalMoves: LegalMoves,
-	boardsim: Board,
+	gamefile: GameFile,
 ): void {
 	// Get an array of the list of individual legal squares the current selected piece can move to
 	const legalIndividuals: Coords[] = legalMoves.individual;
@@ -366,7 +364,7 @@ function pushIndividual(
 	// For each of these squares, calculate it's buffer data
 	for (const coord of legalIndividuals) {
 		const offsetCoord = coordutil.subtractCoords(coord, model_Offset);
-		const isPieceOnCoords = boardutil.isPieceOnCoords(boardsim.pieces, coord);
+		const isPieceOnCoords = boardutil.isPieceOnCoords(gamefile.pieces, coord);
 		if (isPieceOnCoords) instanceData_Capture.push(...offsetCoord);
 		else instanceData_NonCapture.push(...offsetCoord);
 	}
@@ -527,11 +525,7 @@ function pushRay(
 	const { startCoords, startCoordsOffset, iterationCount } = iterationInfo;
 
 	// The cheapest way to test whether a piece occupies each square of this ray.
-	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(
-		gamefile.boardsim.pieces,
-		step,
-		startCoords,
-	);
+	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(gamefile.pieces, step, startCoords);
 
 	// Recursively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
