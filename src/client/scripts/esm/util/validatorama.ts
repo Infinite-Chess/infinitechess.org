@@ -101,13 +101,7 @@ async function getAccessToken(): Promise<string | undefined> {
 async function refreshToken(): Promise<void> {
 	reqIsOut = true;
 	try {
-		const response = await serverFetch('/api/get-access-token', {
-			method: 'POST', // Ensure it's a POST request
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		});
-
+		const response = await serverFetch('/api/get-access-token', { method: 'POST' });
 		const result = await response.json();
 
 		if (response.ok) {

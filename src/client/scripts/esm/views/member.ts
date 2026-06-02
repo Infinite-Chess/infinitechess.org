@@ -77,16 +77,10 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 	// so our refresh token in this here fetch request here would then be invalid
 	await validatorama.waitUntilInitialRequestBack();
 
-	const config: RequestInit = {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	};
 	// Server reads refresh token cookie, no Authorization header needed here as per original comments
 
 	try {
-		const response = await serverFetch(`/member/${member}/data`, config);
+		const response = await serverFetch(`/member/${member}/data`, { method: 'GET' });
 
 		if (response.status === 404) {
 			window.location.href = languagedropdown.addLngQueryParamToLink('/404'); // Use href for navigation
@@ -252,14 +246,7 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 function resendConfirmEmail(): void {
 	if (!isOurProfile) return; // Only allow resend if viewing own profile
 
-	const config: RequestInit = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	};
-
-	serverFetch(`/member/${member}/send-email`, config)
+	serverFetch(`/member/${member}/send-email`, { method: 'POST' })
 		.then((response) => {
 			if (response.status === 401) {
 				window.location.href = languagedropdown.addLngQueryParamToLink('/401'); // Unauthorized

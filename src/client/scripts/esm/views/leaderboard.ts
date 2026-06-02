@@ -109,12 +109,7 @@ function createEmptyLeaderboardTable(): void {
  * @param n_players - number of players to add to table
  */
 async function populateTable(n_players: number): Promise<void> {
-	const config: RequestInit = {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	};
+	const config: RequestInit = { method: 'GET' };
 
 	try {
 		// Make server request

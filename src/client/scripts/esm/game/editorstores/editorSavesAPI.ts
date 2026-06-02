@@ -35,9 +35,7 @@ export interface CloudPositionRecord {
 // Helpers --------------------------------------------------------------------------
 
 async function buildAuthHeaders(): Promise<Record<string, string>> {
-	const headers: Record<string, string> = {
-		'Content-Type': 'application/json',
-	};
+	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 	const token = await validatorama.getAccessToken();
 	if (token) headers['Authorization'] = `Bearer ${token}`;
 	return headers;
