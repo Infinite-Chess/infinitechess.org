@@ -8,8 +8,8 @@
 
 import type { Color } from '../../../../../../../shared/util/math/math.js';
 
-import variant from '../../../../../../../shared/chess/variants/variant.js';
 import bdcoords from '../../../../../../../shared/chess/util/bdcoords.js';
+import variantpreviewer from '../../../../../../../shared/chess/variants/variantpreviewer.js';
 import vectors, { Ray } from '../../../../../../../shared/util/math/vectors.js';
 import geometry, { BaseRay } from '../../../../../../../shared/util/math/geometry.js';
 import coordutil, {
@@ -58,7 +58,8 @@ function areDrawing(): boolean {
 
 /** Returns all the preset rays in the current variant. */
 function getPresetRays(): Ray[] {
-	const baseRays = preset_rays ?? variant.getRayPresets(gameslot.getGamefile()!.boardsim.variant);
+	const baseRays =
+		preset_rays ?? variantpreviewer.getRayPresets(gameslot.getGamefile()!.variant?.mod);
 	// Maps a list of plain rays to a new Ray list that contains their line coefficient info.
 	return baseRays.map((r) => {
 		return {
@@ -220,7 +221,7 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	);
 	const vector = findClosestPredefinedVector(
 		vector_unnormalized,
-		gameslot.getGamefile()!.boardsim.pieces.hippogonalsPresent,
+		gameslot.getGamefile()!.pieces.hippogonalsPresent,
 	);
 	const line = vectors.getLineGeneralFormFromCoordsAndVec(drag_start!, vector);
 

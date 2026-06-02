@@ -87,10 +87,10 @@ function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | unde
  * May only return undefined in the case we're looking into the sky.
  */
 function getCrossHairWorld(): DoubleCoords | undefined {
-	if (perspective.isLookingUp()) return;
+	if (camera.isLookingUp()) return;
 
-	const rotX = (Math.PI / 180) * perspective.getRotX();
-	const rotZ = (Math.PI / 180) * perspective.getRotZ();
+	const rotX = (Math.PI / 180) * camera.getRotX();
+	const rotZ = (Math.PI / 180) * camera.getRotZ();
 
 	// Calculate intersection point
 	const hyp = -Math.tan(rotX) * camera.getPosition()[2];
@@ -116,7 +116,7 @@ function convertMousePositionToWorldSpace(
 	const clientHeight = element instanceof HTMLElement ? element.clientHeight : window.innerHeight;
 	// The world space coordinates are sensitive to whether we're viewing white's or black's perspective.
 	// prettier-ignore
-	const mouseWorldSpace: DoubleCoords = perspective.getIsViewingBlackPerspective() ? [
+	const mouseWorldSpace: DoubleCoords = camera.getIsViewingBlackPerspective() ? [
 		screenBox.right - (mouseCopy[0] / clientWidth) * screenWidth,
 		// [0,0] is the top LEFT corner of the screen, according to mouse coordinates.
 		screenBox.bottom + (mouseCopy[1] / clientHeight) * screenHeight,

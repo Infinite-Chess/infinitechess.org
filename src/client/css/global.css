@@ -1,0 +1,439 @@
+/* src/client/css/global.css */
+
+/*
+ * Shared stylesheet loaded on every page.
+ * Defines: CSS resets, @font-face, font stack, theme variables, utility classes.
+ *
+ * Theme variables are set via a [data-theme] attribute on <html>.
+ * The initial value is written by the server (SSR default: "dark").
+ * An inline <script> in layout.njk overwrites it from localStorage
+ * before CSS loads, preventing a flash of the wrong theme.
+ * Switching themes at runtime is one setAttribute + localStorage.setItem call.
+ */
+
+/* ============================================================
+   @font-face
+   ============================================================ */
+
+@font-face {
+	font-family: 'Noto Sans';
+	src: url('/fonts/noto-sans-latin.woff2') format('woff2');
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap; /* Show fallback font immediately; swap in Noto Sans once loaded */
+}
+
+/* ============================================================
+   CSS Reset
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html {
+	height: 100%;
+	font-family: 'Noto Sans', Verdana, sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100%;
+	background-color: var(--c-bg);
+	color: var(--c-text);
+}
+
+/* ============================================================
+   Theme: Dark (default) - STARTER VARIABLES, refine as we go
+   ============================================================ */
+
+:root {
+	/* Placeholder board-tile-theme variables, will be set by js */
+	--c-tile: rgb(97, 97, 97);
+	--c-tile-2: rgb(110, 110, 110);
+
+	/* Error/danger red. Theme-independent (identical in light and dark). */
+	--c-error: #e05555;
+}
+
+[data-theme='dark'] {
+	--c-bg: rgb(33, 33, 33);
+	--c-surface: rgb(35, 35, 35);
+	--c-surface-transparent: rgba(35, 35, 35, 0.4);
+	--c-surface-2: rgb(55, 55, 55);
+	--c-text: rgb(170, 170, 170);
+	--c-text-emphasis: rgb(220, 220, 220);
+	--c-text-muted: rgb(135, 135, 135);
+	--c-accent: hsl(88, 62%, 37%);
+	--c-border: rgb(60, 60, 60);
+	--c-border-2: rgb(100, 100, 100);
+	--c-border-muted: rgb(55 55 55);
+
+	--c-link: rgb(97, 169, 255);
+	--c-donate: hsl(37, 74%, 58%);
+	--c-donate-hover: hsl(37, 74%, 68%);
+	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.14);
+	--c-bg-overlay: rgba(0, 0, 0, 0.88);
+	--c-hover-brighten: rgb(255 255 255 / 8%);
+
+	/* Raised face: top → bottom of a "lit-from-above" elevated surface (buttons, cards).
+	   In both themes the *top* stop is brighter than the bottom so the gradient
+	   direction reads consistently regardless of theme. */
+	--c-elev-face: rgb(50, 50, 50);
+	--c-elev-face-2: rgb(35, 35, 35);
+	/* Drop shadow color tuned per theme (heavy on dark, soft on light backgrounds). */
+	--c-shadow-elev: rgba(0, 0, 0, 0.5);
+	/* Inset top-edge highlight on the same raised face. */
+	--c-elev-highlight: rgba(255, 255, 255, 0.06);
+	/* Hover-state overlay for opaque surfaces: brightens on dark, darkens on light.
+	   Different from --c-hover-brighten, which only ever lightens. */
+	--c-hover-overlay: rgba(255, 255, 255, 0.08);
+
+	/* Raised-text gradient stops. Direction stays consistent per theme so a
+	   top→bottom linear gradient always reads as "lit from above" / outset. */
+	--c-text-elev-top: rgb(220, 220, 220);
+	--c-text-elev-bottom: rgb(135, 135, 135);
+}
+
+/* ============================================================
+   Theme: Light - STARTER VARIABLES, refine as we go
+   ============================================================ */
+
+[data-theme='light'] {
+	--c-bg: rgb(245, 245, 245);
+	--c-surface: rgb(255, 255, 255);
+	--c-surface-transparent: rgb(255, 255, 255, 0.4);
+	--c-surface-2: rgb(235, 235, 235);
+	--c-text: rgb(30, 30, 30);
+	--c-text-emphasis: rgb(0, 0, 0);
+	--c-text-muted: rgb(100, 100, 100);
+	--c-accent: hsl(88, 62%, 37%);
+	--c-border: rgb(200, 200, 200);
+	--c-border-2: rgb(150, 150, 150);
+	--c-border-muted: rgb(215 215 215);
+
+	--c-link: rgb(0, 102, 204);
+	--c-donate: hsl(37, 74%, 38%);
+	--c-donate-hover: hsl(37, 74%, 30%);
+	--c-donate-bg-hover: hsla(37, 74%, 43%, 0.12);
+	--c-bg-overlay: rgba(255, 255, 255, 0.68);
+	--c-hover-brighten: rgb(255 255 255 / 24%);
+
+	--c-elev-face: rgb(255, 255, 255);
+	--c-elev-face-2: rgb(236, 236, 236);
+	--c-shadow-elev: rgba(0, 0, 0, 0.22);
+	--c-elev-highlight: rgba(255, 255, 255, 0.8);
+	--c-hover-overlay: rgba(0, 0, 0, 0.06);
+
+	--c-text-elev-top: rgb(100, 100, 100);
+	--c-text-elev-bottom: rgb(0, 0, 0);
+}
+
+/* ============================================================
+   Utility classes
+   ============================================================ */
+
+.hidden {
+	display: none;
+}
+
+.visibility-hidden {
+	visibility: hidden;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.center {
+	text-align: center;
+}
+
+.unselectable {
+	user-select: none;
+}
+
+.selectable {
+	user-select: text;
+}
+
+.set-cursor-to-not-allowed {
+	cursor: not-allowed;
+}
+
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}
+
+.scrollbar-thin {
+	scrollbar-width: thin;
+	scrollbar-color: var(--c-border) transparent;
+}
+
+/* Fades content to transparent at the right edge */
+.text-fade {
+	mask-image: linear-gradient(to right, black calc(100% - 1em), transparent 100%);
+}
+
+/* ============================================================
+   Page background layers
+   ============================================================ */
+
+/* Tiled checkerboard backdrop (home, login, etc.). Apply to the page's <main>. */
+.bg-checkerboard {
+	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
+		200px 200px;
+}
+
+/* Fixed overlay that dims the checkerboard so foreground content stays legible. */
+#bg-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background-color: var(--c-bg-overlay);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+/* Solid accent-colored primary action button (login, modal submit, etc.). */
+.btn-primary {
+	width: 100%;
+	padding: 14px;
+	background: var(--c-accent);
+	color: #fff;
+	font-size: 16px;
+	font-weight: 700;
+	border-radius: 6px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary:hover {
+	filter: brightness(1.08);
+}
+
+.btn-primary:active {
+	transform: translateY(1px);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   Username embed containers
+   ============================================================ */
+
+.username-embed {
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+	width: fit-content;
+}
+
+.username-embed .username {
+	font-size: 1em;
+	font-weight: bold;
+	text-decoration: none;
+	color: var(--c-text-emphasis);
+}
+
+.username-embed .elo {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+.username-embed .eloChange {
+	font-size: 0.9em;
+}
+
+.username-embed .eloChange.positive {
+	color: green;
+}
+
+.username-embed .eloChange.negative {
+	color: red;
+}
+
+/* ============================================================
+   Tooltips
+   ============================================================ */
+
+#tooltip-popup {
+	position: fixed;
+	background-color: black;
+	color: rgb(236, 236, 236);
+	text-align: center;
+	border-radius: 6px;
+	font-size: 12px;
+	width: max-content;
+	max-width: 150px;
+	padding: 5px;
+	box-shadow: var(--dropdown-shadow);
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	pointer-events: none;
+	word-wrap: break-word;
+	word-break: break-word;
+	white-space: normal;
+	z-index: 1000;
+}
+
+#tooltip-arrow {
+	position: fixed;
+	width: 0;
+	height: 0;
+	border-width: 5px; /* MUST match ARROW_HALF in tooltips.ts */
+	border-style: solid;
+	opacity: 0;
+	transition: opacity 0.1s ease-in-out;
+	pointer-events: none;
+	z-index: 1000;
+}
+
+/* Arrow pointing downward (tooltip-d / tooltip-dl / tooltip-dr) */
+#tooltip-arrow.tooltip-arrow-down {
+	border-color: transparent transparent black transparent;
+}
+
+/* Arrow pointing upward (tooltip-u / tooltip-ul / tooltip-ur) */
+#tooltip-arrow.tooltip-arrow-up {
+	border-color: black transparent transparent transparent;
+}
+
+/* ============================================================
+   Badge shine
+   ============================================================ */
+
+#checkmate-badge-bronze {
+	--shine-color: rgba(229, 203, 180, 0.3);
+}
+
+#checkmate-badge-silver {
+	--shine-color: rgba(192, 192, 192, 0.22);
+}
+
+#checkmate-badge-gold {
+	--shine-color: rgba(255, 215, 0, 0.24);
+}
+
+.badge .shine-clockwise,
+.badge .shine-anticlockwise {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 200%;
+	height: 200%;
+	transform: translate(-50%, -50%);
+	background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
+	mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	-webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	animation: rotateShine linear infinite;
+	pointer-events: none;
+	z-index: -1;
+}
+
+.badge .shine-clockwise {
+	animation-direction: normal;
+	animation-duration: 13s;
+}
+
+.badge .shine-anticlockwise {
+	animation-direction: reverse;
+	animation-duration: 26s;
+}
+
+.badge:hover .shine-clockwise,
+.badge:hover .shine-anticlockwise {
+	opacity: 1;
+}
+
+@keyframes rotateShine {
+	from {
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
+}
+
+/* ============================================================
+   Range slider (.slider)
+   ============================================================ */
+
+.slider {
+	appearance: none;
+	width: 100%;
+	background: none;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+.slider:focus {
+	outline: none;
+}
+
+/* Track */
+.slider::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 1em;
+	cursor: pointer;
+	background: var(--c-surface-2);
+	border-radius: 0.5em;
+}
+
+.slider::-moz-range-track {
+	width: 100%;
+	height: 1em;
+	cursor: pointer;
+	background: var(--c-surface-2);
+	border-radius: 0.5em;
+}
+
+/* Thumb */
+.slider::-webkit-slider-thumb {
+	appearance: none;
+	border: 1px solid var(--c-border-2);
+	height: 1em;
+	width: 1.5em;
+	border-radius: 12px;
+	background: var(--c-surface);
+	cursor: pointer;
+	margin-top: 0;
+}
+
+.slider::-moz-range-thumb {
+	box-sizing: border-box;
+	border: 1px solid var(--c-border-2);
+	height: 1em;
+	width: 1.5em;
+	border-radius: 12px;
+	background: var(--c-surface);
+	cursor: pointer;
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+	outline: 2px solid var(--c-accent);
+	outline-offset: 1px;
+}
+
+.slider:focus-visible::-moz-range-thumb {
+	outline: 2px solid var(--c-accent);
+	outline-offset: 1px;
+}

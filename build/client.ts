@@ -9,7 +9,7 @@ import browserslist from 'browserslist';
 // @ts-ignore this package doesn't have a declaration file
 import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
-import esbuild, { BuildOptions, Plugin, PluginBuild } from 'esbuild';
+import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
 
@@ -26,22 +26,35 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * into their own bundle!
  */
 const ESMEntryPoints = [
-	'src/client/scripts/esm/game/main.ts',
-	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
+	// Stylesheets — bundled as content-hashed CSS entry points.
+	'src/client/css/global.css',
+	'src/client/css/header.css',
+	'src/client/css/footer.css',
+	'src/client/css/toast.css',
+	'src/client/css/index.css',
+	'src/client/css/login.css',
+
+	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
-	'src/client/scripts/esm/views/index.ts',
-	'src/client/scripts/esm/views/member.ts',
-	'src/client/scripts/esm/views/leaderboard.ts',
+	'src/client/scripts/esm/views/index/index.ts',
 	'src/client/scripts/esm/views/login.ts',
-	'src/client/scripts/esm/views/news.ts',
-	'src/client/scripts/esm/views/createaccount.ts',
-	'src/client/scripts/esm/views/resetpassword.ts',
-	'src/client/scripts/esm/views/guide.ts',
-	'src/client/scripts/esm/views/admin.ts',
-	'src/client/scripts/esm/views/icnvalidator.ts',
-	'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
-	'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
-	'src/client/scripts/esm/workers/icnvalidator.worker.ts',
+
+	// Other
+	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
+
+	// 'src/client/scripts/esm/game/main.ts',
+	// 'src/client/scripts/esm/components/header/header.ts',
+	// 'src/client/scripts/esm/views/member.ts',
+	// 'src/client/scripts/esm/views/leaderboard.ts',
+	// 'src/client/scripts/esm/views/news.ts',
+	// 'src/client/scripts/esm/views/register.ts',
+	// 'src/client/scripts/esm/views/resetpassword.ts',
+	// 'src/client/scripts/esm/views/guide.ts',
+	// 'src/client/scripts/esm/views/admin.ts',
+	// 'src/client/scripts/esm/views/icnvalidator.ts',
+	// 'src/client/scripts/esm/game/chess/engines/engineCheckmatePractice.ts',
+	// 'src/client/scripts/esm/game/chess/engines/hydrochess.ts',
+	// 'src/client/scripts/esm/workers/icnvalidator.worker.ts',
 ];
 
 /** CommonJS modules imported by html pages. */
@@ -120,10 +133,36 @@ const GLSLMinifyPlugin = {
 	},
 };
 
+/** An esbuild plugin that writes the asset manifest after every (re)build. */
+const ManifestPlugin: Plugin = {
+	name: 'write-manifest',
+	setup(build: PluginBuild) {
+		build.onEnd((result) => {
+			if (result.metafile) writeManifest(result.metafile);
+		});
+	},
+};
+
+/**
+ * Reads esbuild's metafile and writes dist/manifest.json — a flat map of
+ * logical entry-point names (e.g. "scripts/esm/views/index.ts") to their
+ * web-relative output paths (e.g. "/scripts/esm/views/index-ABCD1234.js").
+ */
+function writeManifest(metafile: Metafile): void {
+	const manifest: Record<string, string> = {};
+	for (const [rawOutputPath, output] of Object.entries(metafile.outputs)) {
+		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
+		const key = output.entryPoint.replace(/^src\/client\//, ''); // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
+		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
+	}
+	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
+}
+
 const ESMBuildOptions: BuildOptions = {
 	bundle: true,
 	entryPoints: ESMEntryPoints,
-	outdir: './dist/client/scripts/esm',
+	outdir: './dist/client',
+	chunkNames: 'scripts/esm/[name]-[hash]',
 	/**
 	 * Enable code splitting, which means if multiple entry points require the same module,
 	 * that dependancy will be separated out of both of them which means it isn't duplicated,
@@ -137,6 +176,10 @@ const ESMBuildOptions: BuildOptions = {
 	sourcemap: true, // Enables sourcemaps for debugging in the browser.
 	// minify: true, // Enable minification. SWC is more compact so we don't use esbuild's
 	loader: { '.wasm': 'file' },
+	// Font URLs in CSS (e.g. @font-face url('/fonts/...')) are absolute web paths — mark them
+	// external so esbuild doesn't try to resolve them as files on disk.
+	external: ['/fonts/*'],
+	metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
 };
 
 const CJSBuildOptions: BuildOptions = {
@@ -162,8 +205,9 @@ export async function buildClient(isDev: boolean): Promise<void> {
 
 	const ESMContext = await esbuild.context({
 		...ESMBuildOptions,
+		entryNames: '[dir]/[name]-[hash]', // Content-hash output file names
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
-		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin],
+		plugins: [ESMBuildPlugin, GLSLMinifyPlugin, esmInitialBuildPlugin, ManifestPlugin],
 	});
 	const CJSContext = await esbuild.context({
 		...CJSBuildOptions,
@@ -244,16 +288,15 @@ async function minifyScriptDirectory(
 }
 
 /**
- * Minifies all CSS files from src/client/css/ directory
- * to the distribution directory, preserving the original structure.
+ * Minifies all CSS files under dist/client/ (esbuild output), preserving the original structure.
  * @returns Resolves when all CSS files are processed.
  */
 async function minifyCSSFiles(): Promise<void> {
 	// Bundle and compress all css files
-	const cssFiles = await glob('**/*.css', { cwd: './dist/client/css', nodir: true });
+	const cssFiles = await glob('**/*.css', { cwd: './dist/client', nodir: true });
 	for (const file of cssFiles) {
 		// Minify css files
-		const outputFilePath = `./dist/client/css/${file}`;
+		const outputFilePath = `./dist/client/${file}`;
 		const { code } = transform({
 			targets: cssTargets,
 			code: Buffer.from(await readFile(outputFilePath, 'utf8')),

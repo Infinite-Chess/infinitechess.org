@@ -1,0 +1,18 @@
+# Translation component: login page.
+# Source template: src/server/views/login.njk
+
+title = "Log In"
+username_label = "Username or email"
+password_label = "Password"
+keep_logged_in = "Keep me logged in"
+reset_password = "Reset password"
+submit = "Log In"
+register_prompt = "Don't have an account?"
+register_link = "Register"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.login.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+network_error = "Network error. Please try again."

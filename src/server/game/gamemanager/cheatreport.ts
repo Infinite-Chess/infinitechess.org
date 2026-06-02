@@ -11,7 +11,6 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import * as z from 'zod';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import { isGameInstantlyDeleted } from '../../../shared/chess/variants/servervalidation.js';
 
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
@@ -47,14 +46,8 @@ function onReport(
 
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
-	if (
-		isGameInstantlyDeleted(
-			servergame.match.variant,
-			servergame.basegame.dateTimestamp,
-			servergame.match.publicity === 'private',
-		)
-	) {
-		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Publicity: ${servergame.match.publicity}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
+	if (servergame.validateMoves) {
+		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog.txt');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
@@ -66,9 +59,9 @@ function onReport(
 		return;
 	}
 
-	const perpetratingMoveIndex = servergame.basegame.moves.length - 1;
+	const perpetratingMoveIndex = servergame.moves.length - 1;
 	const colorThatPlayedPerpetratingMove = gameutility.getColorThatPlayedMoveIndex(
-		servergame.basegame,
+		servergame,
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
@@ -84,7 +77,7 @@ function onReport(
 		return;
 	}
 	// Remove the last move played.
-	const perpetratingMove = servergame.basegame.moves.pop();
+	const perpetratingMove = servergame.moves.pop();
 	if (!perpetratingMove) return;
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;

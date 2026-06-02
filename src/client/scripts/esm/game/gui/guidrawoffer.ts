@@ -23,6 +23,11 @@ const element_whosturn = document.getElementById('whosturn')!;
 /** Whether the player names and clocks have been hidden to give space for the draw offer UI */
 let drawOfferUICramped: boolean = false;
 
+// Listeners -------------------------------------------------------------------
+
+// Recheck visibility of names/clocks when the canvas is resized
+document.addEventListener('canvas_resize', updateVisibilityOfNamesAndClocksWithDrawOffer);
+
 // Functions -------------------------------------------------------------------
 
 /** Reveals the draw offer UI on the bottom navigation bar */
@@ -88,7 +93,7 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer(): void {
  * draw offer UI to not fit with everything on the header bar.
  */
 function isDrawOfferUICramped(): boolean {
-	if (gameslot.getGamefile()!.basegame.untimed) return false; // Clocks not visible, we definitely have room
+	if (gameslot.getGamefile()!.untimed) return false; // Clocks not visible, we definitely have room
 	if (window.innerWidth > 560) return false; // Screen is wide, we have room
 	return true; // Cramped
 }

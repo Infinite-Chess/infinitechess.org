@@ -5,10 +5,9 @@
 // And it removes the lng query param from the url after loading.
 
 import docutil from '../../../util/docutil.js';
+import { serverFetch } from '../../../util/serverFetch.js';
 
 // Document Elements -------------------------------------------------------------------------
-
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
 const languageDropdown = document.querySelector('.language-dropdown')!;
 const dropdownItems = document.querySelectorAll('.language-dropdown-item');
@@ -19,12 +18,8 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 (function init() {
 	// Request cookie if it doesn't exist
 	if (!docutil.getCookieValue('i18next')) {
-		fetch('/setlanguage', {
+		serverFetch('/setlanguage', {
 			method: 'POST',
-			credentials: 'same-origin',
-			headers: {
-				'is-fetch-request': 'true', // Custom header
-			},
 		});
 	}
 	removeLngQueryParam();
@@ -63,14 +58,12 @@ function removeLngQueryParam(): void {
 }
 
 function open(): void {
-	languageDropdown.classList.remove('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	languageDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
-	languageDropdown.classList.add('visibility-hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	languageDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {
@@ -103,8 +96,6 @@ function onLanguageClicked(event: Event): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	addLngQueryParamToLink,
 	open,
 	close,

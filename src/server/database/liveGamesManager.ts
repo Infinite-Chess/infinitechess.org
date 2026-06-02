@@ -34,8 +34,6 @@ export interface LiveGameData {
 	afk_resign_time: number | null;
 	delete_time: number | null;
 	/** 0 = false, 1 = true */
-	position_pasted: 0 | 1;
-	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
 }
 
@@ -48,8 +46,8 @@ const INSERT_QUERY = `
 		draw_offer_state,
 		conclusion_condition, conclusion_victor, time_ended,
 		afk_resign_time, delete_time,
-		position_pasted, validate_moves
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		validate_moves
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
 const DELETE_QUERY = `DELETE FROM live_games WHERE game_id = ?`;
@@ -80,7 +78,6 @@ function insertLiveGame(record: LiveGamesRecord): void {
 			record.time_ended,
 			record.afk_resign_time,
 			record.delete_time,
-			record.position_pasted,
 			record.validate_moves,
 		]);
 	} catch (error: unknown) {

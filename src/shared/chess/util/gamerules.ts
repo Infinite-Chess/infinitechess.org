@@ -9,22 +9,13 @@ import type { UnboundedRectangle } from '../../util/math/bounds.js';
 import type { GameruleWinCondition } from './winconutil.js';
 import type { Player, RawType, PlayerGroup } from './typeutil.js';
 
-interface GameRules {
+export interface GameRules {
 	/** An object containing lists of what win conditions each color can win by. */
 	winConditions: PlayerGroup<GameruleWinCondition[]>;
 	/** A list of players that make up one full turn cycle. */
 	turnOrder: Player[];
-	/**
-	 * Contains a list of all promotion ranks each color promotes at, if they can promote.
-	 * If neither side can promote, this should be left as undefined.
-	 */
-	promotionRanks?: PlayerGroup<bigint[]>;
-	/**
-	 * An object containing arrays of raw types white and
-	 * black can promote to, if it's legal for them to promote.
-	 * If one color can't promote, their list should be left undefined.
-	 */
-	promotionsAllowed?: PlayerGroup<RawType[]>;
+	/** The promotion pieces & ranks, if this game allows promotion. */
+	promotion?: Promotion;
 	/**
 	 * How many plies (half-moves) can pass with no
 	 * captures or pawn pushes until a draw is declared.
@@ -42,6 +33,13 @@ interface GameRules {
 	 */
 	worldBorder?: UnboundedRectangle;
 }
+
+export type Promotion = {
+	/** Contains a list of all promotion ranks each color promotes at. */
+	ranks: PlayerGroup<bigint[]>;
+	/** A shared list of raw piece types any player can promote to. */
+	pieces: RawType[];
+};
 
 /** Checks if a specified color has a given win condition. */
 function doesColorHaveWinCondition(
@@ -77,10 +75,18 @@ function swapCheckmateForRoyalCapture(gameRules: GameRules): void {
 	if (changeMade) console.log('Swapped checkmate win conditions for royalcapture.');
 }
 
+/**
+ * Returns a list of all unique players in the turn order.
+ * Removes duplicates while preserving the order of first appearance.
+ * @param turnOrder - The turn order array that may contain duplicate players
+ */
+function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
+	return [...new Set(turnOrder)];
+}
+
 export default {
 	doesColorHaveWinCondition,
 	getWinConditionCountOfColor,
 	swapCheckmateForRoyalCapture,
+	getUniquePlayersInTurnOrder,
 };
-
-export type { GameRules };

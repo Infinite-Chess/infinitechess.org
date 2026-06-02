@@ -4,14 +4,94 @@
  * This script contains utility methods for working with the gamefile's moves list.
  */
 
+import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { MoveFull } from '../logic/movepiece.js';
+import type { GameRules } from './gamerules.js';
+import type { EnPassant } from '../logic/state.js';
 import type { MoveCoords } from '../logic/icn/icnconverter.js';
-import type { Game, Board } from '../logic/gamefile.js';
-import type { CoordsTagged } from '../logic/movepiece.js';
+import type { MoveFull, CoordsTagged, MoveRecord } from '../logic/movepiece.js';
 
 import coordutil from './coordutil.js';
+
+// Types ------------------------------------------------------------------
+
+/** A special move tag on {@link CoordsTagged}, both move tags and UI tags. */
+export interface SpecialTags extends MoveSpecialTags, UISpecialTags {}
+
+/**
+ * A special move tag that is retained when transferring from {@link CoordsTagged} to a move.
+ * This describes what actually happened during the move execution.
+ */
+export interface MoveSpecialTags {
+	/** Special move tag that, when present, making the move will create an enpassant state on the gamefile. */
+	enpassantCreate: EnPassant;
+	/**
+	 * A special move tag for enpassant capture.
+	 *
+	 * If true, the specialMove function for pawns will read the gamefile's
+	 * enpassant property to figure out where the pawn to capture is.
+	 * After that, the captured piece is appended to the move's changes list,
+	 * so we don't actually need to store more information in here.
+	 */
+	enpassant: true;
+	/** A special move tag for pawn promotion. This is the integer type of the piece promoted to. */
+	promotion: number;
+	/** A special move tag for castling. */
+	castle: {
+		/** 1 => King castled right   -1 => King castled left */
+		dir: 1n | -1n;
+		/** The coordinate of the piece the king castled with, usually a rook. */
+		coord: Coords;
+	};
+	/**
+	 * A special move tag that stores a list of all the waypoints along
+	 * the travel path of a piece. Inclusive to start and end.
+	 *
+	 * Used for Rose piece.
+	 */
+	path: Coords[];
+}
+
+/**
+ * A special move tag that is UI-only. It is present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and is
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+interface UISpecialTags {
+	/**
+	 * A special move tag that, when the move is attempted to be made should
+	 * trigger the promotion UI to open. The special detect functions are in
+	 * charge of adding this. selection.ts will delete it and open the promotion UI.
+	 */
+	promoteTrigger: boolean;
+}
+
+// Constants ------------------------------------------------------------------------------
+
+/**
+ * All special move tag names that are retained when transferring from {@link CoordsTagged}
+ * to a move. These describe what actually happened during the move execution.
+ */
+const MOVE_SPECIAL_TAGS = [
+	'enpassantCreate',
+	'enpassant',
+	'promotion',
+	'castle',
+	'path',
+] satisfies ReadonlyArray<keyof MoveSpecialTags>;
+
+/**
+ * All special move tag names that are UI-only. They are present on {@link CoordsTagged}
+ * to signal something to the UI (e.g. open the promotion picker), and are
+ * consumed and removed BEFORE the move is executed — never transferred to a move.
+ */
+const UI_SPECIAL_TAGS = ['promoteTrigger'] satisfies ReadonlyArray<keyof UISpecialTags>;
+
+/** All special move tags names on {@link CoordsTagged}, both move tags and UI tags. */
+const SPECIAL_TAGS = [...MOVE_SPECIAL_TAGS, ...UI_SPECIAL_TAGS] satisfies ReadonlyArray<
+	keyof SpecialTags
+>;
 
 // Functions ------------------------------------------------------------------------------
 
@@ -92,16 +172,18 @@ function flagLastMoveAsMate(boardsim: Board): void {
 /**
  * Returns whether the game is resignable (at least 2 moves have been played).
  * If not, then the game is considered abortable.
+ * @param game - The minimum properties needed from the gamefile to check if the game is resignable. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  */
-function isGameResignable(game: Game | Board): boolean {
+function isGameResignable(game: { moves: MoveRecord[] }): boolean {
 	return game.moves.length > 1;
 }
 
 /**
  * Returns the color of the player that played the provided index within the moves list.
+ * @param game - The gamefile with the gameRules
  */
-function getColorThatPlayedMoveIndex(basegame: Game, index: number): Player {
-	const turnOrder = basegame.gameRules.turnOrder;
+function getColorThatPlayedMoveIndex(game: { gameRules: GameRules }, index: number): Player {
+	const turnOrder = game.gameRules.turnOrder;
 	// If the starting position of the game is in check, then the player very last in the turnOrder is considered the one who *gave* the check.
 	if (index === -1) return turnOrder[turnOrder.length - 1]!;
 	return turnOrder[index % turnOrder.length]!;
@@ -109,17 +191,18 @@ function getColorThatPlayedMoveIndex(basegame: Game, index: number): Player {
 
 /**
  * Returns the color whos turn it is after the specified move index was played.
+ * @param game - The gamefile with the gameRules
  */
-function getWhosTurnAtMoveIndex(basegame: Game, moveIndex: number): Player {
-	return getColorThatPlayedMoveIndex(basegame, moveIndex + 1);
+function getWhosTurnAtMoveIndex(game: { gameRules: GameRules }, moveIndex: number): Player {
+	return getColorThatPlayedMoveIndex(game, moveIndex + 1);
 }
 
 /**
  * Returns true if any player in the turn order ever gets to turn in a row.
  */
-function doesAnyPlayerGet2TurnsInARow(basegame: Game): boolean {
+function doesAnyPlayerGet2TurnsInARow(gameRules: GameRules): boolean {
 	// If one player ever gets 2 turns in a row, then that also allows the capture of the king.
-	const turnOrder = basegame.gameRules.turnOrder;
+	const turnOrder = gameRules.turnOrder;
 	for (let i = 0; i < turnOrder.length; i++) {
 		const thisColor = turnOrder[i];
 		const nextColorIndex = i === turnOrder.length - 1 ? 0 : i + 1; // If the color is last, then the next color is the first color of the turn order.
@@ -139,6 +222,10 @@ function stripSpecialMoveTagsFromCoords(coords: CoordsTagged): Coords {
 // ------------------------------------------------------------------------------
 
 export default {
+	// Constants
+	MOVE_SPECIAL_TAGS,
+	SPECIAL_TAGS,
+	// Functions
 	isIncrementingLegal,
 	isDecrementingLegal,
 	getLastMove,

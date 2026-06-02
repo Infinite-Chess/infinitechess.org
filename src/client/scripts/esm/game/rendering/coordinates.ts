@@ -178,7 +178,7 @@ function render(): void {
 		space.convertPixelsToWorldSpace_Virtual(LABEL_ARROW_PADDING_PX);
 	const arrowLocations = arrows.getAllArrowWorldLocations();
 
-	const isBlackPerspective = perspective.getIsViewingBlackPerspective();
+	const isBlackPerspective = camera.getIsViewingBlackPerspective();
 	// Arrow hitbox locations in black's perspective need to be negated so overlap detection remains accurate.
 	const effectiveArrowLocations: DoubleCoords[] = isBlackPerspective
 		? arrowLocations.map((loc) => [-loc[0], -loc[1]])
@@ -204,7 +204,7 @@ function render(): void {
 
 	// Render without any rotation so glyphs always appear upright.
 	// In black's perspective the view matrix carries a 180° Z-rotation that would otherwise flip the text.
-	perspective.renderWithoutPerspectiveRotations(() => {
+	camera.renderWithoutPerspectiveRotations(() => {
 		for (let file = firstFile; file <= tileBox.right; file += stepBig) {
 			let worldX = space.convertCoordToWorldSpace(bdcoords.FromCoords([file, 0n]))[0];
 			if (isBlackPerspective) worldX = -worldX; // Invert world coords

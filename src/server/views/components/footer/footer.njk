@@ -1,0 +1,21 @@
+{# Site-wide footer. Included by every page, except those with the board visible. #}
+{% set t = templateT('footer') %}
+<footer class="site-footer">
+	<a href="/about">{{ t.links.about }}</a>
+	<span class="footer-sep">·</span>
+	<a href="mailto:naviary@infinitechess.org">{{ t.links.contact }}</a>
+	<span class="footer-sep">·</span>
+	<a href="/terms">{{ t.links.terms }}</a>
+	<span class="footer-sep">·</span>
+	<a href="/privacy">{{ t.links.privacy }}</a>
+	<span class="footer-sep">·</span>
+	<a href="/credits">{{ t.links.credits }}</a>
+	<span class="footer-sep">·</span>
+	<a href="https://github.com/Infinite-Chess/infinitechess.org" target="_blank" rel="noopener noreferrer">GitHub</a>
+	<span class="footer-sep">·</span>
+	<a href="https://discord.gg/NFWFGZeNh5" target="_blank" rel="noopener noreferrer">Discord</a>
+	<span class="footer-sep">·</span>
+	<a href="https://www.youtube.com/@Naviary" target="_blank" rel="noopener noreferrer">YouTube</a>
+	<span class="footer-sep">·</span>
+	<a href="https://www.patreon.com/naviary" target="_blank" rel="noopener noreferrer">Patreon</a>
+</footer>

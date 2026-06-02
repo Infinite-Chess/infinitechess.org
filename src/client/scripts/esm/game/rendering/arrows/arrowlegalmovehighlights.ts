@@ -75,7 +75,7 @@ function update(): void {
 
 	// Do not render line highlights upon arrow hover, when game is rewinded,
 	// since calculating their legal moves means overwriting game's move history.
-	if (!moveutil.areWeViewingLatestMove(gamefile.boardsim)) {
+	if (!moveutil.areWeViewingLatestMove(gamefile)) {
 		hoveredArrowsLegalMoves.length = 0;
 		return;
 	}
@@ -141,10 +141,10 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 	const pieceColor = typeutil.getColorFromType(piece.type);
 	const ourColor =
 		gameloader.areInLocalGame() || boardeditor.areInBoardEditor()
-			? gamefile.basegame.whosTurn
+			? gamefile.whosTurn
 			: gameloader.getOurColor();
 	const isOpponentPiece = pieceColor !== ourColor;
-	const isOurTurn = gamefile.basegame.whosTurn === pieceColor;
+	const isOurTurn = gamefile.whosTurn === pieceColor;
 	const color = preferences.getLegalMoveHighlightColor({
 		isOpponentPiece,
 		isPremove: !isOurTurn,

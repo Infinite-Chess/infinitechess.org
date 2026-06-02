@@ -80,7 +80,7 @@ function addRipple(sourceCoords: Coords): void {
 	// Convert coords to world space
 	const sourceWorldSpace = space.convertCoordToWorldSpace(bdcoords.FromCoords(sourceCoords));
 
-	const screenHeight = camera.canvas.height / window.devicePixelRatio;
+	const screenHeight = camera.getCanvas().height / window.devicePixelRatio;
 	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
 	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(pixelPadding);
 	// The screen rectangle in world space

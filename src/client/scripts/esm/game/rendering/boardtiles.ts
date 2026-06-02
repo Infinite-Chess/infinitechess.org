@@ -14,21 +14,14 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../shared/util/math/math.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import style from '../gui/style.js';
 import camera from './camera.js';
-import gameslot from '../chess/gameslot.js';
 import boardpos from './boardpos.js';
-import imagecache from '../../chess/rendering/imagecache.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
-import piecemodels from './piecemodels.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
-import guipromotion from '../gui/guipromotion.js';
-import texturecache from '../../chess/rendering/texturecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import webgl, { gl } from './webgl.js';
 import checkerboardgenerator from '../../chess/rendering/checkerboardgenerator.js';
@@ -96,44 +89,39 @@ let darkTiles: Color;
 // Initialization --------------------------------------------------------------------------------
 
 // Add event listener for theme changes
-document.addEventListener('theme-change', (_event) => {
+document.addEventListener('theme-change', () => {
 	// Custom Event listener.
-	console.log(`Theme change event detected: ${preferences.getTheme()}`);
-	updateTheme();
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
-	imagecache.deleteImageCache();
-	// texturecache.deleteTextureCache(gl);
-	imagecache.initImagesForGame(gamefile.boardsim).then(() => {
-		// Regenerate piece textures with the new tinted images
-		texturecache.initTexturesForGame(gl, gamefile.boardsim);
-		piecemodels.regenAll(gamefile.boardsim, gameslot.getMesh());
-	});
-	// Reinit the promotion UI
-	guipromotion.resetUI();
-	guipromotion.initUI(gamefile.basegame.gameRules.promotionsAllowed);
+	// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
+	// The board tile textures only exist once WebGL is initialized (i.e. we're viewing a board or variant preview).
+	if (!webgl.isInitialized()) return;
+	resetColor();
 });
 
-GameBus.addEventListener('game-concluded', () => {
-	darkenColor();
-});
-GameBus.addEventListener('game-unloaded', () => {
-	// Resets the board color (the color changes when checkmate happens)
-	updateTheme();
-});
-
-/** Loads the tiles texture. */
-function init(): void {
+/** Loads and generates the tile textures. */
+async function init(): Promise<void> {
 	// Generate the tiles mask texture
-	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
-	checkerboardgenerator.createCheckerboardIMG('white', 'black', 256).then((tilesMask_IMG) => {
-		tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
-	});
-
-	// Initial generation of tile textures
-	updateTheme();
+	const maskPromise = initMaskTexture();
+	// Generation main tile textures
+	const texturesPromise = resetColor();
 
 	recalcVariables(); // Variables dependant on the board position & scale
+
+	await Promise.all([maskPromise, texturesPromise]);
+}
+
+/**
+ * Generates the tiles mask texture.
+ * Used for applying zone effects to selective light/dark tiles.
+ */
+async function initMaskTexture(): Promise<void> {
+	// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
+
+	const tilesMask_IMG: HTMLImageElement = await checkerboardgenerator.createCheckerboardIMG(
+		'white',
+		'black',
+		256,
+	);
+	tilesMask = TextureLoader.loadTexture(gl, tilesMask_IMG, { mipmaps: false });
 }
 
 async function initTextures(): Promise<void> {
@@ -187,11 +175,20 @@ function getSquareCenterAsNumber(): number {
 	return squareCenter;
 }
 
-function gtileWidth_Pixels(debugMode = camera.getDebug()): BigDecimal {
+/**
+ * Returns the width of a tile in virtual pixels at the provided board scale.
+ * @param scale - Defaults to the current board scale, but can be overridden.
+ */
+function getTileWidthPixels(
+	debugMode = camera.getDebug(),
+	scale: BigDecimal = boardpos.getBoardScale(),
+): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = camera.getScreenBoundingBox(debugMode);
-	const factor1: BigDecimal = bd.fromNumber((camera.canvas.height * 0.5) / screenBoundingBox.top);
-	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, boardpos.getBoardScale()); // Greater for retina displays
+	const factor1: BigDecimal = bd.fromNumber(
+		(camera.getCanvas().height * 0.5) / screenBoundingBox.top,
+	);
+	const tileWidthPixels_Physical = bd.multiplyFloating(factor1, scale); // Greater for retina displays
 
 	const divisor = bd.fromNumber(window.devicePixelRatio);
 	const tileWidthPixels_Virtual = bd.divideFloating(tileWidthPixels_Physical, divisor);
@@ -293,24 +290,16 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 	return { left, right, bottom, top };
 }
 
-/** Resets the board color, sky, and navigation bars (the color changes when checkmate happens). */
-function updateTheme(): void {
-	const gamefile = gameslot.getGamefile();
-	if (gamefile && gamefileutility.isGameOver(gamefile.basegame))
-		darkenColor(); // Reset to slightly darkened board
-	else resetColor(); // Reset to defaults
-	updateSkyColor();
-	updateNavColor();
-}
-
+/** Returns a promise that resolves when the new tiles textures have been generated. */
 function resetColor(
 	newLightTiles = preferences.getColorOfLightTiles(),
 	newDarkTiles = preferences.getColorOfDarkTiles(),
-): void {
+): Promise<void> {
 	lightTiles = newLightTiles; // true for white
 	darkTiles = newDarkTiles; // false for dark
-	initTextures();
+	updateSkyColor();
 	frametracker.onVisualChange();
+	return initTextures();
 }
 
 // Updates sky color based on current board color
@@ -336,52 +325,6 @@ function updateSkyColor(): void {
 	// webgl.setClearColor([0,0,0]); // Solid Black
 }
 
-function updateNavColor(): void {
-	// Determine the new "white" color
-
-	const avgR = (lightTiles[0] + darkTiles[0]) / 2;
-	const avgG = (lightTiles[1] + darkTiles[1]) / 2;
-	const avgB = (lightTiles[2] + darkTiles[2]) / 2;
-
-	// With the default theme, these should be max
-	let navR = 255;
-	let navG = 255;
-	let navB = 255;
-
-	if (preferences.getTheme() !== 'white') {
-		const brightAmount = 0.6; // 50% closer to white
-		navR = (1 - (1 - avgR) * (1 - brightAmount)) * 255;
-		navG = (1 - (1 - avgG) * (1 - brightAmount)) * 255;
-		navB = (1 - (1 - avgB) * (1 - brightAmount)) * 255;
-	}
-
-	style.setNavStyle(`
-
-        .navigation {
-            background: linear-gradient(to top, rgba(${navR}, ${navG}, ${navB}, 0.104), rgba(${navR}, ${navG}, ${navB}, 0.552), rgba(${navR}, ${navG}, ${navB}, 0.216));
-        }
-
-        .footer {
-            background: linear-gradient(to bottom, rgba(${navR}, ${navG}, ${navB}, 0.307), rgba(${navR}, ${navG}, ${navB}, 1), rgba(${navR}, ${navG}, ${navB}, 0.84));
-        }
-    `);
-}
-
-function darkenColor(): void {
-	const defaultLightTiles = preferences.getColorOfLightTiles();
-	const defaultDarkTiles = preferences.getColorOfDarkTiles();
-
-	const darkenBy = 0.09;
-	const darkWR = Math.max(defaultLightTiles[0] - darkenBy, 0);
-	const darkWG = Math.max(defaultLightTiles[1] - darkenBy, 0);
-	const darkWB = Math.max(defaultLightTiles[2] - darkenBy, 0);
-	const darkDR = Math.max(defaultDarkTiles[0] - darkenBy, 0);
-	const darkDG = Math.max(defaultDarkTiles[1] - darkenBy, 0);
-	const darkDB = Math.max(defaultDarkTiles[2] - darkenBy, 0);
-
-	resetColor([darkWR, darkWG, darkWB, 1], [darkDR, darkDG, darkDB, 1]);
-}
-
 // Rendering -------------------------------------------------------------------------
 
 // Renders board tiles
@@ -396,7 +339,7 @@ function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): 
 
 // Renders an upside down grey cone centered around the camera, and level with the horizon.
 function renderSolidCover(): void {
-	// const dist = perspective.distToRenderBoard;
+	// const dist = camera.DIST_TO_RENDER_BOARD;
 	const dist = camera.getZFar() / Math.SQRT2;
 	const z = getRelativeZ();
 	const cameraZ = camera.getPosition(true)[2];
@@ -552,14 +495,12 @@ export default {
 	// Public API
 	getSquareCenter,
 	getSquareCenterAsNumber,
-	gtileWidth_Pixels,
+	getTileWidthPixels,
 	gboundingBox,
 	gboundingBoxFloat,
 	getBoundingBoxOfBoard,
 	generatePerspectiveBoundingBox,
 	roundAwayBoundingBox,
-	resetColor,
-	darkenColor,
 	// Rendering
 	render,
 	renderSolidCover,

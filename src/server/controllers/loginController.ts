@@ -14,6 +14,7 @@ import type { Request, Response } from 'express';
 
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { testPasswordForRequest } from './authController.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateLoginCountAndLastSeen } from '../database/memberManager.js';
 
@@ -45,7 +46,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 			);
 			// Send a generic error to the client, as this is a server-side problem.
 			res.status(500).json({
-				message: 'Login failed due to an internal server error. Please try again later.',
+				message: getScriptTranslationsForReq('responses', req).auth.login_failed,
 			});
 			return;
 		}
@@ -53,7 +54,10 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		// The roles fetched from the database is a stringified json string array, parse it here!
 		const parsedRoles = record.roles !== null ? JSON.parse(record.roles) : null;
 
-		createNewSession(req, res, record.user_id, record.username, parsedRoles);
+		/** Whether the user checked "keep me logged in". */
+		const keepLoggedIn = req.body.keepLoggedIn === true;
+
+		createNewSession(req, res, record.user_id, record.username, parsedRoles, keepLoggedIn);
 
 		res.status(200).json({ message: 'Logged in successfully.' });
 
@@ -73,7 +77,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		// Check if a response has already been sent to avoid "Error [ERR_HTTP_HEADERS_SENT]"
 		if (!res.headersSent) {
 			res.status(500).json({
-				message: 'Login failed due to an unexpected error. Please try again.',
+				message: getScriptTranslationsForReq('responses', req).auth.login_failed,
 			});
 		}
 	}

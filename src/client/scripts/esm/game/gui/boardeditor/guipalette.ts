@@ -7,6 +7,7 @@
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 
+import gamerules from '../../../../../../shared/chess/util/gamerules.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import typeutil, {
 	rawTypes as r,
@@ -239,8 +240,7 @@ function closeListeners(): void {
 /** Helper: Returns an array of players based on the current gamefile's turn order. */
 function _getPlayersInOrder(): Player[] {
 	const gamefile = gameslot.getGamefile()!;
-	// Using a Set removes duplicates before converting to an array
-	return [...new Set(gamefile.basegame.gameRules.turnOrder)];
+	return gamerules.getUniquePlayersInTurnOrder(gamefile.gameRules.turnOrder);
 }
 
 /** Helper: Returns an array of all piece elements that are currently clickable (active color + neutral). */

@@ -1,31 +1,37 @@
+/* src/client/components/footer/footer.css */
+
+/*
+ * Site footer. Included on every page, except those with the board visible.
+ */
+
 footer {
-	text-align: center;
-	padding: 10px 0;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	background: var(--c-bg);
+	z-index: 1;
+	gap: 0 0px;
+	padding: 16px 16px;
+	border-top: 1px solid var(--c-border);
+	color: var(--c-text-muted);
 }
 
 footer a {
 	display: inline-block;
-	color: rgb(207, 207, 207);
-	margin: 10px 10px;
-	text-decoration: underline;
+	padding: 4px 8px;
+	color: var(--c-text-muted);
+	font-size: 12px;
+	text-decoration: none;
+	white-space: nowrap;
 }
 
-footer label {
-	font-size: 16px;
-	color: rgb(207, 207, 207);
-	margin: 10px 2px 10px 10px;
+footer a:hover {
+	color: var(--c-link);
 }
 
-footer select {
-	width: min-content;
-	color: rgb(207, 207, 207);
-	font-size: 1em;
-	background-color: rgba(0, 0, 0, 0);
-	margin: 10px 10px 10px 0px;
-	cursor: pointer;
-}
-
-/* This ONLY changes the color of the text in the language-selection dropdown list so that the contrast is easier to read on Windows */
-footer .language-option {
-	color: rgb(33, 33, 33);
+footer .footer-sep {
+	color: var(--c-border-2);
+	font-size: 12px;
+	user-select: none;
 }

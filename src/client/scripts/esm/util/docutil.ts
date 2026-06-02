@@ -85,6 +85,16 @@ function getPathnameFromHref(href: string): string {
 }
 
 /**
+ * Reads a query‐param from the current URL.
+ * @param name - The name of the parameter to read.
+ * @returns The parameter's value, or null if not present.
+ */
+function getQueryParam(name: string): string | null {
+	const urlParams = new URLSearchParams(window.location.search);
+	return urlParams.get(name);
+}
+
+/**
  * Searches the document for the specified cookie, and returns it if found.
  * @param cookieName The name of the cookie you would like to retrieve.
  * @returns The cookie, if it exists, otherwise, undefined.
@@ -143,6 +153,7 @@ export default {
 	isMouseSupported,
 	isTouchSupported,
 	getLastSegmentOfURL,
+	getQueryParam,
 	getPathnameFromHref,
 	getCookieValue,
 	updateCookie,

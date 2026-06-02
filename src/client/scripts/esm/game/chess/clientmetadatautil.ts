@@ -25,18 +25,6 @@ const YOU_NAME_ICN_METADATA = '(You)' as const;
 // Functions -----------------------------------------------------------------------
 
 /**
- * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
- * Falls back to the current time if UTCDate is not provided.
- * If UTCDate is provided but UTCTime is not, midnight (00:00:00) is assumed.
- */
-function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
-	if (UTCDate !== undefined) {
-		return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
-	}
-	return Date.now();
-}
-
-/**
  * Builds a {@link MetaData} object for client-side games (local, engine, board editor).
  * Automatically populates `Site`, `Round`, `UTCDate`, and `UTCTime`.
  * @param event - The `Event` string describing the game.
@@ -115,7 +103,6 @@ function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
 
 export default {
 	YOU_NAME_ICN_METADATA,
-	resolveTimestampFromMetadata,
 	buildBaseGameMetadata,
 	copyMetadataField,
 	getGameConclusionFromResultAndTermination,

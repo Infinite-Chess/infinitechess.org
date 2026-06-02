@@ -3,7 +3,7 @@
 import type { Zone } from '../EffectZoneManager';
 
 import camera from '../../camera';
-import loadbalancer from '../../../misc/loadbalancer';
+import deltatime from '../../../misc/deltatime.js';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { PostProcessPass } from '../../../../webgl/post_processing/PostProcessingPipeline';
@@ -46,7 +46,8 @@ export class OceanZone implements Zone {
 		this.colorGradePass.tint = [0.9, 0.95, 1.0]; // Slight blue
 
 		// Initialize the WaterPass with the current canvas dimensions.
-		this.waterPass = new WaterPass(programManager, camera.canvas.width, camera.canvas.height);
+		const canvas = camera.getCanvas();
+		this.waterPass = new WaterPass(programManager, canvas.width, canvas.height);
 
 		// Initialize the three permanent ripple sources. Their location will be updated each frame.
 		this.sources = [{ center: [0, 0] }, { center: [0, 0] }, { center: [0, 0] }];
@@ -64,7 +65,7 @@ export class OceanZone implements Zone {
 	}
 
 	public update(): void {
-		const deltaTime = loadbalancer.getDeltaTime(); // Time in seconds since last frame.
+		const deltaTime = deltatime.get(); // Time in seconds since last frame.
 
 		// --- 1. Animate the rotation of the ripple circle ---
 		this.circleRotationAngle += this.ROTATION_SPEED * this.rotationDirection * deltaTime;

@@ -17,14 +17,14 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from '../gui/toast.js';
+import toast from '../../components/toast.js';
 import meshes from './meshes.js';
+import camera from './camera.js';
 import splines from '../../util/splines.js';
 import boardpos from './boardpos.js';
-import gamesound from '../misc/gamesound.js';
+import movesound from '../misc/movesound.js';
 import arrowshifts from './arrows/arrowshifts.js';
 import piecemodels from './piecemodels.js';
-import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -205,7 +205,7 @@ function animatePiece(
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant)
-		return gamesound.playMove(
+		return movesound.playMove(
 			totalDistance,
 			showKeyframes.size !== 0,
 			premove,
@@ -338,7 +338,7 @@ function scheduleAnimationRemoval(animation: Animation): void {
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(animation: Animation): void {
-	gamesound.playMove(
+	movesound.playMove(
 		animation.totalDistance,
 		animation.showKeyframes.size !== 0,
 		animation.premove,
@@ -421,7 +421,7 @@ function renderAnimations(): void {
 	const boardPos = boardpos.getBoardPos();
 
 	/** Whether the textures should be inverted or not, based on whether we're viewing black's perspective. */
-	const inverted = perspective.getIsViewingBlackPerspective();
+	const inverted = camera.getIsViewingBlackPerspective();
 
 	const vertexData = instancedshapes.getDataTexture(inverted);
 

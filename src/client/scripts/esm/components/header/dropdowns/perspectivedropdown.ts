@@ -7,8 +7,6 @@ import preferences from '../preferences.js';
 
 // Document Elements -------------------------------------------------------------------------
 
-const settingsDropdown = document.querySelector('.settings-dropdown')!;
-
 // The option in the main settings menu
 const perspectiveSettingsDropdownItem = document.getElementById(
 	'perspective-settings-dropdown-item',
@@ -53,14 +51,12 @@ function setInitialValues(): void {
 }
 
 function open(): void {
-	perspectiveDropdown.classList.remove('visibility-hidden');
+	perspectiveDropdown.classList.remove('hidden');
 	initListeners();
-	settingsDropdown.classList.add('transparent');
 }
 function close(): void {
-	perspectiveDropdown.classList.add('visibility-hidden');
+	perspectiveDropdown.classList.add('hidden');
 	closeListeners();
-	settingsDropdown.classList.remove('transparent');
 }
 
 function initListeners(): void {
@@ -117,8 +113,6 @@ function resetFOVDefault(): void {
 }
 
 export default {
-	initListeners,
-	closeListeners,
 	close,
 	open,
 };

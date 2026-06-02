@@ -38,7 +38,7 @@ async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImage
  * @returns A promise that resolves with the created image element.
  */
 function svgToImage(svgElement: SVGElement): Promise<HTMLImageElement> {
-	const svgID = svgElement.id; // 'pawnsW'
+	const svgID = svgElement.id; // 'pawn-white'
 
 	// Serialize the SVG element back to a string
 	const svgString = new XMLSerializer().serializeToString(svgElement);

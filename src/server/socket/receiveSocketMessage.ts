@@ -13,20 +13,20 @@ import * as z from 'zod';
 import socketUtility from './socketUtility.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
-import { InvitesSchema } from '../game/invitesmanager/invitesrouter.js';
+import { LobbySchema } from '../game/invitesmanager/lobbyrouter.js';
 import { GeneralSchema } from './generalrouter.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
 import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
-import { rescheduleRenewConnection, sendSocketMessage } from './sendSocketMessage.js';
+import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------
 
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
-	z.strictObject({ id: z.int(), route: z.literal('invites'), contents: InvitesSchema }),
+	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: LobbySchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
 /** Represents all possible types a non-echo incoming websocket message could be! */
@@ -34,7 +34,7 @@ export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** This is the id of the message being replied to. */
 const EchoSchema = z.strictObject({
-	/** The route to forward the message to (e.g., "general", "invites", "game"). */
+	/** The route to forward the message to (e.g., "general", "lobby", "game"). */
 	route: z.literal('echo'),
 	/** The contents of the message, for the router to read. */
 	contents: z.int(),
@@ -128,7 +128,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// console.log('Received message: ' + rawMessage);
 
-	rescheduleRenewConnection(ws); // We know they are connected, so reset this
+	rescheduleHeartbeatTimer(ws); // We know they are connected, so reset this
 
 	routeIncomingSocketMessage(ws, message);
 }

@@ -7,6 +7,8 @@
 
 import validators from '../../../../shared/util/validators.js';
 
+import { serverFetch } from '../util/serverFetch.js';
+
 // Types ----------------------------------------------------------------
 
 type FormElements = {
@@ -112,11 +114,10 @@ function initializeForm(elements: FormElements): void {
 		submitButton.value = translations.processing;
 
 		try {
-			const response = await fetch('/reset-password', {
+			const response = await serverFetch('/reset-password', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'is-fetch-request': 'true', // Custom header
 				},
 				body: JSON.stringify({ token, password: newPasswordInput.value }),
 			});

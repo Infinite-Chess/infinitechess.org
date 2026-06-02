@@ -61,6 +61,11 @@ let pointer2BoardPosGrabbed: BDCoords | undefined;
 const positionHistory: PositionHistoryEntry[] = [];
 const positionHistoryWindowMillis: number = 80; // The amount of milliseconds to look back into for board velocity calculation.
 
+// Listeners -------------------------------------------------------------
+
+// Cancel any active board drag when a transition begins.
+document.addEventListener('transition-start', cancelBoardDrag);
+
 // Functions -------------------------------------------------------------------
 
 /** Whether the board is currently being dragged by one or more pointers. */

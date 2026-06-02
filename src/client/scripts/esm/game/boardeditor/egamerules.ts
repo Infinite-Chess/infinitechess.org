@@ -9,9 +9,9 @@
 import type { Edit } from '../../../../../shared/chess/logic/movepiece';
 import type { Piece } from '../../../../../shared/chess/util/boardutil';
 import type { Coords } from '../../../../../shared/chess/util/coordutil';
-import type { GameRules } from '../../../../../shared/chess/util/gamerules';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds';
-import type { RawType, PlayerGroup } from '../../../../../shared/chess/util/typeutil';
+import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules';
+import type { PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil';
 
 import boardutil from '../../../../../shared/chess/util/boardutil';
@@ -41,7 +41,7 @@ interface GameRulesGUIinfo {
 		white?: bigint[];
 		black?: bigint[];
 	};
-	promotionsAllowed?: RawType[];
+	promotionPieces?: RawType[];
 	pawnDoublePush?: boolean;
 	castling?: boolean;
 	winConditions: GameruleWinCondition[];
@@ -85,35 +85,36 @@ function getCurrentGamerulesAndState(): {
 		[p.WHITE]: gamerulesGUIinfo.winConditions,
 		[p.BLACK]: gamerulesGUIinfo.winConditions,
 	};
-	let promotionRanks: PlayerGroup<bigint[]> | undefined = undefined;
-	let promotionsAllowed: PlayerGroup<RawType[]> | undefined = undefined;
+
+	let promotion: Promotion | undefined;
 	if (
-		gamerulesGUIinfo.promotionsAllowed !== undefined &&
+		gamerulesGUIinfo.promotionPieces !== undefined &&
 		gamerulesGUIinfo.promotionRanks !== undefined
 	) {
-		promotionsAllowed = {};
-		promotionRanks = {};
+		const promotionRanks: PlayerGroup<bigint[]> = {};
 		if (
 			gamerulesGUIinfo.promotionRanks.white !== undefined &&
 			gamerulesGUIinfo.promotionRanks.white.length !== 0
 		) {
 			promotionRanks[p.WHITE] = gamerulesGUIinfo.promotionRanks.white;
-			promotionsAllowed[p.WHITE] = gamerulesGUIinfo.promotionsAllowed;
 		}
 		if (
 			gamerulesGUIinfo.promotionRanks.black !== undefined &&
 			gamerulesGUIinfo.promotionRanks.black.length !== 0
 		) {
 			promotionRanks[p.BLACK] = gamerulesGUIinfo.promotionRanks.black;
-			promotionsAllowed[p.BLACK] = gamerulesGUIinfo.promotionsAllowed;
 		}
+
+		promotion = {
+			ranks: promotionRanks,
+			pieces: gamerulesGUIinfo.promotionPieces,
+		};
 	}
 
 	const gameRules: GameRules = {
 		turnOrder,
 		moveRule,
-		promotionRanks,
-		promotionsAllowed,
+		promotion,
 		winConditions,
 		worldBorder: gamerulesGUIinfo.worldBorder,
 	};
@@ -151,7 +152,7 @@ function setGamerulesGUIinfo(
 			y: state_global.enpassant.square[1],
 		};
 	} else {
-		gamerulesGUIinfo.enPassant = undefined;
+		delete gamerulesGUIinfo.enPassant;
 	}
 
 	if (gameRules.moveRule !== undefined) {
@@ -160,29 +161,18 @@ function setGamerulesGUIinfo(
 			max: gameRules.moveRule,
 		};
 	} else {
-		gamerulesGUIinfo.moveRule = undefined;
+		delete gamerulesGUIinfo.moveRule;
 	}
 
-	if (gameRules.promotionRanks !== undefined) {
+	if (gameRules.promotion !== undefined) {
 		gamerulesGUIinfo.promotionRanks = {
-			white: gameRules.promotionRanks[p.WHITE],
-			black: gameRules.promotionRanks[p.BLACK],
+			white: gameRules.promotion.ranks[p.WHITE],
+			black: gameRules.promotion.ranks[p.BLACK],
 		};
+		gamerulesGUIinfo.promotionPieces = gameRules.promotion.pieces;
 	} else {
-		gamerulesGUIinfo.promotionRanks = undefined;
-	}
-
-	if (gameRules.promotionsAllowed !== undefined) {
-		gamerulesGUIinfo.promotionsAllowed = [
-			...new Set([
-				...(gameRules.promotionsAllowed[p.WHITE] || []),
-				...(gameRules.promotionsAllowed[p.BLACK] || []),
-			]),
-		];
-		if (gamerulesGUIinfo.promotionsAllowed.length === 0)
-			gamerulesGUIinfo.promotionsAllowed = undefined;
-	} else {
-		gamerulesGUIinfo.promotionsAllowed = undefined;
+		delete gamerulesGUIinfo.promotionRanks;
+		delete gamerulesGUIinfo.promotionPieces;
 	}
 
 	gamerulesGUIinfo.winConditions = [
@@ -206,6 +196,7 @@ function setGamerulesGUIinfo(
 	updateGamefileProperties(
 		enpassantSquare,
 		gamerulesGUIinfo.promotionRanks,
+		gamerulesGUIinfo.promotionPieces,
 		gamerulesGUIinfo.playerToMove,
 		gamerulesGUIinfo.worldBorder,
 	);
@@ -273,7 +264,7 @@ function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolea
 /** Gives or removes all special rights of pawns according to the value of pawnDoublePush. */
 function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): void {
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = gamefile.pieces;
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
@@ -287,7 +278,7 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 	if (!boardeditor.areInBoardEditor()) return;
 
 	const gamefile = gameslot.getGamefile()!;
-	const pieces = gamefile.boardsim.pieces;
+	const pieces = gamefile.pieces;
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
@@ -308,6 +299,7 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
 	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
+	promotionPieces: RawType[] | undefined,
 	playerToMove: 'white' | 'black',
 	worldBorder: UnboundedRectangle | undefined,
 ): void {
@@ -315,31 +307,36 @@ function updateGamefileProperties(
 
 	// Update en passant state for rendering purposes, and correct enpassant legality calculation
 	if (enpassantCoords === undefined) {
-		gamefile.boardsim.state.global.enpassant = undefined;
+		gamefile.state.global.enpassant = undefined;
 	} else {
 		// prettier-ignore
 		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 		const enpassant: EnPassant = { square: enpassantCoords, pawn };
-		gamefile.boardsim.state.global.enpassant = enpassant;
+		gamefile.state.global.enpassant = enpassant;
 	}
 
 	// Update the promotionlines in the gamefile for rendering purposes
-	if (promotionRanks === undefined) {
-		gamefile.basegame.gameRules.promotionRanks = undefined;
+	if (promotionRanks === undefined || promotionPieces === undefined) {
+		delete gamefile.gameRules.promotion;
 	} else {
-		gamefile.basegame.gameRules.promotionRanks = {};
-		gamefile.basegame.gameRules.promotionRanks[p.WHITE] = promotionRanks.white;
-		gamefile.basegame.gameRules.promotionRanks[p.BLACK] = promotionRanks.black;
+		gamefile.gameRules.promotion = {
+			ranks: {
+				[p.WHITE]: promotionRanks.white,
+				[p.BLACK]: promotionRanks.black,
+			},
+			pieces: promotionPieces,
+		};
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
 	// prettier-ignore
-	gamefile.basegame.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	gamefile.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
 	// Update whosTurn as well
-	gamefile.basegame.whosTurn = gamefile.basegame.gameRules.turnOrder[0]!;
+	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
+	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
 
 	// Update World Border
-	gamefile.basegame.gameRules.worldBorder = worldBorder;
+	gamefile.gameRules.worldBorder = worldBorder;
 }
 
 // Exports -------------------------------------------------------------

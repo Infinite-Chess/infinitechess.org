@@ -8,7 +8,8 @@
  * It also computes hint arrows for off-screen legal move destinations.
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type {
 	BDCoords,
@@ -146,7 +147,7 @@ export function getBoundingBoxFloat(): BoundingBoxBD | undefined {
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
 export function areZoomedInEnoughForArrows(): boolean {
-	return bd.compare(boardtiles.gtileWidth_Pixels(false), MIN_SQUARE_SIZE) >= 0;
+	return bd.compare(boardtiles.getTileWidthPixels(false), MIN_SQUARE_SIZE) >= 0;
 }
 
 /**
@@ -245,7 +246,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
 	/** The running list of arrows that should be visible */
 	const slideArrowsDraft: SlideArrowsDraft = {};
 	const gamefile = gameslot.getGamefile()!;
-	gamefile.boardsim.pieces.slides.forEach((slide: Vec2) => {
+	gamefile.pieces.slides.forEach((slide: Vec2) => {
 		// For each slide direction in the game...
 		const slideKey: Vec2Key = vectors.getKeyFromVec2(slide);
 
@@ -262,7 +263,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
 		containingPointsLineC.sort((a, b) => bimath.compare(a, b)); // Sort them so C is ascending. Then index 0 will be the minimum and 1 will be the max.
 
 		// For all our lines in the game with this slope...
-		const organizedLinesOfDir = gamefile.boardsim.pieces.lines.get(slideKey)!;
+		const organizedLinesOfDir = gamefile.pieces.lines.get(slideKey)!;
 		for (const [lineKey, organizedLine] of organizedLinesOfDir) {
 			// The C of the lineKey (`C|X`) with this slide at the very left & right sides of the screen.
 			const C: bigint = organizedpieces.getCFromKey(lineKey);
@@ -292,7 +293,7 @@ function generateArrowsDraft(): SlideArrowsDraft {
  * can jump/skip over other pieces.
  */
 export function calcArrowsLineDraft(
-	gamefile: FullGame,
+	gamefile: GameFile,
 	slideDir: Vec2,
 	slideKey: Vec2Key,
 	organizedline: number[],
@@ -307,7 +308,7 @@ export function calcArrowsLineDraft(
 
 	const axis = slideDir[0] === 0n ? 1 : 0;
 
-	const firstPiece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, organizedline[0]!)!;
+	const firstPiece = boardutil.getPieceFromIdx(gamefile.pieces, organizedline[0]!)!;
 
 	/**
 	 * The 2 intersections points of the whole organized line, consistent for every piece on it.
@@ -326,7 +327,7 @@ export function calcArrowsLineDraft(
 	const boundingBoxIntBD = bounds.castBoundingBoxToBigDecimal(boundingBoxInt!);
 
 	organizedline.forEach((idx) => {
-		const piece = boardutil.getPieceFromIdx(gamefile.boardsim.pieces, idx)!;
+		const piece = boardutil.getPieceFromIdx(gamefile.pieces, idx)!;
 		const arrowPiece: ArrowPiece = {
 			type: piece.type,
 			coords: bdcoords.FromCoords(piece.coords),
@@ -371,7 +372,7 @@ export function calcArrowsLineDraft(
 		 */
 
 		// prettier-ignore
-		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile.boardsim, gamefile.basegame.gameRules.worldBorder, piece, slideDir, slideKey, organizedline);
+		const slideLegalLimit = legalmoves.calcPiecesLegalSlideLimitOnSpecificLine(gamefile, gamefile.gameRules.worldBorder, piece, slideDir, slideKey, organizedline);
 		if (slideLegalLimit === undefined) return; // This piece can't slide along the direction of travel
 
 		/**
@@ -539,7 +540,7 @@ export function getSlideExceptions(mode: 0 | 1 | 2 | 3): Vec2Key[] {
 	let slideExceptions: Vec2Key[] = [];
 	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2)
-		slideExceptions = gamefile.boardsim.pieces.slides
+		slideExceptions = gamefile.pieces.slides
 			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n) // Filter out all hippogonal and greater vectors
 			.map((v) => vectors.getKeyFromVec2(v));
 	return slideExceptions;
@@ -607,7 +608,7 @@ export function convertLineDraftToLine(
 	appendHover: boolean,
 ): { line: ArrowsLine; newHoveredArrows: HoveredArrow[] } {
 	const negVector = vectors.negateVector(slideDir);
-	const boardsim = gameslot.getGamefile()!.boardsim!;
+	const boardsim = gameslot.getGamefile()!;
 	const newHoveredArrows: HoveredArrow[] = [];
 
 	const toArrow = (

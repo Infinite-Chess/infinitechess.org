@@ -28,7 +28,6 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 import space from '../../misc/space.js';
 import mouse from '../../../util/mouse.js';
 import meshes from '../meshes.js';
-import guipause from '../../gui/guipause.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../boardpos.js';
@@ -47,8 +46,12 @@ import { Renderable, createRenderable } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------
 
-/** Width of entities (mini images, highlights) when zoomed out, in virtual pixels. */
-const ENTITY_WIDTH_VPIXELS = 40; // Default: 40
+/**
+ * Width of all entity icons when zoomed out, in virtual pixels.
+ * Includes mini images, square annotations, arrows, move hints,
+ * snap point ghost images.
+ */
+export const ENTITY_WIDTH_VPIXELS = 40;
 
 /** The color of the line that shows you what entity your mouse is snapped to. */
 const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
@@ -108,12 +111,8 @@ type Intersection = {
 
 // Entity Hovering ---------------------------------------------------------
 
-/**
- * {@link ENTITY_WIDTH_VPIXELS}, but converted to world-space units.
- * This can change depending on the screen dimensions.
- * Scale doesn't affect entity's visible size on screen.
- */
-function getEntityWidthWorld(): number {
+/** Returns the width of entity icons when zoomed out, in world-space units. */
+export function getEntityWidthWorld(): number {
 	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
 }
 
@@ -169,7 +168,6 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 /** We do not snap when zoomed in. */
 function isSnappingEnabledThisFrame(): boolean {
 	if (!boardpos.areZoomedOut()) return false;
-	if (guipause.areWePaused()) return false;
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return false;
 
 	return true;
@@ -197,9 +195,7 @@ function getSnapContext(world: DoubleCoords): SnapContext | undefined {
 	const pointerCoords = space.convertWorldSpaceToCoords(world);
 
 	/** The minimum distance from a snap point, in world space, for our mouse to snap to it. */
-	const snapDistWorld: BigDecimal = bd.fromNumber(
-		space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS * 0.5),
-	);
+	const snapDistWorld: BigDecimal = bd.fromNumber(getEntityWidthWorld() / 2);
 	/** The minimum distance from a snap point, in squares, for our mouse to snap to it. */
 	const snapDistSquares: BigDecimal = bd.divideFloating(snapDistWorld, boardpos.getBoardScale());
 
@@ -296,8 +292,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 	// At this point we know we WILL be snapping to something.
 	const { pointerCoords, snapDistSquares, closeLines, closestSnap } = ctx;
-	const { boardsim } = gameslot.getGamefile()!;
-
+  const gamefile = gameslot.getGamefile()!;
+  
 	/**
 	 * All intersection points of the highlight lines (drawn rays, preset rays, and legal moves)
 	 * within snapping distance of the mouse. If any, the closest takes priority.
@@ -327,7 +323,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// const allPrimitiveSlidesInGame = boardsim.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
 	// prettier-ignore
-	const searchVectors = boardsim.pieces.hippogonalsPresent ? [
+	const searchVectors = gamefile.pieces.hippogonalsPresent ? [
 		...vectors.VECTORS_ORTHOGONAL,
 		...vectors.VECTORS_DIAGONAL,
 		...vectors.VECTORS_HIPPOGONAL
@@ -353,9 +349,9 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	// 2. Pieces ========================================
 
 	// Only snap to these if there isn't too many pieces (slow)
-	if (boardutil.getPieceCountOfGame(boardsim.pieces) < THRESHOLD_TO_SNAP_PIECES) {
+	if (boardutil.getPieceCountOfGame(gamefile.pieces) < THRESHOLD_TO_SNAP_PIECES) {
 		const pieces: BDCoords[] = boardutil
-			.getCoordsOfAllPieces(boardsim.pieces)
+			.getCoordsOfAllPieces(gamefile.pieces)
 			.map((c) => bdcoords.FromCoords(c)); // Convert to BDCoords
 		const closestPieceSnap = findClosestEntityOfGroup(
 			pieces,

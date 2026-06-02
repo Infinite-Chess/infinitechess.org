@@ -14,13 +14,13 @@ import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 import camera from './camera.js';
 import docutil from '../../util/docutil.js';
 import gameslot from '../chess/gameslot.js';
+import deltatime from '../misc/deltatime.js';
 import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
 import gameloader from '../chess/gameloader.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
-import loadbalancer from '../misc/loadbalancer.js';
 import frametracker from './frametracker.js';
 import {
 	AttributeInfoInstanced,
@@ -241,7 +241,7 @@ function update(): void {
 	// Update the desired number of stars for this frame ---
 	desiredNumStars = getDesiredNumStars();
 
-	const deltaTimeSecs = loadbalancer.getDeltaTime();
+	const deltaTimeSecs = deltatime.get();
 	const now = performance.now(); // Get the current time once.
 
 	// 1. Update existing stars and handle deaths
@@ -291,10 +291,10 @@ function couldStarfieldEverBeVisible(): boolean {
 
 	// If voids can be present in the game, the starfield could be visible.
 	const gamefile = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
-	if (gamefile.boardsim.existingRawTypes.includes(r.VOID)) return true; // Voids are PRESENT (or can be added in the editor)
+	if (gamefile.existingRawTypes.includes(r.VOID)) return true; // Voids are PRESENT (or can be added in the editor)
 
 	// If there is a world border, the starfield could be visible.
-	if (gamefile.basegame.gameRules.worldBorder !== undefined) return true;
+	if (gamefile.gameRules.worldBorder !== undefined) return true;
 
 	return false;
 }
@@ -312,17 +312,17 @@ function isStarfieldVisible(): boolean {
 	// It would take too much effort to determine if the void mesh
 	// overlaps with the screen, so just assume the're visible.
 	const gamefile = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
-	if (boardutil.getPieceCountOfType(gamefile.boardsim.pieces, r.VOID) > 0) return true; // Voids are PRESENT
+	if (boardutil.getPieceCountOfType(gamefile.pieces, r.VOID) > 0) return true; // Voids are PRESENT
 
 	// At this point, if there isn't a world border, we know starfield is NOT visible.
-	if (gamefile.basegame.gameRules.worldBorder === undefined) return false;
+	if (gamefile.gameRules.worldBorder === undefined) return false;
 
 	// There IS a world border...
 
 	// Last check is whether our screen is entirely contained within the worldBorder box.
 	// If so, the starfield is NOT visible.
 	const screenBox = boardtiles.gboundingBox(false);
-	return !bounds.boxContainsBox(gamefile.basegame.gameRules.worldBorder, screenBox);
+	return !bounds.boxContainsBox(gamefile.gameRules.worldBorder, screenBox);
 }
 
 // Rendering ----------------------------------------------------------------------
@@ -372,7 +372,7 @@ function render(): void {
 		instanceData.push(...star.position, ...currentColor, currentSize);
 	});
 
-	perspective.renderWithoutPerspectiveRotations(() => {
+	camera.renderWithoutPerspectiveRotations(() => {
 		createRenderable_Instanced_GivenInfo(
 			vertexData,
 			instanceData,

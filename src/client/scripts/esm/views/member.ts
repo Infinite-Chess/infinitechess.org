@@ -16,6 +16,7 @@ import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
 
 import docutil from '../util/docutil.js';
 import validatorama from '../util/validatorama.js';
+import { serverFetch } from '../util/serverFetch.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -76,17 +77,10 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 	// so our refresh token in this here fetch request here would then be invalid
 	await validatorama.waitUntilInitialRequestBack();
 
-	const config: RequestInit = {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
-		},
-	};
 	// Server reads refresh token cookie, no Authorization header needed here as per original comments
 
 	try {
-		const response = await fetch(`/member/${member}/data`, config);
+		const response = await serverFetch(`/member/${member}/data`, { method: 'GET' });
 
 		if (response.status === 404) {
 			window.location.href = languagedropdown.addLngQueryParamToLink('/404'); // Use href for navigation
@@ -224,14 +218,12 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ password }), // Send password in body
-		credentials: 'same-origin', // Allows cookies (like session/CSRF) to be sent
 	};
 
 	try {
-		const response = await fetch(`/member/${member}/delete`, config);
+		const response = await serverFetch(`/member/${member}/delete`, config);
 
 		if (!response.ok) {
 			// Probably incorrect password
@@ -254,16 +246,7 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 function resendConfirmEmail(): void {
 	if (!isOurProfile) return; // Only allow resend if viewing own profile
 
-	const config: RequestInit = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
-		},
-		credentials: 'same-origin',
-	};
-
-	fetch(`/member/${member}/send-email`, config)
+	serverFetch(`/member/${member}/send-email`, { method: 'POST' })
 		.then((response) => {
 			if (response.status === 401) {
 				window.location.href = languagedropdown.addLngQueryParamToLink('/401'); // Unauthorized

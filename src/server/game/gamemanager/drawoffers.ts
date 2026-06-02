@@ -47,12 +47,12 @@ function doesColorHaveExtendedDrawOffer(match: MatchInfo, color: Player): boolea
  * Returns true if they given color has extended a draw offer
  * too recently for them to extend another, yet.
  */
-function hasColorOfferedDrawTooFast({ match, basegame }: ServerGame, color: Player): boolean {
-	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(match, color); // number | undefined
+function hasColorOfferedDrawTooFast(servergame: ServerGame, color: Player): boolean {
+	const lastPlyDrawOffered = getLastDrawOfferPlyOfColor(servergame.match, color); // number | undefined
 	if (lastPlyDrawOffered !== undefined) {
 		// They have made at least 1 offer this game
 		// console.log("Last ply offered:", lastPlyDrawOffered);
-		const movesSinceLastOffer = basegame.moves.length - lastPlyDrawOffered;
+		const movesSinceLastOffer = servergame.moves.length - lastPlyDrawOffered;
 		if (movesSinceLastOffer < movesBetweenDrawOffers) return true;
 	}
 	return false;
@@ -63,17 +63,17 @@ function hasColorOfferedDrawTooFast({ match, basegame }: ServerGame, color: Play
  * DOES NOT INFORM the opponent.
  * @param color - The color of the player extending the offer
  */
-function openDrawOffer({ match, basegame }: ServerGame, color: Player): void {
-	if (isDrawOfferOpen(match)) {
+function openDrawOffer(servergame: ServerGame, color: Player): void {
+	if (isDrawOfferOpen(servergame.match)) {
 		logEventsAndPrint(
 			"MUST NOT open a draw offer when there's already one open!!",
 			'errLog.txt',
 		);
 		return;
 	}
-	const playerdata = match.playerData[color]!;
-	playerdata.lastOfferPly = basegame.moves.length;
-	match.drawOfferState = color;
+	const playerdata = servergame.match.playerData[color]!;
+	playerdata.lastOfferPly = servergame.moves.length;
+	servergame.match.drawOfferState = color;
 	return;
 }
 

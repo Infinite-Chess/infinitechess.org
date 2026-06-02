@@ -8,7 +8,8 @@
  * @author Andreas Tsevas
  */
 
-import type { Board, FullGame } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type {
 	Coords,
 	CoordsKey,
@@ -18,8 +19,8 @@ import type {
 import jsutil from '../../../../../../shared/util/jsutil.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 import { primalityTest } from '../../../../../../shared/util/isprime.js';
-import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import icnconverter, { MoveCoords } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import { detectInsufficientMaterial } from '../../../../../../shared/chess/logic/insufficientmaterial.js';
 import {
 	rawTypes as r,
 	ext as e,
@@ -68,7 +69,7 @@ let rand: Function;
 let engineInitialized: boolean = false;
 
 /** Externally supplied gamefile */
-let input_gamefile: FullGame;
+let input_gamefile: GameFile;
 
 /** Start time of current engine calculation in millis */
 let engineStartTime: number;
@@ -1668,23 +1669,20 @@ function runIterativeDeepening(
 							);
 						}
 					}
-					const emptyPieceMovesets = {}; // <--- Is this gonna be an issue?
-					const basegame = input_gamefile.basegame;
+					const gamefile = input_gamefile;
 					const dummy_board = {
+						gameRules: gamefile.gameRules,
 						moves: [],
-						// pieceMovesets is the only required gamefile property that is lost when sending the gamefile to the engine.
-						// This will cause the possible slides to be calculated incorrectly, and thus the `lines` property not entirely filled out.
-						// I THINK we are safe though, because I saw nowhere in detectInsufficientMaterial() where it reads the lines.
+						// Slide lines are not needed here — detectInsufficientMaterial() never reads lines.
 						pieces: organizedpieces.processInitialPosition(
 							piecesOrganizedByKey,
-							emptyPieceMovesets,
-							basegame.gameRules.turnOrder,
-							input_gamefile.boardsim.editor,
-							basegame.gameRules.promotionsAllowed,
+							gamefile.gameRules.turnOrder,
+							input_gamefile.editor,
+							gamefile.gameRules.promotion,
 						).pieces,
 					} as unknown as Board;
 
-					if (detectInsufficientMaterial(basegame.gameRules, dummy_board)) break;
+					if (detectInsufficientMaterial(dummy_board)) break;
 				}
 
 				// special case for 3B3B-1k variant after piece capture
@@ -1811,14 +1809,14 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
  */
 async function runEngine(): Promise<void> {
 	try {
-		const board = input_gamefile.boardsim;
+		const gamefile = input_gamefile;
 		// get real coordinates and parse type of black royal piece
-		if (doesTypeExist(board, r.KING + e.B)) {
-			gamefile_royal_coords = getFirstOfType(board, r.KING + e.B)!;
+		if (doesTypeExist(gamefile, r.KING + e.B)) {
+			gamefile_royal_coords = getFirstOfType(gamefile, r.KING + e.B)!;
 			royal_moves = king_moves;
 			royal_type = 'k';
-		} else if (doesTypeExist(board, r.ROYALCENTAUR + e.B)) {
-			gamefile_royal_coords = getFirstOfType(board, r.ROYALCENTAUR + e.B)!;
+		} else if (doesTypeExist(gamefile, r.ROYALCENTAUR + e.B)) {
+			gamefile_royal_coords = getFirstOfType(gamefile, r.ROYALCENTAUR + e.B)!;
 			royal_moves = centaur_moves;
 			royal_type = 'rc';
 		} else {
@@ -1828,7 +1826,7 @@ async function runEngine(): Promise<void> {
 		// create list of types and coords of white pieces, in order to initialize start_piecelist and start_coordlist
 		start_piecelist = [];
 		start_coordlist = [];
-		for (const [type, range] of board.pieces.typeRanges) {
+		for (const [type, range] of gamefile.pieces.typeRanges) {
 			let undefinedidx = 0;
 			for (let idx = range.start; idx < range.end; idx++) {
 				if (idx === range.undefineds[undefinedidx]) {
@@ -1838,8 +1836,8 @@ async function runEngine(): Promise<void> {
 				}
 				if (Math.floor(type / numTypes) !== p.WHITE) continue;
 				const bigintCoords: Coords = [
-					board.pieces.XPositions[idx]!,
-					board.pieces.YPositions[idx]!,
+					gamefile.pieces.XPositions[idx]!,
+					gamefile.pieces.YPositions[idx]!,
 				];
 				// Convert the bigint coordinates to floating point coordinates that the engine works with.
 				const coords = convertBigIntCoordsToFloating(bigintCoords);

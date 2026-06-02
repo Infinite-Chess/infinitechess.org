@@ -4,9 +4,11 @@ import i18next from 'i18next';
 import { LanguageDetector } from 'i18next-http-middleware';
 
 import translationLoader from './translationLoader.js';
+import { loadComponentTranslations } from './componentTranslationLoader.js';
 
 /** Initializes i18next for the server process, loading languages from .toml files. */
 function initTranslations(): void {
+	// Load OLD translations
 	const translations = translationLoader.loadTranslations();
 	const supportedLngs = Object.keys(translations);
 
@@ -17,6 +19,9 @@ function initTranslations(): void {
 		// fallbackLng: DEFAULT_LANGUAGE, // Fallback is handled by deepMerge() in translationLoader
 		// debug: true, // Enable debug mode to see logs for missing keys and other details
 	});
+
+	// Load NEW translations
+	loadComponentTranslations();
 }
 
 export { initTranslations };

@@ -1,0 +1,131 @@
+# Translation component: shared codes-and-labels
+# Auto-injected sitewide via layout.njk. Contains display labels for "codes" used
+# across many pages: variant codes, variant group codes, time-control speed
+# categories, game modes, sides, win conditions, modifiers, and the narrative
+# phrasing used in the variant preview tooltip.
+script_only = true
+
+[user_status] # Identity placeholders shown in place of a real username.
+guest_indicator = "(Guest)"
+you_indicator = "(You)"
+
+[variants] # Display names for each variant.
+# Group "standard"
+Classical = "Classical"
+Core = "Core"
+Standarch = "Standarch"
+Space_Classic = "Space Classic"
+CoaIP = "Chess on an Infinite Plane"
+Space = "Space"
+Obstocean = "Obstocean"
+Chess = "Chess"
+Confined_Classical = "Confined Classical"
+Classical_Plus = "Classical+"
+Pawndard = "Pawndard"
+Knightline = "Knightline"
+Palace = "Palace"
+CoaIP_HO = "Chess on an Infinite Plane - Huygens Option"
+CoaIP_RO = "Chess on an Infinite Plane - Roses Option"
+CoaIP_NO = "Chess on an Infinite Plane - Knightriders Option"
+# Hidden depricated variants
+Knighted_Chess = "Knighted Chess"
+Abundance = "Abundance"
+Amazon_Chandelier = "Amazon Chandelier"
+Containment = "Containment"
+# Group "horde"
+Pawn_Horde = "Pawn Horde"
+# Group "4d"
+"4x4x4x4_Chess" = "4×4×4×4 Chess"
+"5D_Chess" = "5D Chess"
+# Group "showcase"
+Omega = "Omega"
+Omega_Squared = "Omega^2"
+Omega_Cubed = "Omega^3"
+Omega_Fourth = "Omega^4"
+
+[variant_groups.standard]
+name = "Standard"
+description = "Normal rules apply."
+
+[variant_groups.horde]
+name = "Horde"
+description = "One side has a large number of pawns, the other has a normal army."
+
+[variant_groups."4D"]
+name = "4D"
+description = "Pieces can travel four-dimensionally."
+
+[variant_groups.showcase]
+name = "Showcase"
+description = "Mate in omega, and greater, forced checkmate positions."
+
+[variant_groups.custom] # Pseudo-group for the user's own custom positions
+name = "Custom"
+description = "Your own position, your own rules."
+display_label = "Custom Variant" # label for all custom seeks
+
+[speeds] # Time control "Speed" category labels
+bullet = "Bullet"
+blitz = "Blitz"
+rapid = "Rapid"
+classical = "Classical"
+infinite = "Infinite"
+
+[game_modes]
+casual = "Casual"
+rated = "Rated"
+
+[sides] # Color labels
+random = "Random"
+white = "White"
+black = "Black"
+red = "Red"
+blue = "Blue"
+yellow = "Yellow"
+green = "Green"
+neutral = "Neutral"
+
+[modifiers.slide-limit]
+name = "Slide Limit"
+description = "All pieces have a maximum distance they can slide in one move."
+
+[position_errors]
+invalid_icn = "Invalid ICN."
+icn_missing_position = "ICN must include a position."
+# Display labels for codes returned by validatePosition()
+mixed_player_modes = "Cannot mix 2-player and 4-player."
+incomplete_turn_order = "All players need a turn."
+position_too_large = "Position is too large."
+gargoyles_not_allowed = "No gargoyles allowed."
+invalid_player_id = "At least one piece has an invalid player ID."
+player_missing_pieces = "Each player must have at least one piece."
+player_missing_royal = "At least one player is missing a royal."
+consecutive_turns_with_checkmate = "Players cannot have consecutive turns when using checkmate."
+too_many_royals_for_checkmate = "Too many royals for using checkmate."
+king_capture_on_turn_1 = "King capture possible on turn 1."
+
+[variant_preview]
+# Narrative phrasing for the variant preview tooltip's rules list.
+four_d_movement = "Pieces travel four-dimensionally."
+black_moves_first = "Black moves first."
+turn_order = "Turn order: {order}."
+win_by = "Win by {label}." # Description of how either player can win the game. Label examples are below in client.variant_preview.win_conditions
+color_wins_by = "{color} wins by {label}."
+no_promotion = "No promotion." # Indicates promotion is disabled in the game
+promotion_prefix = "Promotion: " # To the right of this is inserted small icons of the pieces you can promote to, followed by a period
+no_move_rule = "No 50-move rule."
+move_rule = "Move rule: {plies} plies."
+en_passant = "En passant square: ({x},{y})."
+plies_since_capture = "{n} plies passed since last capture or pawn push."
+# Parameterized rule-list phrasing for the active slide-limit modifier.
+# Other modifiers' rule-list lines can likely reuse [modifiers.<code>].description directly.
+slide_limit_rule = "Pieces can't slide more than {n} squares."
+
+[variant_preview.win_conditions]
+# Display labels for non-checkmate win conditions
+# Each of these are inserted as labels above in the variant_preview.win_by and color_wins_by strings
+checkmate = "checkmate"
+royalcapture = "royal capture"
+allroyalscaptured = "capturing all royals"
+allpiecescaptured = "capturing all pieces"
+koth = "reaching the center"

@@ -7,6 +7,8 @@
  * This script is only used for subtracting the ping value from the clock values the server reported.
  */
 
+import { SocketBus } from '../websocket/SocketBus.js';
+
 // Variables -------------------------------------------------------------
 
 let currentPing: number = 0; // Stores the current ping value
@@ -16,10 +18,9 @@ const pingHistory: number[] = []; // Stores the last 'MAX_PING_HISTORY' ping val
 
 // Functions -------------------------------------------------------------
 
-// Initialize event listeners for ping and socket-closed events
 (function init(): void {
-	document.addEventListener('ping', handlePingUpdate);
-	document.addEventListener('socket-closed', handleSocketClosed);
+	SocketBus.addEventListener('ping', handlePingUpdate);
+	SocketBus.addEventListener('closed', handleSocketClosed);
 })();
 
 /**
@@ -32,12 +33,8 @@ function handlePingUpdate(event: CustomEvent<number>): void {
 	updatePingHistory(currentPing);
 }
 
-/**
- * Event handler for the 'socket-closed' event.
- * Resets the current ping value without clearing the ping history.
- * @param event - The 'socket-closed' event.
- */
-function handleSocketClosed(_event: CustomEvent<void>): void {
+/** Resets the current ping value without clearing the ping history. */
+function handleSocketClosed(): void {
 	currentPing = 0;
 }
 

@@ -5,9 +5,9 @@
  */
 
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
-import type { Board } from '../../../../../shared/chess/logic/gamefile.js';
 import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -19,9 +19,8 @@ import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
 import { gl } from './webgl.js';
+import camera from './camera.js';
 import boardpos from './boardpos.js';
-import miniimage from './miniimage.js';
-import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 import texturecache from '../../chess/rendering/texturecache.js';
 import instancedshapes from './instancedshapes.js';
@@ -105,14 +104,14 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  *
  * SLOWEST. Minimize calling.
  */
-function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
+function regenAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
 	if (!mesh) return;
-	console.log('Regenerating all piece type meshes.');
+	// console.log('Regenerating all piece type meshes.');
 
 	// Update the offset
 	mesh.offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
 	// Calculate whether the textures should be inverted or not, based on whether we're viewing black's perspective.
-	mesh.inverted = perspective.getIsViewingBlackPerspective();
+	mesh.inverted = camera.getIsViewingBlackPerspective();
 
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
@@ -132,11 +131,9 @@ function regenAll(boardsim: Board, mesh: Mesh | undefined): void {
  *
  * Regenerates the single model of the provided type.
  * Call externally after adding more undefined placeholders to a type list.
- * @param boardsim
- * @param mesh
  * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
  */
-function regenType(boardsim: Board, mesh: Mesh, type: number): void {
+function regenType(boardsim: BoardPreview, mesh: Mesh, type: number): void {
 	console.log(`Regenerating mesh of type ${type}.`);
 
 	if (typeutil.getRawType(type) === r.VOID)
@@ -151,11 +148,9 @@ function regenType(boardsim: Board, mesh: Mesh, type: number): void {
  * Must be called whenever we add more undefineds placeholders to the this piece list.
  *
  * SLOWEST. Minimize calling.
- * @param boardsim
- * @param mesh
  * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
  */
-function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
+function genTypeModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshData {
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
@@ -179,7 +174,7 @@ function genTypeModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  *
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
+function genVoidModel(boardsim: BoardPreview, mesh: Mesh, type: number): MeshData {
 	// const voidColor = preferences.getTintColorOfType(type); // Black, from the pieceTheme
 	const voidColor = gl.getParameter(gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. DOESN'T EVEN MATTER SINCE IT'S A MASK!
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
@@ -202,7 +197,11 @@ function genVoidModel(boardsim: Board, mesh: Mesh, type: number): MeshData {
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(boardsim: Board, mesh: Mesh, type: number): InstanceData {
+function getInstanceDataForTypeRange(
+	boardsim: BoardPreview,
+	mesh: Mesh,
+	type: number,
+): InstanceData {
 	// const range = boardsim.pieces.typeRanges.get(type)!;
 	// const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 	const instanceData: InstanceData = []; // Initialize empty
@@ -284,7 +283,7 @@ function castBigIntArrayToFloat32(instanceData: bigint[]): Float32Array {
  * uniform translations upon rendering, and reinits them on the gpu.
  * Faster than {@link regenAll}.
  */
-function shiftAll(boardsim: Board, mesh: Mesh): void {
+function shiftAll(boardsim: BoardPreview, mesh: Mesh): void {
 	console.log('Shifting all piece meshes.');
 
 	const newOffset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
@@ -413,26 +412,17 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
  * Renders ever piece type mesh of the game, EXCLUDING voids,
  * translating and scaling them into position.
  */
-function renderAll(boardsim: Board, mesh: Mesh | undefined): void {
+function renderAll(boardsim: BoardPreview, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
 	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z);
-
-	if (boardpos.areZoomedOut() && !miniimage.isDisabled()) {
-		// Only render voids
-		// NOT ANYMORE SINCE ADDING STAR FIELD ANIMATION (voids are rendered separately)
-		// mesh.types[r.VOID]?.model.render(position, scale);
-		return;
-	}
-
-	// We can render everything...
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
 	if (!boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(mesh.offset))
 		shiftAll(boardsim, mesh);
 
 	// Test if the rotation has changed
-	const correctInverted = perspective.getIsViewingBlackPerspective();
+	const correctInverted = camera.getIsViewingBlackPerspective();
 	if (mesh.inverted !== correctInverted) rotateAll(mesh, correctInverted);
 
 	for (const [typeStr, meshData] of Object.entries(mesh.types)) {

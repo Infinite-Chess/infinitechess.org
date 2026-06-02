@@ -18,6 +18,7 @@ import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/m
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import math from '../../../../../../shared/util/math/math.js';
+import bounds from '../../../../../../shared/util/math/bounds.js';
 import coordutil, {
 	BDCoords,
 	Coords,
@@ -27,7 +28,6 @@ import coordutil, {
 import space from '../../misc/space.js';
 import meshes from '../meshes.js';
 import boardpos from '../boardpos.js';
-import boarddrag from '../boarddrag.js';
 import boardtiles from '../boardtiles.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../GameBus.js';
@@ -219,8 +219,7 @@ function onTransitionStart(): void {
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
 
-	boardpos.eraseMomentum(); // Reset velocities to zero
-	boarddrag.cancelBoardDrag(); // We don't want to allow dragging during a transition.
+	document.dispatchEvent(new CustomEvent('transition-start'));
 }
 
 /** Starts a Zooming Transition. */
@@ -401,13 +400,68 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 }
 
 /**
+ * High level function that initiates one or two zoom transitions
+ * with the goal of getting the target Area on screen.
+ * @param thisArea - The Area object to get on screen.
+ * @param ignoreHistory - Whether to skip adding this teleport to the teleport history.
+ */
+function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
+	const thisAreaBox = thisArea.boundingBox;
+
+	const startCoords = boardpos.getBoardPos();
+	const endCoords = thisArea.coords;
+
+	const currentBoardBoundingBox = boardtiles.gboundingBoxFloat(); // Tile/board space, NOT world-space
+
+	// Will a teleport to this area be a zoom out or in?
+	const isAZoomOut = bd.compare(thisArea.scale, boardpos.getBoardScale()) < 0;
+
+	let firstArea: Area | undefined;
+
+	if (isAZoomOut) {
+		// If our current screen isn't within the final area, create new area to teleport to first
+		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
+			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
+			firstArea = area.calculateFromUnpaddedBox(thisAreaBox);
+		}
+		// Version that fits the entire screen on the zoom out
+		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
+		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
+		//     firstArea = calculateFromBox(mergedBoxes);
+		// }
+	} else {
+		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
+		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
+			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
+			firstArea = area.calculateFromUnpaddedBox(currentBoardBoundingBox);
+		}
+		// Version that fits the entire screen on the zoom out
+		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
+		//     const mergedBoxes = bounds.mergeBoundingBoxBDs(currentBoardBoundingBox, thisAreaBox);
+		//     firstArea = calculateFromBox(mergedBoxes);
+		// }
+	}
+
+	const trans1: ZoomTransition | undefined = firstArea
+		? { destinationCoords: firstArea.coords, destinationScale: firstArea.scale }
+		: undefined;
+	const trans2: ZoomTransition = {
+		destinationCoords: thisArea.coords,
+		destinationScale: thisArea.scale,
+	};
+
+	if (trans1) startZoomTransition(trans1, trans2, ignoreHistory);
+	else startZoomTransition(trans2, undefined, ignoreHistory);
+}
+
+/**
  * Starts a Zooming Transition to an integer bounding box.
  * If an intermediate zoom-out is needed first, it will be done.
  */
 function zoomToCoordsBox(box: BoundingBox): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
 	const thisArea = area.calculateFromUnpaddedBox(boxFloating);
-	area.initTransitionFromArea(thisArea, false);
+	initTransitionFromArea(thisArea, false);
 }
 
 /**
@@ -470,7 +524,7 @@ function undoTransition(): void {
 				previousTrans.destinationScale,
 			),
 		};
-		area.initTransitionFromArea(thisArea, true);
+		initTransitionFromArea(thisArea, true);
 	} else {
 		// Panning transition
 		startPanTransition(previousTrans.destinationCoords, true);

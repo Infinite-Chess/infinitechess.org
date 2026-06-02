@@ -76,7 +76,17 @@ export const editorSaveLimiter = rateLimit({
  */
 export const editorLoadLimiter = rateLimit({
 	windowMs: 1000 * 60,
-	max: 20,
+	max: 30,
 	skip: () => process.env['NODE_ENV'] === 'test',
+	...default_options,
+});
+
+/**
+ * Seek Preview Limiter
+ * Rule: Max 20 seek previews per 1 minute per IP
+ */
+export const seekPreviewLimiter = rateLimit({
+	windowMs: 1000 * 60,
+	max: 20,
 	...default_options,
 });

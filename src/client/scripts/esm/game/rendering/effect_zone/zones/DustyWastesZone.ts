@@ -2,7 +2,7 @@
 
 import type { Zone } from '../EffectZoneManager';
 
-import loadbalancer from '../../../misc/loadbalancer';
+import deltatime from '../../../misc/deltatime.js';
 import { GlitchPass } from '../../../../webgl/post_processing/passes/GlitchPass';
 import { ColorGradePass } from '../../../../webgl/post_processing/passes/ColorGradePass';
 import { ProgramManager } from '../../../../webgl/ProgramManager';
@@ -167,7 +167,7 @@ export class DustyWastesZone implements Zone {
 
 	/** Responsible for calculating the exact UV offsets of the noise texture layers each frame. */
 	public update(): void {
-		const deltaTime = loadbalancer.getDeltaTime();
+		const deltaTime = deltatime.get();
 
 		// --- Wind update logic ---
 

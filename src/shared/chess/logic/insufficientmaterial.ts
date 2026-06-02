@@ -4,7 +4,7 @@
  * This script detects draws by insufficient material.
  */
 
-import type { Board } from './gamefile.js';
+import type { Board } from './boardinit.js';
 import type { Coords } from '../util/coordutil.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/winconutil.js';
@@ -281,7 +281,9 @@ function normalizeBishopParities(scen: Scenario): void {
 // Main Logic ---------------------------------------------------------------
 
 /** Whether the position supports insufficient material checks. */
-function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): boolean {
+function doesPositionSupportInsuffmat(boardsim: Board): boolean {
+	const gameRules = boardsim.gameRules;
+
 	// Is the win condition is checkmate for both players?
 	if (
 		!gamerules.doesColorHaveWinCondition(gameRules, p.WHITE, 'checkmate') ||
@@ -314,7 +316,6 @@ function doesPositionSupportInsuffmat(gameRules: GameRules, boardsim: Board): bo
 
 /**
  * Builds the current piece scenario that is on the board.
- * @param boardsim
  * @param exclude - Optional function, run for each piece, that returns
  * whether that piece should be excluded from the scenario.
  */
@@ -371,11 +372,10 @@ function invertScenario(scenario: Scenario): Scenario {
  * Detects if the game is drawn by insufficient material,
  * returning the game conclusion if so.
  */
-export function detectInsufficientMaterial(
-	gameRules: GameRules,
-	boardsim: Board,
-): GameConclusion | undefined {
-	if (!doesPositionSupportInsuffmat(gameRules, boardsim)) return undefined;
+export function detectInsufficientMaterial(boardsim: Board): GameConclusion | undefined {
+	if (!doesPositionSupportInsuffmat(boardsim)) return undefined;
+
+	const gameRules = boardsim.gameRules;
 
 	const boardScenariosToCheck = buildBoardScenarios(gameRules, boardsim);
 	if (boardScenariosToCheck === false) return undefined; // Too many promotable pawns, skip insuffmat check entirely to avoid exponential blowup.
@@ -424,8 +424,8 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 		const [rawType, player] = typeutil.splitType(piece.type);
 		if (rawType !== r.PAWN) continue; // Not a pawn
 		if (player === p.NEUTRAL) continue; // Player neutral can't even move pieces let alone promote pawns
-		if ((gameRules.promotionsAllowed?.[player]?.length ?? 0) === 0) continue; // None of them are promotable (this player can't promote to anything)
-		if ((gameRules.promotionRanks?.[player]?.length ?? 0) === 0) continue; // Player has no promotion ranks to promote at
+		if ((gameRules.promotion?.pieces.length ?? 0) === 0) continue; // None of them are promotable (no promotions exist in this game)
+		if ((gameRules.promotion?.ranks[player]?.length ?? 0) === 0) continue; // Player has no promotion ranks to promote at
 		// ASSUME the pawn is behind a promotion rank.
 		// Worst case if it isn't: insuffmat isn't triggered when it could be.
 		promotablePawns.push({ coords: piece.coords, player, pawnType: piece.type });
@@ -450,7 +450,7 @@ function buildBoardScenarios(gameRules: GameRules, boardsim: Board): Scenario[] 
 	/** Returns every possible outcome for a pawn: staying unpromoted, or each promotion piece. */
 	function getPawnOutcomes(pawn: { player: Player; pawnType: number }): PawnOutcome[] {
 		const outcomes: PawnOutcome[] = [{ pieceType: pawn.pawnType }]; // stays as pawn
-		for (const promotionRawType of gameRules.promotionsAllowed![pawn.player]!) {
+		for (const promotionRawType of gameRules.promotion!.pieces) {
 			const pieceType = typeutil.buildType(promotionRawType, pawn.player);
 			if (promotionRawType === r.BISHOP) {
 				outcomes.push({ pieceType, bishopParity: 0 });

@@ -11,8 +11,12 @@ import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
-import { refreshTokenExpiryMillis, signRefreshToken } from './tokenSigner.js';
 import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
+import {
+	DEFAULT_SESSION_EXPIRY_MILLIS,
+	EXTENDED_SESSION_EXPIRY_MILLIS,
+	signRefreshToken,
+} from './tokenSigner.js';
 
 const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 // const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 10; // 10s
@@ -39,16 +43,22 @@ export function freshenSession(
 	// 	`Renewing member "${username}"s session by issuing them new login cookies! -------`,
 	// );
 
+	// Renew with the same session type the user originally chose
+	const keepLoggedIn = Boolean(tokenRecord.is_persistent);
+	const expiryMillis = keepLoggedIn
+		? EXTENDED_SESSION_EXPIRY_MILLIS
+		: DEFAULT_SESSION_EXPIRY_MILLIS;
+
 	// Create the new token.
-	const newToken = signRefreshToken(user_id, username, roles);
+	const newToken = signRefreshToken(user_id, username, roles, expiryMillis);
 
 	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
 	markRefreshTokenAsConsumed(tokenRecord.token);
 	// Add the new token to the database.
-	addRefreshToken(req, user_id, newToken);
+	addRefreshToken(req, user_id, newToken, expiryMillis, keepLoggedIn);
 
 	// Send the new token to the user in their cookies.
-	createSessionCookies(res, user_id, username, newToken);
+	createSessionCookies(res, user_id, username, newToken, expiryMillis);
 }
 
 /**
@@ -58,6 +68,8 @@ export function freshenSession(
  * @param user_id - The unique id of the user in the database.
  * @param username - The username of the user.
  * @param roles - The roles the user has.
+ * @param keepLoggedIn - Whether the session is given a much longer expiry
+ * 						 window before it logs them out due to inactivity.
  */
 export function createNewSession(
 	req: Request,
@@ -65,14 +77,19 @@ export function createNewSession(
 	user_id: number,
 	username: string,
 	roles: Role[] | null,
+	keepLoggedIn: boolean,
 ): void {
+	const expiryMillis = keepLoggedIn
+		? EXTENDED_SESSION_EXPIRY_MILLIS
+		: DEFAULT_SESSION_EXPIRY_MILLIS;
+
 	// The payload can be an object with their username and their roles.
-	const refreshToken = signRefreshToken(user_id, username, roles);
+	const refreshToken = signRefreshToken(user_id, username, roles, expiryMillis);
 
 	// Save the refresh token to the database
-	addRefreshToken(req, user_id, refreshToken);
+	addRefreshToken(req, user_id, refreshToken, expiryMillis, keepLoggedIn);
 
-	createSessionCookies(res, user_id, username, refreshToken);
+	createSessionCookies(res, user_id, username, refreshToken, expiryMillis);
 }
 
 /**
@@ -99,12 +116,14 @@ export function revokeSession(res: Response): void {
  * @param userId - The ID of the user.
  * @param username - The username of the user.
  * @param refreshToken - The refresh token to be stored in the cookie.
+ * @param expiryMillis - How long, in milliseconds, the cookies should live (match the token's expiry).
  */
 function createSessionCookies(
 	res: Response,
 	userId: number,
 	username: string,
 	refreshToken: string,
+	expiryMillis: number,
 ): void {
 	// Create and sets an HTTP-only cookie containing the refresh token.
 	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true.
@@ -112,9 +131,9 @@ function createSessionCookies(
 		httpOnly: true,
 		sameSite: 'none',
 		secure: true,
-		maxAge: refreshTokenExpiryMillis,
+		maxAge: expiryMillis,
 	});
-	createMemberInfoCookie(res, userId, username);
+	createMemberInfoCookie(res, userId, username, expiryMillis);
 }
 
 /**
@@ -123,11 +142,17 @@ function createSessionCookies(
  * @param res - The response object.
  * @param userId - The ID of the user.
  * @param username - The username of the user.
+ * @param expiryMillis - How long, in milliseconds, the cookie should live (match the token's expiry).
  */
-function createMemberInfoCookie(res: Response, userId: number, username: string): void {
+function createMemberInfoCookie(
+	res: Response,
+	userId: number,
+	username: string,
+	expiryMillis: number,
+): void {
 	// Create an object with member info
 	const now = Date.now();
-	const expires = now + refreshTokenExpiryMillis;
+	const expires = now + expiryMillis;
 	const memberInfo = JSON.stringify({ user_id: userId, username, issued: now, expires });
 
 	// Set the cookie (readable by JavaScript, not HTTP-only).
@@ -136,7 +161,7 @@ function createMemberInfoCookie(res: Response, userId: number, username: string)
 		httpOnly: false,
 		sameSite: 'none',
 		secure: true,
-		maxAge: refreshTokenExpiryMillis,
+		maxAge: expiryMillis,
 	});
 }
 

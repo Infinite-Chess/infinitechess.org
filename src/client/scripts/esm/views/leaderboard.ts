@@ -7,7 +7,7 @@
  * so we can display that info.
  */
 
-import type { VariantCode } from '../../../../shared/chess/variants/variantdictionary.js';
+import type { VariantCode } from '../../../../shared/chess/variants/variantregistry.js';
 import type { UsernameItem } from '../util/usernamecontainer.js';
 
 import {
@@ -16,6 +16,7 @@ import {
 } from '../../../../shared/chess/variants/validleaderboard.js';
 
 import validatorama from '../util/validatorama.js';
+import { serverFetch } from '../util/serverFetch.js';
 import usernamecontainer from '../util/usernamecontainer.js';
 
 // --- DOM Element Selection ---
@@ -108,20 +109,14 @@ function createEmptyLeaderboardTable(): void {
  * @param n_players - number of players to add to table
  */
 async function populateTable(n_players: number): Promise<void> {
-	const config: RequestInit = {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
-		},
-	};
+	const config: RequestInit = { method: 'GET' };
 
 	try {
 		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
 		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
 		const find_requester_rank = !initialized && loggedInAs !== undefined ? 1 : 0;
-		const response = await fetch(
+		const response = await serverFetch(
 			`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`,
 			config,
 		);

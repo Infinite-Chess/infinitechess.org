@@ -4,8 +4,8 @@
  * The script keeps track of all our active online games.
  */
 
-import type { Invite } from '../invitesmanager/inviteutility.js';
 import type { Rating } from '../../../shared/types.js';
+import type { AuthSeek } from '../invitesmanager/inviteutility.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
@@ -16,14 +16,12 @@ import WebSocket from 'ws';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
-import gamefile from '../../../shared/chess/logic/gamefile.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
+import variantcache from '../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import {
-	doesVariantSupportServerValidation,
-	isGameInstantlyDeleted,
-} from '../../../shared/chess/variants/servervalidation.js';
+import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
+import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
 import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
@@ -38,7 +36,6 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
-import { broadcastGameCountToInviteSubs } from './gamecount.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
@@ -55,7 +52,7 @@ import {
 // Constants ----------------------------------------------------------------------------------
 
 /** Whether to log all new and ending games to the console. */
-const PRINT_GAMES = false;
+const PRINT_GAMES = true;
 
 // State --------------------------------------------------------------------------------------
 
@@ -73,16 +70,12 @@ const activeGames: Record<number, ServerGame> = {};
 /**
  * Creates the `ServerGame` object and subscibes each player to the game
  * Auto-subscribes the players to receive game updates.
- * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`, `publicity`.
+ * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
- * @param actingPlayer - The color of the player that started the game and sent the socket message
- * @param replyto - The ID of the incoming socket message of the player that started the game. This is used for the `replyto` property on our response.
  */
 function createGame(
-	invite: Invite,
+	invite: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
-	actingPlayer: Player,
-	replyto?: number,
 ): void {
 	const ratinginfo: typeof assignments & PlayerGroup<{ rating?: Rating }> = {};
 	for (const [color, data] of Object.entries(assignments)) {
@@ -98,33 +91,37 @@ function createGame(
 		}
 	}
 
+	if (invite.variant.kind !== 'preset')
+		throw new Error('Custom variant game starting is not yet implemented.');
+	const variantCode = invite.variant.code;
+
 	const gameID = issueUniqueGameId();
-	const now = Date.now();
+	const dateTimestamp = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
-		invite.rated === 'rated',
-		invite.variant,
-		invite.clock,
-		now,
+		invite.mode === 'rated',
+		variantCode,
+		invite.time,
+		dateTimestamp,
 		ratinginfo,
 	);
-	const basegame = gamefile.initGame(metadata, now, invite.variant);
+	const variant: LoadedVariant = {
+		code: variantCode,
+		mod: variantcache.getModule(variantCode),
+		dateTimestamp,
+	};
+	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);
 	const match = gameutility.initMatch(invite, gameID, assignments);
+	const validateMoves = doesVariantSupportServerValidation(variant);
 
-	// If the variant is small, construct the board for server-side move legality validation.
-	const boardsim = doesVariantSupportServerValidation(match.variant, basegame.dateTimestamp)
-		? gamefile.initBoard(basegame.gameRules, match.variant, basegame.dateTimestamp)
-		: undefined;
-
-	const servergame: ServerGame = { basegame, match, boardsim };
+	const servergame: ServerGame = gameutility.initServerGame(
+		gameWithRules,
+		match,
+		validateMoves,
+		variant,
+	);
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		if (socket)
-			gameutility.subscribeClientToGame(
-				servergame,
-				socket,
-				player,
-				actingPlayer === player ? { replyto } : {},
-			);
+		if (socket) gameutility.subscribeClientToGame(servergame, socket, player);
 		else startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
 	}
 
@@ -223,7 +220,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 
 	// Let their OPPONENT know they've disconnected though...
 
-	if (gameutility.isGameOver(servergame.basegame)) return; // It's fine if players unsub/disconnect after the game has ended.
+	if (gameutility.isGameOver(servergame)) return; // It's fine if players unsub/disconnect after the game has ended.
 
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)! as Player;
 	if (unsubNotByChoice) {
@@ -287,7 +284,7 @@ function onRequestRemovalFromPlayersInActiveGames(
 	ws: CustomWebSocket,
 	servergame: ServerGame,
 ): void {
-	if (!gameutility.isGameOver(servergame.basegame)) return; // Game is still going, can't let them join a new game.
+	if (!gameutility.isGameOver(servergame)) return; // Game is still going, can't let them join a new game.
 
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, servergame.match.id);
@@ -316,22 +313,24 @@ function onRequestRemovalFromPlayersInActiveGames(
  * @param servergame - The game
  * @returns The new time (in ms) of the player that just moved after increment is added.
  */
-function pushGameClock({ basegame, match }: ServerGame): number | undefined {
-	basegame.whosTurn =
-		basegame.gameRules.turnOrder[basegame.moves.length % basegame.gameRules.turnOrder.length]!;
+function pushGameClock(servergame: ServerGame): number | undefined {
+	servergame.whosTurn =
+		servergame.gameRules.turnOrder[
+			servergame.moves.length % servergame.gameRules.turnOrder.length
+		]!;
 
-	if (basegame.untimed) return; // Don't adjust the times if the game isn't timed.
+	if (servergame.untimed) return; // Don't adjust the times if the game isn't timed.
 
-	const data = clock.push(basegame, basegame.clocks);
+	const data = clock.push(servergame);
 
 	// Reset the timer that will auto terminate the game when one player loses on time.
-	if (!gameutility.isGameOver(basegame) && gameutility.isGameResignable(basegame)) {
+	if (!gameutility.isGameOver(servergame) && gameutility.isGameResignable(servergame)) {
 		// Cancel previous auto loss timer if it exists
-		clearTimeout(match.autoTimeLossTimeoutID);
+		clearTimeout(servergame.match.autoTimeLossTimeoutID);
 		// Set the next one
-		const timeUntilLoseOnTime = Math.max(basegame.clocks.timeRemainAtTurnStart!, 0);
-		match.autoTimeLossTimeoutID = setTimeout(
-			() => onPlayerLostOnTime({ basegame, match }),
+		const timeUntilLoseOnTime = Math.max(servergame.clocks.timeRemainAtTurnStart!, 0);
+		servergame.match.autoTimeLossTimeoutID = setTimeout(
+			() => onPlayerLostOnTime(servergame),
 			timeUntilLoseOnTime,
 		);
 	}
@@ -361,7 +360,7 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	gamefileutility.setConclusion(servergame.basegame, conclusion);
+	gamefileutility.setConclusion(servergame, conclusion);
 
 	if (conclusion === undefined) return;
 
@@ -374,10 +373,10 @@ function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion |
 	}
 	if (PRINT_GAMES)
 		console.log(
-			`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.basegame.gameConclusion)}. Moves: ${servergame.basegame.moves.length}.`,
+			`Game ${servergame.match.id} over. Players: ${JSON.stringify(players)}. Conclusion: ${JSON.stringify(servergame.gameConclusion)}. Moves: ${servergame.moves.length}.`,
 		);
 
-	clock.stop(servergame.basegame);
+	clock.stop(servergame);
 	// Cancel the timer that will auto terminate
 	// the game when the next player runs out of time
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
@@ -401,22 +400,15 @@ function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion |
  * @param servergame - The game (basegame.gameConclusion must already be set)
  */
 function teardownGame(servergame: ServerGame): void {
-	const conclusion = servergame.basegame.gameConclusion!;
+	const conclusion = servergame.gameConclusion!;
 
 	// Move-triggered conclusions already send the gameConclusion in the move response.
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition))
 		gameutility.broadcastGameUpdate(servergame);
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
-	if (
-		isGameInstantlyDeleted(
-			servergame.match.variant,
-			servergame.basegame.dateTimestamp,
-			servergame.match.publicity === 'private',
-		)
-	) {
-		// Server validated every move — cheating is impossible,
-		// OR we disallow cheat reports (private game).
+	if (servergame.validateMoves) {
+		// Server validated every move — cheating is impossible.
 		// We can log and unsubscribe clients immediately.
 		deleteGame(servergame);
 	} else {
@@ -440,12 +432,12 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
 	// console.log('Someone has lost on time!');
 
 	// Who lost on time?
-	const loser = servergame.basegame.whosTurn!;
+	const loser = servergame.whosTurn!;
 	const winner = typeutil.invertPlayer(loser);
 
-	clock.stop(servergame.basegame);
+	clock.stop(servergame);
 	// Sometimes their clock can have 1ms left. Just make that zero.
-	if (servergame.basegame.clocks) servergame.basegame.clocks.currentTime[loser] = 0;
+	if (servergame.clocks) servergame.clocks.currentTime[loser] = 0;
 
 	setGameConclusion(servergame, { victor: winner, condition: 'time' });
 }
@@ -457,12 +449,12 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
  * @param colorWon - The color that won by opponent disconnection
  */
 function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): void {
-	if (gameutility.isGameOver(servergame.basegame))
+	if (gameutility.isGameOver(servergame))
 		return console.error(
 			'We should have cancelled the auto-loss-by-disconnection timer when the game ended!',
 		);
 
-	if (gameutility.isGameResignable(servergame.basegame)) {
+	if (gameutility.isGameResignable(servergame)) {
 		// console.log('Someone has lost by disconnection!');
 		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
@@ -480,7 +472,7 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
  * @param colorWon - The color that won by opponent abandonment (AFK)
  */
 function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): void {
-	if (gameutility.isGameResignable(servergame.basegame)) {
+	if (gameutility.isGameResignable(servergame)) {
 		// console.log('Someone has lost by abandonment!');
 		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
 	} else {
@@ -500,31 +492,24 @@ function deleteGame(servergame: ServerGame): void {
 	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
 	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
 	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
-	broadcastGameCountToInviteSubs();
 
 	// Remove the live game from the persistence database.
 	liveGameValues.onGameDeleted(servergame.match.id);
 
-	// If the pastedGame flag is present, skip logging to the database.
-	// We don't know the starting position.
-	if (servergame.match.positionPasted) {
-		// console.log('Skipping logging custom game.');
-	} else {
-		// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-		// The ratings are calculated during the logging of the game into the database
-		const ratingdata = gamelogger.logGame(servergame);
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The ratings are calculated during the logging of the game into the database
+	const ratingdata = gamelogger.logGame(servergame);
 
-		// Mostly deprecated:
-		// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
-		executeSafely(
-			() => statlogger.logGame(servergame),
-			`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
-		);
+	// Mostly deprecated:
+	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
+	executeSafely(
+		() => statlogger.logGame(servergame),
+		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
+	);
 
-		// Send rating changes to all players of game, if relevant
-		if (ratingdata !== undefined)
-			gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
-	}
+	// Send rating changes to all players of game, if relevant
+	if (ratingdata !== undefined)
+		gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
@@ -607,7 +592,7 @@ function restoreLiveGames(): void {
 		}
 
 		// Skip remaining timers for concluded games
-		if (gameutility.isGameOver(servergame.basegame)) continue;
+		if (gameutility.isGameOver(servergame)) continue;
 
 		// 2. Auto time loss timer (for timed games)
 		if (pendingTimers.autoTimeLossMs !== undefined) {
@@ -624,7 +609,7 @@ function restoreLiveGames(): void {
 
 		// 3. AFK resign timer
 		if (pendingTimers.afkResignTimerMs !== undefined) {
-			const opponentColor = typeutil.invertPlayer(servergame.basegame.whosTurn!);
+			const opponentColor = typeutil.invertPlayer(servergame.whosTurn!);
 			if (pendingTimers.afkResignTimerMs <= 0) {
 				// AFK timer already expired during downtime
 				onPlayerLostByAbandonment(servergame, opponentColor);

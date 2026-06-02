@@ -8,7 +8,7 @@
  * Legal moves (of selected piece and hovered arrows)
  */
 
-import type { Board } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { Color } from '../../../../../../shared/util/math/math.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';

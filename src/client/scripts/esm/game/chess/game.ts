@@ -8,7 +8,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Color } from '../../../../../shared/util/math/math.js';
-import type { FullGame } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
@@ -20,7 +20,6 @@ import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import border from '../rendering/border.js';
 import camera from '../rendering/camera.js';
-import invites from '../misc/invites.js';
 import gameslot from './gameslot.js';
 import guititle from '../gui/guititle.js';
 import boardpos from '../rendering/boardpos.js';
@@ -61,7 +60,7 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import buffermodel, { createRenderable } from '../../webgl/Renderable.js';
+import Renderable, { createRenderable } from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
@@ -93,14 +92,14 @@ let effectZoneManager: EffectZoneManager | undefined;
 
 function init(): void {
 	programManager = new ProgramManager(gl);
-	buffermodel.init(gl, programManager);
+	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
+	boardtiles.init();
 
 	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
-	boardtiles.init();
 
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
@@ -120,7 +119,6 @@ function init(): void {
 function update(): void {
 	screenshake.update();
 	controls.testOutGameToggles();
-	invites.update();
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
 		frametracker.onVisualChange();
@@ -143,18 +141,16 @@ function update(): void {
 
 	controls.testInGameToggles(gamefile, mesh);
 
-	perspective.update(); // Update perspective camera according to mouse movement
-
-	const timeWinner = clock.update(gamefile.basegame);
+	const timeWinner = clock.update(gamefile);
 	if (timeWinner && !onlinegame.areInOnlineGame()) {
 		// undefined if no clock has ran out
-		gamefileutility.setConclusion(gamefile.basegame, { victor: timeWinner, condition: 'time' });
+		gamefileutility.setConclusion(gamefile, { victor: timeWinner, condition: 'time' });
 		gameslot.concludeGame();
 	}
-	guiclock.update(gamefile.basegame);
+	guiclock.update(gamefile);
 
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
-	boardpos.update(); // Updates the board's position and scale according to its velocity
+	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
 	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
@@ -218,7 +214,7 @@ function update(): void {
  * Tests if by clicking an empty region of the board,
  * we need to clear premoves and collapse annotations.
  */
-function testIfEmptyBoardRegionClicked(gamefile: FullGame, mesh: Mesh | undefined): void {
+function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefined): void {
 	const mouseKeybind = keybinds.getCollapseMouseButton();
 	if (mouseKeybind === undefined) return; // No button is assigned to collaping annotes / cancelling premoves currently
 
@@ -272,7 +268,7 @@ function renderScene(): void {
 	// Star Field Animation: Appears in border & voids
 	maskedDraw.execute(
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // EXCLUSION MASK is our playable region
+		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
 		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
@@ -280,7 +276,7 @@ function renderScene(): void {
 	// Board Tiles & Voids: Mask the playable region so the tiles
 	// don't render outside the world border or where voids should be
 	maskedDraw.execute(
-		() => border.drawPlayableRegionMask(gamefile.basegame.gameRules.worldBorder), // INCLUSION MASK containing playable region
+		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
 		() => renderTilesAndPromoteLines(), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
@@ -302,7 +298,7 @@ function renderScene(): void {
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		coordinates.render();
 		selectedpiecehighlightline.render();
-		highlights.render(gamefile.boardsim);
+		highlights.render(gamefile);
 		GameBus.dispatch('render-below-pieces');
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
 		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
@@ -311,7 +307,7 @@ function renderScene(): void {
 
 	// The rendering of the pieces needs to use the normal depth function, because the
 	// rendering of currently-animated pieces needs to be blocked by animations.
-	pieces.renderPiecesInGame(gamefile.boardsim, mesh);
+	pieces.renderPiecesInGame(gamefile, mesh);
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -330,7 +326,12 @@ function renderScene(): void {
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(): void {
 	effectZoneManager!.renderBoard();
-	promotionlines.render();
+
+	const gamefile = gameslot.getGamefile()!;
+	// The start box determines how far out promotion lines are rendered.
+	// In editor mode, don't provide it, so the lines extend to the screen edges.
+	const startBox = gamefile.editor ? undefined : gamefile.startSnapshot.box;
+	promotionlines.render(gamefile.gameRules.promotion, startBox);
 }
 
 /**

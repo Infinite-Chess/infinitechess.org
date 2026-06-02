@@ -12,8 +12,8 @@ import type { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 
 import { logEvents } from '../middleware/logEvents.js';
-import { getTranslationForReq } from '../utility/translate.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import {
 	getBrowserAgent,
 	onCorrectPassword,
@@ -45,7 +45,7 @@ async function testPasswordForRequest(req: Request, res: Response): Promise<bool
 	if (record === undefined) {
 		// User not found
 		res.status(401).json({
-			message: getTranslationForReq('server.javascript.ws-invalid_username', req),
+			message: getScriptTranslationsForReq('responses', req).auth.invalid_username,
 		}); // Unauthorized, username not found
 		return false;
 	}
@@ -58,7 +58,7 @@ async function testPasswordForRequest(req: Request, res: Response): Promise<bool
 	if (!match) {
 		logEvents(`Incorrect password for user ${record.username}!`, 'loginAttempts.txt');
 		res.status(401).json({
-			message: getTranslationForReq('server.javascript.ws-incorrect_password', req),
+			message: getScriptTranslationsForReq('responses', req).auth.incorrect_password,
 		}); // Unauthorized, password not found
 		onIncorrectPassword(browserAgent, record.username);
 		return false;
@@ -75,16 +75,10 @@ async function testPasswordForRequest(req: Request, res: Response): Promise<bool
  * @returns true if the body is valid
  */
 function verifyBodyHasLoginFormData(req: Request, res: Response): boolean {
-	if (!req.body) {
-		// Missing body
-		console.log(`User sent a bad login request missing the body!`);
-		res.status(400).send('Bad Request'); // 400 Bad request
-		return false;
-	}
-
 	const { username, password } = req.body;
 
 	if (!username || !password) {
+		// Only hit by hand-crafted/malformed requests
 		console.log(
 			`User ${username} sent a bad login request missing either username or password!`,
 		);

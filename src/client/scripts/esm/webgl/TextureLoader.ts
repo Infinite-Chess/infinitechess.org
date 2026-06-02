@@ -1,5 +1,23 @@
 // src/client/scripts/esm/webgl/TextureLoader.ts
 
+/*
+ * Loads WebGL textures from HTMLImageElements.
+ *
+ * Notes:
+ *
+ * Checkerboard best options for 2D:
+ * Current: 256x256 opaque mipmaps (-0.5 bias)
+ * Previous: 2x2 transparent no mips (no antialiasing)
+ *
+ * Checkerboard best options for perspective:
+ * Current: 2x2 opaque no mips (no antialiasing, decreased moire)
+ * Next best: 256x256 opaque mipmaps (-0.5 bias) (antialiasing, zero moire, blurry distance)
+ * Previous: 256x256 transparent no mips (grey lines, no antialiasing, max moire)
+ *
+ * Antialiasing helps with smoothing the edges between squares,
+ * and prevents tiles gittering when scrolling slowly.
+ */
+
 interface Options {
 	/** Whether to generate and use mipmaps for the texture. Default is false. */
 	mipmaps?: boolean;

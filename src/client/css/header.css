@@ -1,375 +1,436 @@
+/* src/client/components/header/header.css */
+
+/*
+ * Site header. Always visible at the top of every page.
+ */
+
 :root {
-	/* THIS GETS OVERWRITTEN BY JAVASCRIPT in header.js that correctly sets the
-    viewport height based on how much screen space the home button bar takes up! */
+	--header-height: 56px;
+	--header-btn-width: 50px;
+	--dropdown-item-height: 34px;
 	--vh: 100vh;
-	--header-height: 40px;
-	--dropdown-item-height: 43px;
-	--header-link-hover-color: rgb(230, 230, 230);
-	--currPage-background-color: rgb(237, 237, 237);
-	--switch-on-color: rgb(97, 97, 97); /* Default value. Can be modified using javascript */
-	--header-link-max-padding: 16px;
-	--header-link-min-padding: 8px;
-	--CBC-in: cubic-bezier(0, 1.05, 0.47, 1); /* Settings dropdown IN curve */
-	--CBC-out: cubic-bezier(0.54, 0, 1, 0.97); /* Settings dropdown OUT curve */
-	--CBC-CM-in: cubic-bezier(0.09, 1.61, 0.36, 1); /* Checkmark IN curve */
-	--CBC-CM-out: cubic-bezier(0, 1.1, 1, 1); /* Checkmark OUT curve */
-	--CBC-switch: cubic-bezier(0, 1.05, 0.47, 1); /* Toggle switch curve */
+	--dropdown-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+	--dropdown-clip: inset(0 -20px -20px -20px round 0 0 4px 4px);
+	--dropdown-border-radius: 0 0 4px 4px;
+	--switch-border-radius: 14px;
 }
 
-header {
-	/* 
-    box-shadow: 0px 1px 5px rgb(107, 107, 107);
-    overflow: scroll;
-    white-space: nowrap;
-    text-align: center;
-    background-color: white;
-    z-index: 1; */
-
-	position: fixed;
-	left: 0;
+.site-header {
+	position: sticky;
 	top: 0;
-	right: 0;
-	z-index: 1;
+	z-index: 2;
 	display: flex;
-	justify-content: space-between;
+	align-items: stretch;
 	height: var(--header-height);
-	background-color: white;
-	border-bottom: 1px solid black;
-	box-shadow: 0 3px 4px rgba(0, 0, 0, 0.08);
-	font-size: 16px;
-	align-items: center;
-	user-select: none; /* Prevent text selection */
+	padding: 0;
+	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	border-bottom: 1px solid var(--c-border);
+	color: var(--c-text);
+	font-family: 'Noto Sans', Verdana, sans-serif;
+	font-size: 14px;
+	line-height: 1;
+	user-select: none;
 }
 
-header a {
+.site-header a {
 	text-decoration: none;
-	color: black;
-	display: flex;
-	align-items: center;
 }
 
-header label {
-	font-size: inherit; /* Prevents createaccount.css changing the font size. */
-}
-
-.italic {
-	font-style: italic;
-}
-
-/* All SVG settings. (Most settings dropdown SVGs are the same width in the document, we just scale them here to make them all VISUALLY the same size */
-
+/* svg resizing */
 .svg-pawn {
-	/* The pawn svg and loading animation that we use in several spots */
-	position: relative;
-	bottom: 3px;
-	height: 65%;
-	aspect-ratio: 1;
-	stroke: #666;
-	fill: #666;
+	transform: scale(1.1) translateY(-7%);
 }
-
-/* The spinny pawn animation */
-.spinny-pawn {
-	transform-origin: 50% 60%; /* Rotate around the center of mass (slightly downward) */
-	animation: spin 0.65s linear infinite; /* Spin animation with continuous loop */
+.svg-keypad {
+	transform: scale(0.95);
 }
-
-.svg-language,
-.svg-board,
-.svg-legalmove,
-.svg-perspective,
-.svg-selection,
-.svg-squares,
-.svg-mouse,
-.svg-sound,
-.svg-camera,
-.checkmark {
-	width: 19px;
-	aspect-ratio: 1;
-	padding: 0 2px;
+.svg-tesseract {
+	transform: scale(1.05);
 }
-
-.svg-language {
-	transform: scale(1.21);
+.svg-trophy {
+	transform: scale(0.9);
 }
-
-.svg-perspective {
+.svg-speed-bullet {
+	transform: scale(1.1);
+}
+.svg-speed-rapid {
+	transform: scale(0.95);
+}
+.svg-speed-classical {
+	transform: scale(1.05);
+}
+.svg-speed-infinite {
 	transform: scale(1.1);
 }
 
-.svg-mouse {
-	transform: scale(1.47);
-}
+/* ---------- Logo + sitename ---------- */
 
-.svg-sound {
-	transform: scale(1.25);
-}
-
-.svg-camera {
-	transform: scale(1.3);
-}
-
-.svg-undo {
-	transform: scale(1.8);
-	aspect-ratio: 1;
-}
-
-/* The Infinite Chess text and logo, left side of header */
-
-.home {
+.header-home {
 	display: flex;
-	gap: 5px;
-	height: 100%;
 	align-items: center;
-	padding: 0 8px;
-	white-space: nowrap; /* Prevent text from wrapping */
-	overflow: hidden; /* Hide overflow if needed */
+	gap: 6px;
+	padding: 0 14px 0 16px;
+	flex-shrink: 0;
+	color: var(--c-text-emphasis);
 }
 
-.home picture {
-	height: 90%;
+.header-home:hover .header-sitename {
+	color: var(--c-link);
 }
 
-.home picture img {
-	height: 100%;
-}
-
-.home p {
-	font-family: georgia;
-	font-size: 24px;
-}
-
-.home:hover p {
-	text-decoration: underline;
-}
-
-/* Hide the "Infinite Chess" text when we are at compactness level 1 */
-.home.compact-1 p {
-	display: none;
-}
-
-.home.compact-1:hover {
-	background-color: var(--header-link-hover-color);
-}
-
-/* The navigation hyperlinks, middle of header. Play, News, Leaderboard, Login, Create Account */
-
-nav {
-	display: flex;
-	height: 100%;
-}
-
-nav a {
-	padding: 0 calc(var(--header-link-max-padding)) 0;
-	white-space: nowrap; /* Prevent text from wrapping */
-	overflow: clip; /* Hide overflow if needed. FIREFOX NEEDS THIS TO BE "CLIP" */
-	position: relative; /* Required for correct absolute positioning of news notification badge */
-}
-
-nav span {
-	padding-left: 4px;
-}
-
-nav .svg-pawn {
-	bottom: 1px;
-}
-
-nav #svg-news {
-	height: 55%;
-	padding: 0 5px;
-}
-
-nav #svg-leaderboard {
-	height: 55%;
-	padding-left: 4px;
-}
-
-nav #svg-login {
-	height: 60%;
-	padding-left: 4px;
-}
-
-nav #svg-profile {
-	height: 47.5%;
-	padding: 0 4px 0 6px;
-}
-
-nav #svg-createaccount {
-	height: 50%;
-	padding-left: 7px;
+.header-logo {
 	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: var(--header-height);
+	flex-shrink: 0;
+}
+
+.header-logo-glyph,
+.header-logo-aura {
+	position: absolute;
+	height: 38px;
+	bottom: 17%;
+}
+
+.header-logo-aura {
+	opacity: 0.25;
+	transform: scale(1);
+	transform-origin: 50% 53%;
+}
+
+.header-sitename {
+	font-size: 25px;
+	font-weight: 400;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+}
+
+/* ---------- Nav (center) ---------- */
+
+.header-nav {
+	display: flex;
+	align-items: stretch;
+	flex: 1;
+	min-width: 0;
+}
+
+.header-nav-item {
+	position: relative;
+	display: flex;
+	align-items: stretch;
+}
+
+.header-nav-link {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 12px;
+	height: 100%;
+	background: none;
+	border: 0;
+	border-left: 2px solid transparent;
+	color: var(--c-text);
+	font: inherit;
+	font-size: 13px;
+	font-weight: 300;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.header-nav-link:hover,
+.header-dropdown-parent:hover .header-nav-link {
+	background-color: var(--c-surface-2);
+	outline: none;
+}
+
+/* For dropdown parents, show the accent left border on the nav link when open */
+.header-dropdown-parent:hover .header-nav-link {
+	border-left-color: var(--c-tile);
+}
+
+/* Donate link - golden accent */
+a.header-donate {
+	color: var(--c-donate);
+}
+
+a.header-donate:hover {
+	background-color: var(--c-donate-bg-hover);
+	color: var(--c-donate-hover);
+}
+
+/* ---------- Right-side action icons ---------- */
+
+.header-actions {
+	display: flex;
+	align-items: stretch;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+.header-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--header-btn-width);
+	height: 100%;
+	padding: 0 12px;
+	background: none;
+	border: 0;
+	color: var(--c-text);
+	cursor: pointer;
+}
+
+.header-icon-btn:hover {
+	background-color: var(--c-surface-2);
+	outline: none;
+}
+
+.header-icon-btn > svg {
+	width: 22px;
+	height: 22px;
+	display: block;
+}
+
+/* The "create account" pen-on-paper SVG and the gear are visually larger
+   than the login/logout/profile shapes at the same canvas size, so we
+   render them a touch smaller for visual parity. */
+.header-icon-btn-tight svg {
+	width: 18px;
+	height: 18px;
+}
+
+/* Nudge slightly for better centering. */
+.header-actions .svg-login,
+.header-actions .svg-register {
+	position: relative;
+	left: 2px;
 	top: 1px;
 }
 
-nav #svg-logout {
-	height: 63%;
-	padding-left: 5px;
+.header-actions .svg-profile {
+	transform: scale(0.85);
 }
 
-nav a:hover {
-	background-color: var(--header-link-hover-color);
-}
-
-/* Hide the navigation SVGs when we are at compactness level 2 */
-nav.compact-2 svg {
-	display: none;
-}
-nav.compact-2 span {
-	padding: 0 4px;
-}
-
-/* Navigation SVGs are visible again, but not the text */
-nav.compact-3 span {
-	display: none;
-}
-nav.compact-3 #svg-news {
-	padding: 0 4px;
-}
-nav.compact-3 #svg-leaderboard {
-	padding: 0 4px;
-}
-nav.compact-3 #svg-profile {
-	padding: 0 4px;
-}
-nav.compact-3 #svg-createaccount {
-	padding-left: 5px;
-}
-nav.compact-3 #svg-logout {
-	padding-left: 4px;
-}
-
-/* The gear and settings dropdown menu, right side of header. */
-
+/* Settings gear container is also an icon button, but holds dropdowns. */
 .settings {
-	height: 100%;
-	width: var(--header-height);
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	position: relative;
 	cursor: pointer;
-}
-
-.settings.open {
-	background-color: var(--currPage-background-color);
-}
-
-.settings:hover {
-	background-color: var(--header-link-hover-color);
-}
-
-.settings:active {
-	/* Prevents blue highlight when holding finger over the gear button */
-	background-color: var(--header-link-hover-color);
 	-webkit-tap-highlight-color: transparent;
 }
 
+/* Input slider style overrides - the settings background is brighter */
+.settings .slider::-webkit-slider-runnable-track {
+	background: var(--c-surface);
+}
+.settings .slider::-webkit-slider-thumb {
+	background: var(--c-surface-2);
+}
+.settings .slider::-moz-range-track {
+	background: var(--c-surface);
+}
+.settings .slider::-moz-range-thumb {
+	background: var(--c-surface-2);
+}
+
 .gear {
-	width: 45%;
-	transition: transform 0.2s var(--CBC-out);
+	transition: transform 0.25s cubic-bezier(0.22, 0.85, 0.4, 1);
 }
 
 .settings.open .gear {
-	transition: transform 0.3s var(--CBC-in);
 	transform: rotate(60deg);
 }
 
-.dropdown {
-	position: absolute; /* Position relative to the nearest positioned ancestor */
-	top: 100%; /* Aligns the top of the dropdown content to the bottom of the gear */
-	right: 0;
-	min-width: 195px;
-	width: fit-content; /* Polish needs to be able to fit content because it's a little bit wider */
-	/* Can't enable these because words "Perspective Sensitivity" won't wrap but instead increase the length of the whole dropdown. */
-	/* min-width: 195px;
-    width: fit-content; */
-	background-color: white;
-	box-shadow: -2px 3px 4px rgba(0, 0, 0, 0.1);
-	z-index: 1;
-	border: 1px solid black;
-	border-right: unset;
-	cursor: auto;
-	border-radius: 0 0 0 5px;
-	overflow: hidden; /* Prevent children from rendering outside the border */
-	transform: translateX(0); /* Slide into view */
-	transition:
-		transform 0.3s var(--CBC-in),
-		visibility 0s,
-		opacity 0.25s ease-in-out;
+.settings.open {
+	background-color: var(--c-surface-2);
 }
 
-.dropdown.visibility-hidden {
-	transform: translateX(
-		100%
-	); /* Just off screen to the right, to start out, until it's animated in. */
+/* ---------- Hamburger button (mobile only) ---------- */
+
+.header-hamburger {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	width: var(--header-btn-width);
+	height: 100%;
+	padding: 0;
+	background: none;
+	border: 0;
+	color: var(--c-text);
+	cursor: pointer;
+}
+
+.header-hamburger:hover {
+	background-color: var(--c-surface-2);
+	outline: none;
+}
+
+.header-hamburger-bar {
+	display: block;
+	width: 22px;
+	height: 2px;
+	background-color: currentColor;
+	border-radius: 1px;
 	transition:
-		transform 0.2s var(--CBC-out),
-		visibility 0s 0.2s,
-		opacity 0.25s ease-in-out;
+		transform 0.18s cubic-bezier(0.55, 0.055, 0.675, 0.19),
+		opacity 0.1s ease-in;
+}
+
+/* Animate the three bars into an X when the menu is open. */
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(1) {
+	transform: translateY(6px) rotate(45deg);
+}
+
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(2) {
+	opacity: 0;
+	transform: scaleX(0);
+}
+
+.header-hamburger[aria-expanded='true'] .header-hamburger-bar:nth-child(3) {
+	transform: translateY(-6px) rotate(-45deg);
+}
+
+/* ---------- Learn / Tools dropdowns (hover-only, CSS-driven) ---------- */
+
+.header-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	min-width: 100%;
+	background-color: var(--c-surface-2);
+	border-left: 2px solid var(--c-tile);
+	border-radius: var(--dropdown-border-radius);
+	box-shadow: var(--dropdown-shadow);
+	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
+	clip-path: var(--dropdown-clip);
+	/* Kept rendered (not display: none) so the cursor can move from the
+	   parent into the dropdown without the dropdown collapsing first. */
+	opacity: 0;
+	pointer-events: none;
+}
+
+.header-dropdown-parent:hover > .header-dropdown,
+.header-dropdown-parent > .header-dropdown:hover {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.header-dropdown-item {
+	display: block;
+	padding: 12px 12px;
+	color: var(--c-text);
+	font-size: 13px;
+	font-weight: 400;
+	white-space: nowrap;
+	letter-spacing: 0.02em;
+}
+
+.header-dropdown-item:hover {
+	background-color: var(--c-surface);
+	outline: none;
+}
+
+/* ===================================================================
+   Settings dropdown
+   =================================================================== */
+
+.ping-meter .spinny-pawn {
+	position: relative;
+	width: 25px;
+	height: 25px;
+	bottom: 2px;
+	color: var(--c-text-muted);
+	transform-origin: 50% 60%;
+	animation: spin 0.65s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.dropdown {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	min-width: 175px;
+	width: max-content;
+	background-color: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-top: 0;
+	box-shadow: var(--dropdown-shadow);
+	/* Clip the top of the shadow so it doesn't bleed over the nav link above. */
+	clip-path: var(--dropdown-clip);
+	font-size: 13px;
+	cursor: auto;
+	border-radius: var(--dropdown-border-radius);
+	overflow: hidden;
 }
 
 .dropdown-title {
-	/* The back button at the top of 2+ deep dropdown */
 	display: flex;
 	align-items: center;
 	height: var(--dropdown-item-height);
-	padding: 0 15px;
+	padding: 0 14px;
 	cursor: pointer;
-	border-bottom: 1px solid grey;
+	border-bottom: 1px solid var(--c-border);
+	color: var(--c-text);
+	gap: 6px;
 }
 
 .dropdown-title:hover,
 .settings-dropdown-item:hover,
 .language-dropdown-item:hover,
-.legalmove-option:hover,
 .boolean-option:hover {
-	background-color: var(--header-link-hover-color);
+	background-color: var(--c-surface);
 }
 
-/* Dropdown items */
 .settings-dropdown-item {
 	display: flex;
 	align-items: center;
 	height: var(--dropdown-item-height);
-	padding: 0 15px 0 8px;
+	padding: 0 14px;
 	cursor: pointer;
+	color: var(--c-text);
 }
 
 p.text {
-	padding: 10px 6px;
-	max-width: 150px;
+	max-width: 160px;
 	margin-right: auto;
+	font-size: 13px;
+	color: var(--c-text);
 }
 
 span.arrow-head-right,
 span.arrow-head-left {
-	width: 8px;
-	height: 8px;
-	border-right: 3px solid #666;
-	border-top: 3px solid #666;
+	width: 7px;
+	height: 7px;
+	border-right: 2px solid var(--c-text-muted);
+	border-top: 2px solid var(--c-text-muted);
+	flex-shrink: 0;
 }
 span.arrow-head-right {
 	margin-left: auto;
-	transform: rotate(45deg) /* skew(10deg, 10deg); */;
+	transform: rotate(45deg);
 }
 span.arrow-head-left {
-	margin-right: auto;
-	transform: rotate(225deg) /* skew(10deg, 10deg); */;
+	transform: rotate(225deg);
 }
 
 .checkmark {
-	width: 30px;
-	aspect-ratio: 1;
 	margin-left: auto;
-	fill: #444;
-	transition: transform 0.5s var(--CBC-CM-in);
-	transform: scale(1);
-}
-
-.checkmark.visibility-hidden {
-	transition:
-		transform 0.2s var(--CBC-CM-out),
-		visibility 0s 0.5s;
-	transform: scale(0);
+	flex-shrink: 0;
+	padding: 0 4px;
+	color: var(--c-text-muted);
+	font-size: 14px;
 }
 
 /* Switch toggles */
@@ -385,138 +446,135 @@ span.arrow-head-left {
 .switch > input + * {
 	position: absolute;
 	inset: 0;
-	border-radius: 14px;
-	background-color: #777;
-	border: 2px solid #777;
-	transition: 0.2s var(--CBC-switch);
-	transition-property: background-color, border-color;
+	border-radius: var(--switch-border-radius);
+	background-color: var(--c-text-muted);
+	border: 2px solid var(--c-text-muted);
 }
 
 .switch > input + ::before {
 	content: '';
 	display: block;
-	border-radius: 14px;
-	background-color: white;
+	border-radius: var(--switch-border-radius);
+	background-color: var(--c-surface);
 	width: 50%;
 	height: 100%;
-	transition: transform 0.2s var(--CBC-switch);
-	box-shadow: 0px 1px 2px #00000076;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+	transition: transform 0.18s cubic-bezier(0, 1.05, 0.47, 1);
 }
 
 .switch input:checked + ::before {
 	transform: translateX(100%);
 }
 .switch input:checked + * {
-	background-color: var(--switch-on-color);
-	border-color: var(--switch-on-color);
+	background-color: var(--c-tile);
+	border-color: var(--c-tile);
+}
+
+/* The various types of options in the settings dropdowns */
+
+/* LIGHT/DARK */
+.select-option {
+	display: flex;
+	align-items: center;
+	min-height: var(--dropdown-item-height);
+	padding: 0 8px;
+	color: var(--c-text);
+	cursor: pointer;
+}
+
+.select-option:hover {
+	background-color: var(--c-surface);
+}
+
+.select-value {
+	margin-left: auto;
+	color: var(--c-text-muted);
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.boolean-option {
+	min-height: var(--dropdown-item-height);
+	padding: 0 8px;
+}
+
+.boolean-option .switch {
+	width: 34px;
+	height: 18px;
+	margin: 0 2px 0 4px;
 }
 
 /* Language nested dropdown */
 
 .language-dropdown-item,
-.legalmove-option,
 .boolean-option {
 	display: flex;
 	align-items: center;
 	cursor: pointer;
+	color: var(--c-text);
 }
 
 .language-dropdown-item {
-	height: 48px;
-	padding: 0 15px;
+	height: 44px;
+	padding: 0 14px;
 }
 
-/* .language-dropdown-item p.name {
-
-} */
-
 .language-dropdown-item p.englishName {
-	color: grey;
+	color: var(--c-text-muted);
 	font-size: 0.7em;
 }
 
 /* Board theme nested dropdown */
 
 .dropdown-scrollable {
-	/* Set max height to bottom of screen */
 	max-height: calc(var(--vh) - var(--header-height) - var(--dropdown-item-height));
 	overflow-y: auto;
 }
 
 .appearance-dropdown {
-	width: 211px;
+	width: 200px;
 }
+
+/* Theme text-button toggle */
 
 p.theme-title {
 	text-align: center;
 	padding-top: 8px;
+	font-size: 13px;
+	color: var(--c-text-muted);
 }
 
-.theme-list {
+.board-color-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, 45.5px);
 	justify-content: center;
-	gap: 14px; /* Combined margin from both axes (7px) */
-	padding: 12px 0px 16px;
-	border-bottom: 1px solid grey;
+	gap: 14px;
+	padding: 12px 0 16px;
+	border-bottom: 1px solid var(--c-border);
 }
 
-.theme-list img {
+.board-color-list img {
 	width: 45.5px;
 	image-rendering: pixelated;
 	border-radius: 2px;
-	outline: 3px solid rgb(97, 97, 97);
+	outline: 3px solid var(--c-border-2);
 	cursor: pointer;
 	justify-self: center;
 	align-self: center;
 }
 
-.theme-list img:hover,
-.theme-list img.selected {
-	outline: 5px solid black;
-}
-
-/* Legalmove shape nested dropdown */
-
-/* .legalmove-dropdown {
-    
-} */
-
-.legalmove-option {
-	height: 43px;
-	padding: 0 15px 0 8px;
-}
-
-/* Gameplay dropdown */
-
-.selection-option-title {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 35px;
-}
-
-.boolean-option p.text {
-	padding: 10px 6px 10px 3px;
-}
-
-.boolean-option {
-	min-height: 43px;
-	padding: 0 8px 0 8px;
-}
-
-.boolean-option .switch {
-	width: 36px;
-	height: 20px;
-	margin: 0 2px 0 4px;
+.board-color-list img:hover,
+.board-color-list img.selected {
+	outline: 5px solid var(--c-text-emphasis);
 }
 
 /* Perspective & Sound dropdowns */
 
 .perspective-option,
 .sound-option {
-	font-size: 14px;
 	padding: 5px 0 10px;
+	color: var(--c-text);
 }
 
 .perspective-option .perspective-option-title,
@@ -524,12 +582,7 @@ p.theme-title {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	height: 35px;
-}
-
-.perspective-option .perspective-option-title p {
-	/* "Mouse Sensitivity", "Field of View" */
-	padding-left: 6px;
+	height: 28px;
 }
 
 .perspective-option .slider-container,
@@ -538,30 +591,21 @@ p.theme-title {
 	margin-left: 8px;
 }
 
-.perspective-option .slider,
-.sound-option .slider {
-	width: 100%;
-}
-
-.perspective-option .slider:hover,
-.sound-option .slider:hover {
-	cursor: pointer;
-}
-
 .perspective-option .value,
 .sound-option .value {
 	padding-left: 5px;
 	text-align: left;
 	flex-shrink: 0;
+	color: var(--c-text-muted);
 }
 
 .perspective-option.mouse-sensitivity .value,
 .sound-option.master-volume .value {
-	width: 50px;
+	width: 45px;
 }
 
 .perspective-option.fov .value {
-	width: 35px;
+	width: 33px;
 }
 
 /* Reset default buttons */
@@ -578,22 +622,26 @@ p.theme-title {
 	align-items: center;
 	width: fit-content;
 	height: fit-content;
-	border-radius: 15px;
-	padding: 3px 8px;
+	border-radius: var(--switch-border-radius);
+	padding: 1px 6px;
+	color: var(--c-text);
 }
 
 .reset-default:hover {
-	background-color: rgb(233, 233, 233);
+	background-color: var(--c-surface);
 	cursor: pointer;
 }
 
 .reset-default span {
-	padding-left: 2px;
+	padding-right: 4px;
 }
 
 .reset-default-container .svg-undo {
 	width: 19px;
-	transform-origin: 70% 55%;
+	transform: scale(1.5);
+	transform-origin: 70% 60%;
+	aspect-ratio: 1;
+	color: var(--c-text-muted);
 }
 
 /* Ping Meter */
@@ -602,283 +650,225 @@ p.theme-title {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	height: 50px;
-	padding: 0 15px;
-	border-top: 1px solid grey;
-	overflow: hidden; /* Don't let the connection bars glow effect leak above */
-	font-size: 0px; /* Prevents a small amount of margin between each element */
+	height: 46px;
+	padding: 0 14px;
+	border-top: 1px solid var(--c-border);
+	overflow: hidden;
+	font-size: 0;
+	color: var(--c-text);
 }
 
 .ping-meter .ping {
-	font-size: 15px;
-}
-
-.ping-meter .ping-value {
-	font-size: 15px;
-	padding: 0 3px 0 6px;
-}
-
-.ping-meter .ms {
 	font-size: 13px;
 }
-
-/* .ping-bars {
-    
-} */
+.ping-meter .ping-value {
+	font-size: 14px;
+	padding: 0 3px 0 6px;
+}
+.ping-meter .ms {
+	font-size: 11px;
+	color: var(--c-text-muted);
+}
 
 .ping-bar {
-	outline: 1px solid #0000008c;
+	outline: 1px solid rgba(0, 0, 0, 0.55);
 	display: inline-block;
 	width: 9px;
-	/* box-shadow: 0px 0px 5px 0px #0000007a; */
-	background-color: rgb(210, 210, 210);
+	background-color: var(--c-surface-2);
+}
+
+.ping-bars > .ping-bar:nth-child(1) {
+	height: 6px;
+}
+.ping-bars > .ping-bar:nth-child(2) {
+	height: 12px;
+}
+.ping-bars > .ping-bar:nth-child(3) {
+	height: 18px;
+}
+.ping-bars > .ping-bar:nth-child(4) {
+	height: 24px;
 }
 
 .ping-bar.green {
 	background-color: #78ff78;
 }
-
 .ping-bar.yellow {
 	background-color: #f8f878;
 }
-
 .ping-bar.red {
 	background-color: #ff8b8b;
 }
 
 .ping-glow {
-	/* Relatively positioned 0-space element that only glows */
-	box-shadow: 0px 0px 80px 30px #000000c4;
+	box-shadow: 0 0 80px 30px rgba(0, 0, 0, 0.77);
 	position: relative;
 	bottom: 7px;
-	z-index: -1; /* Places glow behind all bars */
+	z-index: -1;
 	left: 10px;
 	overflow: hidden;
-	/* transform: scaleY(0.7); */
 }
 
-/* Miscellaneous (some of these can probably be put in a universal stylesheet for all pages, not just the header stylesheet) */
+/* ===================================================================
+   Mobile slide-out menu (only visible at narrow widths)
+   =================================================================== */
 
-/* Greys the background of the navigation hyperlink we are currently in */
-.currPage {
-	background-color: var(--currPage-background-color);
-}
-
-.hidden {
-	display: none;
-}
-
-.center {
-	text-align: center;
-}
-
-.visibility-hidden {
+.header-mobile-panel {
+	position: fixed;
+	top: calc(var(--header-height) - 1px);
+	left: 0;
+	bottom: 0;
+	padding: 10px 0;
+	width: fit-content;
+	max-width: min(80vw, 320px);
+	background-color: var(--c-surface);
+	border-right: 1px solid var(--c-border);
+	box-shadow: 0px 0 8px rgba(0, 0, 0, 0.3);
+	/* Clip the upward shadow bleed so it doesn't spill into the header bar. */
+	clip-path: inset(0 -20px -20px 0);
+	z-index: 4;
+	transform: translateX(-100%);
 	visibility: hidden;
+	overflow-y: auto;
 }
 
-.transparent {
-	opacity: 0%;
-	pointer-events: none;
+.header-mobile-panel.open {
+	transform: translateX(0);
+	visibility: visible;
 }
 
-/* Used for disallowing changing your coordinates in an online game */
-.set-cursor-to-not-allowed {
-	cursor: not-allowed;
-}
-
-.unselectable {
-	/* Makes text inside the element unselectable (sometimes worsens the experience if you don't intent to) */
-	user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-}
-
-.selectable {
-	/* Makes text inside the elements with the .unselectable class re-selectable */
-	user-select: text;
-	-moz-user-select: text;
-	-webkit-user-select: text;
-	-ms-user-select: text;
-}
-
-/* Animations */
-
-@keyframes spin {
-	0% {
-		transform: rotate(0deg); /* Start at 0 degrees */
-	}
-	100% {
-		transform: rotate(360deg); /* Complete a full 360 degree rotation */
-	}
-}
-
-/*
- * Tooltips
- *
- * The JS tooltip system injects a fixed #tooltip-popup div and #tooltip-arrow div
- * directly into document.body, so no chance of being clipped by their parent containers.
- */
-
-/* Tooltip box */
-#tooltip-popup {
+.header-mobile-dim-content,
+.header-mobile-dim-header {
 	position: fixed;
-	background-color: black;
-	color: rgb(236, 236, 236);
-	text-align: center;
-	border-radius: 6px;
-	font-size: 12px;
-	width: max-content;
-	max-width: 150px;
-	padding: 5px;
+	right: 0;
+	background-color: rgba(0, 0, 0, 0.55);
+	z-index: 3;
+	visibility: hidden;
 	opacity: 0;
-	transition: opacity 0.1s ease-in-out;
-	pointer-events: none;
-	word-wrap: break-word;
-	word-break: break-word;
-	white-space: normal;
-	z-index: 10000;
 }
 
-/* Tooltip arrow */
-#tooltip-arrow {
-	position: fixed;
-	width: 0;
-	height: 0;
-	border-width: 5px; /* MUST match ARROW_HALF in tooltips.ts */
-	border-style: solid;
-	opacity: 0;
-	transition: opacity 0.1s ease-in-out;
-	pointer-events: none;
-	z-index: 10000;
+/* Dims the page content area (below the header) when the mobile panel is open. */
+.header-mobile-dim-content {
+	top: var(--header-height);
+	left: 0;
+	bottom: 0;
 }
 
-/* Arrow pointing downward (used for tooltip-d / tooltip-dl / tooltip-dr) */
-#tooltip-arrow.tooltip-arrow-down {
-	border-color: transparent transparent black transparent;
+/* Dims the header bar to the right of the X button when the mobile panel is open. */
+.header-mobile-dim-header {
+	top: 0;
+	left: 50px;
+	height: var(--header-height);
 }
 
-/* Arrow pointing upward (used for tooltip-u / tooltip-ul / tooltip-ur) */
-#tooltip-arrow.tooltip-arrow-up {
-	border-color: black transparent transparent transparent;
-}
-
-/* Badge shine properties - needed both for play and for member page */
-
-#checkmate-badge-bronze {
-	--shine-color: rgba(229, 203, 180, 0.3);
-}
-
-#checkmate-badge-silver {
-	--shine-color: rgba(192, 192, 192, 0.22);
-}
-
-#checkmate-badge-gold {
-	--shine-color: rgba(255, 215, 0, 0.24);
-}
-
-.badge .shine-clockwise,
-.badge .shine-anticlockwise {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 200%;
-	height: 200%;
-	transform: translate(-50%, -50%);
-	/* Conic gradient produces the rays */
-	background: repeating-conic-gradient(var(--shine-color) 0deg 15deg, transparent 15deg 40deg);
-	/* Use a radial mask to fade the rays proportional to distance */
-	mask-image: radial-gradient(circle, black 30%, transparent 55%);
-	-webkit-mask-image: radial-gradient(circle, black 30%, transparent 55%);
-	opacity: 0;
-	transition: opacity 0.4s ease;
-	animation: rotateShine linear infinite;
-	pointer-events: none; /* This prevents the shine from being part of the hover area */
-	z-index: -1;
-}
-
-.badge .shine-clockwise {
-	animation-direction: normal;
-	animation-duration: 13s;
-}
-
-.badge .shine-anticlockwise {
-	animation-direction: reverse;
-	animation-duration: 26s;
-}
-
-.badge:hover .shine-clockwise,
-.badge:hover .shine-anticlockwise {
+.header-mobile-dim-content.open,
+.header-mobile-dim-header.open {
+	visibility: visible;
 	opacity: 1;
 }
 
-@keyframes rotateShine {
-	from {
-		transform: translate(-50%, -50%) rotate(0deg);
-	}
-	to {
-		transform: translate(-50%, -50%) rotate(360deg);
-	}
-}
-
-/* Username Embed Containers */
-
-.username-embed {
+.header-mobile-nav {
 	display: flex;
-	align-items: center;
-	/* flex-wrap: wrap; */
-	gap: 0.3em;
-	width: fit-content;
+	flex-direction: column;
 }
 
-.username-embed .svg-profile,
-.svg-engine {
-	width: 1em;
-	height: 1em;
-	aspect-ratio: 1;
+.header-mobile-link,
+.header-mobile-group-title {
+	display: block;
+	padding: 8px 22px;
+	color: var(--c-text-muted);
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-decoration: none;
+	text-transform: uppercase;
 }
 
-.username-embed .username {
-	font-size: 1em;
-	font-weight: bold;
-	color: #000;
+.header-mobile-group-title {
+	cursor: default;
+}
+
+/* Children of a group are visually nested by an indent. */
+.header-mobile-child {
+	display: block;
+	padding: 6px 40px 6px 42px;
+	color: var(--c-text);
+	font-size: 13px;
+	font-weight: 400;
 	text-decoration: none;
 }
 
-.username-embed .elo {
-	color: #666;
-	font-size: 0.9em;
+.header-mobile-link:hover,
+.header-mobile-child:hover {
+	background-color: var(--c-surface-2);
 }
 
-.username-embed .eloChange {
-	font-size: 0.9em;
+/* ===================================================================
+   Responsive: progressive breakpoints for header content
+   =================================================================== */
+
+/* T1: Full layout getting tight - hide the logo symbol, keep text + nav */
+@media (max-width: 850px) {
+	.header-logo {
+		display: none;
+	}
 }
 
-.username-embed .eloChange.positive {
-	color: green;
+/* T2: Text + nav still too wide - restore symbol, hide text instead */
+@media (max-width: 800px) {
+	.header-logo {
+		display: inline-flex;
+	}
+
+	.header-sitename {
+		display: none;
+	}
 }
 
-.username-embed .eloChange.negative {
-	color: red;
+/* T3: Symbol + nav still too wide - nav moves into hamburger, full logo returns */
+@media (max-width: 670px) {
+	.header-sitename {
+		display: block;
+	}
+
+	.header-nav {
+		display: none;
+	}
+
+	.header-hamburger {
+		display: flex;
+	}
+
+	/* The home link sits to the right of the hamburger. */
+	.header-home {
+		padding: 0 8px;
+	}
 }
 
-/* Fades the right side of the element away to hide overflow text */
-.fade-element {
-	/* prettier-ignore */
-	mask-image: linear-gradient(
-      to right,
-      black 0%,
-      black calc(100% - 20px),
-      transparent 100%
-    );
-	-webkit-mask-image: linear-gradient(
-		to right,
-		black 0%,
-		black calc(100% - 20px),
-		transparent 100%
-	);
+/* T4: Logo + text doesn't have enough room - drop to text-only logo */
+@media (max-width: 470px) {
+	.header-logo {
+		display: none;
+	}
 }
 
-.justify-content-right {
-	justify-content: right;
+/* T5: Text-only logo doesn't have enough room - drop to symbol-only logo */
+@media (max-width: 420px) {
+	.header-logo {
+		display: inline-flex;
+	}
+
+	.header-sitename {
+		display: none;
+	}
+}
+
+/* ============================================================
+   Utility classes
+   ============================================================ */
+
+/* Recommended for specificity, because `display` rules in here may overwrite the .hidden
+   class from global.css. Without this, the ping meter is always visible. */
+.hidden {
+	display: none;
 }
