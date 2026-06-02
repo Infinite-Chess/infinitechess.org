@@ -8,7 +8,9 @@ import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
  */
 
 /** The WebGL rendering context. This is our web-based render engine. */
-let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in initGL()
+let gl: WebGL2RenderingContext; // The WebGL context. Is initiated in init()
+/** Whether {@link init} has run and {@link gl} is ready to use. */
+let initialized: boolean = false;
 
 /**
  * The color the screen should be cleared to every frame.
@@ -78,6 +80,7 @@ function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	// }
 
 	gl = newContext;
+	initialized = true;
 
 	gl.clearDepth(1.0); // Set the clear depth value
 	clearScreen();
@@ -98,6 +101,11 @@ function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	gl.clearStencil(0); // Good practice, although 0 is the default
 
 	return gl;
+}
+
+/** Whether the WebGL context has been initialized via {@link init}. */
+function isInitialized(): boolean {
+	return initialized;
 }
 
 /**
@@ -267,6 +275,7 @@ function disableDepthTest(): void {
 
 export default {
 	init,
+	isInitialized,
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,
 	executeWithInverseBlending,

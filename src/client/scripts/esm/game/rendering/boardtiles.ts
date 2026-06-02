@@ -92,6 +92,8 @@ let darkTiles: Color;
 document.addEventListener('theme-change', () => {
 	// Custom Event listener.
 	// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
+	// The board tile textures only exist once WebGL is initialized (i.e. we're viewing a board or variant preview).
+	if (!webgl.isInitialized()) return;
 	resetColor();
 });
 
