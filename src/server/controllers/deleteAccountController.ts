@@ -6,13 +6,13 @@
 
 import type { Request, Response } from 'express';
 
+import { deleteUser } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
-import { deleteUser, getMemberDataByCriteria } from '../database/memberManager.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -47,7 +47,9 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 
 	// The delete account request doesn't come with the username already in the body, so we set that here.
 	req.body.username = claimedUsername;
-	if (!(await testPasswordForRequest(req, res))) {
+	// The resolved identity comes straight from the DB, with the canonical user_id and username.
+	const identity = await testPasswordForRequest(req, res);
+	if (!identity) {
 		// It will have already sent a response
 		logEvents(
 			`Incorrect password for user "${claimedUsername}" attempting to remove account!`,
@@ -56,23 +58,13 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
-	// Get user_id and case-sensitive username from database
-	const record = getMemberDataByCriteria(['user_id', 'username'], 'username', claimedUsername);
-	if (record === undefined) {
-		logEventsAndPrint(
-			`Unable to find member of claimed username "${claimedUsername}" after a correct password to delete their account!`,
-			'errLog.txt',
-		);
-		return;
-	}
-
 	// Do not allow account deletion if user is currently playing a game
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
 	// If that is done while they are in the middle of a rated game,
 	// errors will happen when the game is deleted.
-	if (isMemberInSomeActiveGame(record.username)) {
+	if (isMemberInSomeActiveGame(identity.username)) {
 		logEventsAndPrint(
-			`User ${record.username} requested account deletion while being listed in some active game.`,
+			`User ${identity.username} requested account deletion while being listed in some active game.`,
 			'deletedAccounts.txt',
 		);
 		res.status(403).json({
@@ -89,9 +81,9 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	const reason_deleted = 'user request';
 
 	try {
-		deleteAccount(record.user_id, reason_deleted);
+		deleteAccount(identity.user_id, reason_deleted);
 		logEvents(
-			`Deleted account of user_id (${record.user_id}) for reason (${reason_deleted}).`,
+			`Deleted account of user_id (${identity.user_id}) for reason (${reason_deleted}).`,
 			'deletedAccounts.txt',
 		);
 		res.send('OK'); // 200 is default code
@@ -99,7 +91,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Can't delete account of user_id (${record.user_id}) after a correct password entered: ${errorMessage}`,
+			`Can't delete account of user_id (${identity.user_id}) after a correct password entered: ${errorMessage}`,
 			'errLog.txt',
 		);
 		res.status(404).json({

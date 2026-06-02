@@ -52,7 +52,7 @@ export interface ScriptTranslations {
 			cloud_not_found: string;
 		};
 		auth: {
-			invalid_username: string;
+			invalid_identifier: string;
 			incorrect_password: string;
 			login_failed: string;
 			login_retry_in_one: string;

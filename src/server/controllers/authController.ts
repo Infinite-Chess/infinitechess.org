@@ -2,12 +2,13 @@
 
 /**
  * This controller is used to process login form data,
- * returning tru if username and password is correct.
+ * returning true if username/email and password is correct.
  *
  * This also rate limits a members login attempts.
  */
 
 import type { Request, Response } from 'express';
+import type { MemberRecord } from '../database/memberManager.js';
 
 import bcrypt from 'bcrypt';
 
@@ -24,34 +25,43 @@ import {
 /**
  * Called when any fetch request submits login form data.
  * The req body needs to have the `username` and `password` properties.
+ * The `username` may be either a username or an email.
  * If the req body does not have `username`, req.params must have the `member` property.
- * If the password is correct, this returns true.
- * Otherwise this sends a response to the client saying it was incorrect.
+ * If the password is correct, this returns the resolved identity of the member.
+ * Otherwise this sends a response to the client saying it was incorrect, and returns undefined.
  * This is also rate limited.
- * @returns true if the password was correct
+ * @returns the resolved member identity if the password was correct, otherwise undefined
  */
-async function testPasswordForRequest(req: Request, res: Response): Promise<boolean> {
-	if (!verifyBodyHasLoginFormData(req, res)) return false; // If false, it will have already sent a response.
+async function testPasswordForRequest(
+	req: Request,
+	res: Response,
+): Promise<Pick<MemberRecord, 'user_id' | 'username' | 'roles'> | undefined> {
+	if (!verifyBodyHasLoginFormData(req, res)) return undefined; // If undefined, it will have already sent a response.
 
 	// eslint-disable-next-line prefer-const
 	let { username: claimedUsername, password: claimedPassword } = req.body;
 	claimedUsername = claimedUsername || req.params['member'];
 
+	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
+	const isEmail = claimedUsername.includes('@');
+	const searchKey = isEmail ? 'email' : 'username';
+	const searchValue = isEmail ? claimedUsername.toLowerCase() : claimedUsername;
+
 	const record = getMemberDataByCriteria(
-		['user_id', 'username', 'hashed_password'],
-		'username',
-		claimedUsername,
+		['user_id', 'username', 'hashed_password', 'roles'],
+		searchKey,
+		searchValue,
 	);
 	if (record === undefined) {
 		// User not found
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).auth.invalid_username,
+			message: getScriptTranslationsForReq('responses', req).auth.invalid_identifier,
 		}); // Unauthorized, username not found
-		return false;
+		return undefined;
 	}
 
 	const browserAgent = getBrowserAgent(req, record.username);
-	if (!rateLimitLogin(req, res, browserAgent)) return false; // They are being rate limited from enterring incorrectly too many times
+	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from enterring incorrectly too many times
 
 	// Test the password
 	const match = await bcrypt.compare(claimedPassword, record.hashed_password);
@@ -61,12 +71,12 @@ async function testPasswordForRequest(req: Request, res: Response): Promise<bool
 			message: getScriptTranslationsForReq('responses', req).auth.incorrect_password,
 		}); // Unauthorized, password not found
 		onIncorrectPassword(browserAgent, record.username);
-		return false;
+		return undefined;
 	}
 
 	onCorrectPassword(browserAgent);
 
-	return true;
+	return { user_id: record.user_id, username: record.username, roles: record.roles };
 }
 
 /**
