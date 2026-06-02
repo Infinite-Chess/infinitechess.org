@@ -16,6 +16,7 @@ import validcheckmates from '../../../../shared/chess/util/validcheckmates.js';
 
 import docutil from '../util/docutil.js';
 import validatorama from '../util/validatorama.js';
+import { serverFetch } from '../util/serverFetch.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // Types ---------------------------------------------------------------------------------
@@ -80,13 +81,12 @@ const member: string = docutil.getLastSegmentOfURL(); // Assuming returns string
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 	};
 	// Server reads refresh token cookie, no Authorization header needed here as per original comments
 
 	try {
-		const response = await fetch(`/member/${member}/data`, config);
+		const response = await serverFetch(`/member/${member}/data`, config);
 
 		if (response.status === 404) {
 			window.location.href = languagedropdown.addLngQueryParamToLink('/404'); // Use href for navigation
@@ -224,13 +224,12 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ password }), // Send password in body
 	};
 
 	try {
-		const response = await fetch(`/member/${member}/delete`, config);
+		const response = await serverFetch(`/member/${member}/delete`, config);
 
 		if (!response.ok) {
 			// Probably incorrect password
@@ -257,11 +256,10 @@ function resendConfirmEmail(): void {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 	};
 
-	fetch(`/member/${member}/send-email`, config)
+	serverFetch(`/member/${member}/send-email`, config)
 		.then((response) => {
 			if (response.status === 401) {
 				window.location.href = languagedropdown.addLngQueryParamToLink('/401'); // Unauthorized

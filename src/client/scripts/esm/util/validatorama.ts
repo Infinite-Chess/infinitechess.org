@@ -13,6 +13,7 @@
 import tokenConfig from '../../../../shared/util/tokenConfig.js';
 
 import docutil from './docutil.js';
+import { serverFetch } from './serverFetch.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -100,11 +101,10 @@ async function getAccessToken(): Promise<string | undefined> {
 async function refreshToken(): Promise<void> {
 	reqIsOut = true;
 	try {
-		const response = await fetch('/api/get-access-token', {
+		const response = await serverFetch('/api/get-access-token', {
 			method: 'POST', // Ensure it's a POST request
 			headers: {
 				'Content-Type': 'application/json',
-				'is-fetch-request': 'true', // Custom header
 			},
 		});
 

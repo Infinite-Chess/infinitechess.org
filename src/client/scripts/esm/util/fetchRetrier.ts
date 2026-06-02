@@ -1,8 +1,11 @@
-// src/client/scripts/esm/util/httputils.ts
+// src/client/scripts/esm/util/fetchRetrier.ts
 
 /**
- * This script contains http/fetch utility methods.
+ * A wrapper around fetch that provides retry logic, with exponential backoff,
+ * for network errors and 5xx server errors.
  */
+
+import { serverFetch } from './serverFetch.js';
 
 /** Options for {@link retryFetch} */
 interface RetryFetchOptions {
@@ -69,7 +72,7 @@ async function retryFetch(
 
 		try {
 			// console.log(`retryFetch: Attempt ${attempt}/${options.maxAttempts} for ${urlString}...`);
-			const response = await fetch(url, fetchInit);
+			const response = await serverFetch(url, fetchInit);
 
 			// Check for retryable server errors (5xx)
 			if (response.status >= 500 && response.status <= 599) {

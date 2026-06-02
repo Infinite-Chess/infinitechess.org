@@ -32,7 +32,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
 import { engineDictionary } from './engines/engine.js';
-import { retryFetch, RetryFetchOptions } from '../../util/httputils.js';
+import { retryFetch, RetryFetchOptions } from '../../util/fetchRetrier.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -294,7 +294,6 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),
 	};

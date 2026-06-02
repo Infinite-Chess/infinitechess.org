@@ -7,6 +7,7 @@
 import type { CompressionMode } from '../../../../../shared/util/compression';
 
 import validatorama from '../../util/validatorama';
+import { serverFetch } from '../../util/serverFetch.js';
 import { fetchWithDeduplication } from '../../util/fetchDeduplicator.js';
 
 // Types ----------------------------------------------------------------------------
@@ -36,7 +37,6 @@ export interface CloudPositionRecord {
 async function buildAuthHeaders(): Promise<Record<string, string>> {
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
-		'is-fetch-request': 'true',
 	};
 	const token = await validatorama.getAccessToken();
 	if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -52,7 +52,7 @@ async function buildAuthHeaders(): Promise<Record<string, string>> {
  */
 async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
-	const response = await fetch('/api/editor-saves', {
+	const response = await serverFetch('/api/editor-saves', {
 		method: 'GET',
 		headers,
 	});
@@ -79,7 +79,7 @@ async function savePosition(
 	castling?: boolean,
 ): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
-	const response = await fetch('/api/editor-saves', {
+	const response = await serverFetch('/api/editor-saves', {
 		method: 'POST',
 		headers,
 		body: JSON.stringify({
@@ -129,7 +129,7 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  */
 async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
 	const headers = await buildAuthHeaders();
-	const response = await fetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
+	const response = await serverFetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
 		method: 'DELETE',
 		headers,
 	});

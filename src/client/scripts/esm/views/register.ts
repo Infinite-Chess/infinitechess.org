@@ -4,19 +4,13 @@
 
 import validators from '../../../../shared/util/validators.js';
 
+import { serverFetch } from '../util/serverFetch.js';
 import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 const element_usernameInput = document.getElementById('username') as HTMLInputElement;
 const element_emailInput = document.getElementById('email') as HTMLInputElement;
 const element_passwordInput = document.getElementById('password') as HTMLInputElement;
 const element_submitButton = document.getElementById('submit') as HTMLButtonElement;
-
-/** Default fetch options */
-const fetchOptions: RequestInit = {
-	headers: {
-		'is-fetch-request': 'true', // Custom header
-	},
-};
 
 let usernameHasError = false;
 element_usernameInput.addEventListener('input', () => {
@@ -60,7 +54,7 @@ element_usernameInput.addEventListener('focusout', () => {
 	// Check username availability...
 	if (element_usernameInput.value.length === 0 || usernameHasError) return;
 
-	fetch(`/register/username/${element_usernameInput.value}`, fetchOptions)
+	serverFetch(`/register/username/${element_usernameInput.value}`)
 		.then((response) => response.json())
 		.then((result) => {
 			// { allowed, reason }
@@ -120,7 +114,7 @@ element_emailInput.addEventListener('focusout', () => {
 	// Check email availability and functionality...
 	// If it's blank, all the server would send back is the register.html again..
 	if (element_emailInput.value.length > 1 && !emailHasError) {
-		fetch(`/register/email/${element_emailInput.value}`, fetchOptions)
+		serverFetch(`/register/email/${element_emailInput.value}`)
 			.then((response) => response.json())
 			.then((result) => {
 				// We've got the result back from the server,
@@ -204,11 +198,10 @@ function sendForm(username: string, email: string, password: string): void {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ username, email, password }),
 	};
-	fetch('/register', config)
+	serverFetch('/register', config)
 		.then((response) => {
 			if (response.ok) OK = true;
 			return response.json();

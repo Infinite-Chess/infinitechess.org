@@ -7,6 +7,8 @@
  * the promise for the first fetch.
  */
 
+import { serverFetch } from './serverFetch.js';
+
 interface InProgressRequests {
 	[url: string]: Promise<Response> | undefined;
 }
@@ -27,7 +29,7 @@ const inProgressRequests: InProgressRequests = {};
  * @param options - Optional fetch options.
  * @returns A promise resolving to the fetch response.
  */
-function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<Response> {
+export function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<Response> {
 	const baseURL = window.location.origin;
 	const fullURL = new URL(url, baseURL).toString();
 
@@ -39,7 +41,7 @@ function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<
 		return inProgressRequests[requestKey];
 	}
 
-	inProgressRequests[requestKey] = fetch(url, options)
+	inProgressRequests[requestKey] = serverFetch(url, options)
 		.then((response: Response) => {
 			delete inProgressRequests[requestKey];
 			return response;
@@ -51,5 +53,3 @@ function fetchWithDeduplication(url: string, options?: RequestOptions): Promise<
 
 	return inProgressRequests[requestKey];
 }
-
-export { fetchWithDeduplication };

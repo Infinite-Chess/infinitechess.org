@@ -1,6 +1,6 @@
 // src/client/scripts/esm/util/ImageLoader.ts
 
-import { retryFetch, RetryFetchOptions } from './httputils';
+import { retryFetch, RetryFetchOptions } from './fetchRetrier';
 
 class ImageLoader {
 	/** Default retry options if none are provided. */

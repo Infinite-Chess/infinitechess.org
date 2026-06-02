@@ -9,6 +9,7 @@
  */
 
 import docutil from '../util/docutil.js';
+import { serverFetch } from '../util/serverFetch.js';
 
 // Elements ----------------------------------------------------------
 
@@ -37,9 +38,9 @@ async function submitLogin(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await fetch('/auth', {
+		const response = await serverFetch('/auth', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'is-fetch-request': 'true' },
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, password, keepLoggedIn: keepLoggedInInput.checked }),
 		});
 

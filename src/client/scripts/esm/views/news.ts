@@ -6,6 +6,7 @@
  */
 
 import validatorama from '../util/validatorama.js';
+import { serverFetch } from '../util/serverFetch.js';
 
 /**
  * Marks all news as read for the current user
@@ -16,11 +17,10 @@ async function markNewsAsRead(): Promise<void> {
 	if (!username) return;
 
 	try {
-		const response = await fetch('/api/news/mark-read', {
+		const response = await serverFetch('/api/news/mark-read', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'is-fetch-request': 'true',
 			},
 		});
 
@@ -38,11 +38,7 @@ async function markNewsAsRead(): Promise<void> {
  */
 async function fetchUnreadNewsDates(): Promise<string[]> {
 	try {
-		const response = await fetch('/api/news/unread-dates', {
-			headers: {
-				'is-fetch-request': 'true',
-			},
-		});
+		const response = await serverFetch('/api/news/unread-dates');
 
 		if (!response.ok) return [];
 

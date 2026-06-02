@@ -5,6 +5,7 @@
 // And it removes the lng query param from the url after loading.
 
 import docutil from '../../../util/docutil.js';
+import { serverFetch } from '../../../util/serverFetch.js';
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -17,11 +18,8 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 (function init() {
 	// Request cookie if it doesn't exist
 	if (!docutil.getCookieValue('i18next')) {
-		fetch('/setlanguage', {
+		serverFetch('/setlanguage', {
 			method: 'POST',
-			headers: {
-				'is-fetch-request': 'true', // Custom header
-			},
 		});
 	}
 	removeLngQueryParam();

@@ -13,6 +13,7 @@ import pieceThemes, {
 import docutil from '../../util/docutil.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
+import { serverFetch } from '../../util/serverFetch.js';
 
 /** Prefs that do NOT get saved on the server side */
 const clientSidePrefs: string[] = [
@@ -143,7 +144,6 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'is-fetch-request': 'true', // Custom header
 		} as Record<string, string>,
 		body: JSON.stringify({ preferences: preparedPrefs }), // Send the preferences as JSON
 	};
@@ -153,7 +153,7 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	if (token) config.headers['Authorization'] = `Bearer ${token}`; // If you use tokens for authentication
 
 	try {
-		const response: Response = await fetch('/api/set-preferences', config);
+		const response: Response = await serverFetch('/api/set-preferences', config);
 
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {
