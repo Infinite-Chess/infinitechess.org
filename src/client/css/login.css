@@ -1,202 +1,140 @@
-* {
-	margin: 0;
-	padding: 0;
-	font-family: Verdana;
-	border: 0;
-	/* Enable temporarily during dev to see the borders of all elements */
-	/* outline: 1px solid rgba(0, 0, 0, 0.214); */
+/* src/client/css/login.css */
+
+/* The login page: a single centered form over the checkerboard background. */
+
+/* Sticky-footer: body fills the viewport; main grows to push footer down */
+body {
+	display: flex;
+	flex-direction: column;
 }
 
-html {
-	height: 100%;
-	background-color: rgb(33, 33, 33);
-}
+/* ============================================================
+   Layout — center the card vertically and horizontally
+   ============================================================ */
 
 main {
-	background-color: #fff;
-	/* Using PNG because it was the smallest after compression */
-	background-image: url('/img/blank_board.png');
-	background-position: center;
-	background-repeat: no-repeat;
-	background-size: cover;
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	-o-background-size: cover;
-	background-attachment: fixed;
-
-	margin-top: 40px;
-	min-height: 425px;
+	position: relative;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 12px;
+	z-index: 1;
 }
 
-#content {
-	background-color: rgba(255, 255, 255, 0.805);
-	min-height: 425px;
-	margin: auto;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.522);
-	padding: 30px 20px;
+/* ============================================================
+   Login card
+   ============================================================ */
+
+.login-card {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: 100%;
+	max-width: 440px;
+	/* Side padding holds at 36px until ~464px wide — where the 440px card (inside main's 12px
+	   padding) stops being full-width — then shrinks quickly, hitting its 20px floor near 400px. */
+	padding: 40px clamp(20px, 25vw - 80px, 36px);
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 12px;
+	box-shadow: 0 8px 30px var(--c-shadow-elev);
 }
 
-#content h1 {
-	font-size: 40px;
-	font-family: georgia;
-	margin-bottom: 60px;
-}
-
-.formfield {
-	width: fit-content;
-	text-align: right;
-	margin: auto;
-	line-height: 2.2em;
-}
-
-#username-input-line,
-#password-input-line,
-#email-input-line {
+.login-title {
+	margin-bottom: 4px;
+	color: var(--c-text-emphasis);
+	font-size: 1.75em;
+	font-weight: 800;
 	text-align: center;
 }
 
-#password-input-line {
-	margin-top: 12px;
-	display: inline-block;
+/* ============================================================
+   Fields
+   ============================================================ */
+
+.login-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
-#confirm-password-line {
-	margin-top: 12px;
+.login-field label {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
 }
 
-.formfield label {
-	font-size: 18px;
-	vertical-align: middle;
-	margin-right: 2px;
+.login-input {
+	padding: 10px 12px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font-size: 1em;
+	transition: border-color 0.15s;
 }
 
-form input {
-	border: 0;
-	border-radius: 4px;
-	padding: 0.4em;
-	box-shadow: 0 0 8px rgba(0, 0, 0, 0.63);
-	font-size: 15px;
-	width: 180px;
+.login-input:focus {
+	outline: none;
+	border-color: var(--c-border-2);
 }
 
-form input:focus {
-	outline: solid 1px black;
+/* ============================================================
+   Options row — "Keep me logged in" + reset link
+   ============================================================ */
+
+.login-options {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 12px;
+	font-size: 0.9em;
 }
 
-form input:not([type='submit']):hover {
-	box-shadow: 0 0 8px rgb(0, 0, 0);
+.login-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--c-text);
+	cursor: pointer;
+	user-select: none;
+	white-space: nowrap;
 }
 
-/* The instructions for the request password reset form */
-.form-instruction {
-	font-size: 16px;
-	color: #333; /* A dark grey, easy to read */
-	margin-bottom: 20px; /* Add some space between the text and the email input */
-	max-width: 350px; /* Optional: Constrain width on wider screens */
-	margin-left: auto; /* Optional: Center the text block */
-	margin-right: auto; /* Optional: Center the text block */
-	line-height: 1.4em;
-}
-
-div.error {
-	font-size: 16px;
-	text-align: center;
-	color: red;
-	margin-top: 1em;
-	line-height: 1em;
-}
-
-form input[type='submit'] {
-	height: 30px;
-	min-width: 0;
-	width: fit-content;
-	height: fit-content;
-	background-color: white;
-	font-size: 16px;
-	transition: 0.1s;
-	margin-top: 25px;
-	outline: 0;
-	transition: 0.1s;
-}
-
-form input[type='submit'].ready:hover {
-	box-shadow: 0 0 8px rgb(0, 0, 0);
-	transform: scale(1.125);
-}
-
-form input[type='submit'].ready:focus {
-	outline: solid 1px black;
-}
-
-.center {
-	text-align: center;
-}
-
-.unavailable {
-	color: rgba(0, 0, 0, 0.199);
-}
-
-a {
-	-webkit-tap-highlight-color: rgba(0, 0, 0, 0.099);
-	color: black;
-}
-
-/* Start increasing header links width */
-@media only screen and (min-width: 450px) {
-	#content h1 {
-		font-size: calc(40px + 0.027 * (100vw - 450px));
-	}
-
-	form input {
-		width: calc(180px + 0.15 * (100vw - 450px));
-	}
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-	form input {
-		width: 220px;
-	}
-}
-
-/* Cap content width size, revealing image on the sides */
-@media only screen and (min-width: 810px) {
-	#content {
-		max-width: calc(810px - 60px); /* 60px less than 810 to account for padding */
-		padding: 40px 30px;
-		min-height: 800px;
-	}
-
-	#content h1 {
-		font-size: 50px;
-		margin-bottom: 70px;
-	}
-}
-
-/* Password Reset Form */
-
-/* Container for the "Forgot?" and "Back to Login" links */
-.forgot-link-container {
-	margin-top: 24px;
-	font-size: 14px;
-}
-
-/* Style for the links to make them look clickable */
-.forgot-link-container a {
-	color: #0056b3; /* A standard hyperlink blue */
-	text-decoration: underline;
+.login-checkbox input {
+	width: 15px;
+	height: 15px;
+	accent-color: var(--c-accent);
 	cursor: pointer;
 }
 
-.forgot-link-container a:hover {
-	color: #003d7a;
+.login-link {
+	color: var(--c-link);
+	text-decoration: none;
+	white-space: nowrap;
 }
 
-/* Style for the success message (e.g., after sending the email) */
-div.success {
-	font-size: 16px;
+.login-link:hover {
+	text-decoration: underline;
+}
+
+/* ============================================================
+   Error message
+   ============================================================ */
+
+.login-error {
+	color: var(--c-error);
+	font-size: 0.9em;
 	text-align: center;
-	color: green;
-	margin-top: 1em;
-	line-height: 1em;
+}
+
+/* ============================================================
+   Register prompt
+   ============================================================ */
+
+.login-register {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+	text-align: center;
 }

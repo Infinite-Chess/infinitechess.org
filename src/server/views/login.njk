@@ -1,9 +1,55 @@
 {% extends "layout.njk" %}
 
-{% block title %}Login — Infinite Chess{% endblock %}
+{% set pageName = "Log In" %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/login.css'] }}" />
+{% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
-<main></main>
+
+<main class="bg-checkerboard">
+	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
+	<div id="bg-overlay"></div>
+
+	<form class="login-card" id="login-form">
+		<h1 class="login-title">Log In</h1>
+
+		<div class="login-field">
+			<label for="username">Username or email</label>
+			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
+			<input class="login-input" type="text" id="username" name="username"
+			       autocomplete="username" autocapitalize="off" maxlength="320" required />
+		</div>
+
+		<div class="login-field">
+			<label for="password">Password</label>
+			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
+			<input class="login-input" type="password" id="password" name="password"
+			       autocomplete="current-password" maxlength="72" required />
+		</div>
+
+		<div class="login-options">
+			<label class="login-checkbox">
+				<input type="checkbox" id="keep-logged-in" />
+				<span>Keep me logged in</span>
+			</label>
+			<a class="login-link" href="/resetpassword">Reset password</a>
+		</div>
+
+		{# Populated by login.ts on a failed attempt. #}
+		<p class="login-error hidden" id="login-error"></p>
+
+		<button class="btn-primary" type="submit" id="login-submit">Log In</button>
+
+		<p class="login-register">Don't have an account? <a class="login-link" href="/register">Register</a></p>
+	</form>
+</main>
+
 {% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/login.ts'] }}"></script>
 {% endblock %}

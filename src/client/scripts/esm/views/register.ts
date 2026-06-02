@@ -206,7 +206,6 @@ function sendForm(username: string, email: string, password: string): void {
 			'Content-Type': 'application/json',
 			'is-fetch-request': 'true', // Custom header
 		},
-		credentials: 'same-origin', // Allows cookie to be set from this request
 		body: JSON.stringify({ username, email, password }),
 	};
 	fetch('/register', config)

@@ -19,7 +19,6 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 	if (!docutil.getCookieValue('i18next')) {
 		fetch('/setlanguage', {
 			method: 'POST',
-			credentials: 'same-origin',
 			headers: {
 				'is-fetch-request': 'true', // Custom header
 			},

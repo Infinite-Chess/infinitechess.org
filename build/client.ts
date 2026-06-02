@@ -32,10 +32,12 @@ const ESMEntryPoints = [
 	'src/client/css/footer.css',
 	'src/client/css/toast.css',
 	'src/client/css/index.css',
+	'src/client/css/login.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index/index.ts',
+	'src/client/scripts/esm/views/login.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
@@ -44,7 +46,6 @@ const ESMEntryPoints = [
 	// 'src/client/scripts/esm/components/header/header.ts',
 	// 'src/client/scripts/esm/views/member.ts',
 	// 'src/client/scripts/esm/views/leaderboard.ts',
-	// 'src/client/scripts/esm/views/login.ts',
 	// 'src/client/scripts/esm/views/news.ts',
 	// 'src/client/scripts/esm/views/register.ts',
 	// 'src/client/scripts/esm/views/resetpassword.ts',

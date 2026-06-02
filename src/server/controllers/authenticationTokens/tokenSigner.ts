@@ -40,7 +40,7 @@ const DEFAULT_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 2; // 48 hours
  * The lifetime of an extended session refresh token,
  * when "keep me logged in" is checked, if never renewed.
  */
-const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 90; // 90 days
+const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
 
 /** The window where a "consumed" token is still accepted. */
 const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds

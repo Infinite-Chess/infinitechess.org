@@ -1,7 +1,5 @@
 {% extends "layout.njk" %}
 
-{% block title %}Infinite Chess{% endblock %}
-
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/index.css'] }}" />
 {% endblock %}
@@ -324,7 +322,7 @@
 
 		<div class="modal-footer">
 			{# Default label — JS overwrites this in openModal() based on the active modal mode. #}
-			<button class="submit-btn" id="modal-submit"></button>
+			<button class="btn-primary" id="modal-submit"></button>
 		</div>
 
 	</div>{# .modal #}

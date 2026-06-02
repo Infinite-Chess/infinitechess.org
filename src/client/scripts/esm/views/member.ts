@@ -227,7 +227,6 @@ async function removeAccount(confirmation: boolean): Promise<void> {
 			'is-fetch-request': 'true', // Custom header
 		},
 		body: JSON.stringify({ password }), // Send password in body
-		credentials: 'same-origin', // Allows cookies (like session/CSRF) to be sent
 	};
 
 	try {
@@ -260,7 +259,6 @@ function resendConfirmEmail(): void {
 			'Content-Type': 'application/json',
 			'is-fetch-request': 'true', // Custom header
 		},
-		credentials: 'same-origin',
 	};
 
 	fetch(`/member/${member}/send-email`, config)

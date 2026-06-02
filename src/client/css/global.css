@@ -62,6 +62,9 @@ body {
 	/* Placeholder board-tile-theme variables, will be set by js */
 	--c-tile: rgb(97, 97, 97);
 	--c-tile-2: rgb(110, 110, 110);
+
+	/* Error/danger red. Theme-independent (identical in light and dark). */
+	--c-error: #e05555;
 }
 
 [data-theme='dark'] {
@@ -72,7 +75,7 @@ body {
 	--c-text: rgb(170, 170, 170);
 	--c-text-emphasis: rgb(220, 220, 220);
 	--c-text-muted: rgb(135, 135, 135);
-	--c-brand: hsl(88, 62%, 37%);
+	--c-accent: hsl(88, 62%, 37%);
 	--c-border: rgb(60, 60, 60);
 	--c-border-2: rgb(100, 100, 100);
 	--c-border-muted: rgb(55 55 55);
@@ -115,7 +118,7 @@ body {
 	--c-text: rgb(30, 30, 30);
 	--c-text-emphasis: rgb(0, 0, 0);
 	--c-text-muted: rgb(100, 100, 100);
-	--c-brand: hsl(88, 62%, 37%);
+	--c-accent: hsl(88, 62%, 37%);
 	--c-border: rgb(200, 200, 200);
 	--c-border-2: rgb(150, 150, 150);
 	--c-border-muted: rgb(215 215 215);
@@ -182,6 +185,51 @@ button:disabled {
 /* Fades content to transparent at the right edge */
 .text-fade {
 	mask-image: linear-gradient(to right, black calc(100% - 1em), transparent 100%);
+}
+
+/* ============================================================
+   Page background layers
+   ============================================================ */
+
+/* Tiled checkerboard backdrop (home, login, etc.). Apply to the page's <main>. */
+.bg-checkerboard {
+	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
+		200px 200px;
+}
+
+/* Fixed overlay that dims the checkerboard so foreground content stays legible. */
+#bg-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background-color: var(--c-bg-overlay);
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+/* Solid accent-colored primary action button (login, modal submit, etc.). */
+.btn-primary {
+	width: 100%;
+	padding: 14px;
+	background: var(--c-accent);
+	color: #fff;
+	font-size: 16px;
+	font-weight: 700;
+	border-radius: 6px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary:hover {
+	filter: brightness(1.08);
+}
+
+.btn-primary:active {
+	transform: translateY(1px);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* ============================================================
@@ -381,11 +429,11 @@ button:disabled {
 }
 
 .slider:focus-visible::-webkit-slider-thumb {
-	outline: 2px solid var(--c-brand);
+	outline: 2px solid var(--c-accent);
 	outline-offset: 1px;
 }
 
 .slider:focus-visible::-moz-range-thumb {
-	outline: 2px solid var(--c-brand);
+	outline: 2px solid var(--c-accent);
 	outline-offset: 1px;
 }
