@@ -24,7 +24,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('owner')) {
 		const user_id = await generateAccount({
 			username: 'Owner',
-			email: 'email1',
+			email: '4@gmail.com',
 			password: '1',
 			autoVerify: true,
 		});
@@ -46,7 +46,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('admin')) {
 		const user_id = await generateAccount({
 			username: 'Admin',
-			email: 'email5',
+			email: '3@gmail.com',
 			password: '1',
 			autoVerify: true,
 		});
@@ -55,7 +55,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('patron')) {
 		const user_id = await generateAccount({
 			username: 'Patron',
-			email: 'email2',
+			email: '2@gmail.com',
 			password: '1',
 			autoVerify: true,
 		});
@@ -64,7 +64,7 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 	if (!isUsernameTaken('member')) {
 		await generateAccount({
 			username: 'Member',
-			email: 'email3',
+			email: '1@gmail.com',
 			password: '1',
 			autoVerify: true,
 		});
