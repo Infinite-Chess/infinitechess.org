@@ -319,7 +319,7 @@ function closeListeners_Navigation(): void {
 	element_Annotations.removeEventListener('click', callback_Annotations);
 	element_Erase.removeEventListener('click', callback__Collapse);
 	element_Collapse.removeEventListener('click', callback__Collapse);
-	element_Back.removeEventListener('click', callback_Pause);
+	element_pause.removeEventListener('click', callback_Pause);
 
 	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
 	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
