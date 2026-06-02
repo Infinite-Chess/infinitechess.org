@@ -6,9 +6,11 @@
 
 import type { Request, Response } from 'express';
 
+import { interpolate } from '../../shared/util/interpolate.js';
+
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getTranslationForReq } from '../utility/translate.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 // Types ----------------------------------------------------------------------------
 
@@ -71,17 +73,15 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
 	if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) {
 		// Still on cooldown
 
-		let translation = getTranslationForReq('server.javascript.ws-login_failure_retry_in', req);
+		const authT = getScriptTranslationsForReq('responses', req).auth;
 		const login_cooldown = Math.floor(
 			loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs,
 		);
-		const seconds_plurality =
-			login_cooldown === 1
-				? getTranslationForReq('server.javascript.ws-second', req)
-				: getTranslationForReq('server.javascript.ws-seconds', req);
-		translation += ` ${login_cooldown} ${seconds_plurality}.`;
+		const template =
+			login_cooldown === 1 ? authT.login_retry_in_one : authT.login_retry_in_other;
+		const translation = interpolate(template, { n: login_cooldown }); // "Failed to login, try again in 3 seconds."
 
-		res.status(401).json({ message: translation }); // "Failed to log in, try again in 3 seconds.""
+		res.status(401).json({ message: translation });
 
 		// Reset the timer to auto-delete them from the login attempt data
 		// if they haven't tried in a while.

@@ -519,11 +519,6 @@ export type TranslationKeys =
 	| 'error-pages.500_message'
 	| 'news.title'
 	| 'news.more_dev_logs'
-	| 'server.javascript.ws-invalid_username'
-	| 'server.javascript.ws-incorrect_password'
-	| 'server.javascript.ws-login_failure_retry_in'
-	| 'server.javascript.ws-seconds'
-	| 'server.javascript.ws-second'
 	| 'server.javascript.ws-username_letters'
 	| 'server.javascript.ws-username_taken'
 	| 'server.javascript.ws-username_bad_word'
@@ -1163,11 +1158,6 @@ export interface TranslationsObject {
 	};
 	server: {
 		javascript: {
-			'ws-invalid_username': string;
-			'ws-incorrect_password': string;
-			'ws-login_failure_retry_in': string;
-			'ws-seconds': string;
-			'ws-second': string;
 			'ws-username_letters': string;
 			'ws-username_taken': string;
 			'ws-username_bad_word': string;

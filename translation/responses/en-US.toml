@@ -8,3 +8,10 @@ rated_requires_verified = "To play ranked, you need to be signed in with a verif
 game_aborted = "Game aborted."
 cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
 cloud_not_found = "Cloud save not found."
+
+[auth]
+invalid_username = "Username is invalid"
+incorrect_password = "Password is incorrect"
+login_failed = "Login failed due to an internal server error. Please try again later."
+login_retry_in_one = "Failed to login, try again in {n} second."
+login_retry_in_other = "Failed to login, try again in {n} seconds."

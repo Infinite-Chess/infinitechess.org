@@ -55,12 +55,6 @@ const profanityMatcher = new RegExpMatcher({
  * This route is called whenever the user clicks "Create Account"
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
-	if (!req.body) {
-		console.log(`User sent a bad create account request missing the whole body!`);
-		res.status(400).send('Bad request'); // 400 Bad request
-		return;
-	}
-
 	// Honeypot Bot Catcher: `recovery` — if present, return generic success.
 	const recoveryEmail: string =
 		typeof req.body.recovery === 'string' ? req.body.recovery.trim() : '';

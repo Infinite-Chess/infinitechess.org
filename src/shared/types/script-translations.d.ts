@@ -40,6 +40,9 @@ export interface ScriptTranslations {
 			};
 		};
 	};
+	login: {
+		network_error: string;
+	};
 	responses: {
 		seeks: {
 			already_in_game: string;
@@ -47,6 +50,13 @@ export interface ScriptTranslations {
 			game_aborted: string;
 			cloud_requires_sign_in: string;
 			cloud_not_found: string;
+		};
+		auth: {
+			invalid_username: string;
+			incorrect_password: string;
+			login_failed: string;
+			login_retry_in_one: string;
+			login_retry_in_other: string;
 		};
 	};
 	shared: {

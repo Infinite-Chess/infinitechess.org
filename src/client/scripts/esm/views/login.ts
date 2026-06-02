@@ -56,7 +56,7 @@ async function submitLogin(): Promise<void> {
 		window.location.href = redirectTo ?? '/';
 	} catch (e: unknown) {
 		console.error('Login request failed:', e);
-		setError('Network error. Please try again.');
+		setError(t.login.network_error);
 		submitButton.disabled = false;
 	}
 }

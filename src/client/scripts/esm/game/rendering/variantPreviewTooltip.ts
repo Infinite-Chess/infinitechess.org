@@ -16,9 +16,9 @@ import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/
 
 import modutil from '../../../../../shared/util/modutil.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import { format } from '../../../../../shared/util/format.js';
 import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import boardpreviewer from '../../../../../shared/chess/logic/boardpreviewer.js';
+import { interpolate } from '../../../../../shared/util/interpolate.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import variantpreviewer from '../../../../../shared/chess/variants/variantpreviewer.js';
 import typeutil, {
@@ -317,7 +317,7 @@ async function populateRules(
 			const order = gameRules.turnOrder
 				.map((p) => t.shared.sides[ext_inverted[p] as keyof typeof t.shared.sides])
 				.join(', ');
-			items.push(format(tp.turn_order, { order }));
+			items.push(interpolate(tp.turn_order, { order }));
 		}
 	}
 
@@ -340,12 +340,14 @@ async function populateRules(
 			const label = formatWinCondition(cond);
 			if (condPlayers.length === playerCount) {
 				// All players share this win condition
-				items.push(format(tp.win_by, { label }));
+				items.push(interpolate(tp.win_by, { label }));
 			} else {
 				// Only specific players have this win condition
 				for (const player of condPlayers) {
 					const color = typeutil.strcolors[player];
-					items.push(format(tp.color_wins_by, { color: t.shared.sides[color], label }));
+					items.push(
+						interpolate(tp.color_wins_by, { color: t.shared.sides[color], label }),
+					);
 				}
 			}
 		}
@@ -373,7 +375,7 @@ async function populateRules(
 	// Move rule — show if not default (100)
 	if (gameRules.moveRule !== 100) {
 		if (gameRules.moveRule === undefined) items.push(tp.no_move_rule);
-		else items.push(format(tp.move_rule, { plies: gameRules.moveRule }));
+		else items.push(interpolate(tp.move_rule, { plies: gameRules.moveRule }));
 	}
 
 	// Slide limit gamerule - SKIP. Covered below as a modifier.
@@ -383,19 +385,19 @@ async function populateRules(
 	const { enpassant, moveRuleState } = boardsim.startSnapshot.state_global;
 	if (enpassant !== undefined) {
 		const [x, y] = enpassant.square;
-		items.push(format(tp.en_passant, { x: String(x), y: String(y) }));
+		items.push(interpolate(tp.en_passant, { x: String(x), y: String(y) }));
 	}
 
 	// Game state: move rule counter
 	if (moveRuleState !== undefined && moveRuleState !== 0) {
-		items.push(format(tp.plies_since_capture, { n: moveRuleState }));
+		items.push(interpolate(tp.plies_since_capture, { n: moveRuleState }));
 	}
 
 	// Modifiers — last
 	for (const modifier of modifiers ?? []) {
 		if (modifier.kind === 'slide-limit') {
 			const descVars = modutil.getModifierDescriptionVars(modifier);
-			items.push(format(t.shared.variant_preview.slide_limit_rule, descVars));
+			items.push(interpolate(t.shared.variant_preview.slide_limit_rule, descVars));
 		} else {
 			throw new Error(`Unknown modifier kind ${modifier.kind}`);
 		}

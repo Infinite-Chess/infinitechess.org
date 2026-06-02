@@ -1,9 +1,15 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Log In" %}
+{% set t = templateT('login') %}
+{% set pageName = t.title %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/login.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# Ship the login component's [script] strings to the browser, preserving the existing window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { login: {{ scriptT('login') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
@@ -14,17 +20,17 @@
 	<div id="bg-overlay"></div>
 
 	<form class="login-card" id="login-form">
-		<h1 class="login-title">Log In</h1>
+		<h1 class="login-title">{{ t.title }}</h1>
 
 		<div class="login-field">
-			<label for="username">Username or email</label>
+			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
 			<input class="login-input" type="text" id="username" name="username"
 			       autocomplete="username" autocapitalize="off" maxlength="320" required />
 		</div>
 
 		<div class="login-field">
-			<label for="password">Password</label>
+			<label for="password">{{ t.password_label }}</label>
 			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
 			<input class="login-input" type="password" id="password" name="password"
 			       autocomplete="current-password" maxlength="72" required />
@@ -33,17 +39,17 @@
 		<div class="login-options">
 			<label class="login-checkbox">
 				<input type="checkbox" id="keep-logged-in" />
-				<span>Keep me logged in</span>
+				<span>{{ t.keep_logged_in }}</span>
 			</label>
-			<a class="login-link" href="/resetpassword">Reset password</a>
+			<a class="login-link" href="/resetpassword">{{ t.reset_password }}</a>
 		</div>
 
 		{# Populated by login.ts on a failed attempt. #}
 		<p class="login-error hidden" id="login-error"></p>
 
-		<button class="btn-primary" type="submit" id="login-submit">Log In</button>
+		<button class="btn-primary" type="submit" id="login-submit">{{ t.submit }}</button>
 
-		<p class="login-register">Don't have an account? <a class="login-link" href="/register">Register</a></p>
+		<p class="login-register">{{ t.register_prompt }} <a class="login-link" href="/register">{{ t.register_link }}</a></p>
 	</form>
 </main>
 

@@ -671,11 +671,6 @@ title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
 [server.javascript]
-ws-invalid_username = "Username is invalid"
-ws-incorrect_password = "Password is incorrect"
-ws-login_failure_retry_in = "Failed to login, try again in"
-ws-seconds = "seconds" # unit of time
-ws-second = "second" # unit of time
 ws-username_letters = "Username must only contain letters A-Z and numbers 0-9"
 ws-username_taken = "That username is taken"
 ws-username_bad_word = "That username contains a word that is not allowed"
