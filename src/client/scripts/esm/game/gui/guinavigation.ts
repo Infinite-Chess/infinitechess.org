@@ -77,6 +77,9 @@ const durationToLockRewindAfterMoveForwardingMillis = 750;
 /** Whether the navigation UI is visible (not hidden) */
 let navigationOpen = true;
 
+/** Whether the edit (undo/redo) button listeners were attached instead of the move (rewind/forward) ones. */
+let editButtonsListenersActive = false;
+
 /**
  * Whether the annotations button is enabled.
  * If so, all left click actions are treated as right clicks.
@@ -272,7 +275,8 @@ function initListeners_Navigation(): void {
 	element_CoordsX.addEventListener('change', callback_CoordsXChange);
 	element_CoordsY.addEventListener('change', callback_CoordsYChange);
 
-	if (!guiboardeditor.isOpen()) {
+	editButtonsListenersActive = guiboardeditor.isOpen();
+	if (!editButtonsListenersActive) {
 		element_moveRewind.addEventListener('click', callback_MoveRewind);
 		element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
 		element_moveRewind.addEventListener('mouseleave', callback_MoveRewindMouseLeave);
@@ -320,7 +324,8 @@ function closeListeners_Navigation(): void {
 	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
 	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
 
-	if (!guiboardeditor.isOpen()) {
+	// Remove whichever set was added in initListeners_Navigation(), even if the board editor state changed since.
+	if (!editButtonsListenersActive) {
 		element_moveRewind.removeEventListener('click', callback_MoveRewind);
 		element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
 		element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
