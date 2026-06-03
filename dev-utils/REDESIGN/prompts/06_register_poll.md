@@ -5,7 +5,7 @@ registration is verified, that browser (and only that browser) gets logged in.
 
 ## Current state
 `POST /register` sets the httpOnly pending cookie (`claim_token`), and `POST /verify/:token`
-promotes a pending row (setting `verified_at` and `member_user_id`). Nothing yet lets the
+promotes a pending row (setting its `member_user_id`). Nothing yet lets the
 register browser detect the verification or receive a session.
 `createNewSession(req, res, user_id, username, roles, keepLoggedIn)` in
 `src/server/controllers/authenticationTokens/sessionManager.ts` is how a session is issued.
@@ -14,8 +14,8 @@ register browser detect the verification or receive a session.
 Add `GET /register/poll` (in `src/server/middleware/middleware.ts`):
 - Read the pending cookie (`claim_token`). No cookie → `{ status: 'expired' }`.
 - Look up the pending row by `claim_token`. Missing/expired → `{ status: 'expired' }`.
-- Not yet verified → `{ status: 'pending' }`.
-- Verified → issue the session for `member_user_id` via
+- Not yet verified (`member_user_id` is null) → `{ status: 'pending' }`.
+- Verified (`member_user_id` is set) → issue the session for that `member_user_id` via
   `createNewSession(req, res, user_id, username, roles, keepLoggedIn = false)` (fetch the
   member's roles the way `loginController` does), **clear the pending cookie**, and respond
   `{ status: 'verified' }`.

@@ -10,26 +10,30 @@ Registration inserts `members` rows directly. There is no pending-registration s
 1. **Table** — in `src/server/database/databaseTables.ts` `generateTables()`, add a
    `pending_registrations` table, mirroring the existing `members` table's style:
    ```
-   id                 INTEGER PRIMARY KEY
-   verification_token TEXT    UNIQUE   -- secret, used in the email link
-   claim_token        TEXT    UNIQUE   -- secret, stored in the httpOnly pending cookie
-   username           TEXT    UNIQUE COLLATE NOCASE
-   email              TEXT    UNIQUE
-   hashed_password    TEXT
-   created_at         TIMESTAMP
-   expires_at         TIMESTAMP        -- 24h from creation
-   verified_at        TIMESTAMP        -- NULL until promotion
-   member_user_id     INTEGER          -- NULL until promotion
+   claim_token        TEXT PRIMARY KEY NOT NULL  -- httpOnly cookie secret; stable; primary lookup (the poll)
+   verification_token TEXT UNIQUE NOT NULL        -- email-link secret; rotates on email change
+   username           TEXT UNIQUE NOT NULL COLLATE NOCASE
+   email              TEXT UNIQUE NOT NULL
+   hashed_password    TEXT NOT NULL
+   created_at         TIMESTAMP NOT NULL
+   expires_at         TIMESTAMP NOT NULL          -- 24h from creation
+   member_user_id     INTEGER                     -- NULL until verified; doubles as the "verified" flag
    ```
+   `claim_token` is the primary key (not a surrogate `id`) to match the codebase's token-table
+   convention (`refresh_tokens`, `password_reset_tokens`): it is the row's stable identity and
+   the most frequent lookup (the poll). `verification_token` rotates on an email change, so it
+   stays `UNIQUE` rather than being the key.
 2. **Manager** — add `src/server/database/pendingRegistrationManager.ts`, mirroring
    `memberManager.ts` conventions (all SQL lives here, not in controllers). Expose the
    operations later work needs:
-   - create a pending row (with `verification_token`, `claim_token`, `expires_at`);
-   - look up by `verification_token`; look up by `claim_token`;
+   - create a pending row (with `verification_token`, `claim_token`, `created_at`,
+     `expires_at`);
+   - look up by `claim_token` (the poll/resend path); look up by `verification_token` (the
+     verify path);
    - check whether a username/email is present among **non-expired** pending rows;
    - delete expired pending rows for a given username/email;
-   - mark a row verified (set `verified_at`, `member_user_id`);
-   - sweep query: delete expired rows, and verified rows older than a short retention.
+   - mark a row verified (set `member_user_id`);
+   - sweep query: delete rows where `expires_at < now`.
 
 ## Out of scope
 - Wiring this into registration, verification, polling, availability checks, or cleanup

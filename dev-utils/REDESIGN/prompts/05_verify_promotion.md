@@ -14,12 +14,12 @@ table/manager exist and `POST /register` creates pending rows.
    (token in the URL param or body):
    - Look up the pending row by `verification_token`.
    - Missing/expired → respond with a clear error JSON.
-   - Already verified (`verified_at` set) → respond success **idempotently**.
+   - Already verified (`member_user_id` set) → respond success **idempotently**.
    - Otherwise **promote**: create the real account as already-verified (reuse
      `generateAccount` / `addUser` with `is_verified = 1`, `verification_code = null`,
      `is_verification_notified = 1` — these columns still exist), then mark the pending row
-     verified (`verified_at`, `member_user_id`). **Do not create a session.** Return success
-     JSON.
+     verified by setting `member_user_id` to the new member's id. **Do not create a session.**
+     Return success JSON.
    - Handle the "just taken" race at promotion (`addUser` runs in a transaction and throws
      `SQLITE_CONSTRAINT_ERROR` on conflict).
 2. Routes (`src/server/middleware/middleware.ts`): replace the old

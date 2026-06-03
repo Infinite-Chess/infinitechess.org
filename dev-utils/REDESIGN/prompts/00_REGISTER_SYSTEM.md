@@ -39,7 +39,7 @@ The email link points at `GET /verify/:token`. This page is **inert** — it mak
 changes and consumes no token; it only shows a **"Verify my account"** button. The user
 clicks it → `POST /verify/:token` → the server looks up the pending row by its
 `verification_token` and **promotes** it: it creates the real `members` row and marks the
-pending row verified (recording `verified_at` and the new `member_user_id`). The page then
+pending row verified by recording the new `member_user_id`. The page then
 swaps in place to "✓ Your email is verified — head back to where you signed up and you'll be
 logged in." **This page never creates a session and shows no login link.**
 
@@ -74,13 +74,13 @@ never leaked through a `Referer` header.
 ## The `pending_registrations` table
 | Column | Purpose |
 | --- | --- |
-| `verification_token` | Secret carried in the email link. Unique. |
-| `claim_token` | Secret stored in the httpOnly pending cookie; scopes the poll. Unique. |
+| `claim_token` | Secret stored in the httpOnly pending cookie; scopes the poll. **Primary key** — the row's stable identity and the most frequent lookup. |
+| `verification_token` | Secret carried in the email link. Unique; rotated if the email is changed. |
 | `username` | Unique, case-insensitive (`COLLATE NOCASE`). |
 | `email` | Unique. |
 | `hashed_password` | bcrypt hash, carried until promotion. |
 | `created_at` / `expires_at` | A pending registration is valid for **24 hours** — long enough to cover one overnight regardless of the time of day. |
-| `verified_at`, `member_user_id` | Null until verification; set when the row is promoted. |
+| `member_user_id` | Null until verification; set to the new member's id when the row is promoted. **Doubles as the "verified" flag** (non-null = verified), so there is no separate verified column. |
 
 A username or email counts as **taken** if it is held by a `members` row **or** by a
 non-expired `pending_registrations` row, so two people cannot claim the same name while one is
@@ -88,8 +88,10 @@ mid-verification.
 
 A verified pending row is **not deleted immediately** on verification — it is kept so that a
 refreshed or duplicated waiting tab that polls again still sees "verified" and resolves
-cleanly instead of "expired." A periodic cleanup deletes expired rows, and deletes verified
-rows roughly an hour after they were verified.
+cleanly instead of "expired." A periodic cleanup simply deletes rows once they pass their
+`expires_at`; a verified row that lingers until then is harmless, because `members` already
+enforces its username/email, and the poll's active window (~20–30 min) is far shorter than the
+24-hour TTL.
 
 ## Recovery paths
 The "check your email" state offers two affordances, and the server guards against
