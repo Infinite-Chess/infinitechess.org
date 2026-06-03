@@ -12,6 +12,19 @@ This chunk is independent of chunk `03` (front-end); they can be done in either 
 
 1. **Drop the columns** from the `members` table: `is_verified`, `verification_code`,
    `is_verification_notified`.
+   - **One-time purge of remaining unverified members FIRST (decided: option b, not
+     grandfather).** Before dropping the columns, run a one-off migration that **deletes all
+     `is_verified = 0` members** — otherwise dropping the flag would silently promote them to
+     permanent verified accounts. Reuse the existing deletion path: it is exactly
+     `removeOldUnverifiedMembers`'s logic **minus** the `joined < cutoff` age filter — i.e.
+     `SELECT user_id FROM members WHERE is_verified = 0`, then `deleteAccount(user_id,
+     'unverified')` for each (so cascades + the `deleted_members` table are handled
+     correctly). This **must run before** the column-drop migration (it queries
+     `is_verified`). Annotate it `TEMPORARY MIGRATION: remove after it has run in production`
+     and call it once from `initDatabase()` ahead of the DROP COLUMN step. Note in the PR
+     description that, because the old 3-day sweep bounds the unverified set to ≤3 days, this
+     purges only a small recent population — and that any genuine in-flight registrant it
+     evicts simply re-registers under the new verify-first flow.
    - Remove them from the `CREATE TABLE IF NOT EXISTS members` statement in
      `databaseTables.ts` `generateTables()` (so fresh databases never have them).
    - **For existing databases, add a one-off migration** following the established pattern
@@ -50,8 +63,9 @@ This chunk is independent of chunk `03` (front-end); they can be done in either 
 5. **AdminPanel.ts** — remove the `is_verified` column/display.
 
 6. **`removeOldUnverifiedMembers`** (`cleanupTasks.ts`) — delete this task and its
-   scheduling; it can no longer find anything (no unverified members exist). Keep the
-   pending-registrations sweep added in `01`.
+   scheduling; after the step-1 purge no unverified members exist, so it can never find
+   anything. (Its delete-all-unverified variant lives on only as the one-time step-1
+   migration.) Keep the pending-registrations sweep added in `01`.
 
 7. **Leftover verify code** — remove anything in `verifyAccountController.ts` /
    `emailController.ts` that still references the old `members`-based verification

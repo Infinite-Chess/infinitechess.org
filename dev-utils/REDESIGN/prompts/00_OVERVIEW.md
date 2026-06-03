@@ -13,11 +13,6 @@ the verification **email**) is a self-contained task doable any time after `01`.
 > ⚠️ Between chunks the app still runs, but the registration flow is not fully
 > bot-protected until `04` lands. **Do not deploy to production until `04` is merged.**
 
-> 📋 **`OPEN_DECISIONS.md`** (in this folder) lists known gaps not yet folded into the
-> numbered prompts (resend/re-register handling, link TTL, cutover of existing unverified
-> accounts, verify-button JS). Resolve those with the owner and fold them in before
-> relying on the prompts as complete.
-
 ---
 
 ## The goal in one paragraph

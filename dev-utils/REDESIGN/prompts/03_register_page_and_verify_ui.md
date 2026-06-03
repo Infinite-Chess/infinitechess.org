@@ -31,13 +31,29 @@ Read these before starting:
   card in place** to the "Check your email" state (see B) — do **not** navigate. On a
   validation/conflict error, show it inline (no more `window.location = '/409'` redirect).
 
-### B. "Check your email" state + polling + come-alive
-- Build the post-submit state (same `/register` page): a calm "Check your email at
-  `<masked email>`" message replacing the form. This must be renderable **two ways**:
+### B. "Check your email" state + resend / wrong-email + polling
+- Build the post-submit state (same `/register` page): a calm, **generic** "We sent a
+  verification link to your email — check your inbox and spam folder" message replacing the
+  form. **Echo no email address anywhere** (the user re-checks what they typed via "Wrong
+  email?" below). Renderable **two ways**:
   1. client-side swap immediately after a successful submit, and
   2. via **SSR** when the page loads with the pending cookie present (chunk `01` passes an
-     `awaitingVerification` flag + masked email to `register.njk`). Branch in the template
-     on that flag so reload / direct navigation is safe; no cookie → render the form.
+     `awaitingVerification` flag to `register.njk`). Branch in the template on that flag so
+     reload / direct navigation is safe; no cookie → render the form.
+- **Blacklisted variant:** chunk `01` also passes a `blacklisted` flag (SSR re-check) and
+  the submit response can signal it too. When set, show the generic **"This address can't
+  receive mail."** instead of the "we sent a link" copy — **never claim a send was made** —
+  and offer "Wrong email?" to correct it.
+- **Resend button:** calls `POST /register/resend` (chunk `01`, cookie-scoped). On success
+  show a transient **"✓ Verification email sent again."** (no address, **no countdown
+  timer** — don't imply email failure is likely). On `429` show **"Please wait a little bit
+  before resending."** On the blacklist signal show **"This address can't receive mail."**
+  The server limiter is the only throttle — do **not** add a client-side cooldown.
+- **"Wrong email?" link:** swaps back to the form with **all inputs preserved** (including
+  the email, so the user can spot a typo — never clear them). Correcting the email and
+  re-submitting hits chunk `01`'s cookie-aware update path (updates their own pending row +
+  resends, rotating the token since the email changed). There is **no** separate "start
+  over" endpoint.
 - While in this state, **poll** `GET /register/poll` (from `01`) on an interval
   (~3s; cap the total duration, e.g. stop after ~20–30 min or back off):
   - `{ status: 'pending' }` → keep waiting.
@@ -54,17 +70,26 @@ Read these before starting:
   `src/client/css/verify.css`, TS entry `src/client/scripts/esm/views/verify.ts`, a render
   route in `root.ts` for `GET /verify/:token`, and esbuild entries in `build/client.ts`.
   Add a `translation/verify/en-US.toml`.
-- The GET page is **inert**: it shows a short message and a **"Verify my account"**
-  `btn-primary` button. It must perform **no** verification on load.
+- The GET page is **inert** — it performs **no** verification on load (no DB writes, no
+  token consumption) — but it **does read** the token to choose which state to render:
+  - **token exists (valid)** → the **"Verify my account"** `btn-primary` button. An
+    already-verified token **also** shows the button; clicking it hits the **idempotent**
+    `POST /verify/:token`, which just returns success — so there is **no** separate "already
+    verified" GET state to build.
+  - **unknown / expired** → a "link expired or invalid" message with a link to `/register`.
 - Set a strict **`Referrer-Policy`** (e.g. `no-referrer`) on this page so the token does
   not leak via `Referer` when assets/links load. (Set it on the response in the route, or
   via a `<meta name="referrer" content="no-referrer">` — prefer the header.)
 - On a **real button click** (never auto-submit on load), `serverFetch` the
-  `POST /verify/:token` from `01`. On success, **swap the text in place** to a
-  device-agnostic confirmation: "✓ Your email is verified! Head back to where you signed
-  up and you'll be logged in." Optionally include a "Log in here" link (`/login`) for the
-  cross-device user who wants to use the current device. **Never set a session / never
-  redirect to home from this page.**
+  `POST /verify/:token` from `01` (which returns JSON). On success, **swap the text in
+  place** to a device-agnostic confirmation: "✓ Your email is verified! Head back to where
+  you signed up and you'll be logged in." **No login link** — login happens via the register
+  tab's poll, never on this page. **Never set a session / never redirect to home from this
+  page.**
+  - **Decision:** this button uses the JS `serverFetch` + in-place swap (not a no-JS
+    `<form method="POST">`). The whole app already requires JS (see `login.ts`), and modern
+    in-app email browsers run JS, so a no-JS fallback would serve a population that doesn't
+    exist here. A real click (not auto-submit) is still required to stay scanner-proof.
 - On error (invalid/expired token) show a clear message with a link back to `/register`.
 
 ### D. Wire build + routes
@@ -101,5 +126,6 @@ Read these before starting:
   the in-place swap + poll.
 - Keep verify-page copy device-agnostic (never "return to your tab").
 - Use `serverFetch` (not raw `fetch`) so the `is-fetch-request` header is sent.
-- Mask the email in the "check your email" message (e.g. `j•••@gmail.com`) — don't echo it
-  verbatim into the DOM from an untrusted source without escaping.
+- **Echo no email address** in the "check your email" state — the "Wrong email?" link (which
+  returns to the un-cleared form) is the only place the user sees what they typed. This
+  sidesteps masking/escaping concerns entirely.
