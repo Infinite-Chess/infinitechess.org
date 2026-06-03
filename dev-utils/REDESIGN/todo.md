@@ -11,8 +11,6 @@
 - **Removing a page** — delete its `.njk`, its CSS, and its entry point together; remove the route from `root.ts`.
 - **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a CSS file in `src/client/css/`, add an esbuild entry point.
 
-- Redesign the **home (index)** page.
-
 - Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
 
 - Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
