@@ -49,8 +49,8 @@
 		<p class="auth-prompt">Already have an account? <a class="auth-link" href="/login">Log In</a></p>
 	</form>
 
-	{# The post-submit state #}
-	<section class="auth-card{% if not awaitingVerification %} hidden{% endif %}" id="register-success">
+	{# The post-submit state. data-awaiting marks a deliverable pending registration #}
+	<section class="auth-card{% if not awaitingVerification %} hidden{% endif %}" id="register-success"{% if awaitingVerification and not blacklisted %} data-awaiting="true"{% endif %}>
 		{% if not blacklisted %}
 		<h1 class="auth-title register-state-title">
 			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
