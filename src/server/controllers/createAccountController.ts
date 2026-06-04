@@ -19,7 +19,6 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { handleLogin } from './loginController.js';
-import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
@@ -55,24 +54,9 @@ const profanityMatcher = new RegExpMatcher({
  * This route is called whenever the user clicks "Create Account"
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
-	// Honeypot Bot Catcher: `recovery` — if present, return generic success.
-	const recoveryEmail: string =
-		typeof req.body.recovery === 'string' ? req.body.recovery.trim() : '';
-	if (recoveryEmail.length > 0) {
-		const username = typeof req.body.username === 'string' ? req.body.username : '[empty]';
-		logEventsAndPrint(
-			`Bot signup detected! IP: ${getClientIP(req)}, Username: ${username}, User-Agent: ${req.get('User-Agent')}`,
-			'newMemberLog.txt',
-		);
-		// Return a normal-looking success so bot doesn't adapt
-		res.status(200).json({ success: true, created: true });
-		return;
-	}
-
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
-	let { username, email, password }: { username: string; email: string; password: string } =
-		req.body;
+	let { username, email, password } = req.body;
 	if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
 		console.error(
 			'We received request to create new member without all supplied username, email, and password!',
