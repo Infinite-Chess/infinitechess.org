@@ -20,8 +20,8 @@ use guest play, so requiring verification before an account exists costs nothing
 - **The verification link** — the link in the email, opened on any device. It carries a
   different secret, the `verification_token`. The cookie's `claim_token` and the email's
   `verification_token` are deliberately separate secrets.
-- **The poll** — `GET /register/poll`, a small endpoint the register browser quietly polls
-  while it waits for the email to be verified.
+- **The poll** — `GET /register/awaiting/poll`, a small endpoint the register browser's
+  awaiting page quietly polls while it waits for the email to be verified.
 
 ## End-to-end flow
 
@@ -29,10 +29,13 @@ use guest play, so requiring verification before an account exists costs nothing
 `POST /register` (a `fetch` from the register page) validates the username/email/password and
 the bot-protection token, then inserts a `pending_registrations` row, sends the verification
 email, sets the httpOnly pending cookie (`claim_token`), and returns success JSON. **No
-`members` row is created.** The page replaces the form in place with a "check your email"
-state and starts polling. On reload the server re-renders that same state from the pending
-cookie, so refreshing or re-navigating to `/register` mid-wait is safe; without the cookie it
-renders the form.
+`members` row is created.** The page then navigates to **`/register/awaiting`** — a dedicated
+page that shows the "check your email" state and polls. Visiting or reloading `/register` while
+the pending cookie is present **redirects to `/register/awaiting`**, so re-navigating mid-wait
+is safe; without the cookie `/register` renders the form. A `POST /register` that arrives while
+the caller already holds an active pending registration does **not** create a second one — it
+returns success so the page just lands on `/register/awaiting` for the existing registration
+(this is what lets a stale second tab self-heal on its next action).
 
 ### 2. Verifying the email
 The email link points at `GET /verify/:token`. This page is **inert** — it makes no database
@@ -64,9 +67,9 @@ The verify page additionally sends `Referrer-Policy: no-referrer` so the token i
 never leaked through a `Referer` header.
 
 ## Same-browser vs cross-device
-- **Same browser:** the still-open register tab polls and lights up → home + success toast.
+- **Same browser:** the still-open awaiting page polls and lights up → home + success toast.
   The verify tab shows the "verified, head back" message.
-- **Cross-device** (registered on a desktop, verified on a phone): the desktop register tab
+- **Cross-device** (registered on a desktop, verified on a phone): the desktop awaiting page
   polls → home + toast; the phone's verify page shows "verified, head back" and is **not**
   logged in. All verify-page copy is device-agnostic — "head back to where you signed up,"
   never "return to your tab," because the verifying device may have no such tab.
@@ -94,26 +97,30 @@ enforces its username/email, and the poll's active window (~20–30 min) is far 
 24-hour TTL.
 
 ## Recovery paths
-The "check your email" state offers two affordances, and the server guards against
-undeliverable addresses:
+The awaiting page offers a single recovery affordance — change-email — plus guidance, and the
+server guards against undeliverable addresses. There is **no resend button**: changing the
+email (even re-submitting the same address) rotates the token and re-sends, so a dedicated
+resend is redundant. The page shows brief guidance instead: "Not seeing it? Check your spam
+folder, and make sure your email address is correct."
 
-- **Resend** — `POST /register/resend` re-sends the same verification link to the pending row
-  identified by the cookie. It takes no request body, so it can only ever re-send to the
-  caller's own pending address, never an arbitrary one. It is rate-limited; when the limit is
-  hit the page shows "Please wait a little bit before resending."
-- **Wrong email? / change email** — returns to the form with the fields still filled in (so
-  the user can spot a typo). Re-submitting `POST /register` when the request carries a pending
-  cookie matching an existing row **updates that row in place and re-sends** rather than
-  reporting a conflict; because the email changed, a fresh `verification_token` is issued. A
-  collision with someone *else's* non-expired pending row, or with a real member, is a genuine
-  "already taken."
+- **Wrong email? / change email** — a "Wrong email?" button reveals a field prefilled with the
+  pending address; editing it and clicking "Change it" calls `POST /register/awaiting/email`
+  (cookie-scoped, rate-limited). The server re-validates the new address (format, blacklist,
+  MX, taken-by-another), updates the pending row's email, rotates the `verification_token`,
+  refreshes `expires_at`, and re-sends. **Success reloads the page** so the new state is shown;
+  validation/conflict errors render **inline beneath the field** with no reload. A collision
+  with someone *else's* non-expired pending row, or with a real member, is a genuine "already
+  in use."
 - **Undeliverable address** — addresses that have hard-bounced or filed a spam complaint are
   recorded in the email blacklist (`email_blacklist`, populated from AWS SES bounce/complaint
   webhooks). The server refuses to send to a blacklisted address and reports "This address
-  can't receive mail." It reports an address as undeliverable **only when it actually declined
-  to send** — it never claims to have sent a message it did not. The reason (bounce vs.
-  complaint) is never shown. **No email address is echoed anywhere in the UI;** the "Wrong
-  email?" form is the only place the user sees what they typed.
+  can't receive mail." On the awaiting page the blacklisted variant shows the change-email
+  field **expanded by default**, since changing the address is the only way forward. It reports
+  an address as undeliverable **only when it actually declined to send** — it never claims to
+  have sent a message it did not. The reason (bounce vs. complaint) is never shown.
+- **Echoing the address** — the main waiting copy shows **no** email address; the change-email
+  field is the sole, deliberate exception, displaying the pending address so the user can spot
+  a typo.
 
 ## Bot protection
 The register form is protected by **Cloudflare Turnstile in Managed mode** — invisible when
@@ -130,10 +137,10 @@ so local development needs no real keys.
 | --- | --- |
 | Pending-table schema | [databaseTables.ts](../../../src/server/database/databaseTables.ts) |
 | Pending-row SQL | [pendingRegistrationManager.ts](../../../src/server/database/pendingRegistrationManager.ts) |
-| Register POST, validation, availability | [createAccountController.ts](../../../src/server/controllers/createAccountController.ts) |
+| Register POST, awaiting page-state, validation, availability, change-email | [createAccountController.ts](../../../src/server/controllers/createAccountController.ts) |
 | Verify promotion (`POST /verify/:token`) | [verifyAccountController.ts](../../../src/server/controllers/verifyAccountController.ts) |
 | Verification email | [emailController.ts](../../../src/server/controllers/emailController.ts) |
 | Session issuance (used by the poll) | [sessionManager.ts](../../../src/server/controllers/authenticationTokens/sessionManager.ts) |
 | Email blacklist | [blacklistManager.ts](../../../src/server/database/blacklistManager.ts) |
-| Routes (`/register`, `/verify/:token`, poll, resend) | [middleware.ts](../../../src/server/middleware/middleware.ts) |
+| Routes (`/register`, `/register/awaiting`, awaiting poll & change-email, `/verify/:token`) | [middleware.ts](../../../src/server/middleware/middleware.ts) |
 | Cleanup sweep | [cleanupTasks.ts](../../../src/server/database/cleanupTasks.ts) |
