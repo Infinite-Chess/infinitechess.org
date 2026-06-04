@@ -9,6 +9,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { getRandomSplashText } from './splashTexts.js';
+import { getRegisterPageState } from '../controllers/createAccountController.js';
 import {
 	getScriptTranslations,
 	getTemplateTranslations,
@@ -45,7 +46,7 @@ router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.n
 router.get('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 router.get('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 router.get('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
-router.get('/register(.html)?', (_req: Request, res: Response) => res.render('register.njk'));
+router.get('/register(.html)?', (req: Request, res: Response) => res.render('register.njk', getRegisterPageState(req))); // prettier-ignore
 router.get('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
 router.get('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 router.get('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));

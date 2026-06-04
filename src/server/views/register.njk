@@ -13,7 +13,7 @@
 	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
 	<div id="bg-overlay"></div>
 
-	<form class="auth-card" id="register-form">
+	<form class="auth-card{% if awaitingVerification %} hidden{% endif %}" id="register-form">
 		<h1 class="auth-title">Register</h1>
 
 		<div class="auth-field">
@@ -49,10 +49,21 @@
 		<p class="auth-prompt">Already have an account? <a class="auth-link" href="/login">Log In</a></p>
 	</form>
 
-	{# Revealed by register.ts (and the form hidden) after a successful submit. #}
-	<section class="auth-card hidden" id="register-success">
-		<h1 class="auth-title">Check your email</h1>
-		<p class="register-check-email">We've sent a verification link to your email. Click it to activate your account.</p>
+	{# The post-submit state #}
+	<section class="auth-card{% if not awaitingVerification %} hidden{% endif %}" id="register-success">
+		{% if not blacklisted %}
+		<h1 class="auth-title register-state-title">
+			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+			Check your Email
+		</h1>
+		<p class="register-state-message">We've sent you an email. Click the link inside to activate your account.</p>
+		{% else %}
+		<h1 class="auth-title register-state-title">
+			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+			This address can't receive mail
+		</h1>
+		<p class="register-state-message">The email address you registered with can't receive messages, please use a different email address.</p>
+		{% endif %}
 	</section>
 </main>
 

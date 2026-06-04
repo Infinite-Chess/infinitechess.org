@@ -92,18 +92,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	email = email.toLowerCase();
 
 	// Determine whether this is a re-submit from the same browser.
-	const cookieClaimToken: unknown = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
-	let ownPendingRow: PendingRegistrationRecord | undefined;
-	if (typeof cookieClaimToken === 'string' && cookieClaimToken.length > 0) {
-		try {
-			const row = getPendingRegistrationByClaimToken(cookieClaimToken);
-			if (row !== undefined && row.expires_at > Date.now() && row.member_user_id === null) {
-				ownPendingRow = row;
-			}
-		} catch {
-			// DB lookup failed; fall through to the fresh-registration path.
-		}
-	}
+	const ownPendingRow = getOwnActivePendingRegistration(req);
 	const isUpdate = ownPendingRow !== undefined;
 
 	// These 'return's are so that we don't send duplicate responses,
@@ -186,6 +175,38 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
 function generateRegistrationToken(): string {
 	return crypto.randomBytes(32).toString('base64url');
+}
+
+/**
+ * Returns the caller's own active (non-expired, still-unverified) pending registration,
+ * identified solely by the httpOnly `claim_token` cookie — or undefined if there is none.
+ */
+function getOwnActivePendingRegistration(req: Request): PendingRegistrationRecord | undefined {
+	const cookieClaimToken: unknown = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
+	if (typeof cookieClaimToken !== 'string' || cookieClaimToken.length === 0) return undefined;
+	try {
+		const row = getPendingRegistrationByClaimToken(cookieClaimToken);
+		if (row !== undefined && row.expires_at > Date.now() && row.member_user_id === null) {
+			return row;
+		}
+	} catch {
+		// DB lookup failed; treat as no pending registration.
+	}
+	return undefined;
+}
+
+/**
+ * SSR state for the register page (`GET /register`), derived from the
+ * pending-registration cookie: whether the caller is awaiting email
+ * verification, and — if so — whether their address is blacklisted.
+ */
+function getRegisterPageState(req: Request): {
+	awaitingVerification: boolean;
+	blacklisted: boolean;
+} {
+	const pending = getOwnActivePendingRegistration(req);
+	if (pending === undefined) return { awaitingVerification: false, blacklisted: false };
+	return { awaitingVerification: true, blacklisted: isBlacklisted(pending.email) };
 }
 
 /**
@@ -530,6 +551,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 
 export {
 	createNewMember,
+	getRegisterPageState,
 	resendPendingVerificationEmail,
 	pollPendingRegistration,
 	checkEmailValidity,
