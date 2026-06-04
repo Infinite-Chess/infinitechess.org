@@ -104,7 +104,7 @@ resend is redundant. The page shows brief guidance instead: "Not seeing it? Chec
 folder, and make sure your email address is correct."
 
 - **Wrong email? / change email** — a "Wrong email?" button reveals a field prefilled with the
-  pending address; editing it and clicking "Change it" calls `POST /register/awaiting/email`
+  pending address; editing it and clicking "Update it" calls `POST /register/awaiting/email`
   (cookie-scoped, rate-limited). The server re-validates the new address (format, blacklist,
   MX, taken-by-another), updates the pending row's email, rotates the `verification_token`,
   refreshes `expires_at`, and re-sends. **Success reloads the page** so the new state is shown;

@@ -34,12 +34,14 @@ const ESMEntryPoints = [
 	'src/client/css/index.css',
 	'src/client/css/login.css',
 	'src/client/css/register.css',
+	'src/client/css/register-awaiting.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index/index.ts',
 	'src/client/scripts/esm/views/login.ts',
 	'src/client/scripts/esm/views/register.ts',
+	'src/client/scripts/esm/views/register-awaiting.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

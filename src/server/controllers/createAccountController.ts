@@ -28,7 +28,6 @@ import {
 	getMemberDataByCriteria,
 	isEmailTaken,
 	isEmailTakenOrPending,
-	isUsernameTaken,
 	isUsernameTakenOrPending,
 } from '../database/memberManager.js';
 import {
@@ -36,10 +35,9 @@ import {
 	deleteExpiredPendingRegistrationsFor,
 	getPendingRegistrationByClaimToken,
 	isEmailTakenInPendingByOther,
-	isUsernameTakenInPendingByOther,
 	PENDING_REGISTRATION_EXPIRY_MILLIS,
 	PendingRegistrationRecord,
-	updatePendingRegistration,
+	updatePendingRegistrationEmail,
 } from '../database/pendingRegistrationManager.js';
 
 // Variables -------------------------------------------------------------------------
@@ -71,10 +69,6 @@ const profanityMatcher = new RegExpMatcher({
 /**
  * `POST /register` — validates the submission, stages a pending registration,
  * emails a verification link, and sets the pending cookie. Creates no member.
- *
- * If the request already carries a pending cookie whose claim_token matches an
- * active (non-expired, unverified) pending row, the submission is treated as a
- * re-submit: the row is updated in place and the email is re-sent.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
 	// First make sure we have all 3 variables.
@@ -88,69 +82,48 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
+	// Two-tab guard: a single pending cookie can't track two registrations. If this browser
+	// already has one in progress, don't create another — report success so the page simply
+	// navigates to /register/awaiting for the existing registration.
+	if (getOwnActivePendingRegistration(req) !== undefined) {
+		res.status(200).json({ success: true });
+		return;
+	}
+
 	// Make the email lowercase, so we don't run into problems with seeing if capitalized emails are taken!
 	email = email.toLowerCase();
 
-	// Determine whether this is a re-submit from the same browser.
-	const ownPendingRow = getOwnActivePendingRegistration(req);
-	const isUpdate = ownPendingRow !== undefined;
-
 	// These 'return's are so that we don't send duplicate responses,
-	// AND so we don't create/update the pending row anyway.
+	// AND so we don't create the pending row anyway.
 	if (!doUsernameFormatChecks(username, req, res)) return;
 	if (!(await doEmailFormatChecks(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
-	// The claim_token lives only in the httpOnly cookie (scopes the poll),
-	// whereas the verification_token lives only in the emailed link.
-	const claimToken = isUpdate ? ownPendingRow!.claim_token : generateRegistrationToken();
-
-	// Availability checks: fresh → all pending+members; update → other parties only.
-	if (!isUpdate) {
-		if (isUsernameTakenOrPending(username)) {
-			res.status(409).json({
-				message: getTranslationForReq('server.javascript.ws-username_taken', req),
-			});
-			return;
-		}
-		if (isEmailTakenOrPending(email)) {
-			res.status(409).json({
-				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
-			});
-			return;
-		}
-	} else {
-		if (isUsernameTaken(username) || isUsernameTakenInPendingByOther(username, claimToken)) {
-			res.status(409).json({
-				message: getTranslationForReq('server.javascript.ws-username_taken', req),
-			});
-			return;
-		}
-		if (isEmailTaken(email) || isEmailTakenInPendingByOther(email, claimToken)) {
-			res.status(409).json({
-				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
-			});
-			return;
-		}
+	if (isUsernameTakenOrPending(username)) {
+		res.status(409).json({
+			message: getTranslationForReq('server.javascript.ws-username_taken', req),
+		});
+		return;
+	}
+	if (isEmailTakenOrPending(email)) {
+		res.status(409).json({
+			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
+		});
+		return;
 	}
 
 	// Hash the password now so the plaintext never reaches the pending row.
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
 
-	// Rotate the verification_token only when the email changed on a re-submit,
-	// so an already-delivered link keeps working on a same-email re-submit.
-	const emailChanged = isUpdate && email !== ownPendingRow!.email;
-	const verificationToken =
-		isUpdate && !emailChanged ? ownPendingRow!.verification_token : generateRegistrationToken();
+	// Two deliberately-separate secrets: the claim_token lives only in the httpOnly cookie
+	// (scopes the poll), the verification_token only in the emailed link.
+	const claimToken = generateRegistrationToken();
+	const verificationToken = generateRegistrationToken();
 
 	try {
 		// Clear any expired rows blocking the new username/email UNIQUE constraints.
 		deleteExpiredPendingRegistrationsFor(username, email);
-		if (isUpdate) {
-			updatePendingRegistration(claimToken, username, email, hashedPassword, verificationToken); // prettier-ignore
-		} else {
-			addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
-		}
+		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
 	} catch {
 		res.status(500).json({
 			message: 'A server side error occurred during registration. Please try again.',
@@ -161,7 +134,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// Email the verification link. No `members` row will be created until they verify.
 	sendEmailConfirmation(email, username, verificationToken);
 
-	// Scope later poll/resend requests to this pending registration.
+	// Scope later poll/change-email requests to this pending registration.
 	res.cookie(PENDING_REGISTRATION_COOKIE_NAME, claimToken, {
 		httpOnly: true,
 		sameSite: 'none',
@@ -169,7 +142,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
 	});
 
-	res.status(isUpdate ? 200 : 201).json({ success: true });
+	res.status(201).json({ success: true });
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
@@ -196,63 +169,70 @@ function getOwnActivePendingRegistration(req: Request): PendingRegistrationRecor
 }
 
 /**
- * SSR state for the register page (`GET /register`), derived from the
- * pending-registration cookie: whether the caller is awaiting email
- * verification, and — if so — whether their address is blacklisted.
+ * SSR state for the awaiting page (`GET /register/awaiting`) and the `GET /register` redirect,
+ * derived from the pending-registration cookie: the active pending registration's email (shown
+ * in the change-email field) and whether that address is blacklisted — or `null` if there is no
+ * active pending registration.
  */
-function getRegisterPageState(req: Request): {
-	awaitingVerification: boolean;
-	blacklisted: boolean;
-} {
+function getAwaitingPageState(req: Request): { email: string; blacklisted: boolean } | null {
 	const pending = getOwnActivePendingRegistration(req);
-	if (pending === undefined) return { awaitingVerification: false, blacklisted: false };
-	return { awaitingVerification: true, blacklisted: isBlacklisted(pending.email) };
+	if (pending === undefined) return null;
+	return { email: pending.email, blacklisted: isBlacklisted(pending.email) };
 }
 
 /**
- * `POST /register/resend` — re-sends the verification email for the caller's own pending
- * registration. Identified solely by the httpOnly `claim_token` cookie.
+ * `POST /register/awaiting/email` — changes the email on the caller's own pending registration
+ * (identified by the httpOnly `claim_token` cookie), re-validates the new address, rotates the
+ * verification token, refreshes the expiry, and re-sends the verification email.
  */
-function resendPendingVerificationEmail(req: Request, res: Response): void {
-	const claimToken = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
-	if (typeof claimToken !== 'string' || claimToken.length === 0) {
+async function changePendingEmail(req: Request, res: Response): Promise<void> {
+	const pending = getOwnActivePendingRegistration(req);
+	if (pending === undefined) {
 		res.status(404).json({ message: 'No pending registration found.' });
 		return;
 	}
 
-	let pending: PendingRegistrationRecord | undefined;
-	try {
-		pending = getPendingRegistrationByClaimToken(claimToken);
-	} catch {
-		res.status(500).json({ message: 'A server error occurred.' });
+	let { email } = req.body;
+	if (typeof email !== 'string') {
+		res.status(400).json({ message: 'Email is required.' });
 		return;
 	}
+	email = email.toLowerCase();
 
-	if (
-		pending === undefined ||
-		pending.expires_at <= Date.now() ||
-		pending.member_user_id !== null
-	) {
-		res.status(404).json({ message: 'No pending registration found.' });
-		return;
-	}
+	// Re-validate the new address (format, blacklist, MX) — same checks as registration.
+	if (!(await doEmailFormatChecks(email, req, res))) return;
 
-	if (isBlacklisted(pending.email)) {
-		res.status(422).json({
-			message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+	// Availability: reject a real member's email or another party's pending email. The caller's
+	// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
+	if (isEmailTaken(email) || isEmailTakenInPendingByOther(email, pending.claim_token)) {
+		res.status(409).json({
+			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
 		});
 		return;
 	}
 
-	sendEmailConfirmation(pending.email, pending.username, pending.verification_token);
-	res.json({ sent: true });
+	// Rotate the verification token so the new address gets a fresh link and any
+	// already-delivered link to the old address stops working.
+	const verificationToken = generateRegistrationToken();
+
+	try {
+		// Clear any expired row blocking the new email's UNIQUE constraint.
+		deleteExpiredPendingRegistrationsFor(pending.username, email);
+		updatePendingRegistrationEmail(pending.claim_token, email, verificationToken);
+	} catch {
+		res.status(500).json({ message: 'A server side error occurred. Please try again.' });
+		return;
+	}
+
+	sendEmailConfirmation(email, pending.username, verificationToken);
+	res.json({ success: true });
 }
 
 /**
- * `GET /register/poll` — the register browser polls this while waiting for its emailed link to
- * be verified. It is identified by the httpOnly `claim_token` cookie set at registration. Once
- * the pending registration has been promoted, THIS browser (the only one holding the cookie) is
- * issued a session and the pending cookie is cleared.
+ * `GET /register/awaiting/poll` — the register browser's awaiting page polls this while
+ * waiting for its emailed link to be verified. It is identified by the httpOnly `claim_token`
+ * cookie set at registration. Once the pending registration has been promoted, THIS browser
+ * (the only one holding the cookie) is issued a session and the pending cookie is cleared.
  *
  * Responds `{ status: 'expired' | 'pending' | 'verified' }`.
  */
@@ -273,8 +253,8 @@ function pollPendingRegistration(req: Request, res: Response): void {
 
 	// Not yet verified.
 	if (pending.member_user_id === null) {
-		// Expired while still waiting → dead link.
 		if (pending.expires_at <= Date.now()) res.json({ status: 'expired' });
+		else if (isBlacklisted(pending.email)) res.json({ status: 'blacklisted' });
 		else res.json({ status: 'pending' });
 		return;
 	}
@@ -551,8 +531,8 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 
 export {
 	createNewMember,
-	getRegisterPageState,
-	resendPendingVerificationEmail,
+	getAwaitingPageState,
+	changePendingEmail,
 	pollPendingRegistration,
 	checkEmailValidity,
 	checkUsernameAvailable,

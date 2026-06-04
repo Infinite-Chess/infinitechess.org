@@ -288,11 +288,22 @@ button:disabled {
 	border-color: var(--c-border-2);
 }
 
+/* Red outline on an input whose value failed validation. */
+.auth-input.input-error,
+.auth-input.input-error:focus {
+	border-color: var(--c-error);
+}
+
 /* Form-level error message, centered beneath the fields. */
 .auth-error {
 	color: var(--c-error);
 	font-size: 0.9em;
 	text-align: center;
+}
+
+/* Per-field error, left-aligned beneath its own input (vs the centered form-level .auth-error). */
+.auth-field-error {
+	text-align: left;
 }
 
 .auth-link {

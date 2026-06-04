@@ -1,0 +1,55 @@
+{% extends "layout.njk" %}
+
+{% set pageName = "Register" %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/register-awaiting.css'] }}" />
+{% endblock %}
+
+{% block body %}
+{% include "components/header/header.njk" %}
+
+<main class="bg-checkerboard">
+	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
+	<div id="bg-overlay"></div>
+
+	{# data-awaiting marks a deliverable pending registration, telling register-awaiting.ts to poll
+	   for verification (omitted for the blacklisted variant — no email was sent). #}
+	<section class="auth-card" id="awaiting-card"{% if not blacklisted %} data-awaiting="true"{% endif %}>
+		{% if not blacklisted %}
+		<h1 class="auth-title register-state-title">
+			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+			Check your email
+		</h1>
+		<div class="register-state-text">
+			<p>We've sent you an email. Click the link inside to activate your account.</p>
+			<p>Not seeing it? Check your spam folder, and make sure your email address is correct.</p>
+		</div>
+		<button class="register-change-toggle" type="button" id="change-email-toggle">Check email correctness</button>
+		{% else %}
+		<h1 class="auth-title register-state-title">
+			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+			This address can't receive mail
+		</h1>
+		<div class="register-state-text">
+			<p>The email address you registered with can't receive messages. Enter a different address below to continue.</p>
+		</div>
+		{% endif %}
+
+		{# Change-email control. Hidden behind the "Check email correctness" toggle  #}
+		<div class="register-change-email auth-field{% if not blacklisted %} hidden{% endif %}" id="change-email">
+			<label for="new-email">Your email address</label>
+			<input class="auth-input" type="email" id="new-email" name="new-email"
+			       autocomplete="email" autocapitalize="off" maxlength="320" value="{{ email }}" />
+			<p class="auth-error auth-field-error hidden" id="new-email-error"></p>
+			<button class="btn-primary register-change-submit" type="button" id="change-email-submit">Update it</button>
+		</div>
+	</section>
+</main>
+
+{% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/register-awaiting.ts'] }}"></script>
+{% endblock %}

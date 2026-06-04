@@ -40,10 +40,10 @@ export const createAccountLimiter = rateLimit({
 });
 
 /**
- * Resend Account Verification Email Limiter
- * Rule: Max 8 verification email resends per hour per IP
+ * Verification Email Limiter
+ * Rule: Max 8 verification emails (sent by changing the pending email) per hour per IP
  */
-export const resendAccountVerificationLimiter = rateLimit({
+export const verificationEmailLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60,
 	max: 8,
 	...default_options,

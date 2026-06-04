@@ -48,11 +48,11 @@ import {
 	checkUsernameAvailable,
 	createNewMember,
 	pollPendingRegistration,
-	resendPendingVerificationEmail,
+	changePendingEmail,
 } from '../controllers/createAccountController.js';
 import {
 	createAccountLimiter,
-	resendAccountVerificationLimiter,
+	verificationEmailLimiter,
 	forgotPasswordLimiter,
 	editorSaveLimiter,
 	editorLoadLimiter,
@@ -203,8 +203,8 @@ export function configureMiddleware(app: Express): void {
 	app.get('/register/username/:username', checkUsernameAvailable);
 	app.get('/register/email/:email', checkEmailValidity);
 	app.post('/register', createAccountLimiter, createNewMember);
-	app.get('/register/poll', pollPendingRegistration);
-	app.post('/register/resend', resendAccountVerificationLimiter, resendPendingVerificationEmail);
+	app.get('/register/awaiting/poll', pollPendingRegistration);
+	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);

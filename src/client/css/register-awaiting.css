@@ -1,0 +1,83 @@
+/* src/client/css/register-awaiting.css */
+
+/* The post-registration "check your email" page: a single centered card. */
+
+/* Sticky-footer: body fills the viewport; main grows to push footer down */
+body {
+	display: flex;
+	flex-direction: column;
+}
+
+/* ============================================================
+   Layout — center the card vertically and horizontally
+   ============================================================ */
+
+main {
+	position: relative;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 12px;
+	z-index: 1;
+}
+
+/* ============================================================
+   Awaiting-state pieces
+   ============================================================ */
+
+/* State heading (check-email or blocked): the status glyph beside the text. */
+.register-state-title {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+}
+
+.register-state-glyph {
+	height: 2em;
+	width: auto;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	flex-shrink: 0;
+}
+
+/* Explanatory message block beneath the heading. */
+.register-state-text {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	color: var(--c-text-muted);
+	font-size: 0.95em;
+}
+
+/* "Check email correctness" toggle — a secondary button that reveals the change-email field. */
+.register-change-toggle {
+	align-self: flex-start;
+	padding: 8px 14px;
+	background: none;
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font-size: 0.9em;
+	cursor: pointer;
+}
+
+.register-change-toggle:hover {
+	background: var(--c-hover-overlay);
+}
+
+/* The change-email field group (revealed by the toggle, or shown expanded when blacklisted). */
+.register-change-submit {
+	margin-top: 8px;
+	padding: 10px;
+}
+
+@media (max-width: 390px) {
+	.register-state-title {
+		font-size: 1.5em;
+	}
+}

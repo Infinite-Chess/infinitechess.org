@@ -9,7 +9,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
 import { getRandomSplashText } from './splashTexts.js';
-import { getRegisterPageState } from '../controllers/createAccountController.js';
+import { getAwaitingPageState } from '../controllers/createAccountController.js';
 import {
 	getScriptTranslations,
 	getTemplateTranslations,
@@ -46,7 +46,17 @@ router.get('/play(.html)?', (_req: Request, res: Response) => res.render('play.n
 router.get('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 router.get('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 router.get('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
-router.get('/register(.html)?', (req: Request, res: Response) => res.render('register.njk', getRegisterPageState(req))); // prettier-ignore
+router.get('/register(.html)?', (req: Request, res: Response) => {
+	// Redirect to check-your-email page if register is pending
+	if (getAwaitingPageState(req)) res.redirect('/register/awaiting');
+	else res.render('register.njk');
+});
+router.get('/register/awaiting(.html)?', (req: Request, res: Response) => {
+	const state = getAwaitingPageState(req);
+	// Redirect to register page if no register is pending
+	if (state === null) res.redirect('/register');
+	else res.render('register-awaiting.njk', state);
+});
 router.get('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
 router.get('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 router.get('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));

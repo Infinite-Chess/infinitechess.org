@@ -1,24 +1,18 @@
 // src/client/scripts/esm/views/register.ts
 
 /**
- * Client-side logic for the register page (/register).
+ * Client-side logic for the register form (/register).
  *
- * On submit it POSTs to /register; on success it hides the form and reveals the
- * SSR'd "Check your email" card sitting beside it (no DOM building or navigation).
- * It also polls /register/poll until the email is verified.
+ * Validates the username/email/password fields (format via the shared validators, plus on-blur
+ * availability checks against the server) with "reward early, punish late" timing, and submits
+ * via fetch. On success the server has staged a pending registration and set the pending
+ * cookie, so the page navigates to /register/awaiting (which owns the "check your email" state,
+ * polling, and the change-email recovery control).
  */
 
 import validators from '../../../../shared/util/validators.js';
 
-import flashToast from '../util/flashToast.js';
 import { serverFetch } from '../util/serverFetch.js';
-
-// Constants ---------------------------------------------------------
-
-/** How often to poll /register/poll while awaiting verification. */
-const POLL_INTERVAL_MS = 3000;
-/** Stop polling after this long, so an abandoned tab doesn't loop forever. */
-const POLL_MAX_DURATION_MS = 1000 * 24 * 60;
 
 // Elements ----------------------------------------------------------
 
@@ -31,18 +25,12 @@ const usernameError = document.querySelector<HTMLParagraphElement>('#username-er
 const emailError = document.querySelector<HTMLParagraphElement>('#email-error')!;
 const passwordError = document.querySelector<HTMLParagraphElement>('#password-error')!;
 const formError = document.querySelector<HTMLParagraphElement>('#register-error')!;
-const successCard = document.querySelector<HTMLElement>('#register-success')!;
 
 // State -------------------------------------------------------------
 
 let usernameValid = false;
 let emailValid = false;
 let passwordValid = false;
-
-/** Active /register/poll interval id, or undefined when not polling. */
-let pollTimerId: number | undefined;
-/** Timestamp (ms) polling began, for enforcing POLL_MAX_DURATION_MS. */
-let pollStartedAt = 0;
 
 // Format error messages (hardcoded English) -------------------------
 
@@ -142,7 +130,7 @@ function validateFormat(
 	return valid;
 }
 
-/** Submits the register form, swapping in the "Check your Email" state on success. */
+/** Submits the register form, navigating to the awaiting page on success. */
 async function submitRegister(): Promise<void> {
 	// Authoritative gate: a field can be filled but unblurred, so its error may not
 	// have surfaced yet (and the button stayed enabled). Reveal any such errors now,
@@ -182,62 +170,12 @@ async function submitRegister(): Promise<void> {
 			return;
 		}
 
-		showCheckEmail();
+		// The pending cookie is set; the awaiting page owns the rest (check-email, polling, change-email).
+		window.location.assign('/register/awaiting');
 	} catch (e: unknown) {
 		console.error('Registration request failed:', e);
 		setFormError('Network error. Please try again.');
 		refreshSubmit(); // Re-enable for a retry.
-	}
-}
-
-/** Hides the form and reveals the SSR'd "Check your email" confirmation card, then polls. */
-function showCheckEmail(): void {
-	form.classList.add('hidden');
-	successCard.classList.remove('hidden');
-	startPolling();
-}
-
-// Verification polling ----------------------------------------------
-
-/** Begins polling for email verification. Idempotent — a second call is a no-op. */
-function startPolling(): void {
-	if (pollTimerId !== undefined) return;
-	pollStartedAt = Date.now();
-	pollTimerId = window.setInterval(() => pollVerification(), POLL_INTERVAL_MS);
-	pollVerification(); // Check immediately — the link may already be verified.
-}
-
-/** Stops the verification poll loop. */
-function stopPolling(): void {
-	window.clearInterval(pollTimerId);
-	pollTimerId = undefined;
-}
-
-/**
- * Polls /register/poll once. `verified` → the server has set the session cookie, so queue
- * a welcome toast and redirect home; `expired` → reload (the pending registration is no
- * longer active, so the page re-renders as the plain form); `pending` → keep waiting until
- * the duration cap.
- */
-async function pollVerification(): Promise<void> {
-	if (Date.now() - pollStartedAt > POLL_MAX_DURATION_MS) {
-		stopPolling();
-		return;
-	}
-	try {
-		const response = await serverFetch('/register/poll');
-		const result = (await response.json()) as { status: 'pending' | 'verified' | 'expired' };
-		if (result.status === 'verified') {
-			stopPolling();
-			flashToast.queue('Your account has been activated!');
-			window.location.assign('/');
-		} else if (result.status === 'expired') {
-			stopPolling();
-			window.location.reload();
-		}
-		// 'pending' → keep waiting.
-	} catch (e: unknown) {
-		console.error('Registration poll failed:', e); // Transient; keep polling.
 	}
 }
 
@@ -308,7 +246,4 @@ emailInput.addEventListener('blur', async (): Promise<void> => {
 	}
 });
 
-// On load: if the deliverable "check your email" state was SSR'd (reload mid-wait), resume
-// polling; otherwise the form is showing, so focus its first field.
-if (successCard.dataset['awaiting'] === 'true') startPolling();
-else usernameInput.focus();
+usernameInput.focus();
