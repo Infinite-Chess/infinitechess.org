@@ -123,7 +123,7 @@ with Cloudflare's `siteverify` endpoint — passing the real client IP, which is
 because the site runs behind a Cloudflare Tunnel — and rejects any request whose token is
 missing or invalid before any pending row is created. The site key and secret key come from
 environment variables; in development they fall back to Cloudflare's published dummy test keys
-so local development needs no real keys. There is no hidden-field honeypot.
+so local development needs no real keys.
 
 ## Where it lives
 | Concern | File |
