@@ -12,8 +12,13 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { isEmailTakenInPending, isUsernameTakenInPending } from './pendingRegistrationManager.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
+import {
+	isEmailTakenInPending,
+	isUsernameTakenInPending,
+	markPendingRegistrationVerified,
+	PendingRegistrationRecord,
+} from './pendingRegistrationManager.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -39,9 +44,6 @@ export interface MemberRecord {
 type MembersColumn = keyof MemberRecord;
 
 // Constants ----------------------------------------------------------
-
-/** SQLite constraint error code constant */
-const SQLITE_CONSTRAINT_ERROR = 'SQLITE_CONSTRAINT';
 
 /** Custom error message for user not found during deletion */
 const USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
@@ -122,13 +124,28 @@ function addUser(
 			'errLog.txt',
 		);
 
-		let genericError: string = 'A database error occurred.'; // Generic error message to avoid leaking details
-		if (error instanceof SqliteError && error.code === SQLITE_CONSTRAINT_ERROR)
-			genericError = SQLITE_CONSTRAINT_ERROR;
-		throw Error(genericError); // Rethrow with the generic error message, or specific constraint error
+		// Rethrow a generic message to avoid leaking details.
+		throw new Error('A database error occurred.');
 	}
 }
 // setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
+
+/**
+ * Atomically promotes a pending registration into a real,
+ * verified member, and marks the pending row verified.
+ * @param pending - The pending registration to promote.
+ * @returns The new member's user_id.
+ * @throws If member creation fails (e.g. CONSTRAINT violation).
+ */
+function promotePendingRegistration(pending: PendingRegistrationRecord): number {
+	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
+		// addUser runs its own transaction; nested here it becomes a savepoint.
+		const user_id = addUser(p.username, p.email, p.hashed_password, 1, null, 1);
+		markPendingRegistrationVerified(p.claim_token, user_id);
+		return user_id;
+	});
+	return promoteTransaction(pending);
+}
 
 /**
  * Deletes a user from the members table and adds them to the deleted_members table.
@@ -567,8 +584,8 @@ function isEmailTakenOrPending(email: string): boolean {
 // Exports -----------------------------------------------------------------------------
 
 export {
-	SQLITE_CONSTRAINT_ERROR,
 	addUser,
+	promotePendingRegistration,
 	deleteUser,
 	getMemberDataByCriteria,
 	getMultipleMemberDataByCriteria,

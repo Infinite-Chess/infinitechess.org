@@ -158,7 +158,7 @@ async function generateAccount({
 		is_verification_notified,
 	);
 
-	logEvents(`Created new member: ${username}`, 'newMemberLog.txt');
+	logEvents(`Manually generated new member: ${username}`, 'newMemberLog.txt');
 
 	return user_id;
 }

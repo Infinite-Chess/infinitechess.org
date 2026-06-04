@@ -25,7 +25,6 @@ import secureRedirect from './secureRedirect.js';
 import { rootRouter } from '../routes/root.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
 import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
@@ -37,6 +36,7 @@ import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { requestConfirmEmail } from '../controllers/emailController.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
@@ -266,7 +266,7 @@ export function configureMiddleware(app: Express): void {
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
 	app.post('/member/:member/send-email', resendAccountVerificationLimiter, requestConfirmEmail);
-	app.get('/verify/:member/:code', verifyAccount);
+	app.post('/verify/:token', verifyPendingRegistration);
 
 	// Leaderboard router
 	app.get(
