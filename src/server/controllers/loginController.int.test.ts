@@ -66,7 +66,6 @@ describe('Login Controller Integration', () => {
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',
-			autoVerify: true,
 		});
 
 		// 2. Test
@@ -83,7 +82,6 @@ describe('Login Controller Integration', () => {
 			username: 'RealUser',
 			email: 'test@example.com',
 			password: 'CorrectPassword!',
-			autoVerify: true,
 		});
 
 		// 2. Test

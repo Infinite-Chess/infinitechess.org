@@ -1,12 +1,12 @@
 // src/server/controllers/createAccountController.ts
 
 /*
- * This module handles create account form data,
- * verifying the data, creating the account,
- * and sending them a verification email.
+ * Handles the register form: validates the submission, then stages a pending
+ * registration and emails a verification link (no member is created until the
+ * link is verified). Also answers username/email availability checks.
  *
- * It also answers requests for whether
- * a specific username or email is available.
+ * generateAccount() additionally creates a verified member directly, for dev
+ * seeding and tests.
  */
 
 import crypto from 'crypto';
@@ -18,7 +18,6 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 
 import validators from '../../shared/util/validators.js';
 
-import { handleLogin } from './loginController.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
@@ -27,17 +26,27 @@ import {
 	addUser,
 	isEmailTakenOrPending,
 	isUsernameTakenOrPending,
-	SQLITE_CONSTRAINT_ERROR,
 } from '../database/memberManager.js';
+import {
+	addPendingRegistration,
+	deleteExpiredPendingRegistrationsFor,
+	PENDING_REGISTRATION_EXPIRY_MILLIS,
+} from '../database/pendingRegistrationManager.js';
 
 // Variables -------------------------------------------------------------------------
 
 /**
- * The number of times to SALT passwords before storing in the database.
- *
- * Consider moving SALT_ROUNDS to a config file or environment variable
+ * Name of the httpOnly cookie that holds a pending registration's `claim_token`,
+ * set when the register form is submitted. The poll/resend endpoints
+ * read it to scope a request to its own pending registration.
  */
-const PASSWORD_SALT_ROUNDS: number = 10;
+const PENDING_REGISTRATION_COOKIE_NAME = 'pending_registration';
+
+/**
+ * The number of times to SALT passwords before storing in the database.
+ * 10 is standard.
+ */
+const PASSWORD_SALT_ROUNDS = 10;
 
 /**
  * Initialize the obscenity profanity matcher.
@@ -51,7 +60,8 @@ const profanityMatcher = new RegExpMatcher({
 // Functions -------------------------------------------------------------------------
 
 /**
- * This route is called whenever the user clicks "Create Account"
+ * `POST /register` — validates the submission, stages a pending registration,
+ * emails a verification link, and sets the pending cookie. Creates no member.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
 	// First make sure we have all 3 variables.
@@ -69,25 +79,48 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	email = email.toLowerCase();
 
 	// First we make checks on the username...
-	// These 'return's are so that we don't send duplicate responses, AND so we don't create the member anyway.
+	// These 'return's are so that we don't send duplicate responses, AND so we don't create the pending row anyway.
 	if (!doUsernameValidation(username, req, res)) return;
 	if (!(await doEmailValidation(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
+	// Hash the password now so the plaintext never reaches the pending row.
+	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
+
+	// Two deliberately-separate secrets: the claim_token lives only in the httpOnly
+	// cookie (scopes the poll), the verification_token only in the emailed link.
+	const claimToken = generateRegistrationToken();
+	const verificationToken = generateRegistrationToken();
+
 	try {
-		await generateAccount({ username, email, password });
-	} catch (error: unknown) {
-		let message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-		// Detect the specific constraint error message that can be thrown
-		if (message === SQLITE_CONSTRAINT_ERROR)
-			message = 'The username or email has just been taken.';
-		res.status(500).json({ error: 'Could not generate account. ' + message });
+		// Clear any EXPIRED pending row holding this username/email first, so a freed
+		// name isn't blocked by the UNIQUE constraints, then stage the registration.
+		deleteExpiredPendingRegistrationsFor(username, email);
+		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
+	} catch {
+		res.status(500).json({
+			error: 'A server side error occurred during registration. Please try again.',
+		});
 		return;
 	}
 
-	// Create new login session! They just created an account, so log them in!
-	// This will handle our response/redirect too for us!
-	handleLogin(req, res);
+	// Email the verification link. No `members` row will be created until they verify.
+	sendEmailConfirmation(email, username, verificationToken);
+
+	// Scope later poll/resend requests to this pending registration.
+	res.cookie(PENDING_REGISTRATION_COOKIE_NAME, claimToken, {
+		httpOnly: true,
+		sameSite: 'none',
+		secure: true,
+		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
+	});
+
+	res.status(201).json({ success: true });
+}
+
+/** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
+function generateRegistrationToken(): string {
+	return crypto.randomBytes(32).toString('base64url');
 }
 
 /**
@@ -101,7 +134,6 @@ async function generateAccount({
 	username,
 	email,
 	password,
-	autoVerify = false,
 }: {
 	username: string;
 	email: string;
@@ -111,18 +143,11 @@ async function generateAccount({
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
 
-	const { is_verified, verification_code, is_verification_notified } = autoVerify
-		? {
-				is_verified: 1 as 0 | 1,
-				verification_code: null,
-				is_verification_notified: 1 as 0 | 1,
-			}
-		: {
-				// Don't auto verify them
-				is_verified: 0 as 0 | 1,
-				verification_code: crypto.randomBytes(24).toString('base64url'),
-				is_verification_notified: 0 as 0 | 1,
-			};
+	const { is_verified, verification_code, is_verification_notified } = {
+		is_verified: 1 as 0 | 1,
+		verification_code: null,
+		is_verification_notified: 1 as 0 | 1,
+	};
 
 	const user_id = addUser(
 		username,
@@ -134,9 +159,6 @@ async function generateAccount({
 	);
 
 	logEvents(`Created new member: ${username}`, 'newMemberLog.txt');
-
-	// SEND EMAIL CONFIRMATION
-	if (!autoVerify) sendEmailConfirmation(user_id);
 
 	return user_id;
 }

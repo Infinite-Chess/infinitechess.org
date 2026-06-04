@@ -23,7 +23,6 @@ async function createAndLoginUser(): Promise<{
 		username,
 		email: `${username}@example.com`,
 		password: 'Password123!',
-		autoVerify: true,
 	});
 
 	const response = await testRequest().post('/auth').send({ username, password: 'Password123!' });

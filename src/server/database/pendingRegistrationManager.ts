@@ -32,7 +32,7 @@ export interface PendingRegistrationRecord {
 // Constants -----------------------------------------------------------------
 
 /** How long a pending registration stays valid before it is swept, in milliseconds. */
-const PENDING_REGISTRATION_EXPIRY_MILLIS = 24 * 60 * 60 * 1000;
+export const PENDING_REGISTRATION_EXPIRY_MILLIS = 24 * 60 * 60 * 1000;
 
 // Create --------------------------------------------------------------------
 
