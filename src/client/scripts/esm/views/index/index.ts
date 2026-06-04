@@ -9,12 +9,16 @@
 import type { LobbyMessage } from '../../websocket/socketschemas.js';
 
 import lobby from './lobby.js';
+import flashToast from '../../util/flashToast.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 
 import './newPrompt.js';
 import './gameSetupModal.js';
 
 // Initial setup -----------------------------------------------------
+
+// Show any toast queued before a redirect here (e.g. "Account activated!" after registering).
+flashToast.consume();
 
 lobby.subscribe();
 SocketBus.addEventListener('reconnected', () => lobby.subscribe());
