@@ -216,8 +216,14 @@ function resendPendingVerificationEmail(req: Request, res: Response): void {
 		return;
 	}
 
-	sendEmailConfirmation(pending.email, pending.username, pending.verification_token);
+	if (isBlacklisted(pending.email)) {
+		res.status(422).json({
+			message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+		});
+		return;
+	}
 
+	sendEmailConfirmation(pending.email, pending.username, pending.verification_token);
 	res.json({ sent: true });
 }
 
@@ -463,10 +469,12 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 		}
 	}
 	if (isBlacklisted(email)) {
-		const errMessage = `Blacklisted email ${email} tried to create an account!`;
-		logEventsAndPrint(errMessage, 'blacklistLog.txt');
-		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+		logEventsAndPrint(
+			`Blacklisted email ${email} tried to create an account!`,
+			'blacklistLog.txt',
+		);
+		res.status(422).json({
+			message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return false;
 	}
