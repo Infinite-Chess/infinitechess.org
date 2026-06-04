@@ -118,6 +118,24 @@ function generateTables(): void {
 		);
 	`);
 
+	// Pending Registrations table — verify-first registration staging, before a real member row exists
+	db.run(`
+		CREATE TABLE IF NOT EXISTS pending_registrations (
+			claim_token        TEXT PRIMARY KEY NOT NULL, -- httpOnly cookie secret; unchanging
+			verification_token TEXT UNIQUE NOT NULL, -- email-link secret; rotates on email change
+			username           TEXT UNIQUE NOT NULL COLLATE NOCASE,
+			email              TEXT UNIQUE NOT NULL,
+			hashed_password    TEXT NOT NULL,
+			created_at         INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			expires_at         INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			member_user_id     INTEGER -- NULL until verified; doubles as the "verified" flag
+		);
+	`);
+	// Index for the expiry sweep
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_pending_registrations_expires_at ON pending_registrations (expires_at);`,
+	);
+
 	// Deleted Members table
 	db.run(`
 		CREATE TABLE IF NOT EXISTS deleted_members (
