@@ -236,13 +236,12 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 
 /**
  * Cleanup: deletes every pending registration whose `expires_at` is in the past.
- * @returns The number of rows deleted.
  * @throws {Error} Throws a generic error if a database error occurs.
  */
-export function deleteExpiredPendingRegistrations(): number {
+export function deleteExpiredPendingRegistrations(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
 	try {
-		return db.run(query, [Date.now()]).changes;
+		db.run(query, [Date.now()]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(

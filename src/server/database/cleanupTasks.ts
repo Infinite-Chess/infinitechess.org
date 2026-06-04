@@ -11,6 +11,7 @@ import db from './database.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
+import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
 
 /** The maximum time an account is allowed to remain unverified before the server will delete it from Database. */
 const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
@@ -29,6 +30,7 @@ function performCleanupTasks(): void {
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
 	removeOldUnverifiedMembers();
+	deleteExpiredPendingRegistrations();
 }
 
 // ========================================================
