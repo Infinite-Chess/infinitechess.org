@@ -233,6 +233,86 @@ button:disabled {
 }
 
 /* ============================================================
+   Auth card (shared by the login & register pages)
+   ============================================================ */
+
+/* The card holding an auth form. Each page's own stylesheet positions it
+   (centered over the checkerboard); these rules style the card itself. */
+.auth-card {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	width: 100%;
+	max-width: 440px;
+	/* Side padding holds at 36px until ~464px wide — where the 440px card (inside main's 12px
+	   padding) stops being full-width — then shrinks quickly, hitting its 20px floor near 400px. */
+	padding: 40px clamp(20px, 25vw - 80px, 36px);
+	background: var(--c-surface);
+	border: 1px solid var(--c-border);
+	border-radius: 12px;
+	box-shadow: 0 8px 30px var(--c-shadow-elev);
+}
+
+.auth-title {
+	margin-bottom: 4px;
+	color: var(--c-text-emphasis);
+	font-size: 1.75em;
+	font-weight: 800;
+	text-align: center;
+}
+
+/* A labeled input column. */
+.auth-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.auth-field label {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+}
+
+.auth-input {
+	padding: 10px 12px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font-size: 1em;
+	transition: border-color 0.15s;
+}
+
+.auth-input:focus {
+	outline: none;
+	border-color: var(--c-border-2);
+}
+
+/* Form-level error message, centered beneath the fields. */
+.auth-error {
+	color: var(--c-error);
+	font-size: 0.9em;
+	text-align: center;
+}
+
+.auth-link {
+	color: var(--c-link);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.auth-link:hover {
+	text-decoration: underline;
+}
+
+/* Centered muted prompt linking to the other auth page (e.g. "Don't have an account?"). */
+.auth-prompt {
+	color: var(--c-text-muted);
+	font-size: 0.9em;
+	text-align: center;
+}
+
+/* ============================================================
    Username embed containers
    ============================================================ */
 

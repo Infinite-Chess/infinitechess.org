@@ -120,26 +120,26 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!isUpdate) {
 		if (isUsernameTakenOrPending(username)) {
 			res.status(409).json({
-				conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+				message: getTranslationForReq('server.javascript.ws-username_taken', req),
 			});
 			return;
 		}
 		if (isEmailTakenOrPending(email)) {
 			res.status(409).json({
-				conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
+				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
 			});
 			return;
 		}
 	} else {
 		if (isUsernameTaken(username) || isUsernameTakenInPendingByOther(username, claimToken)) {
 			res.status(409).json({
-				conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+				message: getTranslationForReq('server.javascript.ws-username_taken', req),
 			});
 			return;
 		}
 		if (isEmailTaken(email) || isEmailTakenInPendingByOther(email, claimToken)) {
 			res.status(409).json({
-				conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
+				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
 			});
 			return;
 		}
@@ -164,7 +164,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		}
 	} catch {
 		res.status(500).json({
-			error: 'A server side error occurred during registration. Please try again.',
+			message: 'A server side error occurred during registration. Please try again.',
 		});
 		return;
 	}
@@ -419,7 +419,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 				return false;
 			case validators.UsernameValidationResult.UsernameIsReserved:
 				res.status(409).json({
-					conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+					message: getTranslationForReq('server.javascript.ws-username_taken', req),
 				}); // Code for reserved (but the users don't know that!)
 				return false;
 			default:
@@ -431,7 +431,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 	}
 	if (checkProfanity(username.toLowerCase())) {
 		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-username_bad_word', req),
+			message: getTranslationForReq('server.javascript.ws-username_bad_word', req),
 		});
 		return false;
 	}

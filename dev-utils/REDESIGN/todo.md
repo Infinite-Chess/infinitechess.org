@@ -19,6 +19,8 @@
 
 - Delete all old ejs documents, stylesheets, and scripts related to the old pages.
 
+- Should we have some special 429 "Too Many Requests" page or handling? Does sending the html for that page each rate limit effectively defeat the purpose? We're still sending just as much data each request??
+
 ---
 
 ## Translation System Refactor

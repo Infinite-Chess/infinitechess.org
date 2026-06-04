@@ -1,6 +1,6 @@
 /* src/client/css/login.css */
 
-/* The login page: a single centered form over the checkerboard background. */
+/* The login page: a single centered auth card over the checkerboard background. */
 
 /* Sticky-footer: body fills the viewport; main grows to push footer down */
 body {
@@ -20,63 +20,6 @@ main {
 	justify-content: center;
 	padding: 32px 12px;
 	z-index: 1;
-}
-
-/* ============================================================
-   Login card
-   ============================================================ */
-
-.login-card {
-	display: flex;
-	flex-direction: column;
-	gap: 20px;
-	width: 100%;
-	max-width: 440px;
-	/* Side padding holds at 36px until ~464px wide — where the 440px card (inside main's 12px
-	   padding) stops being full-width — then shrinks quickly, hitting its 20px floor near 400px. */
-	padding: 40px clamp(20px, 25vw - 80px, 36px);
-	background: var(--c-surface);
-	border: 1px solid var(--c-border);
-	border-radius: 12px;
-	box-shadow: 0 8px 30px var(--c-shadow-elev);
-}
-
-.login-title {
-	margin-bottom: 4px;
-	color: var(--c-text-emphasis);
-	font-size: 1.75em;
-	font-weight: 800;
-	text-align: center;
-}
-
-/* ============================================================
-   Fields
-   ============================================================ */
-
-.login-field {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.login-field label {
-	color: var(--c-text-muted);
-	font-size: 0.9em;
-}
-
-.login-input {
-	padding: 10px 12px;
-	background: var(--c-surface-2);
-	border: 1px solid var(--c-border);
-	border-radius: 6px;
-	color: var(--c-text);
-	font-size: 1em;
-	transition: border-color 0.15s;
-}
-
-.login-input:focus {
-	outline: none;
-	border-color: var(--c-border-2);
 }
 
 /* ============================================================
@@ -107,34 +50,4 @@ main {
 	height: 15px;
 	accent-color: var(--c-accent);
 	cursor: pointer;
-}
-
-.login-link {
-	color: var(--c-link);
-	text-decoration: none;
-	white-space: nowrap;
-}
-
-.login-link:hover {
-	text-decoration: underline;
-}
-
-/* ============================================================
-   Error message
-   ============================================================ */
-
-.login-error {
-	color: var(--c-error);
-	font-size: 0.9em;
-	text-align: center;
-}
-
-/* ============================================================
-   Register prompt
-   ============================================================ */
-
-.login-register {
-	color: var(--c-text-muted);
-	font-size: 0.9em;
-	text-align: center;
 }
