@@ -33,7 +33,6 @@ import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
-import { requestConfirmEmail } from '../controllers/emailController.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
@@ -49,6 +48,7 @@ import {
 	checkUsernameAvailable,
 	createNewMember,
 	pollPendingRegistration,
+	resendPendingVerificationEmail,
 } from '../controllers/createAccountController.js';
 import {
 	createAccountLimiter,
@@ -202,8 +202,9 @@ export function configureMiddleware(app: Express): void {
 	// Account router
 	app.get('/register/username/:username', checkUsernameAvailable);
 	app.get('/register/email/:email', checkEmailValidity);
-	app.get('/register/poll', pollPendingRegistration);
 	app.post('/register', createAccountLimiter, createNewMember);
+	app.get('/register/poll', pollPendingRegistration);
+	app.post('/register/resend', resendAccountVerificationLimiter, resendPendingVerificationEmail);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
@@ -267,7 +268,6 @@ export function configureMiddleware(app: Express): void {
 
 	// Member routes that do require authentication
 	app.get('/member/:member/data', getMemberData);
-	app.post('/member/:member/send-email', resendAccountVerificationLimiter, requestConfirmEmail);
 	app.post('/verify/:token', verifyPendingRegistration);
 
 	// Leaderboard router

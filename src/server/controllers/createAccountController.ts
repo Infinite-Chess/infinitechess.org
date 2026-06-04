@@ -189,6 +189,39 @@ function generateRegistrationToken(): string {
 }
 
 /**
+ * `POST /register/resend` — re-sends the verification email for the caller's own pending
+ * registration. Identified solely by the httpOnly `claim_token` cookie.
+ */
+function resendPendingVerificationEmail(req: Request, res: Response): void {
+	const claimToken = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
+	if (typeof claimToken !== 'string' || claimToken.length === 0) {
+		res.status(404).json({ message: 'No pending registration found.' });
+		return;
+	}
+
+	let pending: PendingRegistrationRecord | undefined;
+	try {
+		pending = getPendingRegistrationByClaimToken(claimToken);
+	} catch {
+		res.status(500).json({ message: 'A server error occurred.' });
+		return;
+	}
+
+	if (
+		pending === undefined ||
+		pending.expires_at <= Date.now() ||
+		pending.member_user_id !== null
+	) {
+		res.status(404).json({ message: 'No pending registration found.' });
+		return;
+	}
+
+	sendEmailConfirmation(pending.email, pending.username, pending.verification_token);
+
+	res.json({ sent: true });
+}
+
+/**
  * `GET /register/poll` — the register browser polls this while waiting for its emailed link to
  * be verified. It is identified by the httpOnly `claim_token` cookie set at registration. Once
  * the pending registration has been promoted, THIS browser (the only one holding the cookie) is
@@ -489,6 +522,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 
 export {
 	createNewMember,
+	resendPendingVerificationEmail,
 	pollPendingRegistration,
 	checkEmailValidity,
 	checkUsernameAvailable,

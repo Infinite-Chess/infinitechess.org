@@ -3,17 +3,12 @@
 /*
  * This module constructs and dispatches application emails:
  * password resets, account verification, and rating abuse alerts.
- *
- * It also handles the API endpoint for resending verification emails.
  */
-
-import type { Request, Response } from 'express';
 
 import mailer from '../utility/mailer.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 
 // --- Helper Functions ---
 
@@ -105,41 +100,6 @@ async function sendEmailConfirmation(
 }
 
 /**
- * API to resend the verification email for a logged-in, still-unverified member.
- * TODO(prompt 09): remove this endpoint once the pending-registration /register/resend lands.
- */
-function requestConfirmEmail(req: Request, res: Response): void {
-	if (!req.memberInfo?.signedIn) {
-		res.status(401).json({ message: 'You must be signed in to perform this action.' });
-		return;
-	}
-
-	// We know the member url param is defined because this route is only used when it is present.
-	const usernameParam = req.params['member']!;
-	const { user_id, username } = req.memberInfo;
-
-	if (username.toLowerCase() !== usernameParam.toLowerCase()) {
-		const errText = `Member "${username}" (ID: ${user_id}) attempted to send verification email for user (${usernameParam})!`;
-		logEventsAndPrint(errText, 'hackLog.txt');
-		res.status(403).json({ sent: false, message: 'Forbidden' });
-		return;
-	}
-
-	// Only re-send if the member is still unverified and has a code.
-	const record = getMemberDataByCriteria(
-		['email', 'verification_code', 'is_verified'],
-		'user_id',
-		user_id,
-	);
-	if (record !== undefined && record.is_verified === 0 && record.verification_code) {
-		// Fire-and-forget, no need to await here as we respond to the user immediately.
-		sendEmailConfirmation(record.email, username, record.verification_code);
-	}
-
-	res.json({ sent: true });
-}
-
-/**
  * API to send an email warning about rating abuse to our own infinite chess email address
  * @param messageSubject - email subject text
  * @param messageText - email body text
@@ -166,4 +126,4 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 }
 
 // --- Exports ---
-export { sendPasswordResetEmail, sendEmailConfirmation, requestConfirmEmail, sendRatingAbuseEmail };
+export { sendPasswordResetEmail, sendEmailConfirmation, sendRatingAbuseEmail };
