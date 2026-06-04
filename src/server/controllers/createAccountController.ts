@@ -19,17 +19,20 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
+import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
+	getMemberDataByCriteria,
 	isEmailTakenOrPending,
 	isUsernameTakenOrPending,
 } from '../database/memberManager.js';
 import {
 	addPendingRegistration,
 	deleteExpiredPendingRegistrationsFor,
+	getPendingRegistrationByClaimToken,
 	PENDING_REGISTRATION_EXPIRY_MILLIS,
 } from '../database/pendingRegistrationManager.js';
 
@@ -121,6 +124,67 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
 function generateRegistrationToken(): string {
 	return crypto.randomBytes(32).toString('base64url');
+}
+
+/**
+ * `GET /register/poll` — the register browser polls this while waiting for its emailed link to
+ * be verified. It is identified by the httpOnly `claim_token` cookie set at registration. Once
+ * the pending registration has been promoted, THIS browser (the only one holding the cookie) is
+ * issued a session and the pending cookie is cleared.
+ *
+ * Responds `{ status: 'expired' | 'pending' | 'verified' }`.
+ */
+function pollPendingRegistration(req: Request, res: Response): void {
+	const claimToken = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
+	if (typeof claimToken !== 'string' || claimToken.length === 0) {
+		res.json({ status: 'expired' });
+		return;
+	}
+
+	const pending = getPendingRegistrationByClaimToken(claimToken);
+
+	// Unknown cookie (never existed, or already swept).
+	if (pending === undefined) {
+		res.json({ status: 'expired' });
+		return;
+	}
+
+	// Not yet verified.
+	if (pending.member_user_id === null) {
+		// Expired while still waiting → dead link.
+		if (pending.expires_at <= Date.now()) res.json({ status: 'expired' });
+		else res.json({ status: 'pending' });
+		return;
+	}
+
+	// Verified and created → issue a session to THIS browser, then clear its pending cookie.
+	const member = getMemberDataByCriteria(
+		['username', 'roles'],
+		'user_id',
+		pending.member_user_id,
+	);
+	if (member === undefined) {
+		logEventsAndPrint(
+			`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
+			'errLog.txt',
+		);
+		res.json({ status: 'expired' });
+		return;
+	}
+
+	// roles is a stringified JSON array in the database; parse it.
+	const roles = member.roles !== null ? JSON.parse(member.roles) : null;
+	createNewSession(req, res, pending.member_user_id, member.username, roles, false);
+
+	// Idempotent: do NOT delete the pending row (let the cleanup sweep handle it), so a refreshed
+	// or duplicate waiting tab that still holds the cookie and polls again resolves cleanly.
+	res.clearCookie(PENDING_REGISTRATION_COOKIE_NAME, {
+		httpOnly: true,
+		sameSite: 'none',
+		secure: true,
+	});
+
+	res.json({ status: 'verified' });
 }
 
 /**
@@ -382,6 +446,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 
 export {
 	createNewMember,
+	pollPendingRegistration,
 	checkEmailValidity,
 	checkUsernameAvailable,
 	generateAccount,

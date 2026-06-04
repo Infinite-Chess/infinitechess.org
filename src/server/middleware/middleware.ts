@@ -48,6 +48,7 @@ import {
 	checkEmailValidity,
 	checkUsernameAvailable,
 	createNewMember,
+	pollPendingRegistration,
 } from '../controllers/createAccountController.js';
 import {
 	createAccountLimiter,
@@ -199,9 +200,10 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.post('/register', createAccountLimiter, createNewMember); // "register" POST request
 	app.get('/register/username/:username', checkUsernameAvailable);
 	app.get('/register/email/:email', checkEmailValidity);
+	app.get('/register/poll', pollPendingRegistration);
+	app.post('/register', createAccountLimiter, createNewMember);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
