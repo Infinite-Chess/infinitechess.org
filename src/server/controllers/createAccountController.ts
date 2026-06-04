@@ -26,8 +26,8 @@ import { sendEmailConfirmation } from './emailController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
-	isEmailTaken,
-	isUsernameTaken,
+	isEmailTakenOrPending,
+	isUsernameTakenOrPending,
 	SQLITE_CONSTRAINT_ERROR,
 } from '../database/memberManager.js';
 
@@ -164,7 +164,7 @@ async function generateAccount({
 async function checkEmailValidity(req: Request, res: Response): Promise<void> {
 	const lowercaseEmail = req.params['email']!.toLowerCase();
 
-	if (isEmailTaken(lowercaseEmail)) {
+	if (isEmailTakenOrPending(lowercaseEmail)) {
 		res.json({
 			valid: false,
 			reason: getTranslationForReq('server.javascript.ws-email_in_use', req),
@@ -203,7 +203,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	let allowed = true;
 	let reason = '';
 
-	if (isUsernameTaken(username)) {
+	if (isUsernameTakenOrPending(username)) {
 		allowed = false;
 		reason = getTranslationForReq('server.javascript.ws-username_taken', req);
 	}
@@ -263,7 +263,7 @@ function doUsernameValidation(username: string, req: Request, res: Response): bo
 
 	// Make sure the username isn't taken!!
 
-	if (isUsernameTaken(username)) {
+	if (isUsernameTakenOrPending(username)) {
 		res.status(409).json({
 			conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
 		});
@@ -310,7 +310,7 @@ async function doEmailValidation(string: string, req: Request, res: Response): P
 				return false;
 		}
 	}
-	if (isEmailTaken(string)) {
+	if (isEmailTakenOrPending(string)) {
 		res.status(409).json({
 			conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
 		});

@@ -12,6 +12,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { isEmailTakenInPending, isUsernameTakenInPending } from './pendingRegistrationManager.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 
 // Types ---------------------------------------------------------------------
@@ -546,6 +547,23 @@ function isEmailTaken(email: string): boolean {
 	}
 }
 
+/**
+ * Checks if a username is taken by either a `members`
+ * row OR a non-expired `pending_registrations` row.
+ */
+function isUsernameTakenOrPending(username: string): boolean {
+	return isUsernameTaken(username) || isUsernameTakenInPending(username);
+}
+
+/**
+ * Checks if an email is taken by either a `members`
+ * row OR a non-expired `pending_registrations` row.
+ * @param email - The email to check, in LOWERCASE.
+ */
+function isEmailTakenOrPending(email: string): boolean {
+	return isEmailTaken(email) || isEmailTakenInPending(email);
+}
+
 // Exports -----------------------------------------------------------------------------
 
 export {
@@ -560,4 +578,6 @@ export {
 	doesMemberOfIDExist,
 	isUsernameTaken,
 	isEmailTaken,
+	isUsernameTakenOrPending,
+	isEmailTakenOrPending,
 };
