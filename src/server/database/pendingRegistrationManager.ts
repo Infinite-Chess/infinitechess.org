@@ -32,7 +32,7 @@ export interface PendingRegistrationRecord {
 // Constants -----------------------------------------------------------------
 
 /** How long a pending registration stays valid before it is swept, in milliseconds. */
-export const PENDING_REGISTRATION_EXPIRY_MILLIS = 24 * 60 * 60 * 1000;
+export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
 
 // Create --------------------------------------------------------------------
 
@@ -180,7 +180,105 @@ export function isEmailTakenInPending(email: string): boolean {
 	}
 }
 
+/**
+ * Checks whether a username is held by a non-expired pending registration
+ * whose `claim_token` is NOT `excludeClaimToken`. Used to distinguish a
+ * re-submitter's own row from a genuine third-party collision.
+ * @param username - The username to check.
+ * @param excludeClaimToken - The claim_token of the row to exclude.
+ * @returns True if another non-expired pending row holds this username.
+ * @throws {Error} Throws a generic error if a database error occurs.
+ */
+export function isUsernameTakenInPendingByOther(
+	username: string,
+	excludeClaimToken: string,
+): boolean {
+	const query = `
+		SELECT EXISTS(
+			SELECT 1 FROM pending_registrations
+			WHERE username = ? AND expires_at > ? AND claim_token != ?
+		) AS found
+	`;
+	try {
+		const row = db.get<{ found: 0 | 1 }>(query, [username, Date.now(), excludeClaimToken]);
+		return Boolean(row?.found);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Database error while checking pending username (by other) "${username}": ${message}`,
+			'errLog.txt',
+		);
+		throw new Error('A database error occurred while processing the pending registration.');
+	}
+}
+
+/**
+ * Checks whether an email is held by a non-expired pending registration
+ * whose `claim_token` is NOT `excludeClaimToken`. Used to distinguish a
+ * re-submitter's own row from a genuine third-party collision.
+ * @param email - The email to check, in LOWERCASE.
+ * @param excludeClaimToken - The claim_token of the row to exclude.
+ * @returns True if another non-expired pending row holds this email.
+ * @throws {Error} Throws a generic error if a database error occurs.
+ */
+export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: string): boolean {
+	const query = `
+		SELECT EXISTS(
+			SELECT 1 FROM pending_registrations
+			WHERE email = ? AND expires_at > ? AND claim_token != ?
+		) AS found
+	`;
+	try {
+		const row = db.get<{ found: 0 | 1 }>(query, [email, Date.now(), excludeClaimToken]);
+		return Boolean(row?.found);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Database error while checking pending email (by other) "${email}": ${message}`,
+			'errLog.txt',
+		);
+		throw new Error('A database error occurred while processing the pending registration.');
+	}
+}
+
 // Update --------------------------------------------------------------------
+
+/**
+ * Updates the username, email, hashed_password, verification_token, and
+ * refreshed expires_at of a pending registration identified by its claim_token.
+ * Call {@link deleteExpiredPendingRegistrationsFor} first so any expired
+ * rows holding the new username/email don't violate UNIQUE constraints.
+ * @param claimToken - The claim_token identifying the row to update.
+ * @param username - The new (or unchanged) desired username.
+ * @param email - The new (or unchanged) email, in LOWERCASE.
+ * @param hashedPassword - The newly hashed password.
+ * @param verificationToken - The verification token (rotated if email changed, otherwise the existing one).
+ * @throws {Error} Throws a generic error if a database error occurs.
+ */
+export function updatePendingRegistration(
+	claimToken: string,
+	username: string,
+	email: string,
+	hashedPassword: string,
+	verificationToken: string,
+): void {
+	const expiresAt = Date.now() + PENDING_REGISTRATION_EXPIRY_MILLIS;
+	const query = `
+		UPDATE pending_registrations
+		SET username = ?, email = ?, hashed_password = ?, verification_token = ?, expires_at = ?
+		WHERE claim_token = ?
+	`;
+	try {
+		db.run(query, [username, email, hashedPassword, verificationToken, expiresAt, claimToken]);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Database error while updating pending registration for "${username}": ${message}`,
+			'errLog.txt',
+		);
+		throw new Error('A database error occurred while processing the pending registration.');
+	}
+}
 
 /**
  * Marks a pending registration verified by recording the `user_id` of the member

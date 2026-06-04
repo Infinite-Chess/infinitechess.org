@@ -26,14 +26,20 @@ import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
 	getMemberDataByCriteria,
+	isEmailTaken,
 	isEmailTakenOrPending,
+	isUsernameTaken,
 	isUsernameTakenOrPending,
 } from '../database/memberManager.js';
 import {
 	addPendingRegistration,
 	deleteExpiredPendingRegistrationsFor,
 	getPendingRegistrationByClaimToken,
+	isEmailTakenInPendingByOther,
+	isUsernameTakenInPendingByOther,
 	PENDING_REGISTRATION_EXPIRY_MILLIS,
+	PendingRegistrationRecord,
+	updatePendingRegistration,
 } from '../database/pendingRegistrationManager.js';
 
 // Variables -------------------------------------------------------------------------
@@ -65,6 +71,10 @@ const profanityMatcher = new RegExpMatcher({
 /**
  * `POST /register` — validates the submission, stages a pending registration,
  * emails a verification link, and sets the pending cookie. Creates no member.
+ *
+ * If the request already carries a pending cookie whose claim_token matches an
+ * active (non-expired, unverified) pending row, the submission is treated as a
+ * re-submit: the row is updated in place and the email is re-sent.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
 	// First make sure we have all 3 variables.
@@ -81,25 +91,77 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// Make the email lowercase, so we don't run into problems with seeing if capitalized emails are taken!
 	email = email.toLowerCase();
 
-	// First we make checks on the username...
-	// These 'return's are so that we don't send duplicate responses, AND so we don't create the pending row anyway.
-	if (!doUsernameValidation(username, req, res)) return;
-	if (!(await doEmailValidation(email, req, res))) return;
+	// Determine whether this is a re-submit from the same browser.
+	const cookieClaimToken: unknown = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
+	let ownPendingRow: PendingRegistrationRecord | undefined;
+	if (typeof cookieClaimToken === 'string' && cookieClaimToken.length > 0) {
+		try {
+			const row = getPendingRegistrationByClaimToken(cookieClaimToken);
+			if (row !== undefined && row.expires_at > Date.now() && row.member_user_id === null) {
+				ownPendingRow = row;
+			}
+		} catch {
+			// DB lookup failed; fall through to the fresh-registration path.
+		}
+	}
+	const isUpdate = ownPendingRow !== undefined;
+
+	// These 'return's are so that we don't send duplicate responses,
+	// AND so we don't create/update the pending row anyway.
+	if (!doUsernameFormatChecks(username, req, res)) return;
+	if (!(await doEmailFormatChecks(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
+
+	// The claim_token lives only in the httpOnly cookie (scopes the poll),
+	// whereas the verification_token lives only in the emailed link.
+	const claimToken = isUpdate ? ownPendingRow!.claim_token : generateRegistrationToken();
+
+	// Availability checks: fresh → all pending+members; update → other parties only.
+	if (!isUpdate) {
+		if (isUsernameTakenOrPending(username)) {
+			res.status(409).json({
+				conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+			});
+			return;
+		}
+		if (isEmailTakenOrPending(email)) {
+			res.status(409).json({
+				conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
+			});
+			return;
+		}
+	} else {
+		if (isUsernameTaken(username) || isUsernameTakenInPendingByOther(username, claimToken)) {
+			res.status(409).json({
+				conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
+			});
+			return;
+		}
+		if (isEmailTaken(email) || isEmailTakenInPendingByOther(email, claimToken)) {
+			res.status(409).json({
+				conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
+			});
+			return;
+		}
+	}
 
 	// Hash the password now so the plaintext never reaches the pending row.
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
 
-	// Two deliberately-separate secrets: the claim_token lives only in the httpOnly
-	// cookie (scopes the poll), the verification_token only in the emailed link.
-	const claimToken = generateRegistrationToken();
-	const verificationToken = generateRegistrationToken();
+	// Rotate the verification_token only when the email changed on a re-submit,
+	// so an already-delivered link keeps working on a same-email re-submit.
+	const emailChanged = isUpdate && email !== ownPendingRow!.email;
+	const verificationToken =
+		isUpdate && !emailChanged ? ownPendingRow!.verification_token : generateRegistrationToken();
 
 	try {
-		// Clear any EXPIRED pending row holding this username/email first, so a freed
-		// name isn't blocked by the UNIQUE constraints, then stage the registration.
+		// Clear any expired rows blocking the new username/email UNIQUE constraints.
 		deleteExpiredPendingRegistrationsFor(username, email);
-		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
+		if (isUpdate) {
+			updatePendingRegistration(claimToken, username, email, hashedPassword, verificationToken); // prettier-ignore
+		} else {
+			addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
+		}
 	} catch {
 		res.status(500).json({
 			error: 'A server side error occurred during registration. Please try again.',
@@ -118,7 +180,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
 	});
 
-	res.status(201).json({ success: true });
+	res.status(isUpdate ? 200 : 201).json({ success: true });
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
@@ -297,8 +359,8 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	return;
 }
 
-/** Returns true if the username passes all the checks required before account generation. */
-function doUsernameValidation(username: string, req: Request, res: Response): boolean {
+/** Returns true if the username passes all format/content checks before account generation. */
+function doUsernameFormatChecks(username: string, req: Request, res: Response): boolean {
 	const result = validators.validateUsername(username);
 	if (result !== validators.UsernameValidationResult.Ok) {
 		switch (result) {
@@ -328,26 +390,13 @@ function doUsernameValidation(username: string, req: Request, res: Response): bo
 				return false;
 		}
 	}
-	// Then check if the name's taken
-	const usernameLowercase = username.toLowerCase();
-
-	// Make sure the username isn't taken!!
-
-	if (isUsernameTakenOrPending(username)) {
-		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-username_taken', req),
-		});
-		return false;
-	}
-	// Lastly check for profain words
-	if (checkProfanity(usernameLowercase)) {
+	if (checkProfanity(username.toLowerCase())) {
 		res.status(409).json({
 			conflict: getTranslationForReq('server.javascript.ws-username_bad_word', req),
 		});
 		return false;
 	}
-
-	return true; // Everything's good, no conflicts!
+	return true;
 }
 
 /**
@@ -358,9 +407,9 @@ function checkProfanity(string: string): boolean {
 	return profanityMatcher.hasMatch(string);
 }
 
-/** Returns true if the email passes all the checks required for account generation. */
-async function doEmailValidation(string: string, req: Request, res: Response): Promise<boolean> {
-	const result = validators.validateEmail(string);
+/** Returns true if the email passes all format/content checks before account generation. */
+async function doEmailFormatChecks(email: string, req: Request, res: Response): Promise<boolean> {
+	const result = validators.validateEmail(email);
 	if (result !== validators.EmailValidationResult.Ok) {
 		switch (result) {
 			case validators.EmailValidationResult.InvalidFormat:
@@ -380,21 +429,15 @@ async function doEmailValidation(string: string, req: Request, res: Response): P
 				return false;
 		}
 	}
-	if (isEmailTakenOrPending(string)) {
-		res.status(409).json({
-			conflict: getTranslationForReq('server.javascript.ws-email_in_use', req),
-		});
-		return false;
-	}
-	if (isBlacklisted(string)) {
-		const errMessage = `Blacklisted email ${string} tried to create an account!`;
+	if (isBlacklisted(email)) {
+		const errMessage = `Blacklisted email ${email} tried to create an account!`;
 		logEventsAndPrint(errMessage, 'blacklistLog.txt');
 		res.status(409).json({
 			conflict: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return false;
 	}
-	if (!(await isEmailDNSValid(string))) {
+	if (!(await isEmailDNSValid(email))) {
 		res.status(400).json({
 			message: getTranslationForReq('server.javascript.ws-email_domain_invalid', req),
 		});
