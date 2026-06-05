@@ -579,17 +579,17 @@ position_not_supported = "Position is not supported for reason:"
 illegal_position_king_capture = "Illegal position: King capture possible on turn 1."
 saved_in_browser = "Position saved in browser."
 position_corrupted = "The position was corrupted."
-failed_to_load = "Failed to load position:"
+failed_to_load = "Failed to load position."
 failed_to_convert_icn = "Failed to convert position to ICN for cloud upload."
 too_large_for_cloud = "Position is too large to save to the cloud."
-failed_to_upload = "Failed to upload position to cloud:"
+failed_to_upload = "Failed to upload position to cloud."
 saved_to_cloud = "Position saved to cloud."
 no_changes = "No changes made."
-failed_to_load_cloud = "Failed to load position from the cloud:"
-failed_to_delete_cloud = "Failed to delete position from the cloud:"
-failed_to_remove_cloud = "Failed to remove position from cloud:" # Transfers position from cloud to local browser
+failed_to_load_cloud = "Failed to load position from the cloud."
+failed_to_delete_cloud = "Failed to delete position from the cloud."
+failed_to_remove_cloud = "Failed to remove position from cloud." # Transfers position from cloud to local browser
 saved_locally = "Position saved locally."
-failed_to_fetch_cloud = "Failed to fetch cloud saves:"
+failed_to_fetch_cloud = "Failed to fetch cloud saves."
 
 [terms]
 title = "Terms of Service"

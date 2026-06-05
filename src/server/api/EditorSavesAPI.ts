@@ -65,13 +65,13 @@ const PositionNameParamSchema = z.strictObject({
  */
 function getSavedPositions(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'Server error' }); // `memberInfo` should have been set by auth middleware, even if not signed in
+		res.status(500).json({ message: 'A server error occurred.' }); // `memberInfo` should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'Must be signed in' });
+		res.status(401).json({ message: 'You must be signed in.' });
 		return;
 	}
 
@@ -87,7 +87,7 @@ function getSavedPositions(req: Request, res: Response): void {
 			`Error retrieving saved positions for user_id ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'Failed to retrieve saved positions' });
+		res.status(500).json({ message: 'A server error occurred.' });
 	}
 }
 
@@ -100,13 +100,13 @@ function getSavedPositions(req: Request, res: Response): void {
  */
 function savePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'Must be signed in' });
+		res.status(401).json({ message: 'You must be signed in.' });
 		return;
 	}
 
@@ -116,7 +116,7 @@ function savePosition(req: Request, res: Response): void {
 	const parseResult = SavePositionBodySchema.safeParse(req.body);
 	if (!parseResult.success) {
 		const firstError = parseResult.error.issues[0];
-		const errorMessage = firstError?.message || 'Invalid request body';
+		const errorMessage = firstError?.message || 'The request was invalid.';
 		res.status(400).json({ message: errorMessage });
 		logZodError(req.body, parseResult.error, `Invalid save position request body.`);
 		return;
@@ -143,13 +143,13 @@ function savePosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
-			res.status(403).json({ message: `Maximum saved positions exceeded` });
+			res.status(403).json({ message: 'You have reached your saved-position limit.' });
 			return;
 		}
 
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
-		res.status(500).json({ message: 'Failed to save position' });
+		res.status(500).json({ message: 'A server error occurred.' });
 	}
 }
 
@@ -160,13 +160,13 @@ function savePosition(req: Request, res: Response): void {
  */
 function getPosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'Must be signed in' });
+		res.status(401).json({ message: 'You must be signed in.' });
 		return;
 	}
 
@@ -175,7 +175,7 @@ function getPosition(req: Request, res: Response): void {
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
-		res.status(400).json({ message: 'Invalid position_name' });
+		res.status(400).json({ message: 'The position name is invalid.' });
 		logZodError(req.params, parseResult.error, `Invalid get position request params.`);
 		return;
 	}
@@ -187,7 +187,7 @@ function getPosition(req: Request, res: Response): void {
 		const position = editorSavesManager.getSavedPositionICN(positionName, userId);
 
 		if (!position) {
-			res.status(404).json({ message: 'Position not found' });
+			res.status(404).json({ message: 'That position no longer exists.' });
 			return;
 		}
 
@@ -206,7 +206,7 @@ function getPosition(req: Request, res: Response): void {
 			`Error retrieving position for name "${positionName}": ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'Failed to retrieve position' });
+		res.status(500).json({ message: 'A server error occurred.' });
 	}
 }
 
@@ -217,13 +217,13 @@ function getPosition(req: Request, res: Response): void {
  */
 function deletePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'Server error' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'Must be signed in' });
+		res.status(401).json({ message: 'You must be signed in.' });
 		return;
 	}
 
@@ -232,7 +232,7 @@ function deletePosition(req: Request, res: Response): void {
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
-		res.status(400).json({ message: 'Invalid position_name' });
+		res.status(400).json({ message: 'The position name is invalid.' });
 		logZodError(req.params, parseResult.error, `Invalid delete position request params.`);
 		return;
 	}
@@ -244,7 +244,7 @@ function deletePosition(req: Request, res: Response): void {
 		const result = editorSavesManager.deleteSavedPosition(positionName, userId);
 
 		if (result.changes === 0) {
-			res.status(404).json({ message: 'Position not found' });
+			res.status(404).json({ message: 'That position no longer exists.' });
 			return;
 		}
 
@@ -256,7 +256,7 @@ function deletePosition(req: Request, res: Response): void {
 			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'Failed to delete position' });
+		res.status(500).json({ message: 'A server error occurred.' });
 	}
 }
 
