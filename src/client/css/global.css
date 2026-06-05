@@ -294,16 +294,10 @@ button:disabled {
 	border-color: var(--c-error);
 }
 
-/* Form-level error message, centered beneath the fields. */
+/* Error message. Left-aligned by default (per-field errors); add `.center` for form-level errors. */
 .auth-error {
 	color: var(--c-error);
 	font-size: 0.9em;
-	text-align: center;
-}
-
-/* Per-field error, left-aligned beneath its own input (vs the centered form-level .auth-error). */
-.auth-field-error {
-	text-align: left;
 }
 
 .auth-link {
@@ -316,11 +310,10 @@ button:disabled {
 	text-decoration: underline;
 }
 
-/* Centered muted prompt linking to the other auth page (e.g. "Don't have an account?"). */
+/* Muted prompt linking to the other auth page (e.g. "Don't have an account?"). */
 .auth-prompt {
 	color: var(--c-text-muted);
 	font-size: 0.9em;
-	text-align: center;
 }
 
 /* ============================================================

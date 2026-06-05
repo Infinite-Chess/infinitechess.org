@@ -35,6 +35,7 @@ const ESMEntryPoints = [
 	'src/client/css/login.css',
 	'src/client/css/register.css',
 	'src/client/css/register-awaiting.css',
+	'src/client/css/verify.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
@@ -42,6 +43,7 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/views/login.ts',
 	'src/client/scripts/esm/views/register.ts',
 	'src/client/scripts/esm/views/register-awaiting.ts',
+	'src/client/scripts/esm/views/verify.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

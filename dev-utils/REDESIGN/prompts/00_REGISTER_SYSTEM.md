@@ -43,7 +43,7 @@ changes and consumes no token; it only shows a **"Verify my account"** button. T
 clicks it → `POST /verify/:token` → the server looks up the pending row by its
 `verification_token` and **promotes** it: it creates the real `members` row and marks the
 pending row verified by recording the new `member_user_id`. The page then
-swaps in place to "✓ Your email is verified — head back to where you signed up and you'll be
+swaps in place to "✓ Your account is activated — head back to where you signed up and you'll be
 logged in." **This page never creates a session and shows no login link.**
 
 ### 3. Getting logged in

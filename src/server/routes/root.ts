@@ -8,6 +8,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getLanguageToServe } from '../utility/translate.js';
+import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/createAccountController.js';
 import {
@@ -58,6 +59,11 @@ router.get('/register/awaiting(.html)?', (req: Request, res: Response) => {
 	else res.render('register-awaiting.njk', state);
 });
 router.get('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
+router.get('/verify/:token', (req: Request, res: Response) => {
+	// The token sits in the URL; keep it out of any Referer header sent to third-party resources.
+	res.setHeader('Referrer-Policy', 'no-referrer');
+	res.render('verify.njk', getVerifyPageState(req));
+});
 router.get('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 router.get('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));
 router.get('/member(.html)?/:member', (_req: Request, res: Response) => res.render('member.njk'));
