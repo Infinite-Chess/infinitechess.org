@@ -44,7 +44,6 @@ import {
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
 import {
-	checkEmailValidity,
 	checkUsernameAvailable,
 	createNewMember,
 	pollPendingRegistration,
@@ -201,7 +200,6 @@ export function configureMiddleware(app: Express): void {
 
 	// Account router
 	app.get('/register/username/:username', checkUsernameAvailable);
-	app.get('/register/email/:email', checkEmailValidity);
 	app.post('/register', createAccountLimiter, createNewMember);
 	app.get('/register/awaiting/poll', pollPendingRegistration);
 	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);

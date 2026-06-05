@@ -101,12 +101,14 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 
 	if (isUsernameTakenOrPending(username)) {
 		res.status(409).json({
+			field: 'username',
 			message: getTranslationForReq('server.javascript.ws-username_taken', req),
 		});
 		return;
 	}
 	if (isEmailTakenOrPending(email)) {
 		res.status(409).json({
+			field: 'email',
 			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
 		});
 		return;
@@ -330,39 +332,6 @@ async function generateAccount({
 }
 
 /**
- * Route that's called whenever the client unfocuses the email input field.
- * This tells them whether the email is valid or not.
- */
-async function checkEmailValidity(req: Request, res: Response): Promise<void> {
-	const lowercaseEmail = req.params['email']!.toLowerCase();
-
-	if (isEmailTakenOrPending(lowercaseEmail)) {
-		res.json({
-			valid: false,
-			reason: getTranslationForReq('server.javascript.ws-email_in_use', req),
-		});
-		return;
-	}
-	if (isBlacklisted(lowercaseEmail)) {
-		res.json({
-			valid: false,
-			reason: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
-		});
-		return;
-	}
-	if (!(await isEmailDNSValid(lowercaseEmail))) {
-		res.json({
-			valid: false,
-			reason: getTranslationForReq('server.javascript.ws-email_domain_invalid', req),
-		});
-		return;
-	}
-
-	// Both checks pass
-	res.json({ valid: true });
-}
-
-/**
  * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
  * The request parameters MUST contain the username to test! (different from the body)
  *
@@ -407,6 +376,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 			case validators.UsernameValidationResult.UsernameTooShort:
 			case validators.UsernameValidationResult.UsernameTooLong:
 				res.status(400).json({
+					field: 'username',
 					message: getTranslationForReq(
 						'create-account.javascript.js-username_length',
 						req,
@@ -415,16 +385,19 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 				return false;
 			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
 				res.status(400).json({
+					field: 'username',
 					message: getTranslationForReq('server.javascript.ws-username_letters', req),
 				});
 				return false;
 			case validators.UsernameValidationResult.UsernameIsReserved:
 				res.status(409).json({
+					field: 'username',
 					message: getTranslationForReq('server.javascript.ws-username_taken', req),
 				}); // Code for reserved (but the users don't know that!)
 				return false;
 			default:
 				res.status(400).json({
+					field: 'username',
 					message: 'Username is not valid, but the server could not determine why.',
 				});
 				return false;
@@ -432,6 +405,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 	}
 	if (checkProfanity(username.toLowerCase())) {
 		res.status(409).json({
+			field: 'username',
 			message: getTranslationForReq('server.javascript.ws-username_bad_word', req),
 		});
 		return false;
@@ -454,16 +428,19 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 		switch (result) {
 			case validators.EmailValidationResult.InvalidFormat:
 				res.status(400).json({
+					field: 'email',
 					message: getTranslationForReq('server.javascript.ws-email_invalid', req),
 				});
 				return false;
 			case validators.EmailValidationResult.EmailTooLong:
 				res.status(400).json({
+					field: 'email',
 					message: getTranslationForReq('server.javascript.ws-email_too_long', req),
 				});
 				return false;
 			default:
 				res.status(400).json({
+					field: 'email',
 					message: 'Email is not valid, but the server could not determine why.',
 				});
 				return false;
@@ -475,12 +452,14 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			'blacklistLog.txt',
 		);
 		res.status(422).json({
+			field: 'email',
 			message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
 		});
 		return false;
 	}
 	if (!(await isEmailDNSValid(email))) {
 		res.status(400).json({
+			field: 'email',
 			message: getTranslationForReq('server.javascript.ws-email_domain_invalid', req),
 		});
 		return false;
@@ -511,16 +490,19 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 			case validators.PasswordValidationResult.PasswordTooShort:
 			case validators.PasswordValidationResult.PasswordTooLong:
 				res.status(400).json({
+					field: 'password',
 					message: getTranslationForReq('server.javascript.ws-password_length', req),
 				});
 				return false;
 			case validators.PasswordValidationResult.PasswordIsPassword:
 				res.status(400).json({
+					field: 'password',
 					message: getTranslationForReq('server.javascript.ws-password_password', req),
 				});
 				return false;
 			default:
 				res.status(400).json({
+					field: 'password',
 					message: 'Password is not valid, but the server could not determine why.',
 				});
 				return false;
@@ -534,7 +516,6 @@ export {
 	getAwaitingPageState,
 	changePendingEmail,
 	pollPendingRegistration,
-	checkEmailValidity,
 	checkUsernameAvailable,
 	generateAccount,
 	doPasswordFormatChecks,

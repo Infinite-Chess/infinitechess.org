@@ -98,6 +98,7 @@ function setFormError(message?: string): void {
 /**
  * Reflects the form's *visible* state on the submit button: enabled as long as
  * all three fields have some text and none are currently showing an error.
+ * Field errors keep the button disabled until fixed; form errors don't gate it.
  */
 function refreshSubmit(): void {
 	const allFilled =
@@ -160,13 +161,32 @@ async function submitRegister(): Promise<void> {
 			body: JSON.stringify({ username, email, password }),
 		});
 
-		const result = (await response.json()) as { message?: string };
+		const result = (await response.json()) as {
+			message?: string;
+			field?: 'username' | 'email' | 'password';
+		};
 
 		if (!response.ok) {
-			// The server reports every failure (validation, conflict, server error)
-			// in a single `message` property, already localized.
-			setFormError(result.message ?? 'Something went wrong. Please try again.');
-			refreshSubmit(); // Re-enable for a retry (form-level errors don't gate the button).
+			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
+			// beneath that input; systemic failures (server/network) have none and go form-level.
+			const message = result.message ?? 'Something went wrong. Please try again.';
+			switch (result.field) {
+				case 'username':
+					setFieldError(usernameInput, usernameError, message);
+					usernameValid = false;
+					break;
+				case 'email':
+					setFieldError(emailInput, emailError, message);
+					emailValid = false;
+					break;
+				case 'password':
+					setFieldError(passwordInput, passwordError, message);
+					passwordValid = false;
+					break;
+				default:
+					setFormError(message);
+			}
+			refreshSubmit();
 			return;
 		}
 
@@ -227,23 +247,9 @@ passwordInput.addEventListener('blur', (): void => {
 	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
 	refreshSubmit();
 });
-emailInput.addEventListener('blur', async (): Promise<void> => {
+emailInput.addEventListener('blur', (): void => {
 	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
 	refreshSubmit();
-	if (!emailValid) return;
-	try {
-		const response = await serverFetch(
-			`/register/email/${encodeURIComponent(emailInput.value)}`,
-		);
-		const result = (await response.json()) as { valid: boolean; reason?: string };
-		if (!result.valid) {
-			setFieldError(emailInput, emailError, result.reason);
-			emailValid = false;
-			refreshSubmit();
-		}
-	} catch (e: unknown) {
-		console.error('Email availability check failed:', e);
-	}
 });
 
 usernameInput.focus();
