@@ -63,6 +63,12 @@ export interface ScriptTranslations {
 			account_creations: string;
 			verify_emails: string;
 		};
+		editor_saves: {
+			must_be_signed_in: string;
+			position_not_found: string;
+			limit_reached: string;
+			server_error: string;
+		};
 	};
 	shared: {
 		user_status: {

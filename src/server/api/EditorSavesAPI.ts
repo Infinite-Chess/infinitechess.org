@@ -13,6 +13,7 @@ import editorutil from '../../shared/util/editorutil.js';
 import { logZodError } from '../utility/zodlogger.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 // Zod Schemas -------------------------------------------------------------------------------
 
@@ -65,13 +66,17 @@ const PositionNameParamSchema = z.strictObject({
  */
 function getSavedPositions(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'A server error occurred.' }); // `memberInfo` should have been set by auth middleware, even if not signed in
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		}); // `memberInfo` should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'You must be signed in.' });
+		res.status(401).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+		});
 		return;
 	}
 
@@ -87,7 +92,9 @@ function getSavedPositions(req: Request, res: Response): void {
 			`Error retrieving saved positions for user_id ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'A server error occurred.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		});
 	}
 }
 
@@ -100,13 +107,17 @@ function getSavedPositions(req: Request, res: Response): void {
  */
 function savePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'You must be signed in.' });
+		res.status(401).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+		});
 		return;
 	}
 
@@ -115,9 +126,8 @@ function savePosition(req: Request, res: Response): void {
 	// Validate request body with Zod
 	const parseResult = SavePositionBodySchema.safeParse(req.body);
 	if (!parseResult.success) {
-		const firstError = parseResult.error.issues[0];
-		const errorMessage = firstError?.message || 'The request was invalid.';
-		res.status(400).json({ message: errorMessage });
+		// Not localized: unreachable via the client, only a hand-crafted request lands here.
+		res.status(400).json({ message: 'The request was invalid.' });
 		logZodError(req.body, parseResult.error, `Invalid save position request body.`);
 		return;
 	}
@@ -143,13 +153,17 @@ function savePosition(req: Request, res: Response): void {
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
-			res.status(403).json({ message: 'You have reached your saved-position limit.' });
+			res.status(403).json({
+				message: getScriptTranslationsForReq('responses', req).editor_saves.limit_reached,
+			});
 			return;
 		}
 
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
-		res.status(500).json({ message: 'A server error occurred.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		});
 	}
 }
 
@@ -160,13 +174,17 @@ function savePosition(req: Request, res: Response): void {
  */
 function getPosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'You must be signed in.' });
+		res.status(401).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+		});
 		return;
 	}
 
@@ -175,6 +193,7 @@ function getPosition(req: Request, res: Response): void {
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
+		// Not localized: unreachable via the client (the name comes from the validated saved list).
 		res.status(400).json({ message: 'The position name is invalid.' });
 		logZodError(req.params, parseResult.error, `Invalid get position request params.`);
 		return;
@@ -187,7 +206,10 @@ function getPosition(req: Request, res: Response): void {
 		const position = editorSavesManager.getSavedPositionICN(positionName, userId);
 
 		if (!position) {
-			res.status(404).json({ message: 'That position no longer exists.' });
+			res.status(404).json({
+				message: getScriptTranslationsForReq('responses', req).editor_saves
+					.position_not_found,
+			});
 			return;
 		}
 
@@ -206,7 +228,9 @@ function getPosition(req: Request, res: Response): void {
 			`Error retrieving position for name "${positionName}": ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'A server error occurred.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		});
 	}
 }
 
@@ -217,13 +241,17 @@ function getPosition(req: Request, res: Response): void {
  */
 function deletePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
-		res.status(500).json({ message: 'A server error occurred.' }); // memberInfo should have been set by auth middleware, even if not signed in
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
 
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
-		res.status(401).json({ message: 'You must be signed in.' });
+		res.status(401).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+		});
 		return;
 	}
 
@@ -232,6 +260,7 @@ function deletePosition(req: Request, res: Response): void {
 	// Validate position_name from URL params with Zod
 	const parseResult = PositionNameParamSchema.safeParse(req.params);
 	if (!parseResult.success) {
+		// Not localized: unreachable via the client (the name comes from the validated saved list).
 		res.status(400).json({ message: 'The position name is invalid.' });
 		logZodError(req.params, parseResult.error, `Invalid delete position request params.`);
 		return;
@@ -244,7 +273,10 @@ function deletePosition(req: Request, res: Response): void {
 		const result = editorSavesManager.deleteSavedPosition(positionName, userId);
 
 		if (result.changes === 0) {
-			res.status(404).json({ message: 'That position no longer exists.' });
+			res.status(404).json({
+				message: getScriptTranslationsForReq('responses', req).editor_saves
+					.position_not_found,
+			});
 			return;
 		}
 
@@ -256,7 +288,9 @@ function deletePosition(req: Request, res: Response): void {
 			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'A server error occurred.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+		});
 	}
 }
 
