@@ -53,7 +53,7 @@ export const createAccountAttemptLimiter = rateLimit({
 	...default_options,
 });
 
-/** Verification Email Limiter (prending registration email change) */
+/** Verification Email Limiter (pending registration email change) */
 export const verificationEmailLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
