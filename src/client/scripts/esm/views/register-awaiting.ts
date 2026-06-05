@@ -16,10 +16,26 @@ import { serverFetch } from '../util/serverFetch.js';
 
 // Constants ---------------------------------------------------------
 
-/** How often to poll for verification. */
-const POLL_INTERVAL_MS = 3000;
-/** Stop polling after this long, so an abandoned tab doesn't loop forever. */
-const POLL_MAX_DURATION_MS = 1000 * 60 * 25;
+/**
+ * Backoff schedule for verification polling. Each step's `intervalMs` applies until that much
+ * total elapsed time (`untilMs`) has passed since polling began; the final step (`untilMs: Infinity`)
+ * then holds steady until the pending registration expires.
+ */
+const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly intervalMs: number }[] =
+	[
+		{ untilMs: 1000 * 60 * 1, intervalMs: 3000 }, // 0–1m: every 3s
+		{ untilMs: 1000 * 60 * 2, intervalMs: 5000 }, // 1–2m: every 5s
+		{ untilMs: 1000 * 60 * 4, intervalMs: 10000 }, // 2–4m: every 10s
+		{ untilMs: 1000 * 60 * 10, intervalMs: 20000 }, // 4–10m: every 20s
+		{ untilMs: Infinity, intervalMs: 30000 }, // 10m+: every 30s
+	];
+
+/**
+ * Stop polling after this long, as a backstop. Set just past the 24h pending-registration expiry
+ * (PENDING_REGISTRATION_EXPIRY_MILLIS, server-side) — by then the poll returns 'expired' and the
+ * page reloads, so this only catches a truly orphaned tab (e.g. clock skew) that never does.
+ */
+const POLL_MAX_DURATION_MS = 1000 * 60 * 60 * 24 + 1000 * 60; // 24h 1m
 
 // Elements ----------------------------------------------------------
 
@@ -33,33 +49,47 @@ const changeSubmit = document.querySelector<HTMLButtonElement>('#change-email-su
 
 // State -------------------------------------------------------------
 
-/** Active /register/poll interval id, or undefined when not polling. */
+/** Active next-poll timeout id, or undefined when not polling. */
 let pollTimerId: number | undefined;
-/** Timestamp (ms) polling began, for enforcing POLL_MAX_DURATION_MS. */
+/** Timestamp (ms) polling began, for choosing the backoff interval and enforcing POLL_MAX_DURATION_MS. */
 let pollStartedAt = 0;
 
 let newEmailValid = false;
 
 // Verification polling ----------------------------------------------
 
+/** Returns the backoff interval to wait given how long polling has been running. */
+function pollIntervalForElapsed(elapsedMs: number): number {
+	for (const step of POLL_BACKOFF_SCHEDULE) {
+		if (elapsedMs < step.untilMs) return step.intervalMs;
+	}
+	return POLL_BACKOFF_SCHEDULE[POLL_BACKOFF_SCHEDULE.length - 1]!.intervalMs;
+}
+
 /** Begins polling for email verification. Idempotent — a second call is a no-op. */
 function startPolling(): void {
 	if (pollTimerId !== undefined) return;
 	pollStartedAt = Date.now();
-	pollTimerId = window.setInterval(pollVerification, POLL_INTERVAL_MS);
 	pollVerification(); // Check immediately — the link may already be verified.
 }
 
 /** Stops the verification poll loop. */
 function stopPolling(): void {
-	window.clearInterval(pollTimerId);
+	window.clearTimeout(pollTimerId);
 	pollTimerId = undefined;
 }
 
+/** Queues the next {@link pollVerification} at the current backoff interval. */
+function scheduleNextPoll(): void {
+	const pollInverval = pollIntervalForElapsed(Date.now() - pollStartedAt);
+	pollTimerId = window.setTimeout(() => pollVerification(), pollInverval);
+}
+
 /**
- * Polls /register/awaiting/poll once. `verified` → the server has set the session cookie, so
- * queue a welcome toast and redirect home; `expired` / `blacklisted` → reload (the server
- * re-renders the appropriate variant); `pending` → keep waiting until the duration cap.
+ * Polls /register/awaiting/poll once, then schedules the next poll with backoff. `verified` → the
+ * server has set the session cookie, so queue a welcome toast and redirect home; `expired` /
+ * `blacklisted` → reload (the server re-renders the appropriate variant); `pending` → keep waiting
+ * until the duration cap.
  */
 async function pollVerification(): Promise<void> {
 	if (Date.now() - pollStartedAt > POLL_MAX_DURATION_MS) {
@@ -75,15 +105,18 @@ async function pollVerification(): Promise<void> {
 			stopPolling();
 			flashToast.queue('Your account has been activated!');
 			window.location.assign('/');
+			return;
 		} else if (result.status === 'expired' || result.status === 'blacklisted') {
 			stopPolling();
 			// The server redirects 'expired' to /register when there's no pending registration
 			window.location.reload();
+			return;
 		}
 		// 'pending' → keep waiting.
 	} catch (e: unknown) {
 		console.error('Registration poll failed:', e); // Transient; keep polling.
 	}
+	scheduleNextPoll();
 }
 
 // Change email ------------------------------------------------------

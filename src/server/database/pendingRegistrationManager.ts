@@ -31,7 +31,10 @@ export interface PendingRegistrationRecord {
 
 // Constants -----------------------------------------------------------------
 
-/** How long a pending registration stays valid before it is swept, in milliseconds. */
+/**
+ * How long a pending registration stays valid before it is swept, in milliseconds.
+ * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this.
+ */
 export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
 
 // Create --------------------------------------------------------------------
