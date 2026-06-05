@@ -95,7 +95,7 @@ function getSavedPositions(req: Request, res: Response): void {
  * API endpoint to save a new position for the current user.
  * If a position with the same name already exists, it will be overwritten.
  * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push?: boolean, castling?: boolean } in request body.
- * Returns { success: true } on success.
+ * Returns { saves } on success.
  * Requires authentication.
  */
 function savePosition(req: Request, res: Response): void {
@@ -139,7 +139,7 @@ function savePosition(req: Request, res: Response): void {
 		);
 
 		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
-		res.status(201).json({ success: true, saves });
+		res.status(201).json({ saves });
 	} catch (error: unknown) {
 		// Handle the specific quota error
 		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
@@ -212,7 +212,7 @@ function getPosition(req: Request, res: Response): void {
 
 /**
  * API endpoint to delete a specific saved position by position_name.
- * Returns { success: true } on success.
+ * Returns { saves } on success.
  * Requires authentication and ownership of the position.
  */
 function deletePosition(req: Request, res: Response): void {
@@ -249,7 +249,7 @@ function deletePosition(req: Request, res: Response): void {
 		}
 
 		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
-		res.json({ success: true, saves });
+		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(

@@ -161,12 +161,11 @@ async function submitRegister(): Promise<void> {
 			body: JSON.stringify({ username, email, password }),
 		});
 
-		const result = (await response.json()) as {
-			message?: string;
-			field?: 'username' | 'email' | 'password';
-		};
-
 		if (!response.ok) {
+			const result = (await response.json()) as {
+				message?: string;
+				field?: 'username' | 'email' | 'password';
+			};
 			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
 			// beneath that input; systemic failures (server/network) have none and go form-level.
 			const message = result.message ?? 'Something went wrong. Please try again.';

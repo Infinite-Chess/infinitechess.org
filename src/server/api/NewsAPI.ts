@@ -74,7 +74,7 @@ function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 function markNewsAsRead(req: Request, res: Response): void {
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Not logged in - nothing to update
-		res.status(200).json({ success: true });
+		res.sendStatus(200);
 		return;
 	}
 
@@ -86,14 +86,13 @@ function markNewsAsRead(req: Request, res: Response): void {
 		const result = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
 
 		if (result.changeMade) {
-			res.status(200).json({ success: true });
+			res.sendStatus(200);
 		} else {
 			logEventsAndPrint(
 				`Failed to update last read news date for member of ID "${userId}". No changes made. Do they exist?`,
 				'errLog.txt',
 			);
 			res.status(500).json({
-				success: false,
 				message: 'Failed to update last read news date.',
 			});
 		}
@@ -104,7 +103,6 @@ function markNewsAsRead(req: Request, res: Response): void {
 			'errLog.txt',
 		);
 		res.status(500).json({
-			success: false,
 			message: `Server error updating last read news date`,
 		});
 	}

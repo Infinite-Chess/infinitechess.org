@@ -109,7 +109,9 @@ describe('EditorSavesAPI Integration', () => {
 				.send(position);
 
 			expect(response.status).toBe(201);
-			expect(response.body).toMatchObject({ success: true });
+			expect(response.body).toMatchObject({
+				saves: [expect.objectContaining({ name: position.name })],
+			});
 
 			// Verify the position was actually saved to the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
@@ -548,7 +550,7 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toMatchObject({ success: true, saves: [] });
+			expect(response.body).toMatchObject({ saves: [] });
 
 			// Verify the position was actually deleted from the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);

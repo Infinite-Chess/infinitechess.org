@@ -86,7 +86,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// already has one in progress, don't create another — report success so the page simply
 	// navigates to /register/awaiting for the existing registration.
 	if (getOwnActivePendingRegistration(req) !== undefined) {
-		res.status(200).json({ success: true });
+		res.sendStatus(200);
 		return;
 	}
 
@@ -144,7 +144,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
 	});
 
-	res.status(201).json({ success: true });
+	res.sendStatus(201);
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
@@ -227,7 +227,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	}
 
 	sendEmailConfirmation(email, pending.username, verificationToken);
-	res.json({ success: true });
+	res.sendStatus(200);
 }
 
 /**
