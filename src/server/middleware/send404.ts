@@ -21,7 +21,7 @@ function send404(req: Request, res: Response): void {
 			),
 		);
 	} else if (req.accepts('json')) {
-		res.json({ error: getTranslationForReq('server.javascript.ws-not_found', req) });
+		res.json({ message: getTranslationForReq('server.javascript.ws-not_found', req) });
 	} else {
 		res.type('txt').send(getTranslationForReq('server.javascript.ws-not_found', req));
 	}

@@ -55,8 +55,8 @@ async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
 		headers,
 	});
 	if (!response.ok) {
-		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Failed to get saved positions');
+		const errorData = (await response.json()) as { message?: string };
+		throw new Error(errorData.message || 'Failed to get saved positions');
 	}
 	const data = (await response.json()) as { saves: CloudSaveListRecord[] };
 	return data.saves;
@@ -91,8 +91,8 @@ async function savePosition(
 		}),
 	});
 	if (!response.ok) {
-		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Unknown error');
+		const errorData = (await response.json()) as { message?: string };
+		throw new Error(errorData.message || 'Unknown error');
 	}
 	const data = (await response.json()) as { saves: CloudSaveListRecord[] };
 	return data.saves;
@@ -113,8 +113,8 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
 		},
 	);
 	if (!response.ok) {
-		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Unknown error');
+		const errorData = (await response.json()) as { message?: string };
+		throw new Error(errorData.message || 'Unknown error');
 	}
 	return (await response.json()) as CloudPositionRecord;
 }
@@ -132,8 +132,8 @@ async function deletePosition(position_name: string): Promise<CloudSaveListRecor
 		headers,
 	});
 	if (!response.ok) {
-		const errorData = (await response.json()) as { error?: string };
-		throw new Error(errorData.error || 'Failed to delete position');
+		const errorData = (await response.json()) as { message?: string };
+		throw new Error(errorData.message || 'Failed to delete position');
 	}
 	const data = (await response.json()) as { saves: CloudSaveListRecord[] };
 	return data.saves;

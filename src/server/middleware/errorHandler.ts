@@ -11,7 +11,7 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 	if ('status' in err) {
 		const status = (err as Error & { status: number }).status;
 		if (status >= 400 && status < 500) {
-			res.status(status).json({ error: err.message || 'Bad request' });
+			res.status(status).json({ message: err.message || 'Bad request' });
 			return;
 		}
 	}
