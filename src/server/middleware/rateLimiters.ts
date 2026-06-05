@@ -13,13 +13,6 @@ import { getScriptTranslationsForReq } from '../config/componentTranslationLoade
 
 // Options -------------------------------------------------------------
 
-/** A handler that returns a generic rate-limiting message. */
-function generic_handler(req: Request, res: Response): Response {
-	return res.status(429).json({
-		message: getScriptTranslationsForReq('responses', req).rate_limiting.generic,
-	});
-}
-
 /** Produces a rate-limit handler that responds with the given translation key. */
 function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
 	return (req: Request, res: Response): Response =>
@@ -32,7 +25,7 @@ function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting'
 const default_options = {
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the outdated `X-RateLimit-*` headers
-	handler: generic_handler,
+	handler: make_handler('generic'),
 };
 
 // Limiters -------------------------------------------------------------
