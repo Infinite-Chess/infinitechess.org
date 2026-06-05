@@ -5,6 +5,7 @@
  */
 
 import type { Request, Response } from 'express';
+import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import rateLimit from 'express-rate-limit';
 
@@ -17,6 +18,14 @@ function generic_handler(req: Request, res: Response): Response {
 	return res.status(429).json({
 		message: getScriptTranslationsForReq('responses', req).rate_limiting.generic,
 	});
+}
+
+/** Produces a rate-limit handler that responds with the given translation key. */
+function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
+	return (req: Request, res: Response): Response =>
+		res.status(429).json({
+			message: getScriptTranslationsForReq('responses', req).rate_limiting[key],
+		});
 }
 
 /** Default options for all rate limiters. */
@@ -37,11 +46,7 @@ export const createAccountLimiter = rateLimit({
 	max: 6,
 	skipFailedRequests: true, // Only counts if a pending registration was created (email sent)
 	...default_options,
-	handler: (req: Request, res: Response): Response => {
-		return res.status(429).json({
-			message: getScriptTranslationsForReq('responses', req).rate_limiting.account_creations,
-		});
-	},
+	handler: make_handler('account_creations'),
 });
 
 /**
@@ -60,11 +65,7 @@ export const verificationEmailLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
-	handler: (req: Request, res: Response): Response => {
-		return res.status(429).json({
-			message: getScriptTranslationsForReq('responses', req).rate_limiting.verify_emails,
-		});
-	},
+	handler: make_handler('verify_emails'),
 });
 
 /** Forgot Password Email Limiter */
@@ -72,11 +73,7 @@ export const forgotPasswordLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
-	handler: (req: Request, res: Response): Response => {
-		return res.status(429).json({
-			message: getScriptTranslationsForReq('responses', req).rate_limiting.verify_emails,
-		});
-	},
+	handler: make_handler('verify_emails'),
 });
 
 /** Editor Save Limiter */
