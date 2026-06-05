@@ -32,7 +32,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 	`;
 
 	try {
-		const sent = await mailer.send({
+		const sent = await mailer.send('password-reset', {
 			to: recipientEmail,
 			subject: 'Your Password Reset Request',
 			html: createEmailHtmlWrapper('Password Reset Request', content),
@@ -79,7 +79,7 @@ async function sendEmailConfirmation(
 			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
 		`;
 
-		const sent = await mailer.send({
+		const sent = await mailer.send('registration', {
 			to: recipientEmail,
 			subject: 'Verify Your Account',
 			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
@@ -106,7 +106,7 @@ async function sendEmailConfirmation(
  */
 async function sendRatingAbuseEmail(messageSubject: string, messageText: string): Promise<void> {
 	try {
-		const sent = await mailer.send({
+		const sent = await mailer.send('rating-abuse-alert', {
 			to: mailer.FROM ?? '',
 			subject: messageSubject,
 			text: messageText,

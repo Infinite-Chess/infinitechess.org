@@ -95,8 +95,19 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 
 		const type = sesMessage.notificationType;
 
+		// Handle Deliveries (successful hand-off to the recipient's mail server)
+		if (type === 'Delivery') {
+			const recipients = sesMessage.delivery?.recipients;
+			if (Array.isArray(recipients)) {
+				logEvents(
+					`[AWS WEBHOOK] Delivery: ${recipients.join(', ')} (${sesMessage.mail?.messageId})`,
+					'awsNotifications.txt',
+				);
+			}
+		}
+
 		// Handle Bounces
-		if (type === 'Bounce') {
+		else if (type === 'Bounce') {
 			const bounce = sesMessage.bounce;
 			// We strictly ban Permanent bounces (User Unknown, etc)
 			// Transient bounces (Mailbox Full) are usually safe to retry later, but banning them is safer.

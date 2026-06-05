@@ -9,8 +9,18 @@ import nodemailer from 'nodemailer';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2';
 
+import { logEvents } from '../middleware/logEvents.js';
+
+// --- Types ---
+
+/**
+ * The category of an outgoing email, recorded in the sent-email log.
+ * FUTURE: Add 'tos-update'
+ */
+type EmailType = 'registration' | 'password-reset' | 'rating-abuse-alert';
+
 /** Options for sending an email. */
-export type SendMailOptions = {
+type SendMailOptions = {
 	to: string;
 	subject: string;
 } & ({ html: string } | { text: string });
@@ -48,19 +58,23 @@ const transporter = sesClient
 /**
  * Sends a prepared email via the transporter.
  * Logs a message and returns false if env variables are not configured.
+ * @param type - The category of email, recorded in sentEmailsLog.txt.
  * @param options - Email options including recipient, subject, and content (html or text)
  * @returns Whether the email was sent, which won't be the case if env variables aren't present.
  */
-async function send(options: SendMailOptions): Promise<boolean> {
+async function send(type: EmailType, options: SendMailOptions): Promise<boolean> {
 	if (!transporter) {
 		console.log('Email environment variables not specified. Not sending email.');
 		return false;
 	}
 
-	await transporter.sendMail({
+	const info = await transporter.sendMail({
 		from: `"Infinite Chess" <${FROM}>`,
 		...options,
 	});
+
+	// Log trail of every email sent: its category and SES messageId.
+	logEvents(`${type} | ${info.response}`, 'sentEmailsLog.txt');
 
 	return true;
 }

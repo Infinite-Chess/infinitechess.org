@@ -89,6 +89,7 @@
 - When monthly dontations stop, badge is removed.
 - Maybe a lifetime donation amount where the badge is permanent?
 - Lichess offers golden wings after 5 years of active patron status. And instantly after a lifetime donation, unlocking all colors.
+- Do not handle raw credit card numbers, that's a huge liability. Instead, accept the 3% & ~$0.50 processing fee of payment processors such as Stripe, PayPal, etc.
 
 ## Login
 
