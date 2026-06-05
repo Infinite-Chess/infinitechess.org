@@ -59,6 +59,7 @@ export interface ScriptTranslations {
 			login_retry_in_other: string;
 		};
 		rate_limiting: {
+			generic: string;
 			account_creations: string;
 			verify_emails: string;
 		};

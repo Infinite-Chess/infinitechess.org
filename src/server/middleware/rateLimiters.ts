@@ -8,7 +8,6 @@ import type { Request, Response } from 'express';
 
 import rateLimit from 'express-rate-limit';
 
-import { getTranslationForReq } from '../utility/translate.js';
 import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 // Options -------------------------------------------------------------
@@ -16,8 +15,7 @@ import { getScriptTranslationsForReq } from '../config/componentTranslationLoade
 /** A handler that returns a generic rate-limiting message. */
 function generic_handler(req: Request, res: Response): Response {
 	return res.status(429).json({
-		message: getTranslationForReq('rate-limiting.generic', req), // More detailed human readable
-		error: getTranslationForReq('rate-limiting.error', req), // Shorter concise message
+		message: getScriptTranslationsForReq('responses', req).rate_limiting.generic,
 	});
 }
 

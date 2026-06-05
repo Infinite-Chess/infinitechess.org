@@ -544,9 +544,7 @@ export type TranslationKeys =
 	| 'server.javascript.ws-cannot_resign_finished_game'
 	| 'server.javascript.ws-invalid_code'
 	| 'server.javascript.ws-game_aborted'
-	| 'server.javascript.ws-rated_invite_verification_needed'
-	| 'rate-limiting.generic'
-	| 'rate-limiting.error';
+	| 'server.javascript.ws-rated_invite_verification_needed';
 
 /**
  * Nested object type for client-side translation access.
@@ -1185,9 +1183,5 @@ export interface TranslationsObject {
 			'ws-game_aborted': string;
 			'ws-rated_invite_verification_needed': string;
 		};
-	};
-	'rate-limiting': {
-		generic: string;
-		error: string;
 	};
 }
