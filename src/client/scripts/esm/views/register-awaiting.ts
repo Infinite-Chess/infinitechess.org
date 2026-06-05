@@ -49,10 +49,20 @@ const changeSubmit = document.querySelector<HTMLButtonElement>('#change-email-su
 
 // State -------------------------------------------------------------
 
-/** Active next-poll timeout id, or undefined when not polling. */
+/** Pending next-poll timeout id, or undefined when none is armed (paused while hidden, or stopped). */
 let pollTimerId: number | undefined;
 /** Timestamp (ms) polling began, for choosing the backoff interval and enforcing POLL_MAX_DURATION_MS. */
 let pollStartedAt = 0;
+/**
+ * Whether the poll loop is logically running — true between
+ * {@link startPolling} and a terminal stop, even while paused for a hidden tab.
+ */
+let pollingActive = false;
+/**
+ * Timestamp (ms) the most recent poll was sent, so reveals and
+ * the loop honor the backoff spacing rather than polling sooner.
+ */
+let lastPollAt = 0;
 
 let newEmailValid = false;
 
@@ -68,21 +78,34 @@ function pollIntervalForElapsed(elapsedMs: number): number {
 
 /** Begins polling for email verification. Idempotent — a second call is a no-op. */
 function startPolling(): void {
-	if (pollTimerId !== undefined) return;
+	if (pollingActive) return;
+	pollingActive = true;
 	pollStartedAt = Date.now();
 	pollVerification(); // Check immediately — the link may already be verified.
 }
 
-/** Stops the verification poll loop. */
+/** Permanently stops the verification poll loop. */
 function stopPolling(): void {
+	pollingActive = false;
 	window.clearTimeout(pollTimerId);
 	pollTimerId = undefined;
 }
 
-/** Queues the next {@link pollVerification} at the current backoff interval. */
-function scheduleNextPoll(): void {
-	const pollInverval = pollIntervalForElapsed(Date.now() - pollStartedAt);
-	pollTimerId = window.setTimeout(() => pollVerification(), pollInverval);
+/**
+ * Continues the poll loop: polls instantly when at least the current backoff interval has elapsed
+ * since the last poll (the usual case on returning to the tab), otherwise arms a timer for just the
+ * remaining time. Measuring from the last poll sent means rapid tab reveals can't outpace the
+ * schedule. No-op while hidden; the visibility handler re-runs this on show.
+ */
+function pollNowOrScheduleNext(): void {
+	window.clearTimeout(pollTimerId);
+	pollTimerId = undefined;
+	if (document.visibilityState === 'hidden') return;
+	const interval = pollIntervalForElapsed(Date.now() - pollStartedAt);
+	const delay = lastPollAt + interval - Date.now();
+	if (delay <= 0)
+		pollVerification(); // Due now — poll instantly.
+	else pollTimerId = window.setTimeout(() => pollVerification(), delay);
 }
 
 /**
@@ -96,6 +119,7 @@ async function pollVerification(): Promise<void> {
 		stopPolling();
 		return;
 	}
+	lastPollAt = Date.now();
 	try {
 		const response = await serverFetch('/register/awaiting/poll');
 		const result = (await response.json()) as {
@@ -116,7 +140,18 @@ async function pollVerification(): Promise<void> {
 	} catch (e: unknown) {
 		console.error('Registration poll failed:', e); // Transient; keep polling.
 	}
-	scheduleNextPoll();
+	pollNowOrScheduleNext();
+}
+
+/** Page Visibility handler. Hiding the tab pauses the pooll loop. */
+function handleVisibilityChange(): void {
+	if (!pollingActive) return; // Loop already terminated; nothing to pause or resume.
+	if (document.visibilityState === 'hidden') {
+		window.clearTimeout(pollTimerId);
+		pollTimerId = undefined;
+	} else {
+		pollNowOrScheduleNext();
+	}
 }
 
 // Change email ------------------------------------------------------
@@ -207,4 +242,8 @@ newEmailInput.addEventListener('input', (): void => validateNewEmail(false));
 newEmailInput.addEventListener('blur', (): void => validateNewEmail(true));
 
 // Resume polling when this is a deliverable pending registration.
-if (awaitingCard.dataset['awaiting'] === 'true') startPolling();
+if (awaitingCard.dataset['awaiting'] === 'true') {
+	startPolling();
+	// Pause polling while the tab is hidden; poll immediately when it's shown again.
+	document.addEventListener('visibilitychange', handleVisibilityChange);
+}
