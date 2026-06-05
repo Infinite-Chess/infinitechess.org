@@ -1,7 +1,6 @@
 /* src/client/css/verify.css */
 
-/* The email-link landing page (/verify/:token): a single centered card with a verify button
-   that swaps in place to a confirmation or an expired-link message. */
+/* The email-link landing page (/verify/:token): a single centered card. */
 
 /* Sticky-footer: body fills the viewport; main grows to push footer down */
 body {
@@ -27,40 +26,13 @@ main {
    Card pieces
    ============================================================ */
 
-/* Explanatory line beneath a heading, and the swapped-in result text. Left-aligned by default
-   (the prompt subtitle and the expired explanation read as paragraphs); add `.center` for the
-   short standalone confirmation. */
-.verify-message {
+/* Explanatory line beneath a heading, and the swapped-in result text. */
+.verify-state-text {
 	color: var(--c-text-muted);
 	font-size: 0.95em;
 }
 
-/* Status heading (activated / expired): the glyph beside the text. */
-.verify-state-title {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4em;
-}
-
-.verify-state-glyph {
-	height: 2em;
-	width: auto;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 3;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	flex-shrink: 0;
-}
-
-@media (max-width: 390px) {
-	.auth-title {
-		font-size: 1.5em;
-	}
-}
-
-/* Recommended for specificity, because `display: flex` on .verify-state-title overwrites the
+/* Recommended for specificity, because `display: flex` on .auth-title overwrites the
    .hidden class from global.css. Without this, a hidden state heading shows on the prompt page. */
 .hidden {
 	display: none;

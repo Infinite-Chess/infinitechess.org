@@ -26,25 +26,6 @@ main {
    Awaiting-state pieces
    ============================================================ */
 
-/* State heading (check-email or blocked): the status glyph beside the text. */
-.register-state-title {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4em;
-}
-
-.register-state-glyph {
-	height: 2em;
-	width: auto;
-	fill: none;
-	stroke: currentColor;
-	stroke-width: 3;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	flex-shrink: 0;
-}
-
 /* Explanatory message block beneath the heading. */
 .register-state-text {
 	display: flex;
@@ -74,10 +55,4 @@ main {
 .register-change-submit {
 	margin-top: 8px;
 	padding: 10px;
-}
-
-@media (max-width: 390px) {
-	.register-state-title {
-		font-size: 1.5em;
-	}
 }

@@ -259,7 +259,31 @@ button:disabled {
 	font-size: 1.75em;
 	font-weight: 800;
 	text-align: center;
+	/* Rules that make the glyph to the left work (register-awaiting/verify pages) */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
 }
+
+/* Prevent text wrapping of titles on thin screens */
+@media (max-width: 390px) {
+	.auth-title {
+		font-size: 1.5em;
+	}
+}
+
+.auth-title .glyph {
+	height: 2em;
+	width: auto;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	flex-shrink: 0;
+}
+
 
 /* A labeled input column. */
 .auth-field {

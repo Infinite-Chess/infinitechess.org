@@ -17,8 +17,8 @@
 	   for verification (omitted for the blacklisted variant — no email was sent). #}
 	<section class="auth-card" id="awaiting-card"{% if not blacklisted %} data-awaiting="true"{% endif %}>
 		{% if not blacklisted %}
-		<h1 class="auth-title register-state-title">
-			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+		<h1 class="auth-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
 			Check your email
 		</h1>
 		<div class="register-state-text">
@@ -27,8 +27,8 @@
 		</div>
 		<button class="register-change-toggle" type="button" id="change-email-toggle">Check email correctness</button>
 		{% else %}
-		<h1 class="auth-title register-state-title">
-			<svg class="register-state-glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+		<h1 class="auth-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
 			Broken email address
 		</h1>
 		<div class="register-state-text">

@@ -13,37 +13,31 @@
 	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
 	<div id="bg-overlay"></div>
 
-	<section class="auth-card verify" id="verify-card">
+	<section class="auth-card" id="verify-card">
 		{% if state == 'prompt' %}
-		{# Prompt state. The button is the only thing that consumes the token (POST /verify/:token).
-		   A real click is required so email security scanners — which GET every link but never click
-		   buttons — can't prematurely verify the account. #}
+		{# Prompt state. The button verifies the account. #}
 		<h1 class="auth-title" id="verify-title">Verify your account</h1>
-		<p class="verify-message" id="verify-subtitle">Click the button below to activate your account.</p>
+		<p class="verify-state-text" id="verify-subtitle">Click the button below to activate your account.</p>
 		<button class="btn-primary" type="button" id="verify-button">Verify my account</button>
 		<p class="auth-error center hidden" id="verify-error"></p>
 		{% endif %}
 
-		{# Success state. SSR'd visible when the account is already activated (so revisiting the link
-		   isn't confusing); on the prompt page it's hidden and revealed by verify.ts after a click.
-		   Deliberately sets no session and shows no login link; the registrant's awaiting tab logs
-		   them in. #}
+		{# Success state; on the prompt page it's hidden and revealed by js after a click. #}
 		{% if state == 'prompt' or state == 'verified' %}
-		<h1 class="auth-title verify-state-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-success-title">
-			<svg class="verify-state-glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-success-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
 			Account activated
 		</h1>
-		<p class="verify-message center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">You may return to your previous tab.</p>
+		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">You may return to your previous tab.</p>
 		{% endif %}
 
-		{# Invalid/expired state. SSR'd visible for a dead link; on the prompt page it's hidden and
-		   revealed by verify.ts if a click reports the token is no longer valid. #}
+		{# Expired/invalid state; on the prompt page it's hidden and revealed by js if a click reports token invalid. #}
 		{% if state == 'prompt' or state == 'invalid' %}
-		<h1 class="auth-title verify-state-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-title">
-			<svg class="verify-state-glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
 			Link expired
 		</h1>
-		<p class="verify-message{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">This verification link is no longer valid. It may have expired or been invalidated.</p>
+		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">This verification link is no longer valid. It may have expired or been invalidated.</p>
 		<p class="auth-prompt center{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-prompt"><a class="auth-link" href="/register">Register again</a></p>
 		{% endif %}
 	</section>
