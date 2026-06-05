@@ -14,6 +14,7 @@
 - Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
 
 - Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
+	- Add a `last_emailed_tos_version` INTEGER column to the `members` table (default 0) to track which ToS-update broadcast each member has been emailed — for when the ToS-update email broadcaster is built.
 
 - Add the **Privacy Policy** page — English only, same approach as ToS.
 
