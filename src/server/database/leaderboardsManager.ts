@@ -35,8 +35,7 @@ interface LeaderboardEntry {
  * The core logic for adding a user to a leaderboard.
  * This function is "unsafe" as it throws errors on failure, making it
  * suitable for use inside a database transaction.
- * @throws {SqliteError} If the database query fails. The error's `code` property
- *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
+ * @throws {SqliteError} If the database query fails.
  */
 function addUserToLeaderboard(
 	user_id: number,

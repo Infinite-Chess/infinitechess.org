@@ -145,9 +145,7 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
  * Deletes a user from the members table and adds them to the deleted_members table.
  * @param user_id - The ID of the user to delete.
  * @param reason_deleted - The reason the user is being deleted.
- * @returns A result object: { success: true } on success, or { success: false, reason: string } on failure.
- *
- * @throws If a database error occurs during the deletion process.
+ * @throws If the member does not exist, or if a database error occurs during the deletion.
  */
 function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 	// Create a transaction function. better-sqlite3 will wrap the execution
