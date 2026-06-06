@@ -6,8 +6,7 @@
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import db, { dbCall } from './database.js';
 import { allGamesColumns, game_id_upper_cap } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
@@ -62,23 +61,12 @@ function generateRandomGameId(): number {
  * @returns - Returns true if the game_id exists, false otherwise.
  */
 function isGameIdTaken(game_id: number): boolean {
-	try {
-		const query = 'SELECT 1 FROM games WHERE game_id = ?';
-
-		// Execute query to check if the game_id exists in the games table
-		const row = db.get<{ '1': number }>(query, [game_id]);
-
-		// If a row is found, the game_id exists
-		return row !== undefined;
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		// Log the error if the query fails
-		logEventsAndPrint(
-			`Error checking if game_id "${game_id}" is taken: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = 'SELECT 1 FROM games WHERE game_id = ?';
+	const row = dbCall(
+		() => db.get<{ '1': number }>(query, [game_id]),
+		`Error checking if game_id "${game_id}" is taken`,
+	);
+	return row !== undefined;
 }
 
 /**
@@ -93,9 +81,7 @@ function getGameData<K extends GamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<GamesRecord, K> | undefined {
-	try {
-		// Validate the arguments...
-
+	return dbCall(() => {
 		if (!Array.isArray(columns))
 			throw new Error(
 				`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
@@ -109,19 +95,10 @@ function getGameData<K extends GamesColumn>(
 				`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`,
 			);
 
-		// Arguments are valid, move onto the SQL query construction
+		// Arguments are valid, move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id = ?`;
-
-		// Execute the query and fetch result.
 		return db.get<Pick<GamesRecord, K>>(query, [game_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error when getting game data of game_id ${game_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error;
-	}
+	}, `Error when getting game data of game_id ${game_id}`);
 }
 
 /**
@@ -135,45 +112,33 @@ function getMultipleGameData<K extends GamesColumn>(
 	game_id_list: number[],
 	columns: K[],
 ): Pick<GamesRecord, K>[] {
-	try {
-		// Validate the arguments...
-
-		if (!Array.isArray(columns))
-			throw new Error(
-				`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			);
-		if (
-			!columns.every(
-				(column) => typeof column === 'string' && allGamesColumns.includes(column),
+	return dbCall(
+		() => {
+			if (!Array.isArray(columns))
+				throw new Error(
+					`When getting game data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
+				);
+			if (
+				!columns.every(
+					(column) => typeof column === 'string' && allGamesColumns.includes(column),
+				)
 			)
-		)
-			throw new Error(
-				`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`,
-			);
+				throw new Error(
+					`Invalid columns requested from games table: ${jsutil.ensureJSONString(columns)}`,
+				);
 
-		// Arguments are valid, move onto constructing the SQL query...
-		const placeholders = game_id_list.map(() => '?').join(', ');
-		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
-
-		// Execute the query and fetch result
-		const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
-
-		// Every requested game_id should exist
-		if (rows.length < game_id_list.length)
-			throw new Error(
-				`At least one missing game in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`,
-			);
-
-		// Return the fetched rows
-		return rows;
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}: ${message}`,
-			'errLog.txt',
-		);
-		throw error;
-	}
+			// Arguments are valid, move onto the SQL query
+			const placeholders = game_id_list.map(() => '?').join(', ');
+			const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
+			const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
+			if (rows.length < game_id_list.length)
+				throw new Error(
+					`At least one missing game in games table for game_ids: ${jsutil.ensureJSONString(game_id_list)}.`,
+				);
+			return rows;
+		},
+		`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}`,
+	);
 }
 
 // Exports --------------------------------------------------------------------------------------------

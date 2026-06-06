@@ -8,8 +8,7 @@ import type { DeleteReason } from '../controllers/deleteAccountController.js';
 
 import jsutil from '../../shared/util/jsutil.js';
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import db, { dbCall } from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import {
 	isEmailTakenInPending,
@@ -76,7 +75,7 @@ function addUser(
 		// Step 3: Insert into the members table.
 		const membersQuery = `
 			INSERT INTO members (
-				user_id, username, email, hashed_password, 
+				user_id, username, email, hashed_password,
 				is_verified, verification_code, is_verification_notified,
 				last_read_news_date
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -101,24 +100,18 @@ function addUser(
 		return userId;
 	});
 
-	try {
-		return createAccountTransaction({
-			username,
-			email,
-			hashedPassword,
-			is_verified,
-			verification_code,
-			is_verification_notified,
-		});
-	} catch (error: unknown) {
-		const detailedError = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Account creation transaction for "${username}" failed and was rolled back: ${detailedError}`,
-			'errLog.txt',
-		);
-
-		throw error; // Rethrow
-	}
+	return dbCall(
+		() =>
+			createAccountTransaction({
+				username,
+				email,
+				hashedPassword,
+				is_verified,
+				verification_code,
+				is_verification_notified,
+			}),
+		`Account creation transaction for "${username}" failed and was rolled back`,
+	);
 }
 // setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
 
@@ -192,35 +185,26 @@ function validateMemberQueryArgs(
 		!Array.isArray(columns) ||
 		columns.length === 0 ||
 		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
-	) {
-		logEventsAndPrint(
+	)
+		throw new Error(
 			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
 		);
-		throw new Error('Invalid columns parameter.');
-	}
 
 	// 2. Validate Search Key
-	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey)) {
-		logEventsAndPrint(
+	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey))
+		throw new Error(
 			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
-			'errLog.txt',
 		);
-		throw new Error('Invalid search key.');
-	}
 
 	// 3. Validate Search Values
 	if (
 		!Array.isArray(searchValues) ||
 		searchValues.length === 0 ||
 		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
-	) {
-		logEventsAndPrint(
+	)
+		throw new Error(
 			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
-			'errLog.txt',
 		);
-		throw new Error('Invalid search values.');
-	}
 }
 
 /**
@@ -236,20 +220,13 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 	searchKey: MembersColumn,
 	searchValue: string | number,
 ): Pick<MemberRecord, K> | undefined {
-	// Runtime validation
-	validateMemberQueryArgs(columns, searchKey, [searchValue]);
+	return dbCall(() => {
+		// Runtime validation
+		validateMemberQueryArgs(columns, searchKey, [searchValue]);
 
-	const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
-
-	try {
-		// Execute the query and fetch result
+		const query = `SELECT ${columns.join(', ')} FROM members WHERE ${searchKey} = ?`;
 		return db.get<Pick<MemberRecord, K>>(query, [searchValue]);
-	} catch (error: unknown) {
-		// Log the error and re-throw it
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Error getting member data by criteria: ${message}`, 'errLog.txt');
-		throw error;
-	}
+	}, 'Error getting member data by criteria');
 }
 
 /**
@@ -265,29 +242,19 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	searchKey: MembersColumn,
 	searchValueList: string[] | number[],
 ): Pick<MemberRecord, K>[] {
-	// Runtime validation
-	validateMemberQueryArgs(columns, searchKey, searchValueList);
+	return dbCall(() => {
+		// Runtime validation
+		validateMemberQueryArgs(columns, searchKey, searchValueList);
 
-	// Construct SQL query
-	const placeholders = searchValueList.map(() => '?').join(', ');
-	const query = `
-		SELECT ${columns.join(', ')}
-		FROM members
-		WHERE ${searchKey} IN (${placeholders})
-	`;
-
-	try {
-		// Execute the query and fetch result
+		// Construct SQL query
+		const placeholders = searchValueList.map(() => '?').join(', ');
+		const query = `
+			SELECT ${columns.join(', ')}
+			FROM members
+			WHERE ${searchKey} IN (${placeholders})
+		`;
 		return db.all<Pick<MemberRecord, K>>(query, searchValueList);
-	} catch (error: unknown) {
-		// Log the error and re-throw it
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error getting MULTIPLE member data by criteria: ${message}`,
-			'errLog.txt',
-		);
-		throw error;
-	}
+	}, 'Error getting MULTIPLE member data by criteria');
 }
 
 /**
@@ -301,48 +268,34 @@ function updateMemberColumns(
 	user_id: number,
 	columnsAndValues: Partial<MemberRecord>,
 ): { changeMade: boolean } {
-	// Validate that we have columns to update
-	if (typeof columnsAndValues !== 'object' || columnsAndValues === null) {
-		logEventsAndPrint(
-			`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid update parameters.');
-	}
+	const result = dbCall(() => {
+		// Validate that we have columns to update
+		if (typeof columnsAndValues !== 'object' || columnsAndValues === null)
+			throw new Error(
+				`Invalid columnsAndValues provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
+			);
 
-	const columns = Object.keys(columnsAndValues);
-	const values = Object.values(columnsAndValues);
+		const columns = Object.keys(columnsAndValues);
+		const values = Object.values(columnsAndValues);
 
-	// Validate they are all valid database columns
-	if (
-		columns.length === 0 ||
-		!columns.every((col) => allMemberColumns.includes(col)) ||
-		!values.every((val) => typeof val === 'string' || typeof val === 'number' || val === null)
-	) {
-		logEventsAndPrint(
-			`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
-			'errLog.txt',
-		);
-		throw new Error('Invalid update parameters.');
-	}
+		// Validate they are all valid database columns
+		if (
+			columns.length === 0 ||
+			!columns.every((col) => allMemberColumns.includes(col)) ||
+			!values.every(
+				(val) => typeof val === 'string' || typeof val === 'number' || val === null,
+			)
+		)
+			throw new Error(
+				`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
+			);
 
-	// Dynamically build the SET part of the query
-	const setStatements = columns.map((column) => `${column} = ?`).join(', ');
-	const query = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
-
-	try {
-		// Execute the update query, appending user_id as the last parameter
-		const result = db.run(query, [...values, user_id]);
-		return { changeMade: result.changes > 0 };
-	} catch (error: unknown) {
-		// Log the error and re-throw it
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error updating columns ${jsutil.ensureJSONString(columnsAndValues)} for user ID "${user_id}": ${message}`,
-			'errLog.txt',
-		);
-		throw error;
-	}
+		// Dynamically build the SET part of the query
+		const setStatements = columns.map((column) => `${column} = ?`).join(', ');
+		const query = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
+		return db.run(query, [...values, user_id]);
+	}, `Error updating columns for user ID "${user_id}"`);
+	return { changeMade: result.changes > 0 };
 }
 
 // Login Count & Last Seen ---------------------------------------------------------------------------------------
@@ -352,31 +305,20 @@ function updateMemberColumns(
  * @param userId - The user ID of the member.
  */
 function updateLoginCountAndLastSeen(userId: number): void {
-	// SQL query to update the login_count and last_seen fields
 	const query = `
 		UPDATE members
 		SET login_count = login_count + 1, last_seen = CURRENT_TIMESTAMP
 		WHERE user_id = ?
 	`;
-
-	try {
-		// Execute the query with the provided userId
+	dbCall(() => {
 		const result = db.run(query, [userId]);
 
-		// Log if no changes were made
+		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			logEventsAndPrint(
+			throw new Error(
 				`No changes made when updating login_count and last_seen for member of id "${userId}"!`,
-				'errLog.txt',
 			);
-	} catch (error: unknown) {
-		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error updating login_count and last_seen for member of id "${userId}": ${message}`,
-			'errLog.txt',
-		);
-	}
+	}, `Error updating login_count and last_seen for member of id "${userId}"`);
 }
 
 /**
@@ -384,31 +326,20 @@ function updateLoginCountAndLastSeen(userId: number): void {
  * @param userId - The user ID of the member.
  */
 function updateLastSeen(userId: number): void {
-	// SQL query to update the last_seen field
 	const query = `
 		UPDATE members
 		SET last_seen = CURRENT_TIMESTAMP
 		WHERE user_id = ?
 	`;
-
-	try {
-		// Execute the query with the provided userId
+	dbCall(() => {
 		const result = db.run(query, [userId]);
 
-		// Log if no changes were made
+		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			logEventsAndPrint(
+			throw new Error(
 				`No changes made when updating last_seen for member of id "${userId}"!`,
-				'errLog.txt',
 			);
-	} catch (error: unknown) {
-		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error updating last_seen for member of id "${userId}": ${message}`,
-			'errLog.txt',
-		);
-	}
+	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
 // Utility -----------------------------------------------------------------------------------
@@ -434,22 +365,12 @@ function genUniqueUserID(): number {
  * @throws If a database error occurs during the check.
  */
 function doesMemberOfIDExist(user_id: number): boolean {
-	try {
-		const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found';
-		// Execute query to check if the user_id exists in the members table
-		const row = db.get<{ found: 0 | 1 }>(query, [user_id]);
-
-		// row.found will be 0 or 1
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		// Log the error if the query fails
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error checking if member of user_id (${user_id}) exists: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found';
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [user_id]),
+		`Error checking if member of user_id (${user_id}) exists`,
+	);
+	return Boolean(row?.found);
 }
 
 /**
@@ -460,28 +381,18 @@ function doesMemberOfIDExist(user_id: number): boolean {
  * @throws If a database error occurs during the check.
  */
 function isUserIdTaken(userId: number): boolean {
-	try {
-		const query = `
-			SELECT
-				EXISTS(SELECT 1 FROM members WHERE user_id = ?)
-				OR
-				EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
-			AS found
-		`;
-
-		// Execute query to check if the user_id exists in the members table
-		const row = db.get<{ found: 0 | 1 }>(query, [userId, userId]);
-
-		// row.found will be 0 or 1
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error checking if user_id (${userId}) has been used: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `
+		SELECT
+			EXISTS(SELECT 1 FROM members WHERE user_id = ?)
+			OR
+			EXISTS(SELECT 1 FROM deleted_members WHERE user_id = ?)
+		AS found
+	`;
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [userId, userId]),
+		`Error checking if user_id (${userId}) has been used`,
+	);
+	return Boolean(row?.found);
 }
 // console.log("taken? " + isUserIdTaken(14443702));
 
@@ -492,25 +403,12 @@ function isUserIdTaken(userId: number): boolean {
  * @returns Returns true if the username exists, false otherwise.
  */
 function isUsernameTaken(username: string): boolean {
-	// SQL query to check if a username exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE username = ?';
-
-	try {
-		// Execute the query with the username parameter
-		const row = db.get<{ '1': 1 }>(query, [username]);
-
-		// If a row is found, the username exists
-		return row !== undefined;
-	} catch (error: unknown) {
-		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error checking if username "${username}" is taken: ${message}`,
-			'errLog.txt',
-		);
-
-		throw error; // Rethrow
-	}
+	const row = dbCall(
+		() => db.get<{ '1': 1 }>(query, [username]),
+		`Error checking if username "${username}" is taken`,
+	);
+	return row !== undefined;
 }
 
 /**
@@ -519,21 +417,12 @@ function isUsernameTaken(username: string): boolean {
  * @returns Returns true if the email exists, false otherwise.
  */
 function isEmailTaken(email: string): boolean {
-	// SQL query to check if an email exists in the 'members' table
 	const query = 'SELECT 1 FROM members WHERE email = ?';
-
-	try {
-		// Execute the query with the email parameter
-		const row = db.get<{ '1': 1 }>(query, [email]);
-
-		// If a row is found, the email exists
-		return row !== undefined;
-	} catch (error: unknown) {
-		// Log error if the query fails
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Error checking if email "${email}" exists: ${message}`, 'errLog.txt');
-		throw error; // Rethrow
-	}
+	const row = dbCall(
+		() => db.get<{ '1': 1 }>(query, [email]),
+		`Error checking if email "${email}" exists`,
+	);
+	return row !== undefined;
 }
 
 /**

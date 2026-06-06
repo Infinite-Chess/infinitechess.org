@@ -6,8 +6,7 @@
 
 import type { RunResult } from 'better-sqlite3';
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import db, { dbCall } from './database.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -42,17 +41,11 @@ const MAX_SAVED_POSITIONS = 50;
  * @throws If a database error occurs.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
-	try {
-		const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
-		return db.all<EditorSavesListRecord>(query, [user_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error retrieving saved positions for user_id ${user_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
+	return dbCall(
+		() => db.all<EditorSavesListRecord>(query, [user_id]),
+		`Error retrieving saved positions for user_id ${user_id}`,
+	);
 }
 
 /**
@@ -60,18 +53,12 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @throws If a database error occurs.
  */
 function getSavedPositionCount(user_id: number): number {
-	try {
-		const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
-		const row = db.get<{ count: number }>(query, [user_id]);
-		return row?.count ?? 0;
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error counting saved positions for user_id ${user_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
+	const row = dbCall(
+		() => db.get<{ count: number }>(query, [user_id]),
+		`Error counting saved positions for user_id ${user_id}`,
+	);
+	return row?.count ?? 0;
 }
 
 /**
@@ -82,23 +69,17 @@ function getSavedPositionCount(user_id: number): number {
  * @throws If a database error occurs.
  */
 function doesSavedPositionExist(user_id: number, name: string): boolean {
-	try {
-		const query = `
-			SELECT EXISTS(
-				SELECT 1 FROM editor_saves
-				WHERE user_id = ? AND name = ?
-			) AS found
-		 `;
-		const row = db.get<{ found: 0 | 1 }>(query, [user_id, name]);
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error checking existence of saved position "${name}" for user_id ${user_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `
+		SELECT EXISTS(
+			SELECT 1 FROM editor_saves
+			WHERE user_id = ? AND name = ?
+		) AS found
+	 `;
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [user_id, name]),
+		`Error checking existence of saved position "${name}" for user_id ${user_id}`,
+	);
+	return Boolean(row?.found);
 }
 
 /**
@@ -125,31 +106,24 @@ function addSavedPosition(
 	pawn_double_push?: boolean,
 	castling?: boolean,
 ): void {
-	try {
-		// Insert the record (overwrites any existing one)
-		const insertQuery = `
-            INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-		db.run(insertQuery, [
-			user_id,
-			name,
-			piece_count,
-			timestamp,
-			icn,
-			compression,
-			// Encode tristate
-			pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
-			castling === undefined ? -1 : castling ? 1 : 0,
-		]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const insertQuery = `
+        INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+	dbCall(
+		() =>
+			db.run(insertQuery, [
+				user_id,
+				name,
+				piece_count,
+				timestamp,
+				icn,
+				compression,
+				pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
+				castling === undefined ? -1 : castling ? 1 : 0,
+			]),
+		`Error adding saved position for user_id ${user_id} with name "${name}"`,
+	);
 }
 
 /**
@@ -160,17 +134,11 @@ function addSavedPosition(
  * @throws If a database error occurs.
  */
 function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
-	try {
-		const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
-		return db.get<EditorSavesIcnRecord>(query, [name, user_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error retrieving ICN for name "${name}" and user_id ${user_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
+	return dbCall(
+		() => db.get<EditorSavesIcnRecord>(query, [name, user_id]),
+		`Error retrieving ICN for name "${name}" and user_id ${user_id}`,
+	);
 }
 
 /**
@@ -182,17 +150,11 @@ function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecor
  * @throws If a database error occurs.
  */
 function deleteSavedPosition(name: string, user_id: number): RunResult {
-	try {
-		const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
-		return db.run(query, [name, user_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Error deleting position "${name}" for user_id ${user_id}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
+	return dbCall(
+		() => db.run(query, [name, user_id]),
+		`Error deleting position "${name}" for user_id ${user_id}`,
+	);
 }
 
 export default {

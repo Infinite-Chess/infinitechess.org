@@ -56,7 +56,11 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	res.status(200).json({ message: 'Logged in successfully.' });
 
 	// These operations are "fire and forget" in terms of the client response
-	updateLoginCountAndLastSeen(identity.user_id);
+	try {
+		updateLoginCountAndLastSeen(identity.user_id);
+	} catch {
+		// Already logged
+	}
 	logEvents(`Logged in member "${identity.username}".`, 'loginAttempts.txt');
 }
 

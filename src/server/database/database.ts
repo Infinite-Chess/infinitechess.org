@@ -12,6 +12,8 @@ import path from 'path';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+
 // Get the current file path and derive the directory (ESM doesn't support __dirname)
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
@@ -80,6 +82,21 @@ function get<T>(query: string, params: SupportedColumnTypes[] = []): T | undefin
 function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	const stmt = prepareStatement(query);
 	return stmt.all(...params) as T[];
+}
+
+/**
+ * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
+ * @param fn - The db call to execute.
+ * @param description - Human-readable label for the operation.
+ */
+export function dbCall<T>(fn: () => T, description: string): T {
+	try {
+		return fn();
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
+		logEventsAndPrint(`${description}: ${detail}`, 'errLog.txt');
+		throw error;
+	}
 }
 
 /** Closes the database connection. */

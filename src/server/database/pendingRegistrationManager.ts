@@ -7,8 +7,7 @@
  * a real `members` row is created and the pending row is marked verified.
  */
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import db, { dbCall } from './database.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -62,24 +61,19 @@ export function addPendingRegistration(
 			claim_token, verification_token, username, email, hashed_password, created_at, expires_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`;
-	try {
-		db.run(query, [
-			claimToken,
-			verificationToken,
-			username,
-			email,
-			hashedPassword,
-			now,
-			expiresAt,
-		]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while adding pending registration for "${username}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() =>
+			db.run(query, [
+				claimToken,
+				verificationToken,
+				username,
+				email,
+				hashedPassword,
+				now,
+				expiresAt,
+			]),
+		`Database error while adding pending registration for "${username}"`,
+	);
 }
 
 // Lookups -------------------------------------------------------------------
@@ -94,16 +88,10 @@ export function getPendingRegistrationByClaimToken(
 	claimToken: string,
 ): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE claim_token = ?`;
-	try {
-		return db.get<PendingRegistrationRecord>(query, [claimToken]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while finding pending registration by claim_token: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	return dbCall(
+		() => db.get<PendingRegistrationRecord>(query, [claimToken]),
+		'Database error while finding pending registration by claim_token',
+	);
 }
 
 /**
@@ -116,16 +104,10 @@ export function getPendingRegistrationByVerificationToken(
 	verificationToken: string,
 ): PendingRegistrationRecord | undefined {
 	const query = `SELECT * FROM pending_registrations WHERE verification_token = ?`;
-	try {
-		return db.get<PendingRegistrationRecord>(query, [verificationToken]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while finding pending registration by verification_token: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	return dbCall(
+		() => db.get<PendingRegistrationRecord>(query, [verificationToken]),
+		'Database error while finding pending registration by verification_token',
+	);
 }
 
 // Availability checks (non-expired rows only) -------------------------------
@@ -144,17 +126,11 @@ export function isUsernameTakenInPending(username: string): boolean {
 			WHERE username = ? AND expires_at > ?
 		) AS found
 	`;
-	try {
-		const row = db.get<{ found: 0 | 1 }>(query, [username, Date.now()]);
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while checking pending username "${username}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [username, Date.now()]),
+		`Database error while checking pending username "${username}"`,
+	);
+	return Boolean(row?.found);
 }
 
 /**
@@ -170,17 +146,11 @@ export function isEmailTakenInPending(email: string): boolean {
 			WHERE email = ? AND expires_at > ?
 		) AS found
 	`;
-	try {
-		const row = db.get<{ found: 0 | 1 }>(query, [email, Date.now()]);
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while checking pending email "${email}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [email, Date.now()]),
+		`Database error while checking pending email "${email}"`,
+	);
+	return Boolean(row?.found);
 }
 
 /**
@@ -199,17 +169,11 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
 			WHERE email = ? AND expires_at > ? AND claim_token != ?
 		) AS found
 	`;
-	try {
-		const row = db.get<{ found: 0 | 1 }>(query, [email, Date.now(), excludeClaimToken]);
-		return Boolean(row?.found);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while checking pending email (by other) "${email}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const row = dbCall(
+		() => db.get<{ found: 0 | 1 }>(query, [email, Date.now(), excludeClaimToken]),
+		`Database error while checking pending email (by other) "${email}"`,
+	);
+	return Boolean(row?.found);
 }
 
 // Update --------------------------------------------------------------------
@@ -235,16 +199,10 @@ export function updatePendingRegistrationEmail(
 		SET email = ?, verification_token = ?, expires_at = ?
 		WHERE claim_token = ?
 	`;
-	try {
-		db.run(query, [email, verificationToken, expiresAt, claimToken]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while updating pending registration email: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() => db.run(query, [email, verificationToken, expiresAt, claimToken]),
+		'Database error while updating pending registration email',
+	);
 }
 
 /**
@@ -256,18 +214,12 @@ export function updatePendingRegistrationEmail(
  */
 export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
-	try {
-		const result = db.run(query, [memberUserId, claimToken]);
-		if (result.changes === 0)
-			throw new Error(`No pending registration found for claim_token to mark verified.`);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while marking pending registration verified: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	const result = dbCall(
+		() => db.run(query, [memberUserId, claimToken]),
+		'Database error while marking pending registration verified',
+	);
+	if (result.changes === 0)
+		throw new Error(`No pending registration found for claim_token to mark verified.`);
 }
 
 // Deletion ------------------------------------------------------------------
@@ -284,16 +236,10 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 		DELETE FROM pending_registrations
 		WHERE (username = ? OR email = ?) AND expires_at <= ?
 	`;
-	try {
-		db.run(query, [username, email, Date.now()]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while deleting expired pending registrations for "${username}": ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() => db.run(query, [username, email, Date.now()]),
+		`Database error while deleting expired pending registrations for "${username}"`,
+	);
 }
 
 /**
@@ -302,14 +248,8 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
  */
 export function deleteExpiredPendingRegistrations(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
-	try {
-		db.run(query, [Date.now()]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while sweeping expired pending registrations: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() => db.run(query, [Date.now()]),
+		'Database error while sweeping expired pending registrations',
+	);
 }

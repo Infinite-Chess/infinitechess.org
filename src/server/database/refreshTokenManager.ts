@@ -7,9 +7,8 @@
 
 import type { Request } from 'express';
 
-import db from './database.js';
+import db, { dbCall } from './database.js';
 import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
  * Represents a record in the `refresh_tokens` database table.
@@ -44,13 +43,10 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
         FROM refresh_tokens
         WHERE token = ?
     `;
-	try {
-		return db.get<RefreshTokenRecord>(query, [token]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Database error while finding refresh token: ${message}`, 'errLog.txt');
-		throw error; // Rethrow
-	}
+	return dbCall(
+		() => db.get<RefreshTokenRecord>(query, [token]),
+		'Database error while finding refresh token',
+	);
 }
 
 /**
@@ -66,16 +62,10 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
         FROM refresh_tokens
         WHERE user_id IN (${placeholders})
     `;
-	try {
-		return db.all<RefreshTokenRecord>(query, user_id_list);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	return dbCall(
+		() => db.all<RefreshTokenRecord>(query, user_id_list),
+		`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}`,
+	);
 }
 
 /**
@@ -100,23 +90,18 @@ export function addRefreshToken(
         VALUES (?, ?, ?, ?, ?, ?)
 	`;
 	const ip_address = getClientIP(req) || null;
-	try {
-		db.run(query, [
-			token,
-			userId,
-			now, // created_at
-			now + expiryMillis, // expires_at
-			isPersistent ? 1 : 0,
-			ip_address,
-		]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while adding refresh token for userId ${userId}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() =>
+			db.run(query, [
+				token,
+				userId,
+				now,
+				now + expiryMillis,
+				isPersistent ? 1 : 0,
+				ip_address,
+			]),
+		`Database error while adding refresh token for userId ${userId}`,
+	);
 }
 
 /**
@@ -126,13 +111,7 @@ export function addRefreshToken(
  */
 export function deleteRefreshToken(token: string): void {
 	const query = `DELETE FROM refresh_tokens WHERE token = ?`;
-	try {
-		db.run(query, [token]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Database error while deleting refresh token: ${message}`, 'errLog.txt');
-		throw error; // Rethrow
-	}
+	dbCall(() => db.run(query, [token]), 'Database error while deleting refresh token');
 }
 
 /**
@@ -143,16 +122,10 @@ export function deleteRefreshToken(token: string): void {
  */
 export function deleteAllRefreshTokensForUser(userId: number): void {
 	const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
-	try {
-		db.run(query, [userId]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while deleting all refresh tokens for userId ${userId}: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() => db.run(query, [userId]),
+		`Database error while deleting all refresh tokens for userId ${userId}`,
+	);
 }
 
 /**
@@ -163,16 +136,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  */
 export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
-	try {
-		db.run(query, [ip, token]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while updating refresh token IP: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(() => db.run(query, [ip, token]), 'Database error while updating refresh token IP');
 }
 
 /**
@@ -184,14 +148,8 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 export function markRefreshTokenAsConsumed(token: string): void {
 	const now = Date.now();
 	const query = `UPDATE refresh_tokens SET consumed_at = ? WHERE token = ?`;
-	try {
-		db.run(query, [now, token]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(
-			`Database error while marking refresh token as consumed: ${message}`,
-			'errLog.txt',
-		);
-		throw error; // Rethrow
-	}
+	dbCall(
+		() => db.run(query, [now, token]),
+		'Database error while marking refresh token as consumed',
+	);
 }

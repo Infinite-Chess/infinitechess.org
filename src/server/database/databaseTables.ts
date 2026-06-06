@@ -93,6 +93,40 @@ const allRatingAbuseColumns: string[] = [
 	'last_alerted_at',
 ];
 
+/** All columns of the live_games table. */
+const allLiveGamesColumns: string[] = [
+	'game_id',
+	'time_created',
+	'variant',
+	'clock',
+	'rated',
+	'private',
+	'moves',
+	'color_ticking',
+	'clock_snapshot_time',
+	'draw_offer_state',
+	'conclusion_condition',
+	'conclusion_victor',
+	'time_ended',
+	'afk_resign_time',
+	'delete_time',
+	'validate_moves',
+];
+
+/** All columns of the live_player_games table. */
+const allLivePlayerGamesColumns: string[] = [
+	'game_id',
+	'player_number',
+	'user_id',
+	'browser_id',
+	'elo',
+	'last_draw_offer_ply',
+	'time_remaining_ms',
+	'disconnect_cushion_end_time',
+	'disconnect_resign_time',
+	'disconnect_by_choice',
+];
+
 // Functions -----------------------------------------------------------------------------------
 
 /** Creates the tables in our database if they do not exist. */
@@ -424,6 +458,8 @@ export {
 	allPlayerGamesColumns,
 	allGamesColumns,
 	allRatingAbuseColumns,
+	allLiveGamesColumns,
+	allLivePlayerGamesColumns,
 	initDatabase,
 	generateTables,
 	clearAllTables,
