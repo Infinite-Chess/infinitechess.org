@@ -172,6 +172,10 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 		// and cause the entire transaction (including the DELETE) to roll back.
 		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
 		db.run(insertQuery, [id, reason]);
+
+		// Step 3: Remove the promoted pending registration that
+		// created this member, if it hasn't been cleaned up yet.
+		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
 	try {
