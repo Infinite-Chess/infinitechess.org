@@ -473,15 +473,20 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 				return false;
 		}
 	}
-	if (isBlacklisted(email)) {
-		logEventsAndPrint(
-			`Blacklisted email ${email} tried to create an account!`,
-			'blacklistLog.txt',
-		);
-		res.status(422).json({
-			field: 'email',
-			message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
-		});
+	try {
+		if (isBlacklisted(email)) {
+			logEventsAndPrint(
+				`Blacklisted email ${email} tried to create an account!`,
+				'blacklistLog.txt',
+			);
+			res.status(422).json({
+				field: 'email',
+				message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+			});
+			return false;
+		}
+	} catch {
+		res.status(500).json({ message: 'A server error occurred. Please try again.' });
 		return false;
 	}
 	if (!(await isEmailDNSValid(email))) {

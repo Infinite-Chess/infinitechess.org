@@ -72,6 +72,7 @@ const activeGames: Record<number, ServerGame> = {};
  * Auto-subscribes the players to receive game updates.
  * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link gameutility.subscribeClientToGame}).
  */
 function createGame(
 	invite: AuthSeek,
@@ -496,10 +497,6 @@ function deleteGame(servergame: ServerGame): void {
 	// Remove the live game from the persistence database.
 	liveGameValues.onGameDeleted(servergame.match.id);
 
-	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
-	// The ratings are calculated during the logging of the game into the database
-	const ratingdata = gamelogger.logGame(servergame);
-
 	// Mostly deprecated:
 	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
 	executeSafely(
@@ -507,9 +504,27 @@ function deleteGame(servergame: ServerGame): void {
 		`statlogger unable to log game! ${gameutility.getSimplifiedGameString(servergame)}`,
 	);
 
-	// Send rating changes to all players of game, if relevant
-	if (ratingdata !== undefined)
-		gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
+	// The gamelogger logs the completed game information into the database tables "games", "player_stats" and "ratings"
+	// The ratings are calculated during the logging of the game into the database.
+	try {
+		const ratingdata = gamelogger.logGame(servergame);
+
+		// Send rating changes to all players of game, if relevant
+		if (ratingdata !== undefined)
+			gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
+	} catch {
+		// log failure already logged
+		// Notify both players
+		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
+			if (!ws) continue;
+			sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				"A server error occurred while logging this game. It won't be available in your game history.",
+			);
+		}
+	}
 
 	// Unsubscribe both players' sockets from the game if they still are connected.
 	// If the socket is undefined, they will have already been auto-unsubscribed.
@@ -518,9 +533,8 @@ function deleteGame(servergame: ServerGame): void {
 		removeUserFromActiveGame(data.identifier, servergame.match.id);
 		if (!data.socket) continue; // They don't have a socket connected.
 		// We inform their opponent they have disconnected inside js when we call this method.
-		// Tell the client to unsub on their end, IF the socket isn't closing.
-		if (data.socket.readyState === WebSocket.OPEN)
-			sendSocketMessage(data.socket, 'game', 'unsub');
+		// Tell the client to unsub on their end
+		sendSocketMessage(data.socket, 'game', 'unsub');
 		gameutility.unsubClientFromGame(servergame.match, data.socket);
 	}
 

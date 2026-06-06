@@ -61,15 +61,15 @@ async function sendEmailConfirmation(
 	username: string,
 	verificationToken: string,
 ): Promise<void> {
-	if (isBlacklisted(recipientEmail)) {
-		logEventsAndPrint(
-			`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
-			'blacklistLog.txt',
-		);
-		return;
-	}
-
 	try {
+		if (isBlacklisted(recipientEmail)) {
+			logEventsAndPrint(
+				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
+				'blacklistLog.txt',
+			);
+			return;
+		}
+
 		const baseUrl = getAppBaseUrl();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 

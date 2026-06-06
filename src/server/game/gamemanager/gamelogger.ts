@@ -26,7 +26,7 @@ import {
 } from './ratingcalculation.js';
 import {
 	addUserToLeaderboard,
-	getPlayerLeaderboardRating_core,
+	getPlayerLeaderboardRating,
 	isPlayerInLeaderboard,
 	updatePlayerLeaderboardRating,
 } from '../../database/leaderboardsManager.js';
@@ -40,6 +40,7 @@ import {
  * This ensures data integrity and consistency.
  * @param servergame - The game to log
  * @returns The rating data if the game was rated and not aborted, otherwise undefined.
+ * @throws If a database error occurs during the transaction. The game will be recorded to unloggedGames.txt for debugging info, it WON'T contain enough info for recovery.
  */
 function logGame(servergame: ServerGame): RatingData | undefined {
 	if (servergame.moves.length === 0) return; // Don't log games with zero moves
@@ -68,7 +69,7 @@ function logGame(servergame: ServerGame): RatingData | undefined {
 			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,
 			'unloggedGames.txt',
 		);
-		return;
+		throw error; // Rethrow so callers know the log failed.
 	}
 }
 
@@ -108,7 +109,7 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
  * Updates leaderboards within the transaction. It calculates rating changes
  * and calls the unsafe (error-throwing) _core functions to update the database.
  * @returns The final rating data object, or undefined if the game was not rated, or aborted.
- * @throws An error if any database write fails.
+ * @throws If a database error occurs.
  */
 function updateLeaderboardsInTransaction(
 	match: MatchInfo,
@@ -142,7 +143,7 @@ function updateLeaderboardsInTransaction(
 		}
 
 		// We can now safely assume the player has a rating record.
-		const leaderboard_data = getPlayerLeaderboardRating_core(user_id, leaderboard_id);
+		const leaderboard_data = getPlayerLeaderboardRating(user_id, leaderboard_id);
 		if (leaderboard_data === undefined)
 			throw Error(
 				`Unable to read leaderboard data for user_id ${user_id} in leaderboard ${leaderboard_id}. This should never happen, they should have been added!`,

@@ -89,8 +89,7 @@ function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boo
 			'errLog.txt',
 		);
 
-		// On error, we cannot confirm existence, so return false.
-		return false;
+		throw error; // Rethrow
 	}
 }
 
@@ -149,12 +148,12 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
 		return row;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error and return undefined
+		// Log the error and re-throw
 		logEventsAndPrint(
 			`Error executing query when gettings rating_abuse entry of user_id ${user_id} and leaderboard_id = ${leaderboard_id}: ${message}. The query: "${query}"`,
 			'errLog.txt',
 		);
-		return undefined;
+		throw error;
 	}
 }
 
@@ -223,8 +222,7 @@ function updateRatingAbuseColumns(
 			`Error updating rating_abuse table columns ${JSON.stringify(Object.keys(columnsAndValues))} for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
 			'errLog.txt',
 		);
-		// Return an error message
-		return { success: false, reason: 'Database error.' }; // Generic error message
+		throw error; // Rethrow
 	}
 }
 

@@ -92,7 +92,7 @@ function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 			`Error getting all player_games entries for game_id_list "${jsutil.ensureJSONString(game_id_list)}": ${message}`,
 			'errLog.txt',
 		);
-		return [];
+		throw error; // Rethrow
 	}
 }
 
@@ -152,7 +152,7 @@ function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 			`Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}: ${message}`,
 			'errLog.txt',
 		);
-		return [];
+		throw error; // Rethrow
 	}
 }
 

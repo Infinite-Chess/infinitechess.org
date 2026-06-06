@@ -108,7 +108,7 @@ function columnExists(tableName: string, columnName: string): boolean {
 		return !!result;
 	} catch (error) {
 		console.error(`Error checking if column ${columnName} exists in ${tableName}:`, error);
-		return false;
+		throw error; // Rethrow
 	}
 }
 

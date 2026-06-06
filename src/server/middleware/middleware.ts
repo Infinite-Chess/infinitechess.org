@@ -25,7 +25,6 @@ import secureRedirect from './secureRedirect.js';
 import { rootRouter } from '../routes/root.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
-import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
@@ -265,8 +264,6 @@ export function configureMiddleware(app: Express): void {
 
 	app.get('/command/:command', processCommand);
 
-	// Member routes that do require authentication
-	app.get('/member/:member/data', getMemberData);
 	app.post('/verify/:token', verifyPendingRegistration);
 
 	// Leaderboard router

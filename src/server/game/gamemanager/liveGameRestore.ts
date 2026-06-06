@@ -86,7 +86,13 @@ interface DisconnectTimerState {
  * The caller is responsible for integrating these into the active game system.
  */
 function restoreAllLiveGames(): RestoredGame[] {
-	const liveGameRows = getAllLiveGames();
+	let liveGameRows: LiveGamesRecord[];
+	try {
+		liveGameRows = getAllLiveGames();
+	} catch {
+		// Already logged
+		return [];
+	}
 	if (liveGameRows.length === 0) return [];
 
 	console.log(`Restoring ${liveGameRows.length} live game(s) from database.`);

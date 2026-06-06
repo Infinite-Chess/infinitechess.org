@@ -117,7 +117,7 @@ function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
 			`Error retrieving live player games for game ${game_id}: ${message}`,
 			'errLog.txt',
 		);
-		return [];
+		throw error; // Rethrow
 	}
 }
 

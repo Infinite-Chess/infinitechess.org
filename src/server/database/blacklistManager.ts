@@ -51,8 +51,6 @@ export function isBlacklisted(email: string): boolean {
 			`Database error when checking blacklist for email ${email}: ${msg}`,
 			'errLog.txt',
 		);
-		// Fail safe: If DB errors, assume NOT blacklisted so we don't block legitimate users
-		// (or return true if we want to be ultra-safe/paranoid)
-		return false;
+		throw err; // Rethrow
 	}
 }

@@ -25,8 +25,8 @@ interface LeaderboardEntry {
 	leaderboard_id: number;
 	elo: number;
 	rating_deviation: number;
-	rd_last_update_date: string | null; // Can be null if no games played yet
-	// Consider adding volatility if you use it in Glicko-2
+	/** Can be null if no games played yet */
+	rd_last_update_date: string | null;
 }
 
 // Methods --------------------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ interface LeaderboardEntry {
  * The core logic for adding a user to a leaderboard.
  * This function is "unsafe" as it throws errors on failure, making it
  * suitable for use inside a database transaction.
- * @throws If the database query fails.
+ * @throws If a database error occurs.
  */
 function addUserToLeaderboard(
 	user_id: number,
@@ -61,7 +61,7 @@ function addUserToLeaderboard(
  * This function throws errors on failure, making it suitable for use
  * inside a database transaction which can catch the error and roll back.
  * Callers outside of transactions should implement their own error handling.
- * @throws If the user is not found or if the database query fails.
+ * @throws If the user is not found or if a database error occurs.
  */
 function updatePlayerLeaderboardRating(
 	user_id: number,
@@ -94,6 +94,7 @@ function updatePlayerLeaderboardRating(
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
  * @returns True if the player exists on the specified leaderboard, false otherwise (including on error).
+ * @throws If a database error occurs.
  */
 function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
 	// Query to select a constant '1' if a matching row exists.
@@ -122,54 +123,33 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 			'errLog.txt',
 		);
 
-		// On error, we cannot confirm existence, so return false.
-		return false;
+		throw error; // Rethrow
 	}
 }
 
-/** The return type of {@link getPlayerLeaderboardRating} */
-type PlayerLeaderboardRating = {
-	elo: number;
-	rating_deviation: number;
-	rd_last_update_date: string | null; // Can be null if no games played yet
-};
-
 /**
- * The core logic for getting a player's rating. Throws on failure.
- * @throws If the database query fails.
+ * Gets the rating values for a player on a specific leaderboard.
+ * @returns The player's leaderboard entry object or undefined if not found.
+ * @throws If a database error occurs.
  */
-function getPlayerLeaderboardRating_core(
+function getPlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
-): PlayerLeaderboardRating | undefined {
+): Pick<LeaderboardEntry, 'elo' | 'rating_deviation' | 'rd_last_update_date'> | undefined {
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	// This will throw an error if the query fails.
-	return db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
-}
-
-/**
- * Safely gets the rating values for a player on a specific leaderboard.
- * This wraps the core logic in a try/catch block to prevent crashes.
- * @returns The player's leaderboard entry object or undefined if not found or on error.
- */
-function getPlayerLeaderboardRating(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-): PlayerLeaderboardRating | undefined {
 	try {
-		return getPlayerLeaderboardRating_core(user_id, leaderboard_id);
+		return db.get(query, [user_id, leaderboard_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
 		logEventsAndPrint(
-			`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
+			`Error getting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
 		);
-		return undefined;
+		throw error; // Rethrow
 	}
 }
 
@@ -196,7 +176,7 @@ function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 			`Error getting all leaderboard entries for user "${user_id}": ${message}`,
 			'errLog.txt',
 		);
-		return []; // Return an empty array on error
+		throw error; // Rethrow
 	}
 }
 
@@ -206,6 +186,7 @@ function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
  * @param start_rank - The 1-based rank to start from (e.g. 1 = top player, 2 = second-best, etc.)
  * @param n_players - The maximum number of players to retrieve, starting from start_rank
  * @returns An array of top player leaderboard entries, potentially empty.
+ * @throws If the database query fails.
  */
 function getTopPlayersForLeaderboard(
 	leaderboard_id: Leaderboard,
@@ -241,7 +222,7 @@ function getTopPlayersForLeaderboard(
 			`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
 		);
-		return []; // Return an empty array on error
+		throw error; // Rethrow
 	}
 }
 
@@ -296,7 +277,7 @@ function getPlayerRankInLeaderboard(
 			`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
 		);
-		return undefined; // Return undefined on error
+		throw error; // Rethrow
 	}
 }
 
@@ -308,9 +289,10 @@ function getPlayerRankInLeaderboard(
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard elo and whether we are confident about it.
+ * @throws If a database error occurs.
  */
 function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
-	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id);
 	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
 	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
@@ -359,7 +341,6 @@ export {
 	updatePlayerLeaderboardRating,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
-	getPlayerLeaderboardRating_core,
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,

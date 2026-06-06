@@ -77,7 +77,7 @@ function isGameIdTaken(game_id: number): boolean {
 			`Error checking if game_id "${game_id}" is taken: ${message}`,
 			'errLog.txt',
 		);
-		return false; // Return false if an error occurs
+		throw error; // Rethrow
 	}
 }
 
@@ -86,6 +86,7 @@ function isGameIdTaken(game_id: number): boolean {
  * @param game_id - The game_id of the game
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
  * @returns An object containing the requested columns, or undefined if no match is found.
+ * @throws If a database error occurs.
  */
 function getGameData<K extends GamesColumn>(
 	game_id: number,
@@ -132,12 +133,12 @@ function getGameData<K extends GamesColumn>(
 		return row;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error and return undefined
+		// Log the error and rethrow
 		logEventsAndPrint(
 			`Error executing query when getting game data of game_id ${game_id}: ${message}. The query: "${query}"`,
 			'errLog.txt',
 		);
-		return undefined;
+		throw error;
 	}
 }
 
@@ -193,12 +194,12 @@ function getMultipleGameData<K extends GamesColumn>(
 		return rows;
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error and return undefined
+		// Log the error and rethrow
 		logEventsAndPrint(
 			`Error executing query for game_ids ${jsutil.ensureJSONString(game_id_list)}: ${message}. Query: "${query}"`,
 			'errLog.txt',
 		);
-		return undefined;
+		throw error;
 	}
 }
 

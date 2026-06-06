@@ -293,6 +293,7 @@ function assignWhiteBlackPlayersFromInvite(
  * @param playerColor - What color they are playing in this game. p.NEU
  * @param options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
  * @param options.sendGameInfo
+ * @throws If a database error occurs (from {@link sendGameInfoToPlayer}).
  */
 function subscribeClientToGame(
 	servergame: ServerGame,
@@ -348,6 +349,7 @@ function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
  * @param servergame - The game they're in.
  * @param playerSocket - Their websocket
  * @param playerColor - The color they are.
+ * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
 function sendGameInfoToPlayer(
 	servergame: ServerGame,
@@ -379,6 +381,7 @@ function sendGameInfoToPlayer(
  * Returns the current elo of all players in the game on the leaderboard
  * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
  * @returns An object containing the rating for non-guests in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard}).
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
@@ -441,6 +444,7 @@ function constructMetadataOfGame(
  * @param servergame - The game
  * @param colorPlayingAs - Their color
  * @param [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
+ * @throws If a database error occurs (from {@link subscribeClientToGame}).
  */
 function resyncToGame(
 	ws: CustomWebSocket,
@@ -853,5 +857,4 @@ export default {
 	isGameResignable,
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
-	getRatingDataForGamePlayers,
 };

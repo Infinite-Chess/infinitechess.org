@@ -37,23 +37,6 @@ export interface LiveGameData {
 	validate_moves: 0 | 1;
 }
 
-// SQL Queries ---------------------------------------------------------------------------------------
-
-const INSERT_QUERY = `
-	INSERT INTO live_games (
-		game_id, time_created, variant, clock, rated, private,
-		moves, color_ticking, clock_snapshot_time,
-		draw_offer_state,
-		conclusion_condition, conclusion_victor, time_ended,
-		afk_resign_time, delete_time,
-		validate_moves
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
-
-const DELETE_QUERY = `DELETE FROM live_games WHERE game_id = ?`;
-
-const SELECT_ALL_QUERY = `SELECT * FROM live_games`;
-
 // Methods --------------------------------------------------------------------------------------------
 
 /**
@@ -62,24 +45,36 @@ const SELECT_ALL_QUERY = `SELECT * FROM live_games`;
  */
 function insertLiveGame(record: LiveGamesRecord): void {
 	try {
-		db.run(INSERT_QUERY, [
-			record.game_id,
-			record.time_created,
-			record.variant,
-			record.clock,
-			record.rated,
-			record.private,
-			record.moves,
-			record.color_ticking,
-			record.clock_snapshot_time,
-			record.draw_offer_state,
-			record.conclusion_condition,
-			record.conclusion_victor,
-			record.time_ended,
-			record.afk_resign_time,
-			record.delete_time,
-			record.validate_moves,
-		]);
+		db.run(
+			`
+			INSERT INTO live_games (
+				game_id, time_created, variant, clock, rated, private,
+				moves, color_ticking, clock_snapshot_time,
+				draw_offer_state,
+				conclusion_condition, conclusion_victor, time_ended,
+				afk_resign_time, delete_time,
+				validate_moves
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`,
+			[
+				record.game_id,
+				record.time_created,
+				record.variant,
+				record.clock,
+				record.rated,
+				record.private,
+				record.moves,
+				record.color_ticking,
+				record.clock_snapshot_time,
+				record.draw_offer_state,
+				record.conclusion_condition,
+				record.conclusion_victor,
+				record.time_ended,
+				record.afk_resign_time,
+				record.delete_time,
+				record.validate_moves,
+			],
+		);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error inserting live game ${record.game_id}: ${message}`, 'errLog.txt');
@@ -113,7 +108,7 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
  */
 function deleteLiveGame(game_id: number): void {
 	try {
-		db.run(DELETE_QUERY, [game_id]);
+		db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error deleting live game ${game_id}: ${message}`, 'errLog.txt');
@@ -126,11 +121,11 @@ function deleteLiveGame(game_id: number): void {
  */
 function getAllLiveGames(): LiveGamesRecord[] {
 	try {
-		return db.all<LiveGamesRecord>(SELECT_ALL_QUERY);
+		return db.all<LiveGamesRecord>('SELECT * FROM live_games');
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error retrieving all live games: ${message}`, 'errLog.txt');
-		return [];
+		throw error; // Rethrow
 	}
 }
 

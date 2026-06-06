@@ -511,8 +511,7 @@ function isUsernameTaken(username: string): boolean {
 			'errLog.txt',
 		);
 
-		// Return false if there's an error (indicating the username is not found)
-		return false;
+		throw error; // Rethrow
 	}
 }
 
@@ -535,7 +534,7 @@ function isEmailTaken(email: string): boolean {
 		// Log error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error checking if email "${email}" exists: ${message}`, 'errLog.txt');
-		return false; // Return false if there's an error
+		throw error; // Rethrow
 	}
 }
 

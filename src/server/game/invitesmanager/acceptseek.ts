@@ -107,7 +107,22 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	if (invite_accepter === undefined)
 		throw Error("Invite accepter doesn't exist on accepted 2 player invite");
 
-	createGame(seek, assignments);
+	try {
+		createGame(seek, assignments);
+	} catch {
+		// DB error (already logged)
+		// Notify both parties a server error occurred
+		for (const { socket: ws } of Object.values(assignments)) {
+			if (!ws) continue;
+			sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				"Couldn't create game. A server error occurred. Please try again.",
+			);
+		}
+		return;
+	}
 
 	// Unsubscribe them both from the lobby.
 	if (player1Socket) removeSocketFromLobbySubs(player1Socket); // Could be undefined occasionally

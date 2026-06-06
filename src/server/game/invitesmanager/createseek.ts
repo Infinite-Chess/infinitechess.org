@@ -99,19 +99,30 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 		return;
 	}
 
-	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents);
-	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
+	try {
+		const invite = await getInviteFromWebsocketMessageContents(ws, messageContents);
+		if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
 
-	// Replace any existing invite this user owns — the subsequent addInvite() broadcasts the new state.
-	deleteUsersExistingInvite(ws.metadata.memberInfo, { broadCastNewInvites: false });
+		// Replace any existing invite this user owns — the subsequent addInvite() broadcasts the new state.
+		deleteUsersExistingInvite(ws.metadata.memberInfo, { broadCastNewInvites: false });
 
-	addInvite(invite);
+		addInvite(invite);
+	} catch {
+		// DB error (already logged)
+		sendSocketMessage(
+			ws,
+			'general',
+			'notifyerror',
+			"Couldn't create seek. A server error occurred. Please try again.",
+		);
+	}
 }
 
 /**
  * Builds an {@link AuthSeek} from the client's createseek message, resolving
  * cloudSave variants to ICN and validating ICN positions for legality.
  * Returns `void` after sending an error to the client if any check fails.
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link editorSavesManager.getSavedPositionICN}).
  */
 async function getInviteFromWebsocketMessageContents(
 	ws: CustomWebSocket,
