@@ -118,9 +118,11 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 					recipients.forEach((recipient: any) => {
 						const email = recipient.emailAddress;
 						logEvents(`[AWS WEBHOOK] Hard Bounce: ${email}`, 'awsNotifications.txt');
-
-						// Add to our blacklist table (our db is synchronious, using better-sqlite3)
-						addToBlacklist(email, 'bounce');
+						try {
+							addToBlacklist(email, 'bounce');
+						} catch {
+							// Already logged
+						}
 					});
 				}
 			} else {
@@ -138,7 +140,11 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				recipients.forEach((recipient: any) => {
 					const email = recipient.emailAddress;
 					logEvents(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications.txt');
-					addToBlacklist(email, 'spam_report');
+					try {
+						addToBlacklist(email, 'spam_report');
+					} catch {
+						// Already logged
+					}
 				});
 			}
 		} else {

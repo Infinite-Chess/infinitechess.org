@@ -15,6 +15,7 @@ export function addToBlacklist(email: string, reason: string): void {
 	} catch (err) {
 		const msg = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Database error when blacklisting email ${email}: ${msg}`, 'errLog.txt');
+		throw err; // Rethrow
 	}
 }
 
@@ -30,6 +31,7 @@ export function removeFromBlacklist(email: string): void {
 			`Database error when removing email ${email} from blacklist: ${msg}`,
 			'errLog.txt',
 		);
+		throw err; // Rethrow
 	}
 }
 
