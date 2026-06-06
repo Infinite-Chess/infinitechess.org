@@ -46,7 +46,7 @@ export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
  * @param username - The desired username.
  * @param email - The email to verify, in LOWERCASE.
  * @param hashedPassword - The already-hashed password.
- * @throws {Error} Throws if a database error occurs (e.g. a constraint violation).
+ * @throws If a database error occurs (e.g. a constraint violation).
  */
 export function addPendingRegistration(
 	claimToken: string,
@@ -88,7 +88,7 @@ export function addPendingRegistration(
  * Looks up a pending registration by its `claim_token` (the poll/resend path).
  * @param claimToken - The httpOnly cookie secret.
  * @returns The record if found, otherwise undefined.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function getPendingRegistrationByClaimToken(
 	claimToken: string,
@@ -110,7 +110,7 @@ export function getPendingRegistrationByClaimToken(
  * Looks up a pending registration by its `verification_token` (the verify path).
  * @param verificationToken - The email-link secret.
  * @returns The record if found, otherwise undefined.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function getPendingRegistrationByVerificationToken(
 	verificationToken: string,
@@ -135,7 +135,7 @@ export function getPendingRegistrationByVerificationToken(
  * (case-insensitive, matching the table's COLLATE NOCASE constraint).
  * @param username - The username to check.
  * @returns True if a non-expired pending row holds this username.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function isUsernameTakenInPending(username: string): boolean {
 	const query = `
@@ -161,7 +161,7 @@ export function isUsernameTakenInPending(username: string): boolean {
  * Checks whether an email is held by a non-expired pending registration.
  * @param email - The email to check, in LOWERCASE.
  * @returns True if a non-expired pending row holds this email.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function isEmailTakenInPending(email: string): boolean {
 	const query = `
@@ -190,7 +190,7 @@ export function isEmailTakenInPending(email: string): boolean {
  * @param email - The email to check, in LOWERCASE.
  * @param excludeClaimToken - The claim_token of the row to exclude.
  * @returns True if another non-expired pending row holds this email.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: string): boolean {
 	const query = `
@@ -222,7 +222,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
  * @param claimToken - The claim_token identifying the row to update.
  * @param email - The new email, in LOWERCASE.
  * @param verificationToken - A freshly generated verification token.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function updatePendingRegistrationEmail(
 	claimToken: string,
@@ -252,7 +252,7 @@ export function updatePendingRegistrationEmail(
  * row created for it. The non-NULL `member_user_id` doubles as the "verified" flag.
  * @param claimToken - The claim_token identifying the pending row.
  * @param memberUserId - The user_id of the newly created member.
- * @throws {Error} If a database error occurs, or if no pending row matches the claim_token.
+ * @throws If a database error occurs, or if no pending row matches the claim_token.
  */
 export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
@@ -277,7 +277,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
  * registration attempt so a stale, expired pending row never blocks the UNIQUE constraints.
  * @param username - The username whose expired pending rows should be cleared.
  * @param email - The email (LOWERCASE) whose expired pending rows should be cleared.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function deleteExpiredPendingRegistrationsFor(username: string, email: string): void {
 	const query = `
@@ -298,7 +298,7 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 
 /**
  * Cleanup: deletes every pending registration whose `expires_at` is in the past.
- * @throws {Error} Throws if a database error occurs.
+ * @throws If a database error occurs.
  */
 export function deleteExpiredPendingRegistrations(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;

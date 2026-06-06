@@ -35,7 +35,7 @@ interface LeaderboardEntry {
  * The core logic for adding a user to a leaderboard.
  * This function is "unsafe" as it throws errors on failure, making it
  * suitable for use inside a database transaction.
- * @throws {SqliteError} If the database query fails.
+ * @throws If the database query fails.
  */
 function addUserToLeaderboard(
 	user_id: number,
@@ -61,7 +61,7 @@ function addUserToLeaderboard(
  * This function throws errors on failure, making it suitable for use
  * inside a database transaction which can catch the error and roll back.
  * Callers outside of transactions should implement their own error handling.
- * @throws {Error} If the user is not found or if the database query fails.
+ * @throws If the user is not found or if the database query fails.
  */
 function updatePlayerLeaderboardRating(
 	user_id: number,
@@ -136,7 +136,7 @@ type PlayerLeaderboardRating = {
 
 /**
  * The core logic for getting a player's rating. Throws on failure.
- * @throws {SqliteError} If the database query fails.
+ * @throws If the database query fails.
  */
 function getPlayerLeaderboardRating_core(
 	user_id: number,
