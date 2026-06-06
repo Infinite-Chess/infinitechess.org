@@ -115,7 +115,6 @@ network-error = "A network error occurred. Please try again."
 [password-validation]
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
-js-pwd_not_pwd = "Password must not be 'password'"
 
 [leaderboard]
 title = "Leaderboard"
@@ -680,7 +679,6 @@ ws-email_in_use = "This email is already in use"
 ws-email_domain_invalid = "Invalid domain."
 ws-email_blacklisted = "Your email is blacklisted."
 ws-password_length = "Password must be 6-72 characters long"
-ws-password_password = "Password must not be 'password'"
 ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
 ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
 ws-password-reset-token-invalid = "Password reset token is invalid or has expired."

@@ -69,8 +69,6 @@ function passwordFormatError(value: string): string | undefined {
 			return 'Password must be 6+ characters long';
 		case validators.PasswordValidationResult.PasswordTooLong:
 			return "Password can't be over 72 characters long";
-		case validators.PasswordValidationResult.PasswordIsPassword:
-			return "Password must not be 'password'";
 		default:
 			return undefined;
 	}

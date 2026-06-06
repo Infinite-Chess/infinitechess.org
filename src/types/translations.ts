@@ -79,7 +79,6 @@ export type TranslationKeys =
 	| 'reset-password.javascript.network-error'
 	| 'password-validation.js-pwd_too_short'
 	| 'password-validation.js-pwd_too_long'
-	| 'password-validation.js-pwd_not_pwd'
 	| 'play.title'
 	| 'play.loading'
 	| 'play.error'
@@ -528,7 +527,6 @@ export type TranslationKeys =
 	| 'server.javascript.ws-email_domain_invalid'
 	| 'server.javascript.ws-email_blacklisted'
 	| 'server.javascript.ws-password_length'
-	| 'server.javascript.ws-password_password'
 	| 'server.javascript.ws-password-reset-link-sent'
 	| 'server.javascript.ws-password-change-success'
 	| 'server.javascript.ws-password-reset-token-invalid'
@@ -641,7 +639,6 @@ export interface TranslationsObject {
 	'password-validation': {
 		'js-pwd_too_short': string;
 		'js-pwd_too_long': string;
-		'js-pwd_not_pwd': string;
 	};
 	play: {
 		title: string;
@@ -1165,7 +1162,6 @@ export interface TranslationsObject {
 			'ws-email_domain_invalid': string;
 			'ws-email_blacklisted': string;
 			'ws-password_length': string;
-			'ws-password_password': string;
 			'ws-password-reset-link-sent': string;
 			'ws-password-change-success': string;
 			'ws-password-reset-token-invalid': string;

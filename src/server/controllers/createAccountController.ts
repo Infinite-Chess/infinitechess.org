@@ -499,12 +499,6 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 					message: getTranslationForReq('server.javascript.ws-password_length', req),
 				});
 				return false;
-			case validators.PasswordValidationResult.PasswordIsPassword:
-				res.status(400).json({
-					field: 'password',
-					message: getTranslationForReq('server.javascript.ws-password_password', req),
-				});
-				return false;
 			default:
 				res.status(400).json({
 					field: 'password',

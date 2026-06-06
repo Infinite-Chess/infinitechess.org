@@ -14,7 +14,6 @@ enum PasswordValidationResult {
 	Ok,
 	PasswordTooShort,
 	PasswordTooLong,
-	PasswordIsPassword,
 }
 
 enum EmailValidationResult {
@@ -31,10 +30,7 @@ enum UsernameValidationResult {
 	UsernameIsReserved,
 }
 
-type PasswordValidationResultTranslations =
-	| 'js-pwd_too_short'
-	| 'js-pwd_too_long'
-	| 'js-pwd_not_pwd';
+type PasswordValidationResultTranslations = 'js-pwd_too_short' | 'js-pwd_too_long';
 type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid';
 type UsernameValidationResultTranslations =
 	| 'js-username_reserved'
@@ -45,7 +41,6 @@ type UsernameValidationResultTranslations =
 const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
 passwordErrorTranslations.set(PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
 passwordErrorTranslations.set(PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
-passwordErrorTranslations.set(PasswordValidationResult.PasswordIsPassword, 'js-pwd_not_pwd');
 
 const emailErrorTranslations = new Map<number, EmailValidationResultTranslations>();
 emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
@@ -116,7 +111,6 @@ const reservedUsernames: string[] = [
 function validatePassword(password: string): PasswordValidationResult {
 	if (password.length < 6) return PasswordValidationResult.PasswordTooShort;
 	if (password.length > 72) return PasswordValidationResult.PasswordTooLong;
-	if (password.toLowerCase() === 'password') return PasswordValidationResult.PasswordIsPassword;
 	return PasswordValidationResult.Ok;
 }
 
