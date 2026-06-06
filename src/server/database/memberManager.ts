@@ -43,11 +43,6 @@ export interface MemberRecord {
 
 type MembersColumn = keyof MemberRecord;
 
-// Constants ----------------------------------------------------------
-
-/** Custom error message for user not found during deletion */
-const USER_NOT_FOUND_ERROR = 'USER_NOT_FOUND';
-
 // Create / Delete Member methods ---------------------------------------------------------------------------------------
 
 /**
@@ -164,7 +159,8 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 
 		// If no user was deleted, they didn't exist. Throw an error to
 		// abort the transaction and prevent any further action.
-		if (deleteResult.changes === 0) throw new Error(USER_NOT_FOUND_ERROR);
+		if (deleteResult.changes === 0)
+			throw new Error(`No member found with user_id ${id} to delete`);
 
 		// Step 2: Add their user_id to the 'deleted_members' table
 		// If this fails (e.g., UNIQUE constraint), it will also throw an error
