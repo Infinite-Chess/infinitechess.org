@@ -99,14 +99,26 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (!(await doEmailFormatChecks(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
-	if (isUsernameTakenOrPending(username)) {
+	let usernameTaken: boolean;
+	let emailTaken: boolean;
+	try {
+		usernameTaken = isUsernameTakenOrPending(username);
+		emailTaken = isEmailTakenOrPending(email);
+	} catch {
+		res.status(500).json({
+			message: 'A server error occurred. Please try again.',
+		});
+		return;
+	}
+
+	if (usernameTaken) {
 		res.status(409).json({
 			field: 'username',
 			message: getTranslationForReq('server.javascript.ws-username_taken', req),
 		});
 		return;
 	}
-	if (isEmailTakenOrPending(email)) {
+	if (emailTaken) {
 		res.status(409).json({
 			field: 'email',
 			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
@@ -128,7 +140,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
 	} catch {
 		res.status(500).json({
-			message: 'A server side error occurred during registration. Please try again.',
+			message: 'A server error occurred. Please try again.',
 		});
 		return;
 	}
@@ -206,7 +218,15 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 
 	// Availability: reject a real member's email or another party's pending email. The caller's
 	// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
-	if (isEmailTaken(email) || isEmailTakenInPendingByOther(email, pending.claim_token)) {
+	let emailTaken: boolean;
+	try {
+		emailTaken =
+			isEmailTaken(email) || isEmailTakenInPendingByOther(email, pending.claim_token);
+	} catch {
+		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+		return;
+	}
+	if (emailTaken) {
 		res.status(409).json({
 			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
 		});
@@ -222,7 +242,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		deleteExpiredPendingRegistrationsFor(pending.username, email);
 		updatePendingRegistrationEmail(pending.claim_token, email, verificationToken);
 	} catch {
-		res.status(500).json({ message: 'A server side error occurred. Please try again.' });
+		res.status(500).json({ message: 'A server error occurred. Please try again.' });
 		return;
 	}
 
@@ -245,50 +265,54 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		return;
 	}
 
-	const pending = getPendingRegistrationByClaimToken(claimToken);
+	try {
+		const pending = getPendingRegistrationByClaimToken(claimToken);
 
-	// Unknown cookie (never existed, or already swept).
-	if (pending === undefined) {
-		res.json({ status: 'expired' });
-		return;
-	}
+		// Unknown cookie (never existed, or already swept).
+		if (pending === undefined) {
+			res.json({ status: 'expired' });
+			return;
+		}
 
-	// Not yet verified.
-	if (pending.member_user_id === null) {
-		if (pending.expires_at <= Date.now()) res.json({ status: 'expired' });
-		else if (isBlacklisted(pending.email)) res.json({ status: 'blacklisted' });
-		else res.json({ status: 'pending' });
-		return;
-	}
+		// Not yet verified.
+		if (pending.member_user_id === null) {
+			if (pending.expires_at <= Date.now()) res.json({ status: 'expired' });
+			else if (isBlacklisted(pending.email)) res.json({ status: 'blacklisted' });
+			else res.json({ status: 'pending' });
+			return;
+		}
 
-	// Verified and created → issue a session to THIS browser, then clear its pending cookie.
-	const member = getMemberDataByCriteria(
-		['username', 'roles'],
-		'user_id',
-		pending.member_user_id,
-	);
-	if (member === undefined) {
-		logEventsAndPrint(
-			`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
-			'errLog.txt',
+		// Verified and created → issue a session to THIS browser, then clear its pending cookie.
+		const member = getMemberDataByCriteria(
+			['username', 'roles'],
+			'user_id',
+			pending.member_user_id,
 		);
-		res.json({ status: 'expired' });
-		return;
+		if (member === undefined) {
+			logEventsAndPrint(
+				`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
+				'errLog.txt',
+			);
+			res.json({ status: 'expired' });
+			return;
+		}
+
+		// roles is a stringified JSON array in the database; parse it.
+		const roles = member.roles !== null ? JSON.parse(member.roles) : null;
+		createNewSession(req, res, pending.member_user_id, member.username, roles, false);
+
+		// Idempotent: do NOT delete the pending row (let the cleanup sweep handle it), so a refreshed
+		// or duplicate waiting tab that still holds the cookie and polls again resolves cleanly.
+		res.clearCookie(PENDING_REGISTRATION_COOKIE_NAME, {
+			httpOnly: true,
+			sameSite: 'none',
+			secure: true,
+		});
+
+		res.json({ status: 'verified' });
+	} catch {
+		res.json({ status: 'pending' }); // Allows the client to poll again
 	}
-
-	// roles is a stringified JSON array in the database; parse it.
-	const roles = member.roles !== null ? JSON.parse(member.roles) : null;
-	createNewSession(req, res, pending.member_user_id, member.username, roles, false);
-
-	// Idempotent: do NOT delete the pending row (let the cleanup sweep handle it), so a refreshed
-	// or duplicate waiting tab that still holds the cookie and polls again resolves cleanly.
-	res.clearCookie(PENDING_REGISTRATION_COOKIE_NAME, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true,
-	});
-
-	res.json({ status: 'verified' });
 }
 
 /**

@@ -50,20 +50,24 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 	// Express only matches this route with a non-empty :token segment.
 	const token = req.params['token']!;
 
-	const pending = getPendingRegistrationByVerificationToken(token);
+	let pending: PendingRegistrationRecord | undefined;
+	try {
+		pending = getPendingRegistrationByVerificationToken(token);
+	} catch {
+		// Allows a retry
+		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+		return;
+	}
 
 	// Unknown token, or expired before it was ever promoted → dead link.
 	if (!isVerificationTokenLive(pending)) {
-		res.status(400).json({
-			verified: false,
-			message: 'The verification link is invalid or has expired.',
-		});
+		res.sendStatus(400);
 		return;
 	}
 
 	// Already promoted → idempotent success (the member already exists).
 	if (pending.member_user_id !== null) {
-		res.status(200).json({ verified: true });
+		res.sendStatus(200);
 		return;
 	}
 
@@ -73,16 +77,13 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 
 		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog.txt');
 
-		res.status(200).json({ verified: true });
+		res.sendStatus(200);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error promoting pending registration "${pending.username}": ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({
-			verified: false,
-			message: 'A server error occurred during verification.',
-		});
+		res.status(500).json({ message: 'A server error occurred. Please try again.' });
 	}
 }

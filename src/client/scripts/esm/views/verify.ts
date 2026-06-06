@@ -44,7 +44,7 @@ function showRetryableError(message: string): void {
 
 /**
  * Consumes the token: POSTs to the current /verify/:token path. Success swaps in the confirmation;
- * an invalid/expired token (400) reveals the dead-link state; a network error stays retryable.
+ * an invalid/expired token (400) reveals the dead-link state; a network/server error stays retryable.
  */
 async function verify(): Promise<void> {
 	button!.disabled = true;
@@ -60,8 +60,14 @@ async function verify(): Promise<void> {
 			document.querySelector<HTMLElement>('#verify-success')!.classList.remove('hidden');
 			return;
 		}
-		// 400 → the token is no longer valid (expired before promotion, or unknown).
-		showInvalid();
+		// 400 → the token is no longer valid (expired before promotion, or overwritten)
+		if (response.status === 400) {
+			showInvalid();
+			return;
+		}
+		// Any other status (e.g. 500 server error) -> allow retry
+		const body: { message?: string } = await response.json();
+		showRetryableError(body.message ?? 'Something went wrong. Please try again.');
 	} catch (e: unknown) {
 		console.error('Verification request failed:', e);
 		showRetryableError('Network error. Please try again.');
