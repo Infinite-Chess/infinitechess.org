@@ -16,9 +16,9 @@ import type {
 	Rating,
 	BaseSeek,
 	OutSeek,
-	InviteVariant,
+	SeekVariant,
 	GameMode,
-	InviteModifier,
+	SeekModifier,
 } from '../../../../../shared/types.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
@@ -51,11 +51,11 @@ export type LobbySeek = BaseSeek &
 	};
 
 type CreateSeekOptions = {
-	variant: InviteVariant;
+	variant: SeekVariant;
 	time: TimeControl;
 	color: Player | null;
 	mode: GameMode;
-	modifiers: InviteModifier[];
+	modifiers: SeekModifier[];
 };
 
 // Constants ------------------------------------------

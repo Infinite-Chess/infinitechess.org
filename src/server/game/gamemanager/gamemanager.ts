@@ -5,14 +5,12 @@
  */
 
 import type { Rating } from '../../../shared/types.js';
-import type { AuthSeek } from '../invitesmanager/inviteutility.js';
+import type { AuthSeek } from '../seeksmanager/seekutility.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-
-import WebSocket from 'ws';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -70,12 +68,12 @@ const activeGames: Record<number, ServerGame> = {};
 /**
  * Creates the `ServerGame` object and subscibes each player to the game
  * Auto-subscribes the players to receive game updates.
- * @param invite - The invite with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
+ * @param seek - The seek with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
  * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link gameutility.subscribeClientToGame}).
  */
 function createGame(
-	invite: AuthSeek,
+	seek: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 ): void {
 	const ratinginfo: typeof assignments & PlayerGroup<{ rating?: Rating }> = {};
@@ -92,16 +90,16 @@ function createGame(
 		}
 	}
 
-	if (invite.variant.kind !== 'preset')
+	if (seek.variant.kind !== 'preset')
 		throw new Error('Custom variant game starting is not yet implemented.');
-	const variantCode = invite.variant.code;
+	const variantCode = seek.variant.code;
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
 	const metadata = gameutility.constructMetadataOfGame(
-		invite.mode === 'rated',
+		seek.mode === 'rated',
 		variantCode,
-		invite.time,
+		seek.time,
 		dateTimestamp,
 		ratinginfo,
 	);
@@ -111,7 +109,7 @@ function createGame(
 		dateTimestamp,
 	};
 	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);
-	const match = gameutility.initMatch(invite, gameID, assignments);
+	const match = gameutility.initMatch(seek, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
 	const servergame: ServerGame = gameutility.initServerGame(

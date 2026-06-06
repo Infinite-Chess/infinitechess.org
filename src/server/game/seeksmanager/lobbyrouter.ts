@@ -1,4 +1,4 @@
-// src/server/game/invitesmanager/lobbyrouter.ts
+// src/server/game/seeksmanager/lobbyrouter.ts
 
 /*
  * This script routes all incoming websocket messages

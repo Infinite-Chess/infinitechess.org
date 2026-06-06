@@ -1,8 +1,8 @@
-// src/server/game/invitesmanager/inviteutility.ts
+// src/server/game/seeksmanager/seekutility.ts
 
 /*
  * This script stores utility methods for working
- * with single invites, not multiple
+ * with single seeks, not multiple
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -12,9 +12,9 @@ import jsutil from '../../../shared/util/jsutil.js';
 
 // Type Definitions
 
-/** A lobby game invite, WITH the owner's sensitive information. */
+/** A lobby game seek, WITH the owner's sensitive information. */
 export interface AuthSeek extends BaseSeek {
-	/** Contains the identifier of the owner of the invite, whether a member or browser. */
+	/** Contains the identifier of the owner of the seek, whether a member or browser. */
 	owner: AuthMemberInfo;
 	variant: AuthSeekVariant;
 }
@@ -23,33 +23,33 @@ export interface AuthSeek extends BaseSeek {
 
 /**
  * Removes sensitive data such as their browser-id.
- * Returns a deep copy of the original invite.
+ * Returns a deep copy of the original seek.
  * Also strips ICN content from the variant so the full position text is not
  * broadcast to every lobby viewer.
  */
-function makeInviteSafe(invite: AuthSeek): OutSeek {
+function makeSeekSafe(seek: AuthSeek): OutSeek {
 	const variant: OutSeekVariant =
-		invite.variant.kind === 'preset' ? invite.variant : { kind: 'custom' };
+		seek.variant.kind === 'preset' ? seek.variant : { kind: 'custom' };
 
 	return {
-		id: invite.id,
-		player: jsutil.deepCopyObject(invite.player),
-		tag: invite.tag,
+		id: seek.id,
+		player: jsutil.deepCopyObject(seek.player),
+		tag: seek.tag,
 		variant,
-		time: invite.time,
-		color: invite.color,
-		mode: invite.mode,
-		modifiers: jsutil.deepCopyObject(invite.modifiers),
+		time: seek.time,
+		color: seek.color,
+		mode: seek.mode,
+		modifiers: jsutil.deepCopyObject(seek.modifiers),
 	};
 }
 
 /**
- * Makes a deep copy of provided invite, and
+ * Makes a deep copy of provided seek, and
  * removes sensitive data such as their browser-id.
  */
-function safelyCopyInvite(invite: AuthSeek): OutSeek {
-	const inviteDeepCopy = jsutil.deepCopyObject(invite);
-	return makeInviteSafe(inviteDeepCopy);
+function safelyCopySeek(seek: AuthSeek): OutSeek {
+	const seekDeepCopy = jsutil.deepCopyObject(seek);
+	return makeSeekSafe(seekDeepCopy);
 }
 
 /** Compares two MemberInfo objects to see if they are the same person or not. */
@@ -64,4 +64,4 @@ function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 
 //-------------------------------------------------------------------------------------------
 
-export { safelyCopyInvite, memberInfoEq };
+export { safelyCopySeek, memberInfoEq };

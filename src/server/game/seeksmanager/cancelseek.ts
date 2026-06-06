@@ -1,7 +1,7 @@
-// src/server/game/invitesmanager/cancelseek.ts
+// src/server/game/seeksmanager/cancelseek.ts
 
 /**
- * This script handles invite cancelation.
+ * This script handles seek cancelation.
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -9,12 +9,12 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import * as z from 'zod';
 
 import socketUtility from '../../socket/socketUtility.js';
-import { memberInfoEq } from './inviteutility.js';
+import { memberInfoEq } from './seekutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { getInviteAndIndexByID, deleteInviteByIndex, IDLengthOfInvites } from './lobbymanager.js';
+import { getSeekAndIndexByID, deleteSeekByIndex, IDLengthOfSeeks } from './lobbymanager.js';
 
 /** The zod schema for validating the contents of the cancelseek message. */
-const cancelseekschem = z.string().length(IDLengthOfInvites);
+const cancelseekschem = z.string().length(IDLengthOfSeeks);
 
 /** This is also the id of the seek to delete */
 type CancelSeekMessage = z.infer<typeof cancelseekschem>;
@@ -28,26 +28,26 @@ function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): vo
 	// Value should be the ID of the seek to cancel!
 	const id = messageContents; // id of seek to delete
 
-	const inviteAndIndex = getInviteAndIndexByID(id); // { seek, index } | undefined
+	const seekAndIndex = getSeekAndIndexByID(id); // { seek, index } | undefined
 	// Already cancelled, they must have joined a game, OR CANCELLED on a different tab!
-	if (!inviteAndIndex) return;
+	if (!seekAndIndex) return;
 
-	const { seek, index } = inviteAndIndex;
+	const { seek, index } = seekAndIndex;
 
 	// Make sure they are the owner.
 	if (!memberInfoEq(ws.metadata.memberInfo, seek.owner)) {
 		console.error(
-			`Player tried to delete an invite that wasn't theirs! Invite ID: ${id} Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+			`Player tried to delete an seek that wasn't theirs! Seek ID: ${id} Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
 		);
 		return sendSocketMessage(
 			ws,
 			'general',
 			'printerror',
-			'You are forbidden to delete this invite.',
+			'You are forbidden to delete this seek.',
 		);
 	}
 
-	deleteInviteByIndex(seek, index);
+	deleteSeekByIndex(seek, index);
 }
 
 export { cancelSeek, cancelseekschem };

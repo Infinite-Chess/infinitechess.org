@@ -10,7 +10,7 @@ import type { Mesh } from '../../game/rendering/piecemodels.js';
 import type { GameRules } from '../../../../../shared/chess/util/gamerules.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { InviteModifier } from '../../../../../shared/types.js';
+import type { SeekModifier } from '../../../../../shared/types.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
 import type { LoadedVariant, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 
@@ -155,7 +155,7 @@ async function showForPosition(
 	name: string,
 	variantOptions: VariantOptions,
 	placement: 'left' | 'below' = 'left',
-	modifiers?: InviteModifier[],
+	modifiers?: SeekModifier[],
 ): Promise<void> {
 	const token = ++showToken;
 	const boardsim = boardpreviewer.initBoardPreview(
@@ -175,7 +175,7 @@ async function showForVariantCode(
 	anchor: HTMLElement,
 	code: VariantCode,
 	placement: 'left' | 'below',
-	modifiers?: InviteModifier[],
+	modifiers?: SeekModifier[],
 ): Promise<void> {
 	const token = ++showToken;
 	const variantName = t.shared.variants[code];
@@ -208,7 +208,7 @@ async function showForBoard(
 	isPreset: boolean,
 	placement: 'left' | 'below',
 	variantCode?: VariantCode,
-	modifiers?: InviteModifier[],
+	modifiers?: SeekModifier[],
 ): Promise<void> {
 	element_name.textContent = name;
 	await populateRules(gameRules, boardsim, isPreset, variantCode, modifiers);
@@ -294,7 +294,7 @@ async function populateRules(
 	boardsim: BoardPreview,
 	isPreset: boolean,
 	variantCode?: VariantCode,
-	modifiers?: InviteModifier[],
+	modifiers?: SeekModifier[],
 ): Promise<void> {
 	const items: Array<string | HTMLElement> = [];
 	/** Reference to the variant preview translations. */

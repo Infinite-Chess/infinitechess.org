@@ -37,13 +37,13 @@ export const TimeControlSchema = z.union([
 	z.literal('-'),
 ]);
 
-// Invite Helper Schemas ---------------------------------------------------------------
+// Seek Helper Schemas ---------------------------------------------------------------
 
 /** Whether a game is casual or rated. */
 export type GameMode = z.infer<typeof GameModeSchema>;
 export const GameModeSchema = z.enum(['casual', 'rated']);
 
-/** The username container of an invite sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
+/** The username container of an seek sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
 export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
 export const ServerUsernameContainerSchema = z.strictObject({
 	type: z.enum(['player', 'guest']),
@@ -185,7 +185,7 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 	change: z.number(),
 });
 
-// Invite / Seek Helper Schemas ---------------------------------------------------------------
+// Seek Helper Schemas ---------------------------------------------------------------
 
 /**
  * The variant kinds that a fully-resolved seek can have.
@@ -201,8 +201,8 @@ export const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
 ]);
 
 /** The full variant selection as sent by the client when creating a seek. */
-export type InviteVariant = z.infer<typeof InviteVariantSchema>;
-export const InviteVariantSchema = z.discriminatedUnion('kind', [
+export type SeekVariant = z.infer<typeof SeekVariantSchema>;
+export const SeekVariantSchema = z.discriminatedUnion('kind', [
 	...AuthSeekVariantSchema.options,
 	z.strictObject({
 		kind: z.literal('cloudSave'),
@@ -221,23 +221,23 @@ export const OutSeekVariantSchema = z.discriminatedUnion('kind', [
 ]);
 
 /** The full configuration for a single game modifier applied to a seek. */
-export type InviteModifier = z.infer<typeof InviteModifierSchema>;
-export const InviteModifierSchema = z.discriminatedUnion('kind', [
+export type SeekModifier = z.infer<typeof SeekModifierSchema>;
+export const SeekModifierSchema = z.discriminatedUnion('kind', [
 	z.strictObject({
 		kind: z.literal('slide-limit'),
 		value: z.literal(gameconfig.SLIDE_LIMIT_VALUES),
 	}),
 ]);
 
-/** The number of digits generated invite/seek IDs are. */
-export const IDLengthOfInvites = 5;
-/** Seek/invite ID: Base36 alphanumeric, fixed length of 5. */
+/** The number of digits generated seek IDs are. */
+export const IDLengthOfSeeks = 5;
+/** Seek ID: Base36 alphanumeric, fixed length of 5. */
 export const SeekIdSchema = z
 	.string()
-	.length(IDLengthOfInvites)
+	.length(IDLengthOfSeeks)
 	.regex(/^[0-9a-z]+$/);
 
-/** Shared info for all lobby game invite seek types. (excludes variant) */
+/** Shared info for all lobby game seek types. (excludes variant) */
 export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 export const BaseSeekSchema = z.strictObject({
 	id: SeekIdSchema,
@@ -246,7 +246,7 @@ export const BaseSeekSchema = z.strictObject({
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: TimeControlSchema,
 	mode: GameModeSchema,
-	modifiers: z.array(InviteModifierSchema).optional(),
+	modifiers: z.array(SeekModifierSchema).optional(),
 });
 
 /** The version of seeks broadcast to lobby viewers. */

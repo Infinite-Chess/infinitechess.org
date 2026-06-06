@@ -33,14 +33,14 @@ function onLobbyMessage(contents: LobbyMessage): void {
 			lobby.onViewerCountUpdate(contents.value.viewercount);
 			break;
 		case 'seekslist':
-			lobby.onSeekListUpdate(contents.value.invitesList);
+			lobby.onSeekListUpdate(contents.value.seeksList);
 			break;
 		case 'viewercount':
 			lobby.onViewerCountUpdate(contents.value);
 			break;
 		default:
 			// @ts-ignore
-			console.error(`Unknown invites action: ${contents.action}`);
+			console.error(`Unknown lobby action: ${contents.action}`);
 	}
 }
 

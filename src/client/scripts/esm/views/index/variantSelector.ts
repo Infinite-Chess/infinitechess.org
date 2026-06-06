@@ -7,7 +7,7 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { InviteVariant } from '../../../../../shared/types.js';
+import type { SeekVariant } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CloudSaveListRecord } from '../../game/editorstores/editorSavesAPI.js';
 import type {
@@ -527,7 +527,7 @@ function handleSavePreview(
  * Returns the current variant selection as an InviteVariant for the wire format,
  * or null if the selection cannot be used for an online seek (invalid ICN, local save).
  */
-function getInviteVariant(): InviteVariant | null {
+function getInviteVariant(): SeekVariant | null {
 	if (selection.kind === 'preset') {
 		return { kind: 'preset', code: selection.code };
 	} else if (selection.kind === 'online') {

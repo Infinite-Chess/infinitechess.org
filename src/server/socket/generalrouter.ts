@@ -8,7 +8,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
 
-import { subToLobby, unsubFromLobby } from '../game/invitesmanager/lobbymanager.js';
+import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
 
 const validUnsubs = ['lobby', 'game'] as const;

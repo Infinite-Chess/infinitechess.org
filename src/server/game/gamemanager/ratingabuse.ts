@@ -66,7 +66,7 @@ const SUSPICIOUS_USER_NOTIFICATION_BUFFER_MILLIS = 1000 * 60 * 60 * 24; // 24 ho
 /**
  * Two rated games started this close after each other have a nonzero suspicion score.
  *
- * Slightly higher than {@link SUSPICIOUS_TIME_DURATION_MILLIS} to account for time to accept a new invite.
+ * Slightly higher than {@link SUSPICIOUS_TIME_DURATION_MILLIS} to account for time to accept a new seek.
  */
 const TOO_CLOSE_GAMES_MILLIS = 1000 * 60 * 3.5; // 3.5 minutes
 

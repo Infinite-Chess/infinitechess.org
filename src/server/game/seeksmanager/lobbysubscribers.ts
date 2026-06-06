@@ -1,4 +1,4 @@
-// src/server/game/invitesmanager/lobbysubscribers.ts
+// src/server/game/seeksmanager/lobbysubscribers.ts
 
 /*
  * This script stores the list of websockets currently subscribed
@@ -10,7 +10,7 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import { memberInfoEq } from './inviteutility.js';
+import { memberInfoEq } from './seekutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /** Set of clients currently subscribed to the lobby. */
@@ -51,7 +51,7 @@ function addSocketToLobbySubs(ws: CustomWebSocket): void {
 
 /**
  * Removes a socket from the lobby subscriber list.
- * DOES NOT delete any of their existing invites! That should be done before.
+ * DOES NOT delete any of their existing seeks! That should be done before.
  */
 function removeSocketFromLobbySubs(ws: CustomWebSocket): void {
 	if (!ws)

@@ -1,7 +1,7 @@
-// src/server/game/invitesmanager/acceptseek.ts
+// src/server/game/seeksmanager/acceptseek.ts
 
 /**
- * This script handles invite acceptance,
+ * This script handles seek acceptance,
  * creating a new game if successful.
  */
 
@@ -14,22 +14,22 @@ import * as z from 'zod';
 import gameutility from '../gamemanager/gameutility.js';
 import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
-import { memberInfoEq } from './inviteutility.js';
+import { memberInfoEq } from './seekutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
 import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import {
-	getInviteAndIndexByID,
-	deleteInviteByIndex,
-	deleteUsersExistingInvite,
+	getSeekAndIndexByID,
+	deleteSeekByIndex,
+	deleteUsersExistingSeek,
 	findSocketFromOwner,
-	onPublicInvitesChange,
-	IDLengthOfInvites,
+	onPublicSeeksChange,
+	IDLengthOfSeeks,
 } from './lobbymanager.js';
 
 /** The zod schema for validating the contents of the acceptseek message. */
-const acceptseekschem = z.string().length(IDLengthOfInvites);
+const acceptseekschem = z.string().length(IDLengthOfSeeks);
 
 type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
 
@@ -45,67 +45,63 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
 	}
 
-	// Does the invite still exist?
-	const inviteAndIndex = getInviteAndIndexByID(messageContents);
-	if (!inviteAndIndex) {
+	// Does the seek still exist?
+	const seekAndIndex = getSeekAndIndexByID(messageContents);
+	if (!seekAndIndex) {
 		const t = getScriptTranslationsForReq('responses', ws);
 		sendSocketMessage(ws, 'general', 'notify', t.seeks.game_aborted);
 		return;
 	}
 
-	const { seek, index } = inviteAndIndex;
+	const { seek, index } = seekAndIndex;
 
 	const user = ws.metadata.memberInfo;
 
 	// Make sure they are not accepting their own.
 	if (memberInfoEq(user, seek.owner)) {
-		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own invite!');
+		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own seek!');
 		console.error(
-			`Player tried to accept their own invite! Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+			`Player tried to accept their own seek! Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
 		);
 		return;
 	}
 
-	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the invite is RATED)
+	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the seek is RATED)
 	if (seek.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
 		const t = getScriptTranslationsForReq('responses', ws);
 		return sendSocketMessage(ws, 'general', 'notify', t.seeks.rated_requires_verified);
 	}
 
-	// Accept the invite!
+	// Accept the seek!
 
-	let hadPublicInvite = false;
-	// Delete the invite accepted.
-	if (deleteInviteByIndex(seek, index, { dontBroadcast: true })) hadPublicInvite = true;
-	// Delete their existing invites
-	if (deleteUsersExistingInvite(user, { broadCastNewInvites: false })) hadPublicInvite = true;
+	let hadPublicSeek = false;
+	// Delete the seek accepted.
+	if (deleteSeekByIndex(seek, index, { dontBroadcast: true })) hadPublicSeek = true;
+	// Delete their existing seeks
+	if (deleteUsersExistingSeek(user, { broadCastNewSeeks: false })) hadPublicSeek = true;
 
 	// Start the game! Notify both players and tell them they've been subscribed to a game!
 
 	const player1Socket = findSocketFromOwner(seek.owner); // Could be undefined occasionally
 	const player2Socket = ws;
 
-	// Assign each player a color based on their invite info. Add their socket just encase
+	// Assign each player a color based on their seek info. Add their socket just encase
 	const assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }> = {};
-	let invite_accepter: Player | undefined;
+	let seek_accepter: Player | undefined;
 	for (const [strcolor, identifier] of Object.entries(
-		gameutility.assignWhiteBlackPlayersFromInvite(
-			seek.color,
-			seek.owner,
-			ws.metadata.memberInfo,
-		),
+		gameutility.assignWhiteBlackPlayersFromSeek(seek.color, seek.owner, ws.metadata.memberInfo),
 	)) {
 		const player = Number(strcolor) as Player;
-		const is_invite_accepter = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
-		if (is_invite_accepter) invite_accepter = player;
+		const is_seek_accepter = memberInfoEq(identifier, player2Socket.metadata.memberInfo);
+		if (is_seek_accepter) seek_accepter = player;
 		assignments[player] = {
 			identifier,
-			socket: is_invite_accepter ? player2Socket : player1Socket,
+			socket: is_seek_accepter ? player2Socket : player1Socket,
 		};
 	}
 
-	if (invite_accepter === undefined)
-		throw Error("Invite accepter doesn't exist on accepted 2 player invite");
+	if (seek_accepter === undefined)
+		throw Error("Seek accepter doesn't exist on accepted 2 player seek");
 
 	try {
 		createGame(seek, assignments);
@@ -128,9 +124,9 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	if (player1Socket) removeSocketFromLobbySubs(player1Socket); // Could be undefined occasionally
 	removeSocketFromLobbySubs(player2Socket);
 
-	// Broadcast the invites list change after creating the game,
+	// Broadcast the seeks list change after creating the game,
 	// because the new game ups the game count.
-	if (hadPublicInvite) onPublicInvitesChange(); // Broadcast to all invites list subscribers!
+	if (hadPublicSeek) onPublicSeeksChange(); // Broadcast to all seeks list subscribers!
 }
 
 export { acceptSeek, acceptseekschem };

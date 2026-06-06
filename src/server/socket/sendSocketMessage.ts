@@ -71,7 +71,6 @@ function sendSocketMessage(
 	replyto?: number,
 	{ skipLatency }: { skipLatency?: boolean } = {},
 ): void {
-	// socket, invites, createinvite, inviteinfo, messageIDReplyingTo
 	// If we're applying simulated latency delay, set a timer to send this message.
 	if (simulatedWebsocketLatencyMillis !== 0 && !skipLatency) {
 		setTimeout(() => {

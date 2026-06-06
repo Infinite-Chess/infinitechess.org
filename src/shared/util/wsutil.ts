@@ -67,7 +67,7 @@ const ECHO_TIMEOUT = 5000;
 // 1009 "Origin Error"
 // 1014 "No echo heard"  (Client took too long to respond)
 
-// These are the closure reasons where we will RETAIN their invite for a set amount of time before deleting it by disconnection!
+// These are the closure reasons where we will RETAIN their seek for a set amount of time before deleting it by disconnection!
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
