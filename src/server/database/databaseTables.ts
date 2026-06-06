@@ -350,24 +350,6 @@ function generateTables(): void {
 	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
 }
 
-// /**
-//  * Deletes a table from the database by its name.
-//  * @param tableName - The name of the table to delete.
-//  */
-// function deleteTable(tableName: string): void {
-// 	try {
-// 		// Prepare the SQL query to drop the table
-// 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
-
-// 		// Run the query
-// 		db.run(deleteTableSQL);
-// 		console.log(`Table ${tableName} deleted successfully.`);
-// 	} catch (error) {
-// 		console.error(`Error deleting table ${tableName}:`, error);
-// 	}
-// }
-// deleteTable('test');
-
 function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
