@@ -344,8 +344,6 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		res.status(400).json({ allowed: false, reason: 'Missing username query parameter.' });
 		return;
 	}
-	const usernameLowercase = username.toLowerCase();
-
 	let allowed = true;
 	let reason = '';
 
@@ -353,7 +351,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		allowed = false;
 		reason = getTranslationForReq('server.javascript.ws-username_taken', req);
 	}
-	if (checkProfanity(usernameLowercase)) {
+	if (checkProfanity(username)) {
 		allowed = false;
 		reason = getTranslationForReq('server.javascript.ws-username_bad_word', req);
 	}
@@ -408,7 +406,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 				return false;
 		}
 	}
-	if (checkProfanity(username.toLowerCase())) {
+	if (checkProfanity(username)) {
 		res.status(409).json({
 			field: 'username',
 			message: getTranslationForReq('server.javascript.ws-username_bad_word', req),
