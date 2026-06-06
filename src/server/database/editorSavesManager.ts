@@ -44,7 +44,7 @@ const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
  * Returns only name, piece_count, and timestamp columns.
  * @param user_id - The user ID
  * @returns An array of saved positions.
- * @throws A database error occurred while managing editor saves.
+ * @throws If a database error occurs.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 	try {
@@ -56,7 +56,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 			`Error retrieving saved positions for user_id ${user_id}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while managing editor saves.');
+		throw error; // Rethrow
 	}
 }
 
@@ -73,7 +73,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @param pawn_double_push - Whether the pawn double push gamerule is enabled, or undefined if indeterminate
  * @param castling - Whether the castling gamerule is enabled, or undefined if indeterminate
  * @returns The RunResult.
- * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, or a generic database error.
+ * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, or other internal database errors.
  */
 function addSavedPosition(
 	user_id: number,
@@ -134,12 +134,12 @@ function addSavedPosition(
 		if (errMsg === QUOTA_EXCEEDED_ERROR) {
 			throw error;
 		}
-		// Log and throw generic error for all other database errors
+		// Log and rethrow all other database errors
 		logEventsAndPrint(
 			`Error adding saved position for user_id ${user_id} with name "${name}": ${errMsg}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while managing editor saves.');
+		throw error;
 	}
 }
 
@@ -148,7 +148,7 @@ function addSavedPosition(
  * @param name - The position name
  * @param user_id - The user ID who owns the position
  * @returns The ICN record if found and owned by the user, otherwise undefined.
- * @throws A database error occurred while managing editor saves.
+ * @throws If a database error occurs.
  */
 function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
 	try {
@@ -160,7 +160,7 @@ function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecor
 			`Error retrieving ICN for name "${name}" and user_id ${user_id}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while managing editor saves.');
+		throw error; // Rethrow
 	}
 }
 
@@ -170,7 +170,7 @@ function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecor
  * @param name - The position name
  * @param user_id - The user ID who owns the position
  * @returns The RunResult containing the number of changes.
- * @throws A database error occurred while managing editor saves.
+ * @throws If a database error occurs.
  */
 function deleteSavedPosition(name: string, user_id: number): RunResult {
 	try {
@@ -182,7 +182,7 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
 			`Error deleting position "${name}" for user_id ${user_id}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while managing editor saves.');
+		throw error; // Rethrow
 	}
 }
 

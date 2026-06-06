@@ -36,7 +36,7 @@ export type RefreshTokenRecord = {
  * Finds a refresh token in the database.
  * @param token - The JWT refresh token string.
  * @returns The token record if found, otherwise undefined.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function findRefreshToken(token: string): RefreshTokenRecord | undefined {
 	const query = `
@@ -49,7 +49,7 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Database error while finding refresh token: ${message}`, 'errLog.txt');
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
@@ -57,7 +57,7 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
  * Finds refresh token entries in the database associated with a list of user_ids
  * @param user_id_list - A list of user IDs
  * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenRecord[] {
 	const placeholders = user_id_list.map(() => '?').join(', ');
@@ -74,7 +74,7 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
 			`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
@@ -85,7 +85,7 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
  * @param token - The new JWT refresh token string.
  * @param expiryMillis - How long, in milliseconds, until the token expires.
  * @param isPersistent - Whether this is a persistent ("keep me logged in") session.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function addRefreshToken(
 	req: Request,
@@ -115,14 +115,14 @@ export function addRefreshToken(
 			`Database error while adding refresh token for userId ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
 /**
  * Deletes a specific refresh token from the database.
  * @param token - The token to delete.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function deleteRefreshToken(token: string): void {
 	const query = `DELETE FROM refresh_tokens WHERE token = ?`;
@@ -131,7 +131,7 @@ export function deleteRefreshToken(token: string): void {
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Database error while deleting refresh token: ${message}`, 'errLog.txt');
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
@@ -139,7 +139,7 @@ export function deleteRefreshToken(token: string): void {
  * Deletes all refresh tokens for a given user. Used for "log out of all devices".
  * Effectively terminates all login sessions for the user.
  * @param userId - The user's ID.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function deleteAllRefreshTokensForUser(userId: number): void {
 	const query = `DELETE FROM refresh_tokens WHERE user_id = ?`;
@@ -151,7 +151,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
 			`Database error while deleting all refresh tokens for userId ${userId}: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
@@ -159,7 +159,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
  * Updates the IP address for a given token.
  * @param token - The token to update.
  * @param ip - The new IP address to record.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	const query = `UPDATE refresh_tokens SET ip_address = ? WHERE token = ?`;
@@ -171,7 +171,7 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 			`Database error while updating refresh token IP: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }
 
@@ -179,7 +179,7 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
  * Marks a token as consumed (soft delete).
  * Used during rotation to allow a short grace period for concurrent requests.
  * @param token - The token to mark as consumed.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function markRefreshTokenAsConsumed(token: string): void {
 	const now = Date.now();
@@ -192,6 +192,6 @@ export function markRefreshTokenAsConsumed(token: string): void {
 			`Database error while marking refresh token as consumed: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the refresh token.');
+		throw error; // Rethrow
 	}
 }

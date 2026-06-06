@@ -46,7 +46,7 @@ export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
  * @param username - The desired username.
  * @param email - The email to verify, in LOWERCASE.
  * @param hashedPassword - The already-hashed password.
- * @throws {Error} Throws a generic error if a database error occurs (e.g. a constraint violation).
+ * @throws {Error} Throws if a database error occurs (e.g. a constraint violation).
  */
 export function addPendingRegistration(
 	claimToken: string,
@@ -78,7 +78,7 @@ export function addPendingRegistration(
 			`Database error while adding pending registration for "${username}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -88,7 +88,7 @@ export function addPendingRegistration(
  * Looks up a pending registration by its `claim_token` (the poll/resend path).
  * @param claimToken - The httpOnly cookie secret.
  * @returns The record if found, otherwise undefined.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function getPendingRegistrationByClaimToken(
 	claimToken: string,
@@ -102,7 +102,7 @@ export function getPendingRegistrationByClaimToken(
 			`Database error while finding pending registration by claim_token: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -110,7 +110,7 @@ export function getPendingRegistrationByClaimToken(
  * Looks up a pending registration by its `verification_token` (the verify path).
  * @param verificationToken - The email-link secret.
  * @returns The record if found, otherwise undefined.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function getPendingRegistrationByVerificationToken(
 	verificationToken: string,
@@ -124,7 +124,7 @@ export function getPendingRegistrationByVerificationToken(
 			`Database error while finding pending registration by verification_token: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -135,7 +135,7 @@ export function getPendingRegistrationByVerificationToken(
  * (case-insensitive, matching the table's COLLATE NOCASE constraint).
  * @param username - The username to check.
  * @returns True if a non-expired pending row holds this username.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function isUsernameTakenInPending(username: string): boolean {
 	const query = `
@@ -153,7 +153,7 @@ export function isUsernameTakenInPending(username: string): boolean {
 			`Database error while checking pending username "${username}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -161,7 +161,7 @@ export function isUsernameTakenInPending(username: string): boolean {
  * Checks whether an email is held by a non-expired pending registration.
  * @param email - The email to check, in LOWERCASE.
  * @returns True if a non-expired pending row holds this email.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function isEmailTakenInPending(email: string): boolean {
 	const query = `
@@ -179,7 +179,7 @@ export function isEmailTakenInPending(email: string): boolean {
 			`Database error while checking pending email "${email}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -190,7 +190,7 @@ export function isEmailTakenInPending(email: string): boolean {
  * @param email - The email to check, in LOWERCASE.
  * @param excludeClaimToken - The claim_token of the row to exclude.
  * @returns True if another non-expired pending row holds this email.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: string): boolean {
 	const query = `
@@ -208,7 +208,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
 			`Database error while checking pending email (by other) "${email}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -222,7 +222,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
  * @param claimToken - The claim_token identifying the row to update.
  * @param email - The new email, in LOWERCASE.
  * @param verificationToken - A freshly generated verification token.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function updatePendingRegistrationEmail(
 	claimToken: string,
@@ -243,7 +243,7 @@ export function updatePendingRegistrationEmail(
 			`Database error while updating pending registration email: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -266,7 +266,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
 			`Database error while marking pending registration verified: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
@@ -277,7 +277,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
  * registration attempt so a stale, expired pending row never blocks the UNIQUE constraints.
  * @param username - The username whose expired pending rows should be cleared.
  * @param email - The email (LOWERCASE) whose expired pending rows should be cleared.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function deleteExpiredPendingRegistrationsFor(username: string, email: string): void {
 	const query = `
@@ -292,13 +292,13 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 			`Database error while deleting expired pending registrations for "${username}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }
 
 /**
  * Cleanup: deletes every pending registration whose `expires_at` is in the past.
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} Throws if a database error occurs.
  */
 export function deleteExpiredPendingRegistrations(): void {
 	const query = `DELETE FROM pending_registrations WHERE expires_at <= ?`;
@@ -310,6 +310,6 @@ export function deleteExpiredPendingRegistrations(): void {
 			`Database error while sweeping expired pending registrations: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred while processing the pending registration.');
+		throw error; // Rethrow
 	}
 }

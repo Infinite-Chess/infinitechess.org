@@ -124,8 +124,7 @@ function addUser(
 			'errLog.txt',
 		);
 
-		// Rethrow a generic message to avoid leaking details.
-		throw new Error('A database error occurred.');
+		throw error; // Rethrow
 	}
 }
 // setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
@@ -193,12 +192,7 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 		}
 		logEventsAndPrint(detailedError, 'errLog.txt');
 
-		// Generic error message for return value
-		let genericError = 'A database error occurred.';
-		// Handle our custom "user not found" error
-		if (error instanceof Error && error.message === USER_NOT_FOUND_ERROR)
-			genericError = USER_NOT_FOUND_ERROR;
-		throw Error(genericError); // Rethrow with the generic error message
+		throw error; // Rethrow
 	}
 }
 // console.log(deleteUser(3887110, 'security'));
@@ -275,10 +269,10 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 		// Execute the query and fetch result
 		return db.get<Pick<MemberRecord, K>>(query, [searchValue]);
 	} catch (error: unknown) {
-		// Log the error and rethrow a generic error
+		// Log the error and re-throw it
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error getting member data by criteria: ${message}`, 'errLog.txt');
-		throw new Error('A database error occured.');
+		throw error;
 	}
 }
 
@@ -310,13 +304,13 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 		// Execute the query and fetch result
 		return db.all<Pick<MemberRecord, K>>(query, searchValueList);
 	} catch (error: unknown) {
-		// Log the error and rethrow a generic error
+		// Log the error and re-throw it
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error getting MULTIPLE member data by criteria: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occured.');
+		throw error;
 	}
 }
 
@@ -365,13 +359,13 @@ function updateMemberColumns(
 		const result = db.run(query, [...values, user_id]);
 		return { changeMade: result.changes > 0 };
 	} catch (error: unknown) {
-		// Log the error and rethrow a generic error
+		// Log the error and re-throw it
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error updating columns ${jsutil.ensureJSONString(columnsAndValues)} for user ID "${user_id}": ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred.');
+		throw error;
 	}
 }
 
@@ -478,7 +472,7 @@ function doesMemberOfIDExist(user_id: number): boolean {
 			`Error checking if member of user_id (${user_id}) exists: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred.'); // Rethrow generic error
+		throw error; // Rethrow
 	}
 }
 
@@ -505,13 +499,12 @@ function isUserIdTaken(userId: number): boolean {
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		// Log the error if the query fails
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error checking if user_id (${userId}) has been used: ${message}`,
 			'errLog.txt',
 		);
-		throw new Error('A database error occurred.'); // Rethrow generic error
+		throw error; // Rethrow
 	}
 }
 // console.log("taken? " + isUserIdTaken(14443702));
