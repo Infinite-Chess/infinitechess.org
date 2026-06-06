@@ -173,23 +173,7 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
-	try {
-		// Execute the transaction
-		deleteTransaction(user_id, reason_deleted);
-	} catch (error: unknown) {
-		// The transaction was rolled back due to an error inside it.
-		const errorMessage = error instanceof Error ? error.message : String(error);
-
-		// Detailed error for logging
-		let detailedError = `Delete user transaction for ID (${user_id}) for reason (${reason_deleted}) failed and was rolled back: ${errorMessage}`;
-		// Handle any other unexpected database errors (like UNIQUE constraint)
-		if (error instanceof SqliteError && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-			detailedError = `Delete user transaction for ID (${user_id}) for reason (${reason_deleted}) failed and was rolled back because they already exist in the deleted_members tables, but the user was not deleted from the members table.`;
-		}
-		logEventsAndPrint(detailedError, 'errLog.txt');
-
-		throw error; // Rethrow
-	}
+	deleteTransaction(user_id, reason_deleted);
 }
 // console.log(deleteUser(3887110, 'security'));
 

@@ -34,16 +34,11 @@ type EditorSavesIcnRecord = {
 /** Maximum number of saved positions allowed per user */
 const MAX_SAVED_POSITIONS = 50;
 
-/** Error message for when the user's save quota is exceeded. */
-const QUOTA_EXCEEDED_ERROR = 'QUOTA_EXCEEDED';
-
 // Methods -----------------------------------------------------------------------------
 
 /**
  * Retrieves all saved positions for a given user_id.
  * Returns only name, piece_count, and timestamp columns.
- * @param user_id - The user ID
- * @returns An array of saved positions.
  * @throws If a database error occurs.
  */
 function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
@@ -61,8 +56,53 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 }
 
 /**
- * Adds a new saved position to the editor_saves table,
- * enforcing the maximum saved positions quota per user.
+ * Counts how many saved positions a user currently has.
+ * @throws If a database error occurs.
+ */
+function getSavedPositionCount(user_id: number): number {
+	try {
+		const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
+		const row = db.get<{ count: number }>(query, [user_id]);
+		return row?.count ?? 0;
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Error counting saved positions for user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
+		throw error; // Rethrow
+	}
+}
+
+/**
+ * Checks whether a user already has a saved position with the given name.
+ * @param user_id - The user ID who owns the position
+ * @param name - The name of the saved position
+ * @returns True if a matching saved position exists.
+ * @throws If a database error occurs.
+ */
+function doesSavedPositionExist(user_id: number, name: string): boolean {
+	try {
+		const query = `
+			SELECT EXISTS(
+				SELECT 1 FROM editor_saves
+				WHERE user_id = ? AND name = ?
+			) AS found
+		 `;
+		const row = db.get<{ found: 0 | 1 }>(query, [user_id, name]);
+		return Boolean(row?.found);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		logEventsAndPrint(
+			`Error checking existence of saved position "${name}" for user_id ${user_id}: ${message}`,
+			'errLog.txt',
+		);
+		throw error; // Rethrow
+	}
+}
+
+/**
+ * Inserts a saved position.
  * If a position with the same name already exists, it will be overwritten.
  * @param user_id - The user ID who owns the position
  * @param name - The name of the saved position
@@ -73,7 +113,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
  * @param pawn_double_push - Whether the pawn double push gamerule is enabled, or undefined if indeterminate
  * @param castling - Whether the castling gamerule is enabled, or undefined if indeterminate
  * @returns The RunResult.
- * @throws QUOTA_EXCEEDED if the user has reached the maximum saved positions, or other internal database errors.
+ * @throws If a database error occurs.
  */
 function addSavedPosition(
 	user_id: number,
@@ -86,60 +126,29 @@ function addSavedPosition(
 	castling?: boolean,
 ): RunResult {
 	try {
-		const transaction = db.transaction(() => {
-			// Check if a position with the same name already exists
-			const existingPosition = db.get<{ name: string }>(
-				`SELECT name FROM editor_saves WHERE user_id = ? AND name = ?`,
-				[user_id, name],
-			);
-
-			// Get count within the transaction, only if it's a new position
-			if (!existingPosition) {
-				const countResult = db.get<{ count: number }>(
-					`SELECT COUNT(*) as count FROM editor_saves WHERE user_id = ?`,
-					[user_id],
-				);
-				const currentCount = countResult?.count ?? 0;
-
-				// Check quota
-				if (currentCount >= MAX_SAVED_POSITIONS) {
-					// Throw an error to roll back the transaction
-					throw new Error(QUOTA_EXCEEDED_ERROR);
-				}
-			}
-
-			// Insert the record (overwrites any existing one)
-			const insertQuery = `
+		// Insert the record (overwrites any existing one)
+		const insertQuery = `
             INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
-			return db.run(insertQuery, [
-				user_id,
-				name,
-				piece_count,
-				timestamp,
-				icn,
-				compression,
-				// Encode tristate
-				pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
-				castling === undefined ? -1 : castling ? 1 : 0,
-			]);
-		});
-
-		return transaction();
+		return db.run(insertQuery, [
+			user_id,
+			name,
+			piece_count,
+			timestamp,
+			icn,
+			compression,
+			// Encode tristate
+			pawn_double_push === undefined ? -1 : pawn_double_push ? 1 : 0,
+			castling === undefined ? -1 : castling ? 1 : 0,
+		]);
 	} catch (error: unknown) {
-		const errMsg = error instanceof Error ? error.message : String(error);
-
-		// Re-throw quota exceeded errors as-is (expected business logic failure)
-		if (errMsg === QUOTA_EXCEEDED_ERROR) {
-			throw error;
-		}
-		// Log and rethrow all other database errors
+		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Error adding saved position for user_id ${user_id} with name "${name}": ${errMsg}`,
+			`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`,
 			'errLog.txt',
 		);
-		throw error;
+		throw error; // Rethrow
 	}
 }
 
@@ -189,9 +198,10 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
 export default {
 	// Constants
 	MAX_SAVED_POSITIONS,
-	QUOTA_EXCEEDED_ERROR,
 	// Methods
 	getAllSavedPositionsForUser,
+	getSavedPositionCount,
+	doesSavedPositionExist,
 	addSavedPosition,
 	getSavedPositionICN,
 	deleteSavedPosition,

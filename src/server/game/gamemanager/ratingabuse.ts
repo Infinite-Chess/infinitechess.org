@@ -163,12 +163,8 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 
 		try {
 			measurePlayerRatingAbuse(user_id, username, leaderboard_id);
-		} catch (error: unknown) {
-			const message = error instanceof Error ? error.message : String(error);
-			void logEventsAndPrint(
-				`Error running rating_abuse checks for user ID "${user_id}" on leaderboard ${leaderboard_id}: ${message}`,
-				'errLog.txt',
-			);
+		} catch {
+			// Failure already logged at the db layer. Skip this player's check
 		}
 	}
 }
@@ -179,16 +175,8 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
  */
 function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number): void {
 	// If player is not in rating_abuse table, add him to it
-	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id)) {
-		const result = addEntryToRatingAbuseTable(user_id, leaderboard_id);
-		if (!result.success) {
-			void logEventsAndPrint(
-				`Failed to add user ${user_id} to rating_abuse table for leaderboard ${leaderboard_id} for reason: ${result.reason}`,
-				'errLog.txt',
-			);
-			return;
-		}
-	}
+	if (!isEntryInRatingAbuseTable(user_id, leaderboard_id))
+		addEntryToRatingAbuseTable(user_id, leaderboard_id);
 
 	// Access the player rating_abuse data
 	const rating_abuse_data = getRatingAbuseData(user_id, leaderboard_id, [

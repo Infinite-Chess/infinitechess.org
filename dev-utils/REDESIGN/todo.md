@@ -52,6 +52,8 @@
 
 ## Late-Stage Polish
 
+- Ensure you can't exceed db positions quota.
+
 - Delete any unused theme-specific css variables in global.css
 
 - Delete any unused css rules in all stylesheets.

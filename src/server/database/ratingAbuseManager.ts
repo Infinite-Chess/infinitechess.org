@@ -30,12 +30,12 @@ type ModifyQueryResult = { success: true; result: RunResult } | { success: false
 // Methods --------------------------------------------------------------------------------------------
 
 /**
- * Adds an entry to the rating_abuse table
+ * Adds an entry to the rating_abuse table.
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard
- * @returns A result object indicating success or failure.
+ * @throws If a database error occurs.
  */
-function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): ModifyQueryResult {
+function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): void {
 	const query = `
 	INSERT INTO rating_abuse (
 		user_id,
@@ -44,34 +44,14 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): Mo
 	`; // Only inserting user_id and leaderboard_id is needed if others have DB defaults or may be NULL
 
 	try {
-		// Execute the query with the provided values
-		const result = db.run(query, [user_id, leaderboard_id]);
-
-		// Return success result
-		return { success: true, result };
+		db.run(query, [user_id, leaderboard_id]);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
 		logEventsAndPrint(
 			`Error adding entry to rating_abuse table for user "${user_id}" and leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
 		);
-
-		// Return an error message
-		// Check for specific constraint errors if possible (e.g., FOREIGN KEY failure)
-		let reason = 'Failed to add entry to rating_abuse table.';
-		if (error instanceof Error && 'code' in error) {
-			// Example check for better-sqlite3 specific error codes
-			if (error.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-				reason = '(User ID, Leaderboard ID) does not exist in the leaderboards table.';
-			} else if (
-				error.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
-				error.code === 'SQLITE_CONSTRAINT_PRIMARYKEY'
-			) {
-				reason = '(User ID, Leaderboard ID) already exists in the rating_abuse table.';
-			}
-		}
-		return { success: false, reason };
+		throw error; // Rethrow
 	}
 }
 

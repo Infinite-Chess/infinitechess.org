@@ -136,7 +136,19 @@ function savePosition(req: Request, res: Response): void {
 		parseResult.data;
 
 	try {
-		// Add the saved position to the database (throws on quota exceeded)
+		// Enforce the per-user quota, if it's a new (not existing) position.
+		const atLimit =
+			editorSavesManager.getSavedPositionCount(userId) >=
+			editorSavesManager.MAX_SAVED_POSITIONS;
+		const isExistingPosition = editorSavesManager.doesSavedPositionExist(userId, name);
+		if (atLimit && !isExistingPosition) {
+			res.status(403).json({
+				message: getScriptTranslationsForReq('responses', req).editor_saves.limit_reached,
+			});
+			return;
+		}
+
+		// Add the saved position to the database
 		editorSavesManager.addSavedPosition(
 			userId,
 			name,
@@ -151,14 +163,6 @@ function savePosition(req: Request, res: Response): void {
 		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
 		res.status(201).json({ saves });
 	} catch (error: unknown) {
-		// Handle the specific quota error
-		if (error instanceof Error && error.message === editorSavesManager.QUOTA_EXCEEDED_ERROR) {
-			res.status(403).json({
-				message: getScriptTranslationsForReq('responses', req).editor_saves.limit_reached,
-			});
-			return;
-		}
-
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
 		res.status(500).json({
