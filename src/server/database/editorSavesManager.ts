@@ -124,14 +124,14 @@ function addSavedPosition(
 	compression: string,
 	pawn_double_push?: boolean,
 	castling?: boolean,
-): RunResult {
+): void {
 	try {
 		// Insert the record (overwrites any existing one)
 		const insertQuery = `
             INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
-		return db.run(insertQuery, [
+		db.run(insertQuery, [
 			user_id,
 			name,
 			piece_count,

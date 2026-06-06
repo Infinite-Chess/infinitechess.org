@@ -4,7 +4,6 @@
  * This script handles queries to the leaderboards table.
  */
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Rating } from '../../shared/types.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
@@ -42,7 +41,7 @@ function addUserToLeaderboard(
 	leaderboard_id: Leaderboard,
 	elo: number,
 	rd: number,
-): RunResult {
+): void {
 	const query = `
 	INSERT INTO leaderboards (
 		user_id,
@@ -53,7 +52,7 @@ function addUserToLeaderboard(
 	) VALUES (?, ?, ?, ?)
 	`;
 	// This will throw on failure, which is what we want for a transaction.
-	return db.run(query, [user_id, leaderboard_id, elo, rd]);
+	db.run(query, [user_id, leaderboard_id, elo, rd]);
 }
 
 /**
@@ -68,7 +67,7 @@ function updatePlayerLeaderboardRating(
 	leaderboard_id: Leaderboard,
 	elo: number,
 	rd: number,
-): RunResult {
+): void {
 	const query = `
 	UPDATE leaderboards
 	SET elo = ?,
@@ -85,7 +84,6 @@ function updatePlayerLeaderboardRating(
 			`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`,
 		);
 	}
-	return result;
 }
 
 /**

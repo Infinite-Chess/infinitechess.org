@@ -4,8 +4,6 @@
  * This script handles queries to the rating_abuse table.
  */
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
-
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
@@ -23,9 +21,6 @@ interface RatingAbuseRecord {
 }
 
 type RatingAbuseColumn = keyof RatingAbuseRecord;
-
-/** The result of add/update operations */
-type ModifyQueryResult = { success: true; result: RunResult } | { success: false; reason: string };
 
 // Methods --------------------------------------------------------------------------------------------
 
@@ -150,63 +145,50 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
  * @param user_id - The user ID of the player.
  * @param leaderboard_id - The leaderboard_id
  * @param columnsAndValues - An object containing column-value pairs to update.
- * @returns - A result object indicating success or failure.
+ * @returns A result object indicating success or failure.
+ * @throws If invalid arguments are provided or if a database error occurs.
  */
 function updateRatingAbuseColumns(
 	user_id: number,
 	leaderboard_id: number,
 	columnsAndValues: Partial<RatingAbuseRecord>,
-): ModifyQueryResult {
-	// Ensure columnsAndValues is an object and not empty
-	if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0) {
-		logEventsAndPrint(
-			`Invalid or empty columns and values provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-			'errLog.txt',
-		); // Detailed logging for debugging
-		return { success: false, reason: 'Invalid arguments.' }; // Generic error message
-	}
-
-	for (const column in columnsAndValues) {
-		// Validate all provided columns
-		if (!allRatingAbuseColumns.includes(column)) {
-			logEventsAndPrint(
-				`Invalid column "${column}" provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-				'errLog.txt',
-			); // Detailed logging for debugging
-			return { success: false, reason: 'Invalid column.' }; // Generic error message
-		}
-	}
-
-	// Dynamically build the SET part of the query
-	const setStatements = Object.keys(columnsAndValues)
-		.map((column) => `${column} = ?`)
-		.join(', ');
-	const values = Object.values(columnsAndValues);
-
-	// Add the user_id and leaderboard_id as the last parameters for the WHERE clause
-	values.push(user_id, leaderboard_id);
-
-	// Update query to modify multiple columns
-	const updateQuery = `UPDATE rating_abuse SET ${setStatements} WHERE user_id = ? AND leaderboard_id = ?`;
-
+): void {
 	try {
-		// Execute the update query
+		// Validate the arguments...
+		if (typeof columnsAndValues !== 'object' || Object.keys(columnsAndValues).length === 0)
+			throw new Error(
+				`Invalid or empty columns and values provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
+			);
+
+		for (const column in columnsAndValues) {
+			// Validate all provided columns
+			if (!allRatingAbuseColumns.includes(column))
+				throw new Error(
+					`Invalid column "${column}" provided for user ID "${user_id}" and leaderboard ID "${leaderboard_id}" when updating rating_abuse columns! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
+				);
+		}
+
+		// Dynamically build the SET part of the query
+		const setStatements = Object.keys(columnsAndValues)
+			.map((column) => `${column} = ?`)
+			.join(', ');
+		const values = Object.values(columnsAndValues);
+
+		// Add the user_id and leaderboard_id as the last parameters for the WHERE clause
+		values.push(user_id, leaderboard_id);
+
+		// Update query to modify multiple columns
+		const updateQuery = `UPDATE rating_abuse SET ${setStatements} WHERE user_id = ? AND leaderboard_id = ?`;
 		const result = db.run(updateQuery, values);
 
-		// Check if the update was successful
-		if (result.changes > 0) return { success: true, result };
-		else {
-			logEventsAndPrint(
-				`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry in rating_abuse table with user ID "${user_id}" and leaderboard ID "${leaderboard_id}"! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
-				'errLog.txt',
+		if (result.changes === 0)
+			throw new Error(
+				`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`,
 			);
-			return { success: false, reason: 'No changes made.' }; // Generic error message
-		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
 		logEventsAndPrint(
-			`Error updating rating_abuse table columns ${JSON.stringify(Object.keys(columnsAndValues))} for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}! Received: ${jsutil.ensureJSONString(columnsAndValues)}`,
+			`Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}`,
 			'errLog.txt',
 		);
 		throw error; // Rethrow
