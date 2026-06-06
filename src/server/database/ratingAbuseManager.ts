@@ -98,51 +98,38 @@ function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boo
  * @param user_id - The user_id of the player
  * @param leaderboard_id - The leaderboard_id
  * @param columns - The columns to retrieve (e.g., ['game_count_since_last_check', 'last_alerted_at'])
- * @returns An object containing the requested columns, or undefined if no match is found.
+ * @returns An object containing the requested columns.
+ * @throws If invalid arguments are provided, if no match is found, or if a database error occurs.
  */
 function getRatingAbuseData<K extends RatingAbuseColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	columns: K[],
-): Pick<RatingAbuseRecord, K> | undefined {
-	// Guard clauses... Validating the arguments...
-
-	if (!Array.isArray(columns)) {
-		logEventsAndPrint(
-			`When getting rating_abuse data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
-		);
-		return undefined;
-	}
-	if (
-		!columns.every(
-			(column) => typeof column === 'string' && allRatingAbuseColumns.includes(column),
-		)
-	) {
-		logEventsAndPrint(
-			`Invalid columns requested from rating_abuse table: ${jsutil.ensureJSONString(columns)}`,
-			'errLog.txt',
-		);
-		return undefined;
-	}
-
-	// Arguments are valid, move onto the SQL query...
-
-	// Construct SQL query
-	const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
-
+): Pick<RatingAbuseRecord, K> {
 	try {
-		// Execute the query and fetch result
-		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
+		// Validate the arguments...
 
-		// If no row is found, return undefined
-		if (!row) {
-			logEventsAndPrint(
-				`No matches found in rating_abuse table for user_id = ${user_id} and leaderboard_id = ${leaderboard_id}.`,
-				'errLog.txt',
+		if (!Array.isArray(columns))
+			throw new Error(
+				`When getting rating_abuse data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
 			);
-			return undefined;
-		}
+		if (
+			!columns.every(
+				(column) => typeof column === 'string' && allRatingAbuseColumns.includes(column),
+			)
+		)
+			throw new Error(
+				`Invalid columns requested from rating_abuse table: ${jsutil.ensureJSONString(columns)}`,
+			);
+
+		// Arguments are valid, move onto constructing the SQL query...
+		const query = `SELECT ${columns.join(', ')} FROM rating_abuse WHERE user_id = ? AND leaderboard_id = ?`;
+
+		const row = db.get<Pick<RatingAbuseRecord, K>>(query, [user_id, leaderboard_id]);
+		if (!row)
+			throw new Error(
+				`No matches found in rating_abuse table for user_id = ${user_id} and leaderboard_id = ${leaderboard_id}.`,
+			);
 
 		// Return the fetched row (single object)
 		return row;
@@ -150,7 +137,7 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the error and re-throw
 		logEventsAndPrint(
-			`Error executing query when gettings rating_abuse entry of user_id ${user_id} and leaderboard_id = ${leaderboard_id}: ${message}. The query: "${query}"`,
+			`Error when gettings rating_abuse entry of user_id ${user_id} and leaderboard_id = ${leaderboard_id}: ${message}`,
 			'errLog.txt',
 		);
 		throw error;

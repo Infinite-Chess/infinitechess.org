@@ -164,7 +164,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 		try {
 			measurePlayerRatingAbuse(user_id, username, leaderboard_id);
 		} catch {
-			// Failure already logged at the db layer. Skip this player's check
+			// Already logged. Skip this player's check
 		}
 	}
 }
@@ -172,6 +172,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 /**
  * Weights a specific user's probability of rating abuse on a specified leaderboard.
  * If it flags a user, it sends Naviary an email with data on them.
+ * @throws If a database error occurs.
  */
 function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard_id: number): void {
 	// If player is not in rating_abuse table, add him to it
@@ -183,13 +184,6 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		'game_count_since_last_check',
 		'last_alerted_at',
 	]);
-	if (rating_abuse_data === undefined) {
-		void logEventsAndPrint(
-			`Unable to read rating_abuse_data of user ${user_id} on leaderboard ${leaderboard_id} while making RatingAbuse check!`,
-			'errLog.txt',
-		);
-		return;
-	}
 	// Increment game_count_since_last_check by 1
 	let game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
 
@@ -233,7 +227,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		'termination',
 		'move_count',
 		'time_duration_millis',
-	])!;
+	]);
 	const games_table_game_id_list = recentGamesEntries.map((recent_game) => recent_game.game_id);
 
 	// Combine the information about the games into a single gameInfoList object
