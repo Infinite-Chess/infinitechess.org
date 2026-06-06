@@ -252,17 +252,14 @@ export function updatePendingRegistrationEmail(
  * row created for it. The non-NULL `member_user_id` doubles as the "verified" flag.
  * @param claimToken - The claim_token identifying the pending row.
  * @param memberUserId - The user_id of the newly created member.
- * @returns Whether a row was updated (false if no matching pending row exists).
- * @throws {Error} Throws a generic error if a database error occurs.
+ * @throws {Error} If a database error occurs, or if no pending row matches the claim_token.
  */
-export function markPendingRegistrationVerified(
-	claimToken: string,
-	memberUserId: number,
-): { changeMade: boolean } {
+export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
 	try {
 		const result = db.run(query, [memberUserId, claimToken]);
-		return { changeMade: result.changes > 0 };
+		if (result.changes === 0)
+			throw new Error(`No pending registration found for claim_token to mark verified.`);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
