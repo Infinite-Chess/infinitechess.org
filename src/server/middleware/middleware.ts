@@ -200,7 +200,7 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.get('/register/username/:username', checkUsernameAvailable);
+	app.get('/register/availability', checkUsernameAvailable); // Currently ONLY can check username
 	app.post('/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
 	app.get('/register/awaiting/poll', pollPendingRegistration);
 	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);

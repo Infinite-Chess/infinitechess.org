@@ -230,7 +230,7 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 	if (!usernameValid) return;
 	try {
 		const response = await serverFetch(
-			`/register/username/${encodeURIComponent(usernameInput.value)}`,
+			`/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
 		);
 		const result = (await response.json()) as { allowed: boolean; reason: string };
 		if (!result.allowed) {

@@ -333,12 +333,17 @@ async function generateAccount({
 
 /**
  * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
- * The request parameters MUST contain the username to test! (different from the body)
+ * The username to test is supplied as the `username` query parameter (e.g. `?username=bob`).
  *
  * We send the client the object: `{ allowed: true, reason: '' } | { allowed: false, reason: string }`
  */
 function checkUsernameAvailable(req: Request, res: Response): void {
-	const username = req.params['username']!;
+	const username = req.query['username'];
+	if (typeof username !== 'string' || username.length === 0) {
+		// Unlocalized because the client always provides this
+		res.status(400).json({ allowed: false, reason: 'Missing username query parameter.' });
+		return;
+	}
 	const usernameLowercase = username.toLowerCase();
 
 	let allowed = true;
