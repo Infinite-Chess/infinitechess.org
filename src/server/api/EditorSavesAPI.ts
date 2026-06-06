@@ -15,6 +15,11 @@ import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
+// Constants ---------------------------------------------------------------------------------
+
+/** Maximum number of saved positions allowed per user */
+const MAX_SAVED_POSITIONS = 50;
+
 // Zod Schemas -------------------------------------------------------------------------------
 
 /** Schema for validating the body of POST /api/editor-saves (save position) */
@@ -137,9 +142,7 @@ function savePosition(req: Request, res: Response): void {
 
 	try {
 		// Enforce the per-user quota, if it's a new (not existing) position.
-		const atLimit =
-			editorSavesManager.getSavedPositionCount(userId) >=
-			editorSavesManager.MAX_SAVED_POSITIONS;
+		const atLimit = editorSavesManager.getSavedPositionCount(userId) >= MAX_SAVED_POSITIONS;
 		const isExistingPosition = editorSavesManager.doesSavedPositionExist(userId, name);
 		if (atLimit && !isExistingPosition) {
 			res.status(403).json({
@@ -301,6 +304,8 @@ function deletePosition(req: Request, res: Response): void {
 // Exports -----------------------------------------------------------------------------------
 
 export default {
+	// Constants
+	MAX_SAVED_POSITIONS,
 	// Endpoints
 	getSavedPositions,
 	savePosition,

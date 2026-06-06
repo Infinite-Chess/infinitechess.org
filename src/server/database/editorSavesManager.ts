@@ -28,11 +28,6 @@ type EditorSavesIcnRecord = {
 	castling: -1 | 0 | 1;
 };
 
-// Constants ---------------------------------------------------------------------------------
-
-/** Maximum number of saved positions allowed per user */
-const MAX_SAVED_POSITIONS = 50;
-
 // Methods -----------------------------------------------------------------------------
 
 /**
@@ -158,8 +153,6 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
 }
 
 export default {
-	// Constants
-	MAX_SAVED_POSITIONS,
 	// Methods
 	getAllSavedPositionsForUser,
 	getSavedPositionCount,
