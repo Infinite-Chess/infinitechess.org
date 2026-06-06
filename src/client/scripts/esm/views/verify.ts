@@ -15,6 +15,7 @@ import { serverFetch } from '../util/serverFetch.js';
 // Present only on the prompt state; the already-verified and invalid states are fully SSR'd, so
 // there's nothing to wire up there.
 const button = document.querySelector<HTMLButtonElement>('#verify-button');
+const error = document.querySelector<HTMLElement>('#verify-error');
 
 // Verification ------------------------------------------------------
 
@@ -22,7 +23,7 @@ const button = document.querySelector<HTMLButtonElement>('#verify-button');
 function hidePrompt(): void {
 	document.querySelector<HTMLElement>('#verify-title')!.classList.add('hidden');
 	document.querySelector<HTMLElement>('#verify-subtitle')!.classList.add('hidden');
-	document.querySelector<HTMLElement>('#verify-error')!.classList.add('hidden');
+	error!.classList.add('hidden');
 	button!.classList.add('hidden');
 }
 
@@ -36,9 +37,8 @@ function showInvalid(): void {
 
 /** Shows a transient inline error beneath the button and re-enables it for a retry. */
 function showRetryableError(message: string): void {
-	const error = document.querySelector<HTMLElement>('#verify-error')!;
-	error.textContent = message;
-	error.classList.remove('hidden');
+	error!.textContent = message;
+	error!.classList.remove('hidden');
 	button!.disabled = false;
 }
 
@@ -48,7 +48,7 @@ function showRetryableError(message: string): void {
  */
 async function verify(): Promise<void> {
 	button!.disabled = true;
-	document.querySelector<HTMLElement>('#verify-error')!.classList.add('hidden');
+	error!.classList.add('hidden');
 	try {
 		// The POST endpoint shares this page's path, so the current URL is already the right target.
 		const response = await serverFetch(window.location.pathname, { method: 'POST' });
