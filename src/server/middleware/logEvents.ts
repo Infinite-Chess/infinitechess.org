@@ -61,7 +61,8 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 	// Redact sensitive tokens that appear in URL paths so they are never written to log files.
 	const sanitizedUrl = req.url
 		.replace(/(\/reset-password\/)([^?#/]+)/, '$1[REDACTED]')
-		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]');
+		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]')
+		.replace(/([?&]username=)[^&#]+/, '$1[REDACTED]'); // Redact usernames (e.g. the availability check's ?username=)
 
 	let logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
 	// Delete passwords from incoming form data
