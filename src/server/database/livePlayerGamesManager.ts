@@ -66,7 +66,7 @@ function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 			record.disconnect_by_choice,
 		]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number}): ${message}`,
 			'errLog.txt',
@@ -95,7 +95,7 @@ function updateLivePlayerGame(
 	try {
 		db.run(query, [...values, game_id, player_number]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating live player game (game_id=${game_id}, player=${player_number}): ${message}`,
 			'errLog.txt',
@@ -112,7 +112,7 @@ function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
 	try {
 		return db.all<LivePlayerGamesRecord>(SELECT_BY_GAME_QUERY, [game_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error retrieving live player games for game ${game_id}: ${message}`,
 			'errLog.txt',

@@ -73,7 +73,7 @@ export function addPendingRegistration(
 			expiresAt,
 		]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while adding pending registration for "${username}": ${message}`,
 			'errLog.txt',
@@ -97,7 +97,7 @@ export function getPendingRegistrationByClaimToken(
 	try {
 		return db.get<PendingRegistrationRecord>(query, [claimToken]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while finding pending registration by claim_token: ${message}`,
 			'errLog.txt',
@@ -119,7 +119,7 @@ export function getPendingRegistrationByVerificationToken(
 	try {
 		return db.get<PendingRegistrationRecord>(query, [verificationToken]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while finding pending registration by verification_token: ${message}`,
 			'errLog.txt',
@@ -148,7 +148,7 @@ export function isUsernameTakenInPending(username: string): boolean {
 		const row = db.get<{ found: 0 | 1 }>(query, [username, Date.now()]);
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while checking pending username "${username}": ${message}`,
 			'errLog.txt',
@@ -174,7 +174,7 @@ export function isEmailTakenInPending(email: string): boolean {
 		const row = db.get<{ found: 0 | 1 }>(query, [email, Date.now()]);
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while checking pending email "${email}": ${message}`,
 			'errLog.txt',
@@ -203,7 +203,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
 		const row = db.get<{ found: 0 | 1 }>(query, [email, Date.now(), excludeClaimToken]);
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while checking pending email (by other) "${email}": ${message}`,
 			'errLog.txt',
@@ -238,7 +238,7 @@ export function updatePendingRegistrationEmail(
 	try {
 		db.run(query, [email, verificationToken, expiresAt, claimToken]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while updating pending registration email: ${message}`,
 			'errLog.txt',
@@ -261,7 +261,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
 		if (result.changes === 0)
 			throw new Error(`No pending registration found for claim_token to mark verified.`);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while marking pending registration verified: ${message}`,
 			'errLog.txt',
@@ -287,7 +287,7 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 	try {
 		db.run(query, [username, email, Date.now()]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while deleting expired pending registrations for "${username}": ${message}`,
 			'errLog.txt',
@@ -305,7 +305,7 @@ export function deleteExpiredPendingRegistrations(): void {
 	try {
 		db.run(query, [Date.now()]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while sweeping expired pending registrations: ${message}`,
 			'errLog.txt',

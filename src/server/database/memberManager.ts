@@ -6,8 +6,6 @@
 
 import type { DeleteReason } from '../controllers/deleteAccountController.js';
 
-import { SqliteError } from 'better-sqlite3';
-
 import jsutil from '../../shared/util/jsutil.js';
 
 import db from './database.js';
@@ -113,7 +111,7 @@ function addUser(
 			is_verification_notified,
 		});
 	} catch (error: unknown) {
-		const detailedError = error instanceof SqliteError ? error.message : String(error);
+		const detailedError = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Account creation transaction for "${username}" failed and was rolled back: ${detailedError}`,
 			'errLog.txt',
@@ -248,7 +246,7 @@ function getMemberDataByCriteria<K extends MembersColumn>(
 		return db.get<Pick<MemberRecord, K>>(query, [searchValue]);
 	} catch (error: unknown) {
 		// Log the error and re-throw it
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error getting member data by criteria: ${message}`, 'errLog.txt');
 		throw error;
 	}
@@ -283,7 +281,7 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 		return db.all<Pick<MemberRecord, K>>(query, searchValueList);
 	} catch (error: unknown) {
 		// Log the error and re-throw it
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error getting MULTIPLE member data by criteria: ${message}`,
 			'errLog.txt',
@@ -338,7 +336,7 @@ function updateMemberColumns(
 		return { changeMade: result.changes > 0 };
 	} catch (error: unknown) {
 		// Log the error and re-throw it
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating columns ${jsutil.ensureJSONString(columnsAndValues)} for user ID "${user_id}": ${message}`,
 			'errLog.txt',
@@ -373,7 +371,7 @@ function updateLoginCountAndLastSeen(userId: number): void {
 			);
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating login_count and last_seen for member of id "${userId}": ${message}`,
 			'errLog.txt',
@@ -405,7 +403,7 @@ function updateLastSeen(userId: number): void {
 			);
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating last_seen for member of id "${userId}": ${message}`,
 			'errLog.txt',
@@ -445,7 +443,7 @@ function doesMemberOfIDExist(user_id: number): boolean {
 		return Boolean(row?.found);
 	} catch (error: unknown) {
 		// Log the error if the query fails
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking if member of user_id (${user_id}) exists: ${message}`,
 			'errLog.txt',
@@ -477,7 +475,7 @@ function isUserIdTaken(userId: number): boolean {
 		// row.found will be 0 or 1
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking if user_id (${userId}) has been used: ${message}`,
 			'errLog.txt',
@@ -505,7 +503,7 @@ function isUsernameTaken(username: string): boolean {
 		return row !== undefined;
 	} catch (error: unknown) {
 		// Log the error for debugging purposes
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking if username "${username}" is taken: ${message}`,
 			'errLog.txt',
@@ -532,7 +530,7 @@ function isEmailTaken(email: string): boolean {
 		return row !== undefined;
 	} catch (error: unknown) {
 		// Log error if the query fails
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error checking if email "${email}" exists: ${message}`, 'errLog.txt');
 		throw error; // Rethrow
 	}

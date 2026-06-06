@@ -76,7 +76,7 @@ function insertLiveGame(record: LiveGamesRecord): void {
 			],
 		);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error inserting live game ${record.game_id}: ${message}`, 'errLog.txt');
 	}
 }
@@ -97,7 +97,7 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 	try {
 		db.run(query, [...values, game_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error updating live game ${game_id}: ${message}`, 'errLog.txt');
 	}
 }
@@ -110,7 +110,7 @@ function deleteLiveGame(game_id: number): void {
 	try {
 		db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error deleting live game ${game_id}: ${message}`, 'errLog.txt');
 	}
 }
@@ -123,7 +123,7 @@ function getAllLiveGames(): LiveGamesRecord[] {
 	try {
 		return db.all<LiveGamesRecord>('SELECT * FROM live_games');
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Error retrieving all live games: ${message}`, 'errLog.txt');
 		throw error; // Rethrow
 	}

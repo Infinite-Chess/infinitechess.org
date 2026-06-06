@@ -115,7 +115,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
 		return !!result;
 	} catch (error: unknown) {
 		// Log any potential database errors during the check
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
@@ -142,7 +142,7 @@ function getPlayerLeaderboardRating(
 	try {
 		return db.get(query, [user_id, leaderboard_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error getting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
@@ -169,7 +169,7 @@ function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 		const entries = db.all(query, [user_id]) as LeaderboardEntry[];
 		return entries;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error getting all leaderboard entries for user "${user_id}": ${message}`,
 			'errLog.txt',
@@ -214,7 +214,7 @@ function getTopPlayersForLeaderboard(
 		]) as LeaderboardEntry[];
 		return top_players; // Returns an array (potentially empty)
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		// Updated log message
 		logEventsAndPrint(
 			`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`,
@@ -269,7 +269,7 @@ function getPlayerRankInLeaderboard(
 		// If a result is found, return the rank, otherwise return undefined
 		return result?.rank;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		// Log message remains appropriate
 		logEventsAndPrint(
 			`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
@@ -324,7 +324,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 			'leaderboardLog.txt',
 		);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating all rating deviations in leaderboard table: ${message}`,
 			'errLog.txt',

@@ -13,7 +13,7 @@ export function addToBlacklist(email: string, reason: string): void {
 		]);
 		logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err);
+		const msg = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(`Database error when blacklisting email ${email}: ${msg}`, 'errLog.txt');
 	}
 }
@@ -25,7 +25,7 @@ export function removeFromBlacklist(email: string): void {
 		db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]);
 		logEvents(`Removed ${email} from blacklist`, 'blacklistLog.txt');
 	} catch (err) {
-		const msg = err instanceof Error ? err.message : String(err);
+		const msg = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(
 			`Database error when removing email ${email} from blacklist: ${msg}`,
 			'errLog.txt',
@@ -46,7 +46,7 @@ export function isBlacklisted(email: string): boolean {
 		]);
 		return !!result;
 	} catch (err: unknown) {
-		const msg = err instanceof Error ? err.message : String(err);
+		const msg = err instanceof Error ? err.stack : String(err);
 		logEventsAndPrint(
 			`Database error when checking blacklist for email ${email}: ${msg}`,
 			'errLog.txt',

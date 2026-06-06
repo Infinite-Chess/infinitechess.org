@@ -41,7 +41,7 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): vo
 	try {
 		db.run(query, [user_id, leaderboard_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error adding entry to rating_abuse table for user "${user_id}" and leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
@@ -78,7 +78,7 @@ function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boo
 		return !!result;
 	} catch (error: unknown) {
 		// Log any potential database errors during the check
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking existence of rating_abuse entry for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
 			'errLog.txt',
@@ -129,7 +129,7 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
 		// Return the fetched row (single object)
 		return row;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		// Log the error and re-throw
 		logEventsAndPrint(
 			`Error when gettings rating_abuse entry of user_id ${user_id} and leaderboard_id = ${leaderboard_id}: ${message}`,
@@ -186,7 +186,7 @@ function updateRatingAbuseColumns(
 				`No changes made when updating rating_abuse table columns ${JSON.stringify(columnsAndValues)} for entry with user ID "${user_id}" and leaderboard ID "${leaderboard_id}".`,
 			);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}": ${message}`,
 			'errLog.txt',

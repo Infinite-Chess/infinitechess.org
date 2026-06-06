@@ -46,7 +46,7 @@ function getAllSavedPositionsForUser(user_id: number): EditorSavesListRecord[] {
 		const query = `SELECT name, piece_count, timestamp FROM editor_saves WHERE user_id = ?`;
 		return db.all<EditorSavesListRecord>(query, [user_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error retrieving saved positions for user_id ${user_id}: ${message}`,
 			'errLog.txt',
@@ -65,7 +65,7 @@ function getSavedPositionCount(user_id: number): number {
 		const row = db.get<{ count: number }>(query, [user_id]);
 		return row?.count ?? 0;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error counting saved positions for user_id ${user_id}: ${message}`,
 			'errLog.txt',
@@ -92,7 +92,7 @@ function doesSavedPositionExist(user_id: number, name: string): boolean {
 		const row = db.get<{ found: 0 | 1 }>(query, [user_id, name]);
 		return Boolean(row?.found);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error checking existence of saved position "${name}" for user_id ${user_id}: ${message}`,
 			'errLog.txt',
@@ -143,7 +143,7 @@ function addSavedPosition(
 			castling === undefined ? -1 : castling ? 1 : 0,
 		]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error adding saved position for user_id ${user_id} with name "${name}": ${message}`,
 			'errLog.txt',
@@ -164,7 +164,7 @@ function getSavedPositionICN(name: string, user_id: number): EditorSavesIcnRecor
 		const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
 		return db.get<EditorSavesIcnRecord>(query, [name, user_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error retrieving ICN for name "${name}" and user_id ${user_id}: ${message}`,
 			'errLog.txt',
@@ -186,7 +186,7 @@ function deleteSavedPosition(name: string, user_id: number): RunResult {
 		const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
 		return db.run(query, [name, user_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error deleting position "${name}" for user_id ${user_id}: ${message}`,
 			'errLog.txt',

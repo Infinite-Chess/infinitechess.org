@@ -71,7 +71,7 @@ function isGameIdTaken(game_id: number): boolean {
 		// If a row is found, the game_id exists
 		return row !== undefined;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		// Log the error if the query fails
 		logEventsAndPrint(
 			`Error checking if game_id "${game_id}" is taken: ${message}`,
@@ -115,7 +115,7 @@ function getGameData<K extends GamesColumn>(
 		// Execute the query and fetch result.
 		return db.get<Pick<GamesRecord, K>>(query, [game_id]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error when getting game data of game_id ${game_id}: ${message}`,
 			'errLog.txt',
@@ -167,7 +167,7 @@ function getMultipleGameData<K extends GamesColumn>(
 		// Return the fetched rows
 		return rows;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}: ${message}`,
 			'errLog.txt',

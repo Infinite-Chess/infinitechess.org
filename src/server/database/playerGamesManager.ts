@@ -87,7 +87,7 @@ function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 		// Return the fetched rows (single object)
 		return rows;
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error getting all player_games entries for game_id_list "${jsutil.ensureJSONString(game_id_list)}": ${message}`,
 			'errLog.txt',
@@ -147,7 +147,7 @@ function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 		// Bind parameters: user, leaderboard, and limit
 		return db.all<Pick<PlayerGamesRecord, K>>(query, [user_id, leaderboard_id, limit]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}: ${message}`,
 			'errLog.txt',

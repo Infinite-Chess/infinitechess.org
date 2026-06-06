@@ -47,7 +47,7 @@ export function findRefreshToken(token: string): RefreshTokenRecord | undefined 
 	try {
 		return db.get<RefreshTokenRecord>(query, [token]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Database error while finding refresh token: ${message}`, 'errLog.txt');
 		throw error; // Rethrow
 	}
@@ -69,7 +69,7 @@ export function findRefreshTokensForUsers(user_id_list: number[]): RefreshTokenR
 	try {
 		return db.all<RefreshTokenRecord>(query, user_id_list);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}: ${message}`,
 			'errLog.txt',
@@ -110,7 +110,7 @@ export function addRefreshToken(
 			ip_address,
 		]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while adding refresh token for userId ${userId}: ${message}`,
 			'errLog.txt',
@@ -129,7 +129,7 @@ export function deleteRefreshToken(token: string): void {
 	try {
 		db.run(query, [token]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(`Database error while deleting refresh token: ${message}`, 'errLog.txt');
 		throw error; // Rethrow
 	}
@@ -146,7 +146,7 @@ export function deleteAllRefreshTokensForUser(userId: number): void {
 	try {
 		db.run(query, [userId]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while deleting all refresh tokens for userId ${userId}: ${message}`,
 			'errLog.txt',
@@ -166,7 +166,7 @@ export function updateRefreshTokenIP(token: string, ip: string | null): void {
 	try {
 		db.run(query, [ip, token]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while updating refresh token IP: ${message}`,
 			'errLog.txt',
@@ -187,7 +187,7 @@ export function markRefreshTokenAsConsumed(token: string): void {
 	try {
 		db.run(query, [now, token]);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Database error while marking refresh token as consumed: ${message}`,
 			'errLog.txt',
