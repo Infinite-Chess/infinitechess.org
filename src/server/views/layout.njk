@@ -46,7 +46,7 @@
     {# Any extra head content (meta tags, preloads, etc.) #}
     {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block bodyClass %}{% endblock %}">
 
     {% block body %}{% endblock %}
 

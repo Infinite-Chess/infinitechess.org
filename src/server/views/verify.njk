@@ -2,6 +2,8 @@
 
 {% set pageName = "Verify your account" %}
 
+{% block bodyClass %}sticky-footer{% endblock %}
+
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/verify.css'] }}" />
 {% endblock %}
@@ -9,7 +11,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main class="bg-checkerboard">
+<main class="bg-checkerboard page-centered">
 	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
 	<div id="bg-overlay"></div>
 

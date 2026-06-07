@@ -141,6 +141,29 @@ body {
 }
 
 /* ============================================================
+   Page layout
+   ============================================================ */
+
+/* Sticky-footer: body fills the viewport; main grows to push footer down.
+   Applied to <body> via the `bodyClass` block in layout.njk. */
+.sticky-footer {
+	display: flex;
+	flex-direction: column;
+}
+
+/* Centers a single block of content within the page's <main>.
+   Pairs with .sticky-footer on <body>. */
+.page-centered {
+	position: relative;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 12px;
+	z-index: 1;
+}
+
+/* ============================================================
    Utility classes
    ============================================================ */
 
@@ -283,7 +306,6 @@ button:disabled {
 	stroke-linejoin: round;
 	flex-shrink: 0;
 }
-
 
 /* A labeled input column. */
 .auth-field {

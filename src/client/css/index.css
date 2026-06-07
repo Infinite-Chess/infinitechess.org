@@ -2,12 +2,6 @@
 
 /* The home page, containing the lobby and spectating sections. */
 
-/* Sticky-footer: body fills the viewport; main grows to push footer down */
-body {
-	display: flex;
-	flex-direction: column;
-}
-
 /* ============================================================
    Page layout
    ============================================================ */
