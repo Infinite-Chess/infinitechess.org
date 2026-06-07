@@ -8,10 +8,14 @@ import { getTranslationForReq } from '../utility/translate.js';
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
 	// Catches errors from for example the body parser, which can throw if the body is too large.
 	// This needs to be handled itself, as i18next was never defined.
-	if ('status' in err) {
-		const status = (err as Error & { status: number }).status;
-		if (status >= 400 && status < 500) {
-			res.status(status).json({ message: err.message || 'Bad request' });
+	if ('status' in err && typeof err.status === 'number') {
+		if (err.status >= 400 && err.status < 500) {
+			// Only echo the error's own message back to the client when it is explicitly
+			// marked safe to expose (http-errors sets `expose` for e.g. body-parser errors).
+			// NEVER leak arbitrary internal messages — they can contain absolute file paths.
+			const message = 'expose' in err && err.expose === true ? err.message : 'Bad request';
+
+			res.status(err.status).json({ message });
 			return;
 		}
 	}
