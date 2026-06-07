@@ -1,20 +1,14 @@
 // src/server/routes/root.ts
 
-import type { ScriptTranslations } from '../../shared/types/script-translations.js';
-
 import express, { NextFunction, Request, Response } from 'express';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { verifyJWT } from '../middleware/verifyJWT.js';
-import { getLanguageToServe } from '../utility/translate.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/createAccountController.js';
-import {
-	getScriptTranslations,
-	getTemplateTranslations,
-} from '../config/componentTranslationLoader.js';
+import { getBaseRenderContext } from '../utility/baseRenderContext.js';
 
 const router = express.Router();
 
@@ -27,12 +21,7 @@ router.use(verifyJWT);
 // Nunjucks automatically merges res.locals into every template's render context,
 // so {{ lang }}, {{ templateT }}, {{ scriptT }}, {{ memberInfo }}, are available in every template.
 router.use((req: Request, res: Response, next: NextFunction) => {
-	const lang = getLanguageToServe(req);
-	res.locals['lang'] = lang;
-	res.locals['templateT'] = (component: string) => getTemplateTranslations(component, lang);
-	res.locals['scriptT'] = <C extends keyof ScriptTranslations>(component: C) =>
-		getScriptTranslations(component, lang);
-	res.locals['memberInfo'] = req.memberInfo;
+	Object.assign(res.locals, getBaseRenderContext(req));
 	next();
 });
 
@@ -77,12 +66,5 @@ router.get('/patron(.html)?', (_req: Request, res: Response) => res.render('patr
 
 // Legacy URL redirects (permanent 301)
 router.get('/termsofservice(.html)?', (_req: Request, res: Response) => res.redirect(301, '/terms')); // prettier-ignore
-
-// Error pages
-router.get('/400(.html)?', (_req: Request, res: Response) => res.render('errors/400.njk'));
-router.get('/401(.html)?', (_req: Request, res: Response) => res.render('errors/401.njk'));
-router.get('/404(.html)?', (_req: Request, res: Response) => res.render('errors/404.njk'));
-router.get('/409(.html)?', (_req: Request, res: Response) => res.render('errors/409.njk'));
-router.get('/500(.html)?', (_req: Request, res: Response) => res.render('errors/500.njk'));
 
 export { router as rootRouter };
