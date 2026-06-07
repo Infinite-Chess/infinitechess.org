@@ -3,8 +3,8 @@
 import type { Request, Response } from 'express';
 
 import { logEventsAndPrint } from './logEvents.js';
+import { getErrorPageContext } from '../utility/errorPageContext.js';
 import { getTranslationForReq } from '../utility/translate.js';
-import { getBaseRenderContext } from '../utility/baseRenderContext.js';
 
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
 	// Catches errors from for example the body parser, which can throw if the body is too large.
@@ -32,8 +32,8 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 
 		if (req.accepts('html')) {
 			res.status(500).render(
-				'errors/500.njk',
-				getBaseRenderContext(req), // The error page includes the header which needs auth state.
+				'error.njk',
+				getErrorPageContext(req, 500), // The error page includes the header which needs auth state.
 				// Handle potential errors manually instead of letting them next(err), triggering this handler again and an infinite loop.
 				(renderErr: Error | null, html: string) => {
 					if (!renderErr) {

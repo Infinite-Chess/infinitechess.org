@@ -1,0 +1,28 @@
+{% extends "layout.njk" %}
+
+{# Shared error page for every HTTP error (404, 500, …). The status code, title,
+   and message are passed in per-request — see utility/errorPageContext.ts. #}
+
+{% set pageName = code ~ " " ~ title %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/error.css'] }}" />
+{% endblock %}
+
+{% block body %}
+{% include "components/header/header.njk" %}
+
+<main class="bg-checkerboard">
+	{# Semi-opaque dark overlay sits above the checkerboard background #}
+	<div id="bg-overlay"></div>
+
+	<section class="error-content">
+		<p class="error-code">{{ code }}</p>
+		<h1 class="error-title">{{ title }}</h1>
+		<p class="error-message">{{ message }}</p>
+		<a class="btn-primary error-home" href="/">Back to home</a>
+	</section>
+</main>
+
+{% include "components/footer/footer.njk" %}
+{% endblock %}
