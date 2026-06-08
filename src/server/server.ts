@@ -22,6 +22,13 @@ import variantcache from '../shared/chess/variants/variantcache.js';
 
 const httpsServer = https.createServer(getCertOptions(), app);
 
+// Keep the origin's keep-alive window above the Cloudflare tunnel's (cloudflared's default
+// originRequest.keepAliveTimeout is 90s) so the origin never closes a pooled connection out from
+// under the proxy just as it reuses it. Node's 5s default loses that race, surfacing as
+// "Data after `Connection: close`" HTTP parse errors in errLog.txt.
+// The underlying principle is the origin's keep-alive should outlast the proxy's.
+httpsServer.keepAliveTimeout = 95000;
+
 await variantcache.loadAllVariants();
 
 // Restore live games from the database into memory before accepting new connections.
