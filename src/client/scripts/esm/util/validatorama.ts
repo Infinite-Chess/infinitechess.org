@@ -102,8 +102,6 @@ async function refreshToken(): Promise<void> {
 	reqIsOut = true;
 	try {
 		const response = await serverFetch('/api/get-access-token', { method: 'POST' });
-		const result = await response.json();
-
 		if (response.ok) {
 			// Session token (refresh token cookie) is valid!
 			const accessToken = docutil.getCookieValue('token'); // Read access token from cookie
@@ -118,10 +116,14 @@ async function refreshToken(): Promise<void> {
 
 			// Dispatch event to inform other parts of the app that we are logged in.
 			// document.dispatchEvent(new CustomEvent('login'));
-		} else {
-			// 403 or 500 error   Likely not signed in! Our session token (refresh token cookie) was invalid or not present.
-			console.log(`Server: ${result.message}`);
+		} else if (response.status === 403) {
+			// Auth failure: , our session token (refresh token cookie) is invalid or not present.
+			console.log('Token refresh: not signed in (invalid or missing refresh token).');
 			reloadAfterLogout();
+		} else {
+			// Any other non-OK status (e.g. 429 rate-limited, or 5xx). Don't log the user out!
+			// Leave the session as-is; a later refresh attempt will retry.
+			console.error(`Token refresh failed with status ${response.status}.`);
 		}
 	} catch (error) {
 		console.error('Error occurred during token refresh:', error);

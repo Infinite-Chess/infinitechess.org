@@ -26,6 +26,9 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 	if (cached) return cached;
 	try {
 		const response = await fetch(`sounds/${soundName}.opus`);
+		// Only read the body if OK: a non-OK response (e.g. a 429, or an HTML error page)
+		// isn't valid audio, so skip the needless decode and fail explicitly instead.
+		if (!response.ok) throw new Error(`Fetch returned status ${response.status}.`);
 		const arrayBuffer = await response.arrayBuffer();
 		const decoded = await AudioManager.decodeAudioData(arrayBuffer);
 		audioCache.set(soundName, decoded);

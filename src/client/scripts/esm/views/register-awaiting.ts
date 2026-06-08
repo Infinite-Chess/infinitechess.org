@@ -122,21 +122,25 @@ async function pollVerification(): Promise<void> {
 	lastPollAt = Date.now();
 	try {
 		const response = await serverFetch('/register/awaiting/poll');
-		const result = (await response.json()) as {
-			status: 'pending' | 'verified' | 'expired' | 'blacklisted';
-		};
-		if (result.status === 'verified') {
-			stopPolling();
-			flashToast.queue('Your account has been activated!');
-			window.location.assign('/');
-			return;
-		} else if (result.status === 'expired' || result.status === 'blacklisted') {
-			stopPolling();
-			// The server redirects 'expired' to /register when there's no pending registration
-			window.location.reload();
-			return;
-		}
-		// 'pending' → keep waiting.
+		// Only parse the body if OK: a non-OK status (e.g. a 429 from the rate limiter)
+		// isn't the JSON shape we expect, so just keep waiting and retry next tick.
+		if (response.ok) {
+			const result = (await response.json()) as {
+				status: 'pending' | 'verified' | 'expired' | 'blacklisted';
+			};
+			if (result.status === 'verified') {
+				stopPolling();
+				flashToast.queue('Your account has been activated!');
+				window.location.assign('/');
+				return;
+			} else if (result.status === 'expired' || result.status === 'blacklisted') {
+				stopPolling();
+				// The server redirects 'expired' to /register when there's no pending registration
+				window.location.reload();
+				return;
+			}
+			// 'pending' → keep waiting.
+		} // else non-OK (e.g. 429) without the JSON shape needed → keep waiting.
 	} catch (e: unknown) {
 		console.error('Registration poll failed:', e); // Transient; keep polling.
 	}
@@ -204,11 +208,13 @@ async function submitNewEmail(): Promise<void> {
 		});
 		if (response.ok) {
 			window.location.reload();
-			return;
+		} else {
+			// Non-OK (our server's validation error, or a 429).
+			// The body carries a { message } we surface to the user.
+			const result = (await response.json()) as { message?: string };
+			setEmailError(result.message ?? t.shared.error_fallback);
+			changeSubmit.disabled = false;
 		}
-		const result = (await response.json()) as { message?: string };
-		setEmailError(result.message ?? t.shared.error_fallback);
-		changeSubmit.disabled = false;
 	} catch (e: unknown) {
 		console.error('Change-email request failed:', e);
 		setEmailError('Network error. Please try again.');

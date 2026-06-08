@@ -159,7 +159,10 @@ async function submitRegister(): Promise<void> {
 			body: JSON.stringify({ username, email, password }),
 		});
 
-		if (!response.ok) {
+		if (response.ok) {
+			// The pending cookie is set; the awaiting page owns the rest (check-email, polling, change-email).
+			window.location.assign('/register/awaiting');
+		} else {
 			const result = (await response.json()) as {
 				message?: string;
 				field?: 'username' | 'email' | 'password';
@@ -186,9 +189,6 @@ async function submitRegister(): Promise<void> {
 			refreshSubmit();
 			return;
 		}
-
-		// The pending cookie is set; the awaiting page owns the rest (check-email, polling, change-email).
-		window.location.assign('/register/awaiting');
 	} catch (e: unknown) {
 		console.error('Registration request failed:', e);
 		setFormError('Network error. Please try again.');
