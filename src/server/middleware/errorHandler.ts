@@ -16,8 +16,22 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 		}
 	}
 
+	// If we ever get 'Data after `Connection: close`' errors again, we can enable a block like
+	// the following. Otherwise, if after a few months after the website redesign 2.0 update we
+	// see no more of these errors, we can delete this block.
+	//
+	// Node's HTTP parser tags malformed-request errors with an "HPE_" code (e.g. for a "Data after
+	// `Connection: close`" parse error). These come from a misbehaving peer/proxy — typically a
+	// keep-alive/connection-reuse race between Cloudflare and the origin (see server.ts, where we
+	// raise keepAliveTimeout to reduce them) — not a server bug, so we drop them rather than pollute
+	// errLog.txt, and reply 400 if the broken connection can still be written to.
+	// if ('code' in err && typeof err.code === 'string' && err.code.startsWith('HPE_')) {
+	// 	if (!res.headersSent) res.status(400).end();
+	// 	return;
+	// }
+
 	try {
-		const errMessage = `${err.stack}`;
+		const errMessage = `Error caught by the express error-handling middleware (${req.method} ${req.originalUrl}):\n${err.stack}`;
 		logEventsAndPrint(errMessage, 'errLog.txt');
 
 		// This sends back to the browser the error, instead of the ENTIRE stack which is PRIVATE.
