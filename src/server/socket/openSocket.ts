@@ -164,6 +164,15 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 }
 
 function onerror(ws: CustomWebSocket, error: Error): void {
+	// `ws` tags malformed-frame errors with a "WS_ERR_" code (e.g. WS_ERR_INVALID_CLOSE_CODE for a
+	// Close frame with reserved code 1006) and already closes the connection (status 1002). Not a
+	// server bug, so we ignore them rather than pollute errLog.txt. Cause (from errLog analysis):
+	// client stacks/proxies on flaky networks (mobile, VPNs, webviews) that echo their own
+	// abnormal-disconnect code onto the wire — a compliant browser can never transmit 1006. Rare,
+	// benign, entirely client-side.
+	if ('code' in error && typeof error.code === 'string' && error.code.startsWith('WS_ERR_'))
+		return;
+
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
 	logEventsAndPrint(errText, 'errLog.txt');
 }
