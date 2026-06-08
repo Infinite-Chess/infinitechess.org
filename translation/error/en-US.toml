@@ -5,6 +5,10 @@
 title = "Not Found"
 message = "We couldn't find the page you were looking for."
 
+[429]
+title = "Too Many Requests"
+message = "You have made too many requests, please try again in a moment."
+
 [500]
 title = "Server Error"
 message = "Something went wrong on our end. Please try again."

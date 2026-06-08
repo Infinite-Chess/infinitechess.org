@@ -8,6 +8,7 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
+import { getErrorPageContext } from '../utility/renderContext.js';
 import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 
@@ -137,13 +138,47 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 			`Agent ${userKey} has too many requests! Count: ${timestamps.length}`,
 			'reqLogRateLimited.txt',
 		);
-		res.status(429).json({
-			message: getScriptTranslationsForReq('responses', req).rate_limiting.generic,
-		});
+		respondRateLimited(req, res);
 		return;
 	}
 
 	next(); // Continue the middleware waterfall
+}
+
+/**
+ * Sends the 429 (Too Many Requests) response, content-negotiated on the Accept header:
+ * - HTML  → the shared error page. Its styles live in global.css (already cached for any
+ *   visitor who reached the limit), so it renders fully styled without making a new request
+ *   that would itself be rate limited.
+ * - JSON  → `{ message }`.
+ * - else  → the message as plain text.
+ * @param req - The request object
+ * @param res - The response object
+ */
+function respondRateLimited(req: Request, res: Response): void {
+	res.status(429);
+	const message = getScriptTranslationsForReq('responses', req).rate_limiting.generic;
+
+	if (req.accepts('html')) {
+		res.render(
+			'error.njk',
+			getErrorPageContext(req, 429),
+			// Handle render errors manually instead of next(err), so a failure here doesn't bubble
+			// into the error handler (which would itself try to render and could loop).
+			(renderErr: Error | null, html: string) => {
+				if (renderErr) {
+					console.error('Critical error in rateLimit.ts rendering 429 page:', renderErr);
+					res.send(message);
+				} else {
+					res.send(html);
+				}
+			},
+		);
+	} else if (req.accepts('json')) {
+		res.json({ message });
+	} else {
+		res.send(message);
+	}
 }
 
 /**
