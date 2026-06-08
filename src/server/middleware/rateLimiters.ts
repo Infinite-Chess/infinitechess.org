@@ -47,9 +47,30 @@ export const createAccountLimiter = rateLimit({
  * Guards against spamming DNS/MX lookups, DB queries against.
  */
 export const createAccountAttemptLimiter = rateLimit({
-	windowMs: 1000 * 60 * 60, // 1 hour
-	max: 30,
+	windowMs: 1000 * 60 * 5, // 5 minutes
+	max: 20,
 	skipSuccessfulRequests: true, // Only counts if no pending registration was made (no email)
+	...default_options,
+});
+
+/**
+ * Login Attempt Limiter
+ * A per-IP cap that complements the per-username+IP limiter in authRatelimiter.ts:
+ * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
+ */
+export const loginAttemptLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 15,
+	...default_options,
+});
+
+/**
+ * Username Availability Limiter (the register form's blur-triggered username check).
+ * Generous. Cap only helps prevent rapid username enumeration.
+ */
+export const usernameAvailabilityLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 30,
 	...default_options,
 });
 

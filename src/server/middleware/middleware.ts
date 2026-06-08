@@ -56,6 +56,8 @@ import {
 	editorSaveLimiter,
 	editorLoadLimiter,
 	seekPreviewLimiter,
+	loginAttemptLimiter,
+	usernameAvailabilityLimiter,
 } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
@@ -199,7 +201,7 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.get('/register/availability', checkUsernameAvailable); // Currently ONLY can check username
+	app.get('/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
 	app.post('/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
 	app.get('/register/awaiting/poll', pollPendingRegistration);
 	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
@@ -211,7 +213,7 @@ export function configureMiddleware(app: Express): void {
 
 	// API --------------------------------------------------------------------
 
-	app.post('/auth', handleLogin); // Login fetch POST request
+	app.post('/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
 
 	app.post('/setlanguage', (req: Request, res: Response) => {
 		// Language cookie setter POST request

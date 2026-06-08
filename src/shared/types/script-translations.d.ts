@@ -52,8 +52,7 @@ export interface ScriptTranslations {
 			cloud_not_found: string;
 		};
 		auth: {
-			invalid_identifier: string;
-			incorrect_password: string;
+			invalid_credentials: string;
 			login_failed: string;
 			login_retry_in_one: string;
 			login_retry_in_other: string;

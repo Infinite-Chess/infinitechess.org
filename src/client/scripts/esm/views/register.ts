@@ -230,6 +230,8 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 		const response = await serverFetch(
 			`/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
 		);
+		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
+		if (!response.ok) return;
 		const result = (await response.json()) as { allowed: boolean; reason: string };
 		if (!result.allowed) {
 			setFieldError(usernameInput, usernameError, result.reason);
