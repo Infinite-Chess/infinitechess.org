@@ -1,8 +1,9 @@
-// src/server/utility/baseRenderContext.ts
+// src/server/utility/renderContext.ts
 
 /**
- * Builds the base render context that layout.njk — and therefore every page that
- * extends it — needs: language, the translation helpers, and auth state.
+ * Builds the render contexts (template locals) for SSR'd pages: the base context
+ * every page extending layout.njk needs — language, translation helpers, and auth
+ * state — plus the error page's, which adds the localized title and message.
  */
 
 import type { Request } from 'express';
@@ -29,5 +30,22 @@ export function getBaseRenderContext(req: Request): {
 			getScriptTranslations(component, lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
 		memberInfo: req.memberInfo ?? { signedIn: false },
+	};
+}
+
+/** Returns the locals error.njk needs to render the page for `status`. */
+export function getErrorPageContext(
+	req: Request,
+	status: number,
+): ReturnType<typeof getBaseRenderContext> & { code: number; title: string; message: string } {
+	const base = getBaseRenderContext(req);
+	const t = getTemplateTranslations('error', base.lang);
+	// Fall back to the 500 copy for any code without its own table in the TOML.
+	const entry = t[status] ?? t[500];
+	return {
+		...base,
+		code: status,
+		title: entry.title,
+		message: entry.message,
 	};
 }

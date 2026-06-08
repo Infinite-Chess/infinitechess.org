@@ -8,7 +8,7 @@ import { verifyJWT } from '../middleware/verifyJWT.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/createAccountController.js';
-import { getBaseRenderContext } from '../utility/baseRenderContext.js';
+import { getBaseRenderContext } from '../utility/renderContext.js';
 
 const router = express.Router();
 

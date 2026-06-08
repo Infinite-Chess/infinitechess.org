@@ -1,7 +1,7 @@
 {% extends "layout.njk" %}
 
 {# Shared error page for every HTTP error (404, 500, …). The status code, title,
-   and message are passed in per-request — see utility/errorPageContext.ts. #}
+   and message are passed in per-request — see utility/renderContext.ts. #}
 
 {% set pageName = code ~ " " ~ title %}
 

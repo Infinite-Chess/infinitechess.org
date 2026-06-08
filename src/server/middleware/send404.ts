@@ -2,7 +2,7 @@
 
 import type { Request, Response } from 'express';
 
-import { getErrorPageContext } from '../utility/errorPageContext.js';
+import { getErrorPageContext } from '../utility/renderContext.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
 function send404(req: Request, res: Response): void {

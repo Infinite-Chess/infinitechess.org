@@ -3,7 +3,7 @@
 import type { Request, Response } from 'express';
 
 import { logEventsAndPrint } from './logEvents.js';
-import { getErrorPageContext } from '../utility/errorPageContext.js';
+import { getErrorPageContext } from '../utility/renderContext.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
