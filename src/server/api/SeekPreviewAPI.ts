@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 
 import { SeekIdSchema } from '../../shared/types.js';
 
-import { getInviteAndIndexByID } from '../game/invitesmanager/lobbymanager.js';
+import { getSeekAndIndexByID } from '../game/seeksmanager/lobbymanager.js';
 
 function getSeekPreview(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;
@@ -19,7 +19,7 @@ function getSeekPreview(req: Request, res: Response): void {
 		return;
 	}
 
-	const result = getInviteAndIndexByID(seekId);
+	const result = getSeekAndIndexByID(seekId);
 	if (result === undefined) {
 		res.status(404).send('Seek not found.');
 		return;

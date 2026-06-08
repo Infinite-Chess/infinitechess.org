@@ -10,6 +10,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
 import { getGameBySocket } from './gamemanager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
 
 /**
@@ -22,7 +23,18 @@ function onJoinGame(ws: CustomWebSocket): void {
 	if (!servergame) return; // They don't belong in a game, don't join them in one.
 
 	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
-	gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
+	try {
+		gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
+	} catch {
+		// DB error (already logged
+		sendSocketMessage(
+			ws,
+			'game',
+			'notifyerror',
+			"Couldn't connect to game. A server error occurred. Please refresh.",
+		);
+		return;
+	}
 
 	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
 	if (servergame.whosTurn === colorPlayingAs) {

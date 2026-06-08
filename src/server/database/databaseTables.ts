@@ -93,6 +93,40 @@ const allRatingAbuseColumns: string[] = [
 	'last_alerted_at',
 ];
 
+/** All columns of the live_games table. */
+const allLiveGamesColumns: string[] = [
+	'game_id',
+	'time_created',
+	'variant',
+	'clock',
+	'rated',
+	'private',
+	'moves',
+	'color_ticking',
+	'clock_snapshot_time',
+	'draw_offer_state',
+	'conclusion_condition',
+	'conclusion_victor',
+	'time_ended',
+	'afk_resign_time',
+	'delete_time',
+	'validate_moves',
+];
+
+/** All columns of the live_player_games table. */
+const allLivePlayerGamesColumns: string[] = [
+	'game_id',
+	'player_number',
+	'user_id',
+	'browser_id',
+	'elo',
+	'last_draw_offer_ply',
+	'time_remaining_ms',
+	'disconnect_cushion_end_time',
+	'disconnect_resign_time',
+	'disconnect_by_choice',
+];
+
 // Functions -----------------------------------------------------------------------------------
 
 /** Creates the tables in our database if they do not exist. */
@@ -117,6 +151,24 @@ function generateTables(): void {
 			last_read_news_date TEXT
 		);
 	`);
+
+	// Pending Registrations table — verify-first registration staging, before a real member row exists
+	db.run(`
+		CREATE TABLE IF NOT EXISTS pending_registrations (
+			claim_token        TEXT PRIMARY KEY NOT NULL, -- httpOnly cookie secret; unchanging
+			verification_token TEXT UNIQUE NOT NULL, -- email-link secret; rotates on email change
+			username           TEXT UNIQUE NOT NULL COLLATE NOCASE,
+			email              TEXT UNIQUE NOT NULL,
+			hashed_password    TEXT NOT NULL,
+			created_at         INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			expires_at         INTEGER NOT NULL, -- Unix timestamp (milliseconds)
+			member_user_id     INTEGER -- NULL until verified; doubles as the "verified" flag
+		);
+	`);
+	// Index for the expiry sweep
+	db.run(
+		`CREATE INDEX IF NOT EXISTS idx_pending_registrations_expires_at ON pending_registrations (expires_at);`,
+	);
 
 	// Deleted Members table
 	db.run(`
@@ -332,24 +384,6 @@ function generateTables(): void {
 	db.run(`CREATE INDEX IF NOT EXISTS idx_live_player_games_game ON live_player_games (game_id);`);
 }
 
-// /**
-//  * Deletes a table from the database by its name.
-//  * @param tableName - The name of the table to delete.
-//  */
-// function deleteTable(tableName: string): void {
-// 	try {
-// 		// Prepare the SQL query to drop the table
-// 		const deleteTableSQL = `DROP TABLE IF EXISTS ${tableName};`;
-
-// 		// Run the query
-// 		db.run(deleteTableSQL);
-// 		console.log(`Table ${tableName} deleted successfully.`);
-// 	} catch (error) {
-// 		console.error(`Error deleting table ${tableName}:`, error);
-// 	}
-// }
-// deleteTable('test');
-
 function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
@@ -424,6 +458,8 @@ export {
 	allPlayerGamesColumns,
 	allGamesColumns,
 	allRatingAbuseColumns,
+	allLiveGamesColumns,
+	allLivePlayerGamesColumns,
 	initDatabase,
 	generateTables,
 	clearAllTables,

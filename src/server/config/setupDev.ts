@@ -26,7 +26,6 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			username: 'Owner',
 			email: '4@gmail.com',
 			password: '1',
-			autoVerify: true,
 		});
 		giveRole(user_id, 'owner');
 		giveRole(user_id, 'admin');
@@ -48,7 +47,6 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			username: 'Admin',
 			email: '3@gmail.com',
 			password: '1',
-			autoVerify: true,
 		});
 		giveRole(user_id, 'admin');
 	}
@@ -57,7 +55,6 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			username: 'Patron',
 			email: '2@gmail.com',
 			password: '1',
-			autoVerify: true,
 		});
 		giveRole(user_id, 'patron');
 	}
@@ -66,14 +63,13 @@ async function ensureDevelopmentAccounts(): Promise<void> {
 			username: 'Member',
 			email: '1@gmail.com',
 			password: '1',
-			autoVerify: true,
 		});
 	}
 
 	// Populate leaderboard with dummy accounts for testing
 	// for (let i = 0; i < 230; i++) {
 	// 	if (!doesMemberOfUsernameExist(`Player${i}`)) {
-	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1", autoVerify: true })).user_id;
+	// 		const user_id = (await generateAccount({ username: `Player${i}`, email: `playeremail${i}`, password: "1" })).user_id;
 	// 		addUserToLeaderboard(user_id, Leaderboards.INFINITY);
 	// 		updatePlayerLeaderboardRating(user_id, Leaderboards.INFINITY, 1800 - 10 * i, 100 + i);
 	// 	}

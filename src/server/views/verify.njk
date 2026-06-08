@@ -1,0 +1,53 @@
+{% extends "layout.njk" %}
+
+{% set pageName = "Verify your account" %}
+
+{% block bodyClass %}sticky-footer{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/verify.css'] }}" />
+{% endblock %}
+
+{% block body %}
+{% include "components/header/header.njk" %}
+
+<main class="bg-checkerboard page-centered">
+	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
+	<div id="bg-overlay"></div>
+
+	<section class="auth-card" id="verify-card">
+		{% if state == 'prompt' %}
+		{# Prompt state. The button verifies the account. #}
+		<h1 class="auth-title" id="verify-title">Verify your account</h1>
+		<p class="verify-state-text" id="verify-subtitle">Click the button below to activate your account.</p>
+		<button class="btn-primary" type="button" id="verify-button">Verify my account</button>
+		<p class="auth-error center hidden" id="verify-error"></p>
+		{% endif %}
+
+		{# Success state; on the prompt page it's hidden and revealed by js after a click. #}
+		{% if state == 'prompt' or state == 'verified' %}
+		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-success-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+			Account activated
+		</h1>
+		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">You may return to your previous tab.</p>
+		{% endif %}
+
+		{# Expired/invalid state; on the prompt page it's hidden and revealed by js if a click reports token invalid. #}
+		{% if state == 'prompt' or state == 'invalid' %}
+		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-title">
+			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+			Link expired
+		</h1>
+		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">This verification link is no longer valid. It may have expired or been invalidated.</p>
+		<p class="auth-prompt center{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-prompt"><a class="auth-link" href="/register">Register again</a></p>
+		{% endif %}
+	</section>
+</main>
+
+{% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/verify.ts'] }}"></script>
+{% endblock %}

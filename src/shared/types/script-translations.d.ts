@@ -52,14 +52,25 @@ export interface ScriptTranslations {
 			cloud_not_found: string;
 		};
 		auth: {
-			invalid_identifier: string;
-			incorrect_password: string;
+			invalid_credentials: string;
 			login_failed: string;
 			login_retry_in_one: string;
 			login_retry_in_other: string;
 		};
+		rate_limiting: {
+			generic: string;
+			account_creations: string;
+			verify_emails: string;
+		};
+		editor_saves: {
+			must_be_signed_in: string;
+			position_not_found: string;
+			limit_reached: string;
+			server_error: string;
+		};
 	};
 	shared: {
+		error_fallback: string;
 		user_status: {
 			guest_indicator: string;
 			you_indicator: string;

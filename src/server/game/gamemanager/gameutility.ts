@@ -40,7 +40,7 @@ import {
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { memberInfoEq, AuthSeek } from '../invitesmanager/inviteutility.js';
+import { memberInfoEq, AuthSeek } from '../seeksmanager/seekutility.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
@@ -184,10 +184,10 @@ type ValidationDependant =
 // Functions --------------------------------------------------------------------------------------
 
 /**
- * Construct the match object based on the invite options and how players have been assigned
+ * Construct the match object based on the seek options and how players have been assigned
  */
 function initMatch(
-	invite: AuthSeek,
+	seek: AuthSeek,
 	id: number,
 	assignedPlayers: PlayerGroup<{ identifier: AuthMemberInfo }>,
 ): MatchInfo {
@@ -204,16 +204,16 @@ function initMatch(
 		};
 	}
 
-	if (invite.variant.kind !== 'preset')
+	if (seek.variant.kind !== 'preset')
 		throw new Error('Custom variant game starting is not yet implemented.');
 
 	return {
 		id,
-		variant: invite.variant.code,
+		variant: seek.variant.code,
 		playerData,
 		timeCreated: Date.now(),
-		rated: invite.mode === 'rated',
-		clock: invite.time,
+		rated: seek.mode === 'rated',
+		clock: seek.time,
 	};
 }
 
@@ -248,31 +248,31 @@ function initServerGame(
 }
 
 /**
- * Assigns which player is what color, depending on the `color` property of the invite.
+ * Assigns which player is what color, depending on the `color` property of the seek.
  *
  * WE MUST EXPLICITLY have arguments for each player, as otherwise a bug is introduced
  * if this is called with only 1 player!! And type safety doesn't catch it.
- * @param inviteColor - The color property of the invite. "Random" / "White" / "Black"
- * @param player1 - The first player (the invite owner).
- * @param player2 - The second player (the invite accepter).
+ * @param seekColor - The color property of the seek. "Random" / "White" / "Black"
+ * @param player1 - The first player (the seek owner).
+ * @param player2 - The second player (the seek accepter).
  * @returns An object with 2 properties:
  * - `colorData`: An object mapping player color to player info
  * - `playerColors`: the colors of each player, in order of ascending player number.
  */
-function assignWhiteBlackPlayersFromInvite(
-	inviteColor: Player | null,
+function assignWhiteBlackPlayersFromSeek(
+	seekColor: Player | null,
 	player1: AuthMemberInfo,
 	player2: AuthMemberInfo,
 ): PlayerGroup<AuthMemberInfo> {
 	// { id, owner, variant, clock, color, rated }
 	const colorData: PlayerGroup<AuthMemberInfo> = {};
-	if (inviteColor === p.WHITE) {
+	if (seekColor === p.WHITE) {
 		colorData[p.WHITE] = player1;
 		colorData[p.BLACK] = player2;
-	} else if (inviteColor === p.BLACK) {
+	} else if (seekColor === p.BLACK) {
 		colorData[p.WHITE] = player2;
 		colorData[p.BLACK] = player1;
-	} else if (inviteColor === null) {
+	} else if (seekColor === null) {
 		// Random
 		if (Math.random() > 0.5) {
 			colorData[p.WHITE] = player1;
@@ -281,7 +281,7 @@ function assignWhiteBlackPlayersFromInvite(
 			colorData[p.WHITE] = player2;
 			colorData[p.BLACK] = player1;
 		}
-	} else throw Error(`Unsupported color ${inviteColor} when assigning players to game.`);
+	} else throw Error(`Unsupported color ${seekColor} when assigning players to game.`);
 
 	return colorData;
 }
@@ -293,6 +293,7 @@ function assignWhiteBlackPlayersFromInvite(
  * @param playerColor - What color they are playing in this game. p.NEU
  * @param options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
  * @param options.sendGameInfo
+ * @throws If a database error occurs (from {@link sendGameInfoToPlayer}).
  */
 function subscribeClientToGame(
 	servergame: ServerGame,
@@ -348,6 +349,7 @@ function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
  * @param servergame - The game they're in.
  * @param playerSocket - Their websocket
  * @param playerColor - The color they are.
+ * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
 function sendGameInfoToPlayer(
 	servergame: ServerGame,
@@ -379,6 +381,7 @@ function sendGameInfoToPlayer(
  * Returns the current elo of all players in the game on the leaderboard
  * of the variant being played, or the INFINITY leaderboard if the variant does not have a leaderboard.
  * @returns An object containing the rating for non-guests in the game, and whether we are confident in that rating, IF the variant has a leaderboard.
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard}).
  */
 function getRatingDataForGamePlayers(
 	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
@@ -441,6 +444,7 @@ function constructMetadataOfGame(
  * @param servergame - The game
  * @param colorPlayingAs - Their color
  * @param [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
+ * @throws If a database error occurs (from {@link subscribeClientToGame}).
  */
 function resyncToGame(
 	ws: CustomWebSocket,
@@ -835,7 +839,7 @@ export default {
 	subscribeClientToGame,
 	unsubClientFromGame,
 	resyncToGame,
-	assignWhiteBlackPlayersFromInvite,
+	assignWhiteBlackPlayersFromSeek,
 	constructMetadataOfGame,
 	broadcastGameUpdate,
 	sendGameUpdateToColor,
@@ -853,5 +857,4 @@ export default {
 	isGameResignable,
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,
-	getRatingDataForGamePlayers,
 };

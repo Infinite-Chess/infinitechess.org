@@ -131,7 +131,7 @@ export function syncRatedButton(): void {
 	const variant = variantSelector.getInviteVariant();
 	const time: TimeControl = timeControls.getTimeControl();
 	const color = getSelectedColor();
-	const modifiers = modifierSelector.getInviteModifiers();
+	const modifiers = modifierSelector.getSeekModifiers();
 
 	const allowed = isRatedAllowed(variant, time, color, modifiers);
 	element_ratedButton.disabled = !allowed;
@@ -162,7 +162,7 @@ function handleOnlineSeek(): void {
 	const modeBtn = document.querySelector<HTMLElement>('[data-mode].active')!;
 	const mode: GameMode = modeBtn.getAttribute('data-mode') as GameMode;
 
-	const modifiers = modifierSelector.getInviteModifiers();
+	const modifiers = modifierSelector.getSeekModifiers();
 
 	lobby.createSeek({ variant, time, color, mode, modifiers });
 	closeModal();

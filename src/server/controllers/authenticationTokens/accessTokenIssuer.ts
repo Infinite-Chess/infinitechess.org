@@ -1,8 +1,8 @@
 // src/server/controllers/authenticationTokens/accessTokenIssuer.ts
 
 // Route
-// Returns a new access token if refresh token hasn't expired.
-// Called by a fetch(). ALWAYS RETURN a json!
+// Returns a new access token (as a cookie) if the
+// refresh token hasn't expired. Called by a fetch().
 
 import type { Request, Response } from 'express';
 
@@ -22,9 +22,8 @@ const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
  */
 function accessTokenIssuer(req: Request, res: Response): void {
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
-		res.status(403).json({
-			message: 'Invalid or missing refresh token (logged out), cannot issue access token.',
-		}); // Forbidden
+		// Invalid or missing refresh token (logged out), cannot issue access token.
+		res.status(403).end(); // Forbidden
 		return;
 	}
 
@@ -33,9 +32,10 @@ function accessTokenIssuer(req: Request, res: Response): void {
 	const { user_id, username, roles } = req.memberInfo;
 	const accessToken = signAccessToken(user_id, username, roles);
 
-	// SEND the token as a cookie!
+	// SEND the token as a cookie! Their member information is also
+	// stored in a cookie when the refreshed token cookie is generated.
 	createAccessTokenCookie(res, accessToken); // 10 second expiry time
-	res.json({ message: 'Issued access token!' }); // Their member information is now stored in a cookie when the refreshed token cookie is generated
+	res.end();
 	// console.log(`Issued access token for member "${username}" --------`);
 }
 

@@ -33,21 +33,26 @@ const ESMEntryPoints = [
 	'src/client/css/toast.css',
 	'src/client/css/index.css',
 	'src/client/css/login.css',
+	'src/client/css/register.css',
+	'src/client/css/register-awaiting.css',
+	'src/client/css/verify.css',
+	'src/client/css/error.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index/index.ts',
 	'src/client/scripts/esm/views/login.ts',
+	'src/client/scripts/esm/views/register.ts',
+	'src/client/scripts/esm/views/register-awaiting.ts',
+	'src/client/scripts/esm/views/verify.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
 
 	// 'src/client/scripts/esm/game/main.ts',
 	// 'src/client/scripts/esm/components/header/header.ts',
-	// 'src/client/scripts/esm/views/member.ts',
 	// 'src/client/scripts/esm/views/leaderboard.ts',
 	// 'src/client/scripts/esm/views/news.ts',
-	// 'src/client/scripts/esm/views/register.ts',
 	// 'src/client/scripts/esm/views/resetpassword.ts',
 	// 'src/client/scripts/esm/views/guide.ts',
 	// 'src/client/scripts/esm/views/admin.ts',

@@ -5,8 +5,10 @@
  * across server restarts. One row per active game.
  */
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import jsutil from '../../shared/util/jsutil.js';
+
+import db, { dbCall } from './database.js';
+import { allLiveGamesColumns } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
@@ -37,23 +39,6 @@ export interface LiveGameData {
 	validate_moves: 0 | 1;
 }
 
-// SQL Queries ---------------------------------------------------------------------------------------
-
-const INSERT_QUERY = `
-	INSERT INTO live_games (
-		game_id, time_created, variant, clock, rated, private,
-		moves, color_ticking, clock_snapshot_time,
-		draw_offer_state,
-		conclusion_condition, conclusion_victor, time_ended,
-		afk_resign_time, delete_time,
-		validate_moves
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
-
-const DELETE_QUERY = `DELETE FROM live_games WHERE game_id = ?`;
-
-const SELECT_ALL_QUERY = `SELECT * FROM live_games`;
-
 // Methods --------------------------------------------------------------------------------------------
 
 /**
@@ -61,29 +46,38 @@ const SELECT_ALL_QUERY = `SELECT * FROM live_games`;
  * @param record - The complete live_games record to insert.
  */
 function insertLiveGame(record: LiveGamesRecord): void {
-	try {
-		db.run(INSERT_QUERY, [
-			record.game_id,
-			record.time_created,
-			record.variant,
-			record.clock,
-			record.rated,
-			record.private,
-			record.moves,
-			record.color_ticking,
-			record.clock_snapshot_time,
-			record.draw_offer_state,
-			record.conclusion_condition,
-			record.conclusion_victor,
-			record.time_ended,
-			record.afk_resign_time,
-			record.delete_time,
-			record.validate_moves,
-		]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error inserting live game ${record.game_id}: ${message}`, 'errLog.txt');
-	}
+	const query = `
+			INSERT INTO live_games (
+				game_id, time_created, variant, clock, rated, private,
+				moves, color_ticking, clock_snapshot_time,
+				draw_offer_state,
+				conclusion_condition, conclusion_victor, time_ended,
+				afk_resign_time, delete_time,
+				validate_moves
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`;
+	dbCall(
+		() =>
+			db.run(query, [
+				record.game_id,
+				record.time_created,
+				record.variant,
+				record.clock,
+				record.rated,
+				record.private,
+				record.moves,
+				record.color_ticking,
+				record.clock_snapshot_time,
+				record.draw_offer_state,
+				record.conclusion_condition,
+				record.conclusion_victor,
+				record.time_ended,
+				record.afk_resign_time,
+				record.delete_time,
+				record.validate_moves,
+			]),
+		`Error inserting live game ${record.game_id}`,
+	);
 }
 
 /**
@@ -92,19 +86,24 @@ function insertLiveGame(record: LiveGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  */
 function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
-	const entries = Object.entries(updates);
-	if (entries.length === 0) return;
+	dbCall(() => {
+		// Validate the input structure...
+		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
+			throw new Error(
+				`Invalid or empty updates provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
+		const entries = Object.entries(updates);
+		if (!entries.every(([col]) => allLiveGamesColumns.includes(col)))
+			throw new Error(
+				`Invalid columns provided when updating live game ${game_id}! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
 
-	const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-	const values = entries.map(([, val]) => val);
-	const query = `UPDATE live_games SET ${setClauses} WHERE game_id = ?`;
-
-	try {
+		// Move on to the SQL query
+		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+		const values = entries.map(([, val]) => val);
+		const query = `UPDATE live_games SET ${setClauses} WHERE game_id = ?`;
 		db.run(query, [...values, game_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error updating live game ${game_id}: ${message}`, 'errLog.txt');
-	}
+	}, `Error updating live game ${game_id}`);
 }
 
 /**
@@ -112,12 +111,10 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
  * @param game_id - The game to delete.
  */
 function deleteLiveGame(game_id: number): void {
-	try {
-		db.run(DELETE_QUERY, [game_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error deleting live game ${game_id}: ${message}`, 'errLog.txt');
-	}
+	dbCall(
+		() => db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]),
+		`Error deleting live game ${game_id}`,
+	);
 }
 
 /**
@@ -125,13 +122,10 @@ function deleteLiveGame(game_id: number): void {
  * @returns An array of all live_games records.
  */
 function getAllLiveGames(): LiveGamesRecord[] {
-	try {
-		return db.all<LiveGamesRecord>(SELECT_ALL_QUERY);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error retrieving all live games: ${message}`, 'errLog.txt');
-		return [];
-	}
+	return dbCall(
+		() => db.all<LiveGamesRecord>('SELECT * FROM live_games'),
+		'Error retrieving all live games',
+	);
 }
 
 // Exports --------------------------------------------------------------------------------------------

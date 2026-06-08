@@ -9,12 +9,16 @@
 import type { LobbyMessage } from '../../websocket/socketschemas.js';
 
 import lobby from './lobby.js';
+import flashToast from '../../util/flashToast.js';
 import { SocketBus } from '../../websocket/SocketBus.js';
 
 import './newPrompt.js';
 import './gameSetupModal.js';
 
 // Initial setup -----------------------------------------------------
+
+// Show any toast queued before a redirect here (e.g. "Account activated!" after registering).
+flashToast.consume();
 
 lobby.subscribe();
 SocketBus.addEventListener('reconnected', () => lobby.subscribe());
@@ -29,14 +33,14 @@ function onLobbyMessage(contents: LobbyMessage): void {
 			lobby.onViewerCountUpdate(contents.value.viewercount);
 			break;
 		case 'seekslist':
-			lobby.onSeekListUpdate(contents.value.invitesList);
+			lobby.onSeekListUpdate(contents.value.seeksList);
 			break;
 		case 'viewercount':
 			lobby.onViewerCountUpdate(contents.value);
 			break;
 		default:
 			// @ts-ignore
-			console.error(`Unknown invites action: ${contents.action}`);
+			console.error(`Unknown lobby action: ${contents.action}`);
 	}
 }
 

@@ -115,7 +115,6 @@ network-error = "A network error occurred. Please try again."
 [password-validation]
 js-pwd_too_short = "Password must be 6+ characters long"
 js-pwd_too_long = "Password can't be over 72 characters long"
-js-pwd_not_pwd = "Password must not be 'password'"
 
 [leaderboard]
 title = "Leaderboard"
@@ -579,17 +578,17 @@ position_not_supported = "Position is not supported for reason:"
 illegal_position_king_capture = "Illegal position: King capture possible on turn 1."
 saved_in_browser = "Position saved in browser."
 position_corrupted = "The position was corrupted."
-failed_to_load = "Failed to load position:"
+failed_to_load = "Failed to load position."
 failed_to_convert_icn = "Failed to convert position to ICN for cloud upload."
 too_large_for_cloud = "Position is too large to save to the cloud."
-failed_to_upload = "Failed to upload position to cloud:"
+failed_to_upload = "Failed to upload position to cloud."
 saved_to_cloud = "Position saved to cloud."
 no_changes = "No changes made."
-failed_to_load_cloud = "Failed to load position from the cloud:"
-failed_to_delete_cloud = "Failed to delete position from the cloud:"
-failed_to_remove_cloud = "Failed to remove position from cloud:" # Transfers position from cloud to local browser
+failed_to_load_cloud = "Failed to load position from the cloud."
+failed_to_delete_cloud = "Failed to delete position from the cloud."
+failed_to_remove_cloud = "Failed to remove position from cloud." # Transfers position from cloud to local browser
 saved_locally = "Position saved locally."
-failed_to_fetch_cloud = "Failed to fetch cloud saves:"
+failed_to_fetch_cloud = "Failed to fetch cloud saves."
 
 [terms]
 title = "Terms of Service"
@@ -678,9 +677,8 @@ ws-email_too_long = "Your email is too looooooong."
 ws-email_invalid = "This is not a valid email"
 ws-email_in_use = "This email is already in use"
 ws-email_domain_invalid = "Invalid domain."
-ws-email_blacklisted = "Your email is blacklisted."
+ws-email_blacklisted = "This address either can't receive mail, or is blacklisted."
 ws-password_length = "Password must be 6-72 characters long"
-ws-password_password = "Password must not be 'password'"
 ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
 ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
 ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
@@ -697,7 +695,3 @@ ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it
 ws-rated_invite_verification_needed = "To play ranked, you need to be signed in with a verified account."
-
-[rate-limiting]
-generic = "You have made too many requests, please try again later."
-error = "Too many requests"

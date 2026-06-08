@@ -25,8 +25,6 @@ import secureRedirect from './secureRedirect.js';
 import { rootRouter } from '../routes/root.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
-import { verifyAccount } from '../controllers/verifyAccountController.js';
-import { getMemberData } from '../api/MemberAPI.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
@@ -34,9 +32,9 @@ import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
-import { requestConfirmEmail } from '../controllers/emailController.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
+import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
@@ -45,17 +43,21 @@ import {
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
 import {
-	checkEmailValidity,
 	checkUsernameAvailable,
 	createNewMember,
+	pollPendingRegistration,
+	changePendingEmail,
 } from '../controllers/createAccountController.js';
 import {
 	createAccountLimiter,
-	resendAccountVerificationLimiter,
+	createAccountAttemptLimiter,
+	verificationEmailLimiter,
 	forgotPasswordLimiter,
 	editorSaveLimiter,
 	editorLoadLimiter,
 	seekPreviewLimiter,
+	loginAttemptLimiter,
+	usernameAvailabilityLimiter,
 } from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
@@ -199,9 +201,10 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.post('/register', createAccountLimiter, createNewMember); // "register" POST request
-	app.get('/register/username/:username', checkUsernameAvailable);
-	app.get('/register/email/:email', checkEmailValidity);
+	app.get('/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
+	app.post('/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
+	app.get('/register/awaiting/poll', pollPendingRegistration);
+	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
 
 	// Member router
 	app.delete('/member/:member/delete', removeAccount);
@@ -210,7 +213,7 @@ export function configureMiddleware(app: Express): void {
 
 	// API --------------------------------------------------------------------
 
-	app.post('/auth', handleLogin); // Login fetch POST request
+	app.post('/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
 
 	app.post('/setlanguage', (req: Request, res: Response) => {
 		// Language cookie setter POST request
@@ -263,10 +266,7 @@ export function configureMiddleware(app: Express): void {
 
 	app.get('/command/:command', processCommand);
 
-	// Member routes that do require authentication
-	app.get('/member/:member/data', getMemberData);
-	app.post('/member/:member/send-email', resendAccountVerificationLimiter, requestConfirmEmail);
-	app.get('/verify/:member/:code', verifyAccount);
+	app.post('/verify/:token', verifyPendingRegistration);
 
 	// Leaderboard router
 	app.get(

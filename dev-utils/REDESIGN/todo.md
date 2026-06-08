@@ -14,10 +14,13 @@
 - Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
 
 - Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
+	- Add a `last_emailed_tos_version` INTEGER column to the `members` table (default 0) to track which ToS-update broadcast each member has been emailed — for when the ToS-update email broadcaster is built.
 
 - Add the **Privacy Policy** page — English only, same approach as ToS.
 
 - Delete all old ejs documents, stylesheets, and scripts related to the old pages.
+
+- Should we have some special 429 "Too Many Requests" page or handling? Does sending the html for that page each rate limit effectively defeat the purpose? We're still sending just as much data each request??
 
 ---
 
@@ -48,6 +51,8 @@
 ---
 
 ## Late-Stage Polish
+
+- Ensure you can't exceed db positions quota.
 
 - Delete any unused theme-specific css variables in global.css
 

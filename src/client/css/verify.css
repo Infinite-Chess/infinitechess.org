@@ -1,0 +1,19 @@
+/* src/client/css/verify.css */
+
+/* The email-link landing page (/verify/:token): a single centered card. */
+
+/* ============================================================
+   Card pieces
+   ============================================================ */
+
+/* Explanatory line beneath a heading, and the swapped-in result text. */
+.verify-state-text {
+	color: var(--c-text-muted);
+	font-size: 0.95em;
+}
+
+/* Recommended for specificity, because `display: flex` on .auth-title overwrites the
+   .hidden class from global.css. Without this, a hidden state heading shows on the prompt page. */
+.hidden {
+	display: none;
+}

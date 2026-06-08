@@ -14,6 +14,7 @@ import editorutil from '../../shared/util/editorutil.js';
 import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
+import EditorSavesAPI from './EditorSavesAPI.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
 
@@ -109,7 +110,9 @@ describe('EditorSavesAPI Integration', () => {
 				.send(position);
 
 			expect(response.status).toBe(201);
-			expect(response.body).toMatchObject({ success: true });
+			expect(response.body).toMatchObject({
+				saves: [expect.objectContaining({ name: position.name })],
+			});
 
 			// Verify the position was actually saved to the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
@@ -261,7 +264,7 @@ describe('EditorSavesAPI Integration', () => {
 			const user = await integrationUtils.createAndLoginUser();
 
 			// Add 50 positions to reach the quota limit
-			for (let i = 0; i < editorSavesManager.MAX_SAVED_POSITIONS; i++) {
+			for (let i = 0; i < EditorSavesAPI.MAX_SAVED_POSITIONS; i++) {
 				await testRequest()
 					.post('/api/editor-saves')
 					.set('Cookie', user.cookie)
@@ -548,7 +551,7 @@ describe('EditorSavesAPI Integration', () => {
 				.set('Cookie', user.cookie);
 
 			expect(response.status).toBe(200);
-			expect(response.body).toMatchObject({ success: true, saves: [] });
+			expect(response.body).toMatchObject({ saves: [] });
 
 			// Verify the position was actually deleted from the database
 			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);

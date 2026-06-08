@@ -1,7 +1,7 @@
-// src/server/game/invitesmanager/createseek.ts
+// src/server/game/seeksmanager/createseek.ts
 
 /**
- * This script handles invite creation, making sure that the invites have valid properties.
+ * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
@@ -29,23 +29,23 @@ import {
 	POSITION_STRING_THRESHOLD,
 } from '../../../shared/chess/variants/servervalidation.js';
 import {
-	InviteVariantSchema,
-	InviteModifierSchema,
+	SeekVariantSchema,
+	SeekModifierSchema,
 	TimeControlSchema,
 	GameModeSchema,
 } from '../../../shared/types.js';
 
-import { AuthSeek } from './inviteutility.js';
+import { AuthSeek } from './seekutility.js';
 import editorSavesManager from '../../database/editorSavesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import {
-	existingInviteHasID,
-	deleteUsersExistingInvite,
-	addInvite,
-	IDLengthOfInvites,
+	existingSeekHasID,
+	deleteUsersExistingSeek,
+	addSeek,
+	IDLengthOfSeeks,
 } from './lobbymanager.js';
 
 // Types -------------------------------------------------------------------------------
@@ -60,31 +60,30 @@ export type CreateSeekMessage = z.infer<typeof createseekschem>;
 const createseekschem = z
 	.strictObject({
 		tag: z.string().length(8),
-		variant: InviteVariantSchema,
+		variant: SeekVariantSchema,
 		time: TimeControlSchema.refine((c) => clockutil.isTimedControlValid(c), {
 			error: 'Invalid clock value.',
 		}),
 		color: z.literal([p.WHITE, p.BLACK, null]),
 		mode: GameModeSchema,
-		modifiers: z.array(InviteModifierSchema).max(InviteModifierSchema.options.length),
+		modifiers: z.array(SeekModifierSchema).max(SeekModifierSchema.options.length),
 	})
 	.refine(
 		(val) =>
 			val.mode !== 'rated' || isRatedAllowed(val.variant, val.time, val.color, val.modifiers),
-		{ error: 'Invalid invite parameters for a rated game.' },
+		{ error: 'Invalid seek parameters for a rated game.' },
 	);
 
 // Functions -------------------------------------------------------------------------
 
 /**
- * Creates a new invite from their websocket message.
+ * Creates a new seek from their websocket message.
  * @param ws - Their socket
- * @param messageContents - The incoming socket message that SHOULD contain the invite properties!
+ * @param messageContents - The incoming socket message that SHOULD contain the seek properties!
  */
 async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): Promise<void> {
-	// invite: { id, owner, variant, clock, color, rated }
 	if (isSocketInAnActiveGame(ws)) {
-		// Can't create invite because they are already in a game
+		// Can't create seek because they are already in a game
 		const t = getScriptTranslationsForReq('responses', ws);
 		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
 	}
@@ -99,30 +98,41 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 		return;
 	}
 
-	const invite = await getInviteFromWebsocketMessageContents(ws, messageContents);
-	if (!invite) return; // Message contained invalid invite parameters. Error already sent to the client.
+	try {
+		const seek = await getSeekFromWebsocketMessageContents(ws, messageContents);
+		if (!seek) return; // Message contained invalid seek parameters. Error already sent to the client.
 
-	// Replace any existing invite this user owns — the subsequent addInvite() broadcasts the new state.
-	deleteUsersExistingInvite(ws.metadata.memberInfo, { broadCastNewInvites: false });
+		// Replace any existing seek this user owns — the subsequent addSeek() broadcasts the new state.
+		deleteUsersExistingSeek(ws.metadata.memberInfo, { broadCastNewSeeks: false });
 
-	addInvite(invite);
+		addSeek(seek);
+	} catch {
+		// DB error (already logged)
+		sendSocketMessage(
+			ws,
+			'general',
+			'notifyerror',
+			"Couldn't create seek. A server error occurred. Please try again.",
+		);
+	}
 }
 
 /**
  * Builds an {@link AuthSeek} from the client's createseek message, resolving
  * cloudSave variants to ICN and validating ICN positions for legality.
  * Returns `void` after sending an error to the client if any check fails.
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link editorSavesManager.getSavedPositionICN}).
  */
-async function getInviteFromWebsocketMessageContents(
+async function getSeekFromWebsocketMessageContents(
 	ws: CustomWebSocket,
 	messageContents: CreateSeekMessage,
 ): Promise<AuthSeek | void> {
-	// Verify their invite contains the required properties...
+	// Verify their seek contains the required properties...
 
 	let id: string;
 	do {
-		id = uuid.generateID_Base36(IDLengthOfInvites);
-	} while (existingInviteHasID(id));
+		id = uuid.generateID_Base36(IDLengthOfSeeks);
+	} while (existingSeekHasID(id));
 
 	const owner = ws.metadata.memberInfo;
 

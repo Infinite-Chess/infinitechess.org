@@ -18,7 +18,7 @@ interface CustomWebSocket extends WebSocket {
 	metadata: {
 		/** What subscription lists they are subscribed to. Possible: "lobby" / "game" */
 		subscriptions: {
-			/** Whether they are subscribed to the lobby (invites/spectating) list. */
+			/** Whether they are subscribed to the lobby (seeks/spectating) list. */
 			lobby?: boolean;
 			/** Will be defined if they are subscribed to, or in, a game. */
 			game?: {

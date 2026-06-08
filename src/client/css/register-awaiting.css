@@ -1,0 +1,38 @@
+/* src/client/css/register-awaiting.css */
+
+/* The post-registration "check your email" page: a single centered card. */
+
+/* ============================================================
+   Awaiting-state pieces
+   ============================================================ */
+
+/* Explanatory message block beneath the heading. */
+.register-state-text {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	color: var(--c-text-muted);
+	font-size: 0.95em;
+}
+
+/* "Check email correctness" toggle — a secondary button that reveals the change-email field. */
+.register-change-toggle {
+	align-self: flex-start;
+	padding: 8px 14px;
+	background: none;
+	border: 1px solid var(--c-border);
+	border-radius: 6px;
+	color: var(--c-text);
+	font-size: 0.9em;
+	cursor: pointer;
+}
+
+.register-change-toggle:hover {
+	background: var(--c-hover-overlay);
+}
+
+/* The change-email field group (revealed by the toggle, or shown expanded when blacklisted). */
+.register-change-submit {
+	margin-top: 8px;
+	padding: 10px;
+}

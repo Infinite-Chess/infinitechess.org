@@ -3,6 +3,8 @@
 {% set t = templateT('login') %}
 {% set pageName = t.title %}
 
+{% block bodyClass %}sticky-footer{% endblock %}
+
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/login.css'] }}" />
 {% endblock %}
@@ -15,24 +17,24 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main class="bg-checkerboard">
+<main class="bg-checkerboard page-centered">
 	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
 	<div id="bg-overlay"></div>
 
-	<form class="login-card" id="login-form">
-		<h1 class="login-title">{{ t.title }}</h1>
+	<form class="auth-card" id="login-form">
+		<h1 class="auth-title">{{ t.title }}</h1>
 
-		<div class="login-field">
+		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
-			<input class="login-input" type="text" id="username" name="username"
+			<input class="auth-input" type="text" id="username" name="username"
 			       autocomplete="username" autocapitalize="off" maxlength="320" required />
 		</div>
 
-		<div class="login-field">
+		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
 			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
-			<input class="login-input" type="password" id="password" name="password"
+			<input class="auth-input" type="password" id="password" name="password"
 			       autocomplete="current-password" maxlength="72" required />
 		</div>
 
@@ -41,15 +43,15 @@
 				<input type="checkbox" id="keep-logged-in" />
 				<span>{{ t.keep_logged_in }}</span>
 			</label>
-			<a class="login-link" href="/resetpassword">{{ t.reset_password }}</a>
+			<a class="auth-link" href="/resetpassword">{{ t.reset_password }}</a>
 		</div>
 
 		{# Populated by login.ts on a failed attempt. #}
-		<p class="login-error hidden" id="login-error"></p>
+		<p class="auth-error center hidden" id="login-error"></p>
 
 		<button class="btn-primary" type="submit" id="login-submit">{{ t.submit }}</button>
 
-		<p class="login-register">{{ t.register_prompt }} <a class="login-link" href="/register">{{ t.register_link }}</a></p>
+		<p class="auth-prompt center">{{ t.register_prompt }} <a class="auth-link" href="/register">{{ t.register_link }}</a></p>
 	</form>
 </main>
 

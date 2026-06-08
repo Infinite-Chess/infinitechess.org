@@ -5,8 +5,10 @@
  * state for active games across server restarts. One row per player per game.
  */
 
-import db from './database.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import jsutil from '../../shared/util/jsutil.js';
+
+import db, { dbCall } from './database.js';
+import { allLivePlayerGamesColumns } from './databaseTables.js';
 
 // Types ----------------------------------------------------------------------------------------------
 
@@ -33,18 +35,6 @@ export interface LivePlayerDisconnectData {
 	disconnect_by_choice: 0 | 1 | null;
 }
 
-// SQL Queries ---------------------------------------------------------------------------------------
-
-const INSERT_QUERY = `
-	INSERT INTO live_player_games (
-		game_id, player_number, user_id, browser_id, elo,
-		last_draw_offer_ply, time_remaining_ms,
-		disconnect_cushion_end_time, disconnect_resign_time, disconnect_by_choice
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-`;
-
-const SELECT_BY_GAME_QUERY = `SELECT * FROM live_player_games WHERE game_id = ? ORDER BY player_number`;
-
 // Methods --------------------------------------------------------------------------------------------
 
 /**
@@ -52,26 +42,29 @@ const SELECT_BY_GAME_QUERY = `SELECT * FROM live_player_games WHERE game_id = ? 
  * @param record - The complete live_player_games record to insert.
  */
 function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
-	try {
-		db.run(INSERT_QUERY, [
-			record.game_id,
-			record.player_number,
-			record.user_id,
-			record.browser_id,
-			record.elo,
-			record.last_draw_offer_ply,
-			record.time_remaining_ms,
-			record.disconnect_cushion_end_time,
-			record.disconnect_resign_time,
-			record.disconnect_by_choice,
-		]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number}): ${message}`,
-			'errLog.txt',
-		);
-	}
+	const query = `
+		INSERT INTO live_player_games (
+			game_id, player_number, user_id, browser_id, elo,
+			last_draw_offer_ply, time_remaining_ms,
+			disconnect_cushion_end_time, disconnect_resign_time, disconnect_by_choice
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`;
+	dbCall(
+		() =>
+			db.run(query, [
+				record.game_id,
+				record.player_number,
+				record.user_id,
+				record.browser_id,
+				record.elo,
+				record.last_draw_offer_ply,
+				record.time_remaining_ms,
+				record.disconnect_cushion_end_time,
+				record.disconnect_resign_time,
+				record.disconnect_by_choice,
+			]),
+		`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number})`,
+	);
 }
 
 /**
@@ -85,22 +78,24 @@ function updateLivePlayerGame(
 	player_number: number,
 	updates: Partial<LivePlayerData>,
 ): void {
-	const entries = Object.entries(updates);
-	if (entries.length === 0) return;
+	dbCall(() => {
+		// Validate the input structure...
+		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
+			throw new Error(
+				`Invalid or empty updates provided when updating live player game (game_id=${game_id}, player=${player_number})! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
+		const entries = Object.entries(updates);
+		if (!entries.every(([col]) => allLivePlayerGamesColumns.includes(col)))
+			throw new Error(
+				`Invalid columns provided when updating live player game (game_id=${game_id}, player=${player_number})! Received: ${jsutil.ensureJSONString(updates)}`,
+			);
 
-	const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-	const values = entries.map(([, val]) => val ?? null);
-	const query = `UPDATE live_player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`;
-
-	try {
+		// Move on to the SQL query
+		const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+		const values = entries.map(([, val]) => val ?? null);
+		const query = `UPDATE live_player_games SET ${setClauses} WHERE game_id = ? AND player_number = ?`;
 		db.run(query, [...values, game_id, player_number]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error updating live player game (game_id=${game_id}, player=${player_number}): ${message}`,
-			'errLog.txt',
-		);
-	}
+	}, `Error updating live player game (game_id=${game_id}, player=${player_number})`);
 }
 
 /**
@@ -109,16 +104,11 @@ function updateLivePlayerGame(
  * @returns An array of live_player_games records for this game.
  */
 function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
-	try {
-		return db.all<LivePlayerGamesRecord>(SELECT_BY_GAME_QUERY, [game_id]);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error retrieving live player games for game ${game_id}: ${message}`,
-			'errLog.txt',
-		);
-		return [];
-	}
+	const query = `SELECT * FROM live_player_games WHERE game_id = ? ORDER BY player_number`;
+	return dbCall(
+		() => db.all<LivePlayerGamesRecord>(query, [game_id]),
+		`Error retrieving live player games for game ${game_id}`,
+	);
 }
 
 // Exports --------------------------------------------------------------------------------------------

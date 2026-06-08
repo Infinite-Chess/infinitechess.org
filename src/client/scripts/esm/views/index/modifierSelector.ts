@@ -6,7 +6,7 @@
  */
 
 import type { ModifierCode } from '../../../../../shared/util/modutil.js';
-import type { InviteModifier } from '../../../../../shared/types.js';
+import type { SeekModifier } from '../../../../../shared/types.js';
 
 import modutil from '../../../../../shared/util/modutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
@@ -133,8 +133,8 @@ function hasVisibleModifierItems(): boolean {
 }
 
 /** Returns the complete configuration for every currently selected modifier. */
-function getInviteModifiers(): InviteModifier[] {
-	const configs: InviteModifier[] = [];
+function getSeekModifiers(): SeekModifier[] {
+	const configs: SeekModifier[] = [];
 	if (selectedModifiers.has('slide-limit')) {
 		const idx = parseInt(element_slideLimitSlider.value, 10);
 		const slideLimit = gameconfig.SLIDE_LIMIT_VALUES[idx]!;
@@ -148,5 +148,5 @@ function getInviteModifiers(): InviteModifier[] {
 export default {
 	initModifierSelector,
 	closeModifierDropdown,
-	getInviteModifiers,
+	getSeekModifiers,
 };

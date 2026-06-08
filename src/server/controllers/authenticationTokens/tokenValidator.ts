@@ -54,7 +54,11 @@ function isAccessTokenValid(token: string):
 		return { isValid: false, reason: message };
 	}
 
-	updateLastSeen(payload.user_id);
+	try {
+		updateLastSeen(payload.user_id);
+	} catch {
+		// Already logged. Token is still valid
+	}
 	return { isValid: true, payload };
 }
 
@@ -98,7 +102,11 @@ function isRefreshTokenValid(
 		return { isValid: false, reason: 'An internal error occurred during validation.' };
 	}
 
-	updateLastSeen(payload.user_id);
+	try {
+		updateLastSeen(payload.user_id);
+	} catch {
+		// Already logged. Token is still valid
+	}
 	return { isValid: true, payload, tokenRecord };
 }
 

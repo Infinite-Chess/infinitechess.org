@@ -2,8 +2,59 @@
 
 {% set pageName = "Register" %}
 
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/register.css'] }}" />
+{% endblock %}
+
 {% block body %}
 {% include "components/header/header.njk" %}
-<main></main>
+
+<main class="bg-checkerboard">
+	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
+	<div id="bg-overlay"></div>
+
+	<form class="auth-card" id="register-form">
+		<h1 class="auth-title">Register</h1>
+
+		<div class="auth-field">
+			<label for="username">Username</label>
+			{# maxlength 20: the username max length from validateUsername() in validators.ts. #}
+			<input class="auth-input" type="text" id="username" name="username"
+			       autocomplete="username" autocapitalize="off" maxlength="20" required />
+			{# Populated by register.ts on a failed format / availability check. #}
+			<p class="auth-error hidden" id="username-error"></p>
+		</div>
+
+		<div class="auth-field">
+			<label for="password">Password</label>
+			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
+			<input class="auth-input" type="password" id="password" name="password"
+			       autocomplete="new-password" maxlength="72" required />
+			<p class="auth-error hidden" id="password-error"></p>
+		</div>
+
+		<div class="auth-field">
+			<label for="email">Email</label>
+			{# maxlength 320: the email max length from validateEmail() in validators.ts. #}
+			<input class="auth-input" type="email" id="email" name="email"
+			       autocomplete="email" autocapitalize="off" maxlength="320" required />
+			<p class="auth-error hidden" id="email-error"></p>
+		</div>
+
+		{# Populated by register.ts on a failed submit (server validation / conflict). #}
+		<p class="auth-error center hidden" id="register-error"></p>
+
+		<p class="auth-prompt">By registering, you agree to our <a class="auth-link" href="/terms" target="_blank">Terms of Service</a> and <a class="auth-link" href="/privacy" target="_blank">Privacy Policy</a>.</p>
+
+		<button class="btn-primary" type="submit" id="register-submit" disabled>Register</button>
+
+		<p class="auth-prompt center">Already have an account? <a class="auth-link" href="/login">Log In</a></p>
+	</form>
+</main>
+
 {% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/register.ts'] }}"></script>
 {% endblock %}

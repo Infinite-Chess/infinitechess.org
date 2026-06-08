@@ -69,7 +69,19 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 		return;
 	}
 
-	gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
+	try {
+		gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
+	} catch {
+		// DB error (already logged)
+		sendSocketMessage(
+			ws,
+			'game',
+			'notifyerror',
+			"Couldn't resync to the game. A server error occurred. Please refresh.",
+			replyToMessageID,
+		);
+		return;
+	}
 
 	cancelDisconnectTimer(game.match, colorPlayingAs);
 	liveGameValues.onPlayerReconnected(game, colorPlayingAs);
@@ -77,18 +89,29 @@ function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: numbe
 
 /** Sends a client a game from the database. */
 function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
-	const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'termination', 'icn']);
-	if (!logged_game_info) {
-		// This happens if the user requests a game that was aborted before
-		// any moves were made, as those games are not stored in the database.
-		sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
+	try {
+		const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'termination', 'icn']);
+		if (!logged_game_info) {
+			// This happens if the user requests a game that was aborted before
+			// any moves were made, as those games are not stored in the database.
+			sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
+			return;
+		}
+
+		// They should automatically know to unsub on their end, because of this message.
+
+		// Send them the actual game info.
+		sendSocketMessage(ws, 'game', 'logged-game-info', logged_game_info);
+	} catch {
+		// DB error (already logged)
+		sendSocketMessage(
+			ws,
+			'game',
+			'notifyerror',
+			'A server error occurred while fetching game data. Please refresh.',
+		);
 		return;
 	}
-
-	// They should automatically know to unsub on their end, because of this message.
-
-	// Send them the actual game info.
-	sendSocketMessage(ws, 'game', 'logged-game-info', logged_game_info);
 
 	console.log(`Sent client game from the database of id (${gameID})!`);
 }

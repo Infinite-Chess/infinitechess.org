@@ -75,7 +75,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 
 	// DELETE ACCOUNT..
 
-	// Close their sockets, delete their invites, delete their session cookies...
+	// Close their sockets, delete their seeks, delete their session cookies...
 	revokeSession(res);
 
 	const reason_deleted = 'user request';
@@ -115,7 +115,7 @@ function deleteAccount(user_id: number, reason_deleted: string): void {
 
 	deleteUser(user_id, reason_deleted);
 
-	// Close their sockets, delete their invites...
+	// Close their sockets, delete their seeks...
 	closeAllSocketsOfMember(user_id, 1008, 'Logged out');
 
 	// Account deleting automatically invalidates all their sessions,

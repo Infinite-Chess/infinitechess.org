@@ -23,7 +23,7 @@ import {
 	RatingSchema,
 } from '../../../../shared/types.js';
 
-// Invite Helper Schemas ---------------------------------------------------------------
+// Seek Helper Schemas ---------------------------------------------------------------
 
 // Game Helper Schemas ---------------------------------------------------------------
 
@@ -70,9 +70,9 @@ const GeneralSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('gameversion'), value: z.string() }),
 ]);
 
-// Invites Schema ---------------------------------------------------------------
+// Seeks Schema ---------------------------------------------------------------
 
-const InvitesListSchema = z.array(OutSeekSchema);
+const SeeksListSchema = z.array(OutSeekSchema);
 const ViewerCountSchema = z.number().nonnegative();
 
 /** Represents all possible types an incoming 'lobby' route websocket message contents could be. */
@@ -81,14 +81,14 @@ const LobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('lobbysnapshot'),
 		value: z.strictObject({
-			seekslist: InvitesListSchema,
+			seekslist: SeeksListSchema,
 			viewercount: ViewerCountSchema,
 		}),
 	}),
 	z.strictObject({
 		action: z.literal('seekslist'),
 		value: z.strictObject({
-			invitesList: InvitesListSchema,
+			seeksList: SeeksListSchema,
 		}),
 	}),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),

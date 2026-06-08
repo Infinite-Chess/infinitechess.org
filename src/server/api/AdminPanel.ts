@@ -11,7 +11,6 @@ import validators from '../../shared/util/validators.js';
 
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { manuallyVerifyUser } from '../controllers/verifyAccountController.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { areRolesHigherInPriority } from '../controllers/roles.js';
 import { refreshGitHubContributorsList } from './GitHub.js';
@@ -26,7 +25,6 @@ const validCommands = [
 	'delete',
 	'username',
 	'logout',
-	'verify',
 	'userinfo',
 	'updatecontributors',
 	'help',
@@ -63,9 +61,6 @@ function processCommand(req: Request, res: Response): void {
 			return;
 		case 'logout':
 			logoutUser(command, commandAndArgs, req, res);
-			return;
-		case 'verify':
-			verify(command, commandAndArgs, req, res);
 			return;
 		case 'userinfo':
 			getUserInfo(command, commandAndArgs, req, res);
@@ -289,32 +284,6 @@ function logoutUser(command: string, commandAndArgs: string[], req: Request, res
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 
-function verify(command: string, commandAndArgs: string[], req: Request, res: Response): void {
-	if (commandAndArgs.length < 2) {
-		res.status(422).send(
-			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
-		);
-		return;
-	}
-	// Valid Syntax
-	logCommand(command, req);
-	const email = commandAndArgs[1]!.toLowerCase();
-
-	// Validate email format
-	const validationResult = validators.validateEmail(email);
-	if (validationResult !== validators.EmailValidationResult.Ok) {
-		const errorKey = validators.getEmailErrorTranslation(validationResult);
-		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
-		return;
-	}
-
-	// This method works without us having to confirm they exist first
-	const result = manuallyVerifyUser(email); // { success, username, reason }
-	if (result.success)
-		sendAndLogResponse(res, 200, 'User ' + result.username + ' has been verified!');
-	else sendAndLogResponse(res, 500, result.reason); // Failure message
-}
-
 function getUserInfo(command: string, commandAndArgs: string[], req: Request, res: Response): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
@@ -380,11 +349,6 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 		case 'logout':
 			res.status(200).send(
 				'Syntax: logout <username>\nLogs out all sessions of the account with the given username.',
-			);
-			return;
-		case 'verify':
-			res.status(200).send(
-				'Syntax: verify <email>\nVerifies the account with the given email address.',
 			);
 			return;
 		case 'userinfo':

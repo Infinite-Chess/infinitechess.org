@@ -11,7 +11,7 @@
 import type { Player } from '../util/typeutil.js';
 import type { VariantCode } from './variantregistry.js';
 import type { LoadedVariant } from '../logic/gamefile.js';
-import type { InviteVariant, TimeControl, InviteModifier } from '../../types.js';
+import type { SeekVariant, TimeControl, SeekModifier } from '../../types.js';
 
 import variantpreviewer from './variantpreviewer.js';
 import { VariantLeaderboards } from './validleaderboard.js';
@@ -71,13 +71,13 @@ function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
 
 /**
  * Returns `true` if the given seek options are eligible for a rated game.
- * Mirrors the server-side invite validation logic to avoid redundant checks.
+ * Mirrors the server-side seek validation logic to avoid redundant checks.
  */
 function isRatedAllowed(
-	variant: InviteVariant | null,
+	variant: SeekVariant | null,
 	time: TimeControl,
 	color: Player | null,
-	modifiers: InviteModifier[],
+	modifiers: SeekModifier[],
 ): boolean {
 	if (variant === null) return false;
 	if (variant.kind !== 'preset') return false; // Custom variants are never rated

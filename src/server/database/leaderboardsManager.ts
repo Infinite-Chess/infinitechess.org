@@ -4,13 +4,12 @@
  * This script handles queries to the leaderboards table.
  */
 
-import type { RunResult } from 'better-sqlite3'; // Import necessary types
 import type { Rating } from '../../shared/types.js';
 import type { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
-import db from './database.js';
 import { getTrueRD } from '../game/gamemanager/ratingcalculation.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js'; // Adjust path if needed
+import db, { dbCall } from './database.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	DEFAULT_LEADERBOARD_ELO,
 	UNCERTAIN_LEADERBOARD_RD,
@@ -25,8 +24,8 @@ interface LeaderboardEntry {
 	leaderboard_id: number;
 	elo: number;
 	rating_deviation: number;
-	rd_last_update_date: string | null; // Can be null if no games played yet
-	// Consider adding volatility if you use it in Glicko-2
+	/** Can be null if no games played yet */
+	rd_last_update_date: string | null;
 }
 
 // Methods --------------------------------------------------------------------------------------------
@@ -35,26 +34,27 @@ interface LeaderboardEntry {
  * The core logic for adding a user to a leaderboard.
  * This function is "unsafe" as it throws errors on failure, making it
  * suitable for use inside a database transaction.
- * @throws {SqliteError} If the database query fails. The error's `code` property
- *                       can be checked for specific constraints like 'SQLITE_CONSTRAINT_PRIMARYKEY'.
+ * @throws If a database error occurs.
  */
 function addUserToLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
 	rd: number,
-): RunResult {
+): void {
 	const query = `
-	INSERT INTO leaderboards (
-		user_id,
-		leaderboard_id,
-		elo,
-		rating_deviation
-		-- rd_last_update_date will be NULL by default
-	) VALUES (?, ?, ?, ?)
+		INSERT INTO leaderboards (
+			user_id,
+			leaderboard_id,
+			elo,
+			rating_deviation
+			-- rd_last_update_date will be NULL by default
+		) VALUES (?, ?, ?, ?)
 	`;
-	// This will throw on failure, which is what we want for a transaction.
-	return db.run(query, [user_id, leaderboard_id, elo, rd]);
+	dbCall(
+		() => db.run(query, [user_id, leaderboard_id, elo, rd]),
+		`Error adding user "${user_id}" to leaderboard "${leaderboard_id}"`,
+	);
 }
 
 /**
@@ -62,31 +62,31 @@ function addUserToLeaderboard(
  * This function throws errors on failure, making it suitable for use
  * inside a database transaction which can catch the error and roll back.
  * Callers outside of transactions should implement their own error handling.
- * @throws {Error} If the user is not found or if the database query fails.
+ * @throws If the user is not found or if a database error occurs.
  */
 function updatePlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
 	rd: number,
-): RunResult {
+): void {
 	const query = `
-	UPDATE leaderboards
-	SET elo = ?,
-	    rating_deviation = ?,
-		rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
-	WHERE user_id = ? AND leaderboard_id = ?
+		UPDATE leaderboards
+		SET elo = ?,
+			rating_deviation = ?,
+			rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
+		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
+	dbCall(() => {
+		const result = db.run(query, [elo, rd, user_id, leaderboard_id]);
 
-	// If the UPDATE affected no rows, it's a critical failure for a transaction.
-	// We must throw an error to trigger a rollback.
-	if (result.changes === 0) {
-		throw new Error(
-			`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`,
-		);
-	}
-	return result;
+		// If the UPDATE affected no rows, it's a critical failure for a transaction.
+		// We must throw an error to trigger a rollback.
+		if (result.changes === 0)
+			throw new Error(
+				`User with ID "${user_id}" not found on leaderboard "${leaderboard_id}" for update.`,
+			);
+	}, `Error updating leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`);
 }
 
 /**
@@ -95,83 +95,40 @@ function updatePlayerLeaderboardRating(
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
  * @returns True if the player exists on the specified leaderboard, false otherwise (including on error).
+ * @throws If a database error occurs.
  */
 function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
-	// Query to select a constant '1' if a matching row exists.
-	// LIMIT 1 ensures the database can stop searching after finding the first match.
-	// This is efficient, especially with the primary key index.
 	const query = `
         SELECT 1
         FROM leaderboards
         WHERE user_id = ? AND leaderboard_id = ?
         LIMIT 1;
     `;
-
-	try {
-		const result = db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]);
-
-		// If db.get returns anything (even an object like { '1': 1 }), it means a row was found.
-		// If no row is found, db.get returns undefined.
-		// The double negation (!!) converts a truthy value (the result object) to true,
-		// and a falsy value (undefined) to false.
-		return !!result;
-	} catch (error: unknown) {
-		// Log any potential database errors during the check
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-
-		// On error, we cannot confirm existence, so return false.
-		return false;
-	}
+	const result = dbCall(
+		() => db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]),
+		`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}"`,
+	);
+	return !!result;
 }
 
-/** The return type of {@link getPlayerLeaderboardRating} */
-type PlayerLeaderboardRating = {
-	elo: number;
-	rating_deviation: number;
-	rd_last_update_date: string | null; // Can be null if no games played yet
-};
-
 /**
- * The core logic for getting a player's rating. Throws on failure.
- * @throws {SqliteError} If the database query fails.
+ * Gets the rating values for a player on a specific leaderboard.
+ * @returns The player's leaderboard entry object or undefined if not found.
+ * @throws If a database error occurs.
  */
-function getPlayerLeaderboardRating_core(
+function getPlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
-): PlayerLeaderboardRating | undefined {
+): Pick<LeaderboardEntry, 'elo' | 'rating_deviation' | 'rd_last_update_date'> | undefined {
 	const query = `
 		SELECT elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
 		WHERE user_id = ? AND leaderboard_id = ?
 	`;
-	// This will throw an error if the query fails.
-	return db.get<PlayerLeaderboardRating>(query, [user_id, leaderboard_id]);
-}
-
-/**
- * Safely gets the rating values for a player on a specific leaderboard.
- * This wraps the core logic in a try/catch block to prevent crashes.
- * @returns The player's leaderboard entry object or undefined if not found or on error.
- */
-function getPlayerLeaderboardRating(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-): PlayerLeaderboardRating | undefined {
-	try {
-		return getPlayerLeaderboardRating_core(user_id, leaderboard_id);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log the error for debugging purposes
-		logEventsAndPrint(
-			`Error getting leaderboard rating data for member "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-		return undefined;
-	}
+	return dbCall(
+		() => db.get(query, [user_id, leaderboard_id]),
+		`Error getting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
+	);
 }
 
 /**
@@ -180,25 +137,16 @@ function getPlayerLeaderboardRating(
  * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
  */
 function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
-	// New function leveraging the idx_leaderboards_user index
 	const query = `
         SELECT leaderboard_id, elo, rating_deviation, rd_last_update_date
         FROM leaderboards
         WHERE user_id = ?
         ORDER BY leaderboard_id ASC -- Optional: order for consistency
     `;
-
-	try {
-		const entries = db.all(query, [user_id]) as LeaderboardEntry[];
-		return entries;
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error getting all leaderboard entries for user "${user_id}": ${message}`,
-			'errLog.txt',
-		);
-		return []; // Return an empty array on error
-	}
+	return dbCall(
+		() => db.all(query, [user_id]) as LeaderboardEntry[],
+		`Error getting all leaderboard entries for user "${user_id}"`,
+	);
 }
 
 /**
@@ -207,15 +155,14 @@ function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
  * @param start_rank - The 1-based rank to start from (e.g. 1 = top player, 2 = second-best, etc.)
  * @param n_players - The maximum number of players to retrieve, starting from start_rank
  * @returns An array of top player leaderboard entries, potentially empty.
+ * @throws If the database query fails.
  */
 function getTopPlayersForLeaderboard(
 	leaderboard_id: Leaderboard,
 	start_rank: number,
 	n_players: number,
 ): LeaderboardEntry[] {
-	// Changed table name, column names, ORDER BY column, added WHERE clause for leaderboard_id
 	const offset = Math.max(0, start_rank - 1); // SQL OFFSET is 0-based
-
 	const query = `
 		SELECT user_id, elo, rating_deviation, rd_last_update_date
 		FROM leaderboards
@@ -224,26 +171,16 @@ function getTopPlayersForLeaderboard(
 		ORDER BY elo DESC
 		LIMIT ? OFFSET ?
 	`;
-
-	try {
-		// Execute the query with leaderboard_id, n_players and offset parameters
-		// Added leaderboard_id to parameters
-		const top_players = db.all(query, [
-			leaderboard_id,
-			UNCERTAIN_LEADERBOARD_RD,
-			n_players,
-			offset,
-		]) as LeaderboardEntry[];
-		return top_players; // Returns an array (potentially empty)
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Updated log message
-		logEventsAndPrint(
-			`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-		return []; // Return an empty array on error
-	}
+	return dbCall(
+		() =>
+			db.all<LeaderboardEntry>(query, [
+				leaderboard_id,
+				UNCERTAIN_LEADERBOARD_RD,
+				n_players,
+				offset,
+			]),
+		`Error getting top "${n_players}" players starting at rank "${start_rank}" for leaderboard "${leaderboard_id}"`,
+	);
 }
 
 /**
@@ -259,12 +196,6 @@ function getPlayerRankInLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 ): number | undefined {
-	// This query uses a Common Table Expression (CTE) and the RANK window function.
-	// 1. Filter `leaderboards` to only include rows for the specific `leaderboard_id`.
-	// 2. Calculate `RANK() OVER (ORDER BY elo DESC)`.
-	//    RANK assigns the same rank to ties, but skips subsequent ranks
-	//    (e.g., if 2 players tie for 1st, the next rank is 3).
-	// 3. Select the calculated `rank` for the specific `user_id`.
 	const query = `
 		WITH RankedPlayers AS (
 			SELECT
@@ -278,27 +209,17 @@ function getPlayerRankInLeaderboard(
 		FROM RankedPlayers
 		WHERE user_id = ?; -- Then find the rank for the specific user
 	`;
-
-	try {
-		// Execute the query, expecting at most one row containing the rank
-		const result = db.get<{ rank: number }>(query, [
-			leaderboard_id,
-			UNCERTAIN_LEADERBOARD_RD,
-			user_id,
-			user_id,
-		]);
-
-		// If a result is found, return the rank, otherwise return undefined
-		return result?.rank;
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		// Log message remains appropriate
-		logEventsAndPrint(
-			`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}": ${message}`,
-			'errLog.txt',
-		);
-		return undefined; // Return undefined on error
-	}
+	const result = dbCall(
+		() =>
+			db.get<{ rank: number }>(query, [
+				leaderboard_id,
+				UNCERTAIN_LEADERBOARD_RD,
+				user_id,
+				user_id,
+			]),
+		`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}"`,
+	);
+	return result?.rank;
 }
 
 // Helper Functions ----------------------------------------------------------------------------------
@@ -309,28 +230,38 @@ function getPlayerRankInLeaderboard(
  * @param user_id - The id for the user
  * @param leaderboard_id - The id for the specific leaderboard.
  * @returns The player's leaderboard elo and whether we are confident about it.
+ * @throws If a database error occurs.
  */
 function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
-	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id); // { user_id, elo, rating_deviation, rd_last_update_date } | undefined
+	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id);
 	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
 	const confident = rating_values.rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
 	return { value: rating_values.elo, confident };
 }
 
+/**
+ * Retrieves all entries of the leaderboards table.
+ * @throws If a database error occurs.
+ */
+function getAllLeaderboardEntries(): LeaderboardEntry[] {
+	return dbCall(
+		() => db.all<LeaderboardEntry>('SELECT * FROM leaderboards'),
+		'Error retrieving all leaderboard entries',
+	);
+}
+
 // Regular Table Utility Functions -------------------------------------------------------------------
 
 /** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link RD_UPDATE_FREQUENCY} milliseconds */
 function startPeriodicLeaderboardRatingDeviationUpdate(): void {
-	setInterval(updateAllRatingDeviationsofLeaderboardTable, RD_UPDATE_FREQUENCY);
+	setInterval(() => updateAllRatingDeviationsofLeaderboardTable(), RD_UPDATE_FREQUENCY);
 }
 
 /** Retrieves all entries of the leaderboards table and updates their RD */
 function updateAllRatingDeviationsofLeaderboardTable(): void {
-	const query = `SELECT * FROM leaderboards`;
-
 	try {
-		const entries = db.all<LeaderboardEntry>(query);
+		const entries = getAllLeaderboardEntries();
 		for (const entry of entries) {
 			const updatedRD = getTrueRD(entry.rating_deviation, entry.rd_last_update_date);
 			updatePlayerLeaderboardRating(
@@ -345,9 +276,9 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 			'leaderboardLog.txt',
 		);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const detail = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
-			`Error updating all rating deviations in leaderboard table: ${message}`,
+			`Error updating all rating deviations in leaderboard table: ${detail}`,
 			'errLog.txt',
 		);
 	}
@@ -360,7 +291,6 @@ export {
 	updatePlayerLeaderboardRating,
 	isPlayerInLeaderboard,
 	getPlayerLeaderboardRating,
-	getPlayerLeaderboardRating_core,
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
 	getEloOfPlayerInLeaderboard,

@@ -1,0 +1,21 @@
+# Translation component: error pages
+# Source template: src/server/views/error.njk
+
+[404]
+title = "Page Not Found"
+message = "We couldn't find the page you were looking for."
+
+[500]
+title = "Server Error"
+message = "Something went wrong on our end. Please try again."
+
+# Add more codes as needed. This whole block doesn't need to be included in other tomls.
+# [400]
+# title = "Bad Request"
+# message = "Something about that request wasn't quite right."
+# [401]
+# title = "Unauthorized"
+# message = "You need to be signed in to view this page."
+# [409]
+# title = "Conflict"
+# message = "That request conflicts with the current state of things."

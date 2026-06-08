@@ -1,258 +1,254 @@
 // src/client/scripts/esm/views/register.ts
 
-// The script on the register page
+/**
+ * Client-side logic for the register form (/register).
+ *
+ * Validates the username/email/password fields (format via the shared validators, plus on-blur
+ * availability checks against the server) with "reward early, punish late" timing, and submits
+ * via fetch. On success the server has staged a pending registration and set the pending
+ * cookie, so the page navigates to /register/awaiting (which owns the "check your email" state,
+ * polling, and the change-email recovery control).
+ */
 
 import validators from '../../../../shared/util/validators.js';
 
 import { serverFetch } from '../util/serverFetch.js';
-import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
-const element_usernameInput = document.getElementById('username') as HTMLInputElement;
-const element_emailInput = document.getElementById('email') as HTMLInputElement;
-const element_passwordInput = document.getElementById('password') as HTMLInputElement;
-const element_submitButton = document.getElementById('submit') as HTMLButtonElement;
+// Elements ----------------------------------------------------------
 
-let usernameHasError = false;
-element_usernameInput.addEventListener('input', () => {
-	// When username field changes...
+const form = document.querySelector<HTMLFormElement>('#register-form')!;
+const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
+const emailInput = document.querySelector<HTMLInputElement>('#email')!;
+const passwordInput = document.querySelector<HTMLInputElement>('#password')!;
+const submitButton = document.querySelector<HTMLButtonElement>('#register-submit')!;
+const usernameError = document.querySelector<HTMLParagraphElement>('#username-error')!;
+const emailError = document.querySelector<HTMLParagraphElement>('#email-error')!;
+const passwordError = document.querySelector<HTMLParagraphElement>('#password-error')!;
+const formError = document.querySelector<HTMLParagraphElement>('#register-error')!;
 
-	// Test if the value of the username input field won't be accepted.
+// State -------------------------------------------------------------
 
-	// 3-25 characters in length.
-	// Accepted characters: A-Z 0-9
-	// Doesn't contain existing/reserved usernames.
-	// Doesn't contain profain words.
+let usernameValid = false;
+let emailValid = false;
+let passwordValid = false;
 
-	let usernameError = document.getElementById('usernameerror')!; // Does an error already exist?
+// Format error messages (hardcoded English) -------------------------
 
-	const result = validators.validateUsername(element_usernameInput.value);
+/** The English format error for a username value, or undefined if its format is valid. */
+function usernameFormatError(value: string): string | undefined {
+	switch (validators.validateUsername(value)) {
+		case validators.UsernameValidationResult.UsernameTooShort:
+			return 'Username must be at least 3 characters long';
+		case validators.UsernameValidationResult.UsernameTooLong:
+			return 'Username must be between 3-20 characters';
+		case validators.UsernameValidationResult.OnlyLettersAndNumbers:
+			return 'Username must only contain letters A-Z and numbers 0-9';
+		case validators.UsernameValidationResult.UsernameIsReserved:
+			return 'That username is reserved';
+		default:
+			return undefined;
+	}
+}
 
-	// If ANY error, make sure errorElement is created
-	if (result !== validators.UsernameValidationResult.Ok) {
-		if (!usernameError) {
-			// Create empty errorElement
-			usernameHasError = true;
-			createErrorElement('usernameerror', 'username-input-line');
-			// Change input box to red outline
-			element_usernameInput.style.outline = 'solid 1px red';
-			// Reset variable because it now exists.
-			usernameError = document.getElementById('usernameerror')!;
-		}
-		const errorTranslation = validators.getUsernameErrorTranslation(result);
-		if (errorTranslation) usernameError.textContent = translations[errorTranslation];
-		else usernameError.textContent = 'Invalid username (BUG, please report!)'; // Fallback message if no translation is available for this error
-	} else if (usernameError) {
-		// No errors, delete that error element if it exists
-		usernameHasError = false;
-		usernameError.remove();
-		element_usernameInput.removeAttribute('style');
+/** The English format error for an email value, or undefined if its format is valid. */
+function emailFormatError(value: string): string | undefined {
+	switch (validators.validateEmail(value)) {
+		case validators.EmailValidationResult.InvalidFormat:
+			return 'This is not a valid email';
+		case validators.EmailValidationResult.EmailTooLong:
+			return 'The email is too long';
+		default:
+			return undefined;
+	}
+}
+
+/** The English format error for a password value, or undefined if its format is valid. */
+function passwordFormatError(value: string): string | undefined {
+	switch (validators.validatePassword(value)) {
+		case validators.PasswordValidationResult.PasswordTooShort:
+			return 'Password must be 6+ characters long';
+		case validators.PasswordValidationResult.PasswordTooLong:
+			return "Password can't be over 72 characters long";
+		default:
+			return undefined;
+	}
+}
+
+// Functions ---------------------------------------------------------
+
+/** Shows an error beneath a field, or clears it when called with no message. */
+function setFieldError(
+	input: HTMLInputElement,
+	errorElement: HTMLParagraphElement,
+	message?: string,
+): void {
+	errorElement.textContent = message ?? '';
+	errorElement.classList.toggle('hidden', message === undefined);
+	input.classList.toggle('input-error', message !== undefined);
+}
+
+/** Shows the form-level submit error, or clears it when called with no message. */
+function setFormError(message?: string): void {
+	formError.textContent = message ?? '';
+	formError.classList.toggle('hidden', message === undefined);
+}
+
+/**
+ * Reflects the form's *visible* state on the submit button: enabled as long as
+ * all three fields have some text and none are currently showing an error.
+ * Field errors keep the button disabled until fixed; form errors don't gate it.
+ */
+function refreshSubmit(): void {
+	const allFilled =
+		usernameInput.value.length > 0 &&
+		passwordInput.value.length > 0 &&
+		emailInput.value.length > 0;
+	const anyVisibleError = [usernameError, passwordError, emailError].some(
+		(el) => !el.classList.contains('hidden'),
+	);
+	submitButton.disabled = !allFilled || anyVisibleError;
+}
+
+/**
+ * Runs the synchronous format check for a field and returns whether it's valid.
+ * An empty field is invalid but never shows an error (nothing typed yet).
+ */
+function validateFormat(
+	input: HTMLInputElement,
+	errorElement: HTMLParagraphElement,
+	formatError: (value: string) => string | undefined,
+	revealErrors: boolean,
+): boolean {
+	const message = input.value.length === 0 ? undefined : formatError(input.value);
+	const valid = input.value.length > 0 && message === undefined;
+	// "Reward early, punish late": on blur (revealErrors) show the error if invalid.
+	// While typing, only ever clear a previously-shown error once valid — never
+	// introduce a new one mid-keystroke (a half-typed email is "invalid" but shouldn't nag).
+	if (revealErrors) setFieldError(input, errorElement, message);
+	else if (valid) setFieldError(input, errorElement);
+	return valid;
+}
+
+/** Submits the register form, navigating to the awaiting page on success. */
+async function submitRegister(): Promise<void> {
+	// Authoritative gate: a field can be filled but unblurred, so its error may not
+	// have surfaced yet (and the button stayed enabled). Reveal any such errors now,
+	// then focus the first invalid field and bail without sending.
+	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, true);
+	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
+	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
+	refreshSubmit();
+	if (!usernameValid || !passwordValid || !emailValid) {
+		if (!usernameValid) usernameInput.focus();
+		else if (!passwordValid) passwordInput.focus();
+		else if (!emailValid) emailInput.focus();
+		return;
 	}
 
-	updateSubmitButton();
-});
-element_usernameInput.addEventListener('focusout', () => {
-	// Check username availability...
-	if (element_usernameInput.value.length === 0 || usernameHasError) return;
+	const username = usernameInput.value;
+	const email = emailInput.value;
+	const password = passwordInput.value;
 
-	serverFetch(`/register/username/${element_usernameInput.value}`)
-		.then((response) => response.json())
-		.then((result) => {
-			// { allowed, reason }
-			// We've got the result back from the server,
-			// Is this username available to use?
-			if (result.allowed === true) return; // Not in use
+	setFormError();
+	submitButton.disabled = true;
 
-			// ERROR! In use!
-			usernameHasError = true;
-			createErrorElement('usernameerror', 'username-input-line');
-			// Change input box to red outline
-			element_usernameInput.style.outline = 'solid 1px red';
-			// Reset variable because it now exists.
-			const usernameError = document.getElementById('usernameerror')!;
-
-			// translate the message from the server if a translation is available
-			let result_message = result.reason;
-			// @ts-ignore
-			if (translations[result_message]) result_message = translations[result_message];
-			usernameError.textContent = result_message;
-			updateSubmitButton();
+	try {
+		const response = await serverFetch('/register', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, email, password }),
 		});
-});
 
-let emailHasError = false;
-element_emailInput.addEventListener('input', () => {
-	// When email field changes...
-
-	// Test if the email is a valid email format
-
-	let emailError = document.getElementById('emailerror'); // Does an error already exist?
-
-	const result = validators.validateEmail(element_emailInput.value);
-
-	// If ANY error, make sure errorElement is created
-	if (result !== validators.EmailValidationResult.Ok) {
-		if (!emailError) {
-			// Create empty errorElement
-			emailHasError = true;
-			createErrorElement('emailerror', 'emailinputline');
-			// Change input box to red outline
-			element_emailInput.style.outline = 'solid 1px red';
-			// Reset variable because it now exists.
-			emailError = document.getElementById('emailerror')!;
-		}
-		emailError.textContent = translations[validators.getEmailErrorTranslation(result)!];
-	} else if (emailError) {
-		// No errors, delete that error element if it exists
-		emailHasError = false;
-		emailError.remove();
-		element_emailInput.removeAttribute('style');
-	}
-
-	updateSubmitButton();
-});
-element_emailInput.addEventListener('focusout', () => {
-	// Check email availability and functionality...
-	// If it's blank, all the server would send back is the register.html again..
-	if (element_emailInput.value.length > 1 && !emailHasError) {
-		serverFetch(`/register/email/${element_emailInput.value}`)
-			.then((response) => response.json())
-			.then((result) => {
-				// We've got the result back from the server,
-				// Is anything wrong?
-				if (result.valid === false) {
-					// There has been an error
-					emailHasError = true;
-
-					// We create the error text
-					createErrorElement('emailerror', 'emailinputline');
-
-					// Change input box to red outline
-					element_emailInput.style.outline = 'solid 1px red';
-
-					// Reset variable because it now exists.
-					const emailError = document.getElementById('emailerror')!;
-
-					// The error message from the server is already language-localized
-					emailError.textContent = result.reason;
-
-					updateSubmitButton();
-				} else {
-					emailHasError = false;
-					updateSubmitButton();
-				}
-			});
-	}
-});
-
-let passwordHasError = false;
-element_passwordInput.addEventListener('input', () => {
-	// When password field changes...
-	let passwordError = document.getElementById('passworderror');
-
-	const result = validators.validatePassword(element_passwordInput.value);
-
-	if (result !== validators.PasswordValidationResult.Ok) {
-		passwordHasError = true;
-		if (!passwordError) {
-			passwordError = createErrorElement('passworderror', 'password-input-line');
-			element_passwordInput.style.outline = 'solid 1px red';
-		}
-		passwordError.textContent = translations[validators.getPasswordErrorTranslation(result)!];
-	} else {
-		passwordHasError = false;
-		if (passwordError) {
-			passwordError.remove();
-		}
-		element_passwordInput.removeAttribute('style');
-	}
-
-	updateSubmitButton();
-});
-
-element_submitButton.addEventListener('click', (event) => {
-	event.preventDefault();
-
-	if (
-		!usernameHasError &&
-		!emailHasError &&
-		!passwordHasError &&
-		element_usernameInput.value &&
-		element_emailInput.value &&
-		element_passwordInput.value
-	)
-		sendForm(
-			element_usernameInput.value,
-			element_emailInput.value,
-			element_passwordInput.value,
-		);
-});
-
-/** Sends our form data to the register route. */
-function sendForm(username: string, email: string, password: string): void {
-	// Disable the button and set its class to unavailable immediately.
-	element_submitButton.disabled = true;
-	element_submitButton.className = 'unavailable';
-
-	let OK = false;
-	const config: RequestInit = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({ username, email, password }),
-	};
-	serverFetch('/register', config)
-		.then((response) => {
-			if (response.ok) OK = true;
-			return response.json();
-		})
-		.then((_result) => {
-			if (OK) {
-				// Account created!
-				// We also received the refresh token cookie to start a session.
-				// token = docutil.getCookieValue('token') // Cookie expires in 60s
-				window.location.href = languagedropdown.addLngQueryParamToLink(
-					`/member/${username.toLowerCase()}`,
-				);
-			} else {
-				// Conflict, unable to make account. 409 CONFLICT
-				window.location.href = languagedropdown.addLngQueryParamToLink('/409');
+		if (response.ok) {
+			// The pending cookie is set; the awaiting page owns the rest (check-email, polling, change-email).
+			window.location.assign('/register/awaiting');
+		} else {
+			const result = (await response.json()) as {
+				message?: string;
+				field?: 'username' | 'email' | 'password';
+			};
+			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
+			// beneath that input; systemic failures (server/network) have none and go form-level.
+			const message = result.message ?? t.shared.error_fallback;
+			switch (result.field) {
+				case 'username':
+					setFieldError(usernameInput, usernameError, message);
+					usernameValid = false;
+					break;
+				case 'email':
+					setFieldError(emailInput, emailError, message);
+					emailValid = false;
+					break;
+				case 'password':
+					setFieldError(passwordInput, passwordError, message);
+					passwordValid = false;
+					break;
+				default:
+					setFormError(message);
 			}
-		})
-		// Re-enable the button after the fetch is done.
-		// CURRENTLY ONLY RUNS WHEN a network error occurs, as for all server responses we redirect the page.
-		.finally(() => {
-			element_submitButton.disabled = false;
-			// Call updateSubmitButton() to correctly set the class to 'ready' or 'unavailable'
-			// based on the current state of the form fields.
-			updateSubmitButton();
-		});
-}
-
-function createErrorElement(id: string, insertAfter: string): HTMLElement {
-	const errElement = document.createElement('div');
-	errElement.className = 'error';
-	errElement.id = id;
-	// The element now looks like this:
-	// <div class="error" id="usernameerror"></div>
-	document.getElementById(insertAfter)!.insertAdjacentElement('afterend', errElement);
-	return errElement; // Return the created element
-}
-
-// Greys-out submit button if there's any errors.
-// The click-prevention is taken care of in the submit event listener.
-function updateSubmitButton(): void {
-	if (
-		usernameHasError ||
-		emailHasError ||
-		passwordHasError ||
-		!element_usernameInput.value ||
-		!element_emailInput.value ||
-		!element_passwordInput.value
-	) {
-		element_submitButton.className = 'unavailable';
-	} else {
-		// No Errors
-		element_submitButton.className = 'ready';
+			refreshSubmit();
+			return;
+		}
+	} catch (e: unknown) {
+		console.error('Registration request failed:', e);
+		setFormError('Network error. Please try again.');
+		refreshSubmit(); // Re-enable for a retry.
 	}
 }
+
+// Event Listeners ---------------------------------------------------
+
+form.addEventListener('submit', (event: SubmitEvent): void => {
+	event.preventDefault();
+	submitRegister();
+});
+
+// While typing, recompute validity for the submit button.
+usernameInput.addEventListener('input', (): void => {
+	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, false);
+	setFormError();
+	refreshSubmit();
+});
+passwordInput.addEventListener('input', (): void => {
+	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, false);
+	setFormError();
+	refreshSubmit();
+});
+emailInput.addEventListener('input', (): void => {
+	emailValid = validateFormat(emailInput, emailError, emailFormatError, false);
+	setFormError();
+	refreshSubmit();
+});
+
+// On blur, reveal any format error; then — for fields with a server-side check —
+// verify availability if the format is valid.
+usernameInput.addEventListener('blur', async (): Promise<void> => {
+	usernameValid = validateFormat(usernameInput, usernameError, usernameFormatError, true);
+	refreshSubmit();
+	if (!usernameValid) return;
+	try {
+		const response = await serverFetch(
+			`/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
+		);
+		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
+		if (!response.ok) return;
+		const result = (await response.json()) as { allowed: boolean; reason: string };
+		if (!result.allowed) {
+			setFieldError(usernameInput, usernameError, result.reason);
+			usernameValid = false;
+			refreshSubmit();
+		}
+	} catch (e: unknown) {
+		console.error('Username availability check failed:', e);
+	}
+});
+passwordInput.addEventListener('blur', (): void => {
+	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
+	refreshSubmit();
+});
+emailInput.addEventListener('blur', (): void => {
+	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
+	refreshSubmit();
+});
+
+usernameInput.focus();

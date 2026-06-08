@@ -47,30 +47,29 @@ async function testPasswordForRequest(
 	const searchKey = isEmail ? 'email' : 'username';
 	const searchValue = isEmail ? claimedUsername.toLowerCase() : claimedUsername;
 
+	// Rate limit keyed on the CLAIMED identifier BEFORE the database lookup, so a real
+	// account and a nonexistent one are throttled identically. Otherwise the lockout cooldown
+	// would only ever appear for accounts that exist, becoming an enumeration oracle.
+	const browserAgent = getBrowserAgent(req, searchValue.toLowerCase());
+	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from entering incorrectly too many times
+
 	const record = getMemberDataByCriteria(
 		['user_id', 'username', 'hashed_password', 'roles'],
 		searchKey,
 		searchValue,
 	);
-	if (record === undefined) {
-		// User not found
-		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).auth.invalid_identifier,
-		}); // Unauthorized, username not found
-		return undefined;
-	}
 
-	const browserAgent = getBrowserAgent(req, record.username);
-	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from enterring incorrectly too many times
-
-	// Test the password
-	const match = await bcrypt.compare(claimedPassword, record.hashed_password);
+	// Only test the password if the account exists, but ALWAYS respond with the same generic
+	// message, so the response never reveals whether the identifier is registered.
+	const match =
+		record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
 	if (!match) {
-		logEvents(`Incorrect password for user ${record.username}!`, 'loginAttempts.txt');
+		const attemptedIdentity = record?.username ?? searchValue;
+		logEvents(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts.txt');
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).auth.incorrect_password,
-		}); // Unauthorized, password not found
-		onIncorrectPassword(browserAgent, record.username);
+			message: getScriptTranslationsForReq('responses', req).auth.invalid_credentials,
+		}); // Unauthorized — generic message to avoid account enumeration
+		onIncorrectPassword(browserAgent, attemptedIdentity);
 		return undefined;
 	}
 
