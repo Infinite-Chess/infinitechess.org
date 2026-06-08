@@ -2,7 +2,7 @@
 # Source template: src/server/views/error.njk
 
 [404]
-title = "Page Not Found"
+title = "Not Found"
 message = "We couldn't find the page you were looking for."
 
 [500]
