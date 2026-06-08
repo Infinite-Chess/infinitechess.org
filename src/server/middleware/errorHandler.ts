@@ -24,7 +24,7 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 	// Any other error bubbling here is likely a server uncaught error (500)
 
 	try {
-		const errMessage = `${err.stack}`;
+		const errMessage = `Caught in errorHandler: ${err.stack}`;
 		logEventsAndPrint(errMessage, 'errLog.txt');
 
 		// This sends back to the browser the error, instead of the ENTIRE stack which is PRIVATE.
