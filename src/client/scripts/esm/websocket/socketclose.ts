@@ -94,7 +94,7 @@ function onclose(event: CloseEvent): void {
 		case 'Logged out':
 			validatorama.reloadAfterLogout();
 			break;
-		case 'Too Many Requests. Try again soon.':
+		case 'Too Many Requests':
 			console.error('Too many requests when establishing socket.');
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;

@@ -211,7 +211,7 @@ function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean 
 			`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey]!.length}`,
 			'reqLogRateLimited.txt',
 		);
-		ws.close(1009, 'Too Many Requests. Try again soon.');
+		ws.close(1009, 'Too Many Requests');
 		return false;
 	}
 

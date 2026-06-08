@@ -21,7 +21,7 @@ const ECHO_TIMEOUT = 5000;
 // 1008 "Unable to identify client IP address"
 // 1008 "Authentication needed"
 // 1008 "Logged out"
-// 1009 "Too Many Requests. Try again soon."
+// 1009 "Too Many Requests"
 // 1009 "Message Too Big"
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
@@ -61,7 +61,7 @@ const ECHO_TIMEOUT = 5000;
 // 1008 "Unable to identify client IP address"
 // 1008 "Authentication needed"
 // 1008 "Logged out" (Happens when we click log out button)
-// 1009 "Too Many Requests. Try again soon."
+// 1009 "Too Many Requests"
 // 1009 "Message Too Big"
 // 1009 "Too Many Sockets"
 // 1009 "Origin Error"
