@@ -567,3 +567,43 @@ button:disabled {
 	outline: 2px solid var(--c-accent);
 	outline-offset: 1px;
 }
+
+/* Error pages (404, 500, 429, …): a centered status code + message over the
+   checkerboard background. Shared by every code via error.njk. These live in
+   global.css (rather than a page-specific sheet) so the error page renders fully
+   styled even for a globally rate-limited visitor visiting the error page for
+   the first time, whose browser already has global.css cached and therefore
+   makes no new — and thus blockable — request. */
+
+.error-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	max-width: 480px;
+	text-align: center;
+}
+
+.error-code {
+	color: var(--c-text-emphasis);
+	font-size: clamp(4rem, 18vw, 7rem);
+	font-weight: 800;
+	line-height: 1;
+}
+
+.error-title {
+	color: var(--c-text-emphasis);
+	font-size: 1.5em;
+	font-weight: 700;
+}
+
+.error-message {
+	color: var(--c-text-muted);
+}
+
+.error-home {
+	width: auto;
+	margin-top: 12px;
+	padding: 12px 28px;
+	text-decoration: none;
+}

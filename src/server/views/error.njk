@@ -1,15 +1,14 @@
 {% extends "layout.njk" %}
 
-{# Shared error page for every HTTP error (404, 500, …). The status code, title,
+{# Shared error page for every HTTP error (404, 500, 429, …). The status code, title,
    and message are passed in per-request — see utility/renderContext.ts. #}
 
 {% set pageName = code ~ " " ~ title %}
 
 {% block bodyClass %}sticky-footer{% endblock %}
 
-{% block style %}
-<link rel="stylesheet" href="{{ manifest['css/error.css'] }}" />
-{% endblock %}
+{# Error-page styles live in global.css (already cached site-wide) so this page
+   renders fully styled even for a rate-limited visitor — see css/global.css. #}
 
 {% block body %}
 {% include "components/header/header.njk" %}
