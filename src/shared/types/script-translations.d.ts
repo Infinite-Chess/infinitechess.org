@@ -71,6 +71,7 @@ export interface ScriptTranslations {
 		};
 	};
 	shared: {
+		error_fallback: string;
 		user_status: {
 			guest_indicator: string;
 			you_indicator: string;

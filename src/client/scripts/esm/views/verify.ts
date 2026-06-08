@@ -67,7 +67,7 @@ async function verify(): Promise<void> {
 		}
 		// Any other status (e.g. 500 server error) -> allow retry
 		const body: { message?: string } = await response.json();
-		showRetryableError(body.message ?? 'Something went wrong. Please try again.');
+		showRetryableError(body.message ?? t.shared.error_fallback);
 	} catch (e: unknown) {
 		console.error('Verification request failed:', e);
 		showRetryableError('Network error. Please try again.');

@@ -207,7 +207,7 @@ async function submitNewEmail(): Promise<void> {
 			return;
 		}
 		const result = (await response.json()) as { message?: string };
-		setEmailError(result.message ?? 'Something went wrong. Please try again.');
+		setEmailError(result.message ?? t.shared.error_fallback);
 		changeSubmit.disabled = false;
 	} catch (e: unknown) {
 		console.error('Change-email request failed:', e);

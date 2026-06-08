@@ -1,9 +1,12 @@
 # Translation component: shared codes-and-labels
 # Auto-injected sitewide via layout.njk. Contains display labels for "codes" used
 # across many pages: variant codes, variant group codes, time-control speed
-# categories, game modes, sides, win conditions, modifiers, and the narrative
-# phrasing used in the variant preview tooltip.
+# categories, game modes, sides, win conditions, modifiers, the narrative
+# phrasing used in the variant preview tooltip, etc.
 script_only = true
+
+# Generic fallback shown client-side when a server response misses emitting its own message.
+error_fallback = "Something went wrong. Please try again."
 
 [user_status] # Identity placeholders shown in place of a real username.
 guest_indicator = "(Guest)"

@@ -166,7 +166,7 @@ async function submitRegister(): Promise<void> {
 			};
 			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
 			// beneath that input; systemic failures (server/network) have none and go form-level.
-			const message = result.message ?? 'Something went wrong. Please try again.';
+			const message = result.message ?? t.shared.error_fallback;
 			switch (result.field) {
 				case 'username':
 					setFieldError(usernameInput, usernameError, message);
