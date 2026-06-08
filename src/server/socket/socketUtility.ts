@@ -3,7 +3,6 @@
 // This script contains generalized methods for working with websocket objects.
 
 import type WebSocket from 'ws';
-import type { IncomingMessage } from 'http'; // Used for the socket upgrade http request TYPE
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 
@@ -95,37 +94,9 @@ function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['me
 	return metadataCopy;
 }
 
-/**
- * Parses cookies from the WebSocket upgrade request headers.
- * @param req - The WebSocket upgrade request object
- * @returns An object with cookie names as keys and their corresponding values
- */
-function getCookiesFromWebsocket(req: IncomingMessage): { [cookieName: string]: string } {
-	// req.cookies is only defined from our cookie parser for regular requests,
-	// NOT for websocket upgrade requests! We have to parse them manually!
-
-	const rawCookies = req.headers.cookie;
-	const cookies: { [cookieName: string]: string } = {};
-
-	if (!rawCookies) return cookies;
-
-	for (const cookie of rawCookies.split(';')) {
-		const parts = cookie.split('=');
-		if (parts.length < 2) continue; // Skip if no value part exists
-
-		const name = parts[0]!.trim();
-		const value = parts[1]!.trim();
-
-		if (name && value) cookies[name] = value;
-	}
-
-	return cookies;
-}
-
 export default {
 	printSocket,
 	stringifySocketMetadata,
-	getCookiesFromWebsocket,
 };
 
 export type { CustomWebSocket };

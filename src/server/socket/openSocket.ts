@@ -8,6 +8,8 @@ import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http';
 import type { CustomWebSocket } from './socketUtility.js';
 
+import { parse as parseCookie } from 'cookie';
+
 import { GAME_VERSION } from '../../shared/game_version.js';
 
 import { onclose } from './closeSocket.js';
@@ -118,7 +120,9 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
-	const cookies = socketUtility.getCookiesFromWebsocket(req);
+	// req.cookies is only set by our cookie-parser middleware for regular requests,
+	// NOT for websocket upgrade requests, so we parse the raw header ourselves.
+	const cookies = parseCookie(req.headers.cookie ?? '');
 	if (cookies['browser-id'] === undefined) {
 		// console.log(`Authentication needed for WebSocket connection request!!`);
 		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation

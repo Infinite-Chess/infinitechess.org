@@ -4,10 +4,14 @@ import type { IncomingMessage } from 'node:http';
 import type { Request, Response, NextFunction } from 'express';
 import type { CustomWebSocket } from '../socket/socketUtility.js';
 
+import { parse as parseCookie } from 'cookie';
+
 import jsutil from '../../shared/util/jsutil.js';
 
+import tconfig from '../config/translationconfig.js';
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
+import { getScriptTranslations } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
@@ -86,6 +90,24 @@ function getIpBrowserAgentKey(IP: string, userAgent: string): string {
 }
 
 /**
+ * Resolves the language for a rate-limited response from the 'i18next' cookie.
+ * Rate limiting runs before the cookie-parser middleware (deliberately, for DDOS mitigation),
+ * so we parse the raw header manually. Unknown/unset languages fall back to
+ * the default inside {@link getScriptTranslations}.
+ *
+ * FUTURE (i18next removal — see dev-utils/REDESIGN/TRANSLATION_SYSTEM.md): replace this whole
+ * function with the shared language resolver once it exists, so the logic isn't duplicated.
+ * That also picks up the renamed cookie and Accept-Language detection (which would finally
+ * localize first-time visitors here too).
+ * @param req - The request object
+ * @returns The language code, e.g. "de-DE".
+ */
+function getRequestLanguage(req: Request): string {
+	const cookies = parseCookie(req.headers.cookie ?? '');
+	return cookies['i18next'] || tconfig.DEFAULT_LANGUAGE;
+}
+
+/**
  * Middleware that counts this IP address's recent connections,
  * and rejects this request if they've sent too many.
  * @param req - The request object
@@ -136,7 +158,10 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 			`Agent ${userKey} has too many requests! Count: ${timestamps.length}`,
 			'reqLogRateLimited.txt',
 		);
-		res.status(429).json({ message: 'Too Many Requests. Try again soon.' });
+		const lang = getRequestLanguage(req);
+		res.status(429).json({
+			message: getScriptTranslations('responses', lang).rate_limiting.generic,
+		});
 		return;
 	}
 
