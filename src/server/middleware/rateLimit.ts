@@ -152,8 +152,6 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
  *   that would itself be rate limited.
  * - JSON  → `{ message }`.
  * - else  → the message as plain text.
- * @param req - The request object
- * @param res - The response object
  */
 function respondRateLimited(req: Request, res: Response): void {
 	res.status(429);
@@ -166,11 +164,11 @@ function respondRateLimited(req: Request, res: Response): void {
 			// Handle render errors manually instead of next(err), so a failure here doesn't bubble
 			// into the error handler (which would itself try to render and could loop).
 			(renderErr: Error | null, html: string) => {
-				if (renderErr) {
+				if (!renderErr) {
+					res.send(html);
+				} else {
 					console.error('Critical error in rateLimit.ts rendering 429 page:', renderErr);
 					res.send(message);
-				} else {
-					res.send(html);
 				}
 			},
 		);
