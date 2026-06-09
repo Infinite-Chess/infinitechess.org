@@ -71,7 +71,7 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 	} catch (error: unknown) {
 		// Last line of defense
 		const detail = error instanceof Error ? error.stack : String(error);
-		console.error('Critical error in errorHandler middleware:', detail);
+		logEventsAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog.txt');
 		res.status(500).send('Critical server error.');
 	}
 }
