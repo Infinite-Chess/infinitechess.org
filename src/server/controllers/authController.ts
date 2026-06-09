@@ -26,7 +26,6 @@ import {
  * Called when any fetch request submits login form data.
  * The req body needs to have the `username` and `password` properties.
  * The `username` may be either a username or an email.
- * If the req body does not have `username`, req.params must have the `member` property.
  * If the password is correct, this returns the resolved identity of the member.
  * Otherwise this sends a response to the client saying it was incorrect, and returns undefined.
  * This is also rate limited.
@@ -36,11 +35,9 @@ async function testPasswordForRequest(
 	req: Request,
 	res: Response,
 ): Promise<Pick<MemberRecord, 'user_id' | 'username' | 'roles'> | undefined> {
-	if (!verifyBodyHasLoginFormData(req, res)) return undefined; // If undefined, it will have already sent a response.
-
-	// eslint-disable-next-line prefer-const
-	let { username: claimedUsername, password: claimedPassword } = req.body;
-	claimedUsername = claimedUsername || req.params['member'];
+	const formData = verifyBodyHasLoginFormData(req, res);
+	if (!formData) return undefined; // Reponse already sent
+	const { claimedUsername, claimedPassword } = formData;
 
 	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
 	const isEmail = claimedUsername.includes('@');
@@ -89,29 +86,21 @@ async function testPasswordForRequest(
 /**
  * Tests if the request body has valid `username` and `password` properties.
  * If not, this auto-sends a response to the client with an error.
- * @returns true if the body is valid
+ * @returns The claimed username and password, or undefined if the body is invalid.
  */
-function verifyBodyHasLoginFormData(req: Request, res: Response): boolean {
+function verifyBodyHasLoginFormData(
+	req: Request,
+	res: Response,
+): { claimedUsername: string; claimedPassword: string } | undefined {
 	const { username, password } = req.body;
 
-	if (!username || !password) {
-		// Only hit by hand-crafted/malformed requests
-		console.log(
-			`User ${username} sent a bad login request missing either username or password!`,
-		);
-		res.status(400).json({ message: 'Username and password are required.' }); // 400 Bad request
-		return false;
+	if (!username || typeof username !== 'string' || !password || typeof password !== 'string') {
+		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
+		res.status(400).json({ message: 'Request body malformed.' }); // 400 Bad request
+		return undefined;
 	}
 
-	if (typeof username !== 'string' || typeof password !== 'string') {
-		console.log(
-			`User ${username} sent a bad login request with either username or password not a string!`,
-		);
-		res.status(400).json({ message: 'Username and password must be a string.' }); // 400 Bad request
-		return false;
-	}
-
-	return true;
+	return { claimedUsername: username, claimedPassword: password };
 }
 
 export { testPasswordForRequest };
