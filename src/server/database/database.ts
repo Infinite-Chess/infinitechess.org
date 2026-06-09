@@ -56,6 +56,7 @@ type SupportedColumnTypes = string | number | boolean | null;
  * @param {string} query - The SQL query to be executed.
  * @param {Array} [params=[]] - An array of parameters to bind to the query.
  * @returns {object} - The result of the query execution.
+ * @throws If a database error occurs.
  */
 function run(query: string, params: SupportedColumnTypes[] = []): Database.RunResult {
 	const stmt = prepareStatement(query);
@@ -67,6 +68,7 @@ function run(query: string, params: SupportedColumnTypes[] = []): Database.RunRe
  * @param query - The SQL query to be executed.
  * @param [params=[]] - An array of parameters to bind to the query.
  * @returns - The row object if found, otherwise undefined.
+ * @throws If a database error occurs.
  */
 function get<T>(query: string, params: SupportedColumnTypes[] = []): T | undefined {
 	const stmt = prepareStatement(query);
@@ -78,6 +80,7 @@ function get<T>(query: string, params: SupportedColumnTypes[] = []): T | undefin
  * @param query - The SQL query to be executed.
  * @param [params=[]] - An array of parameters to bind to the query.
  * @returns - An array of row objects.
+ * @throws If a database error occurs.
  */
 function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 	const stmt = prepareStatement(query);
@@ -88,6 +91,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
  * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
  * @param fn - The db call to execute.
  * @param description - Human-readable label for the operation. Goes into errLog if it fails. Exclude ending punctation.
+ * @throws Re-throws the error after logging, if a database error occurs.
  */
 export function dbCall<T>(fn: () => T, description: string): T {
 	try {
@@ -99,7 +103,10 @@ export function dbCall<T>(fn: () => T, description: string): T {
 	}
 }
 
-/** Closes the database connection. */
+/**
+ * Closes the database connection.
+ * @throws If a database error occurs.
+ */
 function close(): void {
 	db.close();
 	// console.log('Closed database.');
@@ -109,12 +116,16 @@ function close(): void {
  * Creates a consistent point-in-time backup of the database to the given file path
  * using SQLite's Online Backup API. Safe to call while the database is open and being written to.
  * @param destPath - Absolute path for the destination backup file.
+ * @throws If a database error occurs.
  */
 async function backup(destPath: string): Promise<void> {
 	await db.backup(destPath);
 }
 
-/** Checks if a column exists in a table. */
+/**
+ * Checks if a column exists in a table.
+ * @throws If a database error occurs.
+ */
 function columnExists(tableName: string, columnName: string): boolean {
 	try {
 		// PRAGMA queries are special and should not use the statement cache.

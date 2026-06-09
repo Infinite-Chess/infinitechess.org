@@ -37,6 +37,7 @@ type GamesColumn = keyof GamesRecord;
 /**
  * Generates a game_id **UNIQUE** to all other game ids in the games table.
  * @returns - A unique game_id.
+ * @throws If a database error occurs.
  */
 function genUniqueGameID(): number {
 	let id: number;
@@ -59,6 +60,7 @@ function generateRandomGameId(): number {
  * Checks if a given game_id exists in the games table.
  * @param game_id - The game_id to check.
  * @returns - Returns true if the game_id exists, false otherwise.
+ * @throws If a database error occurs.
  */
 function isGameIdTaken(game_id: number): boolean {
 	const query = 'SELECT 1 FROM games WHERE game_id = ?';

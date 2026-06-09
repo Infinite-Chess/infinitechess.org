@@ -3,7 +3,10 @@
 import { logEvents } from '../middleware/logEvents.js';
 import db, { dbCall } from './database.js';
 
-/** Adds an email to the blacklist, if it isn't already. */
+/**
+ * Adds an email to the blacklist, if it isn't already.
+ * @throws If a database error occurs.
+ */
 export function addToBlacklist(email: string, reason: string): void {
 	// Uses INSERT OR IGNORE so it doesn't crash if the email is already blacklisted.
 	dbCall(
@@ -17,7 +20,10 @@ export function addToBlacklist(email: string, reason: string): void {
 	logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
 }
 
-/** Removes an email from the blacklist, if it exists. */
+/**
+ * Removes an email from the blacklist, if it exists.
+ * @throws If a database error occurs.
+ */
 export function removeFromBlacklist(email: string): void {
 	// Won't error if the email doesn't exist.
 	dbCall(
@@ -30,6 +36,7 @@ export function removeFromBlacklist(email: string): void {
 /**
  * Checks if an email is in the blacklist.
  * Returns true if blacklisted, false otherwise.
+ * @throws If a database error occurs.
  */
 export function isBlacklisted(email: string): boolean {
 	// We select '1' just to see if a row exists.

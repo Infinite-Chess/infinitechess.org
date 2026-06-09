@@ -44,6 +44,7 @@ export interface LiveGameData {
 /**
  * Inserts a new live game row into the database.
  * @param record - The complete live_games record to insert.
+ * @throws If a database error occurs.
  */
 function insertLiveGame(record: LiveGamesRecord): void {
 	const query = `
@@ -84,6 +85,7 @@ function insertLiveGame(record: LiveGamesRecord): void {
  * Updates specific columns of a live game.
  * @param game_id - The game to update.
  * @param updates - An object containing only the columns to update and their new values.
+ * @throws If invalid arguments are provided, or if a database error occurs.
  */
 function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 	dbCall(() => {
@@ -109,6 +111,7 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 /**
  * Deletes a live game row (cascades to live_player_games).
  * @param game_id - The game to delete.
+ * @throws If a database error occurs.
  */
 function deleteLiveGame(game_id: number): void {
 	dbCall(
@@ -120,6 +123,7 @@ function deleteLiveGame(game_id: number): void {
 /**
  * Retrieves all live game rows. Used on server startup to restore games.
  * @returns An array of all live_games records.
+ * @throws If a database error occurs.
  */
 function getAllLiveGames(): LiveGamesRecord[] {
 	return dbCall(

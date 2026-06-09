@@ -94,7 +94,7 @@ function updatePlayerLeaderboardRating(
  * Relies on the composite primary key (user_id, leaderboard_id).
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
- * @returns True if the player exists on the specified leaderboard, false otherwise (including on error).
+ * @returns True if the player exists on the specified leaderboard, false otherwise.
  * @throws If a database error occurs.
  */
 function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
@@ -135,6 +135,7 @@ function getPlayerLeaderboardRating(
  * Gets all leaderboard entries for a specific user.
  * @param user_id - The id for the user
  * @returns An array of the user's leaderboard entries across all leaderboards, potentially empty.
+ * @throws If a database error occurs.
  */
 function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
 	const query = `
@@ -190,7 +191,8 @@ function getTopPlayersForLeaderboard(
  * @param user_id - The ID of the user whose rank is needed.
  * @param leaderboard_id - The ID of the leaderboard to check.
  * @returns The user's rank (1-based) as a number, or undefined if the user is not found
- *          on that leaderboard or if an error occurs.
+ *          on that leaderboard.
+ * @throws If a database error occurs.
  */
 function getPlayerRankInLeaderboard(
 	user_id: number,

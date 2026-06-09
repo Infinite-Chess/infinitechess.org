@@ -304,6 +304,7 @@ function updateMemberColumns(
 /**
  * Increments the login count and updates the last_seen column for a member based on their user ID.
  * @param userId - The user ID of the member.
+ * @throws If the member does not exist, or if a database error occurs.
  */
 function updateLoginCountAndLastSeen(userId: number): void {
 	const query = `
@@ -325,6 +326,7 @@ function updateLoginCountAndLastSeen(userId: number): void {
 /**
  * Updates the last_seen column for a member based on their user ID.
  * @param userId - The user ID of the member.
+ * @throws If the member does not exist, or if a database error occurs.
  */
 function updateLastSeen(userId: number): void {
 	const query = `

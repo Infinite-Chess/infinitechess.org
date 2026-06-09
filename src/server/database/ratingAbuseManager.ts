@@ -47,7 +47,8 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): vo
  * Relies on the composite primary key (user_id, leaderboard_id).
  * @param user_id - The ID of the user to check.
  * @param leaderboard_id - The ID of the leaderboard to check within.
- * @returns True if the player exists on the specified leaderboard, false otherwise (including on error).
+ * @returns True if the player exists on the specified leaderboard, false otherwise.
+ * @throws If a database error occurs.
  */
 function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boolean {
 	const query = `
