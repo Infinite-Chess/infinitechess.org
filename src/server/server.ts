@@ -1,9 +1,29 @@
 // src/server/server.ts
 
 import { initDatabase } from './database/databaseTables.js';
+import { logEventsAndPrint } from './middleware/logEvents.js';
 import { initDevEnvironment } from './config/setupDev.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
+
+// Last-resort global handlers for errors that slipped past every local handler.
+// By this point, state is broken. Can't ensure responses are sent.
+
+// A rejected promise with no .catch (e.g. an un-awaited async
+// fn call in a request handler). Logged, then we keep serving.
+process.on('unhandledRejection', (reason: unknown) => {
+	const detail = reason instanceof Error ? reason.stack : String(reason);
+	logEventsAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog.txt');
+});
+// A synchronous throw outside any try/catch (e.g. inside a setTimeout callback).
+// It leaves the process in an undefined state, so we log and exit;
+// PM2 restarts us and live games restore from the database.
+process.on('uncaughtException', (error: unknown) => {
+	const detail = error instanceof Error ? error.stack : String(error);
+	logEventsAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog.txt').finally(() =>
+		process.exit(1),
+	);
+});
 
 initDatabase();
 // Ensure our workspace is ready for the dev environment
