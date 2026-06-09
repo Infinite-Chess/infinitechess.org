@@ -32,7 +32,7 @@ export function getBaseRenderContext(req: Request): BaseRenderContext {
 		scriptT: <C extends keyof ScriptTranslations>(component: C) =>
 			getScriptTranslations(component, lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
-		memberInfo: req.memberInfo ?? { signedIn: true },
+		memberInfo: req.memberInfo ?? { signedIn: false },
 	};
 }
 
