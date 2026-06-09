@@ -1,6 +1,6 @@
 // src/server/middleware/errorHandler.ts
 
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 import { logEventsAndPrint } from './logEvents.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
@@ -11,13 +11,18 @@ import { getTranslationForReq } from '../utility/translate.js';
  * carry an HTTP status — in practice only the body parsers (express.json / express.urlencoded),
  * which throw 400 / 413 / 415.
  */
-function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
+function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
 	const status = 'status' in err && typeof err.status === 'number' ? err.status : 500;
 
 	// 4xx are the client's fault (e.g. a malformed or too-large body), not ours, so keep them out of
 	// the server error log. Everything else (5xx, or a statusless uncaught error) gets logged.
 	const isClientError = status !== undefined && status >= 400 && status < 500;
 	if (!isClientError) logEventsAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog.txt');
+
+	// If the response has already started we can't set a status or render our own page (it would
+	// throw "headers already sent"). It's been logged above; delegate to Express's default handler,
+	// which closes the connection.
+	if (res.headersSent) return next(err);
 
 	// If we ever get 'Data after `Connection: close`' errors again, we can enable a block like
 	// the following. Otherwise, if after a few months after the website redesign 2.0 update we
