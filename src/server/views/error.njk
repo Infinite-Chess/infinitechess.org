@@ -21,7 +21,15 @@
 		<p class="error-code">{{ code }}</p>
 		<h1 class="error-title">{{ title }}</h1>
 		<p class="error-message">{{ message }}</p>
-		<a class="btn-primary error-home" href="/">Back to home</a>
+		{# For 429s it's temporarily disabled #}
+		<button class="btn-primary error-home" id="error-home-btn" onclick="window.location.href='/'"{% if retryAfter %} disabled{% endif %}>Back to home</button>
+		{% if retryAfter %}
+		<script>
+			setTimeout(() => {
+				document.getElementById('error-home-btn').disabled = false;
+			}, {{ retryAfter }} * 1000);
+		</script>
+		{% endif %}
 	</section>
 </main>
 

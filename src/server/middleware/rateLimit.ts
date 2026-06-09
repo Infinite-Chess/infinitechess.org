@@ -138,11 +138,23 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 			`Agent ${userKey} has too many requests! Count: ${timestamps.length}`,
 			'reqLogRateLimited.txt',
 		);
-		respondRateLimited(req, res);
+		const retryAfterSeconds = getRetryAfterSeconds(timestamps);
+		respondRateLimited(req, res, retryAfterSeconds);
 		return;
 	}
 
 	next(); // Continue the middleware waterfall
+}
+
+/**
+ * Returns the minimum number of seconds until a client who was just rate limited could make a
+ * successful request again, ASSUMING they make no further requests until then (rolling window).
+ * @param timestamps - The client's recent connection timestamps (length is already over the cap).
+ */
+function getRetryAfterSeconds(timestamps: number[]): number {
+	const index = timestamps.length - maxRequestsPerMinute;
+	const retryAfterMillis = timestamps[index]! + minuteInMillis - Date.now();
+	return Math.max(1, Math.ceil(retryAfterMillis / 1000));
 }
 
 /**
@@ -152,15 +164,16 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
  *   that would itself be rate limited.
  * - JSON  → `{ message }`.
  * - else  → the message as plain text.
+ * @param retryAfterSec - The number of seconds until they should retry, for the Retry-After header and error page context.
  */
-function respondRateLimited(req: Request, res: Response): void {
-	res.status(429);
+function respondRateLimited(req: Request, res: Response, retryAfterSec: number): void {
+	res.status(429).set('Retry-After', String(retryAfterSec)); // Standard hint for how long until they should retry
 	const message = getScriptTranslationsForReq('responses', req).rate_limiting.generic;
 
 	if (req.accepts('html')) {
 		res.render(
 			'error.njk',
-			getErrorPageContext(req, 429),
+			getErrorPageContext(req, 429, retryAfterSec),
 			// Handle render errors manually instead of next(err), so a failure here doesn't bubble
 			// into the error handler (which would itself try to render and could loop).
 			(renderErr: Error | null, html: string) => {

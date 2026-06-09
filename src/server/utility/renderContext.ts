@@ -15,13 +15,16 @@ import {
 	getTemplateTranslations,
 } from '../config/componentTranslationLoader.js';
 
-/** Returns the locals every SSR'd page template requires to render. */
-export function getBaseRenderContext(req: Request): {
+/** The locals every SSR'd page template requires to render. */
+type BaseRenderContext = {
 	lang: string;
 	templateT: (component: string) => Record<string, any>;
 	scriptT: <C extends keyof ScriptTranslations>(component: C) => ScriptTranslations[C];
 	memberInfo: Request['memberInfo'];
-} {
+};
+
+/** Returns the locals every SSR'd page template requires to render. */
+export function getBaseRenderContext(req: Request): BaseRenderContext {
 	const lang = getLanguageToServe(req);
 	return {
 		lang,
@@ -29,15 +32,25 @@ export function getBaseRenderContext(req: Request): {
 		scriptT: <C extends keyof ScriptTranslations>(component: C) =>
 			getScriptTranslations(component, lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
-		memberInfo: req.memberInfo ?? { signedIn: false },
+		memberInfo: req.memberInfo ?? { signedIn: true },
 	};
 }
 
-/** Returns the locals error.njk needs to render the page for `status`. */
+/**
+ * Returns the locals error.njk needs to render the page for `status`.
+ * @param retryAfter - Seconds until a rate-limited client may retry. Only passed for 429s; when set,
+ * the page renders its "Back to home" button disabled until this many seconds have elapsed.
+ */
 export function getErrorPageContext(
 	req: Request,
 	status: number,
-): ReturnType<typeof getBaseRenderContext> & { code: number; title: string; message: string } {
+	retryAfter?: number,
+): BaseRenderContext & {
+	code: number;
+	title: string;
+	message: string;
+	retryAfter?: number;
+} {
 	const base = getBaseRenderContext(req);
 	const t = getTemplateTranslations('error', base.lang);
 	// Fall back to the 500 copy for any code without its own table in the TOML.
@@ -47,5 +60,6 @@ export function getErrorPageContext(
 		code: status,
 		title: entry.title,
 		message: entry.message,
+		retryAfter,
 	};
 }
