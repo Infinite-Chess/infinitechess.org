@@ -87,7 +87,7 @@ function all<T>(query: string, params: SupportedColumnTypes[] = []): T[] {
 /**
  * Wraps a db call in a try/catch: on error, logs the description + full stack to errLog, then rethrows.
  * @param fn - The db call to execute.
- * @param description - Human-readable label for the operation.
+ * @param description - Human-readable label for the operation. Goes into errLog if it fails.
  */
 export function dbCall<T>(fn: () => T, description: string): T {
 	try {
