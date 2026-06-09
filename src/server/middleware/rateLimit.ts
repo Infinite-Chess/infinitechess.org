@@ -182,7 +182,10 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 				if (!renderErr) {
 					res.send(html);
 				} else {
-					console.error('Critical error in rateLimit.ts rendering 429 page:', renderErr);
+					logEventsAndPrint(
+						`Critical error in rateLimit.ts rendering 429 page: ${renderErr.stack}`,
+						'errLog.txt',
+					);
 					res.send(message);
 				}
 			},

@@ -34,8 +34,7 @@ async function logEvents(message: string, logName: string): Promise<void> {
 		fs.mkdirSync(paths.LOGS_DIR, { recursive: true });
 		await fsPromises.appendFile(path.join(paths.LOGS_DIR, logName), logItem);
 	} catch (err: unknown) {
-		if (err instanceof Error) console.error(`Error logging event: ${err.message}`);
-		else console.error('Error logging event:', err);
+		console.error('Error logging event:', err);
 	}
 }
 

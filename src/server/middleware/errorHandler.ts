@@ -55,7 +55,10 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 						res.status(500).send(html);
 					} else {
 						// Log the rendering error and return the plain message
-						console.error('Critical error rendering 500 page:', renderErr);
+						logEventsAndPrint(
+							`Critical error rendering 500 page: ${renderErr.stack}`,
+							'errLog.txt',
+						);
 						res.status(500).send(messageForClient);
 					}
 				},
