@@ -3,16 +3,16 @@
 import type { Request, Response } from 'express';
 
 import { getErrorPageContext } from '../utility/renderContext.js';
-import { getTranslationForReq } from '../utility/translate.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 function send404(req: Request, res: Response): void {
 	res.status(404);
 	if (req.accepts('html')) {
 		res.render('error.njk', getErrorPageContext(req, 404));
 	} else if (req.accepts('json')) {
-		res.json({ message: getTranslationForReq('server.javascript.ws-not_found', req) });
+		res.json({ message: getScriptTranslationsForReq('responses', req).errors.not_found });
 	} else {
-		res.type('txt').send(getTranslationForReq('server.javascript.ws-not_found', req));
+		res.type('txt').send(getScriptTranslationsForReq('responses', req).errors.not_found);
 	}
 }
 

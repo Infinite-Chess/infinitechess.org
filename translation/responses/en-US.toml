@@ -2,12 +2,14 @@
 # These are the ONLY translations the server sends directly in HTTP/WebSocket responses.
 script_only = true
 
-[seeks]
-already_in_game = "You are already in a game."
-rated_requires_verified = "To play ranked, you need to be signed in with a verified account."
-game_aborted = "Game aborted."
-cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
-cloud_not_found = "Cloud save not found."
+[errors]
+not_found = "We couldn't find what you were looking for."
+server_error = "Something went wrong on our end. Please try again."
+
+[rate_limiting]
+generic = "You have made too many requests, please try again later."
+account_creations = "Too many account creations are coming from this IP."
+verify_emails = "You have requested too many emails. Try again later."
 
 [auth]
 invalid_credentials = "Incorrect username/email or password."
@@ -15,10 +17,13 @@ login_failed = "Login failed due to an internal server error. Please try again l
 login_retry_in_one = "Failed to login, try again in {n} second."
 login_retry_in_other = "Failed to login, try again in {n} seconds."
 
-[rate_limiting]
-generic = "You have made too many requests, please try again later."
-account_creations = "Too many account creations are coming from this IP."
-verify_emails = "You have requested too many emails. Try again later."
+[seeks]
+already_in_game = "You are already in a game."
+rated_requires_verified = "To play ranked, you need to be signed in with a verified account."
+game_aborted = "Game aborted."
+cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
+cloud_not_found = "Cloud save not found."
+
 
 [editor_saves]
 must_be_signed_in = "You must be signed in."

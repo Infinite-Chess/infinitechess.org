@@ -533,8 +533,6 @@ export type TranslationKeys =
 	| 'server.javascript.ws-forbidden_wrong_account'
 	| 'server.javascript.ws-deleting_account_not_found'
 	| 'server.javascript.ws-deleting_account_in_game'
-	| 'server.javascript.ws-server_error'
-	| 'server.javascript.ws-not_found'
 	| 'server.javascript.ws-forbidden'
 	| 'server.javascript.ws-already_in_game'
 	| 'server.javascript.ws-you_cheated'
@@ -1168,8 +1166,6 @@ export interface TranslationsObject {
 			'ws-forbidden_wrong_account': string;
 			'ws-deleting_account_not_found': string;
 			'ws-deleting_account_in_game': string;
-			'ws-server_error': string;
-			'ws-not_found': string;
 			'ws-forbidden': string;
 			'ws-already_in_game': string;
 			'ws-you_cheated': string;

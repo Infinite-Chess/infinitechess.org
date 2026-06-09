@@ -44,12 +44,14 @@ export interface ScriptTranslations {
 		network_error: string;
 	};
 	responses: {
-		seeks: {
-			already_in_game: string;
-			rated_requires_verified: string;
-			game_aborted: string;
-			cloud_requires_sign_in: string;
-			cloud_not_found: string;
+		errors: {
+			not_found: string;
+			server_error: string;
+		};
+		rate_limiting: {
+			generic: string;
+			account_creations: string;
+			verify_emails: string;
 		};
 		auth: {
 			invalid_credentials: string;
@@ -57,10 +59,12 @@ export interface ScriptTranslations {
 			login_retry_in_one: string;
 			login_retry_in_other: string;
 		};
-		rate_limiting: {
-			generic: string;
-			account_creations: string;
-			verify_emails: string;
+		seeks: {
+			already_in_game: string;
+			rated_requires_verified: string;
+			game_aborted: string;
+			cloud_requires_sign_in: string;
+			cloud_not_found: string;
 		};
 		editor_saves: {
 			must_be_signed_in: string;
