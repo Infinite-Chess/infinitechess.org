@@ -59,6 +59,8 @@ const requestCapToToggleAttackMode = 200;
 
 /**
  * Whether we think we're currently experiencing a DDOS.
+ * If true, 429 errors never render html, returning a plain json/string instead.
+ *
  * When true, in the future we can strictly limit what actions users can request/perform!
  *
  * Ideas:
@@ -161,7 +163,7 @@ function getRetryAfterSeconds(timestamps: number[]): number {
  * Sends the 429 (Too Many Requests) response, content-negotiated on the Accept header:
  * - HTML  → the shared error page. Its styles live in global.css (already cached for any
  *   visitor who reached the limit), so it renders fully styled without making a new request
- *   that would itself be rate limited.
+ *   that would itself be rate limited. SKIPPED while in {@link underAttackMode}.
  * - JSON  → `{ message }`.
  * - else  → the message as plain text.
  * @param retryAfterSec - The number of seconds until they should retry, for the Retry-After header and error page context.
@@ -170,7 +172,7 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 	res.status(429).set('Retry-After', String(retryAfterSec)); // Standard hint for how long until they should retry
 	const message = getScriptTranslationsForReq('responses', req).rate_limiting.generic;
 
-	if (req.accepts('html')) {
+	if (req.accepts('html') && !underAttackMode) {
 		res.render(
 			'error.njk',
 			getErrorPageContext(req, 429, retryAfterSec),
