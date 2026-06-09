@@ -49,14 +49,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 	req.body.username = claimedUsername;
 	// The resolved identity comes straight from the DB, with the canonical user_id and username.
 	const identity = await testPasswordForRequest(req, res);
-	if (!identity) {
-		// It will have already sent a response
-		logEvents(
-			`Incorrect password for user "${claimedUsername}" attempting to remove account!`,
-			'loginAttempts.txt',
-		);
-		return;
-	}
+	if (!identity) return; // Reponse already sent
 
 	// Do not allow account deletion if user is currently playing a game
 	// THIS DOES NOT PREVENT AN ADMIN MANUALLY DELETING THEIR ACCOUNT
