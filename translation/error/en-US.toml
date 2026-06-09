@@ -1,6 +1,8 @@
 # Translation component: error pages
 # Source template: src/server/views/error.njk
 
+back_home = "Back to home"
+
 [404]
 title = "Not Found"
 message = "We couldn't find the page you were looking for."
