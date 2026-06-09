@@ -6,22 +6,18 @@ import { logEventsAndPrint } from './logEvents.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
 import { getTranslationForReq } from '../utility/translate.js';
 
+/**
+ * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
+ * carry an HTTP status — in practice only the body parsers (express.json / express.urlencoded),
+ * which throw 400 / 413 / 415.
+ */
 function errorHandler(err: Error, req: Request, res: Response, _next: Function): void {
-	// Catches errors from for example the body parser, which can throw if the body is too large.
-	// This needs to be handled itself, as i18next was never defined.
-	if ('status' in err && typeof err.status === 'number') {
-		if (err.status >= 400 && err.status < 500) {
-			// Only echo the error's own message back to the client when it is explicitly
-			// marked safe to expose (http-errors sets `expose` for e.g. body-parser errors).
-			// NEVER leak arbitrary internal messages — they can contain absolute file paths.
-			const message = 'expose' in err && err.expose === true ? err.message : 'Bad request';
+	const status = 'status' in err && typeof err.status === 'number' ? err.status : 500;
 
-			res.status(err.status).json({ message });
-			return;
-		}
-	}
-
-	// Any other error bubbling here is likely a server uncaught error (500)
+	// 4xx are the client's fault (e.g. a malformed or too-large body), not ours, so keep them out of
+	// the server error log. Everything else (5xx, or a statusless uncaught error) gets logged.
+	const isClientError = status !== undefined && status >= 400 && status < 500;
+	if (!isClientError) logEventsAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog.txt');
 
 	// If we ever get 'Data after `Connection: close`' errors again, we can enable a block like
 	// the following. Otherwise, if after a few months after the website redesign 2.0 update we
@@ -38,35 +34,38 @@ function errorHandler(err: Error, req: Request, res: Response, _next: Function):
 	// }
 
 	try {
-		const errMessage = `Caught in errorHandler: ${err.stack}`;
-		logEventsAndPrint(errMessage, 'errLog.txt');
-
-		// This sends back to the browser the error, instead of the ENTIRE stack which is PRIVATE.
-		const messageForClient = getTranslationForReq('server.javascript.ws-server_error', req);
-
 		if (req.accepts('html')) {
-			res.status(500).render(
+			// Render the styled error page, content-negotiated.
+			const context = getErrorPageContext(req, status);
+			res.status(context.code).render(
 				'error.njk',
-				getErrorPageContext(req, 500), // The error page includes the header which needs auth state.
-				// Handle potential errors manually instead of letting them next(err), triggering this handler again and an infinite loop.
+				context,
+				// Handle render errors manually instead of next(err), which would re-enter this
+				// handler and could loop.
 				(renderErr: Error | null, html: string) => {
 					if (!renderErr) {
 						// No error, good to send the rendered page
-						res.status(500).send(html);
+						res.send(html);
 					} else {
 						// Log the rendering error and return the plain message
 						logEventsAndPrint(
-							`Critical error rendering 500 page: ${renderErr.stack}`,
+							`Critical error rendering ${context.code} page: ${renderErr.stack}`,
 							'errLog.txt',
 						);
-						res.status(500).send(messageForClient);
+						res.send(getTranslationForReq('server.javascript.ws-server_error', req));
 					}
 				},
 			);
-		} else if (req.accepts('json')) {
-			res.status(500).json({ message: messageForClient });
 		} else {
-			res.status(500).send(messageForClient);
+			// Non-HTML (API) client. Echo the error's own message
+			// only when it is explicitly marked safe to expose.
+			const message =
+				'expose' in err && err.expose === true
+					? err.message
+					: getTranslationForReq('server.javascript.ws-server_error', req);
+			res.status(status);
+			if (req.accepts('json')) res.json({ message });
+			else res.send(message);
 		}
 	} catch (error: unknown) {
 		// Last line of defense

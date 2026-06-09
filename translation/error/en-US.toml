@@ -3,9 +3,21 @@
 
 back_home = "Back to home"
 
+[400]
+title = "Bad Request"
+message = "Something about that request wasn't quite right."
+
 [404]
 title = "Not Found"
 message = "We couldn't find the page you were looking for."
+
+[413]
+title = "Request Too Large"
+message = "That request was larger than the server allows."
+
+[415]
+title = "Unsupported Media Type"
+message = "The server can't process that type of content."
 
 [429]
 title = "Too Many Requests"
@@ -16,9 +28,6 @@ title = "Server Error"
 message = "Something went wrong on our end. Please try again."
 
 # Add more codes as needed. This whole block doesn't need to be included in other tomls.
-# [400]
-# title = "Bad Request"
-# message = "Something about that request wasn't quite right."
 # [401]
 # title = "Unauthorized"
 # message = "You need to be signed in to view this page."

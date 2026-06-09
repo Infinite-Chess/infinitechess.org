@@ -9,6 +9,7 @@
 import type { Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getLanguageToServe } from './translate.js';
 import {
 	getScriptTranslations,
@@ -53,11 +54,20 @@ export function getErrorPageContext(
 } {
 	const base = getBaseRenderContext(req);
 	const t = getTemplateTranslations('error', base.lang);
-	// Fall back to the 500 copy for any code without its own table in the TOML.
-	const entry = t[status] ?? t[500];
+	// Only codes with their own table in the TOML get their
+	// own page; any other code falls back to the 500 page.
+	let code = status;
+	if (t[status] === undefined) {
+		logEventsAndPrint(
+			`No error page copy exists for status ${status}; falling back to the 500 page. Add a [${status}] table to error TOML.`,
+			'errLog.txt',
+		);
+		code = 500;
+	}
+	const entry = t[code];
 	return {
 		...base,
-		code: status,
+		code,
 		title: entry.title,
 		message: entry.message,
 		retryAfter,
