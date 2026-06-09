@@ -10,10 +10,10 @@ import type { NextFunction, Request, Response } from 'express';
 import z from 'zod';
 
 import themes from '../../shared/components/header/themes.js';
-import jsutil from '../../shared/util/jsutil.js';
 
 import { logZodError } from '../utility/zodlogger.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { readMemberInfoCookie } from '../controllers/authenticationTokens/memberInfoCookie.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 // Types -------------------------------------------------------------------------------
@@ -54,45 +54,20 @@ function setPrefsCookie(req: Request, res: Response, next: NextFunction): void {
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab preferences of other users this way, but there's no harm in that.
-	const cookies = req.cookies;
-	const memberInfoCookieStringified = cookies['memberInfo'];
-	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
+	const memberInfoCookie = readMemberInfoCookie(req);
+	if (memberInfoCookie === undefined) return next(); // Not signed in, or the cookie was tampered (already logged).
 
-	let memberInfoCookie; // { user_id, username }
 	try {
-		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`memberInfo cookie was not JSON parse-able when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${message}`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
+		const preferences = getPrefs(memberInfoCookie.user_id); // Fetch their preferences from the database
+		if (preferences) {
+			createPrefsCookie(res, preferences);
+			// console.log(`Set preferences cookie for member "${jsutil.ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url); // prettier-ignore
+		}
+		// else no preferences set for this user, or the user doesn't exist.
+	} catch {
+		// DB read failed (already logged), or stored preferences weren't valid JSON.
+		// The cookie is skipped.
 	}
-
-	if (typeof memberInfoCookie !== 'object') {
-		logEventsAndPrint(
-			`memberInfo cookie did not parse into an object when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
-	}
-
-	const user_id = memberInfoCookie.user_id;
-	if (typeof user_id !== 'number') {
-		logEventsAndPrint(
-			`memberInfo cookie user_id property was not a number when attempting to set preferences cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the preferences cookie, but allow their request to continue as normal
-	}
-
-	const preferences = getPrefs(user_id); // Fetch their preferences from the database
-	if (!preferences) return next(); // No preferences set for this user, or the user doesn't exist.
-
-	createPrefsCookie(res, preferences);
-
-	// console.log(`Set preferences cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
 }
@@ -123,6 +98,7 @@ function deletePreferencesCookie(res: Response): void {
  * Fetches the preferences for a given user from the database.
  * @param userId - The ID of the user whose preferences are to be fetched.
  * @returns The preferences object if found, otherwise undefined.
+ * @throws If there is a database error or if the stored preferences are not valid JSON.
  */
 function getPrefs(userId: number): Preferences | undefined {
 	const record = getMemberDataByCriteria(['preferences'], 'user_id', userId);

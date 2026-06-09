@@ -402,6 +402,7 @@ function isUserIdTaken(userId: number): boolean {
  * a username is taken even if it has the same spelling but different capitalization).
  * @param username - The username to check.
  * @returns Returns true if the username exists, false otherwise.
+ * @throws If a database error occurs.
  */
 function isUsernameTaken(username: string): boolean {
 	const query = 'SELECT 1 FROM members WHERE username = ?';
@@ -416,6 +417,7 @@ function isUsernameTaken(username: string): boolean {
  * Checks if a member with the given email exists in the members table.
  * @param email - The email to check, in LOWERCASE.
  * @returns Returns true if the email exists, false otherwise.
+ * @throws If a database error occurs.
  */
 function isEmailTaken(email: string): boolean {
 	const query = 'SELECT 1 FROM members WHERE email = ?';
@@ -429,6 +431,7 @@ function isEmailTaken(email: string): boolean {
 /**
  * Checks if a username is taken by either a `members`
  * row OR a non-expired `pending_registrations` row.
+ * @throws If a database error occurs.
  */
 function isUsernameTakenOrPending(username: string): boolean {
 	return isUsernameTaken(username) || isUsernameTakenInPending(username);
@@ -438,6 +441,7 @@ function isUsernameTakenOrPending(username: string): boolean {
  * Checks if an email is taken by either a `members`
  * row OR a non-expired `pending_registrations` row.
  * @param email - The email to check, in LOWERCASE.
+ * @throws If a database error occurs.
  */
 function isEmailTakenOrPending(email: string): boolean {
 	return isEmailTaken(email) || isEmailTakenInPending(email);

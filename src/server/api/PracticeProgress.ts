@@ -5,11 +5,10 @@
  */
 
 import type { Request, Response } from 'express';
-import type { ParsedCookies } from '../types.js';
 
-import jsutil from '../../shared/util/jsutil.js';
 import validcheckmates from '../../shared/chess/util/validcheckmates.js';
 
+import { readMemberInfoCookie } from '../controllers/authenticationTokens/memberInfoCookie.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
@@ -35,43 +34,17 @@ function setPracticeProgressCookie(req: Request, res: Response, next: Function):
 	// We give everyone this cookie as soon as they login.
 	// Since it is modifiable by JavaScript it's possible for them to
 	// grab checkmates_beaten of other users this way, but there's no harm in that.
-	const cookies: ParsedCookies = req.cookies;
-	const memberInfoCookieStringified = cookies.memberInfo;
-	if (memberInfoCookieStringified === undefined) return next(); // No cookie is present, not logged in
+	const memberInfoCookie = readMemberInfoCookie(req);
+	if (memberInfoCookie === undefined) return next(); // Not signed in, or the cookie was tampered (already logged).
 
-	let memberInfoCookie: { user_id: number; username: string };
 	try {
-		memberInfoCookie = JSON.parse(memberInfoCookieStringified);
-	} catch (error) {
-		logEventsAndPrint(
-			`memberInfo cookie was not JSON parse-able when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}" The error: ${(error as Error).stack}`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
+		const checkmates_beaten = getCheckmatesBeaten(memberInfoCookie.user_id); // Fetch their checkmates_beaten from the database
+		createPracticeProgressCookie(res, checkmates_beaten);
+
+		// console.log(`Set checkmates_beaten cookie for member "${memberInfoCookie.username}" for url: ` + req.url); // prettier-ignore
+	} catch {
+		// DB read failed (already logged). The cookie is skipped.
 	}
-
-	if (typeof memberInfoCookie !== 'object') {
-		logEventsAndPrint(
-			`memberInfo cookie did not parse into an object when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
-	}
-
-	const user_id = memberInfoCookie.user_id;
-	if (typeof user_id !== 'number') {
-		logEventsAndPrint(
-			`memberInfo cookie user_id property was not a number when attempting to set checkmates_beaten cookie. Maybe it was tampered? The cookie: "${jsutil.ensureJSONString(memberInfoCookieStringified)}"`,
-			'errLog.txt',
-		);
-		return next(); // Don't set the checkmates_beaten cookie, but allow their request to continue as normal
-	}
-
-	const checkmates_beaten = getCheckmatesBeaten(user_id); // Fetch their checkmates_beaten from the database
-
-	createPracticeProgressCookie(res, checkmates_beaten);
-
-	// console.log(`Set checkmates_beaten cookie for member "${ensureJSONString(memberInfoCookie.username)}" for url: ` + req.url);
 
 	next();
 }
@@ -106,6 +79,7 @@ function deletePracticeProgressCookie(res: Response): void {
  * Fetches the checkmates_beaten for a given user from the database, as a delimited string.
  * @param userId - The ID of the user whose checkmates_beaten are to be fetched.
  * @returns - Returns the checkmates_beaten string if found, otherwise undefined. (e.g. "2Q-1k,3R-1k,1Q1R1B-1k")
+ * @throws If a database error occurs.
  */
 function getCheckmatesBeaten(userId: number): string {
 	const record = getMemberDataByCriteria(['checkmates_beaten'], 'user_id', userId);
@@ -151,22 +125,22 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 
 	// Checkmate is valid...
 
-	let checkmates_beaten: string = getCheckmatesBeaten(user_id);
-	const checkmates_beaten_array: string[] = checkmatesBeatenToStringArray(checkmates_beaten);
-
-	if (checkmates_beaten_array.includes(new_checkmate_beaten)) {
-		// Already beaten
-		res.status(204).json({ message: 'Checkmate already beaten' });
-		return;
-	}
-
-	// Checkmate not already beaten (until now)...
-
-	// Update the new list
-	checkmates_beaten_array.push(new_checkmate_beaten);
-	checkmates_beaten = checkmates_beaten_array.join(',');
-
 	try {
+		let checkmates_beaten: string = getCheckmatesBeaten(user_id);
+		const checkmates_beaten_array: string[] = checkmatesBeatenToStringArray(checkmates_beaten);
+
+		if (checkmates_beaten_array.includes(new_checkmate_beaten)) {
+			// Already beaten
+			res.status(204).json({ message: 'Checkmate already beaten' });
+			return;
+		}
+
+		// Checkmate not already beaten (until now)...
+
+		// Update the new list
+		checkmates_beaten_array.push(new_checkmate_beaten);
+		checkmates_beaten = checkmates_beaten_array.join(',');
+
 		// Save the new list to the database
 		const result = updateMemberColumns(user_id, { checkmates_beaten });
 
@@ -186,12 +160,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 			);
 			res.status(500).json({ message: 'Failed to update practice checkmate' });
 		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error updating practice checkmate for member "${username}" of ID "${user_id}": ${message}`,
-			'errLog.txt',
-		);
+	} catch {
 		res.status(500).json({ message: 'Server error updating practice checkmate' });
 	}
 }

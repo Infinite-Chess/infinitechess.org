@@ -15,7 +15,10 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	const cookies = req.cookies;
 	const refreshToken = cookies['jwt'];
-	if (typeof refreshToken !== 'string') return res.redirect('/'); // Cookie already deleted. (Already logged out)
+	if (typeof refreshToken !== 'string') {
+		res.redirect('/'); // Cookie already deleted. (Already logged out)
+		return;
+	}
 
 	// Delete their existing session cookies WHETHER OR NOT they
 	// are signed in, because they may THINK they are...

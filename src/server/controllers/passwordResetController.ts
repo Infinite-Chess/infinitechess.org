@@ -103,7 +103,6 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		res.status(500).json({
 			message: getScriptTranslationsForReq('responses', req).errors.server_error,
 		});
-		return;
 	}
 }
 

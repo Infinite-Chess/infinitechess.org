@@ -38,6 +38,7 @@ function isVerificationTokenLive(
 export function getVerifyPageState(req: Request): { state: 'prompt' | 'verified' | 'invalid' } {
 	const token = req.params['token']!;
 
+	// Any db error here propogates to errorHanlder which renders a 500 error page, intentional.
 	const pending = getPendingRegistrationByVerificationToken(token);
 	if (!isVerificationTokenLive(pending)) return { state: 'invalid' };
 	// Live: a non-null member_user_id means it was already promoted; otherwise it still awaits the click.

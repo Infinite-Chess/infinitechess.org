@@ -45,35 +45,42 @@ function processCommand(req: Request, res: Response): void {
 		res.status(403).send('Cannot send commands without the admin role');
 		return;
 	}
-	// TODO prevent affecting accounts with equal or higher roles
-	switch (commandAndArgs[0]) {
-		case 'ban':
-			banEmailCommand(command, commandAndArgs, req, res);
-			return;
-		case 'unban':
-			unbanEmailCommand(command, commandAndArgs, req, res);
-			return;
-		case 'delete':
-			deleteCommand(command, commandAndArgs, req, res);
-			return;
-		case 'username':
-			usernameCommand(command, commandAndArgs, req, res);
-			return;
-		case 'logout':
-			logoutUser(command, commandAndArgs, req, res);
-			return;
-		case 'userinfo':
-			getUserInfo(command, commandAndArgs, req, res);
-			return;
-		case 'updatecontributors':
-			updateContributorsCommand(command, req, res);
-			return;
-		case 'help':
-			helpCommand(commandAndArgs, res);
-			return;
-		default:
-			res.status(422).send('Unknown command.');
-			return;
+
+	// TODO: prevent affecting accounts with equal or higher roles.
+
+	try {
+		switch (commandAndArgs[0]) {
+			case 'ban':
+				banEmailCommand(command, commandAndArgs, req, res);
+				return;
+			case 'unban':
+				unbanEmailCommand(command, commandAndArgs, req, res);
+				return;
+			case 'delete':
+				deleteCommand(command, commandAndArgs, req, res);
+				return;
+			case 'username':
+				usernameCommand(command, commandAndArgs, req, res);
+				return;
+			case 'logout':
+				logoutUser(command, commandAndArgs, req, res);
+				return;
+			case 'userinfo':
+				getUserInfo(command, commandAndArgs, req, res);
+				return;
+			case 'updatecontributors':
+				updateContributorsCommand(command, req, res);
+				return;
+			case 'help':
+				helpCommand(commandAndArgs, res);
+				return;
+			default:
+				res.status(422).send('Unknown command.');
+				return;
+		}
+	} catch {
+		// A DB operation inside a command threw (already logged)
+		sendAndLogResponse(res, 500, 'A server error occurred while processing the command.');
 	}
 }
 
@@ -132,13 +139,8 @@ function deleteCommand(
 	if (!areRolesHigherInPriority(adminsRoles, rolesOfAffectedUser))
 		return sendAndLogResponse(res, 403, 'Forbidden to delete ' + record.username + '.');
 
-	try {
-		deleteAccount(record.user_id, reason);
-		sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		sendAndLogResponse(res, 500, `Failed to delete user (${record.username}): ${errorMessage}`);
-	}
+	deleteAccount(record.user_id, reason);
+	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 }
 
 function banEmailCommand(
@@ -165,13 +167,8 @@ function banEmailCommand(
 		return;
 	}
 
-	try {
-		addToBlacklist(email, 'banned');
-		sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		sendAndLogResponse(res, 500, `Failed to ban email (${email}): ${errorMessage}`);
-	}
+	addToBlacklist(email, 'banned');
+	sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
 }
 
 function unbanEmailCommand(
@@ -198,13 +195,8 @@ function unbanEmailCommand(
 		return;
 	}
 
-	try {
-		removeFromBlacklist(email);
-		sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		sendAndLogResponse(res, 500, `Failed to unban email (${email}): ${errorMessage}`);
-	}
+	removeFromBlacklist(email);
+	sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
 }
 
 function usernameCommand(
@@ -265,22 +257,8 @@ function logoutUser(command: string, commandAndArgs: string[], req: Request, res
 		return;
 	}
 
-	try {
-		// Effectively terminates all login sessions of the user
-		deleteAllRefreshTokensForUser(record.user_id);
-	} catch (e) {
-		const errorMessage = e instanceof Error ? e.stack : String(e);
-		logEventsAndPrint(
-			`Error during admin-manual-logout of user "${record.username}": ${errorMessage}`,
-			'errLog.txt',
-		);
-		sendAndLogResponse(
-			res,
-			500,
-			`Failed to log out user "${record.username}" due to internal error.`,
-		);
-		return;
-	}
+	// Effectively terminates all login sessions of the user
+	deleteAllRefreshTokensForUser(record.user_id);
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 

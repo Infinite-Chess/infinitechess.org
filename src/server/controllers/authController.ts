@@ -53,29 +53,37 @@ async function testPasswordForRequest(
 	const browserAgent = getBrowserAgent(req, searchValue.toLowerCase());
 	if (!rateLimitLogin(req, res, browserAgent)) return undefined; // They are being rate limited from entering incorrectly too many times
 
-	const record = getMemberDataByCriteria(
-		['user_id', 'username', 'hashed_password', 'roles'],
-		searchKey,
-		searchValue,
-	);
+	try {
+		const record = getMemberDataByCriteria(
+			['user_id', 'username', 'hashed_password', 'roles'],
+			searchKey,
+			searchValue,
+		);
 
-	// Only test the password if the account exists, but ALWAYS respond with the same generic
-	// message, so the response never reveals whether the identifier is registered.
-	const match =
-		record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
-	if (!match) {
-		const attemptedIdentity = record?.username ?? searchValue;
-		logEvents(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts.txt');
-		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).auth.invalid_credentials,
-		}); // Unauthorized — generic message to avoid account enumeration
-		onIncorrectPassword(browserAgent, attemptedIdentity);
+		// Only test the password if the account exists, but ALWAYS respond with the same generic
+		// message, so the response never reveals whether the identifier is registered.
+		const match =
+			record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
+		if (!match) {
+			const attemptedIdentity = record?.username ?? searchValue;
+			logEvents(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts.txt');
+			res.status(401).json({
+				message: getScriptTranslationsForReq('responses', req).auth.invalid_credentials,
+			}); // Unauthorized — generic message to avoid account enumeration
+			onIncorrectPassword(browserAgent, attemptedIdentity);
+			return undefined;
+		}
+
+		onCorrectPassword(browserAgent);
+
+		return { user_id: record.user_id, username: record.username, roles: record.roles };
+	} catch {
+		// DB error (already logged)
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 		return undefined;
 	}
-
-	onCorrectPassword(browserAgent);
-
-	return { user_id: record.user_id, username: record.username, roles: record.roles };
 }
 
 /**

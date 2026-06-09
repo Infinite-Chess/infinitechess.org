@@ -24,19 +24,22 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Get user's last read news date
-	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	try {
+		// Get user's last read news date
+		const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	if (!record?.last_read_news_date) {
-		// For some reason the cell was null or record not found
-		res.json({ count: 0 });
-		return;
+		if (!record?.last_read_news_date) {
+			// For some reason the cell was null or record not found
+			res.json({ count: 0 });
+			return;
+		}
+
+		// Count unread news posts
+		res.json({ count: countUnreadNews(record.last_read_news_date) });
+	} catch {
+		// DB error (already logged)
+		res.sendStatus(500);
 	}
-
-	// Count unread news posts
-	const unreadCount = countUnreadNews(record.last_read_news_date);
-
-	res.json({ count: unreadCount });
 }
 
 /**
@@ -52,19 +55,22 @@ function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 
 	const userId = req.memberInfo.user_id;
 
-	// Get user's last read news date
-	const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
+	try {
+		// Get user's last read news date
+		const record = getMemberDataByCriteria(['last_read_news_date'], 'user_id', userId);
 
-	if (!record?.last_read_news_date) {
-		// For some reason the cell was null or undefined
-		res.json({ dates: [] });
-		return;
+		if (!record?.last_read_news_date) {
+			// For some reason the cell was null or undefined
+			res.json({ dates: [] });
+			return;
+		}
+
+		// Get unread news dates
+		res.json({ dates: getUnreadNewsDates(record.last_read_news_date) });
+	} catch {
+		// DB error (already logged)
+		res.sendStatus(500);
 	}
-
-	// Get unread news dates
-	const unreadDates = getUnreadNewsDates(record.last_read_news_date);
-
-	res.json({ dates: unreadDates });
 }
 
 /**

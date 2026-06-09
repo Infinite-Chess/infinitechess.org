@@ -12,6 +12,7 @@ import type { RefreshTokenRecord } from '../../database/refreshTokenManager.js';
 import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
+import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
 import {
 	DEFAULT_SESSION_EXPIRY_MILLIS,
 	EXTENDED_SESSION_EXPIRY_MILLIS,
@@ -137,41 +138,11 @@ function createSessionCookies(
 }
 
 /**
- * Creates and sets a cookie containing user info (user ID and username),
- * accessible by JavaScript, with the same expiration as the refresh token.
- * @param res - The response object.
- * @param userId - The ID of the user.
- * @param username - The username of the user.
- * @param expiryMillis - How long, in milliseconds, the cookie should live (match the token's expiry).
- */
-function createMemberInfoCookie(
-	res: Response,
-	userId: number,
-	username: string,
-	expiryMillis: number,
-): void {
-	// Create an object with member info
-	const now = Date.now();
-	const expires = now + expiryMillis;
-	const memberInfo = JSON.stringify({ user_id: userId, username, issued: now, expires });
-
-	// Set the cookie (readable by JavaScript, not HTTP-only).
-	// Cross-site usage requires we set sameSite to 'None'! Also requires secure (https) true.
-	res.cookie('memberInfo', memberInfo, {
-		httpOnly: false,
-		sameSite: 'none',
-		secure: true,
-		maxAge: expiryMillis,
-	});
-}
-
-/**
  * Deletes the cookies that store session information.
  * @param res - The response object.
  */
 function deleteSessionCookies(res: Response): void {
 	// Clear the HTTP-only 'jwt' cookie by setting the same options as when it was created.
 	res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
-	// Clear the 'memberInfo' cookie by setting the same options as when it was created.
-	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'none', secure: true });
+	deleteMemberInfoCookie(res);
 }

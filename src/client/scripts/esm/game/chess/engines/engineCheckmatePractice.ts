@@ -1901,7 +1901,7 @@ async function runEngine(): Promise<void> {
 		}
 		postMessage({ type: 'move', data: move_to_gamefile_move(globallyBestVariation[0]![1]!) });
 	} catch (e) {
-		console.error('An error occured in the engine computation of the checkmate practice');
+		console.error('An error occurred in the engine computation of the checkmate practice');
 		console.error(e);
 	}
 }

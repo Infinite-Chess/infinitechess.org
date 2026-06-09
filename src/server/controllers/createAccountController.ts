@@ -192,7 +192,13 @@ function getOwnActivePendingRegistration(req: Request): PendingRegistrationRecor
 function getAwaitingPageState(req: Request): { email: string; blacklisted: boolean } | null {
 	const pending = getOwnActivePendingRegistration(req);
 	if (pending === undefined) return null;
-	return { email: pending.email, blacklisted: isBlacklisted(pending.email) };
+	try {
+		return { email: pending.email, blacklisted: isBlacklisted(pending.email) };
+	} catch {
+		// DB read failed (already logged). Assume not blacklisted so the awaiting page still renders;
+		// a genuinely blacklisted address is re-checked in subsequent polls.
+		return { email: pending.email, blacklisted: false };
+	}
 }
 
 /**
@@ -369,9 +375,15 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	let allowed = true;
 	let reason = '';
 
-	if (isUsernameTakenOrPending(username)) {
-		allowed = false;
-		reason = getTranslationForReq('server.javascript.ws-username_taken', req);
+	try {
+		if (isUsernameTakenOrPending(username)) {
+			allowed = false;
+			reason = getTranslationForReq('server.javascript.ws-username_taken', req);
+		}
+	} catch {
+		// DB read failed (already logged)
+		res.sendStatus(500);
+		return;
 	}
 	if (checkProfanity(username)) {
 		allowed = false;

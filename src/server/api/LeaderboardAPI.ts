@@ -12,6 +12,7 @@ import { Leaderboard } from '../../shared/chess/variants/validleaderboard.js';
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import {
 	getTopPlayersForLeaderboard,
 	getPlayerRankInLeaderboard,
@@ -130,7 +131,9 @@ function getLeaderboardData(req: Request, res: Response): void {
 		res.json(sendData);
 	} catch {
 		// already logged
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 	}
 }
 

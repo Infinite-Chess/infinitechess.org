@@ -109,6 +109,18 @@ function buildPlayerRecord(
 // Persistence Events ---------------------------------------------------------------------------------
 
 /**
+ * Runs a best-effort live-game persistence write, swallowing any database error (already
+ * logged by dbCall) so it can't abort the game lifecycle or crash a timer callback.
+ */
+function persist(operation: () => void): void {
+	try {
+		operation();
+	} catch {
+		// Already logged by dbCall. The in-memory game continues uninterrupted.
+	}
+}
+
+/**
  * Called when a new game is created. Inserts the full initial state into both tables.
  */
 function onGameCreated(servergame: ServerGame): void {
@@ -133,14 +145,15 @@ function onGameCreated(servergame: ServerGame): void {
 		validate_moves: servergame.validateMoves ? 1 : 0,
 	};
 
-	insertLiveGame(record);
+	// Build one record per player (pure) before touching the database.
+	const playerRecords = Object.entries(match.playerData).map(([playerStr, playerData]) =>
+		buildPlayerRecord(match.id, Number(playerStr) as Player, playerData, servergame),
+	);
 
-	// Insert one row per player
-	for (const [playerStr, playerData] of Object.entries(match.playerData)) {
-		const player = Number(playerStr) as Player;
-		const playerRecord = buildPlayerRecord(match.id, player, playerData, servergame);
-		insertLivePlayerGame(playerRecord);
-	}
+	persist(() => {
+		insertLiveGame(record);
+		for (const playerRecord of playerRecords) insertLivePlayerGame(playerRecord);
+	});
 }
 
 /**
@@ -157,9 +170,10 @@ function onMoveSubmitted(servergame: ServerGame): void {
 		gameUpdates.clock_snapshot_time = servergame.clocks.timeAtTurnStart ?? null;
 	}
 
-	updateLiveGame(servergame.match.id, gameUpdates);
-
-	persistCurrentClockTimes(servergame);
+	persist(() => {
+		updateLiveGame(servergame.match.id, gameUpdates);
+		persistCurrentClockTimes(servergame);
+	});
 }
 
 /**
@@ -185,22 +199,25 @@ function onGameConcluded(servergame: ServerGame): void {
 		gameUpdates.clock_snapshot_time = null;
 	}
 
-	updateLiveGame(servergame.match.id, gameUpdates);
-
-	// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
-	persistCurrentClockTimes(servergame);
+	persist(() => {
+		updateLiveGame(servergame.match.id, gameUpdates);
+		// Update time_remaining_ms for timed games (e.g., time loss sets loser to 0)
+		persistCurrentClockTimes(servergame);
+	});
 }
 
 /**
  * Called when a draw offer is extended.
  */
 function onDrawOfferExtended(servergame: ServerGame, offeringColor: Player): void {
-	updateLiveGame(servergame.match.id, {
-		draw_offer_state: offeringColor,
-	});
+	persist(() => {
+		updateLiveGame(servergame.match.id, {
+			draw_offer_state: offeringColor,
+		});
 
-	updateLivePlayerGame(servergame.match.id, offeringColor, {
-		last_draw_offer_ply: servergame.match.playerData[offeringColor]!.lastOfferPly ?? null,
+		updateLivePlayerGame(servergame.match.id, offeringColor, {
+			last_draw_offer_ply: servergame.match.playerData[offeringColor]!.lastOfferPly ?? null,
+		});
 	});
 }
 
@@ -208,8 +225,10 @@ function onDrawOfferExtended(servergame: ServerGame, offeringColor: Player): voi
  * Called when a draw offer is declined (or auto-declined on move).
  */
 function onDrawOfferDeclined(servergame: ServerGame): void {
-	updateLiveGame(servergame.match.id, {
-		draw_offer_state: null,
+	persist(() => {
+		updateLiveGame(servergame.match.id, {
+			draw_offer_state: null,
+		});
 	});
 }
 
@@ -219,43 +238,51 @@ function onDrawOfferDeclined(servergame: ServerGame): void {
  */
 function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
 	const playerDisconnectData = servergame.match.playerData[color]!.disconnect;
-	updateLivePlayerGame(servergame.match.id, color, getDisconnectColumnData(playerDisconnectData));
+	persist(() =>
+		updateLivePlayerGame(
+			servergame.match.id,
+			color,
+			getDisconnectColumnData(playerDisconnectData),
+		),
+	);
 }
 
 /**
  * Called when a player reconnects. Clears their disconnect state.
  */
 function onPlayerReconnected(servergame: ServerGame, color: Player): void {
-	updateLivePlayerGame(servergame.match.id, color, {
-		disconnect_cushion_end_time: null,
-		disconnect_resign_time: null,
-		disconnect_by_choice: null,
-	});
+	persist(() =>
+		updateLivePlayerGame(servergame.match.id, color, {
+			disconnect_cushion_end_time: null,
+			disconnect_resign_time: null,
+			disconnect_by_choice: null,
+		}),
+	);
 }
 
 /**
  * Called when a player goes AFK. Persists the AFK resign timestamp.
  */
 function onPlayerAFK(servergame: ServerGame): void {
-	updateLiveGame(servergame.match.id, {
-		afk_resign_time: servergame.match.autoAFKResignTime ?? null,
-	});
+	persist(() =>
+		updateLiveGame(servergame.match.id, {
+			afk_resign_time: servergame.match.autoAFKResignTime ?? null,
+		}),
+	);
 }
 
 /**
  * Called when a player returns from AFK. Clears the AFK resign timestamp.
  */
 function onPlayerAFKReturn(servergame: ServerGame): void {
-	updateLiveGame(servergame.match.id, {
-		afk_resign_time: null,
-	});
+	persist(() => updateLiveGame(servergame.match.id, { afk_resign_time: null }));
 }
 
 /**
  * Called when a game is fully deleted/logged. Removes the live game from the database.
  */
 function onGameDeleted(game_id: number): void {
-	deleteLiveGame(game_id);
+	persist(() => deleteLiveGame(game_id));
 }
 
 // Exports --------------------------------------------------------------------------------------------
