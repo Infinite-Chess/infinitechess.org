@@ -9,6 +9,7 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendPasswordResetEmail } from './emailController.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
@@ -97,10 +98,10 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 	} catch (error) {
 		const errorMessage: string =
 			'Forgot password database error: ' +
-			(error instanceof Error ? error.message : String(error));
+			(error instanceof Error ? error.stack : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({
-			message: 'An error occurred while processing your request. Please try again later.',
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
 		});
 		return;
 	}
@@ -207,9 +208,11 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts.txt');
 	} catch (error) {
 		const errorMessage: string =
-			'Reset password error: ' + (error instanceof Error ? error.message : String(error));
+			'Reset password error: ' + (error instanceof Error ? error.stack : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
-		res.status(500).json({ message: 'An internal error occurred. Please try again later.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 	}
 }
 

@@ -9,8 +9,9 @@
 import type { Request, Response } from 'express';
 import type { PendingRegistrationRecord } from '../database/pendingRegistrationManager.js';
 
+import { logEvents } from '../middleware/logEvents.js';
 import { promotePendingRegistration } from '../database/memberManager.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { getPendingRegistrationByVerificationToken } from '../database/pendingRegistrationManager.js';
 
 // Functions -------------------------------------------------------------------------
@@ -50,40 +51,31 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 	// Express only matches this route with a non-empty :token segment.
 	const token = req.params['token']!;
 
-	let pending: PendingRegistrationRecord | undefined;
 	try {
-		pending = getPendingRegistrationByVerificationToken(token);
-	} catch {
-		// Allows a retry
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
-		return;
-	}
+		const pending = getPendingRegistrationByVerificationToken(token);
 
-	// Unknown token, or expired before it was ever promoted → dead link.
-	if (!isVerificationTokenLive(pending)) {
-		res.sendStatus(400);
-		return;
-	}
+		// Unknown token, or expired before it was ever promoted → dead link.
+		if (!isVerificationTokenLive(pending)) {
+			res.sendStatus(400);
+			return;
+		}
 
-	// Already promoted → idempotent success (the member already exists).
-	if (pending.member_user_id !== null) {
-		res.sendStatus(200);
-		return;
-	}
+		// Already promoted → idempotent success (the member already exists).
+		if (pending.member_user_id !== null) {
+			res.sendStatus(200);
+			return;
+		}
 
-	// Promote: actually create the member and mark the pending row verified.
-	try {
+		// Promote: actually create the member and mark the pending row verified.
 		const user_id = promotePendingRegistration(pending);
 
 		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog.txt');
 
 		res.sendStatus(200);
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error promoting pending registration "${pending.username}": ${message}`,
-			'errLog.txt',
-		);
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+	} catch {
+		// Allows a retry
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 	}
 }

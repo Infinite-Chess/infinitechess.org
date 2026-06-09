@@ -343,7 +343,7 @@ function parseReviver(key: string, value: any): any {
  * If there's a provided error message, it will log any ocurred error.
  * @param input - The input to stringify.
  * @param [errorMessage] - If specified, then this message will be printed if an error occurs.
- * @returns - The JSON stringified input or the original string if input was a string. Or, if an error ocurred, 'Error: Input could not be JSON stringified'.
+ * @returns - The JSON stringified input or the original string if input was a string. Or, if an error occurred, 'Error: Input could not be JSON stringified'.
  */
 function ensureJSONString(input: any, errorMessage?: string): string {
 	if (typeof input === 'string') return input;

@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /** Handles member logout by revoking the session and deleting the refresh token. */
@@ -35,7 +36,9 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 			`Critical error when logging out member "${req.memberInfo.username}": ${message}`,
 			'errLog.txt',
 		);
-		res.status(500).json({ message: 'Server Error' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 		return;
 	}
 

@@ -4,7 +4,7 @@ script_only = true
 
 [errors]
 not_found = "We couldn't find what you were looking for."
-server_error = "Something went wrong on our end. Please try again."
+server_error = "A server error occurred. Please try again."
 
 [rate_limiting]
 generic = "You have made too many requests, please try again later."
@@ -23,7 +23,6 @@ rated_requires_verified = "To play ranked, you need to be signed in with a verif
 game_aborted = "Game aborted."
 cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
 cloud_not_found = "Cloud save not found."
-
 
 [editor_saves]
 must_be_signed_in = "You must be signed in."

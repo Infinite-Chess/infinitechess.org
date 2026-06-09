@@ -120,7 +120,7 @@ function addUser(
  * verified member, and marks the pending row verified.
  * @param pending - The pending registration to promote.
  * @returns The new member's user_id.
- * @throws If member creation fails (e.g. CONSTRAINT violation).
+ * @throws If a database error occurrs during member creation (e.g. CONSTRAINT violation).
  */
 function promotePendingRegistration(pending: PendingRegistrationRecord): number {
 	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
@@ -129,6 +129,7 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
 		markPendingRegistrationVerified(p.claim_token, user_id);
 		return user_id;
 	});
+	// Every db operation within the transaction already logs via dbCall() on failure.
 	return promoteTransaction(pending);
 }
 

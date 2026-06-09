@@ -22,6 +22,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
+import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
@@ -216,38 +217,35 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	// Re-validate the new address (format, blacklist, MX) — same checks as registration.
 	if (!(await doEmailFormatChecks(email, req, res))) return;
 
-	// Availability: reject a real member's email or another party's pending email. The caller's
-	// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
-	let emailTaken: boolean;
 	try {
-		emailTaken =
+		// Availability: reject a real member's email or another party's pending email. The caller's
+		// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
+		const emailTaken =
 			isEmailTaken(email) || isEmailTakenInPendingByOther(email, pending.claim_token);
-	} catch {
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
-		return;
-	}
-	if (emailTaken) {
-		res.status(409).json({
-			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
-		});
-		return;
-	}
 
-	// Rotate the verification token so the new address gets a fresh link and any
-	// already-delivered link to the old address stops working.
-	const verificationToken = generateRegistrationToken();
+		if (emailTaken) {
+			res.status(409).json({
+				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
+			});
+			return;
+		}
 
-	try {
+		// Rotate the verification token so the new address gets a fresh link and any
+		// already-delivered link to the old address stops working.
+		const verificationToken = generateRegistrationToken();
+
 		// Clear any expired row blocking the new email's UNIQUE constraint.
 		deleteExpiredPendingRegistrationsFor(pending.username, email);
 		updatePendingRegistrationEmail(pending.claim_token, email, verificationToken);
+
+		sendEmailConfirmation(email, pending.username, verificationToken);
+		res.sendStatus(200);
 	} catch {
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 		return;
 	}
-
-	sendEmailConfirmation(email, pending.username, verificationToken);
-	res.sendStatus(200);
 }
 
 /**
@@ -486,7 +484,9 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			return false;
 		}
 	} catch {
-		res.status(500).json({ message: 'A server error occurred. Please try again.' });
+		res.status(500).json({
+			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+		});
 		return false;
 	}
 	if (!(await isEmailDNSValid(email))) {
