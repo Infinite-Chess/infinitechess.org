@@ -46,7 +46,7 @@ function processCommand(req: Request, res: Response): void {
 		return;
 	}
 
-	// TODO: prevent affecting accounts with equal or higher roles.
+	// TODO: prevent affecting accounts with equal or higher roles across all commands, not just delete.
 
 	try {
 		switch (commandAndArgs[0]) {

@@ -5,7 +5,6 @@
  * and removal of roles from members.
  */
 
-import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 
 /**
@@ -21,53 +20,23 @@ export type Role = (typeof validRoles)[number];
  * Adds a specified role to a member's roles list.
  * @param userId - The user ID of the member.
  * @param role - The role to add (e.g., 'owner', 'patron').
+ * @throws If the user doesn't exist, already has the role, or if a database error occurs.
  */
 function giveRole(userId: number, role: Role): void {
 	// Fetch the member's current roles from the database
 	const memberData = getMemberDataByCriteria(['roles'], 'user_id', userId);
-	if (!memberData) {
-		logEventsAndPrint(
-			`Cannot give role "${role}" to user of ID "${userId}" when they don't exist!`,
-			'errLog.txt',
-		);
-		return;
-	}
+	if (!memberData) throw new Error(`User with ID ${userId} does not exist`);
 	const roles: Role[] = memberData.roles === null ? [] : JSON.parse(memberData.roles); // ['role1','role2', ...]
 
 	// If the role already exists, return early
-	if (roles.includes(role)) {
-		logEventsAndPrint(
-			`Role "${role}" already exists for member with user ID "${userId}".`,
-			'errLog.txt',
-		);
-		return;
-	}
+	if (roles.includes(role))
+		throw new Error(`User with ID ${userId} already has the role "${role}"`);
 
 	// Add the new role to the roles array
 	roles.push(role);
 
-	try {
-		// Save the updated roles back to the database
-		const result = updateMemberColumns(userId, { roles: JSON.stringify(roles) });
-
-		if (result.changeMade) {
-			logEventsAndPrint(
-				`Added role "${role}" to member with ID "${userId}".`,
-				'loginAttempts.txt',
-			);
-		} else {
-			logEventsAndPrint(
-				`Failed to add role "${role}" to member with ID "${userId}".`,
-				'errLog.txt',
-			);
-		}
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error adding role "${role}" to member of ID "${userId}": ${message}`,
-			'errLog.txt',
-		);
-	}
+	// Save the updated roles back to the database
+	updateMemberColumns(userId, { roles: JSON.stringify(roles) });
 }
 
 /**

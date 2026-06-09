@@ -40,6 +40,7 @@ export interface LivePlayerDisconnectData {
 /**
  * Inserts a new live player game row into the database.
  * @param record - The complete live_player_games record to insert.
+ * @throws If a database error occurs.
  */
 function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 	const query = `
@@ -72,6 +73,7 @@ function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
  * @param game_id - The game ID.
  * @param player_number - The player number to update.
  * @param updates - An object containing only the columns to update and their new values.
+ * @throws If a database error occurs.
  */
 function updateLivePlayerGame(
 	game_id: number,
@@ -102,6 +104,7 @@ function updateLivePlayerGame(
  * Retrieves all player rows for a given live game. Used on server startup.
  * @param game_id - The game ID.
  * @returns An array of live_player_games records for this game.
+ * @throws If a database error occurs.
  */
 function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
 	const query = `SELECT * FROM live_player_games WHERE game_id = ? ORDER BY player_number`;
