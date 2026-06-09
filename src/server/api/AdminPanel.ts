@@ -223,21 +223,10 @@ function usernameCommand(
 		if (record === undefined)
 			sendAndLogResponse(res, 404, 'User with id ' + parsedId + ' does not exist.');
 		else sendAndLogResponse(res, 200, record.username);
-	} else if (commandAndArgs[1] === 'set') {
-		if (commandAndArgs.length < 4) {
-			res.status(422).send(
-				'Invalid number of arguments, expected 3, got ' + (commandAndArgs.length - 1) + '.',
-			);
-			return;
-		}
-		// TODO add username changing logic
-		res.status(503).send('Changing usernames is not yet supported.');
 	} else if (commandAndArgs[1] === undefined) {
-		res.status(422).send('Expected either get or set as a subcommand.');
+		res.status(422).send('Expected get as a subcommand.');
 	} else {
-		res.status(422).send(
-			'Invalid subcommand, expected either get or set, got ' + commandAndArgs[1] + '.',
-		);
+		res.status(422).send('Invalid subcommand, expected get, got ' + commandAndArgs[1] + '.');
 	}
 }
 
@@ -321,7 +310,7 @@ function helpCommand(commandAndArgs: string[], res: Response): void {
 			return;
 		case 'username':
 			res.status(200).send(
-				'Syntax: username get <userid>\n        username set <userid> <newUsername>\nGets or sets the username of the account with the given userid',
+				'Syntax: username get <userid>\nGets the username of the account with the given userid.',
 			);
 			return;
 		case 'logout':
