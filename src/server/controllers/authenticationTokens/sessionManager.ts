@@ -13,6 +13,7 @@ import { deletePreferencesCookie } from '../../api/Prefs.js';
 import { deletePracticeProgressCookie } from '../../api/PracticeProgress.js';
 import { addRefreshToken, markRefreshTokenAsConsumed } from '../../database/refreshTokenManager.js';
 import { createMemberInfoCookie, deleteMemberInfoCookie } from './memberInfoCookie.js';
+import { createRefreshTokenCookie, deleteRefreshTokenCookie } from './refreshTokenCookie.js';
 import {
 	DEFAULT_SESSION_EXPIRY_MILLIS,
 	EXTENDED_SESSION_EXPIRY_MILLIS,
@@ -126,14 +127,7 @@ function createSessionCookies(
 	refreshToken: string,
 	expiryMillis: number,
 ): void {
-	// Create and sets an HTTP-only cookie containing the refresh token.
-	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true.
-	res.cookie('jwt', refreshToken, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true,
-		maxAge: expiryMillis,
-	});
+	createRefreshTokenCookie(res, refreshToken, expiryMillis);
 	createMemberInfoCookie(res, userId, username, expiryMillis);
 }
 
@@ -142,7 +136,6 @@ function createSessionCookies(
  * @param res - The response object.
  */
 function deleteSessionCookies(res: Response): void {
-	// Clear the HTTP-only 'jwt' cookie by setting the same options as when it was created.
-	res.clearCookie('jwt', { httpOnly: true, sameSite: 'none', secure: true });
+	deleteRefreshTokenCookie(res);
 	deleteMemberInfoCookie(res);
 }

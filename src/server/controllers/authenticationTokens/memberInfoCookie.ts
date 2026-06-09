@@ -6,6 +6,9 @@
  * This cookie tells the client who they are signed in as, but it is
  * NOT the source of truth for the user's session validity — that is the
  * refresh token, which is HTTP-only and thus not tamperable by the client.
+ *
+ * The sister cookie, `jwt` (see refreshTokenCookie.ts), IS the source of truth
+ * for a user's session validity, being HTTP-only and not tamperable.
  */
 
 import type { Request, Response } from 'express';
@@ -24,22 +27,6 @@ export type MemberInfoCookie = {
 	/** When the session expires, in milliseconds since the epoch. */
 	expires: number;
 };
-
-/** Type guard: whether a JSON-parsed value matches the {@link MemberInfoCookie} shape. */
-function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
-	return (
-		typeof value === 'object' &&
-		value !== null &&
-		'user_id' in value &&
-		typeof value.user_id === 'number' &&
-		'username' in value &&
-		typeof value.username === 'string' &&
-		'issued' in value &&
-		typeof value.issued === 'number' &&
-		'expires' in value &&
-		typeof value.expires === 'number'
-	);
-}
 
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).
@@ -94,6 +81,22 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 		);
 		return undefined;
 	}
+}
+
+/** Type guard: whether a JSON-parsed value matches the {@link MemberInfoCookie} shape. */
+function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		'user_id' in value &&
+		typeof value.user_id === 'number' &&
+		'username' in value &&
+		typeof value.username === 'string' &&
+		'issued' in value &&
+		typeof value.issued === 'number' &&
+		'expires' in value &&
+		typeof value.expires === 'number'
+	);
 }
 
 export { createMemberInfoCookie, deleteMemberInfoCookie, readMemberInfoCookie };
