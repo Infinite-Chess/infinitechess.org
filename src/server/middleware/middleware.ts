@@ -1,7 +1,9 @@
 // src/server/middleware/middleware.ts
 
 /**
- * This module configures the middleware waterfall of our server
+ * Assembles the server's HTTP request pipeline, in order:
+ * global middleware → cookie-setters → routers (`/` pages, `/api` endpoints)
+ * → 404 → error handler.
  */
 
 import type { Express } from 'express';
