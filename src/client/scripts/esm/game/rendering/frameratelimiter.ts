@@ -9,10 +9,7 @@
 
 // Variables -------------------------------------------------
 
-/**
- * The target FPS limit, or `null` for unlimited.
- * Defaults to 30 fps (title-screen throttle) until game code explicitly sets it.
- */
+/** The target FPS limit, or `null` for unlimited. */
 let limitedFps: number | null = null;
 
 /** Timestamp of the last frame that was actually rendered */
