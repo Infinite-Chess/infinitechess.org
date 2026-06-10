@@ -79,8 +79,11 @@ function sendSocketMessage(
 		return;
 	}
 
-	if (ws.readyState === WebSocket.CLOSED) {
-		const errText = `Websocket is in a CLOSED state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
+	// Sends on a CLOSING/CLOSED socket are silently dropped by ws, so return
+	// early instead of logging the message as sent and arming an echo timer.
+	if (ws.readyState !== WebSocket.OPEN) {
+		const state = ws.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED';
+		const errText = `Websocket is in a ${state} state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEventsAndPrint(errText, 'errLog.txt');
 		return;
 	}
