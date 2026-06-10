@@ -4,11 +4,10 @@
  * This module configures the middleware waterfall of our server
  */
 
-import type { Express, Request, Response, NextFunction } from 'express';
+import type { Express, Request, Response } from 'express';
 
 import path from 'path';
 import cors from 'cors';
-import helmet from 'helmet';
 import express from 'express';
 import i18next from 'i18next';
 import { handle } from 'i18next-http-middleware';
@@ -20,6 +19,7 @@ import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
+import pathTraversal from './pathTraversal.js';
 import EditorSavesAPI from '../api/EditorSavesAPI.js';
 import secureRedirect from './secureRedirect.js';
 import { rootRouter } from '../routes/root.js';
@@ -30,6 +30,7 @@ import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
+import contentSecurityPolicy from './contentSecurityPolicy.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
@@ -90,59 +91,11 @@ export function configureMiddleware(app: Express): void {
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
 
-	// CSP (Content Security Policy): protects our users by telling the browser to only load/run
-	// resources (scripts, frames, images, ...) from sources we explicitly allowlist below.
-	// Its main job is mitigating XSS: an injected or inline script from a non-allowlisted source won't run.
-	app.use(
-		helmet({
-			contentSecurityPolicy: {
-				directives: {
-					defaultSrc: ["'self'"],
-					scriptSrc: [
-						"'self'",
-						"'unsafe-inline'",
-						"'wasm-unsafe-eval'",
-						'https://static.cloudflareinsights.com',
-					], // Allows inline scripts
-					scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
-					objectSrc: ["'none'"],
-					frameSrc: ["'self'", 'https://www.youtube.com'],
-					imgSrc: ["'self'", 'data:', 'https://avatars.githubusercontent.com', 'blob:'],
-				},
-			},
-		}),
-	);
+	// Content Security Policy headers (XSS mitigation)
+	app.use(contentSecurityPolicy);
 
 	// Path Traversal Protection, and error protection from malformed URLs
-	app.use((req: Request, res: Response, next: NextFunction) => {
-		try {
-			const decoded = decodeURIComponent(req.url);
-
-			// Check 1: Raw encoded patterns (before decoding)
-			const encodedPatterns = /(%2e%2e|%252e|%%32%65)/gi;
-			if (encodedPatterns.test(req.url)) {
-				// console.warn('Blocked traversal:', req.url);
-				// console.warn('Decoded URL:', decoded);
-				res.status(403).send('Forbidden');
-				return;
-			}
-
-			// Check 2: Decoded path segments
-			const segments = decoded.split(/[\\/]/);
-			if (segments.includes('..')) {
-				// Console warn both the decoded and the original URL
-				// console.warn('Blocked traversal:', req.url);
-				// console.warn('Decoded URL:', decoded);
-				res.status(403).send('Forbidden');
-				return;
-			}
-
-			next();
-		} catch (_err) {
-			// console.warn('Blocked invalid URL encoding:', req.url);
-			res.status(400).send('Invalid URL encoding');
-		}
-	});
+	app.use(pathTraversal);
 
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(handle(i18next, { removeLngFromUrl: false }));
