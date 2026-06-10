@@ -21,11 +21,11 @@ import adminRouter from '../routes/admin.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
+import membersRouter from '../routes/members.js';
 import { rootRouter } from '../routes/root.js';
 import registerRouter from '../routes/register.js';
 import editorSavesRouter from '../routes/editorSaves.js';
 import preferencesRouter from '../routes/preferences.js';
-import { removeAccount } from '../controllers/deleteAccountController.js';
 import leaderboardsRouter from '../routes/leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { setPrefsCookie } from '../api/Prefs.js';
@@ -134,7 +134,7 @@ export function configureMiddleware(app: Express): void {
 	app.use('/api/register', registerRouter);
 
 	// Member router
-	app.delete('/api/members/:member', removeAccount);
+	app.use('/api/members', membersRouter);
 
 	app.post('/api/reset-password', handleResetPassword);
 
