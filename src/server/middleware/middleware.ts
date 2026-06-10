@@ -239,6 +239,10 @@ export function configureMiddleware(app: Express): void {
 	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 	app.post('/api/prepare-restart', handlePrepareRestart);
 
+	app.post('/verify/:token', verifyPendingRegistration);
+
+	app.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
+
 	// Token Authenticator -------------------------------------------------------
 
 	/**
@@ -274,15 +278,11 @@ export function configureMiddleware(app: Express): void {
 
 	app.get('/command/:command', processCommand);
 
-	app.post('/verify/:token', verifyPendingRegistration);
-
 	// Leaderboard router
 	app.get(
 		'/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank',
 		getLeaderboardData,
 	);
-
-	app.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 
