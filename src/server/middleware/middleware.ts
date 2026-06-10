@@ -20,6 +20,7 @@ import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 import { rootRouter } from '../routes/root.js';
+import registerRouter from '../routes/register.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
 import editorSavesRouter from '../routes/editorSaves.js';
@@ -36,25 +37,11 @@ import { verifyPendingRegistration } from '../controllers/verifyAccountControlle
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
+import { forgotPasswordLimiter, seekPreviewLimiter, loginAttemptLimiter } from './rateLimiters.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
 } from '../controllers/passwordResetController.js';
-import {
-	checkUsernameAvailable,
-	createNewMember,
-	pollPendingRegistration,
-	changePendingEmail,
-} from '../controllers/createAccountController.js';
-import {
-	createAccountLimiter,
-	createAccountAttemptLimiter,
-	verificationEmailLimiter,
-	forgotPasswordLimiter,
-	seekPreviewLimiter,
-	loginAttemptLimiter,
-	usernameAvailabilityLimiter,
-} from './rateLimiters.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -144,11 +131,8 @@ export function configureMiddleware(app: Express): void {
 	// Root router
 	app.use('/', rootRouter); // Contains every html page.
 
-	// Account router
-	app.get('/api/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
-	app.post('/api/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
-	app.get('/api/register/awaiting/status', pollPendingRegistration);
-	app.put('/api/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
+	// Account router (public — no verifyJWT, these are pre-login)
+	app.use('/api/register', registerRouter);
 
 	// Member router
 	app.delete('/api/members/:member', removeAccount);
