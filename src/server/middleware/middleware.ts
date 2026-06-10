@@ -215,7 +215,7 @@ export function configureMiddleware(app: Express): void {
 	app.put('/api/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
 
 	// Member router
-	app.delete('/api/member/:member/delete', removeAccount);
+	app.delete('/api/members/:member', removeAccount);
 
 	app.post('/api/reset-password', handleResetPassword);
 
@@ -223,8 +223,8 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
 
-	app.post('/api/setlanguage', (req: Request, res: Response) => {
-		// Language cookie setter POST request
+	app.put('/api/language', (req: Request, res: Response) => {
+		// Language cookie setter
 		res.cookie('i18next', req.i18n.resolvedLanguage);
 		res.send(''); // Doesn't work without this for some reason
 	});
