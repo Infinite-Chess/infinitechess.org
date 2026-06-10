@@ -262,14 +262,10 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
  * Updates specified columns for a member based on their user ID.
  * @param user_id - The user ID of the member to update.
  * @param columnsAndValues - An object mapping column names to their new values.
- * @returns A result object indicating if a change was made, which if not, may indicate the user_id does not exist.
- * @throws If invalid parameters are provided, or if a database error occurs.
+ * @throws If invalid parameters are provided, the member does not exist, or if a database error occurs.
  */
-function updateMemberColumns(
-	user_id: number,
-	columnsAndValues: Partial<MemberRecord>,
-): { changeMade: boolean } {
-	const result = dbCall(() => {
+function updateMemberColumns(user_id: number, columnsAndValues: Partial<MemberRecord>): void {
+	dbCall(() => {
 		// Validate that we have columns to update
 		if (typeof columnsAndValues !== 'object' || columnsAndValues === null)
 			throw new Error(
@@ -291,12 +287,15 @@ function updateMemberColumns(
 				`Invalid columns or values provided when updating member of ID "${user_id}": ${jsutil.ensureJSONString(columnsAndValues)}`,
 			);
 
-		// Dynamically build the SET part of the query
+		// Dynamically build the query
 		const setStatements = columns.map((column) => `${column} = ?`).join(', ');
 		const query = `UPDATE members SET ${setStatements} WHERE user_id = ?`;
-		return db.run(query, [...values, user_id]);
+		const result = db.run(query, [...values, user_id]);
+
+		// If no rows changed, the member doesn't exist.
+		if (result.changes === 0)
+			throw new Error(`User not found! Columns: ${JSON.stringify(columns)}!`);
 	}, `Error updating columns for user ID "${user_id}"`);
-	return { changeMade: result.changes > 0 };
 }
 
 // Login Count & Last Seen ---------------------------------------------------------------------------------------

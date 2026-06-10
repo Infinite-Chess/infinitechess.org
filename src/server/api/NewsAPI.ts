@@ -89,28 +89,11 @@ function markNewsAsRead(req: Request, res: Response): void {
 	const latestNewsDate = getLatestNewsDate();
 
 	try {
-		const result = updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
-
-		if (result.changeMade) {
-			res.sendStatus(200);
-		} else {
-			logEventsAndPrint(
-				`Failed to update last read news date for member of ID "${userId}". No changes made. Do they exist?`,
-				'errLog.txt',
-			);
-			res.status(500).json({
-				message: 'Failed to update last read news date.',
-			});
-		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error updating last read news date for member of ID "${userId}": ${message}`,
-			'errLog.txt',
-		);
-		res.status(500).json({
-			message: `Server error updating last read news date`,
-		});
+		updateMemberColumns(userId, { last_read_news_date: latestNewsDate });
+		res.sendStatus(200);
+	} catch {
+		// DB error (already logged)
+		res.status(500).json({ message: `Server error updating last read news date` });
 	}
 }
 

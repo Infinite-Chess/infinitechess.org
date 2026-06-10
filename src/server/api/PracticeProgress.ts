@@ -142,24 +142,15 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 		checkmates_beaten = checkmates_beaten_array.join(',');
 
 		// Save the new list to the database
-		const result = updateMemberColumns(user_id, { checkmates_beaten });
+		updateMemberColumns(user_id, { checkmates_beaten });
 
-		// Send appropriate response
-		if (result.changeMade) {
-			logEvents(
-				`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,
-				'checkmates_beaten.txt',
-			);
-			// Create a new cookie with the updated checkmate list for the user
-			createPracticeProgressCookie(res, checkmates_beaten);
-			res.status(200).json({ message: 'Checkmate recorded successfully' });
-		} else {
-			logEventsAndPrint(
-				`Failed to save new practice checkmate for member "${username}" id "${user_id}". No change made. Do they exist?`,
-				'errLog.txt',
-			);
-			res.status(500).json({ message: 'Failed to update practice checkmate' });
-		}
+		logEvents(
+			`Member "${username}" of id "${user_id}" has beaten practice checkmate ${new_checkmate_beaten}. Beaten count: ${checkmates_beaten_array.length}. New checkmates_beaten: ${checkmates_beaten}`,
+			'checkmates_beaten.txt',
+		);
+		// Create a new cookie with the updated checkmate list for the user
+		createPracticeProgressCookie(res, checkmates_beaten);
+		res.status(200).json({ message: 'Checkmate recorded successfully' });
 	} catch {
 		res.status(500).json({ message: 'Server error updating practice checkmate' });
 	}

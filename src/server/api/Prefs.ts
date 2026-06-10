@@ -136,29 +136,12 @@ function postPrefs(req: Request, res: Response): void {
 
 	try {
 		// Update the preferences column in the database
-		const result = updateMemberColumns(user_id, {
-			preferences: JSON.stringify(parseResult.data),
-		});
+		updateMemberColumns(user_id, { preferences: JSON.stringify(parseResult.data) });
 
-		// Send appropriate response
-		if (result.changeMade) {
-			// console.log(
-			// 	`Successfully saved member "${username}" of id "${user_id}"s user preferences.`,
-			// );
-			res.status(200).json({ message: 'Preferences updated successfully' });
-		} else {
-			logEventsAndPrint(
-				`Failed to save preferences for member "${username}" id "${user_id}". No change made. Do they exist?`,
-				'errLog.txt',
-			);
-			res.status(500).json({ message: 'Failed to update preferences' });
-		}
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(
-			`Error occurred while saving preferences for member "${username}" of ID "${user_id}": ${message}`,
-			'errLog.txt',
-		);
+		// console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`); // prettier-ignore
+		res.status(200).json({ message: 'Preferences updated successfully' });
+	} catch {
+		// DB error (already logged)
 		res.status(500).json({ message: 'Server error while updating preferences' });
 	}
 }

@@ -214,12 +214,11 @@ export function updatePendingRegistrationEmail(
  */
 export function markPendingRegistrationVerified(claimToken: string, memberUserId: number): void {
 	const query = `UPDATE pending_registrations SET member_user_id = ? WHERE claim_token = ?`;
-	const result = dbCall(
-		() => db.run(query, [memberUserId, claimToken]),
-		'Database error while marking pending registration verified',
-	);
-	if (result.changes === 0)
-		throw new Error(`No pending registration found for claim_token to mark verified.`);
+	dbCall(() => {
+		const result = db.run(query, [memberUserId, claimToken]);
+		// If no rows changed, no pending row matches the claim_token.
+		if (result.changes === 0) throw new Error(`No pending registration found for claim_token`);
+	}, 'Database error while marking pending registration verified');
 }
 
 // Deletion ------------------------------------------------------------------
