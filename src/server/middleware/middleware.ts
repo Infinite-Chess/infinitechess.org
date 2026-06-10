@@ -16,28 +16,26 @@ import { fileURLToPath } from 'node:url';
 import send404 from './send404.js';
 import security from './security.js';
 import newsRouter from '../routes/news.js';
+import authRouter from '../routes/auth.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 import { rootRouter } from '../routes/root.js';
 import registerRouter from '../routes/register.js';
-import { handleLogin } from '../controllers/loginController.js';
-import { handleLogout } from '../controllers/logoutController.js';
 import editorSavesRouter from '../routes/editorSaves.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { forgotPasswordLimiter, seekPreviewLimiter } from './rateLimiters.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
-import { forgotPasswordLimiter, seekPreviewLimiter, loginAttemptLimiter } from './rateLimiters.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
@@ -141,8 +139,6 @@ export function configureMiddleware(app: Express): void {
 
 	// API --------------------------------------------------------------------
 
-	app.post('/api/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
-
 	app.put('/api/language', (req: Request, res: Response) => {
 		// Language cookie setter
 		res.cookie('i18next', req.i18n.resolvedLanguage);
@@ -163,8 +159,9 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
-	// Resource routers that carry their own verifyJWT (see each router), so they're
-	// mounted above the global verifyJWT below to avoid running auth twice.
+	// Routers that manage their own authentication (per-router or per-route verifyJWT),
+	// so they're mounted above the global verifyJWT below to avoid running auth twice.
+	app.use('/api', authRouter); // login (public), logout + access-token (authed)
 	app.use('/api/editor-saves', editorSavesRouter);
 	app.use('/api/news', newsRouter);
 
@@ -182,13 +179,9 @@ export function configureMiddleware(app: Express): void {
 
 	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
 
-	app.post('/api/access-token', accessTokenIssuer);
-
 	app.put('/api/preferences', postPrefs);
 
 	app.put('/api/checkmates-progress', postCheckmateBeaten);
-
-	app.post('/api/logout', handleLogout);
 
 	app.post('/api/admin/command', processCommand);
 
