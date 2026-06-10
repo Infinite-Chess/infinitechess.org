@@ -116,7 +116,7 @@ function postPrefs(req: Request, res: Response): void {
 			"User tried to save preferences when they weren't signed in!",
 			'errLog.txt',
 		);
-		res.status(401).json({ message: "Can't save preferences, not signed in." });
+		res.sendStatus(401);
 		return;
 	}
 
@@ -132,7 +132,7 @@ function postPrefs(req: Request, res: Response): void {
 			parseResult.error,
 			`Member "${username}" of id "${user_id}" tried to save invalid preferences to the database.`,
 		);
-		res.status(400).json({ message: 'Preferences not valid, cannot save on the server.' });
+		res.sendStatus(400);
 		return;
 	}
 
@@ -141,10 +141,10 @@ function postPrefs(req: Request, res: Response): void {
 		updateMemberColumns(user_id, { preferences: JSON.stringify(parseResult.data) });
 
 		// console.log(`Successfully saved member "${username}" of id "${user_id}"s user preferences.`); // prettier-ignore
-		res.status(200).json({ message: 'Preferences updated successfully' });
+		res.sendStatus(200);
 	} catch {
 		// DB error (already logged)
-		res.status(500).json({ message: 'Server error while updating preferences' });
+		res.sendStatus(500);
 	}
 }
 

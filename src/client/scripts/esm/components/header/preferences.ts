@@ -159,12 +159,7 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 		if (response.ok) {
 			console.log('Preferences updated successfully on the server.');
 		} else {
-			// Handle unsuccessful response
-			const errorData: any = await response.json();
-			console.error(
-				'Failed to update preferences on the server:',
-				errorData.message || errorData,
-			);
+			console.error(`Failed to update preferences on the server. Status: ${response.status}`);
 		}
 	} catch (error) {
 		console.error('Error sending preferences to the server:', error);

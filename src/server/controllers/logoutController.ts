@@ -2,11 +2,10 @@
 
 import type { Request, Response } from 'express';
 
+import { logEvents } from '../middleware/logEvents.js';
 import { revokeSession } from '../controllers/authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /** Handles member logout by revoking the session and deleting the refresh token. */
 async function handleLogout(req: Request, res: Response): Promise<void> {
@@ -33,15 +32,9 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 	try {
 		// Now invalidate the refresh token from the database by deleting it.
 		deleteRefreshToken(refreshToken);
-	} catch (e) {
-		const message = e instanceof Error ? e.message : String(e);
-		logEventsAndPrint(
-			`Critical error when logging out member "${req.memberInfo.username}": ${message}`,
-			'errLog.txt',
-		);
-		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
-		});
+	} catch {
+		// DB error (already logged)
+		res.sendStatus(500);
 		return;
 	}
 
