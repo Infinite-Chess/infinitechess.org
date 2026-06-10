@@ -20,7 +20,6 @@ import authRouter from '../routes/auth.js';
 import adminRouter from '../routes/admin.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
-import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
 import { rootRouter } from '../routes/root.js';
 import registerRouter from '../routes/register.js';
@@ -161,8 +160,7 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
-	// Routers that manage their own authentication (per-router or per-route verifyJWT),
-	// so they're mounted above the global verifyJWT below to avoid running auth twice.
+	// Routers that manage their own authentication (per-router or per-route verifyJWT).
 	app.use('/api', authRouter); // login (public), logout + access-token (authed)
 	app.use('/api/editor-saves', editorSavesRouter);
 	app.use('/api/news', newsRouter);
@@ -170,21 +168,6 @@ export function configureMiddleware(app: Express): void {
 	app.use('/api/checkmates-progress', practiceProgressRouter);
 	app.use('/api/admin', adminRouter);
 	app.use('/api/leaderboards', leaderboardsRouter);
-
-	// Token Authenticator -------------------------------------------------------
-
-	/**
-	 * Sets the req.memberInfo properties if they have an authorization
-	 * header (contains access token) or refresh cookie (contains refresh token).
-	 * Don't send unauthorized people private stuff without the proper role.
-	 *
-	 * PLACE AS LOW AS YOU CAN, BUT ABOVE ALL ROUTES THAT NEED AUTHENTICATION!!
-	 * This requires database requests.
-	 */
-	app.use(verifyJWT);
-
-	// NOTE: every authed route now lives in a self-authenticating router mounted above, so no
-	// routes depend on this global verifyJWT anymore — it's ready to be retired (next step).
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 
