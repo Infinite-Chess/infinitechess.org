@@ -7,7 +7,6 @@
 import type { Express, Request, Response } from 'express';
 
 import path from 'path';
-import cors from 'cors';
 import express from 'express';
 import i18next from 'i18next';
 import { handle } from 'i18next-http-middleware';
@@ -15,13 +14,12 @@ import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
+import security from './security.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
-import pathTraversal from './pathTraversal.js';
 import EditorSavesAPI from '../api/EditorSavesAPI.js';
-import secureRedirect from './secureRedirect.js';
 import { rootRouter } from '../routes/root.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
@@ -30,7 +28,6 @@ import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import contentSecurityPolicy from './contentSecurityPolicy.js';
 import { accessTokenIssuer } from '../controllers/authenticationTokens/accessTokenIssuer.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
@@ -88,23 +85,11 @@ export function configureMiddleware(app: Express): void {
 
 	app.use(reqLogger); // Log the request
 
-	// Security Headers & HTTPS Enforcement
-	app.use(secureRedirect); // Redirects http to secure https
-
-	// Content Security Policy headers (XSS mitigation)
-	app.use(contentSecurityPolicy);
-
-	// Path Traversal Protection, and error protection from malformed URLs
-	app.use(pathTraversal);
+	// Security stack: HTTPS enforcement, CSP headers, path-traversal blocking, and CORS.
+	app.use(security);
 
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(handle(i18next, { removeLngFromUrl: false }));
-
-	// CORS (Cross Origin Resource Sharing): Protects our users' sensitive data from other sites stealing it via cross-origin requests.
-	// Access-Control-Allow-Origin (default '*'): which origins are allowed to READ our response body.
-	// Access-Control-Allow-Credentials (default off): whether a cross-origin request that carried cookies is allowed to succeed/be read.
-	// Turning it on (with a specific origin) could let another site read a logged-in user's private data — so we leave it off.
-	app.use(cors());
 
 	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
 	const awsParser = express.json({
