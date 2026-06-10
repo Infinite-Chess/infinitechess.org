@@ -103,7 +103,7 @@
 <header class="site-header">
 
 	{# Hamburger toggle - only visible on narrow screens via CSS. #}
-	<button class="header-hamburger" type="button">
+	<button class="header-hamburger">
 		<span class="header-hamburger-bar"></span>
 		<span class="header-hamburger-bar"></span>
 		<span class="header-hamburger-bar"></span>
@@ -119,7 +119,7 @@
 
 	<nav class="header-nav">
 		<div class="header-nav-item header-dropdown-parent">
-			<button class="header-nav-link" type="button">{{ t.nav.learn }}</button>
+			<button class="header-nav-link">{{ t.nav.learn }}</button>
 			<div class="header-dropdown" role="menu">
 				<a class="header-dropdown-item" role="menuitem" href="/tutorial">{{ t.nav.learn_dropdown.tutorial }}</a>
 				<a class="header-dropdown-item" role="menuitem" href="/checkmatepractice">{{ t.nav.learn_dropdown.checkmate_practice }}</a>
@@ -127,7 +127,7 @@
 		</div>
 
 		<div class="header-nav-item header-dropdown-parent">
-			<button class="header-nav-link" type="button">{{ t.nav.tools }}</button>
+			<button class="header-nav-link">{{ t.nav.tools }}</button>
 			<div class="header-dropdown" role="menu">
 				<a class="header-dropdown-item" role="menuitem" href="/analysis">{{ t.nav.tools_dropdown.analysis_board }}</a>
 				<a class="header-dropdown-item" role="menuitem" href="/editor">{{ t.nav.tools_dropdown.board_editor }}</a>
@@ -152,7 +152,7 @@
 			<a class="header-icon-btn tooltip-d" href="/member/{{ memberInfo.username }}" data-tooltip="{{ t.actions.profile }}">
 				<svg class="svg-profile" viewBox="0 0 2000 2000"><use href="#svg-profile"/></svg>
 			</a>
-			<button type="button" id="logout-button" class="header-icon-btn tooltip-d" data-tooltip="{{ t.actions.logout }}">
+			<button id="logout-button" class="header-icon-btn tooltip-d" data-tooltip="{{ t.actions.logout }}">
 				<svg class="svg-logout" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 240 240">
 					<path d="m160 170 50-50m0 0-50-50m50 50H90m30 50-.1 5.7a30 30 0 01-24 26.9l-5.7.7-10.2 1.1c-15.4 1.8-23 2.6-29.1.7a30 30 0 01-18.3-16.4C30 183 30 175.2 30 159.7V80.3c0-15.5 0-23.2 2.6-29A30 30 0 01 51 34.9c6-2 13.7-1 29 .7l10.3 1 5.7.8A30 30 0 01 120 64.3V70" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20" />
 				</svg>

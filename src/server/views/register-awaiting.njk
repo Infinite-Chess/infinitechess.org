@@ -27,7 +27,7 @@
 			<p>We've sent you an email. Click the link inside to activate your account.</p>
 			<p>Not seeing it? Check your spam folder, and make sure your email address is correct.</p>
 		</div>
-		<button class="register-change-toggle" type="button" id="change-email-toggle">Check email correctness</button>
+		<button class="register-change-toggle" id="change-email-toggle">Check email correctness</button>
 		{% else %}
 		<h1 class="auth-title">
 			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
@@ -45,7 +45,7 @@
 			<input class="auth-input" type="email" id="new-email" name="new-email"
 			       autocomplete="email" autocapitalize="off" maxlength="320" value="{{ email }}" />
 			<p class="auth-error hidden" id="new-email-error"></p>
-			<button class="btn-primary register-change-submit" type="button" id="change-email-submit">Update it</button>
+			<button class="btn-primary register-change-submit" id="change-email-submit">Update it</button>
 		</div>
 	</section>
 </main>
