@@ -25,6 +25,9 @@ function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting'
 const default_options = {
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the outdated `X-RateLimit-*` headers
+	// Integration tests share one IP and blow past per-IP caps,
+	// so all limiters are inert under vitest.
+	skip: (): boolean => process.env['NODE_ENV'] === 'test',
 	handler: make_handler('generic'),
 };
 
@@ -94,7 +97,6 @@ export const forgotPasswordLimiter = rateLimit({
 export const editorSaveLimiter = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 10,
-	skip: () => process.env['NODE_ENV'] === 'test',
 	...default_options,
 });
 
@@ -102,7 +104,6 @@ export const editorSaveLimiter = rateLimit({
 export const editorLoadLimiter = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
 	max: 30,
-	skip: () => process.env['NODE_ENV'] === 'test',
 	...default_options,
 });
 
