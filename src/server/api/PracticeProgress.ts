@@ -58,6 +58,7 @@ function createPracticeProgressCookie(res: Response, checkmates_beaten: string):
 	// Set or update the checkmates_beaten cookie
 	res.cookie('checkmates_beaten', checkmates_beaten, {
 		httpOnly: false,
+		sameSite: 'lax',
 		secure: true,
 	});
 }
@@ -71,6 +72,7 @@ function createPracticeProgressCookie(res: Response, checkmates_beaten: string):
 function deletePracticeProgressCookie(res: Response): void {
 	res.clearCookie('checkmates_beaten', {
 		httpOnly: false,
+		sameSite: 'lax',
 		secure: true,
 	});
 }

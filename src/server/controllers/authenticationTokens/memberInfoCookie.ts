@@ -6,6 +6,9 @@
  * This cookie tells the client who they are signed in as, but it is
  * NOT the source of truth for the user's session validity — that is the
  * refresh token, which is HTTP-only and thus not tamperable by the client.
+ *
+ * The sister cookie, `jwt` (see refreshTokenCookie.ts), IS the source of truth
+ * for a user's session validity, being HTTP-only and not tamperable.
  */
 
 import type { Request, Response } from 'express';
@@ -25,22 +28,6 @@ export type MemberInfoCookie = {
 	expires: number;
 };
 
-/** Type guard: whether a JSON-parsed value matches the {@link MemberInfoCookie} shape. */
-function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
-	return (
-		typeof value === 'object' &&
-		value !== null &&
-		'user_id' in value &&
-		typeof value.user_id === 'number' &&
-		'username' in value &&
-		typeof value.username === 'string' &&
-		'issued' in value &&
-		typeof value.issued === 'number' &&
-		'expires' in value &&
-		typeof value.expires === 'number'
-	);
-}
-
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).
  * @param expiryMillis - How long, in milliseconds, the cookie should live (match the refresh token's expiry).
@@ -59,10 +46,9 @@ function createMemberInfoCookie(
 		expires: now + expiryMillis,
 	};
 
-	// Cross-site usage requires sameSite 'none', which in turn requires secure (https) true.
 	res.cookie('memberInfo', JSON.stringify(memberInfo), {
 		httpOnly: false,
-		sameSite: 'none',
+		sameSite: 'lax',
 		secure: true,
 		maxAge: expiryMillis,
 	});
@@ -70,7 +56,7 @@ function createMemberInfoCookie(
 
 /** Clears the `memberInfo` cookie, using the same options it was created with. */
 function deleteMemberInfoCookie(res: Response): void {
-	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'none', secure: true });
+	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'lax', secure: true });
 }
 
 /**
@@ -94,6 +80,22 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 		);
 		return undefined;
 	}
+}
+
+/** Type guard: whether a JSON-parsed value matches the {@link MemberInfoCookie} shape. */
+function isMemberInfoCookie(value: unknown): value is MemberInfoCookie {
+	return (
+		typeof value === 'object' &&
+		value !== null &&
+		'user_id' in value &&
+		typeof value.user_id === 'number' &&
+		'username' in value &&
+		typeof value.username === 'string' &&
+		'issued' in value &&
+		typeof value.issued === 'number' &&
+		'expires' in value &&
+		typeof value.expires === 'number'
+	);
 }
 
 export { createMemberInfoCookie, deleteMemberInfoCookie, readMemberInfoCookie };

@@ -77,6 +77,7 @@ function createPrefsCookie(res: Response, preferences: Preferences): void {
 	// Set or update the preferences cookie
 	res.cookie('preferences', JSON.stringify(preferences), {
 		httpOnly: false,
+		sameSite: 'lax',
 		secure: true,
 		maxAge: lifetimeOfPrefsCookieMillis,
 	});
@@ -90,6 +91,7 @@ function createPrefsCookie(res: Response, preferences: Preferences): void {
 function deletePreferencesCookie(res: Response): void {
 	res.clearCookie('preferences', {
 		httpOnly: false,
+		sameSite: 'lax',
 		secure: true,
 	});
 }

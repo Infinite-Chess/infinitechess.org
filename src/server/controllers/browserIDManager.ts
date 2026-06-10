@@ -1,6 +1,6 @@
 // src/server/controllers/browserIDManager.ts
 
-import type { Request, Response, NextFunction } from 'express';
+import type { CookieOptions, Request, Response, NextFunction } from 'express';
 
 import uuid from '../../shared/util/uuid.js';
 
@@ -8,6 +8,19 @@ import { isBrowserIDBanned } from '../middleware/banned.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
+
+/** The options the `browser-id` cookie is created with. */
+const BROWSER_ID_COOKIE_OPTIONS: CookieOptions = {
+	// Readable by the server (including for websocket connections), NOT by client JavaScript.
+	httpOnly: true,
+	sameSite: 'lax',
+	secure: true,
+};
+
+/** Sets the `browser-id` cookie to the given id, living for `maxAgeMillis` milliseconds. */
+function setBrowserIDCookie(res: Response, id: string, maxAgeMillis: number): void {
+	res.cookie('browser-id', id, { ...BROWSER_ID_COOKIE_OPTIONS, maxAge: maxAgeMillis });
+}
 
 /**
  * Assigns/renews the browser-id cookie to all requests for an html file.
@@ -31,46 +44,25 @@ function assignOrRenewBrowserID(req: Request, res: Response, next: NextFunction)
 }
 
 function giveBrowserID(req: Request, res: Response): void {
-	const cookieName = 'browser-id';
 	const id = uuid.generateID_Base62(6);
 
 	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 
-	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-	res.cookie(cookieName, id, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true,
-		maxAge: expireOfBrowserIDCookieMillis /* 1 day */,
-	});
+	setBrowserIDCookie(res, id, expireOfBrowserIDCookieMillis);
 }
 
 function refreshBrowserID(req: Request, res: Response): void {
-	const cookieName = 'browser-id';
-	const cookies = req.cookies;
-	const id = cookies[cookieName]!;
+	const id = req.cookies['browser-id']!;
 
 	if (isBrowserIDBanned(id)) return makeBrowserIDPermanent(req, res, id);
 
 	// console.log(`Renewing browser-id: "${id}" for url: ` + req.url);
 
-	// Readable by server with web socket connections, NOT by javascript
-	res.cookie(cookieName, id, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true,
-		maxAge: expireOfBrowserIDCookieMillis,
-	});
+	setBrowserIDCookie(res, id, expireOfBrowserIDCookieMillis);
 }
 
 function makeBrowserIDPermanent(req: Request, res: Response, browserID: string): void {
-	// Readable by server with web socket connections, NOT by javascript: MAX AGE IN MILLIS NOT SECS
-	res.cookie('browser-id', browserID, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true,
-		maxAge: Number.MAX_SAFE_INTEGER /* FOREVER!! */,
-	});
+	setBrowserIDCookie(res, browserID, Number.MAX_SAFE_INTEGER /* FOREVER!! */);
 
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
 	logEventsAndPrint(logThis, 'bannedIPLog.txt');

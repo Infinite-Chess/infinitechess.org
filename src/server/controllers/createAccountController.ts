@@ -152,7 +152,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// Scope later poll/change-email requests to this pending registration.
 	res.cookie(PENDING_REGISTRATION_COOKIE_NAME, claimToken, {
 		httpOnly: true,
-		sameSite: 'none',
+		sameSite: 'lax',
 		secure: true,
 		maxAge: PENDING_REGISTRATION_EXPIRY_MILLIS,
 	});
@@ -309,7 +309,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		// or duplicate waiting tab that still holds the cookie and polls again resolves cleanly.
 		res.clearCookie(PENDING_REGISTRATION_COOKIE_NAME, {
 			httpOnly: true,
-			sameSite: 'none',
+			sameSite: 'lax',
 			secure: true,
 		});
 
