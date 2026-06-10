@@ -153,7 +153,7 @@ async function submitRegister(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await serverFetch('/register', {
+		const response = await serverFetch('/api/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, email, password }),
@@ -228,7 +228,7 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 	if (!usernameValid) return;
 	try {
 		const response = await serverFetch(
-			`/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
+			`/api/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
 		);
 		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
 		if (!response.ok) return;

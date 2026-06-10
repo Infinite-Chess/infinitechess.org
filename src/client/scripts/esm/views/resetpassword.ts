@@ -114,7 +114,7 @@ function initializeForm(elements: FormElements): void {
 		submitButton.value = translations.processing;
 
 		try {
-			const response = await serverFetch('/reset-password', {
+			const response = await serverFetch('/api/reset-password', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

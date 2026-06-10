@@ -117,7 +117,7 @@ async function populateTable(n_players: number): Promise<void> {
 		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
 		const find_requester_rank = !initialized && loggedInAs !== undefined ? 1 : 0;
 		const response = await serverFetch(
-			`/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`,
+			`/api/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`,
 			config,
 		);
 

@@ -3,10 +3,10 @@
 /**
  * Client-side logic for the "check your email" page (/register/awaiting).
  *
- * Polls /register/awaiting/poll until the pending registration is verified (then redirects home
+ * Polls /api/register/awaiting/poll until the pending registration is verified (then redirects home
  * with a welcome toast) or expires (then reloads — the server re-renders as the plain form once
  * the row is no longer active). Also drives the change-email recovery control: a corrected
- * address is POSTed to /register/awaiting/email; success reloads the page, errors show inline.
+ * address is POSTed to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
 import validators from '../../../../shared/util/validators.js';
@@ -109,7 +109,7 @@ function pollNowOrScheduleNext(): void {
 }
 
 /**
- * Polls /register/awaiting/poll once, then schedules the next poll with backoff. `verified` → the
+ * Polls /api/register/awaiting/poll once, then schedules the next poll with backoff. `verified` → the
  * server has set the session cookie, so queue a welcome toast and redirect home; `expired` /
  * `blacklisted` → reload (the server re-renders the appropriate variant); `pending` → keep waiting
  * until the duration cap.
@@ -121,7 +121,7 @@ async function pollVerification(): Promise<void> {
 	}
 	lastPollAt = Date.now();
 	try {
-		const response = await serverFetch('/register/awaiting/poll');
+		const response = await serverFetch('/api/register/awaiting/poll');
 		// Only parse the body if OK: a non-OK status (e.g. a 429 from the rate limiter)
 		// isn't the JSON shape we expect, so just keep waiting and retry next tick.
 		if (response.ok) {
@@ -201,7 +201,7 @@ async function submitNewEmail(): Promise<void> {
 	}
 	changeSubmit.disabled = true;
 	try {
-		const response = await serverFetch('/register/awaiting/email', {
+		const response = await serverFetch('/api/register/awaiting/email', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: newEmailInput.value }),

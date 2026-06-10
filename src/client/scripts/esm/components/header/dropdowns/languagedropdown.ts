@@ -18,7 +18,7 @@ const languageDropdownTitle = document.querySelector('.language-dropdown .dropdo
 (function init() {
 	// Request cookie if it doesn't exist
 	if (!docutil.getCookieValue('i18next')) {
-		serverFetch('/setlanguage', {
+		serverFetch('/api/setlanguage', {
 			method: 'POST',
 		});
 	}

@@ -38,7 +38,7 @@ async function submitLogin(): Promise<void> {
 	submitButton.disabled = true;
 
 	try {
-		const response = await serverFetch('/auth', {
+		const response = await serverFetch('/api/auth', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, password, keepLoggedIn: keepLoggedInInput.checked }),

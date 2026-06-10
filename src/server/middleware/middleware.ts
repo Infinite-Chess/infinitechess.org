@@ -209,21 +209,21 @@ export function configureMiddleware(app: Express): void {
 	app.use('/', rootRouter); // Contains every html page.
 
 	// Account router
-	app.get('/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
-	app.post('/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
-	app.get('/register/awaiting/poll', pollPendingRegistration);
-	app.post('/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
+	app.get('/api/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
+	app.post('/api/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
+	app.get('/api/register/awaiting/poll', pollPendingRegistration);
+	app.post('/api/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
 
 	// Member router
-	app.delete('/member/:member/delete', removeAccount);
+	app.delete('/api/member/:member/delete', removeAccount);
 
-	app.post('/reset-password', handleResetPassword);
+	app.post('/api/reset-password', handleResetPassword);
 
 	// API --------------------------------------------------------------------
 
-	app.post('/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
+	app.post('/api/auth', loginAttemptLimiter, handleLogin); // Login fetch POST request
 
-	app.post('/setlanguage', (req: Request, res: Response) => {
+	app.post('/api/setlanguage', (req: Request, res: Response) => {
 		// Language cookie setter POST request
 		res.cookie('i18next', req.i18n.resolvedLanguage);
 		res.send(''); // Doesn't work without this for some reason
@@ -239,9 +239,9 @@ export function configureMiddleware(app: Express): void {
 	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 	app.post('/api/prepare-restart', handlePrepareRestart);
 
-	app.post('/verify/:token', verifyPendingRegistration);
+	app.post('/api/verify/:token', verifyPendingRegistration);
 
-	app.post('/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
+	app.post('/api/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
 	// Token Authenticator -------------------------------------------------------
 
@@ -274,13 +274,13 @@ export function configureMiddleware(app: Express): void {
 	app.get('/api/editor-saves/:position_name', editorLoadLimiter, EditorSavesAPI.getPosition);
 	app.delete('/api/editor-saves/:position_name', EditorSavesAPI.deletePosition);
 
-	app.get('/logout', handleLogout);
+	app.get('/api/logout', handleLogout);
 
-	app.get('/command/:command', processCommand);
+	app.get('/api/command/:command', processCommand);
 
 	// Leaderboard router
 	app.get(
-		'/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank',
+		'/api/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank',
 		getLeaderboardData,
 	);
 

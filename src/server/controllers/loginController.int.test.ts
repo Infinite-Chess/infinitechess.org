@@ -19,26 +19,26 @@ describe('Login Controller Integration', () => {
 	});
 
 	it('should reject login with no body', async () => {
-		const response = await testRequest().post('/auth').send(); // No body
+		const response = await testRequest().post('/api/auth').send(); // No body
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with missing username', async () => {
-		const response = await testRequest().post('/auth').send({ username: 'OnlyUserNoPass' }); // Missing password
+		const response = await testRequest().post('/api/auth').send({ username: 'OnlyUserNoPass' }); // Missing password
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with missing password', async () => {
-		const response = await testRequest().post('/auth').send({ password: 'OnlyPassNoUser' }); // Missing username
+		const response = await testRequest().post('/api/auth').send({ password: 'OnlyPassNoUser' }); // Missing username
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject login with non-string username', async () => {
 		const response = await testRequest()
-			.post('/auth')
+			.post('/api/auth')
 			.send({ username: 12345, password: 'SomePassword' }); // Non-string username
 
 		expect(response.status).toBe(400);
@@ -46,7 +46,7 @@ describe('Login Controller Integration', () => {
 
 	it('should reject login with non-string password', async () => {
 		const response = await testRequest()
-			.post('/auth')
+			.post('/api/auth')
 			.send({ username: 'SomeUser', password: 67890 }); // Non-string password
 
 		expect(response.status).toBe(400);
@@ -54,7 +54,7 @@ describe('Login Controller Integration', () => {
 
 	it('should reject login for non-existent user', async () => {
 		const response = await testRequest()
-			.post('/auth')
+			.post('/api/auth')
 			.send({ username: 'GhostUser', password: 'password123' });
 
 		expect(response.status).toBe(401);
@@ -70,7 +70,7 @@ describe('Login Controller Integration', () => {
 
 		// 2. Test
 		const response = await testRequest()
-			.post('/auth')
+			.post('/api/auth')
 			.send({ username: 'RealUser', password: 'WRONG_PASSWORD' });
 
 		expect(response.status).toBe(401);
@@ -86,7 +86,7 @@ describe('Login Controller Integration', () => {
 
 		// 2. Test
 		const response = await testRequest()
-			.post('/auth')
+			.post('/api/auth')
 			.send({ username: 'RealUser', password: 'CorrectPassword!' });
 
 		expect(response.status).toBe(200);

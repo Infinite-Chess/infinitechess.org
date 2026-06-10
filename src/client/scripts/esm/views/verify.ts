@@ -3,11 +3,12 @@
 /**
  * Client-side logic for the inert verify landing page (/verify/:token).
  *
- * Clicking the button POSTs to the /verify/:token path, swaps in place
+ * Clicking the button POSTs to /api/verify/:token, swaps in place
  * either a success confirmation or an invalid/expired message.
  * A transient network error shows inline and leaves the button clickable.
  */
 
+import docutil from '../util/docutil.js';
 import { serverFetch } from '../util/serverFetch.js';
 
 // Elements ----------------------------------------------------------
@@ -43,15 +44,16 @@ function showRetryableError(message: string): void {
 }
 
 /**
- * Consumes the token: POSTs to the current /verify/:token path. Success swaps in the confirmation;
+ * Consumes the token: POSTs to /api/verify/:token. Success swaps in the confirmation;
  * an invalid/expired token (400) reveals the dead-link state; a network/server error stays retryable.
  */
 async function verify(): Promise<void> {
 	button!.disabled = true;
 	error!.classList.add('hidden');
 	try {
-		// The POST endpoint shares this page's path, so the current URL is already the right target.
-		const response = await serverFetch(window.location.pathname, { method: 'POST' });
+		// The token is the last path segment of this page's URL (GET /verify/:token).
+		const token = docutil.getLastSegmentOfURL();
+		const response = await serverFetch(`/api/verify/${token}`, { method: 'POST' });
 		if (response.ok) {
 			hidePrompt();
 			document

@@ -29,7 +29,7 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
  * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
  */
 function getLeaderboardData(req: Request, res: Response): void {
-	// route: /leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
+	// route: /api/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
 
 	/** ID of leaderboard to be fetched */
 	const leaderboard_id = Number(req.params['leaderboard_id']) as Leaderboard;
