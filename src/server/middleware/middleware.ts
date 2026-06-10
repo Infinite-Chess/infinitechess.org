@@ -17,6 +17,7 @@ import send404 from './send404.js';
 import security from './security.js';
 import newsRouter from '../routes/news.js';
 import authRouter from '../routes/auth.js';
+import adminRouter from '../routes/admin.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
@@ -24,18 +25,19 @@ import { rateLimit } from './rateLimit.js';
 import { rootRouter } from '../routes/root.js';
 import registerRouter from '../routes/register.js';
 import editorSavesRouter from '../routes/editorSaves.js';
+import preferencesRouter from '../routes/preferences.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
-import { processCommand } from '../api/AdminPanel.js';
+import leaderboardsRouter from '../routes/leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
+import { setPrefsCookie } from '../api/Prefs.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import { getLeaderboardData } from '../api/LeaderboardAPI.js';
+import practiceProgressRouter from '../routes/practiceProgress.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
-import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
+import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import { forgotPasswordLimiter, seekPreviewLimiter } from './rateLimiters.js';
-import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
 import {
 	handleForgotPasswordRequest,
 	handleResetPassword,
@@ -164,6 +166,10 @@ export function configureMiddleware(app: Express): void {
 	app.use('/api', authRouter); // login (public), logout + access-token (authed)
 	app.use('/api/editor-saves', editorSavesRouter);
 	app.use('/api/news', newsRouter);
+	app.use('/api/preferences', preferencesRouter);
+	app.use('/api/checkmates-progress', practiceProgressRouter);
+	app.use('/api/admin', adminRouter);
+	app.use('/api/leaderboards', leaderboardsRouter);
 
 	// Token Authenticator -------------------------------------------------------
 
@@ -177,16 +183,8 @@ export function configureMiddleware(app: Express): void {
 	 */
 	app.use(verifyJWT);
 
-	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
-
-	app.put('/api/preferences', postPrefs);
-
-	app.put('/api/checkmates-progress', postCheckmateBeaten);
-
-	app.post('/api/admin/command', processCommand);
-
-	// Leaderboard router
-	app.get('/api/leaderboards/:leaderboard_id/top', getLeaderboardData);
+	// NOTE: every authed route now lives in a self-authenticating router mounted above, so no
+	// routes depend on this global verifyJWT anymore — it's ready to be retired (next step).
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

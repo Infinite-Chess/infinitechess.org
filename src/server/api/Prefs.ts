@@ -110,7 +110,7 @@ function getPrefs(userId: number): Preferences | undefined {
 }
 
 /** `PUT /api/preferences` — replaces the signed-in user's preferences in the database. */
-function postPrefs(req: Request, res: Response): void {
+function putPrefs(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(
 			"User tried to save preferences when they weren't signed in!",
@@ -148,4 +148,4 @@ function postPrefs(req: Request, res: Response): void {
 	}
 }
 
-export { setPrefsCookie, postPrefs, deletePreferencesCookie };
+export { setPrefsCookie, putPrefs, deletePreferencesCookie };
