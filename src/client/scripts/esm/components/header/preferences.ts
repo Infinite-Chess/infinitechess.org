@@ -135,13 +135,13 @@ async function sendPrefsToServer(): Promise<void> {
 
 	console.log('Sending preferences to the server!');
 	const preparedPrefs: ServerSidePreferences = preparePrefs(); // Prepare the preferences to send
-	POSTPrefs(preparedPrefs);
+	PUTPrefs(preparedPrefs);
 }
 
-async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
-	// Configure the POST request
+async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
+	// Configure the PUT request
 	const config = {
-		method: 'POST',
+		method: 'PUT',
 		headers: {
 			'Content-Type': 'application/json',
 		} as Record<string, string>,
@@ -153,7 +153,7 @@ async function POSTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 	if (token) config.headers['Authorization'] = `Bearer ${token}`; // If you use tokens for authentication
 
 	try {
-		const response: Response = await serverFetch('/api/set-preferences', config);
+		const response: Response = await serverFetch('/api/preferences', config);
 
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {

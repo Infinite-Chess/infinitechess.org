@@ -101,7 +101,7 @@ async function getAccessToken(): Promise<string | undefined> {
 async function refreshToken(): Promise<void> {
 	reqIsOut = true;
 	try {
-		const response = await serverFetch('/api/get-access-token', { method: 'POST' });
+		const response = await serverFetch('/api/access-token', { method: 'POST' });
 		if (response.ok) {
 			// Session token (refresh token cookie) is valid!
 			const accessToken = docutil.getCookieValue('token'); // Read access token from cookie

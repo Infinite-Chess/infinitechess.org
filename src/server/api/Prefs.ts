@@ -109,7 +109,7 @@ function getPrefs(userId: number): Preferences | undefined {
 	return JSON.parse(record.preferences);
 }
 
-/** Route that Handles a POST request to update user preferences in the database. */
+/** `PUT /api/preferences` — replaces the signed-in user's preferences in the database. */
 function postPrefs(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(

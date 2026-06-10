@@ -257,9 +257,9 @@ export function configureMiddleware(app: Express): void {
 
 	// ROUTES THAT NEED AUTHENTICATION ------------------------------------------------------
 
-	app.post('/api/get-access-token', accessTokenIssuer);
+	app.post('/api/access-token', accessTokenIssuer);
 
-	app.post('/api/set-preferences', postPrefs);
+	app.put('/api/preferences', postPrefs);
 
 	app.put('/api/checkmates-progress', postCheckmateBeaten);
 

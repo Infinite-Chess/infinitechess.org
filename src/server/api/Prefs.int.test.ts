@@ -41,7 +41,7 @@ describe('Preferences Integration', () => {
 		// 1. Manually set prefs in DB first (so we have something to fetch)
 		// Since we can't easily inject into DB without the API, we'll use the API first
 		await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.set('Cookie', cookie)
 			.send({ preferences: VALID_PREFS_1 });
 
@@ -67,7 +67,7 @@ describe('Preferences Integration', () => {
 	it('should reject request with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest().post('/api/set-preferences').set('Cookie', cookie);
+		const response = await testRequest().put('/api/preferences').set('Cookie', cookie);
 
 		expect(response.status).toBe(400);
 	});
@@ -75,17 +75,14 @@ describe('Preferences Integration', () => {
 	it('should reject request with missing preferences', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest()
-			.post('/api/set-preferences')
-			.set('Cookie', cookie)
-			.send({}); // No preferences
+		const response = await testRequest().put('/api/preferences').set('Cookie', cookie).send({}); // No preferences
 
 		expect(response.status).toBe(400);
 	});
 
 	it('should reject requests from unauthenticated users', async () => {
 		const response = await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.send({ preferences: VALID_PREFS_1 });
 
 		expect(response.status).toBe(401);
@@ -101,7 +98,7 @@ describe('Preferences Integration', () => {
 		};
 
 		const response = await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.set('Cookie', cookie)
 			.send({ preferences: invalidPrefs });
 
@@ -112,7 +109,7 @@ describe('Preferences Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		const response = await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_1 });
 
@@ -130,13 +127,13 @@ describe('Preferences Integration', () => {
 
 		// 1. Save initial preferences
 		await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_1 });
 
 		// 2. Save new preferences to overwrite
 		const response = await testRequest()
-			.post('/api/set-preferences')
+			.put('/api/preferences')
 			.set('Cookie', user.cookie)
 			.send({ preferences: VALID_PREFS_2 });
 
