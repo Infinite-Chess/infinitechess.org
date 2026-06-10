@@ -89,6 +89,10 @@ export function configureMiddleware(app: Express): void {
 
 	// Security Headers & HTTPS Enforcement
 	app.use(secureRedirect); // Redirects http to secure https
+
+	// CSP (Content Security Policy): protects our users by telling the browser to only load/run
+	// resources (scripts, frames, images, ...) from sources we explicitly allowlist below.
+	// Its main job is mitigating XSS: an injected or inline script from a non-allowlisted source won't run.
 	app.use(
 		helmet({
 			contentSecurityPolicy: {
@@ -143,6 +147,10 @@ export function configureMiddleware(app: Express): void {
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(handle(i18next, { removeLngFromUrl: false }));
 
+	// CORS (Cross Origin Resource Sharing): Protects our users' sensitive data from other sites stealing it via cross-origin requests.
+	// Access-Control-Allow-Origin (default '*'): which origins are allowed to READ our response body.
+	// Access-Control-Allow-Credentials (default off): whether a cross-origin request that carried cookies is allowed to succeed/be read.
+	// Turning it on (with a specific origin) could let another site read a logged-in user's private data — so we leave it off.
 	app.use(cors());
 
 	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
