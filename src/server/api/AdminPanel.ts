@@ -32,8 +32,13 @@ const validCommands = [
 
 // Functions -------------------------------------------------------------------------
 
+/**
+ * `POST /api/admin/command` — parses and runs an admin console command from the request body.
+ * Requires the caller to be signed in with the admin role; rejects unknown commands.
+ */
 function processCommand(req: Request, res: Response): void {
-	const command = req.params['command']!;
+	const command = verifyBodyHasCommand(req, res);
+	if (command === undefined) return; // Response already sent
 
 	const commandAndArgs = parseArgumentsFromCommand(command);
 
@@ -82,6 +87,23 @@ function processCommand(req: Request, res: Response): void {
 		// A DB operation inside a command threw (already logged)
 		sendAndLogResponse(res, 500, 'A server error occurred while processing the command.');
 	}
+}
+
+/**
+ * Tests if the request body has a valid non-empty `command` string.
+ * If not, this auto-sends a response to the client with an error.
+ * @returns The command string, or undefined if the body is invalid.
+ */
+function verifyBodyHasCommand(req: Request, res: Response): string | undefined {
+	const { command } = req.body;
+
+	if (!command || typeof command !== 'string') {
+		// Only reachable by hand-crafted/malformed requests.
+		res.sendStatus(400);
+		return undefined;
+	}
+
+	return command;
 }
 
 function parseArgumentsFromCommand(command: string): string[] {

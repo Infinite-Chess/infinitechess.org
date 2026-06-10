@@ -17,7 +17,7 @@ async function markNewsAsRead(): Promise<void> {
 	if (!username) return;
 
 	try {
-		const response = await serverFetch('/api/news/mark-read', { method: 'POST' });
+		const response = await serverFetch('/api/news/read', { method: 'PATCH' });
 
 		if (response.ok) {
 			// Dispatch event to update header badge

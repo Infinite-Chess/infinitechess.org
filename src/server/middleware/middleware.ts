@@ -211,8 +211,8 @@ export function configureMiddleware(app: Express): void {
 	// Account router
 	app.get('/api/register/availability', usernameAvailabilityLimiter, checkUsernameAvailable); // Currently ONLY can check username
 	app.post('/api/register', createAccountAttemptLimiter, createAccountLimiter, createNewMember);
-	app.get('/api/register/awaiting/poll', pollPendingRegistration);
-	app.post('/api/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
+	app.get('/api/register/awaiting/status', pollPendingRegistration);
+	app.put('/api/register/awaiting/email', verificationEmailLimiter, changePendingEmail);
 
 	// Member router
 	app.delete('/api/member/:member/delete', removeAccount);
@@ -261,12 +261,12 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/set-preferences', postPrefs);
 
-	app.post('/api/update-checkmatelist', postCheckmateBeaten);
+	app.put('/api/checkmates-progress', postCheckmateBeaten);
 
 	// News routes
 	app.get('/api/news/unread-count', getUnreadNewsCount);
 	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
-	app.post('/api/news/mark-read', markNewsAsRead);
+	app.patch('/api/news/read', markNewsAsRead);
 
 	// Editor saves routes
 	app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
@@ -276,7 +276,7 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/logout', handleLogout);
 
-	app.get('/api/command/:command', processCommand);
+	app.post('/api/admin/command', processCommand);
 
 	// Leaderboard router
 	app.get('/api/leaderboards/:leaderboard_id/top', getLeaderboardData);

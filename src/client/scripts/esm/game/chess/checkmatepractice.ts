@@ -287,11 +287,11 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		return;
 	}
 
-	// We ARE logged in. Send a POST request to tell the server we have beaten a new checkmate!
+	// We ARE logged in. Send a PUT request to tell the server we have beaten a new checkmate!
 
-	// Configure the POST request
+	// Configure the PUT request
 	const fetchInit: RequestInit = {
-		method: 'POST',
+		method: 'PUT',
 		headers: {
 			'Content-Type': 'application/json',
 		},
@@ -309,12 +309,12 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 	};
 
 	try {
-		// Use retryFetch wrapper to try the same POST multiple times
+		// Use retryFetch wrapper to try the same PUT multiple times
 		// until it succeeds. This is just in case of a server error,
 		// or a server restart at the exact same time, thus making
 		// them have to solve the same checkmate again.
 		const response: Response = await retryFetch(
-			'/api/update-checkmatelist',
+			'/api/checkmates-progress',
 			fetchInit,
 			retryOptions,
 		);

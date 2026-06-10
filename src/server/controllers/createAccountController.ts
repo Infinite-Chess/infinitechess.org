@@ -202,7 +202,7 @@ function getAwaitingPageState(req: Request): { email: string; blacklisted: boole
 }
 
 /**
- * `POST /register/awaiting/email` — changes the email on the caller's own pending registration
+ * `PUT /api/register/awaiting/email` — changes the email on the caller's own pending registration
  * (identified by the httpOnly `claim_token` cookie), re-validates the new address, rotates the
  * verification token, refreshes the expiry, and re-sends the verification email.
  */
@@ -255,7 +255,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 }
 
 /**
- * `GET /register/awaiting/poll` — the register browser's awaiting page polls this while
+ * `GET /api/register/awaiting/status` — the register browser's awaiting page polls this while
  * waiting for its emailed link to be verified. It is identified by the httpOnly `claim_token`
  * cookie set at registration. Once the pending registration has been promoted, THIS browser
  * (the only one holding the cookie) is issued a session and the pending cookie is cleared.

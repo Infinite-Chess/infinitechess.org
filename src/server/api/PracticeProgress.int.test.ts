@@ -29,9 +29,7 @@ describe('Practice Progress Integration', () => {
 	it('should reject requests with no body', async () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
-		const response = await testRequest()
-			.post('/api/update-checkmatelist')
-			.set('Cookie', cookie);
+		const response = await testRequest().put('/api/checkmates-progress').set('Cookie', cookie);
 
 		expect(response.status).toBe(400);
 	});
@@ -40,7 +38,7 @@ describe('Practice Progress Integration', () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', cookie)
 			.send({}); // No new_checkmate_beaten
 
@@ -51,7 +49,7 @@ describe('Practice Progress Integration', () => {
 		const cookie = await integrationUtils.createAndLoginUser();
 
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', cookie.cookie)
 			.send({ new_checkmate_beaten: 12345 }); // Non-string
 
@@ -60,7 +58,7 @@ describe('Practice Progress Integration', () => {
 
 	it('should reject requests from unauthenticated users', async () => {
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		expect(response.status).toBe(401);
@@ -70,7 +68,7 @@ describe('Practice Progress Integration', () => {
 		const cookie = (await integrationUtils.createAndLoginUser()).cookie;
 
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', cookie)
 			.send({ new_checkmate_beaten: 'INVALID-ID-123' });
 
@@ -82,7 +80,7 @@ describe('Practice Progress Integration', () => {
 		const user = await integrationUtils.createAndLoginUser();
 
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 		expect(response.status).toBe(200);
@@ -108,13 +106,13 @@ describe('Practice Progress Integration', () => {
 
 		// 1. Submit First Checkmate
 		await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Second Checkmate
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: secondCheckmateId });
 
@@ -130,13 +128,13 @@ describe('Practice Progress Integration', () => {
 
 		// 1. Submit First Time
 		await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
 		// 2. Submit Same ID Again
 		const response = await testRequest()
-			.post('/api/update-checkmatelist')
+			.put('/api/checkmates-progress')
 			.set('Cookie', user.cookie)
 			.send({ new_checkmate_beaten: VALID_CHECKMATE_ID });
 
