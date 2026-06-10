@@ -4,7 +4,7 @@
  * This module configures the middleware waterfall of our server
  */
 
-import type { Express, Request, Response } from 'express';
+import type { Express } from 'express';
 
 import path from 'path';
 import express from 'express';
@@ -15,28 +15,14 @@ import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
 import security from './security.js';
-import newsRouter from '../routes/news.js';
-import authRouter from '../routes/auth.js';
-import adminRouter from '../routes/admin.js';
+import apiRouter from '../routes/api.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
-import membersRouter from '../routes/members.js';
-import passwordRouter from '../routes/password.js';
 import { rootRouter } from '../routes/root.js';
-import registerRouter from '../routes/register.js';
-import editorSavesRouter from '../routes/editorSaves.js';
-import preferencesRouter from '../routes/preferences.js';
-import leaderboardsRouter from '../routes/leaderboards.js';
-import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { setPrefsCookie } from '../api/Prefs.js';
-import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import practiceProgressRouter from '../routes/practiceProgress.js';
-import { seekPreviewLimiter } from './rateLimiters.js';
-import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
-import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
 
 // Constants -------------------------------------------------------------------------
@@ -124,46 +110,11 @@ export function configureMiddleware(app: Express): void {
 
 	// Provide a route
 
-	// Root router
-	app.use('/', rootRouter); // Contains every html page.
+	// Root router — every HTML (SSR) page.
+	app.use('/', rootRouter);
 
-	// Account router (public — no verifyJWT, these are pre-login)
-	app.use('/api/register', registerRouter);
-
-	// Member router
-	app.use('/api/members', membersRouter);
-
-	// Password-reset router (public, pre-login)
-	app.use('/api', passwordRouter);
-
-	// API --------------------------------------------------------------------
-
-	app.put('/api/language', (req: Request, res: Response) => {
-		// Language cookie setter
-		res.cookie('i18next', req.i18n.resolvedLanguage);
-		res.send(''); // Doesn't work without this for some reason
-	});
-
-	app.get('/api/contributors', (_req: Request, res: Response) => {
-		const contributors = getContributors();
-		res.send(JSON.stringify(contributors));
-	});
-
-	app.get('/api/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
-
-	// Endpoint called by the GitHub Actions deploy workflow before pm2 reload
-	app.post('/api/prepare-restart', handlePrepareRestart);
-
-	app.post('/api/verify/:token', verifyPendingRegistration);
-
-	// Routers that manage their own authentication (per-router or per-route verifyJWT).
-	app.use('/api', authRouter); // login (public), logout + access-token (authed)
-	app.use('/api/editor-saves', editorSavesRouter);
-	app.use('/api/news', newsRouter);
-	app.use('/api/preferences', preferencesRouter);
-	app.use('/api/checkmates-progress', practiceProgressRouter);
-	app.use('/api/admin', adminRouter);
-	app.use('/api/leaderboards', leaderboardsRouter);
+	// API router — every /api/* endpoint (each sub-router declares its own auth).
+	app.use('/api', apiRouter);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 
