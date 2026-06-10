@@ -22,6 +22,7 @@ import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
 import membersRouter from '../routes/members.js';
+import passwordRouter from '../routes/password.js';
 import { rootRouter } from '../routes/root.js';
 import registerRouter from '../routes/register.js';
 import editorSavesRouter from '../routes/editorSaves.js';
@@ -32,15 +33,11 @@ import { setPrefsCookie } from '../api/Prefs.js';
 import { getContributors } from '../api/GitHub.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import practiceProgressRouter from '../routes/practiceProgress.js';
+import { seekPreviewLimiter } from './rateLimiters.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
-import { forgotPasswordLimiter, seekPreviewLimiter } from './rateLimiters.js';
-import {
-	handleForgotPasswordRequest,
-	handleResetPassword,
-} from '../controllers/passwordResetController.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -136,7 +133,8 @@ export function configureMiddleware(app: Express): void {
 	// Member router
 	app.use('/api/members', membersRouter);
 
-	app.post('/api/reset-password', handleResetPassword);
+	// Password-reset router (public, pre-login)
+	app.use('/api', passwordRouter);
 
 	// API --------------------------------------------------------------------
 
@@ -157,8 +155,6 @@ export function configureMiddleware(app: Express): void {
 	app.post('/api/prepare-restart', handlePrepareRestart);
 
 	app.post('/api/verify/:token', verifyPendingRegistration);
-
-	app.post('/api/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
 	// Routers that manage their own authentication (per-router or per-route verifyJWT).
 	app.use('/api', authRouter); // login (public), logout + access-token (authed)
