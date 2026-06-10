@@ -274,7 +274,7 @@ export function configureMiddleware(app: Express): void {
 	app.get('/api/editor-saves/:position_name', editorLoadLimiter, EditorSavesAPI.getPosition);
 	app.delete('/api/editor-saves/:position_name', EditorSavesAPI.deletePosition);
 
-	app.get('/api/logout', handleLogout);
+	app.post('/api/logout', handleLogout);
 
 	app.get('/api/command/:command', processCommand);
 

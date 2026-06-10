@@ -8,6 +8,8 @@
  * pulse aura animation on hover.
  */
 
+import { serverFetch } from '../../util/serverFetch.js';
+
 import './settings.js';
 import '../../util/tooltips.js'; // Should be imported on EVERY page
 
@@ -69,6 +71,31 @@ function initNavDropdowns(): void {
 	});
 }
 initNavDropdowns();
+
+/**
+ * Wires up the logout button (only present when signed in). Logout mutates
+ * server state (revokes the session) — then we redirect home client-side.
+ */
+function initLogout(): void {
+	const logoutButton = document.querySelector<HTMLButtonElement>('#logout-button');
+	if (!logoutButton) return; // Logged out: no button rendered.
+
+	logoutButton.addEventListener('click', () => {
+		void (async (): Promise<void> => {
+			logoutButton.disabled = true;
+			try {
+				await serverFetch('/api/logout', { method: 'POST' });
+				// Any server response clears the session cookies, so land them home logged out.
+				window.location.assign('/');
+			} catch (e: unknown) {
+				// Network error: nothing changed server-side, so re-enable for a retry.
+				console.error('Logout request failed:', e);
+				logoutButton.disabled = false;
+			}
+		})();
+	});
+}
+initLogout();
 
 function initLogoAnimation(): void {
 	let rafId: number | null = null;

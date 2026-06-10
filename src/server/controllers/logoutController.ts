@@ -15,7 +15,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 	const cookies = req.cookies;
 	const refreshToken = cookies['jwt'];
 	if (typeof refreshToken !== 'string') {
-		res.redirect('/'); // Cookie already deleted. (Already logged out)
+		res.sendStatus(200); // Cookie already deleted. (Already logged out)
 		return;
 	}
 
@@ -25,7 +25,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	if (!req.memberInfo?.signedIn) {
 		// Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
-		res.redirect('/');
+		res.sendStatus(200);
 		return;
 	}
 
@@ -40,7 +40,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	closeAllSocketsOfSession(refreshToken, 1008, 'Logged out');
 
-	res.redirect('/');
+	res.sendStatus(200);
 
 	logEvents(`Logged out member "${req.memberInfo.username}".`, 'loginAttempts.txt');
 }
