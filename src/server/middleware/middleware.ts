@@ -279,10 +279,7 @@ export function configureMiddleware(app: Express): void {
 	app.get('/api/command/:command', processCommand);
 
 	// Leaderboard router
-	app.get(
-		'/api/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank',
-		getLeaderboardData,
-	);
+	app.get('/api/leaderboards/:leaderboard_id/top', getLeaderboardData);
 
 	// Last Resort 404 and Error Handler ----------------------------------------------------
 

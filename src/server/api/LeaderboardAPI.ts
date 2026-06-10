@@ -19,6 +19,11 @@ import {
 	getEloOfPlayerInLeaderboard,
 } from '../database/leaderboardsManager.js';
 
+// Constants -------------------------------------------------------------
+
+/** Number of players returned when the request omits the `n_players` query param. */
+const DEFAULT_N_PLAYERS = 50;
+
 /** Maximum number of players allowed to be requested in a single request. */
 const MAX_N_PLAYERS_REQUEST_CAP = 100;
 
@@ -26,40 +31,36 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
 
 /**
  * Responds to the request to fetch top (N = n_players) players of leaderboard
- * leaderboard_id, starting from start_rank, and also find rank of requester if find_requester_rank === 1
+ * leaderboard_id, starting from start_rank, and also finds the requester's rank if include_requester_rank is true.
  */
 function getLeaderboardData(req: Request, res: Response): void {
-	// route: /api/leaderboard/top/:leaderboard_id/:start_rank/:n_players/:find_requester_rank
+	// route: GET /api/leaderboards/:leaderboard_id/top?start_rank&n_players&include_requester_rank
 
-	/** ID of leaderboard to be fetched */
+	/** ID of leaderboard to be fetched (lives in the path b/c it identifies the resource) */
 	const leaderboard_id = Number(req.params['leaderboard_id']) as Leaderboard;
 
-	/** Highest rank of player to fetch from leaderboard */
-	const start_rank = Number(req.params['start_rank']);
+	/** Highest rank of player to fetch from leaderboard. 1-based; defaults to the top (rank 1). */
+	const start_rank = req.query['start_rank'] !== undefined ? Number(req.query['start_rank']) : 1;
 
-	/** Number of players to fetch from leaderboard */
-	const n_players = Number(req.params['n_players']);
+	/** Number of players to fetch from leaderboard. Page size; defaults to DEFAULT_N_PLAYERS. */
+	const n_players =
+		req.query['n_players'] !== undefined ? Number(req.query['n_players']) : DEFAULT_N_PLAYERS;
 
 	/** Whether the server should also look for and return the rank of the user making the request */
-	const find_requester_rank = Number(req.params['find_requester_rank']) as 0 | 1;
+	const include_requester_rank = req.query['include_requester_rank'] === 'true';
 
-	if (
-		Number.isNaN(start_rank) ||
-		Number.isNaN(n_players) ||
-		Number.isNaN(leaderboard_id) ||
-		Number.isNaN(find_requester_rank)
-	) {
-		res.status(404).json({ message: 'Request incorrectly formatted.' });
+	if (Number.isNaN(leaderboard_id) || Number.isNaN(start_rank) || Number.isNaN(n_players)) {
+		res.status(400).json({ message: 'Request incorrectly formatted.' });
 		return;
 	}
 	if (n_players > MAX_N_PLAYERS_REQUEST_CAP) {
-		res.status(404).json({ message: 'Too many leaderboard positions requested at once.' });
+		res.status(400).json({ message: 'Too many leaderboard positions requested at once.' });
 		return;
 	}
 
 	/** Username of user whose global ranking should be returned. Set to undefined if its global rank should not be found. */
 	const requester_username =
-		find_requester_rank && req.memberInfo?.signedIn ? req.memberInfo.username : undefined;
+		include_requester_rank && req.memberInfo?.signedIn ? req.memberInfo.username : undefined;
 
 	try {
 		// Query leaderboard database

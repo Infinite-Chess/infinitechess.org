@@ -114,10 +114,15 @@ async function populateTable(n_players: number): Promise<void> {
 	try {
 		// Make server request
 		// We need to fetch n_players + 1 and only display n_players in order to know whether the "Show more" button needs to be hidden
-		// If initialized === false and the player is logged in, we also set find_requester_rank to 1, if possible, in order to request his rank from the server on the first page load
-		const find_requester_rank = !initialized && loggedInAs !== undefined ? 1 : 0;
+		// If initialized === false and the player is logged in, we also request the requester's rank on the first page load
+		const include_requester_rank = !initialized && loggedInAs !== undefined;
+		const params = new URLSearchParams({
+			start_rank: String(running_start_rank),
+			n_players: String(n_players + 1),
+			include_requester_rank: String(include_requester_rank),
+		});
 		const response = await serverFetch(
-			`/api/leaderboard/top/${leaderboard_id}/${running_start_rank}/${n_players + 1}/${find_requester_rank}`,
+			`/api/leaderboards/${leaderboard_id}/top?${params}`,
 			config,
 		);
 
