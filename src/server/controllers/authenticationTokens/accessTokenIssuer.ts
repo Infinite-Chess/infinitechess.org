@@ -39,11 +39,10 @@ function accessTokenIssuer(req: Request, res: Response): void {
 	// console.log(`Issued access token for member "${username}" --------`);
 }
 
-/** Creates and sets an HTTP-only cookie containing the refresh token. */
+/** Creates a JavaScript-readable cookie containing the access token, with a short expiry time. */
 function createAccessTokenCookie(res: Response, accessToken: string): void {
-	// Cross-site usage requires we set sameSite to none! Also requires secure (https) true
 	res.cookie('token', accessToken, {
-		sameSite: 'none',
+		sameSite: 'lax',
 		secure: true,
 		maxAge: expireTimeOfTokenCookieMillis, // 10 second time limit. JavaScript needs to read it in that time!
 	});

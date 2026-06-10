@@ -16,8 +16,10 @@ import type { CookieOptions, Response } from 'express';
 /** The options the `jwt` cookie is created with; reused (sans `maxAge`) when clearing it. */
 const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
 	httpOnly: true,
-	// Cross-site usage requires sameSite 'none', which in turn requires secure (https) true.
-	sameSite: 'none',
+	// 'lax' withholds the cookie from cross-site POSTs/fetches (CSRF defense) while still
+	// sending it on same-site requests and top-level navigations to our site.
+	sameSite: 'lax',
+	// Kept so the cookie only ever travels over HTTPS, even though 'lax' doesn't require it.
 	secure: true,
 };
 

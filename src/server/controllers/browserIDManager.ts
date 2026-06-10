@@ -13,8 +13,7 @@ const expireOfBrowserIDCookieMillis = 1000 * 60 * 60 * 24 * 7; // 7 days
 const BROWSER_ID_COOKIE_OPTIONS: CookieOptions = {
 	// Readable by the server (including for websocket connections), NOT by client JavaScript.
 	httpOnly: true,
-	// Cross-site usage requires sameSite 'none', which in turn requires secure (https) true.
-	sameSite: 'none',
+	sameSite: 'lax',
 	secure: true,
 };
 

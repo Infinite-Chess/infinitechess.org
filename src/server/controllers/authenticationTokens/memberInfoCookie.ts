@@ -46,10 +46,9 @@ function createMemberInfoCookie(
 		expires: now + expiryMillis,
 	};
 
-	// Cross-site usage requires sameSite 'none', which in turn requires secure (https) true.
 	res.cookie('memberInfo', JSON.stringify(memberInfo), {
 		httpOnly: false,
-		sameSite: 'none',
+		sameSite: 'lax',
 		secure: true,
 		maxAge: expiryMillis,
 	});
@@ -57,7 +56,7 @@ function createMemberInfoCookie(
 
 /** Clears the `memberInfo` cookie, using the same options it was created with. */
 function deleteMemberInfoCookie(res: Response): void {
-	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'none', secure: true });
+	res.clearCookie('memberInfo', { httpOnly: false, sameSite: 'lax', secure: true });
 }
 
 /**
