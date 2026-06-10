@@ -19,10 +19,10 @@ import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
 import { rateLimit } from './rateLimit.js';
-import EditorSavesAPI from '../api/EditorSavesAPI.js';
 import { rootRouter } from '../routes/root.js';
 import { handleLogin } from '../controllers/loginController.js';
 import { handleLogout } from '../controllers/logoutController.js';
+import editorSavesRouter from '../routes/editorSaves.js';
 import { removeAccount } from '../controllers/deleteAccountController.js';
 import { processCommand } from '../api/AdminPanel.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
@@ -51,8 +51,6 @@ import {
 	createAccountAttemptLimiter,
 	verificationEmailLimiter,
 	forgotPasswordLimiter,
-	editorSaveLimiter,
-	editorLoadLimiter,
 	seekPreviewLimiter,
 	loginAttemptLimiter,
 	usernameAvailabilityLimiter,
@@ -181,6 +179,10 @@ export function configureMiddleware(app: Express): void {
 
 	app.post('/api/forgot-password', forgotPasswordLimiter, handleForgotPasswordRequest);
 
+	// Resource routers that carry their own verifyJWT (see each router), so they're
+	// mounted above the global verifyJWT below to avoid running auth twice.
+	app.use('/api/editor-saves', editorSavesRouter);
+
 	// Token Authenticator -------------------------------------------------------
 
 	/**
@@ -205,12 +207,6 @@ export function configureMiddleware(app: Express): void {
 	app.get('/api/news/unread-count', getUnreadNewsCount);
 	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
 	app.patch('/api/news/read', markNewsAsRead);
-
-	// Editor saves routes
-	app.get('/api/editor-saves', EditorSavesAPI.getSavedPositions);
-	app.post('/api/editor-saves', editorSaveLimiter, EditorSavesAPI.savePosition);
-	app.get('/api/editor-saves/:position_name', editorLoadLimiter, EditorSavesAPI.getPosition);
-	app.delete('/api/editor-saves/:position_name', EditorSavesAPI.deletePosition);
 
 	app.post('/api/logout', handleLogout);
 

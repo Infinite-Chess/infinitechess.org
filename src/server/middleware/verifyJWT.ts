@@ -28,7 +28,9 @@ import {
  * OR the refresh cookie (contains refresh token),
  * sets req.memberInfo properties if it is valid (are signed in).
  * Further middleware can read these properties to not send
- * private information to unauthorized users.\
+ * private information to unauthorized users.
+ *
+ * Does DB work. Only use on routes that need authentication.
  */
 function verifyJWT(req: Request, res: Response, next: NextFunction): void {
 	const cookies: ParsedCookies = req.cookies;

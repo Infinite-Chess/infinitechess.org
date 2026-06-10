@@ -13,7 +13,6 @@ import { getBaseRenderContext } from '../utility/renderContext.js';
 const router = express.Router();
 
 // Page routes need auth state for SSR (header shows Profile/Logout vs Login/Register).
-// verifyJWT does DB work, so it's only attached to the routers that need it.
 router.use(verifyJWT);
 
 // Resolve the user's language, and load component translations
