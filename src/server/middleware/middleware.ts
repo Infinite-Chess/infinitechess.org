@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
 import security from './security.js';
+import newsRouter from '../routes/news.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { verifyJWT } from './verifyJWT.js';
@@ -36,7 +37,6 @@ import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
 import { postPrefs, setPrefsCookie } from '../api/Prefs.js';
 import { postCheckmateBeaten, setPracticeProgressCookie } from '../api/PracticeProgress.js';
-import { getUnreadNewsCount, getUnreadNewsDatesEndpoint, markNewsAsRead } from '../api/NewsAPI.js';
 import { forgotPasswordLimiter, seekPreviewLimiter, loginAttemptLimiter } from './rateLimiters.js';
 import {
 	handleForgotPasswordRequest,
@@ -166,6 +166,7 @@ export function configureMiddleware(app: Express): void {
 	// Resource routers that carry their own verifyJWT (see each router), so they're
 	// mounted above the global verifyJWT below to avoid running auth twice.
 	app.use('/api/editor-saves', editorSavesRouter);
+	app.use('/api/news', newsRouter);
 
 	// Token Authenticator -------------------------------------------------------
 
@@ -186,11 +187,6 @@ export function configureMiddleware(app: Express): void {
 	app.put('/api/preferences', postPrefs);
 
 	app.put('/api/checkmates-progress', postCheckmateBeaten);
-
-	// News routes
-	app.get('/api/news/unread-count', getUnreadNewsCount);
-	app.get('/api/news/unread-dates', getUnreadNewsDatesEndpoint);
-	app.patch('/api/news/read', markNewsAsRead);
 
 	app.post('/api/logout', handleLogout);
 
