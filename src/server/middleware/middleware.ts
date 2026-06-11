@@ -2,13 +2,12 @@
 
 /**
  * Assembles the server's HTTP request pipeline, in order:
- * global middleware → cookie-setters → routers (`/` pages, `/api` endpoints)
+ * global middleware → cookie-setters → routers (`/webhooks`, `/` pages, `/api` endpoints)
  * → 404 → error handler.
  */
 
 import type { Express } from 'express';
 
-import express from 'express';
 import i18next from 'i18next';
 import { handle } from 'i18next-http-middleware';
 
@@ -20,9 +19,9 @@ import staticAssets from './staticAssets.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
+import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
-import { handleSesWebhook } from '../controllers/awsWebhook.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -36,10 +35,11 @@ import { handleSesWebhook } from '../controllers/awsWebhook.js';
  * @param app - The express application instance.
  */
 export function configureMiddleware(app: Express): void {
-	// Note: requests that are rate limited will not be logged, to mitigate slow-down during a DDOS.
+	// Rate limit ALL incoming requests
 	app.use(rateLimit);
 
-	// Log every incoming request, even those with an unparseable body. Bodies are not logged.
+	// Log every non-rate-limited incoming request, even those
+	// with an unparseable body. Bodies are not logged.
 	app.use(reqLogger);
 
 	// Parse the request's JSON body and cookies into req.body / req.cookies.
@@ -51,36 +51,23 @@ export function configureMiddleware(app: Express): void {
 	/** This sets req.i18n, and req.i18n.resolvedLanguage */
 	app.use(handle(i18next, { removeLngFromUrl: false }));
 
-	// CUSTOM express.json() NEEDED because AWS SNS sends text/plain instead of application/json! But it is still parsable as JSON.
-	const awsParser = express.json({
-		limit: '50kb',
-		type: ['text/plain', 'application/json'],
-	});
-	// Webhook endpoint for AWS Simple Email Service (SES) to notify us of bounces and complaints
-	app.post('/webhooks/ses', awsParser, handleSesWebhook);
+	// Inbound third-party webhooks (e.g. AWS SES bounce/complaint/delivery notifications).
+	app.use('/webhooks', webhooksRouter);
 
 	// Serve static files: the built client bundle and the ACME challenge directory.
 	app.use(staticAssets);
-
-	// Every request beyond this point will not be for a resource like a script or image,
-	// but it will be a request for an HTML or API
-
 	// Set the per-HTML-request cookies (browser-id, preferences, checkmates_beaten).
 	app.use(htmlCookies);
 
-	// Provide a route
-
-	// Root router — every HTML (SSR) page.
+	// Serve the root HTML pages (SSR).
 	app.use('/', rootRouter);
 
 	// API router — every /api/* endpoint (each sub-router declares its own auth).
 	app.use('/api', apiRouter);
 
-	// Last Resort 404 and Error Handler ----------------------------------------------------
-
-	// If we've reached this point, send our 404 page.
+	// Unknown route, send 404 error page.
 	app.all('*', send404);
 
-	// Custom error handling. Comes after 404.
+	// Error handling. Catches uncaught server errors.
 	app.use(errorHandler);
 }
