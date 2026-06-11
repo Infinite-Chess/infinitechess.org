@@ -24,7 +24,7 @@ import { WebSocket } from 'ws';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
-import { getLanguageToServe } from '../utility/translate.js';
+import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 
 // Types ---------------------------------------------------------------------
 

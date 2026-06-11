@@ -23,7 +23,6 @@ import leaderboardsRouter from './leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import practiceProgressRouter from './practiceProgress.js';
-import { getLanguageToServe } from '../utility/translate.js';
 import { seekPreviewLimiter } from '../middleware/rateLimiters.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
@@ -47,7 +46,7 @@ router.use('/', passwordRouter);
 // an HTML page is requested, and delete this endpoint.
 router.put('/language', (req: Request, res: Response) => {
 	// Language cookie setter
-	res.cookie('i18next', getLanguageToServe(req));
+	res.cookie('i18next', req.lang!);
 	res.send(''); // Doesn't work without this for some reason
 });
 

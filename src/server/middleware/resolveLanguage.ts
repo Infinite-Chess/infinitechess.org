@@ -50,7 +50,7 @@ export function initLanguageResolution(supported: string[]): void {
  * Calculates the best language to serve a request — from the override
  * cookie (if supported), else the Accept-Language header, else the default.
  */
-export function resolveLanguageForRequest(req: Request): string {
+function resolveLanguageForRequest(req: Request): string {
 	// req.cookies is only populated by the cookie parser; if that hasn't run, parse the header.
 	// This can occasionally be called from the rateLimit middleware to render a 429 error page.
 	const cookies = req.cookies ?? parseCookie(req.headers.cookie ?? '');
@@ -66,4 +66,15 @@ export function resolveLanguageForRequest(req: Request): string {
 export function resolveLanguage(req: Request, _res: Response, next: NextFunction): void {
 	req.lang = resolveLanguageForRequest(req);
 	next();
+}
+
+/**
+ * Guarantees a language to serve for a request. Backup for `req.lang`
+ * if you're not confident that that will be defined from this middleware
+ * by the point you need the language. For example if the user
+ * is rate limited and we need to render the 429 error page.
+ * @returns The language code to serve.
+ */
+export function getLanguageToServe(req: Request): string {
+	return req.lang ?? resolveLanguageForRequest(req);
 }

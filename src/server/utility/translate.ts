@@ -10,21 +10,9 @@ import type { TranslationKeys } from '../../types/translations.js';
 import i18next from 'i18next';
 
 import tconfig from '../config/translationconfig.js';
-import { resolveLanguageForRequest } from '../middleware/resolveLanguage.js';
+import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 
 // Functions -----------------------------------------------------------------
-
-/**
- * Guarantees a language to serve for a request. Backup to `req.lang`
- * if you're not confident that that will be defined from the resolveLanguage
- * middleware by the point you need the language. For example if the
- * user is rate limited and we need to render the 429 error page.
- * @param req - The Express request object.
- * @returns The language code to serve.
- */
-function getLanguageToServe(req: Request): string {
-	return req.lang ?? resolveLanguageForRequest(req);
-}
 
 /**
  * Retrieves the translation for a given key and language.
@@ -51,4 +39,4 @@ function getTranslationForReq(key: TranslationKeys, req: Request): string {
 
 // Exports -------------------------------------------------------------------
 
-export { getLanguageToServe, getTranslation, getTranslationForReq };
+export { getTranslation, getTranslationForReq };
