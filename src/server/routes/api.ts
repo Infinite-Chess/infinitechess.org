@@ -23,6 +23,7 @@ import leaderboardsRouter from './leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import practiceProgressRouter from './practiceProgress.js';
+import { getLanguageToServe } from '../utility/translate.js';
 import { seekPreviewLimiter } from '../middleware/rateLimiters.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
@@ -40,9 +41,13 @@ router.use('/', passwordRouter);
 
 // One-off endpoints that don't form resource families ----------------------------
 
+// Sets the language override cookie to one of our supported languages
+// that is the best fit for the request's Accept-Language header.
+// TODO: Ensure this is auto-set as a cookie whenever
+// an HTML page is requested, and delete this endpoint.
 router.put('/language', (req: Request, res: Response) => {
 	// Language cookie setter
-	res.cookie('i18next', req.i18n.resolvedLanguage);
+	res.cookie('i18next', getLanguageToServe(req));
 	res.send(''); // Doesn't work without this for some reason
 });
 

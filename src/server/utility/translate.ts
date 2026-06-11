@@ -8,46 +8,22 @@ import type { Request } from 'express';
 import type { TranslationKeys } from '../../types/translations.js';
 
 import i18next from 'i18next';
-import { parse as parseCookie } from 'cookie';
 
 import tconfig from '../config/translationconfig.js';
+import { resolveLanguageForRequest } from '../middleware/resolveLanguage.js';
 
 // Functions -----------------------------------------------------------------
 
 /**
- * Determines the language to be used for serving an HTML file to a request.
- * The language is determined in the following order of precedence:
- * 1. The 'lng' query parameter, which can be different than the others.
- * 2. The 'i18next' cookie, which can also be different than the others.
- * 3. The value of req.i18n.resolvedLanguage (typical of users' first-connection to the site).
- * This is determined by several different factors, but i18next also takes into account the
- * 'Accept-Language' header for this property.
- * 4. A default language, if none of the above are supported.
- *
- * The selected language is validated against supported languages,
- * using a default language if none are supported.
- *
- * Works even before the cookie-parser and i18next middleware have run (e.g. when called from the global rate limiter).
+ * Guarantees a language to serve for a request. Backup to `req.lang`
+ * if you're not confident that that will be defined from the resolveLanguage
+ * middleware by the point you need the language. For example if the
+ * user is rate limited and we need to render the 429 error page.
  * @param req - The Express request object.
- * @returns The language to be used.
+ * @returns The language code to serve.
  */
 function getLanguageToServe(req: Request): string {
-	// req.cookies is only populated by the cookie-parser middleware;
-	// if it hasn't run, parse the raw Cookie header manually.
-	const cookies = req.cookies ?? parseCookie(req.headers.cookie ?? '');
-
-	const supportedLngs = i18next.options.supportedLngs;
-	if (!(supportedLngs instanceof Array)) {
-		throw new Error('i18next.options.supportedLngs was not set');
-	}
-
-	let language: string | undefined = cookies['i18next'];
-	// req.i18n is set by the i18next middleware, which likewise may not have run yet.
-	// AFTER the target end state of TRANSLATION_SYSTEM.md, the resolved language needs
-	// to be GUARANTEED, then coming from our own accept-language header parsing middleware.
-	if (!language || !supportedLngs.includes(language)) language = req.i18n?.resolvedLanguage; // Cookie language not supported
-	if (!language || !supportedLngs.includes(language)) language = tconfig.DEFAULT_LANGUAGE; // Resolved language not supported
-	return language;
+	return req.lang ?? resolveLanguageForRequest(req);
 }
 
 /**

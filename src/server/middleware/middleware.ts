@@ -8,9 +8,6 @@
 
 import type { Express } from 'express';
 
-import i18next from 'i18next';
-import { handle } from 'i18next-http-middleware';
-
 import send404 from './send404.js';
 import security from './security.js';
 import apiRouter from '../routes/api.js';
@@ -22,6 +19,7 @@ import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
+import { resolveLanguage } from './resolveLanguage.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -43,10 +41,8 @@ export function configurePipeline(app: Express): void {
 	// Parse the request's JSON body and cookies into req.body / req.cookies.
 	app.use(requestParsers);
 
-	// Language detection. This sets req.i18n and req.i18n.resolvedLanguage.
-	// FUTURE: replace i18next with our own accept-language parsing middleware here. It can read
-	// req.cookies directly (the cookie parser in requestParsers above has already run).
-	app.use(handle(i18next, { removeLngFromUrl: false }));
+	// Resolve the language to serve (cookie → Accept-Language → default) into req.lang.
+	app.use(resolveLanguage);
 
 	// Inbound third-party webhooks (e.g. AWS SES bounce/complaint/delivery notifications).
 	app.use('/webhooks', webhooksRouter);

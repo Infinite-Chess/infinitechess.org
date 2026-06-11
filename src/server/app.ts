@@ -9,6 +9,7 @@ import express from 'express';
 import { initTranslations } from './config/i18n.js';
 import { configureNunjucks } from './config/nunjucks.js';
 import { configurePipeline } from './middleware/middleware.js';
+import { initLanguageResolution } from './middleware/resolveLanguage.js';
 
 const app = express();
 
@@ -24,6 +25,9 @@ configureNunjucks(app);
 // This is in here so integration tests work, as otherwise if
 // this is in server.js, i18next is never initialized for tests.
 initTranslations();
+
+// Precompute language-resolution structures from the now-loaded supported-language set.
+initLanguageResolution();
 
 configurePipeline(app); // Assemble the request pipeline
 
