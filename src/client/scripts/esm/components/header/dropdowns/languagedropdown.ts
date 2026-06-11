@@ -5,7 +5,6 @@
 // And it removes the lng query param from the url after loading.
 
 import docutil from '../../../util/docutil.js';
-import { serverFetch } from '../../../util/serverFetch.js';
 
 // Document Elements -------------------------------------------------------------------------
 
@@ -14,16 +13,6 @@ const dropdownItems = document.querySelectorAll('.language-dropdown-item');
 const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title')!;
 
 // Functions ---------------------------------------------------------------------------------
-
-(function init() {
-	// Request cookie if it doesn't exist
-	if (!docutil.getCookieValue('i18next')) {
-		serverFetch('/api/language', {
-			method: 'PUT',
-		});
-	}
-	removeLngQueryParam();
-})();
 
 /**
  * Modifies the provided URL to include the "lng" query parameter based on the i18next cookie.

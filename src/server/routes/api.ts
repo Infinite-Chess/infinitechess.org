@@ -40,16 +40,6 @@ router.use('/', passwordRouter);
 
 // One-off endpoints that don't form resource families ----------------------------
 
-// Sets the language override cookie to one of our supported languages
-// that is the best fit for the request's Accept-Language header.
-// TODO: Ensure this is auto-set as a cookie whenever
-// an HTML page is requested, and delete this endpoint.
-router.put('/language', (req: Request, res: Response) => {
-	// Language cookie setter
-	res.cookie('i18next', req.lang!);
-	res.send(''); // Doesn't work without this for some reason
-});
-
 router.get('/contributors', (_req: Request, res: Response) => {
 	const contributors = getContributors();
 	res.send(JSON.stringify(contributors));
