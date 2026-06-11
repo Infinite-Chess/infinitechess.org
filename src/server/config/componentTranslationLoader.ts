@@ -74,6 +74,9 @@ const PSEUDO_LOC = false;
 /** Module-level store. */
 let componentStore: ComponentStore | null = null;
 
+/** Supported-language list, computed from all languages present in any component. */
+let supportedLanguages: string[] = [];
+
 // Loading Translations ------------------------------------------------------------
 
 /**
@@ -117,6 +120,14 @@ export function loadComponentTranslations(): void {
 
 		componentStore.set(componentName, langMap);
 	}
+
+	// Compute the supported-language list once:
+	// the union of every language present in any component.
+	const langs = new Set<string>();
+	for (const langMap of componentStore.values()) {
+		for (const lang of langMap.keys()) langs.add(lang);
+	}
+	supportedLanguages = [...langs];
 }
 
 /**
@@ -164,6 +175,14 @@ export function getScriptTranslationsForReq<C extends keyof ScriptTranslations>(
 			? reqOrWs.metadata.cookies.i18next
 			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
 	return getScriptTranslations(component, lang);
+}
+
+/**
+ * Returns the list of language codes supported.
+ * Those with at least one component translation available.
+ */
+export function getSupportedLanguages(): string[] {
+	return supportedLanguages;
 }
 
 // Utility ---------------------------------------------------------------------
