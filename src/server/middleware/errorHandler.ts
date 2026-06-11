@@ -4,7 +4,6 @@ import type { Request, Response, NextFunction } from 'express';
 
 import { logEventsAndPrint } from './logEvents.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 /**
  * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
@@ -57,7 +56,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 							`Critical error rendering ${context.code} page: ${renderErr.stack}`,
 							'errLog.txt',
 						);
-						res.send(getScriptTranslationsForReq('responses', req).errors.server_error);
+						res.send(req.t.responses.errors.server_error);
 					}
 				},
 			);
@@ -67,7 +66,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 			const message =
 				'expose' in err && err.expose === true
 					? err.message
-					: getScriptTranslationsForReq('responses', req).errors.server_error;
+					: req.t.responses.errors.server_error;
 			res.status(status);
 			if (req.accepts('json')) res.json({ message });
 			else res.send(message);

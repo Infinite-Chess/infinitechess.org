@@ -9,15 +9,13 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
 
 import rateLimit from 'express-rate-limit';
 
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
-
 // Options -------------------------------------------------------------
 
 /** Produces a rate-limit handler that responds with the given translation key. */
 function make_handler(key: keyof ScriptTranslations['responses']['rate_limiting']) {
 	return (req: Request, res: Response): Response =>
 		res.status(429).json({
-			message: getScriptTranslationsForReq('responses', req).rate_limiting[key],
+			message: req.t.responses.rate_limiting[key],
 		});
 }
 

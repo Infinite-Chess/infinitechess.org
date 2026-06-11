@@ -9,7 +9,6 @@ import jsutil from '../../shared/util/jsutil.js';
 import { isIPBanned } from './banned.js';
 import { getClientIP } from '../utility/IP.js';
 import { getErrorPageContext } from '../utility/renderContext.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from './logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
@@ -170,7 +169,7 @@ function getRetryAfterSeconds(timestamps: number[]): number {
  */
 function respondRateLimited(req: Request, res: Response, retryAfterSec: number): void {
 	res.status(429).set('Retry-After', String(retryAfterSec)); // Standard hint for how long until they should retry
-	const message = getScriptTranslationsForReq('responses', req).rate_limiting.generic;
+	const message = req.t.responses.rate_limiting.generic;
 
 	if (req.accepts('html') && !underAttackMode) {
 		res.render(
