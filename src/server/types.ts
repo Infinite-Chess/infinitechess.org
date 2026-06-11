@@ -1,6 +1,7 @@
 // src/server/types.ts
 
 import type { Role } from './controllers/roles';
+import type { ScriptTranslations } from '../shared/types/script-translations.js';
 
 declare global {
 	namespace Express {
@@ -8,6 +9,8 @@ declare global {
 			memberInfo?: MemberInfo;
 			/** The resolved language to serve this request, set by the resolveLanguage middleware. */
 			lang?: string;
+			/** Contains all translations for the request's resolved language. */
+			t: ScriptTranslations;
 		}
 	}
 }

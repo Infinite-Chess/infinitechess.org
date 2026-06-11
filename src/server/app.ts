@@ -10,6 +10,7 @@ import { initTranslations } from './config/i18n.js';
 import { configureNunjucks } from './config/nunjucks.js';
 import { configurePipeline } from './middleware/middleware.js';
 import { initLanguageResolution } from './middleware/resolveLanguage.js';
+import { installReqTranslations } from './middleware/reqTranslations.js';
 
 const app = express();
 
@@ -28,6 +29,10 @@ initTranslations();
 
 // Precompute language-resolution structures from the now-loaded supported-language set.
 initLanguageResolution();
+
+// Install the lazy `req.t` translations on the request prototype, so server code can read
+// translated strings (e.g. req.t.responses.errors.not_found) anywhere in the pipeline.
+installReqTranslations(app);
 
 configurePipeline(app); // Assemble the request pipeline
 
