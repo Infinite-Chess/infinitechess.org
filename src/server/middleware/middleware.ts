@@ -48,7 +48,9 @@ export function configureMiddleware(app: Express): void {
 	// Security stack: HTTPS enforcement, CSP headers, path-traversal blocking, and CORS.
 	app.use(security);
 
-	/** This sets req.i18n, and req.i18n.resolvedLanguage */
+	// Language detection. This sets req.i18n and req.i18n.resolvedLanguage.
+	// FUTURE: replace i18next with our own accept-language parsing middleware here. It can read
+	// req.cookies directly (the cookie parser in requestParsers above has already run).
 	app.use(handle(i18next, { removeLngFromUrl: false }));
 
 	// Inbound third-party webhooks (e.g. AWS SES bounce/complaint/delivery notifications).
