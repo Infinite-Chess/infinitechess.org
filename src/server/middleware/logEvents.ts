@@ -63,17 +63,8 @@ function reqLogger(req: Request, res: Response, next: () => void): void {
 		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]')
 		.replace(/([?&]username=)[^&#]+/, '$1[REDACTED]'); // Redact usernames (e.g. the availability check's ?username=)
 
-	let logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
-	// Delete passwords from incoming form data
-	let sensoredBody;
-	if (JSON.stringify(req.body) !== '{}') {
-		// Not an empty object
-		sensoredBody = { ...req.body };
-		delete sensoredBody.password;
-		delete sensoredBody.username; // Since IP's are logged with each request, If you know a deleted account's username, it can be indirectly traced to their IP if we don't delete them here.
-		delete sensoredBody.email;
-		logThis += `\n${JSON.stringify(sensoredBody)}`;
-	}
+	// Bodies are high-PII and left out
+	const logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
 
 	logEvents(logThis, 'reqLog.txt');
 
