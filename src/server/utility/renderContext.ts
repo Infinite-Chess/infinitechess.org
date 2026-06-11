@@ -11,7 +11,6 @@ import type { LanguageOption } from '../config/componentTranslationLoader.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 import {
 	getLanguageOptions,
 	getScriptTranslations,
@@ -31,12 +30,11 @@ type BaseRenderContext = {
 
 /** Returns the locals every SSR'd page template requires to render. */
 export function getBaseRenderContext(req: Request): BaseRenderContext {
-	const lang = getLanguageToServe(req);
 	return {
-		lang,
-		templateT: (component: string) => getTemplateTranslations(component, lang),
+		lang: req.lang,
+		templateT: (component: string) => getTemplateTranslations(component, req.lang),
 		scriptT: <C extends keyof ScriptTranslations>(component: C) =>
-			getScriptTranslations(component, lang),
+			getScriptTranslations(component, req.lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
 		memberInfo: req.memberInfo ?? { signedIn: false },
 		languageOptions: getLanguageOptions(),

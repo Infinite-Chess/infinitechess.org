@@ -19,7 +19,6 @@ import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
-import { resolveLanguage } from './resolveLanguage.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -40,9 +39,6 @@ export function configurePipeline(app: Express): void {
 
 	// Parse the request's JSON body and cookies into req.body / req.cookies.
 	app.use(requestParsers);
-
-	// Resolve the language to serve (cookie → Accept-Language → default) into req.lang.
-	app.use(resolveLanguage);
 
 	// Inbound third-party webhooks (e.g. AWS SES bounce/complaint/delivery notifications).
 	app.use('/webhooks', webhooksRouter);

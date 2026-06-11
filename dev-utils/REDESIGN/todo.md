@@ -32,7 +32,7 @@
 
 - Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (remove that from `generate:types` script, too). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
 
-- Drop `i18next` package entirely. Write our own Accept-Language header parser middleware to replace getLanguageToServe() in translate.ts. Rename the `i18next` cookie, which controls manually switching languages. We should also drop support for specifying the language of the template desired with a lng query parameter, because users won't be able to manually go to the English-only version of the ToS, even if their i18next cookie was set to another language.
+- Drop `i18next` package entirely.
 
 - Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. 
 

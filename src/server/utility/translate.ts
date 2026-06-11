@@ -10,7 +10,6 @@ import type { TranslationKeys } from '../../types/translations.js';
 import i18next from 'i18next';
 
 import tconfig from '../config/translationconfig.js';
-import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 
 // Functions -----------------------------------------------------------------
 
@@ -33,8 +32,7 @@ function getTranslation(key: TranslationKeys, language: string = tconfig.DEFAULT
  * @returns The translated string.
  */
 function getTranslationForReq(key: TranslationKeys, req: Request): string {
-	const language = getLanguageToServe(req);
-	return getTranslation(key, language);
+	return getTranslation(key, req.lang);
 }
 
 // Exports -------------------------------------------------------------------

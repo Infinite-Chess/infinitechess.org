@@ -1,13 +1,20 @@
-// src/server/middleware/resolveLanguage.ts
+// src/server/middleware/reqLanguage.ts
 
 /**
- * Resolves the language to serve each request into req.lang.
+ * Installs the request-bound resolved language `req.lang`.
+ *
+ * Like `req.t`, it's a lazy getter on the Express request prototype rather than a
+ * middleware-set property, so it's available everywhere — including code that runs before
+ * the main pipeline (e.g. the rate limiter, or the error handler rendering a localized
+ * 429/500 page) — with no ordering concerns. On first access it resolves the language
+ * and caches the result on the request instance for the remainder of the request.
+ *
  * Precedence: the language-override cookie (if it names a supported language) → the
  * Accept-Language header (best supported match, with base-language fallback) → the default.
  */
 
 import type { IncomingMessage } from 'http';
-import type { Request, Response, NextFunction } from 'express';
+import type { Express, Request } from 'express';
 
 import accepts from 'accepts';
 import { parse as parseCookie } from 'cookie';
@@ -60,21 +67,19 @@ export function resolveLanguageForRequest(req: IncomingMessage): string {
 	return (best && (baseToRegional.get(best) ?? best)) || tconfig.DEFAULT_LANGUAGE;
 }
 
-/** Resolves and caches req.lang for the request, then continues. */
-export function resolveLanguage(req: Request, res: Response, next: NextFunction): void {
-	req.lang = resolveLanguageForRequest(req);
-	// Make sure the cookie's former name is cleared.
-	if (req.cookies['i18next'] !== undefined) res.clearCookie('i18next');
-	next();
-}
-
 /**
- * Guarantees a language to serve for a request. Backup for `req.lang`
- * if you're not confident that that will be defined from this middleware
- * by the point you need the language. For example if the user
- * is rate limited and we need to render the 429 error page.
- * @returns The language code to serve.
+ * Defines the lazy `req.lang` getter on the Express request prototype. Call once at app setup.
+ * @param app - The express application instance.
  */
-export function getLanguageToServe(req: Request): string {
-	return req.lang ?? resolveLanguageForRequest(req);
+export function installReqLanguage(app: Express): void {
+	Object.defineProperty(app.request, 'lang', {
+		configurable: true,
+		get(this: Request): string {
+			const lang = resolveLanguageForRequest(this);
+			// Cache on the instance: an own property shadows this prototype getter,
+			// so subsequent reads on the same request skip resolution entirely.
+			Object.defineProperty(this, 'lang', { value: lang, configurable: true });
+			return lang;
+		},
+	});
 }

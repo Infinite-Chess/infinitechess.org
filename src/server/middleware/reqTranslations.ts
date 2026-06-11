@@ -5,17 +5,16 @@
  * accessor mirroring the client-side global `t`: `req.t.responses.auth.invalid_token`.
  *
  * Implemented as a lazy getter on the Express request prototype rather than a
- * middleware-set property, so it is available everywhere — including middleware
- * that runs before `resolveLanguage` (e.g. the rate limiter) — without any
- * pipeline-ordering concerns. The language is resolved on first access via the
- * same `getLanguageToServe` fallback `req.lang` itself uses, then the result is
- * cached on the request instance for the remainder of the request.
+ * middleware-set property, so it is available everywhere — including code that runs
+ * before the main pipeline (e.g. the rate limiter, or the error handler rendering a
+ * localized 429/500 page) — without any pipeline-ordering concerns. It reads the
+ * language off `req.lang` (itself a lazy getter), then caches the resulting
+ * Proxy on the request instance for the remainder of the request.
  */
 
 import type { Express, Request } from 'express';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
-import { getLanguageToServe } from './resolveLanguage.js';
 import { getScriptTranslations } from '../config/componentTranslationLoader.js';
 
 /**
@@ -40,7 +39,7 @@ export function installReqTranslations(app: Express): void {
 	Object.defineProperty(app.request, 't', {
 		configurable: true,
 		get(this: Request): ScriptTranslations {
-			const translations = buildTranslations(getLanguageToServe(this));
+			const translations = buildTranslations(this.lang);
 			// Cache on the instance: an own property shadows this prototype getter,
 			// so subsequent reads on the same request skip resolution entirely.
 			Object.defineProperty(this, 't', { value: translations, configurable: true });

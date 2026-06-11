@@ -22,7 +22,7 @@ import { buildTranslations } from '../middleware/reqTranslations.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { resolveLanguageForRequest } from '../middleware/resolveLanguage.js';
+import { resolveLanguageForRequest } from '../middleware/reqLanguage.js';
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 import {
 	addConnectionToConnectionLists,

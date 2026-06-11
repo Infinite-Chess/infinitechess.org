@@ -7,11 +7,14 @@ declare global {
 	namespace Express {
 		export interface Request {
 			memberInfo?: MemberInfo;
-			/** The resolved language to serve this request, set by the resolveLanguage middleware. */
-			lang?: string;
+			/**
+			 * The resolved best-fit supported language to serve this request.
+			 * Set lazilly via reqLanguage.ts
+			 */
+			lang: string;
 			/**
 			 * Contains all translations for the request's resolved language.
-			 * Mirrors the client's global `t`.
+			 * Mirrors the client's global `t`. Set lazilly via reqTranslation.ts.
 			 */
 			t: ScriptTranslations;
 		}
