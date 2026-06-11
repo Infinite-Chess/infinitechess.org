@@ -38,7 +38,8 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	// }
 
 	try {
-		if (req.accepts('html')) {
+		if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate') {
+			// Request accepts html AND is likely a browser, not a bot.
 			// Render the styled error page, content-negotiated.
 			const context = getErrorPageContext(req, status);
 			res.status(context.code).render(

@@ -171,7 +171,8 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 	res.status(429).set('Retry-After', String(retryAfterSec)); // Standard hint for how long until they should retry
 	const message = req.t.responses.rate_limiting.generic;
 
-	if (req.accepts('html') && !underAttackMode) {
+	if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate' && !underAttackMode) {
+		// Request accepts html AND is likely a browser, not a bot.
 		res.render(
 			'error.njk',
 			getErrorPageContext(req, 429, retryAfterSec),
