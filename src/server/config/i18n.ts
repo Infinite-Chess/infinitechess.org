@@ -5,11 +5,8 @@ import i18next from 'i18next';
 import translationLoader from './translationLoader.js';
 import { loadComponentTranslations } from './componentTranslationLoader.js';
 
-/**
- * Initializes i18next for the server process, loading languages from .toml files.
- * @returns The list of supported languages (those with at least one component translation).
- */
-function initTranslations(): string[] {
+/** Initializes i18next for the server process, loading languages from .toml files. */
+function initTranslations(): void {
 	// Load OLD translations
 	const translations = translationLoader.loadTranslations();
 	const supportedLngs = Object.keys(translations);
@@ -23,7 +20,7 @@ function initTranslations(): string[] {
 	});
 
 	// Load NEW translations
-	return loadComponentTranslations();
+	loadComponentTranslations();
 }
 
 export { initTranslations };
