@@ -24,10 +24,10 @@ configureNunjucks(app);
 
 // This is in here so integration tests work, as otherwise if
 // this is in server.js, i18next is never initialized for tests.
-initTranslations();
+const supportedLanguages = initTranslations();
 
 // Precompute language-resolution structures from the now-loaded supported-language set.
-initLanguageResolution();
+initLanguageResolution(supportedLanguages);
 
 configurePipeline(app); // Assemble the request pipeline
 
