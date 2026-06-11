@@ -32,9 +32,8 @@ function setBrowserIDCookie(res: Response, id: string, maxAgeMillis: number): vo
  */
 function assignOrRenewBrowserID(req: Request, res: Response, next: NextFunction): void {
 	// We don't have to worry about the request being for a resource because those have already been served.
-	// The only scenario this request could be for now is an HTML or fetch API request
-	// The 'is-fetch-request' header is a custom header we add on all fetch requests to let us know is is a fetch request.
-	if (req.headers['is-fetch-request'] === 'true' || !req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
+	// The only scenario this request could be for now is an HTML or fetch API request.
+	if (!req.accepts('html')) return next(); // Not an HTML request (but a fetch), don't set the cookie
 
 	const cookies = req.cookies;
 	if (!cookies['browser-id']) giveBrowserID(req, res);
