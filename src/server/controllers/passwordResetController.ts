@@ -7,7 +7,7 @@ import { Request, Response } from 'express';
 import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { getTranslationForReq } from '../utility/translate.js';
+import { getTranslation } from '../utility/translate.js';
 import { sendPasswordResetEmail } from './emailController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
@@ -45,7 +45,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 					'blacklistLog.txt',
 				);
 				res.status(409).json({
-					message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+					message: getTranslation('server.javascript.ws-email_blacklisted', req.lang),
 				});
 				return;
 			}
@@ -92,7 +92,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 
 		// ALWAYS return a generic success message to prevent email enumeration.
 		res.status(200).json({
-			message: getTranslationForReq('server.javascript.ws-password-reset-link-sent', req),
+			message: getTranslation('server.javascript.ws-password-reset-link-sent', req.lang),
 		});
 	} catch (error) {
 		const errorMessage: string =
@@ -153,9 +153,9 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		if (!validTokenRecord) {
 			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts.txt');
 			res.status(400).json({
-				message: getTranslationForReq(
+				message: getTranslation(
 					'server.javascript.ws-password-reset-token-invalid',
-					req,
+					req.lang,
 				),
 			});
 			return;
@@ -199,7 +199,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 7. Send Success Response
 		res.status(200).json({
-			message: getTranslationForReq('server.javascript.ws-password-change-success', req),
+			message: getTranslation('server.javascript.ws-password-change-success', req.lang),
 		});
 
 		// 8. Log the successful password reset

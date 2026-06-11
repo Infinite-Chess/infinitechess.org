@@ -4,7 +4,6 @@
  * Retrieves the translation for the code and language specified.
  */
 
-import type { Request } from 'express';
 import type { TranslationKeys } from '../../types/translations.js';
 
 import i18next from 'i18next';
@@ -25,16 +24,6 @@ function getTranslation(key: TranslationKeys, language: string = tconfig.DEFAULT
 	return i18next.t(key, options);
 }
 
-/**
- * Retrieves the translation for a given key and req. It reads the req's cookies for its preferred language.
- * @param key - The translation key to look up. For example, `"play.javascript.termination.checkmate"`
- * @param req - The request object
- * @returns The translated string.
- */
-function getTranslationForReq(key: TranslationKeys, req: Request): string {
-	return getTranslation(key, req.lang);
-}
-
 // Exports -------------------------------------------------------------------
 
-export { getTranslation, getTranslationForReq };
+export { getTranslation };

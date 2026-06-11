@@ -19,8 +19,8 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
+import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
@@ -114,14 +114,14 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (usernameTaken) {
 		res.status(409).json({
 			field: 'username',
-			message: getTranslationForReq('server.javascript.ws-username_taken', req),
+			message: getTranslation('server.javascript.ws-username_taken', req.lang),
 		});
 		return;
 	}
 	if (emailTaken) {
 		res.status(409).json({
 			field: 'email',
-			message: getTranslationForReq('server.javascript.ws-email_in_use', req),
+			message: getTranslation('server.javascript.ws-email_in_use', req.lang),
 		});
 		return;
 	}
@@ -230,7 +230,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 
 		if (emailTaken) {
 			res.status(409).json({
-				message: getTranslationForReq('server.javascript.ws-email_in_use', req),
+				message: getTranslation('server.javascript.ws-email_in_use', req.lang),
 			});
 			return;
 		}
@@ -377,7 +377,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	try {
 		if (isUsernameTakenOrPending(username)) {
 			allowed = false;
-			reason = getTranslationForReq('server.javascript.ws-username_taken', req);
+			reason = getTranslation('server.javascript.ws-username_taken', req.lang);
 		}
 	} catch {
 		// DB read failed (already logged)
@@ -386,7 +386,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 	}
 	if (checkProfanity(username)) {
 		allowed = false;
-		reason = getTranslationForReq('server.javascript.ws-username_bad_word', req);
+		reason = getTranslation('server.javascript.ws-username_bad_word', req.lang);
 	}
 	// we only check if it's reserved and ignore any other possible reasons it might not be a valid username
 	if (
@@ -394,7 +394,7 @@ function checkUsernameAvailable(req: Request, res: Response): void {
 		validators.UsernameValidationResult.UsernameIsReserved
 	) {
 		allowed = false;
-		reason = getTranslationForReq('create-account.javascript.js-username_reserved', req);
+		reason = getTranslation('create-account.javascript.js-username_reserved', req.lang);
 	}
 
 	res.json({
@@ -413,22 +413,22 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 			case validators.UsernameValidationResult.UsernameTooLong:
 				res.status(400).json({
 					field: 'username',
-					message: getTranslationForReq(
+					message: getTranslation(
 						'create-account.javascript.js-username_length',
-						req,
+						req.lang,
 					),
 				});
 				return false;
 			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
 				res.status(400).json({
 					field: 'username',
-					message: getTranslationForReq('server.javascript.ws-username_letters', req),
+					message: getTranslation('server.javascript.ws-username_letters', req.lang),
 				});
 				return false;
 			case validators.UsernameValidationResult.UsernameIsReserved:
 				res.status(409).json({
 					field: 'username',
-					message: getTranslationForReq('server.javascript.ws-username_taken', req),
+					message: getTranslation('server.javascript.ws-username_taken', req.lang),
 				}); // Code for reserved (but the users don't know that!)
 				return false;
 			default:
@@ -442,7 +442,7 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 	if (checkProfanity(username)) {
 		res.status(409).json({
 			field: 'username',
-			message: getTranslationForReq('server.javascript.ws-username_bad_word', req),
+			message: getTranslation('server.javascript.ws-username_bad_word', req.lang),
 		});
 		return false;
 	}
@@ -465,13 +465,13 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			case validators.EmailValidationResult.InvalidFormat:
 				res.status(400).json({
 					field: 'email',
-					message: getTranslationForReq('server.javascript.ws-email_invalid', req),
+					message: getTranslation('server.javascript.ws-email_invalid', req.lang),
 				});
 				return false;
 			case validators.EmailValidationResult.EmailTooLong:
 				res.status(400).json({
 					field: 'email',
-					message: getTranslationForReq('server.javascript.ws-email_too_long', req),
+					message: getTranslation('server.javascript.ws-email_too_long', req.lang),
 				});
 				return false;
 			default:
@@ -490,7 +490,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			);
 			res.status(422).json({
 				field: 'email',
-				message: getTranslationForReq('server.javascript.ws-email_blacklisted', req),
+				message: getTranslation('server.javascript.ws-email_blacklisted', req.lang),
 			});
 			return false;
 		}
@@ -503,7 +503,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 	if (!(await isEmailDNSValid(email))) {
 		res.status(400).json({
 			field: 'email',
-			message: getTranslationForReq('server.javascript.ws-email_domain_invalid', req),
+			message: getTranslation('server.javascript.ws-email_domain_invalid', req.lang),
 		});
 		return false;
 	}
@@ -534,7 +534,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 			case validators.PasswordValidationResult.PasswordTooLong:
 				res.status(400).json({
 					field: 'password',
-					message: getTranslationForReq('server.javascript.ws-password_length', req),
+					message: getTranslation('server.javascript.ws-password_length', req.lang),
 				});
 				return false;
 			default:

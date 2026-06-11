@@ -8,7 +8,7 @@ import type { Request, Response } from 'express';
 
 import { deleteUser } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
-import { getTranslationForReq } from '../utility/translate.js';
+import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
 import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { isMemberInSomeActiveGame } from '../game/gamemanager/gamemanager.js';
@@ -61,7 +61,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 			'deletedAccounts.txt',
 		);
 		res.status(403).json({
-			message: getTranslationForReq('server.javascript.ws-deleting_account_in_game', req),
+			message: getTranslation('server.javascript.ws-deleting_account_in_game', req.lang),
 		});
 		return;
 	}
@@ -88,7 +88,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 			'errLog.txt',
 		);
 		res.status(404).json({
-			message: getTranslationForReq('server.javascript.ws-deleting_account_not_found', req),
+			message: getTranslation('server.javascript.ws-deleting_account_not_found', req.lang),
 		});
 		return;
 	}
