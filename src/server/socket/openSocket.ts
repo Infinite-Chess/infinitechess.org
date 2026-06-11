@@ -12,7 +12,6 @@ import { parse as parseCookie } from 'cookie';
 
 import { GAME_VERSION } from '../../shared/game_version.js';
 
-import tconfig from '../config/translationconfig.js';
 import { onclose } from './closeSocket.js';
 import socketUtility from './socketUtility.js';
 import { onmessage } from './receiveSocketMessage.js';
@@ -23,6 +22,7 @@ import { buildTranslations } from '../middleware/reqTranslations.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { resolveLanguageForRequest } from '../middleware/resolveLanguage.js';
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 import {
 	addConnectionToConnectionLists,
@@ -145,8 +145,8 @@ function closeIfInvalidAndAddMetadata(
 		IP,
 	};
 
-	// Bind this connection's translations once, from its language cookie.
-	ws.t = buildTranslations(ws.metadata.cookies.lang ?? tconfig.DEFAULT_LANGUAGE);
+	// Bind this connection's translations
+	ws.t = buildTranslations(resolveLanguageForRequest(req));
 
 	return ws;
 }

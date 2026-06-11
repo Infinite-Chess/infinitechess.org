@@ -6,8 +6,10 @@
  * Accept-Language header (best supported match, with base-language fallback) → the default.
  */
 
+import type { IncomingMessage } from 'http';
 import type { Request, Response, NextFunction } from 'express';
 
+import accepts from 'accepts';
 import { parse as parseCookie } from 'cookie';
 
 import tconfig from '../config/translationconfig.js';
@@ -47,15 +49,14 @@ export function initLanguageResolution(): void {
  * Calculates the best language to serve a request — from the override
  * cookie (if supported), else the Accept-Language header, else the default.
  */
-function resolveLanguageForRequest(req: Request): string {
-	// req.cookies is only populated by the cookie parser; if that hasn't run, parse the header.
-	// This can occasionally be called from the rateLimit middleware to render a 429 error page.
-	const cookies = req.cookies ?? parseCookie(req.headers.cookie ?? '');
-	const override = cookies[LANGUAGE_COOKIE];
+export function resolveLanguageForRequest(req: IncomingMessage): string {
+	// parse the cookie header manually (req.cookies isn't set for upgrade requests)
+	const override = parseCookie(req.headers.cookie ?? '')[LANGUAGE_COOKIE];
 	// The cookie is JavaScript-accessible, so don't trust it, make sure it's supported.
 	if (typeof override === 'string' && getSupportedLanguages().includes(override)) return override;
 
-	const best: string | false = offers.length ? req.acceptsLanguages(...offers) : false;
+	// Identical to Express's req.acceptsLanguages, but supports websocket upgrade requests.
+	const best: string | false = offers.length ? accepts(req).languages(offers) : false;
 	return (best && (baseToRegional.get(best) ?? best)) || tconfig.DEFAULT_LANGUAGE;
 }
 
