@@ -31,6 +31,7 @@ declare global {
 	 * Per-component script-facing translations, injected into the page as
 	 * `window.t` by the Nunjucks SSR layout (see TRANSLATION_SYSTEM.md).
 	 * Only components included on the current page are populated at runtime.
+	 * Mirrors the server's `req.t`.
 	 */
 	const t: ScriptTranslations;
 

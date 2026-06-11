@@ -19,10 +19,11 @@ import { getLanguageToServe } from './resolveLanguage.js';
 import { getScriptTranslations } from '../config/componentTranslationLoader.js';
 
 /**
- * Builds the per-request translations: a Proxy that resolves each component's
- * script-facing strings lazily, so only the components actually read are looked up.
+ * Builds a translations accessor for a resolved language: a Proxy that resolves each
+ * component's script-facing strings lazily, so only the components actually read are
+ * looked up. Shared by `req.t` (here) and `ws.t` (see openSocket.ts).
  */
-function buildTranslations(lang: string): ScriptTranslations {
+export function buildTranslations(lang: string): ScriptTranslations {
 	return new Proxy({} as ScriptTranslations, {
 		get(_target, component): unknown {
 			if (typeof component !== 'string') return undefined; // ignore symbol access (inspect, etc.)

@@ -4,6 +4,7 @@
 
 import type WebSocket from 'ws';
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 
 import jsutil from '../../shared/util/jsutil.js';
@@ -13,6 +14,11 @@ import jsutil from '../../shared/util/jsutil.js';
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
 interface CustomWebSocket extends WebSocket {
+	/**
+	 * Contains all translations for the request's resolved language.
+	 * Mirrors the server's `req.t` the client's global `t`.
+	 */
+	t: ScriptTranslations;
 	/** Our custom-entered information about this websocket. */
 	metadata: {
 		/** What subscription lists they are subscribed to. Possible: "lobby" / "game" */
