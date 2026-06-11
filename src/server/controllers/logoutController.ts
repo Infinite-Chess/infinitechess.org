@@ -9,40 +9,26 @@ import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
 /** Handles member logout by revoking the session and deleting the refresh token. */
 async function handleLogout(req: Request, res: Response): Promise<void> {
-	// Delete the refresh token cookie...
-	// On client, also delete the accessToken
-
-	const cookies = req.cookies;
-	const refreshToken = cookies['jwt'];
-	if (typeof refreshToken !== 'string') {
-		res.sendStatus(200); // Cookie already deleted. (Already logged out)
-		return;
-	}
-
-	// Delete their existing session cookies WHETHER OR NOT they
-	// are signed in, because they may THINK they are...
+	// Always clear the client's session cookies, signed in or not.
 	revokeSession(res);
 
-	if (!req.memberInfo?.signedIn) {
-		// Existing refresh token cookie was invalid (tampered, expired, manually invalidated, or account deleted)
-		res.sendStatus(200);
-		return;
+	const refreshToken = req.cookies['jwt'];
+	if (typeof refreshToken === 'string' && refreshToken) {
+		// string, and not empty
+		try {
+			// Invalidate the token server-side. Safely no-ops if it isn't in the DB
+			deleteRefreshToken(refreshToken);
+		} catch {
+			// DB error (already logged)
+			res.sendStatus(500);
+			return;
+		}
+		closeAllSocketsOfSession(refreshToken, 1008, 'Logged out');
 	}
-
-	try {
-		// Now invalidate the refresh token from the database by deleting it.
-		deleteRefreshToken(refreshToken);
-	} catch {
-		// DB error (already logged)
-		res.sendStatus(500);
-		return;
-	}
-
-	closeAllSocketsOfSession(refreshToken, 1008, 'Logged out');
 
 	res.sendStatus(200);
 
-	logEvents(`Logged out member "${req.memberInfo.username}".`, 'loginAttempts.txt');
+	logEvents(`Logged out a member.`, 'loginAttempts.txt');
 }
 
 export { handleLogout };
