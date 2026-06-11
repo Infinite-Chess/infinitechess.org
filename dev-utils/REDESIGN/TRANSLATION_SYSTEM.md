@@ -32,12 +32,11 @@ Config lives in [src/server/config/translationconfig.ts](../../src/server/config
 
 ## Per-request usage in templates
 
-[src/server/routes/root.ts](../../src/server/routes/root.ts) installs middleware that, for every page request:
+For every page request, [src/server/routes/root.ts](../../src/server/routes/root.ts) merges the base render context (built by `getBaseRenderContext` in [renderContext.ts](../../src/server/utility/renderContext.ts)) into `res.locals`, exposing on every template:
 
-- Resolves the language via `getLanguageToServe(req)` ([translate.ts](../../src/server/utility/translate.ts)): query `?lng=` → `i18next` cookie → `req.i18n.resolvedLanguage` (Accept-Language) → `en-US`.
-- Exposes two helpers on `res.locals`:
-  - `templateT(component)` → the component's translation object **with `[script]` stripped out**. Use in `.njk` for strings only the server renders.
-  - `scriptT(component)` → the **contents of the `[script]` sub-table**, promoted one level (so `[script] foo.bar = "x"` becomes `{ foo: { bar: "x" } }`). Returns `{}` if the component has no `[script]` table.
+- `lang` — the resolved language code. The `resolveLanguage` middleware ([resolveLanguage.ts](../../src/server/middleware/resolveLanguage.ts)) resolves it once per request into `req.lang`. `getLanguageToServe(req)` is the resilient accessor — `req.lang ?? recompute` — for code that may run before the middleware.
+- `templateT(component)` → the component's translation object **with `[script]` stripped out**. Use in `.njk` for strings only the server renders.
+- `scriptT(component)` → the **contents of the `[script]` sub-table**, promoted one level (so `[script] foo.bar = "x"` becomes `{ foo: { bar: "x" } }`). Returns `{}` if the component has no `[script]` table.
 
 In a Nunjucks template:
 
@@ -70,24 +69,23 @@ Because the data is baked into the HTML at request time, the user's language is 
 
 ## Server-emitted response strings
 
-When the server itself (not a Nunjucks template) needs to emit a translated string — error responses, socket replies, validation messages — put the string in `translation/responses/<lang>.toml` and fetch it with `getScriptTranslationsForReq(component, reqOrWs)`:
+When the server itself (not a Nunjucks template) needs to emit a translated string — error responses, socket replies, validation messages — put the string in `translation/responses/<lang>.toml` and read it off the request-bound translations object `req.t`:
 
 ```ts
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
-
-const t = getScriptTranslationsForReq('responses', req);
-res.status(400).send(t.auth.invalid_token);
+res.status(400).send(req.t.responses.auth.invalid_token);
 ```
 
-The second argument can be either an `express.Request` or a `CustomWebSocket` — the helper pulls the language from whichever (reading the cookie directly off socket metadata) and returns the typed `ScriptTranslations['responses']` object.
+`req.t` is a fully-typed `ScriptTranslations` accessor present on every Express request, mirroring the client-side global `t` — component-first, one line, no language threading. It's a lazy getter installed on the request prototype ([reqTranslations.ts](../../src/server/middleware/reqTranslations.ts)) that, on first access, resolves the language via `getLanguageToServe(req)` and caches a Proxy for the rest of the request. Because it resolves the language itself, `req.t` works **everywhere** — including middleware that runs before `resolveLanguage` (e.g. the rate limiter), with no pipeline-ordering concerns.
 
-When the caller already has a resolved language code (e.g. SSR template-render code), use the lower-level primitive `getScriptTranslations(component, lang)` instead — `getScriptTranslationsForReq` is sugar on top of it for the req/ws case.
+For socket replies, the connection-bound `ws.t` is the planned equivalent (built from the language in the socket's cookie metadata). **Migration note:** `ws.t` is not yet built — socket call sites currently still use `getScriptTranslationsForReq('responses', ws)`, which is deleted once `ws.t` lands.
+
+When the caller holds only a resolved language code (e.g. SSR template-render code, or a queued email sender that resolved the language from the DB), use the lower-level primitive `getScriptTranslations(component, lang)` that the bound accessors delegate to.
 
 There's nothing structurally special about `responses` — any component's script-facing strings are reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
 
 ## Type generation
 
-`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts), which produces **[src/shared/types/script-translations.d.ts](../../src/shared/types/script-translations.d.ts)** — `export interface ScriptTranslations`, one property per component with script-facing strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts); the server reads it through the typed `getScriptTranslations<C>(component, lang): ScriptTranslations[C]` (or its req/ws sibling `getScriptTranslationsForReq`).
+`npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts), which produces **[src/shared/types/script-translations.d.ts](../../src/shared/types/script-translations.d.ts)** — `export interface ScriptTranslations`, one property per component with script-facing strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts); the server reads it through the request-bound `req.t` (typed as `ScriptTranslations`) or the underlying `getScriptTranslations<C>(component, lang): ScriptTranslations[C]` primitive.
 
 Re-run `npm run generate:types` whenever you add a script-facing key.
 
@@ -120,10 +118,8 @@ Re-run `npm run generate:types` whenever you add a script-facing key.
 The system today runs **alongside** the legacy i18next system. The redesign roadmap ([todo.md § Translation System Refactor](./todo.md)) removes the old system entirely. Once that work lands, expect the following differences from what's documented above:
 
 - **`i18next` dependency dropped.** The package is removed from `package.json`. Language resolution is handled by current resolveLanguage middleware.
-- **Legacy `translate.ts` functions deleted.** `getTranslation(key, lang)` and `getTranslationForReq(key, req)` are removed along with i18next — they front the old monolith TOML system. Every current call site holds a `req` or a `ws`, so they migrate onto the request/connection-bound translator (below); the rare future caller that holds only a bare language code (e.g. a queued email sender resolving the language from the DB) uses the exported `getScriptTranslations(component, lang)` primitive directly.
-- **Request/connection-bound translator (`req.t` / `ws.t`).** A per-request (Express) and per-connection (socket) Proxy typed as `ScriptTranslations`, built once from the resolved language, gives server code the same ergonomics as the client global `t`: `req.t.responses.auth.invalid_token` / `ws.t.responses.auth.invalid_token` — component-first, one line, fully typed, no language threading. This **replaces and deletes `getScriptTranslationsForReq`**, which has no remaining purpose once the bound translator exists. The `ws.t` half has no naming collision and can land independently; **the `req.t` half is blocked until i18next is removed**, because `i18next-http-middleware` already augments Express's `Request` with a conflicting `t: TFunction`. `getScriptTranslations(component, lang)` stays exported as the low-level primitive the Proxy delegates to and the bare-language escape hatch.
-- **Cookie renamed.** The `i18next` cookie (which stores the user's manual language override) is renamed to something system-neutral. Update any references in client code and socket metadata at the same time.
-- **`?lng=` query parameter dropped.** The query-string override is removed. Reason: ToS / Privacy are English-only, and a sticky non-English cookie shouldn't be bypassable per-request (it would let users land on the English ToS in a way the design intentionally prevents).
+- **Legacy `translate.ts` functions deleted.** `getTranslation(key, lang)` and `getTranslationForReq(key, req)` are removed along with i18next — they front the old monolith TOML system. Every current call site holds a `req` or a `ws`, so they migrate onto the request/connection-bound translations accessors (`req.t` / `ws.t`, below); the rare future caller that holds only a bare language code (e.g. a queued email sender resolving the language from the DB) uses the exported `getScriptTranslations(component, lang)` primitive directly.
+- **Connection-bound translations (`ws.t`) + `getScriptTranslationsForReq` deletion.** `req.t` is already **shipped** (see [Server-emitted response strings](#server-emitted-response-strings)). What remains: build `ws.t` — a per-connection `ScriptTranslations` accessor from the socket's cookie language — migrate the few remaining socket call sites onto it, then **delete `getScriptTranslationsForReq`**, which has no remaining purpose. `getScriptTranslations(component, lang)` stays exported as the primitive both accessors delegate to. (The old concern that `i18next-http-middleware` augments `Request.t` proved moot — nothing imports the package, so its global augmentation never applied.)
 - **Legacy loader deleted.** `src/server/config/translationLoader.ts` is removed. `componentTranslationLoader.ts` is renamed (e.g. to `translationLoader.ts`) since it's the only one left.
 - **Legacy type generator removed.** `scripts/generate-translation-types.ts` is deleted and dropped from the `generate:types` npm script. Only `generate-component-translation-types.ts` remains.
 - **Legacy type files deleted.** `src/types/translations.ts` is removed. `../types/**/*` is removed from the `include` arrays of the server and client tsconfigs. The `LegacyClientTranslations` type and the `translations` global declaration in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts) are deleted (they only exist to type EJS-era pages still using the flat-file `translations` object); `const t: ScriptTranslations` stays.
@@ -146,7 +142,8 @@ When working on this refactor, the migration approach in todo.md is: localize ea
 | Loader, getters, deepMerge, XSS  | [src/server/config/componentTranslationLoader.ts](../../src/server/config/componentTranslationLoader.ts) |
 | Boot wiring                      | [src/server/config/i18n.ts](../../src/server/config/i18n.ts)         |
 | Constants (folder, default lang) | [src/server/config/translationconfig.ts](../../src/server/config/translationconfig.ts) |
-| Language resolution              | [src/server/utility/translate.ts](../../src/server/utility/translate.ts) |
+| Language resolution              | [src/server/middleware/resolveLanguage.ts](../../src/server/middleware/resolveLanguage.ts) |
+| Request-bound translations (`req.t`) | [src/server/middleware/reqTranslations.ts](../../src/server/middleware/reqTranslations.ts) |
 | Per-request `res.locals` setup   | [src/server/routes/root.ts](../../src/server/routes/root.ts)         |
 | Client-side `window.t` injection | [src/server/views/layout.njk](../../src/server/views/layout.njk)     |
 | Type generation                  | [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts) |
