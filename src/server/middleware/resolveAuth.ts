@@ -29,10 +29,14 @@ import {
  * sets req.memberInfo properties if it is valid (are signed in).
  * Further middleware can read these properties to not send
  * private information to unauthorized users.
+ * It also triggers session renewal to keep active users' sessions alive.
  *
  * Does DB work. Only use on routes that need authentication.
  */
 function resolveAuth(req: Request, res: Response, next: NextFunction): void {
+	// Idempotent: skip if auth was already resolved for this request
+	if (req.memberInfo !== undefined) return next();
+
 	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
 

@@ -2,13 +2,13 @@
 
 import type { Request, Response } from 'express';
 
-import { getErrorPageContext } from '../utility/renderContext.js';
+import { renderErrorPage } from './renderErrorPage.js';
 
 function send404(req: Request, res: Response): void {
 	res.status(404);
 	if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate') {
 		// Request accepts html AND is likely a browser, not a bot.
-		res.render('error.njk', getErrorPageContext(req, 404));
+		renderErrorPage(req, res, 404);
 	} else if (req.accepts('json')) {
 		res.json({ message: req.t.responses.errors.not_found });
 	} else {

@@ -2,8 +2,8 @@
 
 import type { Request, Response, NextFunction } from 'express';
 
+import { renderErrorPage } from './renderErrorPage.js';
 import { logEventsAndPrint } from './logEvents.js';
-import { getErrorPageContext } from '../utility/renderContext.js';
 
 /**
  * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
@@ -40,27 +40,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	try {
 		if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate') {
 			// Request accepts html AND is likely a browser, not a bot.
-			// Render the styled error page, content-negotiated.
-			const context = getErrorPageContext(req, status);
-			res.status(context.code).render(
-				'error.njk',
-				context,
-				// Handle render errors manually instead of next(err), which would re-enter this
-				// handler and could loop.
-				(renderErr: Error | null, html: string) => {
-					if (!renderErr) {
-						// No error, good to send the rendered page
-						res.send(html);
-					} else {
-						// Log the rendering error and return the plain message
-						logEventsAndPrint(
-							`Critical error rendering ${context.code} page: ${renderErr.stack}`,
-							'errLog.txt',
-						);
-						res.send(req.t.responses.errors.server_error);
-					}
-				},
-			);
+			renderErrorPage(req, res, status);
 		} else {
 			// Non-HTML (API) client. Echo the error's own message
 			// only when it is explicitly marked safe to expose.
