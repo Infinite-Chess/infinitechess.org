@@ -12,7 +12,6 @@ import path from 'path';
 import express from 'express';
 import i18next from 'i18next';
 import { handle } from 'i18next-http-middleware';
-import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
@@ -21,6 +20,7 @@ import apiRouter from '../routes/api.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
+import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
 import { setPrefsCookie } from '../api/Prefs.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
@@ -49,10 +49,8 @@ export function configureMiddleware(app: Express): void {
 	// Log every incoming request, even those with an unparseable body. Bodies are not logged.
 	app.use(reqLogger);
 
-	// This allows us to retrieve json-received-data as a parameter/data!
-	// This also ensures all requests with content-type "application/json" have a body as an object, even if empty.
-	// Increased to 2mb to support large editor position saves (ICN data up to 1MB)
-	app.use(express.json({ limit: '2mb' })); // Limit the size to avoid parsing excessively large objects. Beyond this should throw an error caught by our error handling middleware.
+	// Parse the request's JSON body and cookies into req.body / req.cookies.
+	app.use(requestParsers);
 
 	// Security stack: HTTPS enforcement, CSP headers, path-traversal blocking, and CORS.
 	app.use(security);
@@ -67,15 +65,6 @@ export function configureMiddleware(app: Express): void {
 	});
 	// Webhook endpoint for AWS Simple Email Service (SES) to notify us of bounces and complaints
 	app.post('/webhooks/ses', awsParser, handleSesWebhook);
-
-	/**
-	 * Allow processing urlencoded (FORM) data so that we can retrieve it as a parameter/variable.
-	 * (e.g. when the content-type header is 'application/x-www-form-urlencoded')
-	 */
-	app.use(express.urlencoded({ limit: '10kb', extended: false })); // Limit the size to avoid parsing excessively large objects
-
-	// Sets the req.cookies property
-	app.use(cookieParser());
 
 	// Serve public assets. (e.g. scripts, css, images, audio)
 	app.use(

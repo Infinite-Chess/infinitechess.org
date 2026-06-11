@@ -8,8 +8,8 @@ import { getScriptTranslationsForReq } from '../config/componentTranslationLoade
 
 /**
  * Express error handler. Reached by uncaught server errors (statusless or 5xx) and by errors that
- * carry an HTTP status — in practice only the body parsers (express.json / express.urlencoded),
- * which throw 400 / 413 / 415.
+ * carry an HTTP status — in practice only the JSON body parser (express.json),
+ * which throws 400 / 413 / 415.
  */
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): void {
 	const status = 'status' in err && typeof err.status === 'number' ? err.status : 500;
