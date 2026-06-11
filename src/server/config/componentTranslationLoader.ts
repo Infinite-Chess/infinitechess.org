@@ -13,18 +13,14 @@
  * to skip the `script.` prefix on every subtable header.
  */
 
-import type { Request } from 'express';
-import type { CustomWebSocket } from '../socket/socketUtility.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'smol-toml';
-import { WebSocket } from 'ws';
 import { FilterXSS, IFilterXSSOptions } from 'xss';
 
 import tconfig from './translationconfig.js';
-import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 
 // Types ---------------------------------------------------------------------
 
@@ -182,22 +178,6 @@ export function getScriptTranslations<C extends keyof ScriptTranslations>(
 	if (!langMap) throw new Error(`No translation component "${component}" found.`);
 	return ((langMap.get(lang) ?? langMap.get(tconfig.DEFAULT_LANGUAGE))?.script ??
 		{}) as ScriptTranslations[C];
-}
-
-/**
- * Same as {@link getScriptTranslations}, but resolves the language from an Express request
- * or a WebSocket connection. Convenience for runtime-emitted server strings where
- * the caller has a req/ws rather than a pre-resolved language code.
- */
-export function getScriptTranslationsForReq<C extends keyof ScriptTranslations>(
-	component: C,
-	reqOrWs: Request | CustomWebSocket,
-): ScriptTranslations[C] {
-	const lang =
-		(reqOrWs instanceof WebSocket
-			? reqOrWs.metadata.cookies.lang
-			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
-	return getScriptTranslations(component, lang);
 }
 
 /**
