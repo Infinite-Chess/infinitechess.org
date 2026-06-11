@@ -7,14 +7,14 @@
 
 import express from 'express';
 
-import { verifyJWT } from '../middleware/verifyJWT.js';
 import EditorSavesAPI from '../api/EditorSavesAPI.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 import { editorSaveLimiter, editorLoadLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
 // Every editor-saves route is private, auth is required.
-router.use(verifyJWT);
+router.use(resolveAuth);
 
 router.get('/', EditorSavesAPI.getSavedPositions);
 router.post('/', editorSaveLimiter, EditorSavesAPI.savePosition);

@@ -1,4 +1,4 @@
-// src/server/middleware/verifyJWT.ts
+// src/server/middleware/resolveAuth.ts
 
 /*
  * This module reads incoming requests, searching for a
@@ -32,12 +32,12 @@ import {
  *
  * Does DB work. Only use on routes that need authentication.
  */
-function verifyJWT(req: Request, res: Response, next: NextFunction): void {
+function resolveAuth(req: Request, res: Response, next: NextFunction): void {
 	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
 
-	const hasAccessToken = verifyAccessToken(req, res);
-	if (!hasAccessToken) verifyRefreshToken(req, res);
+	const hasAccessToken = tryAccessToken(req, res);
+	if (!hasAccessToken) tryRefreshToken(req, res);
 
 	next(); // Continue down the middleware waterfall
 }
@@ -48,7 +48,7 @@ function verifyJWT(req: Request, res: Response, next: NextFunction): void {
  *
  * Returns whether they have a valid access token or not.
  */
-function verifyAccessToken(req: Request, res: Response): boolean {
+function tryAccessToken(req: Request, res: Response): boolean {
 	const authHeader = req.headers.authorization;
 	if (!authHeader) return false; // No authentication header included
 	if (!authHeader.startsWith('Bearer ')) return false; // Authentication header doesn't look correct
@@ -81,7 +81,7 @@ function verifyAccessToken(req: Request, res: Response): boolean {
  * updates the connections `memberInfo` property if it is valid (are signed in).
  * Only call if they did not have a valid access token, as this performs database queries!
  */
-function verifyRefreshToken(req: Request, res: Response): void {
+function tryRefreshToken(req: Request, res: Response): void {
 	const cookies: ParsedCookies = req.cookies;
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
@@ -127,8 +127,8 @@ function verifyRefreshToken(req: Request, res: Response): void {
  * @param req
  * @param ws - The websocket object
  */
-function verifyJWTWebSocket(ws: CustomWebSocket): void {
-	verifyRefreshToken_WebSocket(ws);
+function resolveAuth_WebSocket(ws: CustomWebSocket): void {
+	tryRefreshToken_WebSocket(ws);
 }
 
 /**
@@ -137,7 +137,7 @@ function verifyJWTWebSocket(ws: CustomWebSocket): void {
  * @param ws - The websocket object
  * @returns true if a valid token was found.
  */
-function verifyRefreshToken_WebSocket(ws: CustomWebSocket): void {
+function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	const cookies = ws.metadata.cookies;
 
 	const refreshToken = cookies.jwt;
@@ -156,4 +156,4 @@ function verifyRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
 
-export { verifyJWT, verifyJWTWebSocket };
+export { resolveAuth, resolveAuth_WebSocket };

@@ -8,7 +8,7 @@ import express from 'express';
 
 import { initTranslations } from './config/i18n.js';
 import { configureNunjucks } from './config/nunjucks.js';
-import { configureMiddleware } from './middleware/middleware.js';
+import { configurePipeline } from './middleware/middleware.js';
 
 const app = express();
 
@@ -25,6 +25,6 @@ configureNunjucks(app);
 // this is in server.js, i18next is never initialized for tests.
 initTranslations();
 
-configureMiddleware(app); // Setup the middleware waterfall
+configurePipeline(app); // Assemble the request pipeline
 
 export default app;

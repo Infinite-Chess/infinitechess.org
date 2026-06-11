@@ -4,7 +4,7 @@ import express, { NextFunction, Request, Response } from 'express';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
-import { verifyJWT } from '../middleware/verifyJWT.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/createAccountController.js';
@@ -13,7 +13,7 @@ import { getBaseRenderContext } from '../utility/renderContext.js';
 const router = express.Router();
 
 // Page routes need auth state for SSR (header shows Profile/Logout vs Login/Register).
-router.use(verifyJWT);
+router.use(resolveAuth);
 
 // Resolve the user's language, and load component translations
 // for that language, and expose auth state to every template.

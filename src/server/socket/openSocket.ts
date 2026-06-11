@@ -18,8 +18,8 @@ import { onmessage } from './receiveSocketMessage.js';
 import { getClientIP } from '../utility/IP.js';
 import { executeSafely } from '../utility/errorGuard.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
-import { verifyJWTWebSocket } from '../middleware/verifyJWT.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
+import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
 import {
@@ -55,7 +55,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	}
 
 	// Initialize who they are. Member? Browser ID?...
-	verifyJWTWebSocket(ws); // Modifies ws.metadata.memberInfo if they are signed in to add the user_id, username, and roles properties.
+	resolveAuth_WebSocket(ws); // Modifies ws.metadata.memberInfo if they are signed in to add the user_id, username, and roles properties.
 
 	if (
 		ws.metadata.memberInfo.signedIn &&

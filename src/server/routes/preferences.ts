@@ -11,11 +11,11 @@
 import express from 'express';
 
 import { putPrefs } from '../api/Prefs.js';
-import { verifyJWT } from '../middleware/verifyJWT.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 
 const router = express.Router();
 
-router.use(verifyJWT);
+router.use(resolveAuth);
 
 router.put('/', putPrefs);
 

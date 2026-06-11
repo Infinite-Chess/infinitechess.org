@@ -7,12 +7,12 @@
 
 import express from 'express';
 
-import { verifyJWT } from '../middleware/verifyJWT.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 import { processCommand } from '../api/AdminPanel.js';
 
 const router = express.Router();
 
-router.use(verifyJWT);
+router.use(resolveAuth);
 
 router.post('/command', processCommand);
 

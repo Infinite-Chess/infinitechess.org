@@ -10,12 +10,12 @@
 
 import express from 'express';
 
-import { verifyJWT } from '../middleware/verifyJWT.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 import { postCheckmateBeaten } from '../api/PracticeProgress.js';
 
 const router = express.Router();
 
-router.use(verifyJWT);
+router.use(resolveAuth);
 
 router.put('/', postCheckmateBeaten);
 

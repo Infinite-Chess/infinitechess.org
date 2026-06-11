@@ -2,8 +2,8 @@
 
 /**
  * Assembles the server's HTTP request pipeline, in order:
- * global middleware → cookie-setters → routers (`/webhooks`, `/` pages, `/api` endpoints)
- * → 404 → error handler.
+ * global middleware → cookie-setters → routers (`/webhooks`,
+ * `/` pages, `/api` endpoints) → 404 → error handler.
  */
 
 import type { Express } from 'express';
@@ -26,15 +26,10 @@ import { rootRouter } from '../routes/root.js';
 // Functions -------------------------------------------------------------------------
 
 /**
- * Configures the Middleware Waterfall
- *
- * app.use adds the provided function to EVERY SINGLE router and incoming connection.
- * Each middleware function must call next() to go to the next middleware.
- * Connections that do not pass one middleware will not continue.
- *
+ * Assembles the request pipeline onto the app, in order.
  * @param app - The express application instance.
  */
-export function configureMiddleware(app: Express): void {
+export function configurePipeline(app: Express): void {
 	// Rate limit ALL incoming requests
 	app.use(rateLimit);
 

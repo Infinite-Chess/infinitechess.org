@@ -29,7 +29,7 @@ import { verifyPendingRegistration } from '../controllers/verifyAccountControlle
 
 const router = express.Router();
 
-// Account router (public — no verifyJWT, these are pre-login)
+// Account router (public — no resolveAuth, these are pre-login)
 router.use('/register', registerRouter);
 
 // Member router
@@ -58,7 +58,7 @@ router.post('/prepare-restart', handlePrepareRestart);
 
 router.post('/verify/:token', verifyPendingRegistration);
 
-// Routers that manage their own authentication (per-router or per-route verifyJWT) -
+// Routers that manage their own authentication (per-router or per-route resolveAuth) -
 
 router.use('/', authRouter); // login (public), logout + access-token (authed)
 router.use('/editor-saves', editorSavesRouter);

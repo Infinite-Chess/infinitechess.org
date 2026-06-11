@@ -4,17 +4,17 @@
  * Router for the leaderboards resource: ranked player listings.
  * Mounted at /api/leaderboards.
  *
- * Public to read, but verifyJWT runs per-route to populate the optional requester identity
- * (so a signed-in caller can also receive their own rank). verifyJWT doesn't reject anon callers.
+ * Public to read, but resolveAuth runs per-route to populate the optional requester identity
+ * (so a signed-in caller can also receive their own rank). resolveAuth doesn't reject anon callers.
  */
 
 import express from 'express';
 
-import { verifyJWT } from '../middleware/verifyJWT.js';
+import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getLeaderboardData } from '../api/LeaderboardAPI.js';
 
 const router = express.Router();
 
-router.get('/:leaderboard_id/top', verifyJWT, getLeaderboardData);
+router.get('/:leaderboard_id/top', resolveAuth, getLeaderboardData);
 
 export default router;
