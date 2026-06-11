@@ -217,13 +217,16 @@
 			<div class="language-dropdown dropdown hidden">
 				{{ sub_dropdown_title(t.settings.language) }}
 				<div class="dropdown-scrollable">
-					<div class="language-dropdown-item selected" value="en-US">
+					{% for option in languageOptions %}
+					{% set isSelected = option.code == lang %}
+					<div class="language-dropdown-item{% if isSelected %} selected{% endif %}" value="{{ option.code }}">
 						<div class="language-names">
-							<p class="name">English</p>
-							<p class="englishName">English</p>
+							<p class="name">{{ option.name }}</p>
+							<p class="englishName">{{ option.englishName }}</p>
 						</div>
-						<span class="checkmark">✓</span>
+						{% if isSelected %}<span class="checkmark">✓</span>{% endif %}
 					</div>
+					{% endfor %}
 				</div>
 			</div>
 
