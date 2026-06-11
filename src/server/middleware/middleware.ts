@@ -8,15 +8,14 @@
 
 import type { Express } from 'express';
 
-import path from 'path';
 import express from 'express';
 import i18next from 'i18next';
 import { handle } from 'i18next-http-middleware';
-import { fileURLToPath } from 'node:url';
 
 import send404 from './send404.js';
 import security from './security.js';
 import apiRouter from '../routes/api.js';
+import staticAssets from './staticAssets.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
@@ -26,10 +25,6 @@ import { setPrefsCookie } from '../api/Prefs.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
 import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
 import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
-
-// Constants -------------------------------------------------------------------------
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Functions -------------------------------------------------------------------------
 
@@ -66,31 +61,11 @@ export function configureMiddleware(app: Express): void {
 	// Webhook endpoint for AWS Simple Email Service (SES) to notify us of bounces and complaints
 	app.post('/webhooks/ses', awsParser, handleSesWebhook);
 
-	// Serve public assets. (e.g. scripts, css, images, audio)
-	app.use(
-		express.static(path.join(__dirname, '../../client'), {
-			setHeaders(res, filePath) {
-				if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
-					// All JS and CSS files are content-hashed by esbuild (e.g. index-D3TD6A64.js).
-					// The hash changes when content changes, so cached URLs never go stale.
-					res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-				} else {
-					// Other static assets (images, svgs, audio, fonts) are cached for 1 year
-					// but not immutable — bump ?v=N in templates to bust the cache when they change.
-					res.setHeader('Cache-Control', 'public, max-age=31536000');
-				}
-			},
-		}),
-	);
+	// Serve static files: the built client bundle and the ACME challenge directory.
+	app.use(staticAssets);
 
 	// Every request beyond this point will not be for a resource like a script or image,
 	// but it will be a request for an HTML or API
-
-	// Directory required for the ACME (Automatic Certificate Management Environment) protocol used by Certbot to validate your domain ownership.
-	app.use(
-		'/.well-known/acme-challenge',
-		express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')),
-	);
 
 	// This sets the 'browser-id' cookie on every request for an HTML file
 	app.use(assignOrRenewBrowserID);
