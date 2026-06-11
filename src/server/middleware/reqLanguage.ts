@@ -43,7 +43,9 @@ let baseToRegional = new Map<string, string>();
  */
 export function initLanguageResolution(): void {
 	baseToRegional = new Map();
-	for (const tag of getSupportedLanguages()) {
+	// Sort so the variant chosen per base is deterministic (not dependent on component
+	// load order) — e.g. for base "zh", "zh-CN" is picked over "zh-TW".
+	for (const tag of [...getSupportedLanguages()].sort()) {
 		const base = tag.split('-')[0]!;
 		if (!baseToRegional.has(base)) baseToRegional.set(base, tag); // first (sorted) variant per base
 	}
