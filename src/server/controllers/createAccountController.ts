@@ -22,7 +22,6 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendEmailConfirmation } from './emailController.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
@@ -248,7 +247,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		res.sendStatus(200);
 	} catch {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 		return;
 	}
@@ -497,7 +496,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 		}
 	} catch {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 		return false;
 	}

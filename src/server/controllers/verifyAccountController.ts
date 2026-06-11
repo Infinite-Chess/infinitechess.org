@@ -11,7 +11,6 @@ import type { PendingRegistrationRecord } from '../database/pendingRegistrationM
 
 import { logEvents } from '../middleware/logEvents.js';
 import { promotePendingRegistration } from '../database/memberManager.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { getPendingRegistrationByVerificationToken } from '../database/pendingRegistrationManager.js';
 
 // Functions -------------------------------------------------------------------------
@@ -76,7 +75,7 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 	} catch {
 		// Allows a retry
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 	}
 }

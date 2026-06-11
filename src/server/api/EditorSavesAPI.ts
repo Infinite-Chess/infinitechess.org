@@ -13,7 +13,6 @@ import editorutil from '../../shared/util/editorutil.js';
 import { logZodError } from '../utility/zodlogger.js';
 import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 // Constants ---------------------------------------------------------------------------------
 
@@ -72,7 +71,7 @@ const PositionNameParamSchema = z.strictObject({
 function getSavedPositions(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		}); // `memberInfo` should have been set by auth middleware, even if not signed in
 		return;
 	}
@@ -80,7 +79,7 @@ function getSavedPositions(req: Request, res: Response): void {
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+			message: req.t.responses.editor_saves.must_be_signed_in,
 		});
 		return;
 	}
@@ -98,7 +97,7 @@ function getSavedPositions(req: Request, res: Response): void {
 			'errLog.txt',
 		);
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		});
 	}
 }
@@ -113,7 +112,7 @@ function getSavedPositions(req: Request, res: Response): void {
 function savePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
@@ -121,7 +120,7 @@ function savePosition(req: Request, res: Response): void {
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+			message: req.t.responses.editor_saves.must_be_signed_in,
 		});
 		return;
 	}
@@ -146,7 +145,7 @@ function savePosition(req: Request, res: Response): void {
 		const isExistingPosition = editorSavesManager.doesSavedPositionExist(userId, name);
 		if (atLimit && !isExistingPosition) {
 			res.status(403).json({
-				message: getScriptTranslationsForReq('responses', req).editor_saves.limit_reached,
+				message: req.t.responses.editor_saves.limit_reached,
 			});
 			return;
 		}
@@ -169,7 +168,7 @@ function savePosition(req: Request, res: Response): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		});
 	}
 }
@@ -182,7 +181,7 @@ function savePosition(req: Request, res: Response): void {
 function getPosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
@@ -190,7 +189,7 @@ function getPosition(req: Request, res: Response): void {
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+			message: req.t.responses.editor_saves.must_be_signed_in,
 		});
 		return;
 	}
@@ -214,8 +213,7 @@ function getPosition(req: Request, res: Response): void {
 
 		if (!position) {
 			res.status(404).json({
-				message: getScriptTranslationsForReq('responses', req).editor_saves
-					.position_not_found,
+				message: req.t.responses.editor_saves.position_not_found,
 			});
 			return;
 		}
@@ -236,7 +234,7 @@ function getPosition(req: Request, res: Response): void {
 			'errLog.txt',
 		);
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		});
 	}
 }
@@ -249,7 +247,7 @@ function getPosition(req: Request, res: Response): void {
 function deletePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		}); // memberInfo should have been set by auth middleware, even if not signed in
 		return;
 	}
@@ -257,7 +255,7 @@ function deletePosition(req: Request, res: Response): void {
 	// Check if user is authenticated
 	if (!req.memberInfo.signedIn) {
 		res.status(401).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.must_be_signed_in,
+			message: req.t.responses.editor_saves.must_be_signed_in,
 		});
 		return;
 	}
@@ -281,8 +279,7 @@ function deletePosition(req: Request, res: Response): void {
 
 		if (result.changes === 0) {
 			res.status(404).json({
-				message: getScriptTranslationsForReq('responses', req).editor_saves
-					.position_not_found,
+				message: req.t.responses.editor_saves.position_not_found,
 			});
 			return;
 		}
@@ -296,7 +293,7 @@ function deletePosition(req: Request, res: Response): void {
 			'errLog.txt',
 		);
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).editor_saves.server_error,
+			message: req.t.responses.editor_saves.server_error,
 		});
 	}
 }

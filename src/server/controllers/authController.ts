@@ -14,7 +14,6 @@ import bcrypt from 'bcrypt';
 
 import { logEvents } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import {
 	getBrowserAgent,
 	onCorrectPassword,
@@ -65,7 +64,7 @@ async function testPasswordForRequest(
 			const attemptedIdentity = record?.username ?? searchValue;
 			logEvents(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts.txt');
 			res.status(401).json({
-				message: getScriptTranslationsForReq('responses', req).auth.invalid_credentials,
+				message: req.t.responses.auth.invalid_credentials,
 			}); // Unauthorized — generic message to avoid account enumeration
 			onIncorrectPassword(browserAgent, attemptedIdentity);
 			return undefined;
@@ -77,7 +76,7 @@ async function testPasswordForRequest(
 	} catch {
 		// DB error (already logged)
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 		return undefined;
 	}

@@ -10,7 +10,6 @@ import { interpolate } from '../../shared/util/interpolate.js';
 
 import { getClientIP } from '../utility/IP.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 
 // Types ----------------------------------------------------------------------------
 
@@ -73,7 +72,7 @@ function rateLimitLogin(req: Request, res: Response, browserAgent: string): bool
 	if (timeSinceLastAttemptsSecs <= loginAttemptData[browserAgent].cooldownTimeSecs) {
 		// Still on cooldown
 
-		const authT = getScriptTranslationsForReq('responses', req).auth;
+		const authT = req.t.responses.auth;
 		const login_cooldown = Math.floor(
 			loginAttemptData[browserAgent].cooldownTimeSecs - timeSinceLastAttemptsSecs,
 		);

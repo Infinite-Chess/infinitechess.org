@@ -14,7 +14,6 @@ import type { Request, Response } from 'express';
 
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { testPasswordForRequest } from './authController.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
@@ -48,7 +47,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		// Send a generic error response to the client.
 		// Avoid sending detailed error messages to the client for security reasons.
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).auth.login_failed,
+			message: req.t.responses.auth.login_failed,
 		});
 		return;
 	}

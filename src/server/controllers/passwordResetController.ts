@@ -9,7 +9,6 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslationForReq } from '../utility/translate.js';
 import { sendPasswordResetEmail } from './emailController.js';
-import { getScriptTranslationsForReq } from '../config/componentTranslationLoader.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
@@ -101,7 +100,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			(error instanceof Error ? error.stack : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 	}
 }
@@ -210,7 +209,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			'Reset password error: ' + (error instanceof Error ? error.stack : String(error));
 		logEventsAndPrint(errorMessage, 'errLog.txt');
 		res.status(500).json({
-			message: getScriptTranslationsForReq('responses', req).errors.server_error,
+			message: req.t.responses.errors.server_error,
 		});
 	}
 }
