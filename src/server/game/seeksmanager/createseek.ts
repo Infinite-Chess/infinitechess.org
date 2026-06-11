@@ -39,7 +39,6 @@ import { AuthSeek } from './seekutility.js';
 import editorSavesManager from '../../database/editorSavesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
-import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import {
 	existingSeekHasID,
@@ -84,8 +83,7 @@ const createseekschem = z
 async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessage): Promise<void> {
 	if (isSocketInAnActiveGame(ws)) {
 		// Can't create seek because they are already in a game
-		const t = getScriptTranslationsForReq('responses', ws);
-		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
+		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Reject rated seeks from unverified/signed-out users
@@ -93,8 +91,7 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 		messageContents.mode === 'rated' &&
 		!(ws.metadata.memberInfo.signedIn && ws.metadata.verified)
 	) {
-		const t = getScriptTranslationsForReq('responses', ws);
-		sendSocketMessage(ws, 'general', 'notify', t.seeks.rated_requires_verified);
+		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_verified);
 		return;
 	}
 
@@ -157,14 +154,22 @@ async function getSeekFromWebsocketMessageContents(
 	if (variant.kind === 'cloudSave') {
 		// cloudSave seeks require the user to be signed in (cloud saves belong to an account).
 		if (!owner.signedIn) {
-			const t = getScriptTranslationsForReq('responses', ws);
-			sendSocketMessage(ws, 'general', 'notifyerror', t.seeks.cloud_requires_sign_in);
+			sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				ws.t.responses.seeks.cloud_requires_sign_in,
+			);
 			return;
 		}
 		const record = editorSavesManager.getSavedPositionICN(variant.name, owner.user_id);
 		if (record === undefined) {
-			const t = getScriptTranslationsForReq('responses', ws);
-			return sendSocketMessage(ws, 'general', 'notifyerror', t.seeks.cloud_not_found);
+			return sendSocketMessage(
+				ws,
+				'general',
+				'notifyerror',
+				ws.t.responses.seeks.cloud_not_found,
+			);
 		}
 		// Skip decompression if the compressed payload is already too large to be a legal seek.
 		if (record.icn.length > POSITION_STRING_THRESHOLD) {
@@ -220,8 +225,7 @@ function validateIcnSeekContent(content: string): IcnSeekErrorCode | null {
 
 /** Localizes a position/ICN error code for the websocket's `notify` channel. */
 function localizePositionError(code: IcnSeekErrorCode, ws: CustomWebSocket): string {
-	const shared = getScriptTranslationsForReq('shared', ws);
-	return shared.position_errors[code] ?? code;
+	return ws.t.shared.position_errors[code] ?? code;
 }
 
 export { createSeek, createseekschem };

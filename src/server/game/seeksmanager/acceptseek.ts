@@ -18,7 +18,6 @@ import { memberInfoEq } from './seekutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
-import { getScriptTranslationsForReq } from '../../config/componentTranslationLoader.js';
 import {
 	getSeekAndIndexByID,
 	deleteSeekByIndex,
@@ -41,15 +40,13 @@ type AcceptSeekMessage = z.infer<typeof acceptseekschem>;
 function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): void {
 	// { id, isPrivate }
 	if (isSocketInAnActiveGame(ws)) {
-		const t = getScriptTranslationsForReq('responses', ws);
-		return sendSocketMessage(ws, 'general', 'notify', t.seeks.already_in_game);
+		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
 	// Does the seek still exist?
 	const seekAndIndex = getSeekAndIndexByID(messageContents);
 	if (!seekAndIndex) {
-		const t = getScriptTranslationsForReq('responses', ws);
-		sendSocketMessage(ws, 'general', 'notify', t.seeks.game_aborted);
+		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.game_aborted);
 		return;
 	}
 
@@ -68,8 +65,12 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 
 	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the seek is RATED)
 	if (seek.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
-		const t = getScriptTranslationsForReq('responses', ws);
-		return sendSocketMessage(ws, 'general', 'notify', t.seeks.rated_requires_verified);
+		return sendSocketMessage(
+			ws,
+			'general',
+			'notify',
+			ws.t.responses.seeks.rated_requires_verified,
+		);
 	}
 
 	// Accept the seek!
