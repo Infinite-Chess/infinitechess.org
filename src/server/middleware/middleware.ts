@@ -42,11 +42,11 @@ export function configureMiddleware(app: Express): void {
 	// with an unparseable body. Bodies are not logged.
 	app.use(reqLogger);
 
-	// Parse the request's JSON body and cookies into req.body / req.cookies.
-	app.use(requestParsers);
-
 	// Security stack: HTTPS enforcement, CSP headers, path-traversal blocking, and CORS.
 	app.use(security);
+
+	// Parse the request's JSON body and cookies into req.body / req.cookies.
+	app.use(requestParsers);
 
 	// Language detection. This sets req.i18n and req.i18n.resolvedLanguage.
 	// FUTURE: replace i18next with our own accept-language parsing middleware here. It can read
@@ -58,6 +58,7 @@ export function configureMiddleware(app: Express): void {
 
 	// Serve static files: the built client bundle and the ACME challenge directory.
 	app.use(staticAssets);
+
 	// Set the per-HTML-request cookies (browser-id, preferences, checkmates_beaten).
 	app.use(htmlCookies);
 
