@@ -43,6 +43,16 @@ type ComponentEntry = {
 	script: Record<string, any>;
 };
 
+/** A supported language's selectable entry for the header language dropdown. */
+export type LanguageOption = {
+	/** The language code, e.g. "de-DE". */
+	code: string;
+	/** The autonym (the language's name written in itself), e.g. "Deutsch". */
+	name: string;
+	/** The English exonym, e.g. "German". */
+	englishName: string;
+};
+
 // Constants -----------------------------------------------------------------
 
 const englishTOMLName = `${tconfig.DEFAULT_LANGUAGE}.toml`;
@@ -76,6 +86,9 @@ let componentStore: ComponentStore | null = null;
 
 /** Supported-language list, computed from all languages present in any component. */
 let supportedLanguages: string[] = [];
+
+/** Language-selector options (code + display names) for the header dropdown. */
+let languageOptions: LanguageOption[] = [];
 
 // Loading Translations ------------------------------------------------------------
 
@@ -128,6 +141,16 @@ export function loadComponentTranslations(): void {
 		for (const lang of langMap.keys()) langs.add(lang);
 	}
 	supportedLanguages = [...langs];
+
+	// Build the language-selector options once, joining each supported code with its display metadata.
+	languageOptions = supportedLanguages.map((code) => {
+		const meta = tconfig.LANGUAGE_METADATA[code];
+		if (!meta)
+			throw new Error(
+				`Supported language "${code}" has no LANGUAGE_METADATA entry in translationconfig.ts.`,
+			);
+		return { code, name: meta.name, englishName: meta.englishName };
+	});
 }
 
 /**
@@ -183,6 +206,14 @@ export function getScriptTranslationsForReq<C extends keyof ScriptTranslations>(
  */
 export function getSupportedLanguages(): string[] {
 	return supportedLanguages;
+}
+
+/**
+ * Returns the language-selector options — each supported language's
+ * code and display names — for rendering the header language dropdown.
+ */
+export function getLanguageOptions(): LanguageOption[] {
+	return languageOptions;
 }
 
 // Utility ---------------------------------------------------------------------

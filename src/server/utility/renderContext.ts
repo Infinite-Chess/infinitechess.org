@@ -7,21 +7,26 @@
  */
 
 import type { Request } from 'express';
+import type { LanguageOption } from '../config/componentTranslationLoader.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { getLanguageToServe } from '../middleware/resolveLanguage.js';
 import {
+	getLanguageOptions,
 	getScriptTranslations,
 	getTemplateTranslations,
 } from '../config/componentTranslationLoader.js';
 
 /** The locals every SSR'd page template requires to render. */
 type BaseRenderContext = {
+	/** The resolved language to serve for the request. */
 	lang: string;
 	templateT: (component: string) => Record<string, any>;
 	scriptT: <C extends keyof ScriptTranslations>(component: C) => ScriptTranslations[C];
 	memberInfo: Request['memberInfo'];
+	/** The supported languages (code + display names) for the header language dropdown. */
+	languageOptions: LanguageOption[];
 };
 
 /** Returns the locals every SSR'd page template requires to render. */
@@ -34,6 +39,7 @@ export function getBaseRenderContext(req: Request): BaseRenderContext {
 			getScriptTranslations(component, lang),
 		// Fallback to signed out state if memberInfo was forgotten to be set (or a crash happened before it was set)
 		memberInfo: req.memberInfo ?? { signedIn: false },
+		languageOptions: getLanguageOptions(),
 	};
 }
 
