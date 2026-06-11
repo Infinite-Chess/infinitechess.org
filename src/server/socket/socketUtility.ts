@@ -83,7 +83,7 @@ function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['me
 		memberInfo: jsutil.deepCopyObject(metadata.memberInfo),
 		cookies: {
 			'browser-id': ws.metadata.cookies['browser-id'],
-			i18next: ws.metadata.cookies['i18next'],
+			lang: ws.metadata.cookies['lang'],
 		}, // Only copy these 2 cookies, NOT their refresh token!!!
 		verified: metadata.verified,
 		id: metadata.id,

@@ -7,7 +7,6 @@
 import guiplay from './guiplay.js';
 import guipractice from './guipractice.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
-import languagedropdown from '../../components/header/dropdowns/languagedropdown.js';
 
 // Variables ----------------------------------------------------------------------------
 
@@ -66,7 +65,7 @@ function callback_Practice(_event: Event): void {
 
 function callback_Guide(_event: Event): void {
 	// Navigate to the guide page
-	window.location.href = languagedropdown.addLngQueryParamToLink(`/guide`);
+	window.location.href = `/guide`;
 }
 
 function callback_BoardEditor(_event: Event): void {

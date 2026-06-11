@@ -1,8 +1,7 @@
 // src/client/scripts/esm/components/header/dropdowns/languagedropdown.ts
 
-// This script selects new languages when we click a language in the language dropdown.
-// It also appends the lng query param to all header navigation links.
-// And it removes the lng query param from the url after loading.
+// This script selects new languages when we click a language in the language dropdown,
+// storing the choice in the "lang" cookie that the server reads to localize each page.
 
 import docutil from '../../../util/docutil.js';
 
@@ -12,39 +11,10 @@ const languageDropdown = document.querySelector('.language-dropdown')!;
 const dropdownItems = document.querySelectorAll('.language-dropdown-item');
 const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title')!;
 
+/** How long the language-override cookie persists, in days. */
+const LANGUAGE_COOKIE_DAYS = 365;
+
 // Functions ---------------------------------------------------------------------------------
-
-/**
- * Modifies the provided URL to include the "lng" query parameter based on the i18next cookie.
- * @param href - The original URL.
- * @returns The modified URL with the "lng" query parameter.
- */
-function addLngQueryParamToLink(href: string): string {
-	// Get the value of the i18next cookie
-	const lng = docutil.getCookieValue('i18next');
-	if (!lng) return href;
-
-	// Create a URL object from the given href
-	const url = new URL(href, window.location.origin);
-
-	// Add or update the "lng" query parameter
-	url.searchParams.set('lng', lng);
-
-	// Return the modified URL as a string
-	return url.toString();
-}
-
-/** This block auto-removes the "lng" query parameter from the url, visually, without refreshing */
-function removeLngQueryParam(): void {
-	// Create a URL object from the current window location
-	const url = new URL(window.location.href);
-
-	// Remove the "lng" query parameter
-	url.searchParams.delete('lng');
-
-	// Update the browser's URL without refreshing the page
-	window.history.replaceState({}, '', url);
-}
 
 function open(): void {
 	languageDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
@@ -71,21 +41,13 @@ function closeListeners(): void {
 function onLanguageClicked(event: Event): void {
 	const item = event.currentTarget as HTMLElement;
 	const selectedLanguage = item.getAttribute('value')!; // Get the selected language code
-	docutil.updateCookie('i18next', selectedLanguage, 365);
+	docutil.updateCookie('lang', selectedLanguage, LANGUAGE_COOKIE_DAYS);
 
-	// Modify the URL to include the "lng" query parameter
-	const url = new URL(window.location.href);
-	url.searchParams.set('lng', selectedLanguage);
-
-	// Update the browser's URL without reloading the page
-	window.history.replaceState({}, '', url);
-
-	// Reload the page
+	// Reload so the server re-renders the page in the newly selected language.
 	location.reload();
 }
 
 export default {
-	addLngQueryParamToLink,
 	open,
 	close,
 };

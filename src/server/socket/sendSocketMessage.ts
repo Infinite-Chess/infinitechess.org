@@ -144,8 +144,7 @@ function sendNotify(
 	translationCode: TranslationKeys,
 	{ replyto }: { replyto?: number } = {},
 ): void {
-	const i18next = ws.metadata.cookies.i18next;
-	const text = getTranslation(translationCode, i18next);
+	const text = getTranslation(translationCode, ws.metadata.cookies.lang);
 	sendSocketMessage(ws, 'general', 'notify', text, replyto);
 }
 
@@ -159,7 +158,7 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys):
 		ws,
 		'general',
 		'notifyerror',
-		getTranslation(translationCode, ws.metadata.cookies.i18next),
+		getTranslation(translationCode, ws.metadata.cookies.lang),
 	);
 }
 

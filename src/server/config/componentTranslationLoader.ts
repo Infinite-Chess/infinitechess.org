@@ -195,7 +195,7 @@ export function getScriptTranslationsForReq<C extends keyof ScriptTranslations>(
 ): ScriptTranslations[C] {
 	const lang =
 		(reqOrWs instanceof WebSocket
-			? reqOrWs.metadata.cookies.i18next
+			? reqOrWs.metadata.cookies.lang
 			: getLanguageToServe(reqOrWs)) ?? tconfig.DEFAULT_LANGUAGE;
 	return getScriptTranslations(component, lang);
 }

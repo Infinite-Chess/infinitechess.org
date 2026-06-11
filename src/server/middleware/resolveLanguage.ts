@@ -14,7 +14,7 @@ import tconfig from '../config/translationconfig.js';
 import { getSupportedLanguages } from '../config/componentTranslationLoader.js';
 
 /** The cookie storing the user's manual language override. */
-const LANGUAGE_COOKIE = 'i18next';
+const LANGUAGE_COOKIE = 'lang';
 
 /**
  * Supported full tags ("en-US") plus their base tags ("en"), offered
@@ -60,8 +60,10 @@ function resolveLanguageForRequest(req: Request): string {
 }
 
 /** Resolves and caches req.lang for the request, then continues. */
-export function resolveLanguage(req: Request, _res: Response, next: NextFunction): void {
+export function resolveLanguage(req: Request, res: Response, next: NextFunction): void {
 	req.lang = resolveLanguageForRequest(req);
+	// Make sure the cookie's former name is cleared.
+	if (req.cookies['i18next'] !== undefined) res.clearCookie('i18next');
 	next();
 }
 

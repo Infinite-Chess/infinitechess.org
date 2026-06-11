@@ -9,7 +9,6 @@ import type { Rating, ServerUsernameContainer } from '../../../../shared/types.j
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 
 import docutil from './docutil.js';
-import languagedropdown from '../components/header/dropdowns/languagedropdown.js';
 
 // Types ----------------------------------------------------------------------------------------
 
@@ -89,9 +88,7 @@ function createUsernameContainer(
 	if (type === 'player') {
 		// Hyperlink
 		const usernameHyper = document.createElement('a');
-		usernameHyper.href = languagedropdown.addLngQueryParamToLink(
-			`/member/${username.value.toLowerCase()}`,
-		);
+		usernameHyper.href = `/member/${username.value.toLowerCase()}`;
 		usernameHyper.textContent = username.value;
 		if (username.openInNewWindow) usernameHyper.target = '_blank';
 		usernameHyper.classList.add('username');

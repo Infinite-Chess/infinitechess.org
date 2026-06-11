@@ -39,8 +39,8 @@ type AuthMemberInfo = MemberInfo & { browser_id: string };
 interface ParsedCookies {
 	/** The unique id of the browser. Almost always defined, but may not be on first connection, or if client's cookies are disabled. */
 	'browser-id'?: string;
-	/** Their preferred language. For example, 'en-US'. This is determined by their `i18next` cookie. */
-	i18next?: string;
+	/** Their preferred language override. For example, 'de-DE'. */
+	lang?: string;
 	/** Their refresh/session token, if they are signed in. Can be decoded to obtain their payload. */
 	jwt?: string;
 	/**
