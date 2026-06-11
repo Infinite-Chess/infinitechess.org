@@ -15,16 +15,14 @@ import { handle } from 'i18next-http-middleware';
 import send404 from './send404.js';
 import security from './security.js';
 import apiRouter from '../routes/api.js';
+import htmlCookies from './htmlCookies.js';
 import staticAssets from './staticAssets.js';
 import errorHandler from './errorHandler.js';
 import { reqLogger } from './logEvents.js';
 import { rateLimit } from './rateLimit.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
-import { setPrefsCookie } from '../api/Prefs.js';
 import { handleSesWebhook } from '../controllers/awsWebhook.js';
-import { assignOrRenewBrowserID } from '../controllers/browserIDManager.js';
-import { setPracticeProgressCookie } from '../api/PracticeProgress.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -67,12 +65,8 @@ export function configureMiddleware(app: Express): void {
 	// Every request beyond this point will not be for a resource like a script or image,
 	// but it will be a request for an HTML or API
 
-	// This sets the 'browser-id' cookie on every request for an HTML file
-	app.use(assignOrRenewBrowserID);
-	// This sets the user 'preferences' cookie on every request for an HTML file
-	app.use(setPrefsCookie);
-	// This sets the user 'checkmates_beaten' cookie on every request for an HTML file
-	app.use(setPracticeProgressCookie);
+	// Set the per-HTML-request cookies (browser-id, preferences, checkmates_beaten).
+	app.use(htmlCookies);
 
 	// Provide a route
 
