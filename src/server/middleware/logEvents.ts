@@ -1,19 +1,33 @@
 // src/server/middleware/logEvents.ts
 
+/**
+ * Writes all of our log files, appending one timestamped line per event.
+ *
+ * Lines are tagged with the correlation ID of the trigger that caused them:
+ * 'R…' = an HTTP request, 'W…' = an incoming websocket message (see
+ * requestContext.ts). Every line one trigger produces — across ALL log files —
+ * shares its ID. The trigger's own entry is in reqLog.txt (R) or wsInLog.txt (W).
+ *
+ * A line timestamped well after its trigger is a DEFERRED effect, fired by a
+ * timer the trigger scheduled (e.g. an AFK auto-resign). A '---------' ID means
+ * no request caused the line: startup, scheduled tasks, ws connection handshakes.
+ *
+ * Don't confuse correlation IDs with socket IDs (`of ID "..."`), which tie a
+ * CONNECTION's messages together rather than one trigger's effects.
+ */
+
 import type { IncomingMessage } from 'node:http';
 import type { Request, Response } from 'express';
 
 import fs from 'fs';
 import path from 'path';
 import { format } from 'date-fns';
-import { v4 as uuid } from 'uuid';
 import { promises as fsPromises } from 'fs';
 
 import paths from '../config/paths.js';
 import { getClientIP } from '../utility/IP.js';
+import { getRequestID } from './requestContext.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
-
-const giveLoggedItemsUUID = false;
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
@@ -26,9 +40,10 @@ async function logEvents(message: string, logName: string): Promise<void> {
 	if (!logName) return console.trace('Log name MUST be provided when logging an event!');
 
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
-	const logItem = giveLoggedItemsUUID
-		? `${dateTime}   ${uuid()}   ${message}\n` // With unique UUID
-		: `${dateTime}   ${message}\n`;
+	// Tag the line with the ID of the request/socket-message that triggered
+	// it, if any, so all log lines it produced (across files) can be joined.
+	const requestID = getRequestID() ?? '---------';
+	const logItem = `${dateTime}  ${requestID}   ${message}\n`;
 
 	try {
 		fs.mkdirSync(paths.LOGS_DIR, { recursive: true });
@@ -52,7 +67,7 @@ async function logEventsAndPrint(message: string, logName: string): Promise<void
 }
 
 /** Middleware that logs the incoming request, then calls `next()`. */
-function reqLogger(req: Request, res: Response, next: () => void): void {
+function reqLogger(req: Request, _res: Response, next: () => void): void {
 	const clientIP = getClientIP(req) || 'Unknown ip';
 
 	const origin = req.headers.origin || 'Unknown origin';

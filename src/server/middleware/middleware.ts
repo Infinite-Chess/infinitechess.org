@@ -19,6 +19,7 @@ import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
+import { assignRequestID } from './requestContext.js';
 
 // Functions -------------------------------------------------------------------------
 
@@ -27,6 +28,9 @@ import { rootRouter } from '../routes/root.js';
  * @param app - The express application instance.
  */
 export function configurePipeline(app: Express): void {
+	// Give every request a correlation ID that logEvents tags its log lines with.
+	app.use(assignRequestID);
+
 	// Rate limit ALL incoming requests
 	app.use(rateLimit);
 

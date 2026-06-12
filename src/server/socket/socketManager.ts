@@ -232,7 +232,7 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 // Miscellaneous ---------------------------------------------------------------------------
 
 function generateUniqueIDForSocket(): string {
-	return uuid.genUniqueID(4, websocketConnections);
+	return uuid.genUniqueID(8, websocketConnections); // Matches request IDs' length
 }
 
 export {

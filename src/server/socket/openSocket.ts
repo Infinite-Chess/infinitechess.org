@@ -17,6 +17,7 @@ import socketUtility from './socketUtility.js';
 import { onmessage } from './receiveSocketMessage.js';
 import { getClientIP } from '../utility/IP.js';
 import { executeSafely } from '../utility/errorGuard.js';
+import { runWithRequestID } from '../middleware/requestContext.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
@@ -156,9 +157,14 @@ function closeIfInvalidAndAddMetadata(
  */
 function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
-		executeSafely(
-			() => onmessage(req, ws, message),
-			'Error caught within websocket on-message event:',
+		// Each incoming message gets its own correlation ID,
+		// tagging every log line its processing produces.
+		// WS-counterpart of app.use(assignRequestID) for HTTP requests.
+		runWithRequestID(() =>
+			executeSafely(
+				() => onmessage(req, ws, message),
+				'Error caught within websocket on-message event:',
+			),
 		);
 	});
 	ws.on('close', (code, reason) => {
