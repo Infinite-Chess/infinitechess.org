@@ -292,8 +292,8 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 	// At this point we know we WILL be snapping to something.
 	const { pointerCoords, snapDistSquares, closeLines, closestSnap } = ctx;
-  const gamefile = gameslot.getGamefile()!;
-  
+	const gamefile = gameslot.getGamefile()!;
+
 	/**
 	 * All intersection points of the highlight lines (drawn rays, preset rays, and legal moves)
 	 * within snapping distance of the mouse. If any, the closest takes priority.
