@@ -310,9 +310,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 		...line1,
 		...line2,
 	);
-	if (!intersectionBD) {
-		return; // Lines are parallel (shouldn't happen with perpendicular lines).
-	}
+	if (!intersectionBD) return; // Lines are parallel (shouldn't happen with perpendicular lines).
 
 	const intersectionWorld: DoubleCoords = space.convertCoordToWorldSpace(intersectionBD);
 	const hoveredCoords: Coords = space.roundCoords(intersectionBD);
