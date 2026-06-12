@@ -10,7 +10,7 @@ dismiss_button = "I'm experienced"
 
 [lobby]
 title = "Lobby" 
-viewer_count = "Viewer count"
+viewer_count = "Viewer count (other than you)"
 idle_overlay = "Hover to reconnect."
 
 [lobby.table]
