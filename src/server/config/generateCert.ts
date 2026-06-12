@@ -10,8 +10,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const certDir = path.join(__dirname, '..', '..', '..', 'cert');
 
 // Define the paths for the key and certificate files
-const keyPath = path.join(certDir, 'cert.key');
-const certPath = path.join(certDir, 'cert.pem');
+export const keyPath = path.join(certDir, 'cert.key');
+export const certPath = path.join(certDir, 'cert.pem');
 
 /** Generates a self-signed certificate. */
 function generateSelfSignedCertificate(): void {

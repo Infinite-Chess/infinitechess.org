@@ -1,26 +1,21 @@
 // src/server/config/certOptions.ts
 
 import fs from 'fs';
-import path from 'path';
 
-const pathToCertFolder = path.resolve('cert'); // Resolve results in an absolute path
+import { ensureSelfSignedCertificate, keyPath, certPath } from './generateCert.js';
 
 /**
- * Retrieves SSL/TLS certificate options based on the application's
- * build environment, including the certificate and private key.
+ * Retrieves SSL/TLS certificate options (a self-signed key + cert).
+ *
+ * This certificate only secures the loopback hop between cloudflared and this
+ * server — public TLS terminates at Cloudflare's edge, and cloudflared reaches
+ * the origin with `noTLSVerify`. So a self-signed cert is sufficient in every
+ * environment, and its validity is never checked by anything.
  */
 export function getCertOptions(): { key: Buffer; cert: Buffer } {
-	if (process.env['NODE_ENV'] !== 'production') {
-		// Use self-signed certificates for development environment
-		return {
-			key: fs.readFileSync(path.join(pathToCertFolder, 'cert.key')),
-			cert: fs.readFileSync(path.join(pathToCertFolder, 'cert.pem')),
-		};
-	} else {
-		// Use officially signed certificates for production environment
-		return {
-			key: fs.readFileSync(path.join(process.env['CERT_PATH'] ?? '', 'privkey.pem')),
-			cert: fs.readFileSync(path.join(process.env['CERT_PATH'] ?? '', 'fullchain.pem')),
-		};
-	}
+	ensureSelfSignedCertificate(); // Generates cert.key/cert.pem on first run if missing
+	return {
+		key: fs.readFileSync(keyPath),
+		cert: fs.readFileSync(certPath),
+	};
 }
