@@ -2,7 +2,7 @@
 
 import type { CookieOptions, Request, Response, NextFunction } from 'express';
 
-import uuid from '../../shared/util/uuid.js';
+import crypto from 'crypto';
 
 import { isBrowserIDBanned } from '../middleware/banned.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
@@ -43,7 +43,9 @@ function assignOrRenewBrowserID(req: Request, res: Response, next: NextFunction)
 }
 
 function giveBrowserID(req: Request, res: Response): void {
-	const id = uuid.generateID_Base62(6);
+	// Browser ids are the sole identity credential for signed-out users (guests
+	// in live games), so they should be unguessable. Use 'crypto' insteadof uuid.ts.
+	const id = crypto.randomBytes(16).toString('base64url');
 
 	// console.log(`Assigning new browser-id: "${id}" for url: ` + req.url + ' --------');
 
