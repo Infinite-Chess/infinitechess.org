@@ -173,6 +173,8 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
 
 	if (req.accepts('html') && req.get('Sec-Fetch-Mode') === 'navigate' && !underAttackMode) {
 		// Request accepts html AND is likely a browser, not a bot.
+		// Rendered here instead of via renderErrorPage: that runs resolveAuth, which needs req.cookies
+		// (not parsed yet at this point in the stack) and does DB work we must avoid for throttled clients.
 		res.render(
 			'error.njk',
 			getErrorPageContext(req, 429, retryAfterSec),
