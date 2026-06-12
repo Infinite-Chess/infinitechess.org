@@ -1,9 +1,8 @@
 // src/server/middleware/staticAssets.ts
 
 /**
- * Serves static files as one unit in the middleware waterfall:
- *  - the built client bundle (scripts, css, images, audio, fonts), and
- *  - the ACME challenge directory used by Certbot to validate domain ownership.
+ * Serves the built client bundle (scripts, css, images,
+ * audio, fonts) as one unit in the middleware waterfall.
  */
 
 import path from 'path';
@@ -29,13 +28,6 @@ staticAssets.use(
 			}
 		},
 	}),
-);
-
-// Directory required for the ACME (Automatic Certificate Management Environment)
-// protocol used by Certbot to validate your domain ownership.
-staticAssets.use(
-	'/.well-known/acme-challenge',
-	express.static(path.join(__dirname, '../../../cert/.well-known/acme-challenge')),
 );
 
 export default staticAssets;
