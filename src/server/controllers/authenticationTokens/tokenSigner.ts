@@ -13,6 +13,7 @@
 import type { Role } from '../roles.js';
 
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 import tokenConfig from '../../../shared/util/tokenConfig.js';
 
@@ -69,7 +70,13 @@ function signRefreshToken(
 ): string {
 	const payload = generatePayload(user_id, username, roles);
 	const refreshTokenExpirySecs = expiryMillis / 1000;
-	return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenExpirySecs }); // Longer-lived, stored in an httpOnly cookie.
+	return jwt.sign(payload, REFRESH_TOKEN_SECRET, {
+		// Longer-lived than access tokens, and stored in an httpOnly cookie
+		expiresIn: refreshTokenExpirySecs,
+		// Makes every token unique, even when signed for the same user within
+		// the same second, preventing a DB UNIQUE constraint error on the token.
+		jwtid: crypto.randomUUID(),
+	});
 }
 
 /** Generates the payload object for a JWT based on the user ID and username. */
