@@ -1,8 +1,17 @@
 // src/server/config/certOptions.ts
 
 import fs from 'fs';
+import path from 'path';
+import forge from 'node-forge';
+import { fileURLToPath } from 'node:url';
 
-import { ensureSelfSignedCertificate, keyPath, certPath } from './generateCert.js';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const certDir = path.join(__dirname, '..', '..', '..', 'cert');
+
+// Paths for the self-signed key and certificate files
+const keyPath = path.join(certDir, 'cert.key');
+const certPath = path.join(certDir, 'cert.pem');
 
 /**
  * Retrieves SSL/TLS certificate options (a self-signed key + cert).
@@ -18,4 +27,40 @@ export function getCertOptions(): { key: Buffer; cert: Buffer } {
 		key: fs.readFileSync(keyPath),
 		cert: fs.readFileSync(certPath),
 	};
+}
+
+/**
+ * Ensures a self-signed cert.key and cert.pem exist in the
+ * cert directory, generating them if missing. Idempotent.
+ */
+function ensureSelfSignedCertificate(): void {
+	if (fs.existsSync(keyPath) && fs.existsSync(certPath)) return; // Already exist
+
+	const pki = forge.pki;
+	const keys = pki.rsa.generateKeyPair(2048);
+	const cert = pki.createCertificate();
+
+	cert.publicKey = keys.publicKey;
+	cert.serialNumber = '01';
+	cert.validity.notBefore = new Date();
+	cert.validity.notAfter = new Date();
+	cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+
+	const attrs = [{ name: 'commonName', value: 'localhost' }];
+
+	cert.setSubject(attrs);
+	cert.setIssuer(attrs);
+
+	cert.sign(keys.privateKey, forge.md.sha256.create());
+
+	// Convert the PEM-formatted keys to strings
+	const privateKeyPem = pki.privateKeyToPem(keys.privateKey);
+	const certPem = pki.certificateToPem(cert);
+
+	// Write the key and cert
+	fs.mkdirSync(certDir, { recursive: true });
+	fs.writeFileSync(keyPath, privateKeyPem);
+	fs.writeFileSync(certPath, certPem);
+
+	console.log('Generated self-signed certificate.');
 }
