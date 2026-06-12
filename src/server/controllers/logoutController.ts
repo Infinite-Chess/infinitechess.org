@@ -16,7 +16,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 	if (typeof refreshToken === 'string' && refreshToken) {
 		// string, and not empty
 		try {
-			// Invalidate the token server-side. Safely no-ops if it isn't in the DB
+			// Invalidate the token server-side.
 			deleteRefreshToken(refreshToken);
 		} catch {
 			// DB error (already logged)

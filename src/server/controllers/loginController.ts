@@ -13,6 +13,7 @@
 import type { Request, Response } from 'express';
 
 import { createNewSession } from './authenticationTokens/sessionManager.js';
+import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
 import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
@@ -28,6 +29,21 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	const identity = await testPasswordForRequest(req, res);
 	if (!identity) return;
 	// Correct password...
+
+	// CLEANUP: If the browser already holds a session, its token is about to be
+	// become dead weight from the new session's cookie, so invalidate it server-side.
+	// This can happen when a user tries to log in while already logged in.
+	const oldRefreshToken = req.cookies['jwt'];
+	if (typeof oldRefreshToken === 'string' && oldRefreshToken) {
+		// string, and not empty
+		try {
+			deleteRefreshToken(oldRefreshToken);
+		} catch {
+			// DB error (already logged). Don't block the new login over this.
+		}
+		// Sockets open on the old session are intentionally NOT
+		// closed for UX. They expire & reconnect within ~15m anyway
+	}
 
 	/** Whether the user checked "keep me logged in". */
 	const keepLoggedIn = req.body.keepLoggedIn === true;

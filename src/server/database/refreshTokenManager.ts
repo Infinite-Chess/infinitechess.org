@@ -106,6 +106,7 @@ export function addRefreshToken(
 
 /**
  * Deletes a specific refresh token from the database.
+ * No-ops if the token doesn't exist.
  * @param token - The token to delete.
  * @throws If a database error occurs.
  */
