@@ -137,7 +137,7 @@ function terminateAllIPSockets(IP: string): void {
 	for (const id of connectionList) {
 		//console.log(`Terminating 1.. id ${id}`)
 		const ws = websocketConnections[id];
-		ws?.close(1009, 'Message Too Big');
+		ws?.close(1009, 'Too Many Requests');
 	}
 
 	// console.log(`Terminated all of IP ${IP}`)

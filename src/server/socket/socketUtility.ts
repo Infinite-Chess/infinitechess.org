@@ -87,10 +87,6 @@ function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['me
 	// Using Partial takes an existing type and makes all of its properties optional
 	const metadataCopy: Partial<typeof metadata> = {
 		memberInfo: jsutil.deepCopyObject(metadata.memberInfo),
-		cookies: {
-			'browser-id': ws.metadata.cookies['browser-id'],
-			lang: ws.metadata.cookies['lang'],
-		}, // Only copy these 2 cookies, NOT their refresh token!!!
 		verified: metadata.verified,
 		id: metadata.id,
 		IP: metadata.IP,
