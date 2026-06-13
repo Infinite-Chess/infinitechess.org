@@ -1,9 +1,11 @@
 // src/server/middleware/logEvents.ts
 
 /**
- * Writes all of our log files, appending one timestamped line per event.
+ * Core log writer: appends one timestamped line per event to the right file,
+ * handling weekly rotation and retention. (The trigger entries themselves are
+ * written by reqLogger.ts for HTTP and wsLogger.ts for websockets.)
  *
- * Lines are tagged with the correlation ID of the trigger that caused them:
+ * Each line is tagged with the correlation ID of the trigger that caused it:
  * 'R…' = an HTTP request, 'W…' = an incoming websocket message (see
  * requestContext.ts). Every line one trigger produces — across ALL log files —
  * shares its ID. The trigger's own entry is in reqLog/ (R) or wsInLog/ (W).
