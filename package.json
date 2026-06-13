@@ -7,6 +7,9 @@
   "main": "dist/server/server.js",
   "type": "module",
   "// SECURITY": "When auditing dependencies (npm audit), see docs/DEPENDENCY_SECURITY.md for knowingly-unpatched advisories and why.",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1068.0",
     "@aws-sdk/credential-providers": "^3.1068.0",
