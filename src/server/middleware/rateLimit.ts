@@ -102,8 +102,8 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 	const clientIP = getClientIP(req);
 	if (!clientIP) {
-		logEvents('Unable to identify client IP address when rate limiting!', 'reqLogRateLimited');
-		res.status(400).json({ message: 'Unable to identify client IP address' });
+		logEvents('Unable to identify client IP address.', 'errLog');
+		res.status(400).json({ message: 'Unable to identify IP address' });
 		return;
 	}
 
@@ -116,10 +116,7 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 	const userAgent = req.headers['user-agent'];
 	if (!userAgent) {
-		logEvents(
-			`Unable to identify user agent for IP ${clientIP} when rate limiting!`,
-			'reqLogRateLimited',
-		);
+		// Occasionally, automatated scanner and vulnerability prober bots will omit the user agent.
 		res.status(400).json({ message: 'User agent is required' });
 		return;
 	}
@@ -132,10 +129,6 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 	const timestamps = rateLimitHash[userKey];
 	if (timestamps && timestamps.length > maxRequestsPerMinute) {
 		// Rate limit them (too many requests sent)
-		logEvents(
-			`Agent ${userKey} has too many requests! Count: ${timestamps.length}`,
-			'reqLogRateLimited',
-		);
 		const retryAfterSeconds = getRetryAfterSeconds(timestamps);
 		respondRateLimited(req, res, retryAfterSeconds);
 		return;
@@ -208,10 +201,7 @@ function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean 
 
 	const userAgent = req.headers['user-agent'];
 	if (!userAgent) {
-		logEvents(
-			`Unable to identify user agent for websocket connection when rate limiting!`,
-			'reqLogRateLimited',
-		);
+		// Occasionally, automatated scanner and vulnerability prober bots will omit the user agent.
 		ws.close(1008, 'User agent is required');
 		return false;
 	}
@@ -222,10 +212,7 @@ function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean 
 	incrementClientConnectionCount(userKey);
 
 	if (rateLimitHash[userKey]!.length > maxRequestsPerMinute) {
-		logEvents(
-			`Agent ${userKey} has too many requests after! Count: ${rateLimitHash[userKey]!.length}`,
-			'reqLogRateLimited',
-		);
+		// Rate limit them (too many requests sent)
 		ws.close(1009, 'Too Many Requests');
 		return false;
 	}
@@ -326,14 +313,12 @@ setInterval(() => {
 
 function logAttackBegin(): void {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
-	logEventsAndPrint(logText, 'reqLogRateLimited');
-	logEvents(logText, 'hackLog');
+	logEventsAndPrint(logText, 'hackLog');
 }
 
 function logAttackEnd(): void {
 	const logText = `DDOS attack has ended.`;
-	logEventsAndPrint(logText, 'reqLogRateLimited');
-	logEvents(logText, 'hackLog');
+	logEventsAndPrint(logText, 'hackLog');
 }
 
 export { rateLimit, rateLimitWebSocket };

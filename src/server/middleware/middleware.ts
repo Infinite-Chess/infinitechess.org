@@ -31,12 +31,11 @@ export function configurePipeline(app: Express): void {
 	// Give every request a correlation ID that logEvents tags its log lines with.
 	app.use(assignRequestID);
 
-	// Rate limit ALL incoming requests
-	app.use(rateLimit);
-
-	// Log every non-rate-limited incoming request, even those
-	// with an unparseable body. Bodies are not logged.
+	// Log all incoming requests
 	app.use(reqLogger);
+
+	// Rate limit all incoming requests
+	app.use(rateLimit);
 
 	// Security stack: HTTPS enforcement, CSP headers, path-traversal blocking, and CORS.
 	app.use(security);
