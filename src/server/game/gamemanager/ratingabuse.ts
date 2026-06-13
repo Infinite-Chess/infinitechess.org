@@ -154,7 +154,7 @@ function measureRatingAbuseAfterGame(servergame: ServerGame): void {
 		if (!player.identifier.signedIn) {
 			void logEventsAndPrint(
 				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameutility.getSimplifiedGameString(servergame)}`,
-				'errLog.txt',
+				'errLog',
 			);
 			continue;
 		}
@@ -214,7 +214,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 	// The player has lost elo the past GAME_INTERVAL_TO_MEASURE games. No cause for concern, early exit
 	if (netRatingChange <= 0) {
 		const messageText = `Innocent: Ran suspicion check for user ${username} with user_id ${user_id} on leaderboard ${leaderboard_id}, but user net rating change ${netRatingChange} is not positive in the last ${GAME_INTERVAL_TO_MEASURE} games. Game IDs: ${JSON.stringify(game_id_list)}.`;
-		void logEvents(messageText, 'ratingAbuseLog.txt');
+		void logEvents(messageText, 'ratingAbuseLog');
 		return;
 	}
 
@@ -240,7 +240,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		} else {
 			void logEventsAndPrint(
 				`Found game_id ${game_id_list[i]!} in player_games table but not it games table, during rating abuse calculation`,
-				'errLog.txt',
+				'errLog',
 			);
 		}
 	}
@@ -267,7 +267,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		const message = error instanceof Error ? error.message : String(error);
 		void logEventsAndPrint(
 			`Error fetching refresh token entries for users "${JSON.stringify([user_id, ...unique_user_id_list])}": ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 		refreshTokenEntries = [];
 	}
@@ -300,7 +300,7 @@ function measurePlayerRatingAbuse(user_id: number, username: string, leaderboard
 		const message = error instanceof Error ? error.message : String(error);
 		void logEventsAndPrint(
 			`Error fetching records for opponents during rating abuse calculation for user ${username} with user_id ${user_id}: ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 	}
 
@@ -348,7 +348,7 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 		console.log(
 			`User ${username} is under suspicion of rating abuse (weight: ${suspicion_total_weight})! - Check ratingAbuseLog.txt for more details.`,
 		);
-		void logEvents('\n' + messageText, 'ratingAbuseLog.txt');
+		void logEvents('\n' + messageText, 'ratingAbuseLog');
 
 		// If enough time has passed from the last alarm for that user, send an email about his rating abuse
 		if (
@@ -374,7 +374,7 @@ Game_id_list: ${JSON.stringify(game_id_list)}.
 			`OpponentInfoList: ${JSON.stringify(opponentInfoList)}. ` +
 			`Game_id_list: ${JSON.stringify(game_id_list)}. ` +
 			`GameInfo list: ${JSON.stringify(gameInfoList)}.`;
-		void logEvents(messageText, 'ratingAbuseLog.txt');
+		void logEvents(messageText, 'ratingAbuseLog');
 	}
 }
 

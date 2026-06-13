@@ -68,7 +68,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 	// Test if the message is too big. People could DDOS this way
 	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
 	if (Buffer.byteLength(rawMessage) > maxWebsocketMessageSizeBytes) {
-		logEvents(`Client sent too big a websocket message.`, 'reqLogRateLimited.txt');
+		logEvents(`Client sent too big a websocket message.`, 'reqLogRateLimited');
 		ws.close(1009, 'Message Too Big');
 		return;
 	}
@@ -83,7 +83,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 	} catch (error: unknown) {
 		if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errText, 'hackLog.txt');
+		logEvents(errText, 'hackLog');
 		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
 		return;
 	}

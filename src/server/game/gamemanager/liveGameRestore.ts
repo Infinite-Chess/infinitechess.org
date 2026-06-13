@@ -105,7 +105,7 @@ function restoreAllLiveGames(): RestoredGame[] {
 			if (playerRows.length !== 2) {
 				logEventsAndPrint(
 					`Live game ${gameRow.game_id} has ${playerRows.length} player rows, expected 2. Skipping restoration of this game.`,
-					'errLog.txt',
+					'errLog',
 				);
 				deleteLiveGame(gameRow.game_id);
 				continue;
@@ -117,7 +117,7 @@ function restoreAllLiveGames(): RestoredGame[] {
 			const message = error instanceof Error ? error.message : String(error);
 			logEventsAndPrint(
 				`Failed to restore live game ${gameRow.game_id}: ${message}`,
-				'errLog.txt',
+				'errLog',
 			);
 			// Delete the corrupt game from the database so it doesn't block future restarts.
 			deleteLiveGame(gameRow.game_id);
@@ -212,7 +212,7 @@ function reconstructPlayerIdentities(
 				} catch {
 					logEventsAndPrint(
 						`Failed to parse roles for user_id ${row.user_id} during game restoration.`,
-						'errLog.txt',
+						'errLog',
 					);
 				}
 				identities[player] = {

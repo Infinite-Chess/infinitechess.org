@@ -34,7 +34,7 @@ function startDailyBackups(): void {
 			await performBackup();
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
-			logEventsAndPrint(`Daily database backup failed: ${message}`, 'errLog.txt');
+			logEventsAndPrint(`Daily database backup failed: ${message}`, 'errLog');
 		}
 	}, BACKUP_INTERVAL_MS);
 }
@@ -88,7 +88,7 @@ function purgeOldBackups(): void {
 		}
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		void logEventsAndPrint(`Error purging old db backups: ${message}`, 'errLog.txt');
+		void logEventsAndPrint(`Error purging old db backups: ${message}`, 'errLog');
 	}
 }
 

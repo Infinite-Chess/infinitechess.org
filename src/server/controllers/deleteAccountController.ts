@@ -85,7 +85,7 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Can't delete account of user_id (${identity.user_id}) after a correct password entered: ${errorMessage}`,
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(404).json({
 			message: getTranslation('server.javascript.ws-deleting_account_not_found', req.lang),

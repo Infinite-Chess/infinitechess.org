@@ -103,7 +103,7 @@ function postCheckmateBeaten(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(
 			"User tried to save checkmates_beaten when they weren't signed in!",
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(401).json({ message: "Can't save checkmates_beaten, not signed in." });
 		return;

@@ -76,7 +76,7 @@ function readMemberInfoCookie(req: Request): MemberInfoCookie | undefined {
 		const detail = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`memberInfo cookie was tampered: "${jsutil.ensureJSONString(stringified)}"\n${detail}`,
-			'errLog.txt',
+			'errLog',
 		);
 		return undefined;
 	}

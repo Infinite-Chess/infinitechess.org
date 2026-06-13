@@ -16,7 +16,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	// 4xx are the client's fault (e.g. a malformed or too-large body), not ours, so keep them out of
 	// the server error log. Everything else (5xx, or a statusless uncaught error) gets logged.
 	const isClientError = status >= 400 && status < 500;
-	if (!isClientError) logEventsAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog.txt');
+	if (!isClientError) logEventsAndPrint(`Caught in errorHandler: ${err.stack}`, 'errLog');
 
 	// If the response has already started we can't set a status or render our own page (it would
 	// throw "headers already sent"). It's been logged above; delegate to Express's default handler,
@@ -55,7 +55,7 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 	} catch (error: unknown) {
 		// Last line of defense
 		const detail = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog.txt');
+		logEventsAndPrint(`Critical error in errorHandler middleware: ${detail}`, 'errLog');
 		res.status(500).send('Critical server error.');
 	}
 }

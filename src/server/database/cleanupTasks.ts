@@ -43,14 +43,14 @@ function checkDatabaseIntegrity(): void {
 		if (result?.integrity_check !== 'ok')
 			logEventsAndPrint(
 				`Database integrity check failed: ${result?.integrity_check} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
-				'errLog.txt',
+				'errLog',
 			);
 		// else console.log('Database integrity check passed.');
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error performing database integrity check: ${errorMessage} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`,
-			'errLog.txt',
+			'errLog',
 		);
 	}
 }
@@ -70,7 +70,7 @@ function deleteExpiredPasswordResetTokens(): void {
 		const errorMessage =
 			'Failed to delete expired password reset tokens: ' +
 			(error instanceof Error ? error.message : String(error));
-		logEventsAndPrint(errorMessage, 'errLog.txt');
+		logEventsAndPrint(errorMessage, 'errLog');
 	}
 }
 
@@ -102,7 +102,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		const errorMessage =
 			'Failed to delete expired refresh tokens: ' +
 			(error instanceof Error ? error.message : String(error));
-		logEventsAndPrint(errorMessage, 'errLog.txt');
+		logEventsAndPrint(errorMessage, 'errLog');
 	}
 }
 
@@ -144,7 +144,7 @@ function removeOldUnverifiedMembers(): void {
 				const message = error instanceof Error ? error.message : String(error);
 				logEventsAndPrint(
 					`FAILED to remove old unverified account with ID (${member.user_id}): ${message}`,
-					'errLog.txt',
+					'errLog',
 				);
 			}
 		}
@@ -152,7 +152,7 @@ function removeOldUnverifiedMembers(): void {
 		console.log(`Cleanup: Removed ${membersToDelete.length} unverified account(s).`);
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error removing old unverified accounts: ${errorMessage}`, 'errLog.txt');
+		logEventsAndPrint(`Error removing old unverified accounts: ${errorMessage}`, 'errLog');
 	}
 }
 

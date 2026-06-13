@@ -28,7 +28,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 
 	res.sendStatus(200);
 
-	logEvents(`Logged out a member.`, 'loginAttempts.txt');
+	logEvents(`Logged out a member.`, 'loginAttempts');
 }
 
 export { handleLogout };

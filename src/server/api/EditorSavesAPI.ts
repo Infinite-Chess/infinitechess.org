@@ -94,7 +94,7 @@ function getSavedPositions(req: Request, res: Response): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error retrieving saved positions for user_id ${userId}: ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(500).json({
 			message: req.t.responses.editor_saves.server_error,
@@ -166,7 +166,7 @@ function savePosition(req: Request, res: Response): void {
 		res.status(201).json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog.txt');
+		logEventsAndPrint(`Error saving position for user_id ${userId}: ${message}`, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.editor_saves.server_error,
 		});
@@ -231,7 +231,7 @@ function getPosition(req: Request, res: Response): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error retrieving position for name "${positionName}": ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(500).json({
 			message: req.t.responses.editor_saves.server_error,
@@ -290,7 +290,7 @@ function deletePosition(req: Request, res: Response): void {
 		const message = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
 			`Error deleting position "${positionName}" for user_id ${userId}: ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(500).json({
 			message: req.t.responses.editor_saves.server_error,

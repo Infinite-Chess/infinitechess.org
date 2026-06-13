@@ -633,7 +633,7 @@ function sendMessageToSocketOfColor(
 	if (data === undefined) {
 		logEventsAndPrint(
 			`Tried to send a message to player ${color} when there isn't one in game!`,
-			'errLog.txt',
+			'errLog',
 		);
 		return;
 	}
@@ -713,7 +713,7 @@ function sendUpdatedClockToColor(servergame: ServerGame, color: Player): void {
 	if (color !== p.BLACK && color !== p.WHITE) {
 		logEventsAndPrint(
 			`Color must be white or black when sending clock to color! Got: ${color}`,
-			'errLog.txt',
+			'errLog',
 		);
 		return;
 	}
@@ -753,7 +753,7 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 	if (playerdata[servergame.whosTurn] === undefined) {
 		logEventsAndPrint(
 			`Cannot update games clock values when whose turn doesn't have a clock! "${servergame.whosTurn}"`,
-			'errLog.txt',
+			'errLog',
 		);
 		return;
 	}
@@ -771,7 +771,7 @@ function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord
 	if (!(color in match.playerData)) {
 		logEventsAndPrint(
 			`Color to send move to must be one that is in the game (white or black)! ${color}`,
-			'errLog.txt',
+			'errLog',
 		);
 		return;
 	}

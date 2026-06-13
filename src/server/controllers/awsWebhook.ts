@@ -40,7 +40,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		const msg = err instanceof Error ? err.message : String(err);
 		logEvents(
 			`[AWS WEBHOOK] Signature Verification Failed! Is this a hacker? Error: ${msg}`,
-			'awsNotifications.txt',
+			'awsNotifications',
 		);
 		// This likely means a hacker is trying to spoof a request
 		res.status(401).send('Invalid signature');
@@ -79,7 +79,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 	else if (messageType === 'Notification') {
 		// console.log('[AWS WEBHOOK] Processing notification...');
 		// Log entire message so we can learn unexpected structures
-		logEvents(`[AWS WEBHOOK] Received Notification: ${body.Message}`, 'awsNotifications.txt');
+		logEvents(`[AWS WEBHOOK] Received Notification: ${body.Message}`, 'awsNotifications');
 
 		let sesMessage;
 		try {
@@ -88,7 +88,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			sesMessage = JSON.parse(body.Message);
 		} catch (err: unknown) {
 			const msg = err instanceof Error ? err.message : String(err);
-			logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog.txt');
+			logEventsAndPrint(`[AWS WEBHOOK] JSON Parse Error: ${msg}`, 'errLog');
 			res.status(400).send('Bad JSON');
 			return;
 		}
@@ -101,7 +101,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			if (Array.isArray(recipients)) {
 				logEvents(
 					`[AWS WEBHOOK] Delivery: ${recipients.join(', ')} (${sesMessage.mail?.messageId})`,
-					'awsNotifications.txt',
+					'awsNotifications',
 				);
 			}
 		}
@@ -117,7 +117,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				if (Array.isArray(recipients)) {
 					recipients.forEach((recipient: any) => {
 						const email = recipient.emailAddress;
-						logEvents(`[AWS WEBHOOK] Hard Bounce: ${email}`, 'awsNotifications.txt');
+						logEvents(`[AWS WEBHOOK] Hard Bounce: ${email}`, 'awsNotifications');
 						try {
 							addToBlacklist(email, 'bounce');
 						} catch {
@@ -128,7 +128,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			} else {
 				logEvents(
 					`[AWS WEBHOOK] Bounce Type is not Permanent. No action taken: ${bounce.bounceType}`,
-					'awsNotifications.txt',
+					'awsNotifications',
 				);
 			}
 		}
@@ -139,7 +139,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			if (Array.isArray(recipients)) {
 				recipients.forEach((recipient: any) => {
 					const email = recipient.emailAddress;
-					logEvents(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications.txt');
+					logEvents(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications');
 					try {
 						addToBlacklist(email, 'spam_report');
 					} catch {
@@ -150,14 +150,11 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		} else {
 			logEventsAndPrint(
 				`[AWS WEBHOOK] Unknown notification type: ${type}`,
-				'awsNotifications.txt',
+				'awsNotifications',
 			);
 		}
 	} else {
-		logEventsAndPrint(
-			`[AWS WEBHOOK] Unknown message type: ${messageType}`,
-			'awsNotifications.txt',
-		);
+		logEventsAndPrint(`[AWS WEBHOOK] Unknown message type: ${messageType}`, 'awsNotifications');
 	}
 
 	// Always return 200 OK.

@@ -44,7 +44,7 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		}
 	} catch (err) {
 		const errorMessage = err instanceof Error ? err.stack : String(err);
-		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog.txt');
+		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog');
 		throw new Error('Unexpected transporter error sending password reset email.');
 	}
 }
@@ -65,7 +65,7 @@ async function sendEmailConfirmation(
 		if (isBlacklisted(recipientEmail)) {
 			logEventsAndPrint(
 				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
-				'blacklistLog.txt',
+				'blacklistLog',
 			);
 			return;
 		}
@@ -94,7 +94,7 @@ async function sendEmailConfirmation(
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
 			`Error during sendEmailConfirmation to ${recipientEmail}: ${errorMessage}`,
-			'errLog.txt',
+			'errLog',
 		);
 	}
 }
@@ -120,7 +120,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		void logEventsAndPrint(
 			`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`,
-			'errLog.txt',
+			'errLog',
 		);
 	}
 }

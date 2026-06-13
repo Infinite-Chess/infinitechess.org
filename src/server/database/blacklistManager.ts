@@ -17,7 +17,7 @@ export function addToBlacklist(email: string, reason: string): void {
 			]),
 		`Database error when blacklisting email ${email}`,
 	);
-	logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog.txt');
+	logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog');
 }
 
 /**
@@ -30,7 +30,7 @@ export function removeFromBlacklist(email: string): void {
 		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]),
 		`Database error when removing email ${email} from blacklist`,
 	);
-	logEvents(`Removed ${email} from blacklist`, 'blacklistLog.txt');
+	logEvents(`Removed ${email} from blacklist`, 'blacklistLog');
 }
 
 /**

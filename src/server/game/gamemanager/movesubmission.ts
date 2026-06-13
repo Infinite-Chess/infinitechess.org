@@ -93,7 +93,7 @@ function submitMove(
 	const expectedMoveNumber = servergame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEventsAndPrint(errString, 'hackLog');
 		resyncToGame(ws, servergame.match.id);
 		return;
 	}
@@ -102,7 +102,7 @@ function submitMove(
 	const moveParsed = doesMoveCheckOut(messageContents.move);
 	if (moveParsed === false) {
 		const errString = `Player sent a move in an invalid format. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEventsAndPrint(errString, 'hackLog');
 		sendSocketMessage(ws, 'general', 'printerror', 'Invalid move format.');
 		return;
 	}
@@ -110,7 +110,7 @@ function submitMove(
 	// Check if the move exceeds the soft distance cap based on game duration
 	if (!isMoveWithinDistanceCap(moveParsed, servergame.match.timeCreated)) {
 		const errString = `Player sent a move that exceeds the distance cap for game duration. The message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEventsAndPrint(errString, 'hackLog');
 		sendSocketMessage(
 			ws,
 			'general',
@@ -170,7 +170,7 @@ function applyServerValidatedMove(
 	const validationResult = movevalidation.validateMove(servergame, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEventsAndPrint(errString, 'hackLog');
 		// Send the sender a gameupdate to correct their board if a bug somehow caused this
 		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
@@ -210,7 +210,7 @@ function applyClientReportedMove(
 ): MoveRecord | undefined {
 	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
-		logEventsAndPrint(errString, 'hackLog.txt');
+		logEventsAndPrint(errString, 'hackLog');
 		sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
 		return;
 	}

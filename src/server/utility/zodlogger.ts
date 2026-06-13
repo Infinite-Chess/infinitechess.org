@@ -23,6 +23,6 @@ ${treeifiedErrors}
 ===================================================================
 
 	`;
-	logEvents(logText, 'zodLog.txt');
-	logEventsAndPrint(`${contextMessage} - Check zodLog.txt for more details.`, 'errLog.txt');
+	logEvents(logText, 'zodLog');
+	logEventsAndPrint(`${contextMessage} - Check zodLog.txt for more details.`, 'errLog');
 }

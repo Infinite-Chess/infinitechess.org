@@ -27,7 +27,7 @@ function renderErrorPage(req: Request, res: Response, status: number): void {
 					// Log the rendering error and return the plain message
 					logEventsAndPrint(
 						`Critical error rendering ${context.code} page: ${renderErr.stack}`,
-						'errLog.txt',
+						'errLog',
 					);
 					res.send(req.t.responses.errors.server_error);
 				}

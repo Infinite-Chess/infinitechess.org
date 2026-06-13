@@ -172,7 +172,7 @@ function onIncorrectPassword(browserAgent: string, username: string): void {
 	loginAttemptData[browserAgent]!.cooldownTimeSecs += loginCooldownIncrementorSecs;
 	logEventsAndPrint(
 		`${username} got login locked for ${loginAttemptData[browserAgent]!.cooldownTimeSecs} seconds`,
-		'loginAttempts.txt',
+		'loginAttempts',
 	);
 }
 

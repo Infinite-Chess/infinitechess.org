@@ -281,7 +281,7 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 		const detail = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
 			`Error updating all rating deviations in leaderboard table: ${detail}`,
-			'errLog.txt',
+			'errLog',
 		);
 	}
 }

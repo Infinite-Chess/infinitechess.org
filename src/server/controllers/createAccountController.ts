@@ -294,7 +294,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		if (member === undefined) {
 			logEventsAndPrint(
 				`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
-				'errLog.txt',
+				'errLog',
 			);
 			res.json({ status: 'expired' });
 			return;
@@ -353,7 +353,7 @@ async function generateAccount({
 		is_verification_notified,
 	);
 
-	logEvents(`Manually generated new member: ${username}`, 'newMemberLog.txt');
+	logEvents(`Manually generated new member: ${username}`, 'newMemberLog');
 
 	return user_id;
 }
@@ -486,7 +486,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 		if (isBlacklisted(email)) {
 			logEventsAndPrint(
 				`Blacklisted email ${email} tried to create an account!`,
-				'blacklistLog.txt',
+				'blacklistLog',
 			);
 			res.status(422).json({
 				field: 'email',
@@ -520,7 +520,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 		const err = error as Error; // Type assertion
 		logEventsAndPrint(
 			`Error when validating domain for email "${email}": ${err.stack}`,
-			'errLog.txt',
+			'errLog',
 		);
 		return true; // Default to true to avoid blocking users.
 	}

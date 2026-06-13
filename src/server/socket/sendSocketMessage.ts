@@ -84,7 +84,7 @@ function sendSocketMessage(
 	if (ws.readyState !== WebSocket.OPEN) {
 		const state = ws.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED';
 		const errText = `Websocket is in a ${state} state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEventsAndPrint(errText, 'errLog.txt');
+		logEventsAndPrint(errText, 'errLog');
 		return;
 	}
 

@@ -91,7 +91,7 @@ function refreshGitHubContributorsList(): void {
 	) {
 		logEventsAndPrint(
 			'Either Github API key not detected, or repository not specified. Stopping updating contributor list.',
-			'errLog.txt',
+			'errLog',
 		);
 		clearInterval(intervalId);
 		return;
@@ -126,7 +126,7 @@ function refreshGitHubContributorsList(): void {
 			if (res.statusCode !== 200)
 				return logEventsAndPrint(
 					`Response from GitHub when using API to get contributor list: ${body.toString()}`,
-					'errLog.txt',
+					'errLog',
 				);
 
 			const response = body.toString();
@@ -135,7 +135,7 @@ function refreshGitHubContributorsList(): void {
 				unvalidatedJson = JSON.parse(response);
 			} catch (error: unknown) {
 				const errMsg = error instanceof Error ? error.message : String(error);
-				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog.txt');
+				logEventsAndPrint('Error parsing contributors JSON: ' + errMsg, 'errLog');
 				return;
 			}
 
@@ -165,14 +165,11 @@ function refreshGitHubContributorsList(): void {
 	// Handle request errors
 	req.on('error', (err) => {
 		if (err.name === 'AbortError') {
-			logEventsAndPrint(
-				'GitHub contributor request was aborted due to timeout.',
-				'errLog.txt',
-			);
+			logEventsAndPrint('GitHub contributor request was aborted due to timeout.', 'errLog');
 		} else {
 			logEventsAndPrint(
 				`Request error while fetching GitHub contributors: ${err.message}`,
-				'errLog.txt',
+				'errLog',
 			);
 		}
 	});
@@ -180,7 +177,7 @@ function refreshGitHubContributorsList(): void {
 	// Add a timeout using AbortController if request takes too long
 	const abortTimeout = setTimeout(() => {
 		controller.abort();
-		logEventsAndPrint('GitHub API request timed out.', 'errLog.txt');
+		logEventsAndPrint('GitHub API request timed out.', 'errLog');
 	}, 10000);
 
 	req.on('response', () => {

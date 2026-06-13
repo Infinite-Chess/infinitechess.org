@@ -48,7 +48,7 @@ function onReport(
 	// (i.e. games without server-side move validation AND are public)
 	if (servergame.validateMoves) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
-		logEvents(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,
@@ -66,7 +66,7 @@ function onReport(
 	);
 	if (colorThatPlayedPerpetratingMove === ourColor) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
-		logEvents(errString, 'hackLog.txt');
+		logEvents(errString, 'hackLog');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
 			ourColor,
@@ -84,7 +84,7 @@ function onReport(
 
 	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 	console.error(errText);
-	logEvents(errText, 'hackLog.txt');
+	logEvents(errText, 'hackLog');
 
 	for (const playerStr in servergame.match.playerData) {
 		const player: Player = Number(playerStr) as Player;

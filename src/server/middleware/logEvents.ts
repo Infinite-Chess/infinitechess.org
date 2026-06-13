@@ -49,7 +49,7 @@ const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
  * @param message - The message to log.
- * @param logName - The name of the log file.
+ * @param logName - The base name of the log file, without the `.txt` extension.
  */
 async function logEvents(message: string, logName: string): Promise<void> {
 	if (typeof message !== 'string')
@@ -75,23 +75,23 @@ async function logEvents(message: string, logName: string): Promise<void> {
  * Resolves the absolute path a log line should be written to.
  * Rotated logs live in their own directory with one file per week.
  * All other logs are a single flat file at the {@link LOGS_DIR} root.
+ * @param logName - The base name of the log file, without the `.txt` extension.
  */
 function resolveLogPath(logName: string): string {
-	const base = logName.replace(/\.txt$/, '');
-	if (!ROTATED_LOGS.includes(base)) return path.join(LOGS_DIR, logName);
+	if (!ROTATED_LOGS.includes(logName)) return path.join(LOGS_DIR, `${logName}.txt`);
 
 	const bucketDate = format(startOfISOWeek(new Date()), 'yyyy-MM-dd'); // ISO weeks start on Monday.
-	return path.join(LOGS_DIR, base, `${bucketDate}.txt`);
+	return path.join(LOGS_DIR, logName, `${bucketDate}.txt`);
 }
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file,
  * and prints it to the console as an error.
  * @param message - The message to log.
- * @param logName - The name of the log file.
+ * @param logName - The base name of the log file, without the `.txt` extension.
  */
 async function logEventsAndPrint(message: string, logName: string): Promise<void> {
-	if (logName === 'errLog.txt') console.error(message);
+	if (logName === 'errLog') console.error(message);
 	else console.log(message); // Prevents non error logs from going to PM2's error logs.
 
 	await logEvents(message, logName);
@@ -112,7 +112,7 @@ function reqLogger(req: Request, _res: Response, next: () => void): void {
 	// Bodies are high-PII and left out
 	const logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
 
-	logEvents(logThis, 'reqLog.txt');
+	logEvents(logThis, 'reqLog');
 
 	next(); // Continue to next middleware
 }
@@ -128,7 +128,7 @@ function logWebsocketStart(req: IncomingMessage, ws: CustomWebSocket): void {
 	const userAgent = req.headers['user-agent'];
 	// const userAgent = ws.metadata.userAgent;
 	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
-	logEvents(logThis, 'wsInLog.txt');
+	logEvents(logThis, 'wsInLog');
 }
 
 /**
@@ -139,7 +139,7 @@ function logWebsocketStart(req: IncomingMessage, ws: CustomWebSocket): void {
 function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
 	const logThis = `From socket of ID "${socketID}":   ${messageData}`;
-	logEvents(logThis, 'wsInLog.txt');
+	logEvents(logThis, 'wsInLog');
 }
 
 /**
@@ -150,7 +150,7 @@ function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
 function logReqWebsocketOut(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
 	const logThis = `To socket of ID "${socketID}":   ${messageData}`;
-	logEvents(logThis, 'wsOutLog.txt');
+	logEvents(logThis, 'wsOutLog');
 }
 
 // Cleanup ----------------------------------------------------
@@ -180,10 +180,7 @@ function purgeOldRotatedLogs(): void {
 				}
 			} catch (err: unknown) {
 				const detail = err instanceof Error ? err.stack : String(err);
-				logEventsAndPrint(
-					`Error purging old log file '${filePath}': ${detail}`,
-					'errLog.txt',
-				);
+				logEventsAndPrint(`Error purging old log file '${filePath}': ${detail}`, 'errLog');
 			}
 		}
 	}

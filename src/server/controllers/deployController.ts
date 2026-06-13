@@ -24,7 +24,7 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 	if (!secret) {
 		logEventsAndPrint(
 			'POST /api/prepare-restart called but RESTART_SECRET is not set.',
-			'errLog.txt',
+			'errLog',
 		);
 		res.status(500).send('Endpoint is not configured.');
 		return;
@@ -39,7 +39,7 @@ async function handlePrepareRestart(req: Request, res: Response): Promise<void> 
 		await performBackup();
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Pre-deploy DB backup failed: ${message}`, 'errLog.txt');
+		logEventsAndPrint(`Pre-deploy DB backup failed: ${message}`, 'errLog');
 		res.status(500).send('Pre-deploy backup failed.');
 		return;
 	}

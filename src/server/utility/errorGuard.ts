@@ -20,7 +20,7 @@ function executeSafely(callback: () => void, errorMessage: string): boolean {
 	} catch (e) {
 		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
 		const errText = `${errorMessage}\n${stack}`;
-		logEventsAndPrint(errText, 'errLog.txt');
+		logEventsAndPrint(errText, 'errLog');
 		return false; // Yes error
 	}
 	return true; // No error
@@ -44,7 +44,7 @@ async function executeSafely_async(
 	} catch (e) {
 		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
 		const errText = `${errorMessage}\n${stack}`;
-		await logEventsAndPrint(errText, 'errLog.txt');
+		await logEventsAndPrint(errText, 'errLog');
 		return false; // Yes error
 	}
 	return true; // No error

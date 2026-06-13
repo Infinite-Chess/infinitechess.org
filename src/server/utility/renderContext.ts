@@ -64,7 +64,7 @@ export function getErrorPageContext(
 	if (t[status] === undefined) {
 		logEventsAndPrint(
 			`No error page copy exists for status ${status}; falling back to the 500 page. Add a [${status}] table to error TOML.`,
-			'errLog.txt',
+			'errLog',
 		);
 		code = 500;
 	}

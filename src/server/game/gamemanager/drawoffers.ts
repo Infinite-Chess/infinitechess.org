@@ -65,10 +65,7 @@ function hasColorOfferedDrawTooFast(servergame: ServerGame, color: Player): bool
  */
 function openDrawOffer(servergame: ServerGame, color: Player): void {
 	if (isDrawOfferOpen(servergame.match)) {
-		logEventsAndPrint(
-			"MUST NOT open a draw offer when there's already one open!!",
-			'errLog.txt',
-		);
+		logEventsAndPrint("MUST NOT open a draw offer when there's already one open!!", 'errLog');
 		return;
 	}
 	const playerdata = servergame.match.playerData[color]!;

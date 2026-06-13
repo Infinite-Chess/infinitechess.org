@@ -110,7 +110,7 @@ function closeIfInvalidAndAddMetadata(
 	if (process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL']) {
 		logEvents(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
-			'hackLog.txt',
+			'hackLog',
 		);
 		socket.close(1009, 'Origin Error');
 		return;
@@ -118,7 +118,7 @@ function closeIfInvalidAndAddMetadata(
 
 	const IP = getClientIP(req);
 	if (IP === undefined) {
-		logEvents('Unable to identify IP address from websocket connection!', 'hackLog.txt');
+		logEvents('Unable to identify IP address from websocket connection!', 'hackLog');
 		socket.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
 		return;
 	}
@@ -189,7 +189,7 @@ function onerror(ws: CustomWebSocket, error: Error): void {
 		return;
 
 	const errText = `An error occurred in a websocket. The socket: ${socketUtility.stringifySocketMetadata(ws)}\n${error.stack}`;
-	logEventsAndPrint(errText, 'errLog.txt');
+	logEventsAndPrint(errText, 'errLog');
 }
 
 export { onConnectionRequest };

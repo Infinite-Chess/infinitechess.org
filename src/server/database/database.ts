@@ -98,7 +98,7 @@ export function dbCall<T>(fn: () => T, description: string): T {
 		return fn();
 	} catch (error: unknown) {
 		const detail = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`${description}: ${detail}`, 'errLog.txt');
+		logEventsAndPrint(`${description}: ${detail}`, 'errLog');
 		throw error;
 	}
 }

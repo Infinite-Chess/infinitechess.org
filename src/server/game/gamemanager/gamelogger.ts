@@ -63,7 +63,7 @@ function logGame(servergame: ServerGame): RatingData | undefined {
 		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
 		void logEventsAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
-			'errLog.txt',
+			'errLog',
 		);
 		void logEvents(
 			`Game: ${gameutility.getSimplifiedGameString(servergame)}`,

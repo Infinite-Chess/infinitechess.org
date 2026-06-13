@@ -62,10 +62,7 @@ function tryAccessToken(req: Request, res: Response): boolean {
 
 	const result = isAccessTokenValid(accessToken);
 	if (!result.isValid) {
-		logEventsAndPrint(
-			`Invalid access token, expired or tampered! "${accessToken}"`,
-			'errLog.txt',
-		);
+		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog');
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		// The client should never use an expired token unless it's a bug.
 		revokeSession(res);
@@ -116,7 +113,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 		);
 	} catch (error) {
 		const errMsg = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog.txt');
+		logEventsAndPrint(`Error freshening session: ${errMsg}`, 'errLog');
 	}
 
 	// Valid! Set their req.memberInfo property!

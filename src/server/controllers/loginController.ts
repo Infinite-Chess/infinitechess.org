@@ -58,7 +58,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(
 			`Error during handleLogin for user "${req.body.username}": ${message}`,
-			'errLog.txt',
+			'errLog',
 		);
 		// Send a generic error response to the client.
 		// Avoid sending detailed error messages to the client for security reasons.
@@ -76,7 +76,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 	} catch {
 		// Already logged
 	}
-	logEvents(`Logged in member "${identity.username}".`, 'loginAttempts.txt');
+	logEvents(`Logged in member "${identity.username}".`, 'loginAttempts');
 }
 
 export { handleLogin };

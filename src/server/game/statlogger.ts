@@ -131,7 +131,7 @@ async function saveStats(): Promise<void> {
 		const errMsg =
 			`Failed to lock/write stats.json after logging game! Didn't save the new stats, but it should still be accurate in memory.` +
 			(e instanceof Error ? e.message : String(e));
-		void logEventsAndPrint(errMsg, 'errLog.txt');
+		void logEventsAndPrint(errMsg, 'errLog');
 	}
 }
 

@@ -13,14 +13,14 @@ import 'dotenv/config'; // Imports all properties of process.env, if it exists
 // fn call in a request handler). Logged, then we keep serving.
 process.on('unhandledRejection', (reason: unknown) => {
 	const detail = reason instanceof Error ? reason.stack : String(reason);
-	logEventsAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog.txt');
+	logEventsAndPrint(`Unhandled promise rejection: ${detail}`, 'errLog');
 });
 // A synchronous throw outside any try/catch (e.g. inside a setTimeout callback).
 // It leaves the process in an undefined state, so we log and exit;
 // PM2 restarts us and live games restore from the database.
 process.on('uncaughtException', (error: unknown) => {
 	const detail = error instanceof Error ? error.stack : String(error);
-	logEventsAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog.txt').finally(() =>
+	logEventsAndPrint(`Exiting from uncaught exception: ${detail}`, 'errLog').finally(() =>
 		process.exit(1),
 	);
 });

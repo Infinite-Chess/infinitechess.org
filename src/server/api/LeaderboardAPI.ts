@@ -75,7 +75,7 @@ function getLeaderboardData(req: Request, res: Response): void {
 			if (record === undefined) {
 				logEventsAndPrint(
 					`Username of user with user_id ${player.user_id} could not be found in members table, even though it was found in leaderboard table by getTopPlayersForLeaderboard().`,
-					'errLog.txt',
+					'errLog',
 				);
 				continue;
 			}

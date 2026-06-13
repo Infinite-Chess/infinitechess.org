@@ -364,7 +364,7 @@ function logCommand(command: string, req: Request): void {
 		logEventsAndPrint(
 			`Command executed by admin "${req.memberInfo.username}" of id "${req.memberInfo.user_id}":   ` +
 				command,
-			'adminCommands.txt',
+			'adminCommands',
 		);
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
@@ -372,7 +372,7 @@ function logCommand(command: string, req: Request): void {
 function sendAndLogResponse(res: Response, code: number, message: any): void {
 	res.status(code).send(message);
 	// Also log the sent response
-	logEventsAndPrint('Result:   ' + message + '\n', 'adminCommands.txt');
+	logEventsAndPrint('Result:   ' + message + '\n', 'adminCommands');
 }
 
 export { processCommand };

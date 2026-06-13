@@ -98,7 +98,7 @@ function isRefreshTokenValid(
 	} catch (error) {
 		// This block will catch any unexpected errors from database calls
 		const errMsg = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error resolving refresh token in the database: ${errMsg}`, 'errLog.txt');
+		logEventsAndPrint(`Error resolving refresh token in the database: ${errMsg}`, 'errLog');
 		return { isValid: false, reason: 'An internal error occurred during validation.' };
 	}
 
@@ -167,7 +167,7 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | und
 		// Log the error event when verification fails
 		logEventsAndPrint(
 			`Failed to decode token (isRefreshToken: ${isRefreshToken}): ${errMsg}. Token: "${token}"`,
-			'errLog.txt',
+			'errLog',
 		);
 		// Return undefined if verification fails (e.g., token is invalid or expired)
 		return undefined;

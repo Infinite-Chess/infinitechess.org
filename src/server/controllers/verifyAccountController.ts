@@ -69,7 +69,7 @@ export function verifyPendingRegistration(req: Request, res: Response): void {
 		// Promote: actually create the member and mark the pending row verified.
 		const user_id = promotePendingRegistration(pending);
 
-		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog.txt');
+		logEvents(`Created new member "${pending.username}" (ID ${user_id}).`, 'newMemberLog');
 
 		res.sendStatus(200);
 	} catch {

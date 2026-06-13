@@ -74,7 +74,7 @@ async function send(type: EmailType, options: SendMailOptions): Promise<boolean>
 	});
 
 	// Log trail of every email sent: its category and SES messageId.
-	logEvents(`${type} | ${info.response}`, 'sentEmailsLog.txt');
+	logEvents(`${type} | ${info.response}`, 'sentEmailsLog');
 
 	return true;
 }

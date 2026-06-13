@@ -42,7 +42,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			if (isBlacklisted(email)) {
 				logEventsAndPrint(
 					`User has a blacklisted email ${email} when attempting to request a password reset!`,
-					'blacklistLog.txt',
+					'blacklistLog',
 				);
 				res.status(409).json({
 					message: getTranslation('server.javascript.ws-email_blacklisted', req.lang),
@@ -70,23 +70,20 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
 
 			// 9. Log the email send attempt
-			logEvents(
-				`Sending password reset email to user_id (${userId})...`,
-				'loginAttempts.txt',
-			);
+			logEvents(`Sending password reset email to user_id (${userId})...`, 'loginAttempts');
 
 			// 10. Send email (must have its own error handling since we're not await'ing an async method!!)
 			sendPasswordResetEmail(email, resetUrl).catch((err) => {
 				const errorMessage = err instanceof Error ? err.stack : String(err);
 				logEventsAndPrint(
 					`Background password reset email send failed for user_id (${userId}), email (${email}): ${errorMessage}`,
-					'errLog.txt',
+					'errLog',
 				);
 			});
 		} else {
 			logEventsAndPrint(
 				`No member exists with the email (${email}). Not sending password reset email.`,
-				'loginAttempts.txt',
+				'loginAttempts',
 			);
 		}
 
@@ -98,7 +95,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 		const errorMessage: string =
 			'Forgot password database error: ' +
 			(error instanceof Error ? error.stack : String(error));
-		logEventsAndPrint(errorMessage, 'errLog.txt');
+		logEventsAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,
 		});
@@ -151,7 +148,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
-			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts.txt');
+			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts');
 			res.status(400).json({
 				message: getTranslation(
 					'server.javascript.ws-password-reset-token-invalid',
@@ -203,11 +200,11 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		});
 
 		// 8. Log the successful password reset
-		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts.txt');
+		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts');
 	} catch (error) {
 		const errorMessage: string =
 			'Reset password error: ' + (error instanceof Error ? error.stack : String(error));
-		logEventsAndPrint(errorMessage, 'errLog.txt');
+		logEventsAndPrint(errorMessage, 'errLog');
 		res.status(500).json({
 			message: req.t.responses.errors.server_error,
 		});
