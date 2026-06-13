@@ -6,7 +6,7 @@
  * Lines are tagged with the correlation ID of the trigger that caused them:
  * 'R…' = an HTTP request, 'W…' = an incoming websocket message (see
  * requestContext.ts). Every line one trigger produces — across ALL log files —
- * shares its ID. The trigger's own entry is in reqLog.txt (R) or wsInLog.txt (W).
+ * shares its ID. The trigger's own entry is in reqLog/ (R) or wsInLog/ (W).
  *
  * A line timestamped well after its trigger is a DEFERRED effect, fired by a
  * timer the trigger scheduled (e.g. an AFK auto-resign). An all-dashes ID means
