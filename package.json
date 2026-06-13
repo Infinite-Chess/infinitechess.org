@@ -23,7 +23,6 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "i18next": "^23.12.1",
-    "i18next-http-middleware": "^3.6.0",
     "jsonwebtoken": "^9.0.3",
     "marked": "^14.1.2",
     "node-email-verifier": "^2.0.0",
