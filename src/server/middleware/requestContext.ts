@@ -28,6 +28,15 @@ import uuid from '../../shared/util/uuid.js';
 /** IDs only need uniqueness within a log window, not security, so 8 base62 chars is plenty. */
 const ID_LENGTH = 8;
 
+/** Total width of a request ID: the random portion plus the 1-char trigger prefix ('R'/'W'). */
+const REQUEST_ID_WIDTH = ID_LENGTH + 1;
+
+/**
+ * Placeholder logged in place of an ID when a line has no request upstream.
+ * Must be the same width as a real ID to keep log columns aligned.
+ */
+const REQUEST_ID_PLACEHOLDER = '-'.repeat(REQUEST_ID_WIDTH);
+
 /** Holds the current async call chain's request ID, from creation at an entry point until the chain ends. */
 const storage = new AsyncLocalStorage<{ requestID: string }>();
 
@@ -57,4 +66,4 @@ function getRequestID(): string | undefined {
 	return storage.getStore()?.requestID;
 }
 
-export { assignRequestID, runWithRequestID, getRequestID };
+export { REQUEST_ID_PLACEHOLDER, assignRequestID, runWithRequestID, getRequestID };

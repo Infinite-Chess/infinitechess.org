@@ -85,7 +85,7 @@ function cleanUpExpiredRefreshTokens(): void {
 		const consumptionThreshold = now - refreshTokenGracePeriodMillis;
 
 		const query = `
-            DELETE FROM refresh_tokens 
+            DELETE FROM refresh_tokens
             WHERE expires_at < ?
 			   OR (consumed_at IS NOT NULL AND consumed_at < ?)
         `;

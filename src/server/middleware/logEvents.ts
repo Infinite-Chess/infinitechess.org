@@ -9,7 +9,7 @@
  * shares its ID. The trigger's own entry is in reqLog.txt (R) or wsInLog.txt (W).
  *
  * A line timestamped well after its trigger is a DEFERRED effect, fired by a
- * timer the trigger scheduled (e.g. an AFK auto-resign). A '---------' ID means
+ * timer the trigger scheduled (e.g. an AFK auto-resign). An all-dashes ID means
  * no request caused the line: startup, scheduled tasks, ws connection handshakes.
  *
  * Don't confuse correlation IDs with socket IDs (`of ID "..."`), which tie a
@@ -26,8 +26,8 @@ import { promises as fsPromises } from 'fs';
 
 import paths from '../config/paths.js';
 import { getClientIP } from '../utility/IP.js';
-import { getRequestID } from './requestContext.js';
 import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
+import { REQUEST_ID_PLACEHOLDER, getRequestID } from './requestContext.js';
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
@@ -42,7 +42,7 @@ async function logEvents(message: string, logName: string): Promise<void> {
 	const dateTime = format(new Date(), 'yyyy/MM/dd  HH:mm:ss');
 	// Tag the line with the ID of the request/socket-message that triggered
 	// it, if any, so all log lines it produced (across files) can be joined.
-	const requestID = getRequestID() ?? '---------';
+	const requestID = getRequestID() ?? REQUEST_ID_PLACEHOLDER;
 	const logItem = `${dateTime}  ${requestID}   ${message}\n`;
 
 	try {
