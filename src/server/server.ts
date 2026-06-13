@@ -1,8 +1,8 @@
 // src/server/server.ts
 
 import { initDatabase } from './database/databaseTables.js';
-import { logEventsAndPrint } from './middleware/logEvents.js';
 import { initDevEnvironment } from './config/setupDev.js';
+import { logEventsAndPrint, startPeriodicLogCleanup } from './middleware/logEvents.js';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -28,6 +28,7 @@ process.on('uncaughtException', (error: unknown) => {
 initDatabase();
 // Ensure our workspace is ready for the dev environment
 initDevEnvironment();
+startPeriodicLogCleanup();
 
 // Dependancy/built-in imports
 import https from 'https';

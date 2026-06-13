@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { format } from 'date-fns';
 
-import paths from '../config/paths.js';
+import { LOGS_DIR } from '../middleware/logEvents.js';
 
 // Helpers -------------------------------------------------------------------------------
 
@@ -17,8 +17,8 @@ function writeStartupLog(message: string): void {
 	const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
 	const line = `${timestamp} | ${message}. PID: ${process.pid}\n`;
 	try {
-		fs.mkdirSync(paths.LOGS_DIR, { recursive: true });
-		fs.appendFileSync(path.join(paths.LOGS_DIR, 'startupLog.txt'), line);
+		fs.mkdirSync(LOGS_DIR, { recursive: true });
+		fs.appendFileSync(path.join(LOGS_DIR, 'startupLog.txt'), line);
 	} catch (err) {
 		console.error('Failed to write to startupLog.txt:', err);
 	}
