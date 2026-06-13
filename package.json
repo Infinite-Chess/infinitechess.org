@@ -6,6 +6,7 @@
   "license": "AGPL",
   "main": "dist/server/server.js",
   "type": "module",
+  "// SECURITY": "When auditing dependencies (npm audit), see docs/DEPENDENCY_SECURITY.md for knowingly-unpatched advisories and why.",
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1068.0",
     "@aws-sdk/credential-providers": "^3.1068.0",
