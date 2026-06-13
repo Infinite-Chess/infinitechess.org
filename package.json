@@ -28,7 +28,7 @@
     "marked": "^14.1.2",
     "node-email-verifier": "^2.0.0",
     "node-forge": "^1.4.0",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^8.0.11",
     "nunjucks": "^3.2.4",
     "obscenity": "^0.4.5",
     "proper-lockfile": "^4.1.2",
