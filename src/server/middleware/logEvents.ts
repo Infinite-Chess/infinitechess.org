@@ -16,20 +16,17 @@
  * CONNECTION's messages together rather than one trigger's effects.
  */
 
-import type { IncomingMessage } from 'node:http';
-import type { Request, Response } from 'express';
-
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { format, startOfISOWeek } from 'date-fns';
 import { promises as fsPromises } from 'fs';
 
-import { getClientIP } from '../utility/IP.js';
-import socketUtility, { CustomWebSocket } from '../socket/socketUtility.js';
 import { REQUEST_ID_PLACEHOLDER, getRequestID } from './requestContext.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Constants ---------------------------------------------------
 
 /** Absolute path to the project-root `logs/` directory. */
 const LOGS_DIR = path.join(__dirname, '..', '..', '..', 'logs');
@@ -45,6 +42,21 @@ const LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 30 * 6; // ~6 months
 
 /** How often the retention sweep runs. */
 const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+
+// Logging ---------------------------------------------------------------
+
+/**
+ * Logs the provided message by appending a line to the end of the specified log file,
+ * and prints it to the console as an error.
+ * @param message - The message to log.
+ * @param logName - The base name of the log file, without the `.txt` extension.
+ */
+async function logEventsAndPrint(message: string, logName: string): Promise<void> {
+	if (logName === 'errLog') console.error(message);
+	else console.log(message); // Prevents non error logs from going to PM2's error logs.
+
+	await logEvents(message, logName);
+}
 
 /**
  * Logs the provided message by appending a line to the end of the specified log file.
@@ -84,75 +96,6 @@ function resolveLogPath(logName: string): string {
 	return path.join(LOGS_DIR, logName, `${bucketDate}.txt`);
 }
 
-/**
- * Logs the provided message by appending a line to the end of the specified log file,
- * and prints it to the console as an error.
- * @param message - The message to log.
- * @param logName - The base name of the log file, without the `.txt` extension.
- */
-async function logEventsAndPrint(message: string, logName: string): Promise<void> {
-	if (logName === 'errLog') console.error(message);
-	else console.log(message); // Prevents non error logs from going to PM2's error logs.
-
-	await logEvents(message, logName);
-}
-
-/** Middleware that logs the incoming request, then calls `next()`. */
-function reqLogger(req: Request, _res: Response, next: () => void): void {
-	const clientIP = getClientIP(req) || 'Unknown ip';
-
-	const origin = req.headers.origin || 'Unknown origin';
-
-	// Redact sensitive tokens that appear in URL paths so they are never written to log files.
-	const sanitizedUrl = req.url
-		.replace(/(\/reset-password\/)([^?#/]+)/, '$1[REDACTED]')
-		.replace(/(\/verify\/[^/]+\/)([^?#/]+)/, '$1[REDACTED]')
-		.replace(/([?&]username=)[^&#]+/, '$1[REDACTED]'); // Redact usernames (e.g. the availability check's ?username=)
-
-	// Bodies are high-PII and left out
-	const logThis = `${origin}   ${clientIP}   ${req.method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
-
-	logEvents(logThis, 'reqLog');
-
-	next(); // Continue to next middleware
-}
-
-/**
- * Logs websocket connection upgrade requests into `wsInLog.txt`
- * @param req - The request object
- * @param ws - The websocket object
- */
-function logWebsocketStart(req: IncomingMessage, ws: CustomWebSocket): void {
-	const socketID = ws.metadata.id;
-	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
-	const userAgent = req.headers['user-agent'];
-	// const userAgent = ws.metadata.userAgent;
-	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
-	logEvents(logThis, 'wsInLog');
-}
-
-/**
- * Logs incoming websocket messages into `wsInLog.txt`
- * @param ws - The websocket object
- * @param messageData - The raw data of the incoming message, as a string
- */
-function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
-	const socketID = ws.metadata.id;
-	const logThis = `From socket of ID "${socketID}":   ${messageData}`;
-	logEvents(logThis, 'wsInLog');
-}
-
-/**
- * Logs outgoing websocket messages into `wsOutLog.txt`
- * @param ws - The websocket object
- * @param messageData - The raw data of the outgoing message, as a string
- */
-function logReqWebsocketOut(ws: CustomWebSocket, messageData: string): void {
-	const socketID = ws.metadata.id;
-	const logThis = `To socket of ID "${socketID}":   ${messageData}`;
-	logEvents(logThis, 'wsOutLog');
-}
-
 // Cleanup ----------------------------------------------------
 
 /** Starts the periodic retention sweep of rotated logs. */
@@ -188,13 +131,4 @@ function purgeOldRotatedLogs(): void {
 
 // Exports --------------------------------
 
-export {
-	LOGS_DIR,
-	logEvents,
-	logEventsAndPrint,
-	reqLogger,
-	logWebsocketStart,
-	logReqWebsocketIn,
-	logReqWebsocketOut,
-	startPeriodicLogCleanup,
-};
+export { LOGS_DIR, logEvents, logEventsAndPrint, startPeriodicLogCleanup };

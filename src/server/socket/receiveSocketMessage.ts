@@ -11,14 +11,15 @@ import type { CustomWebSocket } from './socketUtility.js';
 import * as z from 'zod';
 
 import socketUtility from './socketUtility.js';
+import { logEvents } from '../middleware/logEvents.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
 import { LobbySchema } from '../game/seeksmanager/lobbyrouter.js';
 import { GeneralSchema } from './generalrouter.js';
+import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
-import { logEvents, logReqWebsocketIn } from '../middleware/logEvents.js';
 import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------

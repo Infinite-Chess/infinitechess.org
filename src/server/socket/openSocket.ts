@@ -20,11 +20,12 @@ import { executeSafely } from '../utility/errorGuard.js';
 import { runWithRequestID } from '../middleware/requestContext.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
+import { logWebsocketStart } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { resolveLanguageForRequest } from '../middleware/reqLanguage.js';
-import { logEvents, logEventsAndPrint, logWebsocketStart } from '../middleware/logEvents.js';
+import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addConnectionToConnectionLists,
 	doesClientHaveMaxSocketCount,

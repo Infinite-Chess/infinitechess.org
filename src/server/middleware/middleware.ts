@@ -14,7 +14,7 @@ import apiRouter from '../routes/api.js';
 import htmlCookies from './htmlCookies.js';
 import staticAssets from './staticAssets.js';
 import errorHandler from './errorHandler.js';
-import { reqLogger } from './logEvents.js';
+import { reqLogger } from './reqLogger.js';
 import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';

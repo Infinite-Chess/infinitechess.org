@@ -15,7 +15,8 @@ import wsutil from '../../shared/util/wsutil.js';
 
 import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
-import { logEventsAndPrint, logReqWebsocketOut } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { logReqWebsocketOut } from './wsLogger.js';
 import { addTimeoutToEchoTimers, deleteEchoTimerForMessageID } from './echoTracker.js';
 
 // Types --------------------------------------------------------------------------------------
