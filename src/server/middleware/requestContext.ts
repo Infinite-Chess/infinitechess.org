@@ -25,7 +25,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import uuid from '../../shared/util/uuid.js';
 
-/** IDs only need uniqueness within a log window, not security, so 8 base62 chars is plenty. */
+/** Length of request IDs' random portion, excluding the trigger prefix ('R'/'W'). */
 const ID_LENGTH = 8;
 
 /** Total width of a request ID: the random portion plus the 1-char trigger prefix ('R'/'W'). */
@@ -66,4 +66,4 @@ function getRequestID(): string | undefined {
 	return storage.getStore()?.requestID;
 }
 
-export { REQUEST_ID_PLACEHOLDER, assignRequestID, runWithRequestID, getRequestID };
+export { REQUEST_ID_PLACEHOLDER, ID_LENGTH, assignRequestID, runWithRequestID, getRequestID };

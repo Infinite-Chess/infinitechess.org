@@ -12,6 +12,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import uuid from '../../shared/util/uuid.js';
 
+import { ID_LENGTH } from '../middleware/requestContext.js';
 import { handleUnsubbing } from './generalrouter.js';
 
 // Variables ---------------------------------------------------------------------------
@@ -232,7 +233,7 @@ function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean
 // Miscellaneous ---------------------------------------------------------------------------
 
 function generateUniqueIDForSocket(): string {
-	return uuid.genUniqueID(8, websocketConnections); // Matches request IDs' length
+	return uuid.genUniqueID(ID_LENGTH, websocketConnections); // Matches request IDs' length
 }
 
 export {
