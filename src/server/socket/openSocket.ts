@@ -21,6 +21,7 @@ import { runWithRequestID } from '../middleware/requestContext.js';
 import { sendSocketMessage } from './sendSocketMessage.js';
 import { buildTranslations } from '../middleware/reqTranslations.js';
 import { logWebsocketStart } from './wsLogger.js';
+import { logIncomingRequest } from '../middleware/reqLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
@@ -39,6 +40,10 @@ import {
 // Functions ---------------------------------------------------------------------------
 
 function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
+	// Log every upgrade attempt to reqLog — even ones we reject below.
+	// Successful upgrades are logged below to wsInLog with more metadata.
+	logIncomingRequest(req);
+
 	const ws = closeIfInvalidAndAddMetadata(socket, req);
 	if (ws === undefined) return; // We will have already closed the socket
 
@@ -73,7 +78,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	addConnectionToConnectionLists(ws);
 
-	logWebsocketStart(req, ws); // Log the request
+	logWebsocketStart(ws); // Log the opened socket in wsInLog with more metadata.
 
 	addListenersToSocket(req, ws);
 
@@ -160,12 +165,14 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		// Each incoming message gets its own correlation ID,
 		// tagging every log line its processing produces.
-		// WS-counterpart of app.use(assignRequestID) for HTTP requests.
-		runWithRequestID(() =>
-			executeSafely(
-				() => onmessage(req, ws, message),
-				'Error caught within websocket on-message event:',
-			),
+		// (Counterpart of assignRequestID for HTTP.)
+		runWithRequestID(
+			() =>
+				executeSafely(
+					() => onmessage(req, ws, message),
+					'Error caught within websocket on-message event:',
+				),
+			'W',
 		);
 	});
 	ws.on('close', (code, reason) => {

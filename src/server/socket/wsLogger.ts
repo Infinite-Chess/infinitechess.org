@@ -5,28 +5,20 @@
  * Reflection of reqLogger middleware, but for websockets.
  */
 
-import type { IncomingMessage } from 'node:http';
-
 import { logEvents } from '../middleware/logEvents.js';
 import socketUtility, { CustomWebSocket } from './socketUtility.js';
 
-/**
- * Logs websocket connection upgrade requests into `wsInLog/`.
- * @param req - The request object
- * @param ws - The websocket object
- */
-function logWebsocketStart(req: IncomingMessage, ws: CustomWebSocket): void {
+/** Additionally logs a newly-opened authenticated socket's metadata into  `wsInLog/. */
+function logWebsocketStart(ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
 	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
-	const userAgent = req.headers['user-agent'];
-	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}   User agent: ${userAgent}`;
+	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}`;
 	logEvents(logThis, 'wsInLog');
 }
 
 /**
  * Logs incoming websocket messages into `wsInLog/`.
- * @param ws - The websocket object
- * @param messageData - The raw data of the incoming message, as a string
+ * @param messageData - The raw data of the incoming message.
  */
 function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
@@ -36,8 +28,7 @@ function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
 
 /**
  * Logs outgoing websocket messages into `wsOutLog/`.
- * @param ws - The websocket object
- * @param messageData - The raw data of the outgoing message, as a string
+ * @param messageData - The raw data of the outgoing message.
  */
 function logReqWebsocketOut(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;

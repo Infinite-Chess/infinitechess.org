@@ -2,20 +2,21 @@
 
 /**
  * Provides the correlation ID that logEvents tags every log line with,
- * identifying the trigger — one HTTP request ('R' prefix) or one incoming
- * websocket message ('W' prefix) — that caused the line.
+ * identifying the trigger — one HTTP request or websocket upgrade
+ * ('R' prefix) or one incoming websocket message ('W' prefix) — that
+ * caused the line.
  *
  * Built on AsyncLocalStorage: an in-memory store scoped to an async call
  * chain, synchronously readable anywhere downstream (surviving awaits)
  * without passing `req` around. Context is created at exactly two entry
- * points: assignRequestID (first middleware in the Express pipeline) and
- * runWithRequestID (wrapping each ws message dispatch in openSocket).
+ * points: assignRequestID middleware, and runWithRequestID (wrapping
+ * the ws upgrade handshake and each incoming ws message).
  *
  * Context follows the causal chain ONLY, so an ID is never wrong:
  * - Timers created during processing carry the scheduler's ID into their
  *   later firings — intentional; deferred effects attribute to their cause.
  * - Unrelated chains can never see each other's IDs.
- * - Chains with no request upstream (startup, intervals, ws handshakes,
+ * - Chains with no request upstream (startup, intervals,
  *   network-initiated closes) read undefined, logging without an ID.
  */
 
@@ -42,7 +43,8 @@ const storage = new AsyncLocalStorage<{ requestID: string }>();
 
 /**
  * Generates a fresh request ID. The prefix tells, at a glance in the logs,
- * what kind of trigger the ID belongs to: 'R' = HTTP request, 'W' = websocket message.
+ * what kind of trigger the ID belongs to: 'R' = HTTP request or websocket
+ * upgrade handshake, 'W' = incoming websocket message.
  */
 function generateRequestID(prefix: 'R' | 'W'): string {
 	return prefix + uuid.generateID_Base62(ID_LENGTH);
@@ -53,9 +55,12 @@ function assignRequestID(_req: Request, _res: Response, next: NextFunction): voi
 	storage.run({ requestID: generateRequestID('R') }, next);
 }
 
-/** Runs the callback inside a context holding a fresh request ID, for incoming websocket messages. */
-function runWithRequestID<T>(callback: () => T): T {
-	return storage.run({ requestID: generateRequestID('W') }, callback);
+/**
+ * Runs the callback inside a context holding a fresh request ID. Used for the
+ * websocket upgrade handshake ('R') and each incoming websocket message ('W').
+ */
+function runWithRequestID<T>(callback: () => T, prefix: 'R' | 'W'): T {
+	return storage.run({ requestID: generateRequestID(prefix) }, callback);
 }
 
 /**

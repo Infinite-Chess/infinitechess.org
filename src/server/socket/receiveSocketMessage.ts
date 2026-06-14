@@ -82,7 +82,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		// Incoming message is in binary data, which can also be parsed into JSON
 		parsedUnvalidatedMessage = JSON.parse(messageStr);
 	} catch (error: unknown) {
-		if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
+		if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
 		logEvents(errText, 'hackLog');
 		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
@@ -113,7 +113,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		const incomingEcho: number = message.contents;
 		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
 		if (!validEcho) {
-			if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
+			if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 			// This occasionally happens when the echo arrives after timeToWaitForEchoMillis has elapsed,
 			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
 		}
@@ -122,7 +122,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	// Not an echo...
 
-	if (!rateLimitAndLogMessage(req, ws, messageStr)) return; // The socket will have already been closed.
+	if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
 
 	// Send our echo here! We always send an echo to every message except echos themselves.
 	sendSocketMessage(ws, 'general', 'echo', message.id);
@@ -135,17 +135,17 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 }
 
 /**
- * Logs and rate limits on incoming socket message.
+ * Logs an incoming socket message to wsInLog, then rate limits it.
  * Returns true if the message is allowed, or false if the message
  * is being rate limited and the socket has already been closed.
  */
-function rateLimitAndLogMessage(
+function logAndRateLimitMessage(
 	req: IncomingMessage,
 	ws: CustomWebSocket,
 	rawMessage: string,
 ): boolean {
-	if (!rateLimitWebSocket(req, ws)) return false; // They are being rate limited, the socket will have already been closed.
-	logReqWebsocketIn(ws, rawMessage); // Only logged the message if it wasn't rate limited.
+	logReqWebsocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
+	if (!rateLimitWebSocket(req, ws)) return false; // Rate limited; the socket will have already been closed.
 	return true;
 }
 
