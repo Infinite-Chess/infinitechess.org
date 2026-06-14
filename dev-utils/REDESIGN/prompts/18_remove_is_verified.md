@@ -17,7 +17,7 @@ reads/branches on them.
    - Add a one-off `ALTER TABLE members DROP COLUMN <col>` migration for each (guard against
      "column doesn't exist" like `dropLegacyLiveGamesPosPastedColumnIfPresent`), called once
      from `initDatabase()`, annotated `TEMPORARY MIGRATION: remove after it has run in
-     production`. Note the migration in the PR.
+     production`.
    - Remove the three from column allow-lists / the `MemberRecord` interface in
      `memberManager.ts`, and from `addUser`.
 2. **Promotion:** update the verify-promotion in `verifyAccountController.ts` so it no longer
