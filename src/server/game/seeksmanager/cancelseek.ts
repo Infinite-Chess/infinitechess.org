@@ -8,9 +8,8 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import socketUtility from '../../socket/socketUtility.js';
 import { memberInfoEq } from './seekutility.js';
-import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getSeekAndIndexByID, deleteSeekByIndex, IDLengthOfSeeks } from './lobbymanager.js';
 
 /** The zod schema for validating the contents of the cancelseek message. */
@@ -36,15 +35,7 @@ function cancelSeek(ws: CustomWebSocket, messageContents: CancelSeekMessage): vo
 
 	// Make sure they are the owner.
 	if (!memberInfoEq(ws.metadata.memberInfo, seek.owner)) {
-		console.error(
-			`Player tried to delete an seek that wasn't theirs! Seek ID: ${id} Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
-		return sendSocketMessage(
-			ws,
-			'general',
-			'printerror',
-			'You are forbidden to delete this seek.',
-		);
+		logEventsAndPrint(`Player tried to delete a seek that wasn't theirs!`, 'errLog');
 	}
 
 	deleteSeekByIndex(seek, index);

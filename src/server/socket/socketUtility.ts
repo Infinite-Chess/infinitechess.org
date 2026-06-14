@@ -55,14 +55,6 @@ interface CustomWebSocket extends WebSocket {
 // Functions ---------------------------------------------------------------------------
 
 /**
- * Prints the websocket to the console, temporarily removing self-referencing first.
- * @param ws - The websocket
- */
-function printSocket(ws: CustomWebSocket): void {
-	console.log(stringifySocketMetadata(ws));
-}
-
-/**
  * Simplifies the websocket's metadata and stringifies it.
  * @param ws - The websocket object
  * @returns The stringified simplified websocket metadata.
@@ -97,7 +89,6 @@ function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['me
 }
 
 export default {
-	printSocket,
 	stringifySocketMetadata,
 };
 

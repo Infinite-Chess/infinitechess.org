@@ -13,6 +13,7 @@
  */
 
 import type { ServerGame } from './gameutility.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
@@ -23,7 +24,6 @@ import { getGameData } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { cancelDisconnectTimer } from './afkdisconnect.js';
-import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already
@@ -36,7 +36,7 @@ import socketUtility, { CustomWebSocket } from '../../socket/socketUtility.js';
 function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: number): void {
 	if (typeof gameID !== 'number') {
 		// Tampered message
-		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}) of type ${typeof gameID}. The socket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}) of type ${typeof gameID}`;
 		logEventsAndPrint(log, 'errLog');
 		return;
 	}

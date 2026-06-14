@@ -12,9 +12,9 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import * as z from 'zod';
 
 import gameutility from '../gamemanager/gameutility.js';
-import socketUtility from '../../socket/socketUtility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
 import { memberInfoEq } from './seekutility.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { removeSocketFromLobbySubs } from './lobbysubscribers.js';
@@ -56,10 +56,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 
 	// Make sure they are not accepting their own.
 	if (memberInfoEq(user, seek.owner)) {
-		sendSocketMessage(ws, 'general', 'printerror', 'Cannot accept your own seek!');
-		console.error(
-			`Player tried to accept their own seek! Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
+		logEventsAndPrint('Player tried to accept their own seek!', 'errLog');
 		return;
 	}
 

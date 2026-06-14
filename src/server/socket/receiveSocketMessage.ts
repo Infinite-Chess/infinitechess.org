@@ -9,7 +9,6 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
 
-import socketUtility from './socketUtility.js';
 import { logEvents } from '../middleware/logEvents.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
@@ -75,7 +74,7 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	}
 
 	const messageStr = rawMessage.toString('utf8');
-	const message = parseAndValidateMessage(ws, messageStr);
+	const message = parseAndValidateMessage(messageStr);
 
 	if (message === null) {
 		// Log the invalid request for debugging (if it wasn't hand crafted)
@@ -104,19 +103,15 @@ function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
  * Sends the appropriate error to the client on failure.
  * Returns the parsed message on success, or null on failure.
  */
-function parseAndValidateMessage(
-	ws: CustomWebSocket,
-	messageStr: string,
-): AnyIncomingMessage | null {
+function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(messageStr);
-	} catch (error: unknown) {
+	} catch {
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots ahve exploited this. Safe to log in case it's ever a legit bug.
-		const message = error instanceof Error ? error.message : String(error);
 		logEvents(
-			`Error parsing incoming message as JSON: ${message}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+			`Incoming websocket message is not JSON parseable. Message: "${messageStr}"`,
 			'errLog',
 		);
 		return null;

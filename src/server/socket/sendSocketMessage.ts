@@ -13,7 +13,6 @@ import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
 import wsutil from '../../shared/util/wsutil.js';
 
-import socketUtility from './socketUtility.js';
 import { getTranslation } from '../utility/translate.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { logReqWebsocketOut } from './wsLogger.js';
@@ -84,7 +83,7 @@ function sendSocketMessage(
 	// early instead of logging the message as sent and arming an echo timer.
 	if (ws.readyState !== WebSocket.OPEN) {
 		const state = ws.readyState === WebSocket.CLOSING ? 'CLOSING' : 'CLOSED';
-		const errText = `Websocket is in a ${state} state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}\nSocket: ${socketUtility.stringifySocketMetadata(ws)}`;
+		const errText = `Websocket is in a ${state} state, can't send message. Action: ${action}. Value: ${jsutil.ensureJSONString(value)}`;
 		logEventsAndPrint(errText, 'errLog');
 		return;
 	}

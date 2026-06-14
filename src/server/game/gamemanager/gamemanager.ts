@@ -25,7 +25,6 @@ import statlogger from '../statlogger.js';
 import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
-import socketUtility from '../../socket/socketUtility.js';
 import liveGameValues from './liveGameValues.js';
 import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
@@ -209,11 +208,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	if (gameID === undefined)
 		return console.error("Cannot unsub client from game when it's not subscribed to one.");
 
-	const servergame = getGameByID(gameID);
-	if (!servergame)
-		return console.log(
-			`Cannot unsub client from game when game doesn't exist! Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-		);
+	const servergame = getGameByID(gameID)!;
 
 	gameutility.unsubClientFromGame(servergame.match, ws); // Don't tell the client to unsub because their socket is CLOSING
 
