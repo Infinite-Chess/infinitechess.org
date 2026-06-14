@@ -18,9 +18,7 @@ temporary one-off migrations (e.g. `dropLegacyLiveGamesPosPastedColumnIfPresent`
   pattern, that deletes **all** `is_verified = 0` members: `SELECT user_id FROM members WHERE
   is_verified = 0`, then `deleteAccount(user_id, 'unverified')` for each.
 - Call it once from `initDatabase()`. Annotate it `TEMPORARY MIGRATION: remove after it has run
-  in production`.
-- Note the purge in the PR description (it evicts any genuine in-flight registrant, who simply
-  registers again).
+  in production` (it evicts any genuine in-flight registrant, who simply registers again).
 
 ## Out of scope
 - Dropping the `is_verified` column and removing its machinery — separate task, which must run
