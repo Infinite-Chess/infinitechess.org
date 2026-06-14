@@ -36,7 +36,7 @@ interface CustomWebSocket extends WebSocket {
 		/** The parsed cookie object */
 		cookies: ParsedCookies;
 		/** The user-agent property of the original websocket upgrade's req.headers */
-		userAgent?: string;
+		userAgent: string;
 		memberInfo: AuthMemberInfo;
 		/** The account verification status of the user */
 		verified: boolean;

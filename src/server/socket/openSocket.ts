@@ -52,7 +52,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 	// 1. Too many requests
 	// 2. Message too big
 	// In ALL these cases, we are terminating all the IPs sockets for now!
-	if (!rateLimitWebSocket(req, ws)) {
+	if (!rateLimitWebSocket(ws)) {
 		// Connection not allowed
 		return terminateAllIPSockets(ws.metadata.IP);
 	}
@@ -80,7 +80,7 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	logWebsocketStart(ws); // Log the opened socket in wsInLog with more metadata.
 
-	addListenersToSocket(req, ws);
+	addListenersToSocket(ws);
 
 	// If user is signed in, use the database to correctly set the property ws.metadata.verified
 	if (ws.metadata.memberInfo.signedIn) {
@@ -129,6 +129,13 @@ function closeIfInvalidAndAddMetadata(
 		return;
 	}
 
+	const userAgent = req.headers['user-agent'];
+	if (!userAgent) {
+		// Occasionally, automated scanner and vulnerability prober bots will omit the user agent.
+		socket.close(1008, 'User agent is required');
+		return;
+	}
+
 	// req.cookies is only set by our cookie-parser middleware for regular requests,
 	// NOT for websocket upgrade requests, so we parse the raw header ourselves.
 	const cookies = parseCookie(req.headers.cookie ?? '');
@@ -145,7 +152,7 @@ function closeIfInvalidAndAddMetadata(
 		// Parse cookies from the Upgrade http headers
 		cookies,
 		subscriptions: {},
-		userAgent: req.headers['user-agent'],
+		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
 		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
@@ -161,7 +168,7 @@ function closeIfInvalidAndAddMetadata(
 /**
  * Adds the 'message', 'close', and 'error' event listeners to the socket
  */
-function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
+function addListenersToSocket(ws: CustomWebSocket): void {
 	ws.on('message', (message: Buffer<ArrayBufferLike>) => {
 		// Each incoming message gets its own correlation ID,
 		// tagging every log line its processing produces.
@@ -169,7 +176,7 @@ function addListenersToSocket(req: IncomingMessage, ws: CustomWebSocket): void {
 		runWithRequestID(
 			() =>
 				executeSafely(
-					() => onmessage(req, ws, message),
+					() => onmessage(ws, message),
 					'Error caught within websocket on-message event:',
 				),
 			'W',

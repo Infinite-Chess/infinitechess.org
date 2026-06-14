@@ -1,6 +1,5 @@
 // src/server/middleware/rateLimit.ts
 
-import type { IncomingMessage } from 'node:http';
 import type { Request, Response, NextFunction } from 'express';
 import type { CustomWebSocket } from '../socket/socketUtility.js';
 
@@ -196,17 +195,10 @@ function respondRateLimited(req: Request, res: Response, retryAfterSec: number):
  * @param ws - The websocket object
  * @returns false if they've sent too many requests/messages. THEY WILL HAVE ALREADY BEEN CLOSED
  */
-function rateLimitWebSocket(req: IncomingMessage, ws: CustomWebSocket): boolean {
+function rateLimitWebSocket(ws: CustomWebSocket): boolean {
 	countRecentRequests();
 
-	const userAgent = req.headers['user-agent'];
-	if (!userAgent) {
-		// Occasionally, automatated scanner and vulnerability prober bots will omit the user agent.
-		ws.close(1008, 'User agent is required');
-		return false;
-	}
-
-	const userKey = getIpBrowserAgentKey(ws.metadata.IP, userAgent);
+	const userKey = getIpBrowserAgentKey(ws.metadata.IP, ws.metadata.userAgent);
 
 	// Add the current timestamp to their list of recent connection timestamps.
 	incrementClientConnectionCount(userKey);

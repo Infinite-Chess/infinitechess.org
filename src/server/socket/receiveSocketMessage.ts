@@ -5,7 +5,6 @@
  * cancels their echo timer, sends an echo, then sends the message to our router.
  */
 
-import type { IncomingMessage } from 'http';
 import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
@@ -66,7 +65,7 @@ const maxWebsocketMessageSizeBytes = 500_000; // 500 KB
  * Sends an echo (unless this message itself **is** an echo), rate limits,
  * logs the message, then routes the message where it needs to go.
  */
-function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer): void {
+function onmessage(ws: CustomWebSocket, rawMessage: Buffer): void {
 	// Test if the message is too big. People could DDOS this way
 	// THIS MAY NOT WORK if the bytes get read before we reach this part of the code, it could still DDOS us before we reject them.
 	if (Buffer.byteLength(rawMessage) > maxWebsocketMessageSizeBytes) {
@@ -80,7 +79,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 
 	if (message === null) {
 		// Log the invalid request for debugging (if it wasn't hand crafted)
-		logAndRateLimitMessage(req, ws, messageStr);
+		logAndRateLimitMessage(ws, messageStr);
 		return;
 	}
 
@@ -90,7 +89,7 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 		return;
 	}
 
-	if (!logAndRateLimitMessage(req, ws, messageStr)) return; // Rate limited; socket already closed.
+	if (!logAndRateLimitMessage(ws, messageStr)) return; // Rate limited; socket already closed.
 
 	// Send our own echo
 	sendSocketMessage(ws, 'general', 'echo', message.id);
@@ -139,13 +138,9 @@ function parseAndValidateMessage(
  * Returns true if the message is allowed, or false if the message
  * is being rate limited and the socket has already been closed.
  */
-function logAndRateLimitMessage(
-	req: IncomingMessage,
-	ws: CustomWebSocket,
-	rawMessage: string,
-): boolean {
+function logAndRateLimitMessage(ws: CustomWebSocket, rawMessage: string): boolean {
 	logReqWebsocketIn(ws, rawMessage); // Log every incoming message, even rate-limited ones.
-	if (!rateLimitWebSocket(req, ws)) return false; // Rate limited; the socket will have already been closed.
+	if (!rateLimitWebSocket(ws)) return false; // Rate limited; the socket will have already been closed.
 	return true;
 }
 
