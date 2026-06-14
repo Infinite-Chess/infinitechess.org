@@ -170,9 +170,6 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys):
  */
 function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
-	// Only reset the timer if they have at least one subscription!
-	if (Object.keys(ws.metadata.subscriptions).length === 0) return; // No subscriptions
-
 	ws.metadata.heartbeatTimerID = setTimeout(
 		() => sendHeartbeatPing(ws),
 		wsutil.heartbeatIntervalMillis,
