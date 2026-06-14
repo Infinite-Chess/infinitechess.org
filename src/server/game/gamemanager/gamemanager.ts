@@ -30,6 +30,7 @@ import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
@@ -205,8 +206,16 @@ function startDisconnectTimerAndPersist(
  */
 function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = true } = {}): void {
 	const gameID = ws.metadata.subscriptions.game?.id;
-	if (gameID === undefined)
-		return console.error("Cannot unsub client from game when it's not subscribed to one.");
+	if (gameID === undefined) {
+		// In the past, this appeared in non-instantly-deleted games when both players clicked
+		// "Main Menu" around the same time; the second click triggered early game deletion,
+		// clearing subscriptions.game before the trailing unsub message was processed.
+		logEventsAndPrint(
+			"Cannot unsub client from game when it's not subscribed to one.",
+			'errLog',
+		);
+		return;
+	}
 
 	const servergame = getGameByID(gameID)!;
 
