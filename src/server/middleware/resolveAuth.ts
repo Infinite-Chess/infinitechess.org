@@ -61,7 +61,7 @@ function tryAccessToken(req: Request, res: Response): boolean {
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
 	const result = isAccessTokenValid(accessToken);
-	if (!result.isValid) {
+	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
 		return false;
@@ -87,7 +87,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 
 	const result = isRefreshTokenValid(refreshToken, getClientIP(req));
 
-	if (!result.isValid) {
+	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
 		return;
@@ -136,10 +136,9 @@ function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	const refreshToken = ws.metadata.cookies.jwt;
 	if (!refreshToken) return; // Not logged in, don't set their user property
 
-	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const ip = ws.metadata.IP;
 	const result = isRefreshTokenValid(refreshToken, ip); // True for refresh token
-	if (!result.isValid) return;
+	if (!result) return;
 
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }

@@ -30,82 +30,56 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
  * Checks if an access token is valid => not expired,
  * nor tampered, and the user account still exists.
  */
-function isAccessTokenValid(token: string):
-	| {
-			isValid: true;
-			payload: TokenPayload;
-	  }
-	| {
-			isValid: false;
-			reason: string;
-	  } {
+function isAccessTokenValid(token: string): { payload: TokenPayload } | undefined {
 	// Decode the token
 	const payload = decodeToken(token, false);
-	if (!payload) return { isValid: false, reason: 'Token is expired or tampered.' };
+	if (!payload) return undefined; // Expired or tampered
 
 	try {
 		// Check if the user account still exists.
-		if (!doesMemberOfIDExist(payload.user_id))
-			return { isValid: false, reason: 'User account does not exist.' };
+		if (!doesMemberOfIDExist(payload.user_id)) return undefined; // Account deleted
 	} catch {
 		// DB error (already logged)
-		return { isValid: false, reason: 'A database error occurred.' };
+		return undefined;
 	}
 
 	try {
 		updateLastSeen(payload.user_id);
 	} catch {
-		// Already logged. Token is still valid
+		// DB error (already logged). Token is still valid
 	}
-	return { isValid: true, payload };
+	return { payload };
 }
 
 /**
  * Checks if a refresh token is valid. Not expired, nor tampered, and it's still
  * in the database (not manually invalidated by logging out, or deleting the account).
- * @param token
  * @param IP - Has a chance to not be defined on HTTP requests.
- * @returns
  */
 function isRefreshTokenValid(
 	token: string,
 	IP?: string,
-):
-	| {
-			isValid: true;
-			payload: TokenPayload;
-			tokenRecord: RefreshTokenRecord;
-	  }
-	| {
-			isValid: false;
-			reason: string;
-	  } {
+): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
 	// Decode the token
 	const payload = decodeToken(token, true);
-	if (!payload) return { isValid: false, reason: 'Token is expired or tampered.' };
+	if (!payload) return undefined; // Expired or tampered
 
 	let tokenRecord: RefreshTokenRecord | undefined;
 	try {
 		// Check against the database
 		tokenRecord = resolveRefreshTokenRecord(token, IP);
-		if (!tokenRecord)
-			return {
-				isValid: false,
-				reason: 'Refresh token unable to be resolved in the database.',
-			};
-	} catch (error) {
-		// This block will catch any unexpected errors from database calls
-		const errMsg = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error resolving refresh token in the database: ${errMsg}`, 'errLog');
-		return { isValid: false, reason: 'An internal error occurred during validation.' };
+		if (!tokenRecord) return undefined; // Not in the database (logged out, account deleted, or rotated past its grace period)
+	} catch {
+		// DB error (already logged)
+		return undefined;
 	}
 
 	try {
 		updateLastSeen(payload.user_id);
 	} catch {
-		// Already logged. Token is still valid
+		// DB error (already logged). Token is still valid
 	}
-	return { isValid: true, payload, tokenRecord };
+	return { payload, tokenRecord };
 }
 
 /**
@@ -114,6 +88,7 @@ function isRefreshTokenValid(
  * If not present, it means it has either expired, been manually invalidated by the user logging out, or deleting their account.
  *
  * Returns the token record if found and valid, otherwise undefined.
+ * @throws If any database error occurs during the process.
  */
 function resolveRefreshTokenRecord(token: string, IP?: string): RefreshTokenRecord | undefined {
 	// Find the token in the database.
