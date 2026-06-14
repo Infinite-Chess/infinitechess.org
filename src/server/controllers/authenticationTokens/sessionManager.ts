@@ -25,7 +25,10 @@ const minTimeToWaitToRenewRefreshTokensMillis = 1000 * 60 * 60 * 24; // 1 day
 
 // Renewing & Revoking Sessions --------------------------------------------------------------------
 
-/** Makes sure a user's session is still fresh, renewing it if it's older than a day. */
+/**
+ * Makes sure a user's session is still fresh, renewing it if it's older than a day.
+ * @throws If signing the refresh token or a database operation fails.
+ */
 export function freshenSession(
 	req: Request,
 	res: Response,
@@ -72,6 +75,7 @@ export function freshenSession(
  * @param roles - The roles the user has.
  * @param keepLoggedIn - Whether the session is given a much longer expiry
  * 						 window before it logs them out due to inactivity.
+ * @throws If signing the refresh token or the database write fails.
  */
 export function createNewSession(
 	req: Request,

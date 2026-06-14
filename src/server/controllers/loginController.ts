@@ -61,7 +61,6 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 			'errLog',
 		);
 		// Send a generic error response to the client.
-		// Avoid sending detailed error messages to the client for security reasons.
 		res.status(500).json({
 			message: req.t.responses.auth.login_failed,
 		});

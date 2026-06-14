@@ -50,6 +50,7 @@ const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
 
 /**
  * Signs and generates an access token for the user.
+ * @throws If the token fails to sign (payload not serializable, bad expiresIn, etc).
  */
 function signAccessToken(user_id: number, username: string, roles: Role[] | null): string {
 	const payload = generatePayload(user_id, username, roles);
@@ -61,6 +62,7 @@ function signAccessToken(user_id: number, username: string, roles: Role[] | null
  * Signs and generates a refresh token for the user.
  * The refresh token is long-lived (hours-days) and should be stored in an httpOnly cookie (not accessible via JS).
  * @param expiryMillis - How long, in milliseconds, the token should remain valid.
+ * @throws If the token fails to sign (payload not serializable, bad expiresIn, etc).
  */
 function signRefreshToken(
 	user_id: number,
