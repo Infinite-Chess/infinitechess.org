@@ -9,7 +9,6 @@
 
 import jwt from 'jsonwebtoken';
 
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
 import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 import {
@@ -30,7 +29,7 @@ const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
  * Checks if an access token is valid => not expired,
  * nor tampered, and the user account still exists.
  */
-function isAccessTokenValid(token: string): { payload: TokenPayload } | undefined {
+function validateAccessToken(token: string): { payload: TokenPayload } | undefined {
 	// Decode the token
 	const payload = decodeToken(token, false);
 	if (!payload) return undefined; // Expired or tampered
@@ -56,7 +55,7 @@ function isAccessTokenValid(token: string): { payload: TokenPayload } | undefine
  * in the database (not manually invalidated by logging out, or deleting the account).
  * @param IP - Has a chance to not be defined on HTTP requests.
  */
-function isRefreshTokenValid(
+function validateRefreshToken(
 	token: string,
 	IP?: string,
 ): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
@@ -146,4 +145,4 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | nul
 	}
 }
 
-export { isAccessTokenValid, isRefreshTokenValid };
+export { validateAccessToken, validateRefreshToken };

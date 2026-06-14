@@ -19,8 +19,8 @@ import {
 	revokeSession,
 } from '../controllers/authenticationTokens/sessionManager.js';
 import {
-	isAccessTokenValid,
-	isRefreshTokenValid,
+	validateAccessToken,
+	validateRefreshToken,
 } from '../controllers/authenticationTokens/tokenValidator.js';
 
 /**
@@ -60,7 +60,7 @@ function tryAccessToken(req: Request, res: Response): boolean {
 	const accessToken = authHeader.split(' ')[1];
 	if (!accessToken) return false; // Authentication header doesn't contain a token
 
-	const result = isAccessTokenValid(accessToken);
+	const result = validateAccessToken(accessToken);
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
@@ -85,7 +85,7 @@ function tryRefreshToken(req: Request, res: Response): void {
 	const refreshToken = cookies.jwt;
 	if (!refreshToken) return; // No refresh token present
 
-	const result = isRefreshTokenValid(refreshToken, getClientIP(req));
+	const result = validateRefreshToken(refreshToken, getClientIP(req));
 
 	if (!result) {
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
@@ -137,7 +137,7 @@ function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	if (!refreshToken) return; // Not logged in, don't set their user property
 
 	const ip = ws.metadata.IP;
-	const result = isRefreshTokenValid(refreshToken, ip); // True for refresh token
+	const result = validateRefreshToken(refreshToken, ip); // True for refresh token
 	if (!result) return;
 
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
