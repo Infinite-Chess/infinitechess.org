@@ -58,9 +58,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket): void {
 		addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
-	// console.log(
-	// 	`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`,
-	// );
+	// console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`); // prettier-ignore
 }
 
 /**

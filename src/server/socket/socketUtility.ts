@@ -82,7 +82,6 @@ function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['me
 		verified: metadata.verified,
 		id: metadata.id,
 		IP: metadata.IP,
-		subscriptions: jsutil.deepCopyObject(metadata.subscriptions),
 	};
 
 	return metadataCopy;
