@@ -12,8 +12,8 @@ import type { MemberRecord } from '../database/memberManager.js';
 
 import bcrypt from 'bcrypt';
 
-import { logEvents } from '../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
+import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
 import {
 	getBrowserAgent,
 	onCorrectPassword,
@@ -62,7 +62,10 @@ async function testPasswordForRequest(
 			record !== undefined && (await bcrypt.compare(claimedPassword, record.hashed_password));
 		if (!match) {
 			const attemptedIdentity = record?.username ?? searchValue;
-			logEvents(`Failed login attempt for "${attemptedIdentity}".`, 'loginAttempts');
+			logEvents(
+				`Failed login attempt for "${escapeLogControlChars(attemptedIdentity)}".`,
+				'loginAttempts',
+			);
 			res.status(401).json({
 				message: req.t.responses.auth.invalid_credentials,
 			}); // Unauthorized — generic message to avoid account enumeration

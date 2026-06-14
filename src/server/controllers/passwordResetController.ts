@@ -9,9 +9,9 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { sendPasswordResetEmail } from './emailController.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
+import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
@@ -41,7 +41,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 3. Make sure they aren't blacklisted
 			if (isBlacklisted(email)) {
 				logEventsAndPrint(
-					`User has a blacklisted email ${email} when attempting to request a password reset!`,
+					`User has a blacklisted email ${escapeLogControlChars(email)} when attempting to request a password reset!`,
 					'blacklistLog',
 				);
 				res.status(409).json({
@@ -76,13 +76,13 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			sendPasswordResetEmail(email, resetUrl).catch((err) => {
 				const errorMessage = err instanceof Error ? err.stack : String(err);
 				logEventsAndPrint(
-					`Background password reset email send failed for user_id (${userId}), email (${email}): ${errorMessage}`,
+					`Background password reset email send failed for user_id (${userId}), email (${escapeLogControlChars(email)}): ${errorMessage}`,
 					'errLog',
 				);
 			});
 		} else {
 			logEventsAndPrint(
-				`No member exists with the email (${email}). Not sending password reset email.`,
+				`No member exists with the email (${escapeLogControlChars(email)}). Not sending password reset email.`,
 				'loginAttempts',
 			);
 		}

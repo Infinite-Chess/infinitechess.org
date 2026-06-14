@@ -8,7 +8,7 @@
 import mailer from '../utility/mailer.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEventsAndPrint } from '../middleware/logEvents.js';
 
 // --- Helper Functions ---
 
@@ -64,7 +64,7 @@ async function sendEmailConfirmation(
 	try {
 		if (isBlacklisted(recipientEmail)) {
 			logEventsAndPrint(
-				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
+				`[BLOCKED] Skipping email confirmation to ${escapeLogControlChars(recipientEmail)} (Blacklisted)`,
 				'blacklistLog',
 			);
 			return;
@@ -93,7 +93,7 @@ async function sendEmailConfirmation(
 	} catch (e) {
 		const errorMessage = e instanceof Error ? e.stack : String(e);
 		logEventsAndPrint(
-			`Error during sendEmailConfirmation to ${recipientEmail}: ${errorMessage}`,
+			`Error during sendEmailConfirmation to ${escapeLogControlChars(recipientEmail)}: ${errorMessage}`,
 			'errLog',
 		);
 	}

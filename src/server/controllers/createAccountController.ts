@@ -22,7 +22,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { sendEmailConfirmation } from './emailController.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addUser,
 	getMemberDataByCriteria,
@@ -485,7 +485,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 	try {
 		if (isBlacklisted(email)) {
 			logEventsAndPrint(
-				`Blacklisted email ${email} tried to create an account!`,
+				`Blacklisted email ${escapeLogControlChars(email)} tried to create an account!`,
 				'blacklistLog',
 			);
 			res.status(422).json({
@@ -519,7 +519,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 	} catch (error) {
 		const err = error as Error; // Type assertion
 		logEventsAndPrint(
-			`Error when validating domain for email "${email}": ${err.stack}`,
+			`Error when validating domain for email "${escapeLogControlChars(email)}": ${err.stack}`,
 			'errLog',
 		);
 		return true; // Default to true to avoid blocking users.

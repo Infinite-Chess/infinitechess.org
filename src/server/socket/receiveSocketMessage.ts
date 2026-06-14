@@ -9,7 +9,6 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import * as z from 'zod';
 
-import { logEvents } from '../middleware/logEvents.js';
 import { GameSchema } from '../game/gamemanager/gamerouter.js';
 import { logZodError } from '../utility/zodlogger.js';
 import { LobbySchema } from '../game/seeksmanager/lobbyrouter.js';
@@ -18,6 +17,7 @@ import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
+import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
 import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------
@@ -109,9 +109,9 @@ function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null 
 		parsed = JSON.parse(messageStr);
 	} catch {
 		// Should only be reachable from explicitly crafted messages, but thus far
-		// no bots ahve exploited this. Safe to log in case it's ever a legit bug.
+		// no bots have exploited this. Safe to log in case it's ever a legit bug.
 		logEvents(
-			`Incoming websocket message is not JSON parseable. Message: "${messageStr}"`,
+			`Incoming websocket message is not JSON parseable. Message: "${escapeLogControlChars(messageStr)}"`,
 			'errLog',
 		);
 		return null;
@@ -120,7 +120,7 @@ function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null 
 	const result = MasterSchemaWithEchos.safeParse(parsed);
 	if (!result.success) {
 		// Should only be reachable from explicitly crafted messages, but thus far
-		// no bots ahve exploited this. Safe to log in case it's ever a legit bug.
+		// no bots have exploited this. Safe to log in case it's ever a legit bug.
 		logZodError(parsed, result.error, 'Received malformed websocket in-message.');
 		return null;
 	}

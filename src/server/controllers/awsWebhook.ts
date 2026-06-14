@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 
 import { addToBlacklist } from '../database/blacklistManager.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 const validator = new MessageValidator();
 
@@ -79,7 +79,10 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 	else if (messageType === 'Notification') {
 		// console.log('[AWS WEBHOOK] Processing notification...');
 		// Log entire message so we can learn unexpected structures
-		logEvents(`[AWS WEBHOOK] Received Notification: ${body.Message}`, 'awsNotifications');
+		logEvents(
+			`[AWS WEBHOOK] Received Notification: ${escapeLogControlChars(String(body.Message))}`,
+			'awsNotifications',
+		);
 
 		let sesMessage;
 		try {
@@ -117,7 +120,10 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				if (Array.isArray(recipients)) {
 					recipients.forEach((recipient: any) => {
 						const email = recipient.emailAddress;
-						logEvents(`[AWS WEBHOOK] Hard Bounce: ${email}`, 'awsNotifications');
+						logEvents(
+							`[AWS WEBHOOK] Hard Bounce: ${escapeLogControlChars(String(email))}`,
+							'awsNotifications',
+						);
 						try {
 							addToBlacklist(email, 'bounce');
 						} catch {
@@ -139,7 +145,10 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 			if (Array.isArray(recipients)) {
 				recipients.forEach((recipient: any) => {
 					const email = recipient.emailAddress;
-					logEvents(`[AWS WEBHOOK] Complaint: ${email}`, 'awsNotifications');
+					logEvents(
+						`[AWS WEBHOOK] Complaint: ${escapeLogControlChars(String(email))}`,
+						'awsNotifications',
+					);
 					try {
 						addToBlacklist(email, 'spam_report');
 					} catch {

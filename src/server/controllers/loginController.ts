@@ -16,7 +16,7 @@ import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { testPasswordForRequest } from './authController.js';
 import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
  * Called when the login page submits login form data.
@@ -57,7 +57,7 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 		const message = error instanceof Error ? error.message : String(error);
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(
-			`Error during handleLogin for user "${req.body.username}": ${message}`,
+			`Error during handleLogin for user "${escapeLogControlChars(String(req.body.username))}": ${message}`,
 			'errLog',
 		);
 		// Send a generic error response to the client.

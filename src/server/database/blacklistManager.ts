@@ -1,7 +1,7 @@
 // src/server/database/blacklistManager.ts
 
-import { logEvents } from '../middleware/logEvents.js';
 import db, { dbCall } from './database.js';
+import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
 
 /**
  * Adds an email to the blacklist, if it isn't already.
@@ -17,7 +17,10 @@ export function addToBlacklist(email: string, reason: string): void {
 			]),
 		`Database error when blacklisting email ${email}`,
 	);
-	logEvents(`Added ${email} to blacklist for reason: ${reason}`, 'blacklistLog');
+	logEvents(
+		`Added ${escapeLogControlChars(email)} to blacklist for reason: ${reason}`,
+		'blacklistLog',
+	);
 }
 
 /**
@@ -30,7 +33,7 @@ export function removeFromBlacklist(email: string): void {
 		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]),
 		`Database error when removing email ${email} from blacklist`,
 	);
-	logEvents(`Removed ${email} from blacklist`, 'blacklistLog');
+	logEvents(`Removed ${escapeLogControlChars(email)} from blacklist`, 'blacklistLog');
 }
 
 /**

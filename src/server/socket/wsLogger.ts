@@ -7,7 +7,7 @@
 
 import type { CustomWebSocket } from './socketUtility.js';
 
-import { logEvents } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
 
 /** Message beyond this length will be truncated in the logs to prevent log bloat.  */
 const MAX_LOGGED_MESSAGE_LENGTH = 2048;
@@ -35,7 +35,7 @@ function logWebsocketStart(ws: CustomWebSocket): void {
  */
 function logReqWebsocketIn(ws: CustomWebSocket, messageData: string): void {
 	const socketID = ws.metadata.id;
-	const logThis = `From socket of ID "${socketID}":   ${truncateMessage(messageData)}`;
+	const logThis = `From socket of ID "${socketID}":   ${escapeLogControlChars(truncateMessage(messageData))}`;
 	logEvents(logThis, 'wsInLog');
 }
 
