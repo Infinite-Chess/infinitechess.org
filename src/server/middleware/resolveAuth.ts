@@ -88,10 +88,6 @@ function tryRefreshToken(req: Request, res: Response): void {
 	const result = isRefreshTokenValid(refreshToken, getClientIP(req));
 
 	if (!result.isValid) {
-		// Token was expired or tampered, or manually invalidated.
-		console.log(
-			`Invalid refresh token: Expired, tampered, or account deleted! Reason: "${result.reason}"`,
-		);
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
 		revokeSession(res);
 		return;
@@ -137,20 +133,13 @@ function resolveAuth_WebSocket(ws: CustomWebSocket): void {
  * @returns true if a valid token was found.
  */
 function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
-	const cookies = ws.metadata.cookies;
-
-	const refreshToken = cookies.jwt;
+	const refreshToken = ws.metadata.cookies.jwt;
 	if (!refreshToken) return; // Not logged in, don't set their user property
 
 	// { isValid (boolean), user_id, username, reason (string, if not valid) }
 	const ip = ws.metadata.IP;
 	const result = isRefreshTokenValid(refreshToken, ip); // True for refresh token
-	if (!result.isValid) {
-		console.log(
-			`Invalid refresh token (websocket): Expired, tampered, or account deleted! Reason: "${result.reason}". Token: "${refreshToken}"`,
-		);
-		return; // Token was expired or tampered
-	}
+	if (!result.isValid) return;
 
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
