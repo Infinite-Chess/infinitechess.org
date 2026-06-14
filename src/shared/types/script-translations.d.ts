@@ -75,6 +75,9 @@ export interface ScriptTranslations {
 	};
 	shared: {
 		error_fallback: string;
+		socket: {
+			cookies_required: string;
+		};
 		user_status: {
 			guest_indicator: string;
 			you_indicator: string;

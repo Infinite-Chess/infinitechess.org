@@ -9,6 +9,7 @@
 
 import wsutil from '../../../../shared/util/wsutil.js';
 
+import toast from '../components/toast.js';
 import config from '../game/config.js';
 import socketman from './socketman.js';
 import socketsubs from './socketsubs.js';
@@ -26,12 +27,6 @@ const timeToResubAfterMessageTooBigMillis = 5000;
 // Variables -------------------------------------------------------------------
 
 let inTimeout = false;
-
-/**
- * The last time the server closed our socket connection request because
- * we were missing a browser-id cookie, in millis since the Unix Epoch.
- */
-let lastTimeWeGotAuthorizationNeededMessage: number | undefined;
 
 /** Returns whether we're currently in a rate-limit timeout. */
 function isInTimeout(): boolean {
@@ -89,7 +84,10 @@ function onclose(event: CloseEvent): void {
 			console.error('Unable to identify IP when establishing socket.');
 			break;
 		case 'Authentication needed':
-			onAuthenticationNeeded();
+			// Called when the server closes our websocket due to missing authentication.
+			toast.show(t.shared.socket.cookies_required, {
+				error: true,
+			});
 			break;
 		case 'Logged out':
 			validatorama.reloadAfterLogout();
@@ -138,33 +136,6 @@ function enterTimeout(timeMillis: number): void {
 /** Timeout from sending too many requests is over, try to reconnect. */
 function leaveTimeout(): void {
 	inTimeout = false;
-	socketman.resubAll();
-}
-
-// Authentication Handling -----------------------------------------------------
-
-/**
- * Called when the server closes our websocket due to missing authentication.
- * Attempts to refresh the browser-id cookie and reconnect.
- */
-async function onAuthenticationNeeded(): Promise<void> {
-	// If this is the second time we're getting this message,
-	// that means that cookies aren't working on this browser.
-	const now = Date.now();
-	if (lastTimeWeGotAuthorizationNeededMessage !== undefined) {
-		const difference = now - lastTimeWeGotAuthorizationNeededMessage;
-		// 24 hours
-		if (difference < 1000 * 60 * 60 * 24) {
-			console.error(
-				'Cookies not supported on this browser. Cannot establish websocket connection.',
-			);
-			lastTimeWeGotAuthorizationNeededMessage = now;
-			return;
-		}
-	}
-	lastTimeWeGotAuthorizationNeededMessage = now;
-
-	await validatorama.refreshToken();
 	socketman.resubAll();
 }
 

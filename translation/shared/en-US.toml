@@ -8,6 +8,9 @@ script_only = true
 # Generic fallback shown client-side when a server response misses emitting its own message.
 error_fallback = "Something went wrong. Please try again."
 
+[socket]
+cookies_required = "Your browser does not support cookies. Unable to connect to the server."
+
 [user_status] # Identity placeholders shown in place of a real username.
 guest_indicator = "(Guest)"
 you_indicator = "(You)"

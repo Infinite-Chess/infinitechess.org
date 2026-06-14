@@ -101,31 +101,24 @@ function closeIfInvalidAndAddMetadata(
 	socket: WebSocket,
 	req: IncomingMessage,
 ): CustomWebSocket | undefined {
-	// Make sure the connection is secure https
-	const origin = req.headers.origin;
-	if (origin === undefined || !origin.startsWith('https')) {
-		console.error(
-			`WebSocket connection request rejected. Reason: Not Secure. Origin: "${origin}"`,
-		);
-		socket.close(1009, 'Not Secure');
-		return;
-	}
-
-	// Make sure the origin is our website
 	// In DEV_BUILD, allow all origins.
-	if (process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL']) {
+	const origin = req.headers.origin;
+	if (
+		origin === undefined ||
+		(process.env['NODE_ENV'] !== 'development' && origin !== process.env['APP_BASE_URL'])
+	) {
 		logEvents(
 			`WebSocket connection request rejected. Reason: Origin Error. "Origin: ${origin}"   Should be: "${process.env['APP_BASE_URL']}"`,
 			'hackLog',
 		);
-		socket.close(1009, 'Origin Error');
+		socket.close(1008, 'Origin Error');
 		return;
 	}
 
 	const IP = getClientIP(req);
 	if (IP === undefined) {
 		logEvents('Unable to identify IP address from websocket connection!', 'hackLog');
-		socket.close(1008, 'Unable to identify client IP address'); // Code 1008 is Policy Violation
+		socket.close(1008, 'Unable to identify client IP address');
 		return;
 	}
 
@@ -140,8 +133,8 @@ function closeIfInvalidAndAddMetadata(
 	// NOT for websocket upgrade requests, so we parse the raw header ourselves.
 	const cookies = parseCookie(req.headers.cookie ?? '');
 	if (cookies['browser-id'] === undefined) {
-		// console.log(`Authentication needed for WebSocket connection request!!`);
-		socket.close(1008, 'Authentication needed'); // Code 1008 is Policy Violation
+		// Can happen if the client has cookies disabled
+		socket.close(1008, 'Authentication needed');
 		return;
 	}
 
