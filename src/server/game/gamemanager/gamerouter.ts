@@ -55,10 +55,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 
 	const servergame = getGameBySocket(ws); // The game they belong in, if they belong in one.
 	if (!servergame) {
-		// This is rare but can happen if the game is deleted on the server while their message is in transit.
-		console.log(
-			`Received game message of action "${contents.action}" when player is not in a game. Maybe it was just deleted?`,
-		);
+		// Benign: the game was torn down between the client sending this and the
+		// server receiving it (it just concluded, or a timer-driven AFK ping fired
+		// at a dead game). The message is simply stale — drop it.
 		return;
 	}
 
