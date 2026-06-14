@@ -24,14 +24,14 @@ import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage
 
 // Types --------------------------------------------------------------------------------------
 
+/** Represents all possible types a non-echo incoming websocket message could be! */
+export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 /** The schema for validating all non-echo incoming websocket messages. */
 const MasterSchema = z.discriminatedUnion('route', [
 	z.strictObject({ id: z.int(), route: z.literal('general'), contents: GeneralSchema }),
 	z.strictObject({ id: z.int(), route: z.literal('lobby'), contents: LobbySchema }),
 	z.strictObject({ id: z.int(), route: z.literal('game'), contents: GameSchema }),
 ]);
-/** Represents all possible types a non-echo incoming websocket message could be! */
-export type WebsocketInMessage = z.infer<typeof MasterSchema>;
 
 /** This is the id of the message being replied to. */
 const EchoSchema = z.strictObject({
@@ -41,6 +41,7 @@ const EchoSchema = z.strictObject({
 	contents: z.int(),
 });
 
+type AnyIncomingMessage = z.infer<typeof MasterSchemaWithEchos>;
 /** The schema for validating all incoming websocket messages, including echos. */
 const MasterSchemaWithEchos = z.discriminatedUnion('route', [MasterSchema, EchoSchema]);
 
@@ -75,63 +76,62 @@ function onmessage(req: IncomingMessage, ws: CustomWebSocket, rawMessage: Buffer
 	}
 
 	const messageStr = rawMessage.toString('utf8');
+	const message = parseAndValidateMessage(ws, messageStr);
 
-	let parsedUnvalidatedMessage: any;
-	try {
-		// Parse the stringified JSON message.
-		// Incoming message is in binary data, which can also be parsed into JSON
-		parsedUnvalidatedMessage = JSON.parse(messageStr);
-	} catch (error: unknown) {
-		if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-		const errText = `'Error parsing incoming message as JSON: ${JSON.stringify(error)}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`;
-		logEvents(errText, 'hackLog');
-		sendSocketMessage(ws, 'general', 'printerror', `Invalid JSON format!`);
+	if (message === null) {
+		// Log the invalid request for debugging (if it wasn't hand crafted)
+		logAndRateLimitMessage(req, ws, messageStr);
 		return;
 	}
-
-	const zod_result = MasterSchemaWithEchos.safeParse(parsedUnvalidatedMessage);
-	if (!zod_result.success) {
-		sendSocketMessage(
-			ws,
-			'general',
-			'notify',
-			'Your browser is running outdated code, please hard refresh the page!',
-		);
-		logZodError(
-			parsedUnvalidatedMessage,
-			zod_result.error,
-			'Received malformed websocket in-message.',
-		);
-		return;
-	}
-
-	// Validation was a success! Message contains valid parameters.
-
-	const message = zod_result.data;
 
 	if (message.route === 'echo') {
-		const incomingEcho: number = message.contents;
-		const validEcho = deleteEchoTimerForMessageID(incomingEcho); // Cancel timer to assume they've disconnected
-		if (!validEcho) {
-			if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-			// This occasionally happens when the echo arrives after timeToWaitForEchoMillis has elapsed,
-			// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
-		}
+		// Echo, don't log or route.
+		deleteEchoTimerForMessageID(message.contents);
 		return;
 	}
 
-	// Not an echo...
+	if (!logAndRateLimitMessage(req, ws, messageStr)) return; // Rate limited; socket already closed.
 
-	if (!logAndRateLimitMessage(req, ws, messageStr)) return; // The socket will have already been closed.
-
-	// Send our echo here! We always send an echo to every message except echos themselves.
+	// Send our own echo
 	sendSocketMessage(ws, 'general', 'echo', message.id);
-
+	// Their message is evidence the connection is alive
+	rescheduleHeartbeatTimer(ws);
 	// console.log('Received message: ' + rawMessage);
-
-	rescheduleHeartbeatTimer(ws); // We know they are connected, so reset this
-
 	routeIncomingSocketMessage(ws, message);
+}
+
+/**
+ * Parses and validates a raw websocket message string.
+ * Sends the appropriate error to the client on failure.
+ * Returns the parsed message on success, or null on failure.
+ */
+function parseAndValidateMessage(
+	ws: CustomWebSocket,
+	messageStr: string,
+): AnyIncomingMessage | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(messageStr);
+	} catch (error: unknown) {
+		// Should only be reachable from explicitly crafted messages, but thus far
+		// no bots ahve exploited this. Safe to log in case it's ever a legit bug.
+		const message = error instanceof Error ? error.message : String(error);
+		logEvents(
+			`Error parsing incoming message as JSON: ${message}. Socket: ${socketUtility.stringifySocketMetadata(ws)}`,
+			'errLog',
+		);
+		return null;
+	}
+
+	const result = MasterSchemaWithEchos.safeParse(parsed);
+	if (!result.success) {
+		// Should only be reachable from explicitly crafted messages, but thus far
+		// no bots ahve exploited this. Safe to log in case it's ever a legit bug.
+		logZodError(parsed, result.error, 'Received malformed websocket in-message.');
+		return null;
+	}
+
+	return result.data;
 }
 
 /**

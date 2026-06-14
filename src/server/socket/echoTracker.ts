@@ -14,11 +14,11 @@
  * An object containing the timeout ID's for the timers that auto terminate
  * websockets if we never hear an echo back: `{ messageID: timeoutID }`
  */
-const echoTimers: { [messageID: number]: NodeJS.Timeout | number } = {};
+const echoTimers: { [messageID: number]: NodeJS.Timeout } = {};
 
 // Functions ---------------------------------------------------------------------------
 
-function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | number): void {
+function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout): void {
 	echoTimers[messageID] = timeout;
 }
 
@@ -26,14 +26,14 @@ function addTimeoutToEchoTimers(messageID: number, timeout: NodeJS.Timeout | num
  * Cancel the timer that will close the socket when we don't hear an expected echo from a sent socket message.
  * If there was no timer, this will return false, meaning it was an invalid echo.
  */
-function deleteEchoTimerForMessageID(messageIDEchoIsFor: number): boolean {
-	const timeout: NodeJS.Timeout | number | undefined = echoTimers[messageIDEchoIsFor];
-	if (timeout === undefined) return false; // Invalid echo (message ID wasn't from any recently sent socket message)
+function deleteEchoTimerForMessageID(messageIDEchoIsFor: number): void {
+	const timeout = echoTimers[messageIDEchoIsFor];
+	// An invalid echo can occasionally happen when the echo arrives after timeToWaitForEchoMillis has elapsed —
+	// the timeout has already fired, the socket was already closed, and the echo timer was already deleted.
+	if (timeout === undefined) return;
 
 	clearTimeout(timeout);
 	delete echoTimers[messageIDEchoIsFor];
-
-	return true; // Valid echo
 }
 
 export { addTimeoutToEchoTimers, deleteEchoTimerForMessageID };
