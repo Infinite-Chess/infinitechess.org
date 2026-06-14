@@ -54,10 +54,10 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
 
 		createNewSession(req, res, identity.user_id, identity.username, parsedRoles, keepLoggedIn);
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
+		const detail = error instanceof Error ? error.message : String(error);
 		// Log the detailed error for server-side debugging.
 		logEventsAndPrint(
-			`Error during handleLogin for user "${escapeLogControlChars(String(req.body.username))}": ${message}`,
+			`Error during handleLogin for user "${escapeLogControlChars(String(req.body.username))}": ${detail}`,
 			'errLog',
 		);
 		// Send a generic error response to the client.
