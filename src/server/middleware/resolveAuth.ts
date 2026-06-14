@@ -62,9 +62,7 @@ function tryAccessToken(req: Request, res: Response): boolean {
 
 	const result = isAccessTokenValid(accessToken);
 	if (!result.isValid) {
-		logEventsAndPrint(`Invalid access token, expired or tampered! "${accessToken}"`, 'errLog');
 		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
-		// The client should never use an expired token unless it's a bug.
 		revokeSession(res);
 		return false;
 	}

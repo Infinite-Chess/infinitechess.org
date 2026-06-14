@@ -47,11 +47,9 @@ function isAccessTokenValid(token: string):
 		// Check if the user account still exists.
 		if (!doesMemberOfIDExist(payload.user_id))
 			return { isValid: false, reason: 'User account does not exist.' };
-	} catch (error: unknown) {
-		// This block will catch any unexpected errors from database calls
-		const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
-		// Reject the token as invalid in this case
-		return { isValid: false, reason: message };
+	} catch {
+		// DB error (already logged)
+		return { isValid: false, reason: 'A database error occurred.' };
 	}
 
 	try {
@@ -151,8 +149,11 @@ function resolveRefreshTokenRecord(token: string, IP?: string): RefreshTokenReco
 	return tokenRecord;
 }
 
-/** Extracts and decodes the payload from an access or refresh token. */
-function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | undefined {
+/**
+ * Extracts and decodes the payload from an access or refresh token.
+ * @returns The decoded payload if the token is valid, or null if it is expired or tampered.
+ */
+function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | null {
 	const secret = isRefreshToken ? REFRESH_TOKEN_SECRET : ACCESS_TOKEN_SECRET;
 	try {
 		// Decode the JWT and return the payload
@@ -162,15 +163,11 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | und
 			username: jwtPayload['username'],
 			roles: jwtPayload['roles'],
 		};
-	} catch (err) {
-		const errMsg = err instanceof Error ? err.message : String(err);
-		// Log the error event when verification fails
-		logEventsAndPrint(
-			`Failed to decode token (isRefreshToken: ${isRefreshToken}): ${errMsg}. Token: "${token}"`,
-			'errLog',
-		);
-		// Return undefined if verification fails (e.g., token is invalid or expired)
-		return undefined;
+	} catch {
+		// Verification failed. Not logged: every cause is expected — an expired token
+		// (commonly a backgrounded/sleeping tab reusing a stale token), or a malformed/tampered
+		// token (typically bots & scanners probing endpoints with junk bearer tokens).
+		return null;
 	}
 }
 
