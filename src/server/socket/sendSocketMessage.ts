@@ -189,4 +189,10 @@ function sendHeartbeatPing(ws: CustomWebSocket): void {
 	sendSocketMessage(ws, 'general', 'ping');
 }
 
-export { sendSocketMessage, sendNotify, sendNotifyError, rescheduleHeartbeatTimer };
+export {
+	sendSocketMessage,
+	sendNotify,
+	sendNotifyError,
+	rescheduleHeartbeatTimer,
+	cancelHeartbeatTimer,
+};

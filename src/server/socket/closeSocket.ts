@@ -8,6 +8,7 @@ import type { CustomWebSocket } from './socketUtility.js';
 
 import wsutil from '../../shared/util/wsutil.js';
 
+import { cancelHeartbeatTimer } from './sendSocketMessage.js';
 import { removeConnectionFromConnectionLists, unsubSocketFromAllSubs } from './socketManager.js';
 
 // Functions ---------------------------------------------------------------------------
@@ -34,11 +35,6 @@ function onclose(ws: CustomWebSocket, code: number, reason: Buffer): void {
 	unsubSocketFromAllSubs(ws, closureNotByChoice);
 
 	cancelHeartbeatTimer(ws);
-}
-
-function cancelHeartbeatTimer(ws: CustomWebSocket): void {
-	clearTimeout(ws.metadata.heartbeatTimerID);
-	ws.metadata.heartbeatTimerID = undefined;
 }
 
 export { onclose };
