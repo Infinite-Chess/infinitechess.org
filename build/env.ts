@@ -43,6 +43,8 @@ HTTPSPORT_LOCAL=3443
 GITHUB_API_KEY=
 GITHUB_REPO=Infinite-Chess/infinitechess.org
 APP_BASE_URL=https://www.infinitechess.org
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 	`;
 
 	fs.writeFileSync(envPath, content.trim());

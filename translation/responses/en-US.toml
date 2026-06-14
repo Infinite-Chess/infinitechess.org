@@ -24,7 +24,7 @@ game_aborted = "Game aborted."
 cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
 cloud_not_found = "Cloud save not found."
 
-[editor_saves]
+[editor_saves] # Short reasons for why loading/saving a position failed
 must_be_signed_in = "You must be signed in."
 position_not_found = "That position no longer exists."
 limit_reached = "You have reached your saved-position limit."

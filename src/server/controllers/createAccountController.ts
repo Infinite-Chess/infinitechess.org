@@ -21,6 +21,7 @@ import validators from '../../shared/util/validators.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
+import { verifyTurnstileToken } from '../middleware/turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
 import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
@@ -71,6 +72,18 @@ const profanityMatcher = new RegExpMatcher({
  * emails a verification link, and sets the pending cookie. Creates no member.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
+	// Bot gate: verify the Cloudflare Turnstile token BEFORE any pending/account work, so an
+	// automated submission can never create a pending row.
+	const turnstileResult = await verifyTurnstileToken(req.body['cf-turnstile-response'], req);
+	if (turnstileResult === 'failed') {
+		res.status(403).json({ message: 'Bot verification failed. Please refresh and try again.' });
+		return;
+	} else if (turnstileResult === 'error') {
+		// Don't fail open on a network error. Claim it as a generic server error.
+		res.status(503).json({ message: req.t.responses.errors.server_error });
+		return;
+	}
+
 	// First make sure we have all 3 variables.
 	// eslint-disable-next-line prefer-const
 	let { username, email, password } = req.body;
@@ -105,9 +118,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		usernameTaken = isUsernameTakenOrPending(username);
 		emailTaken = isEmailTakenOrPending(email);
 	} catch {
-		res.status(500).json({
-			message: 'A server error occurred. Please try again.',
-		});
+		res.status(500).json({ message: req.t.responses.errors.server_error });
 		return;
 	}
 
@@ -139,9 +150,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		deleteExpiredPendingRegistrationsFor(username, email);
 		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
 	} catch {
-		res.status(500).json({
-			message: 'A server error occurred. Please try again.',
-		});
+		res.status(500).json({ message: req.t.responses.errors.server_error });
 		return;
 	}
 
