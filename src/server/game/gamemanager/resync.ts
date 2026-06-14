@@ -15,8 +15,6 @@
 import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import jsutil from '../../../shared/util/jsutil.js';
-
 import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
 import { getGameByID } from './gamemanager.js';
@@ -30,17 +28,10 @@ import { cancelDisconnectTimer } from './afkdisconnect.js';
  * knows the game id and much other information. We only need to send
  * them the current move list, player timers, and game conclusion.
  * @param ws - Their websocket
- * @param gameID - The game id they requested to sync to. They SHOULD have provided this as a number, but they may tamper it.
+ * @param gameID - The game id they requested to sync to
  * @param replyToMessageID - If specified, the id of the incoming socket message this resync will be the reply to
  */
-function resyncToGame(ws: CustomWebSocket, gameID: any, replyToMessageID?: number): void {
-	if (typeof gameID !== 'number') {
-		// Tampered message
-		const log = `Socket sent 'resync', but gameID is in the wrong form! Received: (${jsutil.ensureJSONString(gameID)}) of type ${typeof gameID}`;
-		logEventsAndPrint(log, 'errLog');
-		return;
-	}
-
+function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: number): void {
 	// Make sure their pre-subbed game and game they requested to resync to match.
 	const preSubbedGameId = ws.metadata.subscriptions.game?.id;
 	if (preSubbedGameId !== undefined && preSubbedGameId !== gameID) {
