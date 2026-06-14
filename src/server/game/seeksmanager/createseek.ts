@@ -86,11 +86,8 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 		return sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.already_in_game);
 	}
 
-	// Reject rated seeks from unverified/signed-out users
-	if (
-		messageContents.mode === 'rated' &&
-		!(ws.metadata.memberInfo.signedIn && ws.metadata.verified)
-	) {
+	// Reject rated seeks from signed-out users
+	if (messageContents.mode === 'rated' && !ws.metadata.memberInfo.signedIn) {
 		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_verified);
 		return;
 	}

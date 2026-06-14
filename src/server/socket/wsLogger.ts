@@ -5,14 +5,14 @@
  * Reflection of reqLogger middleware, but for websockets.
  */
 
+import type { CustomWebSocket } from './socketUtility.js';
+
 import { logEvents } from '../middleware/logEvents.js';
-import socketUtility, { CustomWebSocket } from './socketUtility.js';
 
 /** Additionally logs a newly-opened authenticated socket's metadata into  `wsInLog/. */
 function logWebsocketStart(ws: CustomWebSocket): void {
 	const socketID = ws.metadata.id;
-	const stringifiedSocketMetadata = socketUtility.stringifySocketMetadata(ws);
-	const logThis = `Opened socket of ID "${socketID}": ${stringifiedSocketMetadata}`;
+	const logThis = `Opened socket of ID "${socketID}": ${JSON.stringify(ws.metadata.memberInfo)}`;
 	logEvents(logThis, 'wsInLog');
 }
 

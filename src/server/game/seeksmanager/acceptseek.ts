@@ -60,8 +60,8 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 		return;
 	}
 
-	// Make sure it's legal for them to accept. (Not legal if they are a guest or unverified, and the seek is RATED)
-	if (seek.mode === 'rated' && !(user.signedIn && ws.metadata.verified)) {
+	// Make sure it's legal for them to accept. (Not legal if they are a guest, and the seek is RATED)
+	if (seek.mode === 'rated' && !user.signedIn) {
 		return sendSocketMessage(
 			ws,
 			'general',

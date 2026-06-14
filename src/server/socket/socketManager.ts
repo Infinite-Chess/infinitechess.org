@@ -58,7 +58,7 @@ function addConnectionToConnectionLists(ws: CustomWebSocket): void {
 		addConnectionToList(connectedMembers, ws.metadata.memberInfo.user_id, ws.metadata.id); // Add user connection
 
 	startTimerToExpireSocket(ws);
-	// console.log(`New WebSocket connection established. Socket count: ${Object.keys(websocketConnections).length}. Metadata: ${socketUtility.stringifySocketMetadata(ws)}`); // prettier-ignore
+	// console.log(`New websocket opened. Socket count: ${Object.keys(websocketConnections).length}. Auth: ${JSON.stringify(ws.metadata.memberInfo)}`); // prettier-ignore
 }
 
 /**
@@ -179,22 +179,6 @@ function closeAllSocketsOfMember(
 	});
 }
 
-/**
- * Sets the metadata.verified entry of all sockets of a given user to true.
- * @param user_id - The unique ID of the user.
- */
-function AddVerificationToAllSocketsOfMember(user_id: number): void {
-	const socketIDs = connectedMembers[user_id];
-	if (!socketIDs) return; // This member doesn't have any connected sockets
-
-	socketIDs.slice().forEach((socketID) => {
-		// slice() makes a copy of it
-		const ws = websocketConnections[socketID];
-		if (!ws) return;
-		ws.metadata.verified = true;
-	});
-}
-
 // Limiting the socket count per user ---------------------------------------------------------------------------
 
 /**
@@ -244,5 +228,4 @@ export {
 	unsubSocketFromAllSubs,
 	closeAllSocketsOfSession,
 	closeAllSocketsOfMember,
-	AddVerificationToAllSocketsOfMember,
 };

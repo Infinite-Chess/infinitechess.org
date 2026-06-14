@@ -38,7 +38,7 @@ type SignedOutMemberInfo = {
 };
 
 /**
- * @type {MemberInfo}, but the browser_id is guaranteed to be defined.
+ * {@link MemberInfo}, but the browser_id is guaranteed to be defined.
  * This means the user is fully authenticated, cause we only need one
  * identifier to identify them.
  */
@@ -59,4 +59,4 @@ interface ParsedCookies {
 	memberInfo?: string; // Stringified: { user_id: number, username: string, issued: number, expires: number }
 }
 
-export type { MemberInfo, AuthMemberInfo, ParsedCookies };
+export type { AuthMemberInfo, ParsedCookies };

@@ -23,7 +23,6 @@ import { logWebsocketStart } from './wsLogger.js';
 import { logIncomingRequest } from '../middleware/reqLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { resolveAuth_WebSocket } from '../middleware/resolveAuth.js';
-import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { resolveLanguageForRequest } from '../middleware/reqLanguage.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
@@ -81,17 +80,6 @@ function onConnectionRequest(socket: WebSocket, req: IncomingMessage): void {
 
 	addListenersToSocket(ws);
 
-	// If user is signed in, use the database to correctly set the property ws.metadata.verified
-	if (ws.metadata.memberInfo.signedIn) {
-		const record = getMemberDataByCriteria(
-			['is_verified'],
-			'user_id',
-			ws.metadata.memberInfo.user_id,
-		);
-		// Set the verified status. 1 means true.
-		if (record?.is_verified === 1) ws.metadata.verified = true;
-	}
-
 	// Send the current game vesion, so they will know whether to refresh.
 	sendSocketMessage(ws, 'general', 'gameversion', GAME_VERSION);
 }
@@ -146,7 +134,6 @@ function closeIfInvalidAndAddMetadata(
 		subscriptions: {},
 		userAgent,
 		memberInfo: { signedIn: false, browser_id: cookies['browser-id'] },
-		verified: false,
 		id: generateUniqueIDForSocket(), // Sets the ws.metadata.id property of the websocket
 		IP,
 	};

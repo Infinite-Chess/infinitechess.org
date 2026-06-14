@@ -7,13 +7,9 @@ import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 import type { AuthMemberInfo, ParsedCookies } from '../types.js';
 
-import jsutil from '../../shared/util/jsutil.js';
-
-// Types --------------------------------------------------------------------------------------
-
 /** The socket object that contains all properties a normal socket has,
  * plus an additional `metadata` property that we define ourselves. */
-interface CustomWebSocket extends WebSocket {
+export interface CustomWebSocket extends WebSocket {
 	/**
 	 * Contains all translations for the request's resolved language.
 	 * Mirrors the server's `req.t` the client's global `t`.
@@ -38,8 +34,6 @@ interface CustomWebSocket extends WebSocket {
 		/** The user-agent property of the original websocket upgrade's req.headers */
 		userAgent: string;
 		memberInfo: AuthMemberInfo;
-		/** The account verification status of the user */
-		verified: boolean;
 		/** The id of their websocket. */
 		id: string;
 		/** The socket's IP address. */
@@ -51,44 +45,3 @@ interface CustomWebSocket extends WebSocket {
 		heartbeatTimerID?: NodeJS.Timeout;
 	};
 }
-
-// Functions ---------------------------------------------------------------------------
-
-/**
- * Simplifies the websocket's metadata and stringifies it.
- * @param ws - The websocket object
- * @returns The stringified simplified websocket metadata.
- */
-function stringifySocketMetadata(ws: CustomWebSocket): string {
-	// Removes the recursion from the metadata, making it safe to stringify.
-	const simplifiedMetadata = getSimplifiedMetadata(ws);
-	return jsutil.ensureJSONString(simplifiedMetadata, 'Error while stringifying socket metadata:');
-}
-
-/**
- * Creates a new object with simplified metadata information from the websocket,
- * and removes recursion. This can be safely be JSON.stringified() afterward.
- * Excludes the stuff like the sendmessage() function and clearafter timer.
- *
- * BE CAREFUL not to modify the return object, for it will modify the original socket!
- * @param ws - The websocket object
- * @returns A new object containing simplified metadata.
- */
-function getSimplifiedMetadata(ws: CustomWebSocket): Partial<CustomWebSocket['metadata']> {
-	const metadata = ws.metadata;
-	// Using Partial takes an existing type and makes all of its properties optional
-	const metadataCopy: Partial<typeof metadata> = {
-		memberInfo: jsutil.deepCopyObject(metadata.memberInfo),
-		verified: metadata.verified,
-		id: metadata.id,
-		IP: metadata.IP,
-	};
-
-	return metadataCopy;
-}
-
-export default {
-	stringifySocketMetadata,
-};
-
-export type { CustomWebSocket };
