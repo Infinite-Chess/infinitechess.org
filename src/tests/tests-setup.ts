@@ -19,16 +19,20 @@ console.log = vi.fn();
 console.error = vi.fn();
 console.warn = vi.fn();
 
-// Mock Logger to prevent file writes
-// This tells Vitest whenever any file imports logEvents.js, give them these empty functions instead.
-vi.mock('../server/middleware/logEvents.js', () => ({
-	logEvents: vi.fn(), // Do nothing
-	logEventsAndPrint: vi.fn(), // Do nothing
-	reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware
-	logWebsocketStart: vi.fn(), // Do nothing
-	logReqWebsocketIn: vi.fn(), // Do nothing
-	logReqWebsocketOut: vi.fn(), // Do nothing
-}));
+// Mock Logger to prevent file writes. Stub only the
+// file-writing log functions; keep real pure helpers.
+vi.mock('../server/middleware/logEvents.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('../server/middleware/logEvents.js')>();
+	return {
+		...actual,
+		logEvents: vi.fn(), // Do nothing
+		logEventsAndPrint: vi.fn(), // Do nothing
+		reqLogger: (_req: Request, _res: Response, next: NextFunction) => next(), // Continue to next middleware
+		logWebsocketStart: vi.fn(), // Do nothing
+		logReqWebsocketIn: vi.fn(), // Do nothing
+		logReqWebsocketOut: vi.fn(), // Do nothing
+	};
+});
 
 // Restore console functions after tests finish so Vitest can print the summary
 afterAll(() => {
