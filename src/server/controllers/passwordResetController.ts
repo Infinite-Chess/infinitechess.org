@@ -10,7 +10,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { sendPasswordResetEmail } from './emailController.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
-import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './createAccountController.js';
+import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour

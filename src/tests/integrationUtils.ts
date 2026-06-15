@@ -2,7 +2,7 @@
 
 import { testRequest } from './testRequest';
 
-import { generateAccount } from '../server/controllers/createAccountController';
+import { generateAccount } from '../server/controllers/registerController';
 
 // Variables -------------------------------------------------------------------
 

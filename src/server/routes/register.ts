@@ -12,7 +12,7 @@ import {
 	createNewMember,
 	pollPendingRegistration,
 	changePendingEmail,
-} from '../controllers/createAccountController.js';
+} from '../controllers/registerController.js';
 import {
 	createAccountLimiter,
 	createAccountAttemptLimiter,

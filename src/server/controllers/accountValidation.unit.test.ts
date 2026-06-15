@@ -1,22 +1,14 @@
-// src/server/controllers/createAccountController.unit.test.ts
+// src/server/controllers/accountValidation.unit.test.ts
 
 /**
- * Tests for the profanity filter used in account creation.
+ * Tests for accountValidation's profanity filter (`checkProfanity`).
  *
- * This test suite verifies that the obscenity package correctly identifies
- * profane content in usernames during account creation.
+ * Verifies that the obscenity package correctly identifies profane content in usernames.
  */
 
 import { describe, it, expect } from 'vitest';
 
-import { profanityMatcher } from './createAccountController'; // Import the identical one used in the controller
-
-/**
- * Helper function to check profanity (same logic as in createAccountController)
- */
-function checkProfanity(string: string): boolean {
-	return profanityMatcher.hasMatch(string);
-}
+import { checkProfanity } from './accountValidation';
 
 describe('Profanity Filter', () => {
 	describe('Basic profanity detection', () => {
