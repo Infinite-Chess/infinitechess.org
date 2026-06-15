@@ -103,7 +103,8 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
 		markPendingRegistrationVerified(p.claim_token, user_id);
 		return user_id;
 	});
-	// Every db operation within the transaction already logs via dbCall() on failure.
+	// Unlike addUser/deleteUser, this transaction is NOT wrapped
+	// in dbCall: its steps each already log via their own dbCall.
 	return promoteTransaction(pending);
 }
 
@@ -271,7 +272,9 @@ function updateMemberColumns(user_id: number, columnsAndValues: Partial<MemberRe
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(`User not found! Columns: ${JSON.stringify(columns)}!`);
+			throw new Error(
+				`No member found with user_id "${user_id}" when updating columns: ${JSON.stringify(columns)}`,
+			);
 	}, `Error updating columns for user ID "${user_id}"`);
 }
 
@@ -294,7 +297,7 @@ function updateLoginCountAndLastSeen(userId: number): void {
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
 			throw new Error(
-				`No changes made when updating login_count and last_seen for member of id "${userId}"!`,
+				`No member found with user_id "${userId}" when updating login_count and last_seen`,
 			);
 	}, `Error updating login_count and last_seen for member of id "${userId}"`);
 }
@@ -315,9 +318,7 @@ function updateLastSeen(userId: number): void {
 
 		// If no rows changed, the member doesn't exist.
 		if (result.changes === 0)
-			throw new Error(
-				`No changes made when updating last_seen for member of id "${userId}"!`,
-			);
+			throw new Error(`No member found with user_id "${userId}" when updating last_seen`);
 	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
