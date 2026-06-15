@@ -5,6 +5,7 @@ import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
 
 /**
  * Adds an email to the blacklist, if it isn't already.
+ * @param email - The email to blacklist. It will automatically be lowercased.
  * @throws If a database error occurs.
  */
 export function addToBlacklist(email: string, reason: string): void {
@@ -12,7 +13,8 @@ export function addToBlacklist(email: string, reason: string): void {
 	dbCall(
 		() =>
 			db.run(`INSERT OR IGNORE INTO email_blacklist (email, reason) VALUES (?, ?)`, [
-				email,
+				// Stored lowercase: emails are case-insensitive, and we never keep mixed-case ones.
+				email.toLowerCase(),
 				reason,
 			]),
 		`Database error when blacklisting email ${email}`,
@@ -25,12 +27,12 @@ export function addToBlacklist(email: string, reason: string): void {
 
 /**
  * Removes an email from the blacklist, if it exists.
+ * @param email - The email to remove from the blacklist. Case-insensitive.
  * @throws If a database error occurs.
  */
 export function removeFromBlacklist(email: string): void {
-	// Won't error if the email doesn't exist.
 	dbCall(
-		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email]),
+		() => db.run(`DELETE FROM email_blacklist WHERE email = ?`, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows.
 		`Database error when removing email ${email} from blacklist`,
 	);
 	logEvents(`Removed ${escapeLogControlChars(email)} from blacklist`, 'blacklistLog');
@@ -39,13 +41,15 @@ export function removeFromBlacklist(email: string): void {
 /**
  * Checks if an email is in the blacklist.
  * Returns true if blacklisted, false otherwise.
+ * @param email - The email to check. Case-insensitive.
  * @throws If a database error occurs.
  */
 export function isBlacklisted(email: string): boolean {
-	// We select '1' just to see if a row exists.
-	// db.get returns the row object (truthy) or undefined (falsy).
 	const result = dbCall(
-		() => db.get<{ '1': number }>(`SELECT 1 FROM email_blacklist WHERE email = ?`, [email]),
+		() =>
+			db.get<{ '1': number }>(`SELECT 1 FROM email_blacklist WHERE email = ?`, [
+				email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
+			]),
 		`Database error when checking blacklist for email ${email}`,
 	);
 	return !!result;

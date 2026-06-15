@@ -43,7 +43,7 @@ export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
  * @param claimToken - The httpOnly cookie secret.
  * @param verificationToken - The email-link secret.
  * @param username - The desired username.
- * @param email - The email to verify, in LOWERCASE.
+ * @param email - The email to verify. It will automatically be lowercased.
  * @param hashedPassword - The already-hashed password.
  * @throws If a database error occurs (e.g. a constraint violation).
  */
@@ -67,7 +67,7 @@ export function addPendingRegistration(
 				claimToken,
 				verificationToken,
 				username,
-				email,
+				email.toLowerCase(), // Emails are always stored lowercase.
 				hashedPassword,
 				now,
 				expiresAt,
@@ -135,7 +135,7 @@ export function isUsernameTakenInPending(username: string): boolean {
 
 /**
  * Checks whether an email is held by a non-expired pending registration.
- * @param email - The email to check, in LOWERCASE.
+ * @param email - The email to check. Case-insensitive.
  * @returns True if a non-expired pending row holds this email.
  * @throws If a database error occurs.
  */
@@ -147,7 +147,7 @@ export function isEmailTakenInPending(email: string): boolean {
 		) AS found
 	`;
 	const row = dbCall(
-		() => db.get<{ found: 0 | 1 }>(query, [email, Date.now()]),
+		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now()]), // Lowercased to match the stored (lowercase) rows
 		`Database error while checking pending email "${email}"`,
 	);
 	return Boolean(row?.found);
@@ -157,7 +157,7 @@ export function isEmailTakenInPending(email: string): boolean {
  * Checks whether an email is held by a non-expired pending registration
  * whose `claim_token` is NOT `excludeClaimToken`. Used to distinguish a
  * re-submitter's own row from a genuine third-party collision.
- * @param email - The email to check, in LOWERCASE.
+ * @param email - The email to check. Case-insensitive.
  * @param excludeClaimToken - The claim_token of the row to exclude.
  * @returns True if another non-expired pending row holds this email.
  * @throws If a database error occurs.
@@ -170,7 +170,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
 		) AS found
 	`;
 	const row = dbCall(
-		() => db.get<{ found: 0 | 1 }>(query, [email, Date.now(), excludeClaimToken]),
+		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now(), excludeClaimToken]), // Lowercased to match the stored (lowercase) rows
 		`Database error while checking pending email (by other) "${email}"`,
 	);
 	return Boolean(row?.found);
@@ -184,7 +184,7 @@ export function isEmailTakenInPendingByOther(email: string, excludeClaimToken: s
  * Call {@link deleteExpiredPendingRegistrationsFor} first so any expired row holding the new
  * email doesn't violate the UNIQUE constraint.
  * @param claimToken - The claim_token identifying the row to update.
- * @param email - The new email, in LOWERCASE.
+ * @param email - The new email. It will automatically be lowercased.
  * @param verificationToken - A freshly generated verification token.
  * @throws If a database error occurs.
  */
@@ -200,7 +200,7 @@ export function updatePendingRegistrationEmail(
 		WHERE claim_token = ?
 	`;
 	dbCall(
-		() => db.run(query, [email, verificationToken, expiresAt, claimToken]),
+		() => db.run(query, [email.toLowerCase(), verificationToken, expiresAt, claimToken]), // Emails are always stored lowercase.
 		'Database error while updating pending registration email',
 	);
 }

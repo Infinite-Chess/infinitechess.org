@@ -64,8 +64,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	const formData = verifyBodyHasRegisterFormData(req, res);
 	if (!formData) return; // Response already sent
 
-	const { username, password, turnstileToken } = formData;
-	const email = formData.email.toLowerCase(); // Standardize the email to lowercase everywhere
+	const { username, email, password, turnstileToken } = formData;
 
 	// Two-tab guard: a single pending cookie can't track two registrations. If this browser
 	// already has one in progress, don't create another — report success so the page simply
@@ -242,12 +241,11 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
-	let { email } = req.body;
-	if (typeof email !== 'string') {
+	const { email } = req.body;
+	if (!email || typeof email !== 'string') {
 		res.status(400).json({ message: 'Email is required.' });
 		return;
 	}
-	email = email.toLowerCase();
 
 	// Re-validate the new address (format, blacklist, MX) — same checks as registration.
 	if (!(await doEmailFormatChecks(email, req, res))) return;

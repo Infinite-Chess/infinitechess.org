@@ -44,7 +44,7 @@ type MembersColumn = keyof MemberRecord;
  * It atomically inserts records into both the `members` and `player_stats` tables
  * within a single database transaction, ensuring data integrity.
  * @param username The user's username.
- * @param email The user's email.
+ * @param email The user's email. It will automatically be lowercased.
  * @param hashedPassword The user's hashed password.
  * @returns The user_id of the newly created user.
  *
@@ -68,7 +68,7 @@ function addUser(username: string, email: string, hashedPassword: string): numbe
 		const params = [
 			userId,
 			userData.username,
-			userData.email,
+			userData.email.toLowerCase(), // Emails are always stored lowercase
 			userData.hashedPassword,
 			currentDate,
 		];
@@ -394,14 +394,14 @@ function isUsernameTaken(username: string): boolean {
 
 /**
  * Checks if a member with the given email exists in the members table.
- * @param email - The email to check, in LOWERCASE.
+ * @param email - The email to check. Case-insensitive.
  * @returns Returns true if the email exists, false otherwise.
  * @throws If a database error occurs.
  */
 function isEmailTaken(email: string): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE email = ?) AS found';
 	const row = dbCall(
-		() => db.get<{ found: 0 | 1 }>(query, [email]),
+		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows
 		`Error checking if email "${email}" exists`,
 	);
 	return Boolean(row?.found);
@@ -419,7 +419,7 @@ function isUsernameTakenOrPending(username: string): boolean {
 /**
  * Checks if an email is taken by either a `members`
  * row OR a non-expired `pending_registrations` row.
- * @param email - The email to check, in LOWERCASE.
+ * @param email - The email to check. Case-insensitive.
  * @throws If a database error occurs.
  */
 function isEmailTakenOrPending(email: string): boolean {

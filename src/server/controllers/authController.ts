@@ -42,6 +42,8 @@ async function testPasswordForRequest(
 	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
 	const isEmail = claimedUsername.includes('@');
 	const searchKey = isEmail ? 'email' : 'username';
+	// Lowercased here (not by the data layer): getMemberDataByCriteria is column-agnostic, so an
+	// email search value must be normalized by the caller to match the stored lowercase emails.
 	const searchValue = isEmail ? claimedUsername.toLowerCase() : claimedUsername;
 
 	// Rate limit keyed on the CLAIMED identifier BEFORE the database lookup, so a real
