@@ -46,7 +46,7 @@ export function configurePipeline(app: Express): void {
 	// Inbound third-party webhooks (e.g. AWS SES bounce/complaint/delivery notifications).
 	app.use('/webhooks', webhooksRouter);
 
-	// Serve static files: the built client bundle and the ACME challenge directory.
+	// Serve static files: the built client bundle.
 	app.use(staticAssets);
 
 	// Set the per-HTML-request cookies (browser-id, preferences, checkmates_beaten).
