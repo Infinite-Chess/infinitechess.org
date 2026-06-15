@@ -58,7 +58,7 @@ Checks run in this exact order (each failure sends its own response):
 3. Username format, email format (incl. blacklist + MX-record check), password format.
 4. Username taken-or-pending, email taken-or-pending.
 5. **Turnstile verified** — token spent. Doesn't fail open. Errors send `resetTurnstile: true`.
-   For bot protection. Verified server-side in [turnstile.ts](/src/server/middleware/turnstile.ts);
+   For bot protection. Verified server-side in [turnstile.ts](/src/server/controllers/turnstile.ts);
    the widget's **Managed mode** is configured in the Cloudflare dashboard, not in code.
 6. bcrypt-hash the password, generate both tokens,
    clear any expired rows blocking the UNIQUE constraints, `INSERT`, email the link, set the
@@ -169,7 +169,7 @@ the normal flow and create a **verified member directly** via `addMember`. It ex
 | `addMember` / `promotePendingRegistration` / availability reads      | [memberManager.ts](/src/server/database/memberManager.ts)                                                                                                                                  |
 | Field validation (format, blacklist, MX)                             | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                                                                       |
 | Verification email                                                   | [emailController.ts](/src/server/controllers/emailController.ts)                                                                                                                           |
-| Turnstile verification                                               | [turnstile.ts](/src/server/middleware/turnstile.ts)                                                                                                                                        |
+| Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                                       |
 | Email blacklist                                                      | [blacklistManager.ts](/src/server/database/blacklistManager.ts) / [awsWebhook.ts](/src/server/controllers/awsWebhook.ts)                                                                   |
 | Session issuance (poll only)                                         | [sessionManager.ts](/src/server/controllers/authenticationTokens/sessionManager.ts)                                                                                                        |
 | Page routes / API routes                                             | [root.ts](/src/server/routes/root.ts) / [register.ts](/src/server/routes/register.ts), [api.ts](/src/server/routes/api.ts)                                                                 |

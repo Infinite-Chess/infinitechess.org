@@ -1,4 +1,4 @@
-// src/server/middleware/turnstile.ts
+// src/server/controllers/turnstile.ts
 
 /**
  * Cloudflare Turnstile verification helper.
@@ -10,7 +10,7 @@
 import type { IncomingMessage } from 'http';
 
 import { getClientIP } from '../utility/IP.js';
-import { logEventsAndPrint } from './logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Types -------------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { verifyTurnstileToken } from '../middleware/turnstile.js';
+import { verifyTurnstileToken } from './turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
 import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {

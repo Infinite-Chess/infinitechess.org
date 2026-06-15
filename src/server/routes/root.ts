@@ -6,7 +6,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
-import { TURNSTILE_SITE_KEY } from '../middleware/turnstile.js';
+import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
 import { getBaseRenderContext } from '../utility/renderContext.js';
