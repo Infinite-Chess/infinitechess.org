@@ -42,9 +42,9 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
 		} else {
 			console.log(`Password Reset Link: ${resetUrl}`);
 		}
-	} catch (err) {
-		const errorMessage = err instanceof Error ? err.stack : String(err);
-		logEventsAndPrint(`Error sending password reset email: ${errorMessage}`, 'errLog');
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
+		logEventsAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
 		throw new Error('Unexpected transporter error sending password reset email.');
 	}
 }
@@ -90,10 +90,10 @@ async function sendEmailConfirmation(
 		} else {
 			console.log(`Verification Link: ${verificationUrl}`);
 		}
-	} catch (e) {
-		const errorMessage = e instanceof Error ? e.stack : String(e);
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
-			`Error during sendEmailConfirmation to ${escapeLogControlChars(recipientEmail)}: ${errorMessage}`,
+			`Error during sendEmailConfirmation to ${escapeLogControlChars(recipientEmail)}: ${detail}`,
 			'errLog',
 		);
 	}
@@ -116,10 +116,10 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		} else {
 			console.log("Didn't send rating abuse email.");
 		}
-	} catch (e) {
-		const errorMessage = e instanceof Error ? e.stack : String(e);
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
 		void logEventsAndPrint(
-			`Error during the sending of rating abuse email with subject "${messageSubject}": ${errorMessage}`,
+			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
 			'errLog',
 		);
 	}

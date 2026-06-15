@@ -73,10 +73,10 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			logEvents(`Sending password reset email to user_id (${userId})...`, 'loginAttempts');
 
 			// 10. Send email (must have its own error handling since we're not await'ing an async method!!)
-			sendPasswordResetEmail(email, resetUrl).catch((err) => {
-				const errorMessage = err instanceof Error ? err.stack : String(err);
+			sendPasswordResetEmail(email, resetUrl).catch((error: unknown) => {
+				const detail = error instanceof Error ? error.stack : String(error);
 				logEventsAndPrint(
-					`Background password reset email send failed for user_id (${userId}), email (${escapeLogControlChars(email)}): ${errorMessage}`,
+					`Background password reset email send failed for user_id (${userId}), email (${escapeLogControlChars(email)}): ${detail}`,
 					'errLog',
 				);
 			});
