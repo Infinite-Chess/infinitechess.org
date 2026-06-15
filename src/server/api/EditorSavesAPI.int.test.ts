@@ -15,8 +15,11 @@ import { testRequest } from '../../tests/testRequest.js';
 import integrationUtils from '../../tests/integrationUtils.js';
 
 import EditorSavesAPI from './EditorSavesAPI.js';
-import editorSavesManager from '../database/editorSavesManager.js';
 import { generateTables, clearAllTables } from '../database/databaseTables.js';
+import {
+	getAllSavedPositionsForUser,
+	getSavedPositionICN,
+} from '../database/editorSavesManager.js';
 
 describe('EditorSavesAPI Integration', () => {
 	// Runs once at the very start of this file
@@ -115,7 +118,7 @@ describe('EditorSavesAPI Integration', () => {
 			});
 
 			// Verify the position was actually saved to the database
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			const saves = getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]).toMatchObject({
 				name: position.name,
 				piece_count: position.piece_count,
@@ -142,10 +145,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify raw DB values: -1 = indeterminate
-			const icnData = editorSavesManager.getSavedPositionICN(
-				'Tristate Position',
-				user.user_id,
-			);
+			const icnData = getSavedPositionICN('Tristate Position', user.user_id);
 			expect(icnData?.pawn_double_push).toBe(-1);
 			expect(icnData?.castling).toBe(-1);
 		});
@@ -328,7 +328,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify only one position exists with the new data
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			const saves = getAllSavedPositionsForUser(user.user_id);
 			expect(saves).toMatchObject([
 				{
 					name: 'Duplicate Name',
@@ -338,7 +338,7 @@ describe('EditorSavesAPI Integration', () => {
 			]);
 
 			// Verify the ICN was also overwritten
-			const icnData = editorSavesManager.getSavedPositionICN('Duplicate Name', user.user_id);
+			const icnData = getSavedPositionICN('Duplicate Name', user.user_id);
 			expect(icnData?.icn).toBe('test-icn-2');
 			expect(icnData?.pawn_double_push).toBe(0);
 			expect(icnData?.castling).toBe(1);
@@ -409,7 +409,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Omitted field should be stored as -1 (indeterminate)
-			const icnData = editorSavesManager.getSavedPositionICN('Test Position', user.user_id);
+			const icnData = getSavedPositionICN('Test Position', user.user_id);
 			expect(icnData?.pawn_double_push).toBe(-1);
 		});
 
@@ -430,7 +430,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Omitted field should be stored as -1 (indeterminate)
-			const icnData = editorSavesManager.getSavedPositionICN('Test Position', user.user_id);
+			const icnData = getSavedPositionICN('Test Position', user.user_id);
 			expect(icnData?.castling).toBe(-1);
 		});
 	});
@@ -554,7 +554,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.body).toMatchObject({ saves: [] });
 
 			// Verify the position was actually deleted from the database
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			const saves = getAllSavedPositionsForUser(user.user_id);
 			expect(saves).toHaveLength(0);
 		});
 
@@ -620,7 +620,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const save = editorSavesManager.getSavedPositionICN('Test', user.user_id);
+			const save = getSavedPositionICN('Test', user.user_id);
 			expect(save?.icn).toBe(maxLengthIcn);
 		});
 
@@ -645,7 +645,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			const saves = getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.name).toBe(maxLengthName);
 		});
 
@@ -670,7 +670,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify the piece_count was set correctly from client
-			const saves = editorSavesManager.getAllSavedPositionsForUser(user.user_id);
+			const saves = getAllSavedPositionsForUser(user.user_id);
 			expect(saves[0]?.piece_count).toBe(100);
 		});
 
@@ -709,8 +709,8 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response2.status).toBe(201);
 
 			// Verify both positions exist independently
-			const saves1 = editorSavesManager.getAllSavedPositionsForUser(user1.user_id);
-			const saves2 = editorSavesManager.getAllSavedPositionsForUser(user2.user_id);
+			const saves1 = getAllSavedPositionsForUser(user1.user_id);
+			const saves2 = getAllSavedPositionsForUser(user2.user_id);
 
 			expect(saves1[0]?.name).toBe('Same Name');
 			expect(saves2[0]?.name).toBe('Same Name');

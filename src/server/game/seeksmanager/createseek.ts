@@ -36,8 +36,8 @@ import {
 } from '../../../shared/types.js';
 
 import { AuthSeek } from './seekutility.js';
-import editorSavesManager from '../../database/editorSavesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getSavedPositionICN } from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import {
@@ -115,7 +115,7 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
  * Builds an {@link AuthSeek} from the client's createseek message, resolving
  * cloudSave variants to ICN and validating ICN positions for legality.
  * Returns `void` after sending an error to the client if any check fails.
- * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link editorSavesManager.getSavedPositionICN}).
+ * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link getSavedPositionICN}).
  */
 async function getSeekFromWebsocketMessageContents(
 	ws: CustomWebSocket,
@@ -159,7 +159,7 @@ async function getSeekFromWebsocketMessageContents(
 			);
 			return;
 		}
-		const record = editorSavesManager.getSavedPositionICN(variant.name, owner.user_id);
+		const record = getSavedPositionICN(variant.name, owner.user_id);
 		if (record === undefined) {
 			return sendSocketMessage(
 				ws,

@@ -11,8 +11,15 @@ import * as z from 'zod';
 import editorutil from '../../shared/util/editorutil.js';
 
 import { logZodError } from '../utility/zodlogger.js';
-import editorSavesManager from '../database/editorSavesManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
+import {
+	getAllSavedPositionsForUser,
+	getSavedPositionCount,
+	doesSavedPositionExist,
+	addSavedPosition,
+	getSavedPositionICN,
+	deleteSavedPosition,
+} from '../database/editorSavesManager.js';
 
 // Constants ---------------------------------------------------------------------------------
 
@@ -88,7 +95,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 	try {
 		// Get all saved positions for this user
-		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		const saves = getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -141,8 +148,8 @@ function savePosition(req: Request, res: Response): void {
 
 	try {
 		// Enforce the per-user quota, if it's a new (not existing) position.
-		const atLimit = editorSavesManager.getSavedPositionCount(userId) >= MAX_SAVED_POSITIONS;
-		const isExistingPosition = editorSavesManager.doesSavedPositionExist(userId, name);
+		const atLimit = getSavedPositionCount(userId) >= MAX_SAVED_POSITIONS;
+		const isExistingPosition = doesSavedPositionExist(userId, name);
 		if (atLimit && !isExistingPosition) {
 			res.status(403).json({
 				message: req.t.responses.editor_saves.limit_reached,
@@ -151,7 +158,7 @@ function savePosition(req: Request, res: Response): void {
 		}
 
 		// Add the saved position to the database
-		editorSavesManager.addSavedPosition(
+		addSavedPosition(
 			userId,
 			name,
 			piece_count,
@@ -162,7 +169,7 @@ function savePosition(req: Request, res: Response): void {
 			castling,
 		);
 
-		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		const saves = getAllSavedPositionsForUser(userId);
 		res.status(201).json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -209,7 +216,7 @@ function getPosition(req: Request, res: Response): void {
 
 	try {
 		// Get the position from the database (filtered by user_id)
-		const position = editorSavesManager.getSavedPositionICN(positionName, userId);
+		const position = getSavedPositionICN(positionName, userId);
 
 		if (!position) {
 			res.status(404).json({
@@ -275,7 +282,7 @@ function deletePosition(req: Request, res: Response): void {
 
 	try {
 		// Delete the position from the database (filtered by user_id)
-		const result = editorSavesManager.deleteSavedPosition(positionName, userId);
+		const result = deleteSavedPosition(positionName, userId);
 
 		if (result.changes === 0) {
 			res.status(404).json({
@@ -284,7 +291,7 @@ function deletePosition(req: Request, res: Response): void {
 			return;
 		}
 
-		const saves = editorSavesManager.getAllSavedPositionsForUser(userId);
+		const saves = getAllSavedPositionsForUser(userId);
 		res.json({ saves });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
