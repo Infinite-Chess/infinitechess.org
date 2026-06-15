@@ -342,28 +342,11 @@ async function generateAccount({
 	username: string;
 	email: string;
 	password: string;
-	autoVerify?: boolean;
 }): Promise<number> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
-
-	const { is_verified, verification_code, is_verification_notified } = {
-		is_verified: 1 as 0 | 1,
-		verification_code: null,
-		is_verification_notified: 1 as 0 | 1,
-	};
-
-	const user_id = addUser(
-		username,
-		email,
-		hashedPassword,
-		is_verified,
-		verification_code,
-		is_verification_notified,
-	);
-
+	const user_id = addUser(username, email, hashedPassword);
 	logEvents(`Manually generated new member: ${username}`, 'newMemberLog');
-
 	return user_id;
 }
 

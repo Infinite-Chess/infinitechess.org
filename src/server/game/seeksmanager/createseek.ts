@@ -88,7 +88,7 @@ async function createSeek(ws: CustomWebSocket, messageContents: CreateSeekMessag
 
 	// Reject rated seeks from signed-out users
 	if (messageContents.mode === 'rated' && !ws.metadata.memberInfo.signedIn) {
-		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_verified);
+		sendSocketMessage(ws, 'general', 'notify', ws.t.responses.seeks.rated_requires_signin);
 		return;
 	}
 

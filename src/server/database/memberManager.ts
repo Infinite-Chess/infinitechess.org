@@ -29,9 +29,6 @@ export interface MemberRecord {
 	joined: string;
 	last_seen: string;
 	login_count: number;
-	is_verified: 0 | 1;
-	verification_code: string | null;
-	is_verification_notified: 0 | 1;
 	preferences: string | null;
 	username_history: string | null;
 	checkmates_beaten: string;
@@ -49,23 +46,13 @@ type MembersColumn = keyof MemberRecord;
  * @param username The user's username.
  * @param email The user's email.
  * @param hashedPassword The user's hashed password.
- * @param is_verified The verification status.
- * @param verification_code The unique code for verification, if they are not yet verified.
- * @param is_verification_notified The verified notification status.
  * @returns The user_id of the newly created user.
  *
  * @throws If the insertion fails (e.g., due to constraint violation or other unexpected error).
  */
-function addUser(
-	username: string,
-	email: string,
-	hashedPassword: string,
-	is_verified: 0 | 1,
-	verification_code: string | null,
-	is_verification_notified: 0 | 1,
-): number {
+function addUser(username: string, email: string, hashedPassword: string): number {
 	// prettier-ignore
-	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string; is_verified: 0 | 1; verification_code: string | null; is_verification_notified: 0 | 1 }], number>((userData) => {
+	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
 		const userId = genUniqueUserID();
 
@@ -75,19 +62,14 @@ function addUser(
 		// Step 3: Insert into the members table.
 		const membersQuery = `
 			INSERT INTO members (
-				user_id, username, email, hashed_password,
-				is_verified, verification_code, is_verification_notified,
-				last_read_news_date
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+				user_id, username, email, hashed_password, last_read_news_date
+			) VALUES (?, ?, ?, ?, ?)
 		`;
 		const params = [
 			userId,
 			userData.username,
 			userData.email,
 			userData.hashedPassword,
-			userData.is_verified,
-			userData.verification_code,
-			userData.is_verification_notified,
 			currentDate,
 		];
 		db.run(membersQuery, params);
@@ -101,15 +83,7 @@ function addUser(
 	});
 
 	return dbCall(
-		() =>
-			createAccountTransaction({
-				username,
-				email,
-				hashedPassword,
-				is_verified,
-				verification_code,
-				is_verification_notified,
-			}),
+		() => createAccountTransaction({ username, email, hashedPassword }),
 		`Account creation transaction for "${username}" failed and was rolled back`,
 	);
 }
@@ -125,7 +99,7 @@ function addUser(
 function promotePendingRegistration(pending: PendingRegistrationRecord): number {
 	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
 		// addUser runs its own transaction; nested here it becomes a savepoint.
-		const user_id = addUser(p.username, p.email, p.hashed_password, 1, null, 1);
+		const user_id = addUser(p.username, p.email, p.hashed_password);
 		markPendingRegistrationVerified(p.claim_token, user_id);
 		return user_id;
 	});

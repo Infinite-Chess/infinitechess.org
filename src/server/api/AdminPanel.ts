@@ -291,8 +291,6 @@ function getUserInfo(command: string, commandAndArgs: string[], req: Request, re
 			'joined',
 			'last_seen',
 			'preferences',
-			'is_verified',
-			'is_verification_notified',
 			'username_history',
 			'checkmates_beaten',
 		],

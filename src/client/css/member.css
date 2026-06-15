@@ -39,27 +39,8 @@ main {
 	text-align: center;
 }
 
-#verifyerror h2 {
-	font-size: 16px;
-}
-
-#verifyerror p {
-	font-size: 11px;
-	margin-top: 0.5em;
-	margin-bottom: 20px;
-}
-
-#verifyconfirm {
-	font-size: 16px;
-	margin-bottom: 20px;
-}
-
 #content a {
 	color: rgb(0, 0, 0);
-}
-
-#sendemail:hover {
-	cursor: pointer;
 }
 
 .member,
@@ -218,18 +199,6 @@ a {
 
 	.member img {
 		height: calc(100px + (100vw - 450px) * 0.165);
-	}
-}
-
-/* Stop increasing header links width */
-@media only screen and (min-width: 715px) {
-	#verifyerror h2,
-	#verifyconfirm {
-		font-size: 20px;
-	}
-
-	#verifyerror p {
-		font-size: 13px;
 	}
 }
 

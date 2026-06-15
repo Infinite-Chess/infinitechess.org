@@ -5,17 +5,10 @@
  * cleaning up each table in the database of stale data.
  */
 
-import timeutil from '../../shared/util/timeutil.js';
-
 import db from './database.js';
-import { deleteAccount } from '../controllers/deleteAccountController.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 import { refreshTokenGracePeriodMillis } from '../controllers/authenticationTokens/tokenSigner.js';
 import { deleteExpiredPendingRegistrations } from './pendingRegistrationManager.js';
-
-/** The maximum time an account is allowed to remain unverified before the server will delete it from Database. */
-const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 60 * 60 * 24 * 3; // 3 days
-// const maxExistenceTimeForUnverifiedAccountMillis = 1000 * 40; // 30 seconds
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
 // const CLEANUP_INTERVAL_MS = 1000 * 20; // 20 seconds for dev testing
@@ -29,7 +22,6 @@ function performCleanupTasks(): void {
 	checkDatabaseIntegrity();
 	deleteExpiredPasswordResetTokens();
 	cleanUpExpiredRefreshTokens();
-	removeOldUnverifiedMembers();
 	deleteExpiredPendingRegistrations();
 }
 
@@ -103,56 +95,6 @@ function cleanUpExpiredRefreshTokens(): void {
 			'Failed to delete expired refresh tokens: ' +
 			(error instanceof Error ? error.message : String(error));
 		logEventsAndPrint(errorMessage, 'errLog');
-	}
-}
-
-/**
- * Removes unverified members who have not verified their account for more than 3 days.
- *
- * FUTURE: If the user has zero game records in the database, we could skip adding
- * their user_id to the deleted_members table, allowing us to reuse that id.
- */
-function removeOldUnverifiedMembers(): void {
-	// console.log("Checking for old unverified accounts to remove.");
-	try {
-		// Calculate the cutoff time.
-		const cutoffTimestamp = Date.now() - maxExistenceTimeForUnverifiedAccountMillis;
-		const cutoffDateString = timeutil.timestampToSqlite(cutoffTimestamp);
-
-		const membersToDelete = db.all<{ user_id: number }>(
-			`
-			SELECT user_id FROM members 
-			WHERE is_verified = 0 
-			  AND joined < ?
-		`,
-			[cutoffDateString],
-		);
-
-		if (membersToDelete.length === 0) return; // Nothing to do.
-
-		const reason_deleted = 'unverified';
-
-		// Iterate through the IDs and delete each account.
-		for (const member of membersToDelete) {
-			try {
-				deleteAccount(member.user_id, reason_deleted);
-				logEvents(
-					`Removed old unverified account with ID: ${member.user_id}`,
-					'deletedAccounts.txt',
-				);
-			} catch (error: unknown) {
-				const message = error instanceof Error ? error.message : String(error);
-				logEventsAndPrint(
-					`FAILED to remove old unverified account with ID (${member.user_id}): ${message}`,
-					'errLog',
-				);
-			}
-		}
-
-		console.log(`Cleanup: Removed ${membersToDelete.length} unverified account(s).`);
-	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		logEventsAndPrint(`Error removing old unverified accounts: ${errorMessage}`, 'errLog');
 	}
 }
 

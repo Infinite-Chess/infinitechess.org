@@ -19,7 +19,7 @@ login_retry_in_other = "Failed to login, try again in {n} seconds."
 
 [seeks]
 already_in_game = "You are already in a game."
-rated_requires_verified = "To play ranked, you need to be signed in with a verified account."
+rated_requires_signin = "You must be signed in to play rated games."
 game_aborted = "Game aborted."
 cloud_requires_sign_in = "Must be signed in to create a seek from a cloud save."
 cloud_not_found = "Cloud save not found."

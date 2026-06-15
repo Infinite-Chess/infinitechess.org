@@ -24,9 +24,6 @@ export type TranslationKeys =
 	| 'member.javascript.js-confirm_delete'
 	| 'member.javascript.js-enter_password'
 	| 'member.title'
-	| 'member.verify_message'
-	| 'member.resend_message'
-	| 'member.verify_confirm'
 	| 'member.joined'
 	| 'member.seen'
 	| 'member.practice_progress'
@@ -539,8 +536,7 @@ export type TranslationKeys =
 	| 'server.javascript.ws-opponent_cheated'
 	| 'server.javascript.ws-cannot_resign_finished_game'
 	| 'server.javascript.ws-invalid_code'
-	| 'server.javascript.ws-game_aborted'
-	| 'server.javascript.ws-rated_invite_verification_needed';
+	| 'server.javascript.ws-game_aborted';
 
 /**
  * Nested object type for client-side translation access.
@@ -564,9 +560,6 @@ export interface TranslationsObject {
 			'js-enter_password': string;
 		};
 		title: string;
-		verify_message: string;
-		resend_message: string[];
-		verify_confirm: string;
 		joined: string;
 		seen: string;
 		practice_progress: string;
@@ -1173,7 +1166,6 @@ export interface TranslationsObject {
 			'ws-cannot_resign_finished_game': string;
 			'ws-invalid_code': string;
 			'ws-game_aborted': string;
-			'ws-rated_invite_verification_needed': string;
 		};
 	};
 }

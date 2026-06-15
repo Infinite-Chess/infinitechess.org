@@ -66,7 +66,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 			ws,
 			'general',
 			'notify',
-			ws.t.responses.seeks.rated_requires_verified,
+			ws.t.responses.seeks.rated_requires_signin,
 		);
 	}
 

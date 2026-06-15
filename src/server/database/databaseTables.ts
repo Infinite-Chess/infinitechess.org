@@ -31,9 +31,6 @@ const allMemberColumns: string[] = [
 	'preferences',
 	'login_count',
 	'checkmates_beaten',
-	'is_verified',
-	'verification_code',
-	'is_verification_notified',
 	'last_read_news_date',
 ];
 
@@ -143,9 +140,6 @@ function generateTables(): void {
 			joined TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			login_count INTEGER NOT NULL DEFAULT 0,
-			is_verified INTEGER NOT NULL DEFAULT 0,
-			verification_code TEXT,
-			is_verification_notified INTEGER NOT NULL DEFAULT 0,
 			preferences TEXT,
 			username_history TEXT,
 			checkmates_beaten TEXT NOT NULL DEFAULT '',
@@ -389,7 +383,7 @@ function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
-	purgeUnverifiedMembers();
+	dropLegacyVerificationColumnsIfPresent();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -429,21 +423,27 @@ function addIsPersistentColumnToRefreshTokens(): void {
 /**
  * TEMPORARY MIGRATION: remove after it has run in production.
  *
- * Every new account is now created already-verified, so any remaining `is_verified = 0`
- * member registered under the old flow and never verified. This purges all of them.
+ * Drops the now-vestigial verification columns (`is_verified`, `verification_code`,
+ * `is_verification_notified`) from the members table. Every account is now created
+ * already-verified, so before losing the flag we purge any legacy member that was
+ * registered under the old flow and never verified (`is_verified = 0`).
  */
-function purgeUnverifiedMembers(): void {
+function dropLegacyVerificationColumnsIfPresent(): void {
+	if (!db.columnExists('members', 'is_verified')) return; // Already migrated
+
+	// Purge any remaining legacy unverified members before we drop the flag.
 	const membersToDelete = db.all<{ user_id: number }>(
 		`SELECT user_id FROM members WHERE is_verified = 0`,
 	);
-
-	if (membersToDelete.length === 0) return; // Nothing to do.
-
 	for (const member of membersToDelete) {
 		deleteAccount(member.user_id, 'unverified');
 	}
-
 	console.log(`Temporary DB migration: purged ${membersToDelete.length} unverified member(s).`);
+
+	db.run('ALTER TABLE members DROP COLUMN is_verified');
+	db.run('ALTER TABLE members DROP COLUMN verification_code');
+	db.run('ALTER TABLE members DROP COLUMN is_verification_notified');
+	console.log('Temporary DB migration: dropped verification columns from members table.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
