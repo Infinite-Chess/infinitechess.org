@@ -105,7 +105,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
-	// Bot gate: verify the Cloudflare Turnstile token.
+	// Bot gate: verify the Cloudflare Turnstile token. Stops automatic account creation.
+	// Isn't intended for strengthening email enumeration (that's already bounded by createAccountAttemptLimiter)
 	// From here on the token is spent, so these responses tell the client to re-issue a fresh one.
 	const turnstileResult = await verifyTurnstileToken(turnstileToken, req);
 	if (turnstileResult === 'failed') {

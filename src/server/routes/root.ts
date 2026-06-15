@@ -56,7 +56,8 @@ page('/register/awaiting(.html)?', (req: Request, res: Response) => {
 });
 page('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
 page('/verify/:token', (req: Request, res: Response) => {
-	// The token sits in the URL; keep it out of any Referer header sent to third-party resources.
+	// The token sits in the URL; keep it out of any Referer
+	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
 	res.render('verify.njk', getVerifyPageState(req));
 });
