@@ -396,10 +396,7 @@ function initDatabase(): void {
  * This only logs when the column is found and deleted.
  */
 function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
-	const liveGamesColumns = db.all<{ name: string }>("PRAGMA table_info('live_games')");
-	const hasPosPastedColumn = liveGamesColumns.some((column) => column.name === 'position_pasted');
-
-	if (!hasPosPastedColumn) return;
+	if (!db.columnExists('live_games', 'position_pasted')) return; // Already migrated
 
 	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
 	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
