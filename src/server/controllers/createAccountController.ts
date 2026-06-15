@@ -72,28 +72,11 @@ const profanityMatcher = new RegExpMatcher({
  * emails a verification link, and sets the pending cookie. Creates no member.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
-	// Bot gate: verify the Cloudflare Turnstile token BEFORE any pending/account work, so an
-	// automated submission can never create a pending row.
-	const turnstileResult = await verifyTurnstileToken(req.body['cf-turnstile-response'], req);
-	if (turnstileResult === 'failed') {
-		res.status(403).json({ message: 'Verification failed. Please try again.' });
-		return;
-	} else if (turnstileResult === 'error') {
-		// Don't fail open on a network error. Claim it as a generic server error.
-		res.status(503).json({ message: req.t.responses.errors.server_error });
-		return;
-	}
+	const formData = verifyBodyHasRegisterFormData(req, res);
+	if (!formData) return; // Response already sent
 
-	// First make sure we have all 3 variables.
-	// eslint-disable-next-line prefer-const
-	let { username, email, password } = req.body;
-	if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
-		console.error(
-			'We received request to create new member without all supplied username, email, and password!',
-		);
-		res.status(400).redirect('/400'); // Bad request
-		return;
-	}
+	const { username, password, turnstileToken } = formData;
+	const email = formData.email.toLowerCase(); // Standardize the email to lowercase everywhere
 
 	// Two-tab guard: a single pending cookie can't track two registrations. If this browser
 	// already has one in progress, don't create another — report success so the page simply
@@ -103,11 +86,8 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
-	// Make the email lowercase, so we don't run into problems with seeing if capitalized emails are taken!
-	email = email.toLowerCase();
-
-	// These 'return's are so that we don't send duplicate responses,
-	// AND so we don't create the pending row anyway.
+	// Run field-level checks first. Consume Turnstile token last.
+	// Each of these sends its own specific response on failure.
 	if (!doUsernameFormatChecks(username, req, res)) return;
 	if (!(await doEmailFormatChecks(email, req, res))) return;
 	if (!doPasswordFormatChecks(password, req, res)) return;
@@ -137,6 +117,24 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		return;
 	}
 
+	// Bot gate: verify the Cloudflare Turnstile token.
+	// From here on the token is spent, so these responses tell the client to re-issue a fresh one.
+	const turnstileResult = await verifyTurnstileToken(turnstileToken, req);
+	if (turnstileResult === 'failed') {
+		res.status(403).json({
+			message: 'Verification failed. Please try again.',
+			resetTurnstile: true,
+		});
+		return;
+	} else if (turnstileResult === 'error') {
+		// Don't fail open on a network error. Claim it as a generic server error.
+		res.status(503).json({
+			message: req.t.responses.errors.server_error,
+			resetTurnstile: true,
+		});
+		return;
+	}
+
 	// Hash the password now so the plaintext never reaches the pending row.
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
 
@@ -150,7 +148,11 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 		deleteExpiredPendingRegistrationsFor(username, email);
 		addPendingRegistration(claimToken, verificationToken, username, email, hashedPassword);
 	} catch {
-		res.status(500).json({ message: req.t.responses.errors.server_error });
+		// The Turnstile token was already spent above; have the client re-issue a fresh one.
+		res.status(500).json({
+			message: req.t.responses.errors.server_error,
+			resetTurnstile: true,
+		});
 		return;
 	}
 
@@ -166,6 +168,36 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	});
 
 	res.sendStatus(201);
+}
+
+/**
+ * The single structural gate for the register body: requires `username`, `email`, `password`,
+ * and the Turnstile token (`cf-turnstile-response`) all be non-empty strings. Anything else is a
+ * hand-crafted request — auto-sends a 400 and returns undefined.
+ * @returns The four values, or undefined if the body is malformed (response already sent).
+ */
+function verifyBodyHasRegisterFormData(
+	req: Request,
+	res: Response,
+): { username: string; email: string; password: string; turnstileToken: string } | undefined {
+	const { username, email, password, 'cf-turnstile-response': turnstileToken } = req.body;
+
+	if (
+		!username ||
+		!email ||
+		!password ||
+		!turnstileToken ||
+		typeof username !== 'string' ||
+		typeof email !== 'string' ||
+		typeof password !== 'string' ||
+		typeof turnstileToken !== 'string'
+	) {
+		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
+		res.status(400).json({ message: 'Request body malformed.' });
+		return undefined;
+	}
+
+	return { username, email, password, turnstileToken };
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */

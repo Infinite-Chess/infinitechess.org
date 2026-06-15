@@ -36,6 +36,7 @@ async function testPasswordForRequest(
 ): Promise<Pick<MemberRecord, 'user_id' | 'username' | 'roles'> | undefined> {
 	const formData = verifyBodyHasLoginFormData(req, res);
 	if (!formData) return undefined; // Reponse already sent
+
 	const { claimedUsername, claimedPassword } = formData;
 
 	// Emails always contain '@' and are stored lowercase; usernames can never contain '@'.
@@ -96,9 +97,9 @@ function verifyBodyHasLoginFormData(
 ): { claimedUsername: string; claimedPassword: string } | undefined {
 	const { username, password } = req.body;
 
-	if (!username || typeof username !== 'string' || !password || typeof password !== 'string') {
+	if (!username || !password || typeof username !== 'string' || typeof password !== 'string') {
 		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
-		res.status(400).json({ message: 'Request body malformed.' }); // 400 Bad request
+		res.status(400).json({ message: 'Request body malformed.' });
 		return undefined;
 	}
 

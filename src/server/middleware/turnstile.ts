@@ -67,12 +67,7 @@ const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverif
  * @param req - The incoming request, used to forward the real client IP (`remoteip`).
  * @returns The verification outcome. Callers must reject on both `'failed'` and `'error'`.
  */
-async function verifyTurnstileToken(
-	token: unknown,
-	req: IncomingMessage,
-): Promise<TurnstileResult> {
-	if (!token || typeof token !== 'string') return 'failed';
-
+async function verifyTurnstileToken(token: string, req: IncomingMessage): Promise<TurnstileResult> {
 	const body = new URLSearchParams({ secret: TURNSTILE_SECRET_KEY, response: token });
 	const remoteip = getClientIP(req);
 	if (remoteip !== undefined) body.append('remoteip', remoteip);

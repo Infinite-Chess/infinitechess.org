@@ -123,7 +123,6 @@ function refreshSubmit(): void {
 function resetTurnstile(): void {
 	turnstileToken = undefined;
 	if (turnstileWidgetId !== undefined) window.turnstile.reset(turnstileWidgetId);
-	refreshSubmit();
 }
 
 /** Renders the widget and wires its success/error/expired callbacks to. */
@@ -228,6 +227,7 @@ async function submitRegister(): Promise<void> {
 			const result = (await response.json()) as {
 				message?: string;
 				field?: 'username' | 'email' | 'password';
+				resetTurnstile?: boolean;
 			};
 			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
 			// beneath that input; systemic failures (server/network) have none and go form-level.
@@ -248,14 +248,16 @@ async function submitRegister(): Promise<void> {
 				default:
 					setFormError(message);
 			}
-			// The token was consumed by this attempt; re-issue a fresh one for the retry.
-			resetTurnstile();
+			// Only re-issue a token when the server actually spent it (it verifies Turnstile after the field checks).
+			if (result.resetTurnstile) resetTurnstile();
+			refreshSubmit(); // Re-enable for a retry.
 			return;
 		}
 	} catch (e: unknown) {
 		console.error('Registration request failed:', e);
 		setFormError('Network error. Please try again.');
 		resetTurnstile(); // Re-issue a fresh token for the retry.
+		refreshSubmit();
 	}
 }
 
