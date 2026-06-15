@@ -252,3 +252,16 @@ export function deleteExpiredPendingRegistrations(): void {
 		'Database error while sweeping expired pending registrations',
 	);
 }
+
+/**
+ * Deletes the pending registration that was promoted into the given member, if one still exists.
+ * @param user_id - The user_id of the member whose originating pending row to remove.
+ * @throws If a database error occurs.
+ */
+export function deletePendingRegistrationFor(user_id: number): void {
+	const query = `DELETE FROM pending_registrations WHERE member_user_id = ?`;
+	dbCall(
+		() => db.run(query, [user_id]),
+		`Database error while deleting pending registration for member_user_id "${user_id}"`,
+	);
+}

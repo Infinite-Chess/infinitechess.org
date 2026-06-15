@@ -44,9 +44,7 @@ export function getVerifyPageState(req: Request): { state: 'prompt' | 'verified'
 	return { state: pending.member_user_id !== null ? 'verified' : 'prompt' };
 }
 
-/**
- * `POST /api/verify/:token` — promotes a verified pending registration into a real member.
- */
+/** `POST /api/verify/:token` — promotes a verified pending registration into a real member. */
 export function verifyPendingRegistration(req: Request, res: Response): void {
 	// Express only matches this route with a non-empty :token segment.
 	const token = req.params['token']!;
