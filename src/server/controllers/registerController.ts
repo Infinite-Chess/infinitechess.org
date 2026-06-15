@@ -287,7 +287,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
  * cookie set at registration. Once the pending registration has been promoted, THIS browser
  * (the only one holding the cookie) is issued a session and the pending cookie is cleared.
  *
- * Responds `{ status: 'expired' | 'pending' | 'verified' }`.
+ * Responds `{ status: 'expired' | 'pending' | 'blacklisted' | 'verified' }`.
  */
 function pollPendingRegistration(req: Request, res: Response): void {
 	const claimToken = req.cookies[PENDING_REGISTRATION_COOKIE_NAME];
