@@ -15,12 +15,13 @@ import { Request, Response } from 'express';
 
 import validators from '../../shared/util/validators.js';
 
+import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { verifyTurnstileToken } from '../middleware/turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
-import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addMember,
 	getMemberDataByCriteria,
@@ -110,6 +111,10 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// From here on the token is spent, so these responses tell the client to re-issue a fresh one.
 	const turnstileResult = await verifyTurnstileToken(turnstileToken, req);
 	if (turnstileResult === 'failed') {
+		logEvents(
+			`Registration rejected (turnstile failed): ${formatRegistrationLogMeta(req, username, email)}`,
+			'newMemberLog',
+		);
 		res.status(403).json({
 			message: 'Verification failed. Please try again.',
 			resetTurnstile: true,
@@ -181,12 +186,25 @@ function verifyBodyHasRegisterFormData(
 		typeof password !== 'string' ||
 		typeof turnstileToken !== 'string'
 	) {
+		// The page always sends a well-formed body, so this is a clean signal
+		// of a naive direct-POST bot that never rendered the Turnstile widget.
+		logEvents(
+			`Registration rejected (malformed body): ${formatRegistrationLogMeta(req, username, email)}`,
+			'newMemberLog',
+		);
 		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
 		res.status(400).json({ message: 'Request body malformed.' });
 		return undefined;
 	}
 
 	return { username, email, password, turnstileToken };
+}
+
+/** The metadata tail for a rejected-registration log line: `IP   username   email   userAgent`. */
+function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
+	const ip = getClientIP(req) ?? 'Unknown ip';
+	const userAgent = req.headers['user-agent'] ?? 'Unknown user agent';
+	return escapeLogControlChars([ip, username ?? '', email ?? '', userAgent].join('   '));
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */
