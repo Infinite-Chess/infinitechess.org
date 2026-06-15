@@ -45,7 +45,7 @@ export const createAccountLimiter = rateLimit({
 
 /**
  * Account Creation Attempt Limiter (failed registrations only)
- * Guards against spamming DNS/MX lookups, DB queries against.
+ * Guards against email enumeration, spamming DNS/MX lookups, DB queries against.
  */
 export const createAccountAttemptLimiter = rateLimit({
 	windowMs: 1000 * 60 * 5, // 5 minutes
