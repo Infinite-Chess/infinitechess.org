@@ -50,7 +50,7 @@ type MembersColumn = keyof MemberRecord;
  *
  * @throws If the insertion fails (e.g., due to constraint violation or other unexpected error).
  */
-function addUser(username: string, email: string, hashedPassword: string): number {
+function addMember(username: string, email: string, hashedPassword: string): number {
 	// prettier-ignore
 	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
@@ -87,7 +87,7 @@ function addUser(username: string, email: string, hashedPassword: string): numbe
 		`Account creation transaction for "${username}" failed and was rolled back`,
 	);
 }
-// setTimeout(() => { console.log(addUser('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
+// setTimeout(() => { console.log(addMember('na3v534', 'tes3t5em3a4il3', 'password', null)); }, 1000); // Set timeout needed so user_id_upper_cap is initialized before this function is called.
 
 /**
  * Atomically promotes a pending registration into a real,
@@ -98,12 +98,12 @@ function addUser(username: string, email: string, hashedPassword: string): numbe
  */
 function promotePendingRegistration(pending: PendingRegistrationRecord): number {
 	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
-		// addUser runs its own transaction; nested here it becomes a savepoint.
-		const user_id = addUser(p.username, p.email, p.hashed_password);
+		// addMember runs its own transaction; nested here it becomes a savepoint.
+		const user_id = addMember(p.username, p.email, p.hashed_password);
 		markPendingRegistrationVerified(p.claim_token, user_id);
 		return user_id;
 	});
-	// Unlike addUser/deleteUser, this transaction is NOT wrapped
+	// Unlike addMember/deleteMember, this transaction is NOT wrapped
 	// in dbCall: its steps each already log via their own dbCall.
 	return promoteTransaction(pending);
 }
@@ -114,7 +114,7 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
  * @param reason_deleted - The reason the user is being deleted.
  * @throws If the member does not exist, or if a database error occurs during the deletion.
  */
-function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
+function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
 	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
@@ -143,7 +143,7 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 		`Deletion transaction for user_id "${user_id}" failed and was rolled back`,
 	);
 }
-// console.log(deleteUser(3887110, 'security'));
+// console.log(deleteMember(3887110, 'security'));
 
 // General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
 
@@ -429,9 +429,9 @@ function isEmailTakenOrPending(email: string): boolean {
 // Exports -----------------------------------------------------------------------------
 
 export {
-	addUser,
+	addMember,
 	promotePendingRegistration,
-	deleteUser,
+	deleteMember,
 	getMemberDataByCriteria,
 	getMultipleMemberDataByCriteria,
 	updateMemberColumns,

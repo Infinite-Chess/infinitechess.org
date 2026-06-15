@@ -6,7 +6,7 @@
 
 import type { Request, Response } from 'express';
 
-import { deleteUser } from '../database/memberManager.js';
+import { deleteMember } from '../database/memberManager.js';
 import { revokeSession } from './authenticationTokens/sessionManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { testPasswordForRequest } from './authController.js';
@@ -104,7 +104,7 @@ function deleteAccount(user_id: number, reason_deleted: string): void {
 		throw Error(`Delete reason (${reason_deleted}) is invalid.`);
 	}
 
-	deleteUser(user_id, reason_deleted);
+	deleteMember(user_id, reason_deleted);
 
 	// Close their sockets, delete their seeks...
 	closeAllSocketsOfMember(user_id, 1008, 'Logged out');

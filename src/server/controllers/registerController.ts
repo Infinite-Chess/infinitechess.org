@@ -22,7 +22,7 @@ import { verifyTurnstileToken } from '../middleware/turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
 import { logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
-	addUser,
+	addMember,
 	getMemberDataByCriteria,
 	isEmailTaken,
 	isEmailTakenOrPending,
@@ -364,7 +364,7 @@ async function generateAccount({
 }): Promise<number> {
 	// Use bcrypt to hash & salt password
 	const hashedPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS); // Passes 10 salt rounds. (standard)
-	const user_id = addUser(username, email, hashedPassword);
+	const user_id = addMember(username, email, hashedPassword);
 	logEvents(`Manually generated new member: ${username}`, 'newMemberLog');
 	return user_id;
 }
