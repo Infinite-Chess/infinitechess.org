@@ -117,7 +117,7 @@ function validatePassword(password: string): PasswordValidationResult {
 /**
  * Shared logic to validate emails.
  * **Note**: Does not check if the email is taken or banned, that's on the server to do.
- * @param email The email to check
+ * @param email - The email to check. Case in-sensitive.
  * @returns `Ok` if the email is valid, otherwise another member of that enum
  */
 function validateEmail(email: string): EmailValidationResult {

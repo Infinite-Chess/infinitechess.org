@@ -89,7 +89,10 @@ function checkProfanity(string: string): boolean {
 	return profanityMatcher.hasMatch(string);
 }
 
-/** Returns true if the email passes all format/content checks before account generation. */
+/**
+ * Returns true if the email passes all format/content checks before account generation.
+ * @param email - The email to check. Case in-sensitive.
+ */
 async function doEmailFormatChecks(email: string, req: Request, res: Response): Promise<boolean> {
 	const result = validators.validateEmail(email);
 	if (result !== validators.EmailValidationResult.Ok) {

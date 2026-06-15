@@ -227,7 +227,7 @@ export function markPendingRegistrationVerified(claimToken: string, memberUserId
  * Deletes any expired pending rows holding the given username or email. Used before a fresh
  * registration attempt so a stale, expired pending row never blocks the UNIQUE constraints.
  * @param username - The username whose expired pending rows should be cleared.
- * @param email - The email (LOWERCASE) whose expired pending rows should be cleared.
+ * @param email - The email whose expired pending rows should be cleared. It will automatically be lowercased.
  * @throws If a database error occurs.
  */
 export function deleteExpiredPendingRegistrationsFor(username: string, email: string): void {
@@ -236,7 +236,7 @@ export function deleteExpiredPendingRegistrationsFor(username: string, email: st
 		WHERE (username = ? OR email = ?) AND expires_at <= ?
 	`;
 	dbCall(
-		() => db.run(query, [username, email, Date.now()]),
+		() => db.run(query, [username, email.toLowerCase(), Date.now()]), // Lowercased to match the stored (lowercase) rows
 		`Database error while deleting expired pending registrations for "${username}"`,
 	);
 }

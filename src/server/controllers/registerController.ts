@@ -265,6 +265,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 
 		// Rotate the verification token so the new address gets a fresh link and any
 		// already-delivered link to the old address stops working.
+		// The claim_token cookie does not get refreshed.
 		const verificationToken = generateRegistrationToken();
 
 		// Clear any expired row blocking the new email's UNIQUE constraint.
