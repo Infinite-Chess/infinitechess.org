@@ -11,7 +11,6 @@ import jsutil from '../../shared/util/jsutil.js';
 import db, { dbCall } from './database.js';
 import { allMemberColumns, uniqueMemberKeys, user_id_upper_cap } from './databaseTables.js';
 import {
-	deletePendingRegistrationFor,
 	isEmailTakenInPending,
 	isUsernameTakenInPending,
 	markPendingRegistrationVerified,
@@ -135,7 +134,7 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 
 		// Step 3: Remove the promoted pending registration that
 		// created this member, if it hasn't been cleaned up yet.
-		deletePendingRegistrationFor(id);
+		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
 	deleteTransaction(user_id, reason_deleted);
