@@ -383,12 +383,12 @@ function isUserIdTaken(userId: number): boolean {
  * @throws If a database error occurs.
  */
 function isUsernameTaken(username: string): boolean {
-	const query = 'SELECT 1 FROM members WHERE username = ?';
+	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE username = ?) AS found';
 	const row = dbCall(
-		() => db.get<{ '1': 1 }>(query, [username]),
+		() => db.get<{ found: 0 | 1 }>(query, [username]),
 		`Error checking if username "${username}" is taken`,
 	);
-	return row !== undefined;
+	return Boolean(row?.found);
 }
 
 /**
@@ -398,12 +398,12 @@ function isUsernameTaken(username: string): boolean {
  * @throws If a database error occurs.
  */
 function isEmailTaken(email: string): boolean {
-	const query = 'SELECT 1 FROM members WHERE email = ?';
+	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE email = ?) AS found';
 	const row = dbCall(
-		() => db.get<{ '1': 1 }>(query, [email]),
+		() => db.get<{ found: 0 | 1 }>(query, [email]),
 		`Error checking if email "${email}" exists`,
 	);
-	return row !== undefined;
+	return Boolean(row?.found);
 }
 
 /**
