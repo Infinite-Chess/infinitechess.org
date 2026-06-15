@@ -229,6 +229,11 @@ changeToggle?.addEventListener('click', (): void => {
 	changeToggle.classList.add('hidden');
 	changeGroup.classList.remove('hidden');
 	newEmailInput.focus();
+	// Place the caret at the end of the prefilled email, not at the start.
+	// setSelectionRange is ignored on type="email" inputs, so re-assign the value instead.
+	const value = newEmailInput.value;
+	newEmailInput.value = '';
+	newEmailInput.value = value;
 });
 
 changeSubmit.addEventListener('click', (): void => {
