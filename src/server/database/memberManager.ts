@@ -17,7 +17,7 @@ import {
 	PendingRegistrationRecord,
 } from './pendingRegistrationManager.js';
 
-// Types ---------------------------------------------------------------------
+// Types -------------------------------------------------------------------
 
 /** Structure of a complete member record. */
 export interface MemberRecord {
@@ -37,7 +37,7 @@ export interface MemberRecord {
 
 type MembersColumn = keyof MemberRecord;
 
-// Create / Delete Member methods ---------------------------------------------------------------------------------------
+// Creation ----------------------------------------------------------------
 
 /**
  * Creates a new account. This is the single, authoritative function for user creation.
@@ -108,83 +108,7 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
 	return promoteTransaction(pending);
 }
 
-/**
- * Deletes a user from the members table and adds them to the deleted_members table.
- * @param user_id - The ID of the user to delete.
- * @param reason_deleted - The reason the user is being deleted.
- * @throws If the member does not exist, or if a database error occurs during the deletion.
- */
-function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
-	// Create a transaction function. better-sqlite3 will wrap the execution
-	// of this function in BEGIN/COMMIT/ROLLBACK statements.
-	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
-		// Step 1: Delete the user from the main 'members' table
-		const deleteQuery = 'DELETE FROM members WHERE user_id = ?';
-		const deleteResult = db.run(deleteQuery, [id]);
-
-		// If no user was deleted, they didn't exist. Throw an error to
-		// abort the transaction and prevent any further action.
-		if (deleteResult.changes === 0)
-			throw new Error(`No member found with user_id ${id} to delete`);
-
-		// Step 2: Add their user_id to the 'deleted_members' table
-		// If this fails (e.g., UNIQUE constraint), it will also throw an error
-		// and cause the entire transaction (including the DELETE) to roll back.
-		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
-		db.run(insertQuery, [id, reason]);
-
-		// Step 3: Remove the promoted pending registration that
-		// created this member, if it hasn't been cleaned up yet.
-		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
-	});
-
-	dbCall(
-		() => deleteTransaction(user_id, reason_deleted),
-		`Deletion transaction for user_id "${user_id}" failed and was rolled back`,
-	);
-}
-// console.log(deleteMember(3887110, 'security'));
-
-// General SELECT/UPDATE methods ---------------------------------------------------------------------------------------
-
-/**
- * Helper for validating the common arguments used for querying member data.
- * @param columns - The list of columns to retrieve (e.g., ['checkmates_beaten']).
- * @param searchKey - The database column to search by (e.g., 'username').
- * @param searchValues - An array of values to search for (e.g., ['user1', 'user2']).
- * @throws Error if any validation fails.
- */
-function validateMemberQueryArgs(
-	columns: string[],
-	searchKey: string,
-	searchValues: (string | number)[],
-): void {
-	// 1. Validate Columns
-	if (
-		!Array.isArray(columns) ||
-		columns.length === 0 ||
-		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
-	)
-		throw new Error(
-			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
-		);
-
-	// 2. Validate Search Key
-	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey))
-		throw new Error(
-			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
-		);
-
-	// 3. Validate Search Values
-	if (
-		!Array.isArray(searchValues) ||
-		searchValues.length === 0 ||
-		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
-	)
-		throw new Error(
-			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
-		);
-}
+// Reads -------------------------------------------------------------------
 
 /**
  * Fetches specified columns of a single member from the database based on user_id, username, or email.
@@ -236,6 +160,8 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	}, 'Error getting MULTIPLE member data by criteria');
 }
 
+// Updates -----------------------------------------------------------------
+
 /**
  * Updates specified columns for a member based on their user ID.
  * @param user_id - The user ID of the member to update.
@@ -277,8 +203,6 @@ function updateMemberColumns(user_id: number, columnsAndValues: Partial<MemberRe
 			);
 	}, `Error updating columns for user ID "${user_id}"`);
 }
-
-// Login Count & Last Seen ---------------------------------------------------------------------------------------
 
 /**
  * Increments the login count and updates the last_seen column for a member based on their user ID.
@@ -322,19 +246,46 @@ function updateLastSeen(userId: number): void {
 	}, `Error updating last_seen for member of id "${userId}"`);
 }
 
-// Utility -----------------------------------------------------------------------------------
+// Deletion ----------------------------------------------------------------
 
 /**
- * Generates a unique user_id that no other member has ever used.
- * @throws If a database error occurs during uniqueness checks.
+ * Deletes a user from the members table and adds them to the deleted_members table.
+ * @param user_id - The ID of the user to delete.
+ * @param reason_deleted - The reason the user is being deleted.
+ * @throws If the member does not exist, or if a database error occurs during the deletion.
  */
-function genUniqueUserID(): number {
-	let id: number;
-	do {
-		id = Math.floor(Math.random() * user_id_upper_cap);
-	} while (isUserIdTaken(id));
-	return id;
+function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
+	// Create a transaction function. better-sqlite3 will wrap the execution
+	// of this function in BEGIN/COMMIT/ROLLBACK statements.
+	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
+		// Step 1: Delete the user from the main 'members' table
+		const deleteQuery = 'DELETE FROM members WHERE user_id = ?';
+		const deleteResult = db.run(deleteQuery, [id]);
+
+		// If no user was deleted, they didn't exist. Throw an error to
+		// abort the transaction and prevent any further action.
+		if (deleteResult.changes === 0)
+			throw new Error(`No member found with user_id ${id} to delete`);
+
+		// Step 2: Add their user_id to the 'deleted_members' table
+		// If this fails (e.g., UNIQUE constraint), it will also throw an error
+		// and cause the entire transaction (including the DELETE) to roll back.
+		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
+		db.run(insertQuery, [id, reason]);
+
+		// Step 3: Remove the promoted pending registration that
+		// created this member, if it hasn't been cleaned up yet.
+		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
+	});
+
+	dbCall(
+		() => deleteTransaction(user_id, reason_deleted),
+		`Deletion transaction for user_id "${user_id}" failed and was rolled back`,
+	);
 }
+// console.log(deleteMember(3887110, 'security'));
+
+// Existence & Availability Checks -----------------------------------------
 
 /**
  * Checks if a member of a given id exists in the members table.
@@ -426,7 +377,60 @@ function isEmailTakenOrPending(email: string): boolean {
 	return isEmailTaken(email) || isEmailTakenInPending(email);
 }
 
-// Exports -----------------------------------------------------------------------------
+// Internal Helpers --------------------------------------------------------
+
+/**
+ * Generates a unique user_id that no other member has ever used.
+ * @throws If a database error occurs during uniqueness checks.
+ */
+function genUniqueUserID(): number {
+	let id: number;
+	do {
+		id = Math.floor(Math.random() * user_id_upper_cap);
+	} while (isUserIdTaken(id));
+	return id;
+}
+
+/**
+ * Helper for validating the common arguments used for querying member data.
+ * @param columns - The list of columns to retrieve (e.g., ['checkmates_beaten']).
+ * @param searchKey - The database column to search by (e.g., 'username').
+ * @param searchValues - An array of values to search for (e.g., ['user1', 'user2']).
+ * @throws Error if any validation fails.
+ */
+function validateMemberQueryArgs(
+	columns: string[],
+	searchKey: string,
+	searchValues: (string | number)[],
+): void {
+	// 1. Validate Columns
+	if (
+		!Array.isArray(columns) ||
+		columns.length === 0 ||
+		!columns.every((column) => typeof column === 'string' && allMemberColumns.includes(column))
+	)
+		throw new Error(
+			`Invalid columns requested from members table: ${jsutil.ensureJSONString(columns)}`,
+		);
+
+	// 2. Validate Search Key
+	if (typeof searchKey !== 'string' || !uniqueMemberKeys.includes(searchKey))
+		throw new Error(
+			`Invalid search key for members table "${searchKey}". Must be one of: ${uniqueMemberKeys.join(', ')}`,
+		);
+
+	// 3. Validate Search Values
+	if (
+		!Array.isArray(searchValues) ||
+		searchValues.length === 0 ||
+		!searchValues.every((value) => typeof value === 'string' || typeof value === 'number')
+	)
+		throw new Error(
+			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
+		);
+}
+
+// Exports -----------------------------------------------------------------
 
 export {
 	addMember,
