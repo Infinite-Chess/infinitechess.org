@@ -63,12 +63,12 @@ function generateRandomGameId(): number {
  * @throws If a database error occurs.
  */
 function isGameIdTaken(game_id: number): boolean {
-	const query = 'SELECT 1 FROM games WHERE game_id = ?';
+	const query = 'SELECT EXISTS(SELECT 1 FROM games WHERE game_id = ?) AS found';
 	const row = dbCall(
-		() => db.get<{ '1': number }>(query, [game_id]),
+		() => db.get<{ found: 0 | 1 }>(query, [game_id]),
 		`Error checking if game_id "${game_id}" is taken`,
 	);
-	return row !== undefined;
+	return Boolean(row?.found);
 }
 
 /**

@@ -45,12 +45,14 @@ export function removeFromBlacklist(email: string): void {
  * @throws If a database error occurs.
  */
 export function isBlacklisted(email: string): boolean {
-	const result = dbCall(
+	const row = dbCall(
 		() =>
-			db.get<{ '1': number }>(`SELECT 1 FROM email_blacklist WHERE email = ?`, [
-				email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
-			]),
+			// prettier-ignore
+			db.get<{ found: 0 | 1 }>(
+				`SELECT EXISTS(SELECT 1 FROM email_blacklist WHERE email = ?) AS found`, [
+					email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
+				]),
 		`Database error when checking blacklist for email ${email}`,
 	);
-	return !!result;
+	return Boolean(row?.found);
 }
