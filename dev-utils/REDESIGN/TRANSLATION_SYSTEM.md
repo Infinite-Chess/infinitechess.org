@@ -83,6 +83,17 @@ When the caller holds only a resolved language code (e.g. SSR template-render co
 
 There's nothing structurally special about `responses` — any component's script-facing strings are reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
 
+## Interpolating dynamic values
+
+Translated strings are static — there is no built-in interpolation. Put `{name}` placeholders in the TOML value and resolve them with `interpolate(template, vars)` from [src/shared/util/interpolate.ts](../../src/shared/util/interpolate.ts) (shared, so it works on both sides; unknown placeholders are left intact):
+
+```ts
+// login_retry_in_other = "Failed to login, try again in {n} seconds."
+interpolate(req.t.responses.auth.login_retry_in_other, { n: 3 }); // "...in 3 seconds."
+```
+
+Keep the whole phrase in one key with placeholders — never assemble sentences by concatenation, so translators can reorder words freely.
+
 ## Type generation
 
 `npm run generate:types` (auto-run by `build` and `dev:build`) executes [scripts/generate-component-translation-types.ts](../../scripts/generate-component-translation-types.ts), which produces **[src/shared/types/script-translations.d.ts](../../src/shared/types/script-translations.d.ts)** — `export interface ScriptTranslations`, one property per component with script-facing strings. Lives in `shared/` so both sides can consume it: client scripts read `t.header.x.y` via the global declared in [src/client/types/globals.d.ts](../../src/client/types/globals.d.ts); the server reads it through the request-bound `req.t` (typed as `ScriptTranslations`) or the underlying `getScriptTranslations<C>(component, lang): ScriptTranslations[C]` primitive.
