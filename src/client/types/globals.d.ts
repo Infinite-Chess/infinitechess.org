@@ -8,7 +8,7 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
  * injected by EJS templates of pages not yet migrated to Nunjucks/per-component TOMLs.
  * Remove this type (and the `translations` global) once every page has been migrated
  * and the legacy flat-file translation system is deleted — see
- * dev-utils/REDESIGN/TRANSLATION_SYSTEM.md "Target end state".
+ * docs/systems/TRANSLATIONS.md "Target end state".
  */
 type LegacyClientTranslations = TranslationsObject['play']['javascript'] &
 	TranslationsObject['play']['play-menu'] &
@@ -53,7 +53,7 @@ declare global {
 
 	/**
 	 * Per-component script-facing translations, injected into the page as
-	 * `window.t` by the Nunjucks SSR layout (see TRANSLATION_SYSTEM.md).
+	 * `window.t` by the Nunjucks SSR layout (see docs/systems/TRANSLATIONS.md).
 	 * Only components included on the current page are populated at runtime.
 	 * Mirrors the server's `req.t`.
 	 */

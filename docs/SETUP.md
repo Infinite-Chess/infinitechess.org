@@ -2,7 +2,7 @@
 
 This guide walks you through the initial setup phase of the infinitechess.org server on your machine.
 
-[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./GUIDELINES.md) | [Translation Guide](./TRANSLATIONS.md)
+[← Back to README](../README.md) | [Navigation Guide](./NAVIGATING.md) | [Contributing Guide](./GUIDELINES.md) | [Translation Guide](./TRANSLATING.md)
 
 This only needs to be done once. Afterward, you will be able to run the website locally on your computer, write and modify code, suggesting changes to the github!
 

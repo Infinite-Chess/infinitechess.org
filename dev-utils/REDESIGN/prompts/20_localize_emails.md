@@ -21,7 +21,7 @@ The senders in `src/server/controllers/emailController.ts` build their subject, 
 label, and fallback text from **hardcoded English strings**. They receive no language argument.
 
 **Use the redesign-era per-component translation system — NOT the legacy `getTranslation` /
-`i18next` path, which is being removed.** Read `dev-utils/REDESIGN/TRANSLATION_SYSTEM.md` first.
+`i18next` path, which is being removed.** Read `docs/systems/TRANSLATIONS.md` first.
 The relevant primitives:
 - Server-emitted strings live in a per-component folder `translation/<component>/en-US.toml`
   (English is the required source; translators add the other languages). The component's whole
@@ -30,7 +30,7 @@ The relevant primitives:
 - A caller holding `req` reads strings via the typed accessor `req.t.<component>.<key>`. A caller
   holding only a **bare language code** — exactly an email sender — uses the
   `getScriptTranslations(component, lang)` primitive from
-  `src/server/config/componentTranslationLoader.ts`. TRANSLATION_SYSTEM.md explicitly names the
+  `src/server/config/componentTranslationLoader.ts`. TRANSLATIONS.md explicitly names the
   email sender as this primitive's intended use case.
 - These strings are static — there is **no built-in interpolation**. For dynamic values use the
   `interpolate(template, vars)` helper (`src/shared/util/interpolate.ts`) with `{name}`-style

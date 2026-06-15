@@ -38,7 +38,7 @@
 
 - Once all pages are localized: Setup Weblate.
 
-- Rewrite the translation guide in `docs/TRANSLATIONS.md` to reflect the new system and Weblate. It should cover how to use Weblate, and also contain pointers for fast-tracking translation via AI by translating whole components at once. It should also include info about retaining any xss-whitelisted html tags they should not modify in strings, UNLESS wherever html tags are in use in strings, those templates are commented to clearly explain their presence and the need to preserve them, then they don't have to explicitly be explained in the guide, to keep it simpler.
+- Rewrite the translation guide in `docs/TRANSLATING.md` to reflect the new system and Weblate. It should cover how to use Weblate, and also contain pointers for fast-tracking translation via AI by translating whole components at once. It should also include info about retaining any xss-whitelisted html tags they should not modify in strings, UNLESS wherever html tags are in use in strings, those templates are commented to clearly explain their presence and the need to preserve them, then they don't have to explicitly be explained in the guide, to keep it simpler.
 
 ---
 
