@@ -65,7 +65,7 @@ function refreshBrowserID(req: Request, res: Response): void {
 function makeBrowserIDPermanent(req: Request, res: Response, browserID: string): void {
 	setBrowserIDCookie(res, browserID, Number.MAX_SAFE_INTEGER /* FOREVER!! */);
 
-	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']!}`;
 	logEventsAndPrint(logThis, 'bannedIPLog');
 }
 

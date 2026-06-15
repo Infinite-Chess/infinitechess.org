@@ -203,8 +203,8 @@ function verifyBodyHasRegisterFormData(
 /** The metadata tail for a rejected-registration log line: `IP   username   email   userAgent`. */
 function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
 	const ip = getClientIP(req) ?? 'Unknown ip';
-	const userAgent = req.headers['user-agent'] ?? 'Unknown user agent';
-	return escapeLogControlChars([ip, username ?? '', email ?? '', userAgent].join('   '));
+	const agent = req.headers['user-agent']!;
+	return escapeLogControlChars([ip, username ?? '', email ?? '', agent].join('   '));
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */

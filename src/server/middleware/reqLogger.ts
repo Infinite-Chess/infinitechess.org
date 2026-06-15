@@ -15,6 +15,7 @@ import { getClientIP } from '../utility/IP.js';
 function logIncomingRequest(req: IncomingMessage): void {
 	const clientIP = getClientIP(req) || 'Unknown ip';
 	const origin = req.headers.origin || 'Unknown origin';
+	const agent = req.headers['user-agent'] || 'Unknown agent';
 
 	// Redact sensitive tokens that appear in URL paths so they are never written to log files.
 	const sanitizedUrl = req
@@ -26,7 +27,7 @@ function logIncomingRequest(req: IncomingMessage): void {
 	const method = req.headers.upgrade ? `${req.method} (WS upgrade)` : req.method;
 
 	// Bodies are high-PII and left out
-	const logThis = `${origin}   ${clientIP}   ${method}   ${sanitizedUrl}   ${req.headers['user-agent']}`;
+	const logThis = `${origin}   ${clientIP}   ${method}   ${sanitizedUrl}   ${agent}`;
 	logEvents(logThis, 'reqLog');
 }
 

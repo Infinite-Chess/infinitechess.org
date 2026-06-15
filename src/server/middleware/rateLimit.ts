@@ -107,7 +107,7 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 	}
 
 	if (isIPBanned(clientIP)) {
-		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent']}`;
+		const logThis = `Banned IP ${clientIP} tried to connect! ${req.headers.origin}   ${clientIP}   ${req.method}   ${req.url}   ${req.headers['user-agent'] || 'Unknown agent'}`;
 		logEvents(logThis, 'bannedIPLog');
 		res.status(403).json({ message: 'You are banned' });
 		return;
