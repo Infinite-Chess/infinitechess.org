@@ -75,23 +75,21 @@ async function removeAccount(req: Request, res: Response): Promise<void> {
 
 	try {
 		deleteAccount(identity.user_id, reason_deleted);
-		logEvents(
-			`Deleted account of user_id (${identity.user_id}) for reason (${reason_deleted}).`,
-			'deletedAccounts.txt',
-		);
-		res.send('OK'); // 200 is default code
-		return;
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.message : String(error);
 		logEventsAndPrint(
-			`Can't delete account of user_id (${identity.user_id}) after a correct password entered: ${errorMessage}`,
+			`Can't delete account of user_id (${identity.user_id}) after a correct password entered: ${detail}`,
 			'errLog',
 		);
-		res.status(404).json({
-			message: getTranslation('server.javascript.ws-deleting_account_not_found', req.lang),
-		});
+		res.status(500).json({ message: req.t.responses.errors.server_error });
 		return;
 	}
+
+	logEvents(
+		`Deleted account of user_id (${identity.user_id}) for reason (${reason_deleted}).`,
+		'deletedAccounts.txt',
+	);
+	res.sendStatus(200);
 }
 
 /**

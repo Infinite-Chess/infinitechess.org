@@ -137,7 +137,10 @@ function deleteUser(user_id: number, reason_deleted: DeleteReason): void {
 		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
-	deleteTransaction(user_id, reason_deleted);
+	dbCall(
+		() => deleteTransaction(user_id, reason_deleted),
+		`Deletion transaction for user_id "${user_id}" failed and was rolled back`,
+	);
 }
 // console.log(deleteUser(3887110, 'security'));
 

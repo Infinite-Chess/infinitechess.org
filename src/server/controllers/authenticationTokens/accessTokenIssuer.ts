@@ -23,7 +23,7 @@ const expireTimeOfTokenCookieMillis = 1000 * 10; // 10 seconds
 function accessTokenIssuer(req: Request, res: Response): void {
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Invalid or missing refresh token (logged out), cannot issue access token.
-		res.status(403).end(); // Forbidden
+		res.sendStatus(403); // Forbidden
 		return;
 	}
 
@@ -35,7 +35,7 @@ function accessTokenIssuer(req: Request, res: Response): void {
 	// SEND the token as a cookie! Their member information is also
 	// stored in a cookie when the refreshed token cookie is generated.
 	createAccessTokenCookie(res, accessToken); // 10 second expiry time
-	res.end();
+	res.sendStatus(200);
 	// console.log(`Issued access token for member "${username}" --------`);
 }
 
