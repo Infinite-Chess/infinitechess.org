@@ -42,7 +42,7 @@ export interface LivePlayerDisconnectData {
  * @param record - The complete live_player_games record to insert.
  * @throws If a database error occurs.
  */
-function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
+export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 	const query = `
 		INSERT INTO live_player_games (
 			game_id, player_number, user_id, browser_id, elo,
@@ -75,7 +75,7 @@ function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  * @throws If a database error occurs.
  */
-function updateLivePlayerGame(
+export function updateLivePlayerGame(
 	game_id: number,
 	player_number: number,
 	updates: Partial<LivePlayerData>,
@@ -106,14 +106,10 @@ function updateLivePlayerGame(
  * @returns An array of live_player_games records for this game.
  * @throws If a database error occurs.
  */
-function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
+export function getLivePlayerGamesForGame(game_id: number): LivePlayerGamesRecord[] {
 	const query = `SELECT * FROM live_player_games WHERE game_id = ? ORDER BY player_number`;
 	return dbCall(
 		() => db.all<LivePlayerGamesRecord>(query, [game_id]),
 		`Error retrieving live player games for game ${game_id}`,
 	);
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export { insertLivePlayerGame, updateLivePlayerGame, getLivePlayerGamesForGame };

@@ -50,7 +50,7 @@ type MembersColumn = keyof MemberRecord;
  *
  * @throws If the insertion fails (e.g., due to constraint violation or other unexpected error).
  */
-function addMember(username: string, email: string, hashedPassword: string): number {
+export function addMember(username: string, email: string, hashedPassword: string): number {
 	// prettier-ignore
 	const createAccountTransaction = db.transaction<[{ username: string; email: string; hashedPassword: string }], number>((userData) => {
 		// Step 1: Generate a unique user ID.
@@ -96,7 +96,7 @@ function addMember(username: string, email: string, hashedPassword: string): num
  * @returns The new member's user_id.
  * @throws If a database error occurrs during member creation (e.g. CONSTRAINT violation).
  */
-function promotePendingRegistration(pending: PendingRegistrationRecord): number {
+export function promotePendingRegistration(pending: PendingRegistrationRecord): number {
 	const promoteTransaction = db.transaction<[PendingRegistrationRecord], number>((p) => {
 		// addMember runs its own transaction; nested here it becomes a savepoint.
 		const user_id = addMember(p.username, p.email, p.hashed_password);
@@ -118,7 +118,7 @@ function promotePendingRegistration(pending: PendingRegistrationRecord): number 
  * @returns An object containing the requested columns, or undefined if no match is found.
  * @throws If invalid parameters are provided, or if a database error occurs during the query.
  */
-function getMemberDataByCriteria<K extends MembersColumn>(
+export function getMemberDataByCriteria<K extends MembersColumn>(
 	columns: K[],
 	searchKey: MembersColumn,
 	searchValue: string | number,
@@ -140,7 +140,7 @@ function getMemberDataByCriteria<K extends MembersColumn>(
  * @returns An array of member records.
  * @throws If invalid parameters are provided, or if a database error occurs during the query.
  */
-function getMultipleMemberDataByCriteria<K extends MembersColumn>(
+export function getMultipleMemberDataByCriteria<K extends MembersColumn>(
 	columns: K[],
 	searchKey: MembersColumn,
 	searchValueList: string[] | number[],
@@ -168,7 +168,10 @@ function getMultipleMemberDataByCriteria<K extends MembersColumn>(
  * @param columnsAndValues - An object mapping column names to their new values.
  * @throws If invalid parameters are provided, the member does not exist, or if a database error occurs.
  */
-function updateMemberColumns(user_id: number, columnsAndValues: Partial<MemberRecord>): void {
+export function updateMemberColumns(
+	user_id: number,
+	columnsAndValues: Partial<MemberRecord>,
+): void {
 	dbCall(() => {
 		// Validate that we have columns to update
 		if (typeof columnsAndValues !== 'object' || columnsAndValues === null)
@@ -209,7 +212,7 @@ function updateMemberColumns(user_id: number, columnsAndValues: Partial<MemberRe
  * @param userId - The user ID of the member.
  * @throws If the member does not exist, or if a database error occurs.
  */
-function updateLoginCountAndLastSeen(userId: number): void {
+export function updateLoginCountAndLastSeen(userId: number): void {
 	const query = `
 		UPDATE members
 		SET login_count = login_count + 1, last_seen = CURRENT_TIMESTAMP
@@ -231,7 +234,7 @@ function updateLoginCountAndLastSeen(userId: number): void {
  * @param userId - The user ID of the member.
  * @throws If the member does not exist, or if a database error occurs.
  */
-function updateLastSeen(userId: number): void {
+export function updateLastSeen(userId: number): void {
 	const query = `
 		UPDATE members
 		SET last_seen = CURRENT_TIMESTAMP
@@ -254,7 +257,7 @@ function updateLastSeen(userId: number): void {
  * @param reason_deleted - The reason the user is being deleted.
  * @throws If the member does not exist, or if a database error occurs during the deletion.
  */
-function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
+export function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
 	// Create a transaction function. better-sqlite3 will wrap the execution
 	// of this function in BEGIN/COMMIT/ROLLBACK statements.
 	const deleteTransaction = db.transaction<[number, string], void>((id, reason) => {
@@ -295,7 +298,7 @@ function deleteMember(user_id: number, reason_deleted: DeleteReason): void {
  *
  * @throws If a database error occurs during the check.
  */
-function doesMemberOfIDExist(user_id: number): boolean {
+export function doesMemberOfIDExist(user_id: number): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE user_id = ?) AS found';
 	const row = dbCall(
 		() => db.get<{ found: 0 | 1 }>(query, [user_id]),
@@ -334,7 +337,7 @@ function isUserIdTaken(userId: number): boolean {
  * @returns Returns true if the username exists, false otherwise.
  * @throws If a database error occurs.
  */
-function isUsernameTaken(username: string): boolean {
+export function isUsernameTaken(username: string): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE username = ?) AS found';
 	const row = dbCall(
 		() => db.get<{ found: 0 | 1 }>(query, [username]),
@@ -349,7 +352,7 @@ function isUsernameTaken(username: string): boolean {
  * @returns Returns true if the email exists, false otherwise.
  * @throws If a database error occurs.
  */
-function isEmailTaken(email: string): boolean {
+export function isEmailTaken(email: string): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM members WHERE email = ?) AS found';
 	const row = dbCall(
 		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows
@@ -363,7 +366,7 @@ function isEmailTaken(email: string): boolean {
  * row OR a non-expired `pending_registrations` row.
  * @throws If a database error occurs.
  */
-function isUsernameTakenOrPending(username: string): boolean {
+export function isUsernameTakenOrPending(username: string): boolean {
 	return isUsernameTaken(username) || isUsernameTakenInPending(username);
 }
 
@@ -373,7 +376,7 @@ function isUsernameTakenOrPending(username: string): boolean {
  * @param email - The email to check. Case-insensitive.
  * @throws If a database error occurs.
  */
-function isEmailTakenOrPending(email: string): boolean {
+export function isEmailTakenOrPending(email: string): boolean {
 	return isEmailTaken(email) || isEmailTakenInPending(email);
 }
 
@@ -429,21 +432,3 @@ function validateMemberQueryArgs(
 			`Invalid search values for members table: ${jsutil.ensureJSONString(searchValues)}`,
 		);
 }
-
-// Exports -----------------------------------------------------------------
-
-export {
-	addMember,
-	promotePendingRegistration,
-	deleteMember,
-	getMemberDataByCriteria,
-	getMultipleMemberDataByCriteria,
-	updateMemberColumns,
-	updateLoginCountAndLastSeen,
-	updateLastSeen,
-	doesMemberOfIDExist,
-	isUsernameTaken,
-	isEmailTaken,
-	isUsernameTakenOrPending,
-	isEmailTakenOrPending,
-};

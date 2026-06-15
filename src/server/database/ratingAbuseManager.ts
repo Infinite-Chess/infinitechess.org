@@ -29,7 +29,7 @@ type RatingAbuseColumn = keyof RatingAbuseRecord;
  * @param leaderboard_id - The id for the specific leaderboard
  * @throws If a database error occurs.
  */
-function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): void {
+export function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): void {
 	const query = `
 		INSERT INTO rating_abuse (
 			user_id,
@@ -50,7 +50,7 @@ function addEntryToRatingAbuseTable(user_id: number, leaderboard_id: number): vo
  * @returns True if the player exists on the specified leaderboard, false otherwise.
  * @throws If a database error occurs.
  */
-function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boolean {
+export function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boolean {
 	const query = `
         SELECT 1
         FROM rating_abuse
@@ -72,7 +72,7 @@ function isEntryInRatingAbuseTable(user_id: number, leaderboard_id: number): boo
  * @returns An object containing the requested columns.
  * @throws If invalid arguments are provided, if no match is found, or if a database error occurs.
  */
-function getRatingAbuseData<K extends RatingAbuseColumn>(
+export function getRatingAbuseData<K extends RatingAbuseColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	columns: K[],
@@ -112,7 +112,7 @@ function getRatingAbuseData<K extends RatingAbuseColumn>(
  * @returns A result object indicating success or failure.
  * @throws If invalid arguments are provided or if a database error occurs.
  */
-function updateRatingAbuseColumns(
+export function updateRatingAbuseColumns(
 	user_id: number,
 	leaderboard_id: number,
 	columnsAndValues: Partial<RatingAbuseRecord>,
@@ -145,12 +145,3 @@ function updateRatingAbuseColumns(
 			);
 	}, `Error updating rating_abuse table columns for user ID "${user_id}" and leaderboard ID "${leaderboard_id}"`);
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export {
-	addEntryToRatingAbuseTable,
-	isEntryInRatingAbuseTable,
-	getRatingAbuseData,
-	updateRatingAbuseColumns,
-};

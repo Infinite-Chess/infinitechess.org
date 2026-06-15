@@ -36,7 +36,7 @@ interface LeaderboardEntry {
  * suitable for use inside a database transaction.
  * @throws If a database error occurs.
  */
-function addUserToLeaderboard(
+export function addUserToLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -64,7 +64,7 @@ function addUserToLeaderboard(
  * Callers outside of transactions should implement their own error handling.
  * @throws If the user is not found or if a database error occurs.
  */
-function updatePlayerLeaderboardRating(
+export function updatePlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
@@ -97,7 +97,7 @@ function updatePlayerLeaderboardRating(
  * @returns True if the player exists on the specified leaderboard, false otherwise.
  * @throws If a database error occurs.
  */
-function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
+export function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): boolean {
 	const query = `
         SELECT 1
         FROM leaderboards
@@ -116,7 +116,7 @@ function isPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): bo
  * @returns The player's leaderboard entry object or undefined if not found.
  * @throws If a database error occurs.
  */
-function getPlayerLeaderboardRating(
+export function getPlayerLeaderboardRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 ): Pick<LeaderboardEntry, 'elo' | 'rating_deviation' | 'rd_last_update_date'> | undefined {
@@ -158,7 +158,7 @@ function _getAllUserLeaderboardEntries(user_id: number): LeaderboardEntry[] {
  * @returns An array of top player leaderboard entries, potentially empty.
  * @throws If the database query fails.
  */
-function getTopPlayersForLeaderboard(
+export function getTopPlayersForLeaderboard(
 	leaderboard_id: Leaderboard,
 	start_rank: number,
 	n_players: number,
@@ -194,7 +194,7 @@ function getTopPlayersForLeaderboard(
  *          on that leaderboard.
  * @throws If a database error occurs.
  */
-function getPlayerRankInLeaderboard(
+export function getPlayerRankInLeaderboard(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 ): number | undefined {
@@ -234,7 +234,7 @@ function getPlayerRankInLeaderboard(
  * @returns The player's leaderboard elo and whether we are confident about it.
  * @throws If a database error occurs.
  */
-function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
+export function getEloOfPlayerInLeaderboard(user_id: number, leaderboard_id: Leaderboard): Rating {
 	const rating_values = getPlayerLeaderboardRating(user_id, leaderboard_id);
 	if (!rating_values) return { value: DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
 
@@ -256,7 +256,7 @@ function getAllLeaderboardEntries(): LeaderboardEntry[] {
 // Regular Table Utility Functions -------------------------------------------------------------------
 
 /** Calls updateAllRatingDeviationsofLeaderboardTable() every {@link RD_UPDATE_FREQUENCY} milliseconds */
-function startPeriodicLeaderboardRatingDeviationUpdate(): void {
+export function startPeriodicLeaderboardRatingDeviationUpdate(): void {
 	setInterval(() => updateAllRatingDeviationsofLeaderboardTable(), RD_UPDATE_FREQUENCY);
 }
 
@@ -285,16 +285,3 @@ function updateAllRatingDeviationsofLeaderboardTable(): void {
 		);
 	}
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export {
-	addUserToLeaderboard,
-	updatePlayerLeaderboardRating,
-	isPlayerInLeaderboard,
-	getPlayerLeaderboardRating,
-	getTopPlayersForLeaderboard,
-	getPlayerRankInLeaderboard,
-	getEloOfPlayerInLeaderboard,
-	startPeriodicLeaderboardRatingDeviationUpdate,
-};

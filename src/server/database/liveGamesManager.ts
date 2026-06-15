@@ -46,7 +46,7 @@ export interface LiveGameData {
  * @param record - The complete live_games record to insert.
  * @throws If a database error occurs.
  */
-function insertLiveGame(record: LiveGamesRecord): void {
+export function insertLiveGame(record: LiveGamesRecord): void {
 	const query = `
 			INSERT INTO live_games (
 				game_id, time_created, variant, clock, rated, private,
@@ -87,7 +87,7 @@ function insertLiveGame(record: LiveGamesRecord): void {
  * @param updates - An object containing only the columns to update and their new values.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
+export function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
 	dbCall(() => {
 		// Validate the input structure...
 		if (typeof updates !== 'object' || updates === null || Object.keys(updates).length === 0)
@@ -113,7 +113,7 @@ function updateLiveGame(game_id: number, updates: Partial<LiveGameData>): void {
  * @param game_id - The game to delete.
  * @throws If a database error occurs.
  */
-function deleteLiveGame(game_id: number): void {
+export function deleteLiveGame(game_id: number): void {
 	dbCall(
 		() => db.run('DELETE FROM live_games WHERE game_id = ?', [game_id]),
 		`Error deleting live game ${game_id}`,
@@ -125,13 +125,9 @@ function deleteLiveGame(game_id: number): void {
  * @returns An array of all live_games records.
  * @throws If a database error occurs.
  */
-function getAllLiveGames(): LiveGamesRecord[] {
+export function getAllLiveGames(): LiveGamesRecord[] {
 	return dbCall(
 		() => db.all<LiveGamesRecord>('SELECT * FROM live_games'),
 		'Error retrieving all live games',
 	);
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export { insertLiveGame, updateLiveGame, deleteLiveGame, getAllLiveGames };

@@ -28,7 +28,7 @@ let activeBackup: Promise<void> | null = null;
 // Functions -------------------------------------------------------------------------
 
 /** Schedules a database backup to run once every 24 hours. */
-function startDailyBackups(): void {
+export function startDailyBackups(): void {
 	setInterval(async () => {
 		try {
 			await performBackup();
@@ -45,7 +45,7 @@ function startDailyBackups(): void {
  * If a backup is already in progress, returns the same promise so callers join it.
  * @throws If the SQLite backup or directory creation fails.
  */
-function performBackup(): Promise<void> {
+export function performBackup(): Promise<void> {
 	if (activeBackup !== null) return activeBackup;
 	activeBackup = doBackup().finally(() => {
 		activeBackup = null;
@@ -91,5 +91,3 @@ function purgeOldBackups(): void {
 		void logEventsAndPrint(`Error purging old db backups: ${message}`, 'errLog');
 	}
 }
-
-export { startDailyBackups, performBackup };

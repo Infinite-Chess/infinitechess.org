@@ -37,7 +37,7 @@ type PlayerGamesColumn = keyof PlayerGamesRecord;
  * @returns An array of objects with the requested columns from player_games.
  * @throws If invalid arguments are provided, if fewer rows than expected are found, or if a database error occurs.
  */
-function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
+export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 	user_id: number,
 	game_id_list: number[],
 	columns: K[],
@@ -91,7 +91,7 @@ function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
  * @returns Array of objects containing only the requested columns.
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
+export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 	user_id: number,
 	leaderboard_id: number,
 	limit: number,
@@ -124,12 +124,3 @@ function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 		return db.all<Pick<PlayerGamesRecord, K>>(query, [user_id, leaderboard_id, limit]);
 	}, `Error fetching recent rated games for user ${user_id} on leaderboard ${leaderboard_id}`);
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export {
-	getOpponentsOfUserFromGames,
-	// Commented out to emphasize this should not ever have to be used:
-	// updatePlayerGamesColumns,
-	getRecentNRatedGamesForUser,
-};

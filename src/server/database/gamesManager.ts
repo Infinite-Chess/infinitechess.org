@@ -39,7 +39,7 @@ type GamesColumn = keyof GamesRecord;
  * @returns - A unique game_id.
  * @throws If a database error occurs.
  */
-function genUniqueGameID(): number {
+export function genUniqueGameID(): number {
 	let id: number;
 	do {
 		id = generateRandomGameId();
@@ -79,7 +79,7 @@ function isGameIdTaken(game_id: number): boolean {
  * A miss is an expected outcome (e.g. games aborted before any moves are not stored).
  * @throws If invalid arguments are provided, or if a database error occurs.
  */
-function getGameData<K extends GamesColumn>(
+export function getGameData<K extends GamesColumn>(
 	game_id: number,
 	columns: K[],
 ): Pick<GamesRecord, K> | undefined {
@@ -110,7 +110,7 @@ function getGameData<K extends GamesColumn>(
  * @returns An array of objects with the requested columns.
  * @throws If invalid arguments are provided, if no matches are found, or if a database error occurs.
  */
-function getMultipleGameData<K extends GamesColumn>(
+export function getMultipleGameData<K extends GamesColumn>(
 	game_id_list: number[],
 	columns: K[],
 ): Pick<GamesRecord, K>[] {
@@ -142,7 +142,3 @@ function getMultipleGameData<K extends GamesColumn>(
 		`Error when getting game data of game_ids ${jsutil.ensureJSONString(game_id_list)}`,
 	);
 }
-
-// Exports --------------------------------------------------------------------------------------------
-
-export { genUniqueGameID, getGameData, getMultipleGameData };
