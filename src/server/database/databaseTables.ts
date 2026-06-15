@@ -5,6 +5,7 @@
  */
 
 import db from './database.js';
+import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { startDailyBackups } from './backupManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
@@ -388,9 +389,26 @@ function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
+	purgeUnverifiedMembers();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
+}
+
+/**
+ * TEMPORARY MIGRATION: Remove this function (and its call in initDatabase) once it has run in production.
+ *
+ * The `position_pasted` column used to exist on `live_games` and needs to be removed from old DBs.
+ * This only logs when the column is found and deleted.
+ */
+function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
+	const liveGamesColumns = db.all<{ name: string }>("PRAGMA table_info('live_games')");
+	const hasPosPastedColumn = liveGamesColumns.some((column) => column.name === 'position_pasted');
+
+	if (!hasPosPastedColumn) return;
+
+	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
+	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
 }
 
 /**
@@ -409,19 +427,23 @@ function addIsPersistentColumnToRefreshTokens(): void {
 }
 
 /**
- * TEMPORARY MIGRATION: Remove this function (and its call in initDatabase) once it has run in production.
+ * TEMPORARY MIGRATION: remove after it has run in production.
  *
- * The `position_pasted` column used to exist on `live_games` and needs to be removed from old DBs.
- * This only logs when the column is found and deleted.
+ * Every new account is now created already-verified, so any remaining `is_verified = 0`
+ * member registered under the old flow and never verified. This purges all of them.
  */
-function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
-	const liveGamesColumns = db.all<{ name: string }>("PRAGMA table_info('live_games')");
-	const hasPosPastedColumn = liveGamesColumns.some((column) => column.name === 'position_pasted');
+function purgeUnverifiedMembers(): void {
+	const membersToDelete = db.all<{ user_id: number }>(
+		`SELECT user_id FROM members WHERE is_verified = 0`,
+	);
 
-	if (!hasPosPastedColumn) return;
+	if (membersToDelete.length === 0) return; // Nothing to do.
 
-	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
-	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
+	for (const member of membersToDelete) {
+		deleteAccount(member.user_id, 'unverified');
+	}
+
+	console.log(`Temporary DB migration: purged ${membersToDelete.length} unverified member(s).`);
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
