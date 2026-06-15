@@ -76,7 +76,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	// automated submission can never create a pending row.
 	const turnstileResult = await verifyTurnstileToken(req.body['cf-turnstile-response'], req);
 	if (turnstileResult === 'failed') {
-		res.status(403).json({ message: 'Bot verification failed. Please refresh and try again.' });
+		res.status(403).json({ message: 'Verification failed. Please try again.' });
 		return;
 	} else if (turnstileResult === 'error') {
 		// Don't fail open on a network error. Claim it as a generic server error.

@@ -57,6 +57,8 @@ function initThemeToggle(): void {
 		document.documentElement.setAttribute('data-theme', next);
 		localStorage.setItem(THEME_KEY, next);
 		themeIndicator.textContent = next === THEME_DARK ? td.theme_dark : td.theme_light;
+		// Notify listeners (e.g. the register page's Turnstile widget) of the light/dark switch.
+		document.dispatchEvent(new CustomEvent('color-scheme-change'));
 	});
 }
 

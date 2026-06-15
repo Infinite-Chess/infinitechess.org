@@ -21,6 +21,7 @@ const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
 const emailInput = document.querySelector<HTMLInputElement>('#email')!;
 const passwordInput = document.querySelector<HTMLInputElement>('#password')!;
 const submitButton = document.querySelector<HTMLButtonElement>('#register-submit')!;
+const turnstileContainer = document.querySelector<HTMLDivElement>('#turnstile-widget')!;
 const usernameError = document.querySelector<HTMLParagraphElement>('#username-error')!;
 const emailError = document.querySelector<HTMLParagraphElement>('#email-error')!;
 const passwordError = document.querySelector<HTMLParagraphElement>('#password-error')!;
@@ -31,6 +32,11 @@ const formError = document.querySelector<HTMLParagraphElement>('#register-error'
 let usernameValid = false;
 let emailValid = false;
 let passwordValid = false;
+
+/** The Turnstile widget id, set once the widget renders; used to reset it for a fresh token. */
+let turnstileWidgetId: string | undefined;
+/** The latest single-use Turnstile token, or undefined until solved / after it's spent or expires. */
+let turnstileToken: string | undefined;
 
 // Format error messages (hardcoded English) -------------------------
 
@@ -95,10 +101,12 @@ function setFormError(message?: string): void {
 
 /**
  * Reflects the form's *visible* state on the submit button: enabled as long as
- * all three fields have some text and none are currently showing an error.
- * Field errors keep the button disabled until fixed; form errors don't gate it.
+ * all three fields have some text, none are currently showing an error, and the
+ * Turnstile bot-check has yielded a token. Field errors keep the button disabled
+ * until fixed; form errors don't gate it.
  */
 function refreshSubmit(): void {
+	// console.error('refreshSubmit');
 	const allFilled =
 		usernameInput.value.length > 0 &&
 		passwordInput.value.length > 0 &&
@@ -106,8 +114,57 @@ function refreshSubmit(): void {
 	const anyVisibleError = [usernameError, passwordError, emailError].some(
 		(el) => !el.classList.contains('hidden'),
 	);
-	submitButton.disabled = !allFilled || anyVisibleError;
+	submitButton.disabled = !allFilled || anyVisibleError || turnstileToken === undefined;
 }
+
+// Turnstile -------------------------------------------------------
+
+/** Re-issues the Turnstile challenge for a fresh token, clearing the spent one (tokens are single-use). */
+function resetTurnstile(): void {
+	turnstileToken = undefined;
+	if (turnstileWidgetId !== undefined) window.turnstile.reset(turnstileWidgetId);
+	refreshSubmit();
+}
+
+/** Renders the widget and wires its success/error/expired callbacks to. */
+function renderTurnstileWidget(): void {
+	turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+		sitekey: turnstileContainer.dataset['sitekey']!,
+		// Match the page's resolved theme (set on <html> by layout.njk's inline head script).
+		theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark',
+		// Success: store the token and ungate the submit button.
+		callback: (token: string): void => {
+			turnstileToken = token;
+			refreshSubmit();
+		},
+		// Error: drop any token, re-gate submit, and ask the user to retry.
+		'error-callback': (): void => {
+			turnstileToken = undefined;
+			setFormError('Verification failed. Please try again.');
+			refreshSubmit();
+		},
+		// Expired: a previously-issued token aged out (~300s TTL); re-gate and prompt a retry.
+		'expired-callback': (): void => {
+			turnstileToken = undefined;
+			setFormError('Verification expired. Please try again.');
+			refreshSubmit();
+		},
+	});
+}
+
+// Turnstile's api.js invokes this once ready.
+window.onloadTurnstileCallback = renderTurnstileWidget;
+
+// When the user switches light/dark theme, re-render the widget.
+document.addEventListener('color-scheme-change', (): void => {
+	if (turnstileWidgetId === undefined) return; // Never rendered (api.js failed) — nothing to swap.
+	window.turnstile.remove(turnstileWidgetId);
+	turnstileToken = undefined;
+	refreshSubmit();
+	renderTurnstileWidget();
+});
+
+// Form submission --------------------------------------------------
 
 /**
  * Runs the synchronous format check for a field and returns whether it's valid.
@@ -138,7 +195,7 @@ async function submitRegister(): Promise<void> {
 	passwordValid = validateFormat(passwordInput, passwordError, passwordFormatError, true);
 	emailValid = validateFormat(emailInput, emailError, emailFormatError, true);
 	refreshSubmit();
-	if (!usernameValid || !passwordValid || !emailValid) {
+	if (!usernameValid || !passwordValid || !emailValid || !turnstileToken) {
 		if (!usernameValid) usernameInput.focus();
 		else if (!passwordValid) passwordInput.focus();
 		else if (!emailValid) emailInput.focus();
@@ -156,7 +213,12 @@ async function submitRegister(): Promise<void> {
 		const response = await serverFetch('/api/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ username, email, password }),
+			body: JSON.stringify({
+				username,
+				email,
+				password,
+				'cf-turnstile-response': turnstileToken,
+			}),
 		});
 
 		if (response.ok) {
@@ -186,13 +248,14 @@ async function submitRegister(): Promise<void> {
 				default:
 					setFormError(message);
 			}
-			refreshSubmit();
+			// The token was consumed by this attempt; re-issue a fresh one for the retry.
+			resetTurnstile();
 			return;
 		}
 	} catch (e: unknown) {
 		console.error('Registration request failed:', e);
 		setFormError('Network error. Please try again.');
-		refreshSubmit(); // Re-enable for a retry.
+		resetTurnstile(); // Re-issue a fresh token for the retry.
 	}
 }
 

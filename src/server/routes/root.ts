@@ -6,6 +6,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { resolveAuth } from '../middleware/resolveAuth.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
+import { TURNSTILE_SITE_KEY } from '../middleware/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/createAccountController.js';
 import { getBaseRenderContext } from '../utility/renderContext.js';
@@ -45,7 +46,7 @@ page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk')
 page('/register(.html)?', (req: Request, res: Response) => {
 	// Redirect to check-your-email page if register is pending
 	if (getAwaitingPageState(req)) res.redirect('/register/awaiting');
-	else res.render('register.njk');
+	else res.render('register.njk', { turnstileSiteKey: TURNSTILE_SITE_KEY });
 });
 page('/register/awaiting(.html)?', (req: Request, res: Response) => {
 	const state = getAwaitingPageState(req);

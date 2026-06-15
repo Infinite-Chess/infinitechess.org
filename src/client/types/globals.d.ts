@@ -19,6 +19,30 @@ type LegacyClientTranslations = TranslationsObject['play']['javascript'] &
 	TranslationsObject['reset-password']['javascript'] &
 	TranslationsObject['password-validation'];
 
+/** The subset of Cloudflare Turnstile's `window.turnstile` API we use. */
+interface Turnstile {
+	/** Renders a widget into `container`, returning an opaque widget id for later `reset`. */
+	render: (container: HTMLElement, options: TurnstileRenderOptions) => string;
+	/** Clears the widget's token and re-issues the challenge, yielding a fresh single-use token. */
+	reset: (widgetId: string) => void;
+	/** Destroys the widget and frees its resources; the widget id is invalid afterward. */
+	remove: (widgetId: string) => void;
+}
+
+/** Options passed to `turnstile.render()` for explicit widget rendering. */
+interface TurnstileRenderOptions {
+	/** The public site key, in Managed mode the default. */
+	sitekey: string;
+	/** Widget color theme. Pass the page's resolved theme; omitting it defaults to `'auto'`. */
+	theme: 'light' | 'dark';
+	/** Called with the verification token once the challenge is solved. */
+	callback: (token: string) => void;
+	/** Called when the challenge errors out. */
+	'error-callback': () => void;
+	/** Called when a previously-issued token expires (tokens have a ~300s TTL). */
+	'expired-callback': () => void;
+}
+
 declare global {
 	/**
 	 * Legacy global translations object injected by EJS templates.
@@ -55,6 +79,11 @@ declare global {
 	 * `AudioWorklet.addModule()` takes an opaque string argument that esbuild cannot analyze or rewrite.
 	 */
 	var $downsamplerProcessorUrl: string;
+
+	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
+	var turnstile: Turnstile;
+	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */
+	var onloadTurnstileCallback: () => void;
 
 	// Our Custom Events
 	interface DocumentEventMap {

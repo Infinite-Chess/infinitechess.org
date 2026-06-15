@@ -16,10 +16,11 @@ const contentSecurityPolicy = helmet({
 				"'unsafe-inline'",
 				"'wasm-unsafe-eval'",
 				'https://static.cloudflareinsights.com',
+				'https://challenges.cloudflare.com', // Cloudflare Turnstile (register page human-check)
 			], // Allows inline scripts
 			scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
 			objectSrc: ["'none'"],
-			frameSrc: ["'self'", 'https://www.youtube.com'],
+			frameSrc: ["'self'", 'https://www.youtube.com', 'https://challenges.cloudflare.com'],
 			imgSrc: ["'self'", 'data:', 'https://avatars.githubusercontent.com', 'blob:'],
 		},
 	},

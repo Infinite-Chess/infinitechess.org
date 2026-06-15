@@ -274,6 +274,7 @@ button:disabled {
 	border: 1px solid var(--c-border);
 	border-radius: 12px;
 	box-shadow: 0 8px 30px var(--c-shadow-elev);
+	overflow: hidden;
 }
 
 .auth-title {

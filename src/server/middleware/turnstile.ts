@@ -49,12 +49,12 @@ if (process.env['NODE_ENV'] === 'production') {
  * The public Turnstile site key, rendered into the widget. Pulled from the env in
  * production (asserted present above); falls back to the always-pass test key otherwise.
  */
-const TURNSTILE_SITE_KEY: string = process.env['TURNSTILE_SITE_KEY'] ?? TEST_SITE_KEY;
+const TURNSTILE_SITE_KEY: string = process.env['TURNSTILE_SITE_KEY'] || TEST_SITE_KEY;
 /**
  * The server-only Turnstile secret key, used to verify tokens. Pulled from the env in
  * production (asserted present above); falls back to the always-pass test secret otherwise.
  */
-const TURNSTILE_SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] ?? TEST_SECRET_KEY;
+const TURNSTILE_SECRET_KEY: string = process.env['TURNSTILE_SECRET_KEY'] || TEST_SECRET_KEY;
 
 /** Cloudflare's token verification endpoint. */
 const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
