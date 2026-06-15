@@ -130,7 +130,7 @@ async function pollVerification(): Promise<void> {
 			};
 			if (result.status === 'verified') {
 				stopPolling();
-				flashToast.queue('Your account has been activated!');
+				flashToast.queue(t.awaiting.account_activated);
 				window.location.assign('/');
 				return;
 			} else if (result.status === 'expired' || result.status === 'blacklisted') {
@@ -167,13 +167,14 @@ function setEmailError(message?: string): void {
 	newEmailInput.classList.toggle('input-error', message !== undefined);
 }
 
-/** Returns the English format error for an email value, or undefined if its format is valid. */
+/**
+ * Returns the localized format error for an email value, or undefined if its format is valid.
+ * Only bots or hand crafted PUTs can trigger EmailTooLong, so that case is ignored.
+ */
 function emailFormatError(value: string): string | undefined {
 	switch (validators.validateEmail(value)) {
 		case validators.EmailValidationResult.InvalidFormat:
-			return 'This is not a valid email';
-		case validators.EmailValidationResult.EmailTooLong:
-			return 'The email is too long';
+			return t.shared.account.email_invalid;
 		default:
 			return undefined;
 	}
@@ -212,12 +213,12 @@ async function submitNewEmail(): Promise<void> {
 			// Non-OK (our server's validation error, or a 429).
 			// The body carries a { message } we surface to the user.
 			const result = (await response.json()) as { message?: string };
-			setEmailError(result.message ?? t.shared.error_fallback);
+			setEmailError(result.message ?? t.shared.errors.fallback);
 			changeSubmit.disabled = false;
 		}
 	} catch (e: unknown) {
 		console.error('Change-email request failed:', e);
-		setEmailError('Network error. Please try again.');
+		setEmailError(t.shared.errors.network);
 		changeSubmit.disabled = false;
 	}
 }
