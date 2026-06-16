@@ -1,6 +1,7 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Verify your account" %}
+{% set t = templateT('verify') %}
+{% set pageName = t.prompt.title %}
 
 {% block bodyClass %}sticky-footer{% endblock %}
 
@@ -18,9 +19,9 @@
 	<section class="auth-card" id="verify-card">
 		{% if state == 'prompt' %}
 		{# Prompt state. The button verifies the account. #}
-		<h1 class="auth-title" id="verify-title">Verify your account</h1>
-		<p class="verify-state-text" id="verify-subtitle">Click the button below to activate your account.</p>
-		<button class="btn-primary" id="verify-button">Verify my account</button>
+		<h1 class="auth-title" id="verify-title">{{ t.prompt.title }}</h1>
+		<p class="verify-state-text" id="verify-subtitle">{{ t.prompt.body }}</p>
+		<button class="btn-primary" id="verify-button">{{ t.prompt.button }}</button>
 		<p class="auth-error center hidden" id="verify-error"></p>
 		{% endif %}
 
@@ -28,19 +29,19 @@
 		{% if state == 'prompt' or state == 'verified' %}
 		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-success-title">
 			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-			Account activated
+			{{ t.activated.title }}
 		</h1>
-		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">You may return to your previous tab.</p>
+		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">{{ t.activated.body }}</p>
 		{% endif %}
 
 		{# Expired/invalid state; on the prompt page it's hidden and revealed by js if a click reports token invalid. #}
 		{% if state == 'prompt' or state == 'invalid' %}
 		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-title">
 			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
-			Link expired
+			{{ t.expired.title }}
 		</h1>
-		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">This verification link is no longer valid. It may have expired or been invalidated.</p>
-		<p class="auth-prompt center{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-prompt"><a class="auth-link" href="/register">Register again</a></p>
+		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">{{ t.expired.body }}</p>
+		<p class="auth-prompt center{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-prompt"><a class="auth-link" href="/register">{{ t.expired.register_again }}</a></p>
 		{% endif %}
 	</section>
 </main>

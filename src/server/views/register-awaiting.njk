@@ -1,11 +1,18 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Register" %}
+{% set t = templateT('awaiting') %}
+{# The awaiting page shares the register page's browser-tab title. #}
+{% set pageName = templateT('register').title %}
 
 {% block bodyClass %}sticky-footer{% endblock %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/register-awaiting.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# Ship the awaiting [script] strings to the browser, preserving window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { awaiting: {{ scriptT('awaiting') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
@@ -21,31 +28,31 @@
 		{% if not blacklisted %}
 		<h1 class="auth-title">
 			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-			Check your email
+			{{ t.check_email.title }}
 		</h1>
 		<div class="register-state-text">
-			<p>We've sent you an email. Click the link inside to activate your account.</p>
-			<p>Not seeing it? Check your spam folder, and make sure your email address is correct.</p>
+			<p>{{ t.check_email.body }}</p>
+			<p>{{ t.check_email.help }}</p>
 		</div>
-		<button class="register-change-toggle" id="change-email-toggle">Check email correctness</button>
+		<button class="register-change-toggle" id="change-email-toggle">{{ t.check_email.toggle }}</button>
 		{% else %}
 		<h1 class="auth-title">
 			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
-			Bad address
+			{{ t.bad_address.title }}
 		</h1>
 		<div class="register-state-text">
-			<p>The email address you registered with can't receive messages. Enter a different address below to continue.</p>
+			<p>{{ t.bad_address.body }}</p>
 		</div>
 		{% endif %}
 
 		{# Change-email control. Hidden behind the "Check email correctness" toggle  #}
 		<div class="register-change-email auth-field{% if not blacklisted %} hidden{% endif %}" id="change-email">
-			<label for="new-email">Your email address</label>
+			<label for="new-email">{{ t.change_email.label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts #}
-			<input class="auth-input" type="email" id="new-email" name="new-email"
-			       autocomplete="email" autocapitalize="off" maxlength="320" value="{{ email }}" />
+			{# Never add `| safe` to `email`: it's user-controlled and can pass validation while carrying HTML #}
+			<input class="auth-input" type="email" id="new-email" name="new-email" autocomplete="email" autocapitalize="off" maxlength="320" value="{{ email }}" />
 			<p class="auth-error hidden" id="new-email-error"></p>
-			<button class="btn-primary register-change-submit" id="change-email-submit">Update it</button>
+			<button class="btn-primary register-change-submit" id="change-email-submit">{{ t.change_email.submit }}</button>
 		</div>
 	</section>
 </main>

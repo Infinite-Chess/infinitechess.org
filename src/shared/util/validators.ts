@@ -26,16 +26,11 @@ enum UsernameValidationResult {
 	Ok,
 	UsernameTooShort,
 	UsernameTooLong,
-	OnlyLettersAndNumbers,
+	UsernameAlphanumeric,
 }
 
 type PasswordValidationResultTranslations = 'js-pwd_too_short' | 'js-pwd_too_long';
 type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid';
-type UsernameValidationResultTranslations =
-	| 'js-username_reserved'
-	| 'js-username_tooshort'
-	| 'js-username_length'
-	| 'js-username_wrongenc';
 
 const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
 passwordErrorTranslations.set(PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
@@ -44,15 +39,6 @@ passwordErrorTranslations.set(PasswordValidationResult.PasswordTooLong, 'js-pwd_
 const emailErrorTranslations = new Map<number, EmailValidationResultTranslations>();
 emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
 emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
-
-const usernameErrorTranslations = new Map<number, UsernameValidationResultTranslations>();
-usernameErrorTranslations.set(UsernameValidationResult.UsernameIsReserved, 'js-username_reserved');
-usernameErrorTranslations.set(UsernameValidationResult.UsernameTooShort, 'js-username_tooshort');
-usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'js-username_length'); // there is no translation for js-username_toolong
-usernameErrorTranslations.set(
-	UsernameValidationResult.OnlyLettersAndNumbers,
-	'js-username_wrongenc',
-);
 
 function getPasswordErrorTranslation(
 	err: PasswordValidationResult,
@@ -119,5 +105,4 @@ export default {
 	UsernameValidationResult,
 	getPasswordErrorTranslation,
 	getEmailErrorTranslation,
-	getUsernameErrorTranslation,
 };

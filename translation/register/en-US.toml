@@ -1,0 +1,22 @@
+# Translation component: register page (/register).
+# Source template: src/server/views/register.njk
+
+title = "Register"
+username_label = "Username"
+password_label = "Password"
+email_label = "Email"
+# {terms} and {privacy} are replaced with hyperlinks
+terms_agreement = "By registering, you agree to our {terms} and {privacy}."
+terms_link = "Terms of Service"
+privacy_link = "Privacy Policy"
+submit = "Register"
+login_prompt = "Already have an account?"
+login_link = "Log In"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.register.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+verification_failed = "Verification failed. Please try again."
+verification_expired = "Verification expired. Please try again."

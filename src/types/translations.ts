@@ -63,10 +63,6 @@ export type TranslationKeys =
 	| 'create-account.password'
 	| 'create-account.create_button'
 	| 'create-account.agreement'
-	| 'create-account.javascript.js-username_reserved'
-	| 'create-account.javascript.js-username_length'
-	| 'create-account.javascript.js-username_tooshort'
-	| 'create-account.javascript.js-username_wrongenc'
 	| 'create-account.javascript.js-email_invalid'
 	| 'create-account.javascript.js-email_too_long'
 	| 'create-account.javascript.js-email_inuse'
@@ -515,15 +511,6 @@ export type TranslationKeys =
 	| 'error-pages.500_message'
 	| 'news.title'
 	| 'news.more_dev_logs'
-	| 'server.javascript.ws-username_letters'
-	| 'server.javascript.ws-username_taken'
-	| 'server.javascript.ws-username_bad_word'
-	| 'server.javascript.ws-email_too_long'
-	| 'server.javascript.ws-email_invalid'
-	| 'server.javascript.ws-email_in_use'
-	| 'server.javascript.ws-email_domain_invalid'
-	| 'server.javascript.ws-email_blacklisted'
-	| 'server.javascript.ws-password_length'
 	| 'server.javascript.ws-password-reset-link-sent'
 	| 'server.javascript.ws-password-change-success'
 	| 'server.javascript.ws-password-reset-token-invalid'
@@ -610,10 +597,6 @@ export interface TranslationsObject {
 		create_button: string;
 		agreement: string[];
 		javascript: {
-			'js-username_reserved': string;
-			'js-username_length': string;
-			'js-username_tooshort': string;
-			'js-username_wrongenc': string;
 			'js-email_invalid': string;
 			'js-email_too_long': string;
 			'js-email_inuse': string;
@@ -1144,15 +1127,6 @@ export interface TranslationsObject {
 	};
 	server: {
 		javascript: {
-			'ws-username_letters': string;
-			'ws-username_taken': string;
-			'ws-username_bad_word': string;
-			'ws-email_too_long': string;
-			'ws-email_invalid': string;
-			'ws-email_in_use': string;
-			'ws-email_domain_invalid': string;
-			'ws-email_blacklisted': string;
-			'ws-password_length': string;
 			'ws-password-reset-link-sent': string;
 			'ws-password-change-success': string;
 			'ws-password-reset-token-invalid': string;

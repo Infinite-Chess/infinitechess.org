@@ -5,8 +5,19 @@
 # phrasing used in the variant preview tooltip, etc.
 script_only = true
 
+[errors]
 # Generic fallback shown client-side when a server response misses emitting its own message.
-error_fallback = "Something went wrong. Please try again."
+fallback = "Something went wrong. Please try again."
+# Shown client-side when a request fails to reach the server (network failure).
+network = "Network error. Please try again."
+
+# Account-field format errors shown client-side on the register / awaiting / resetpassword forms.
+# The server reads these too; server-only validation responses live in responses.account.
+[account]
+username_short = "Username must be at least 3 characters long"
+username_alphanumeric = "Username must only contain letters A-Z and numbers 0-9"
+email_invalid = "This is not a valid email"
+password_short = "Password must be 6+ characters long"
 
 [socket]
 cookies_required = "Your browser does not support cookies. Unable to connect to the server."

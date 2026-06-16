@@ -15,7 +15,7 @@
         document.documentElement.setAttribute('data-home-prompt', 'dismissed');
     }
 </script>
-{# Ship the index component's [script] strings to the browser, preserving the existing window.t from layout.njk. #}
+{# Ship the index [script] strings to the browser, preserving window.t from layout.njk. #}
 <script>window.t = Object.assign(window.t || {}, { index: {{ scriptT('index') | json | safe }} });</script>
 {% endblock %}
 

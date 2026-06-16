@@ -1,9 +1,15 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Register" %}
+{% set t = templateT('register') %}
+{% set pageName = t.title %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/register.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# Ship the register [script] strings to the browser, preserving window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { register: {{ scriptT('register') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
@@ -14,10 +20,10 @@
 	<div id="bg-overlay"></div>
 
 	<form class="auth-card" id="register-form">
-		<h1 class="auth-title">Register</h1>
+		<h1 class="auth-title">{{ t.title }}</h1>
 
 		<div class="auth-field">
-			<label for="username">Username</label>
+			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 20: the username max length from validateUsername() in validators.ts. #}
 			<input class="auth-input" type="text" id="username" name="username"
 			       autocomplete="username" autocapitalize="off" maxlength="20" required />
@@ -26,7 +32,7 @@
 		</div>
 
 		<div class="auth-field">
-			<label for="password">Password</label>
+			<label for="password">{{ t.password_label }}</label>
 			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
 			<input class="auth-input" type="password" id="password" name="password"
 			       autocomplete="new-password" maxlength="72" required />
@@ -34,7 +40,7 @@
 		</div>
 
 		<div class="auth-field">
-			<label for="email">Email</label>
+			<label for="email">{{ t.email_label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts. #}
 			<input class="auth-input" type="email" id="email" name="email"
 			       autocomplete="email" autocapitalize="off" maxlength="320" required />
@@ -47,11 +53,13 @@
 		{# Cloudflare Turnstile humanc-check #}
 		<div id="turnstile-widget" class="turnstile-widget" data-sitekey="{{ turnstileSiteKey }}"></div>
 
-		<p class="auth-prompt">By registering, you agree to our <a class="auth-link" href="/terms" target="_blank">Terms of Service</a> and <a class="auth-link" href="/privacy" target="_blank">Privacy Policy</a>.</p>
+		{% set termsLink %}<a class="auth-link" href="/terms" target="_blank">{{ t.terms_link }}</a>{% endset %}
+		{% set privacyLink %}<a class="auth-link" href="/privacy" target="_blank">{{ t.privacy_link }}</a>{% endset %}
+		<p class="auth-prompt">{{ t.terms_agreement | replace("{terms}", termsLink) | replace("{privacy}", privacyLink) | safe }}</p>
 
-		<button class="btn-primary" type="submit" id="register-submit" disabled>Register</button>
+		<button class="btn-primary" type="submit" id="register-submit" disabled>{{ t.submit }}</button>
 
-		<p class="auth-prompt center">Already have an account? <a class="auth-link" href="/login">Log In</a></p>
+		<p class="auth-prompt center">{{ t.login_prompt }} <a class="auth-link" href="/login">{{ t.login_link }}</a></p>
 	</form>
 </main>
 

@@ -13,11 +13,8 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
-import validators from '../../shared/util/validators.js';
-
 import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { verifyTurnstileToken } from './turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
@@ -124,7 +121,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 			'newMemberLog',
 		);
 		res.status(403).json({
-			message: 'Verification failed. Please try again.',
+			message: req.t.register.verification_failed,
 			resetTurnstile: true,
 		});
 		return;
@@ -264,12 +261,13 @@ function getAwaitingPageState(req: Request): { email: string; blacklisted: boole
 async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	const pending = getOwnActivePendingRegistration(req);
 	if (pending === undefined) {
-		res.status(404).json({ message: 'No pending registration found.' });
+		res.status(404).json({ message: req.t.responses.account.no_pending_registration });
 		return;
 	}
 
 	const { email } = req.body;
 	if (!email || typeof email !== 'string') {
+		// Unlocalized: only a bot or crafted request can trigger this
 		res.status(400).json({ message: 'Email is required.' });
 		return;
 	}
@@ -285,7 +283,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 
 		if (emailTaken) {
 			res.status(409).json({
-				message: getTranslation('server.javascript.ws-email_in_use', req.lang),
+				message: req.t.responses.account.email_in_use,
 			});
 			return;
 		}
