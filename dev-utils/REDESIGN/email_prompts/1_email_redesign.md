@@ -58,7 +58,7 @@ it returns `false` and logs the HTML/link instead. `getAppBaseUrl()`
 
 ## Out of scope
 - The verify / password-reset landing page UIs and any link/token mechanics. No new email types.
-- **Localization / translation** of email copy — tracked separately in `20_localize_emails.md`.
+- **Localization / translation** of email copy — tracked separately in `2_localize_emails.md`.
   Write English here.
 
 ## Acceptance
