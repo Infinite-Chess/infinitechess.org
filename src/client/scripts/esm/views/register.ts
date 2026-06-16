@@ -297,8 +297,10 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 		);
 		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
 		if (!response.ok) return;
-		const result = (await response.json()) as { allowed: boolean; reason: string };
-		if (!result.allowed) {
+		const result = (await response.json()) as
+			| { available: true }
+			| { available: false; reason: string };
+		if (!result.available) {
 			setFieldError(usernameInput, usernameError, result.reason);
 			usernameValid = false;
 			refreshSubmit();

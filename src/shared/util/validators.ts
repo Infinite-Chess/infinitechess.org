@@ -27,7 +27,6 @@ enum UsernameValidationResult {
 	UsernameTooShort,
 	UsernameTooLong,
 	OnlyLettersAndNumbers,
-	UsernameIsReserved,
 }
 
 type PasswordValidationResultTranslations = 'js-pwd_too_short' | 'js-pwd_too_long';
@@ -67,42 +66,6 @@ function getEmailErrorTranslation(
 	return emailErrorTranslations.get(err);
 }
 
-function getUsernameErrorTranslation(
-	err: UsernameValidationResult,
-): UsernameValidationResultTranslations | undefined {
-	return usernameErrorTranslations.get(err);
-}
-
-/** Usernames that are reserved. New members cannot use these are their name. */
-// prettier-ignore
-const reservedUsernames: string[] = [
-	'infinitechess',
-	'support', 'infinitechesssupport',
-	'administrator',
-	'amazon', 'amazonsupport', 'aws', 'awssupport',
-	'apple', 'applesupport',
-	'microsoft', 'microsoftsupport',
-	'google', 'googlesupport',
-	'adobe', 'adobesupport',
-	'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
-	'tesla', 'elonmusk', 'meta',
-	'walmart', 'costco',
-	'valve', 'valvesupport',
-	'github',
-	'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
-	'roblox',
-	'minecraft',
-	'fortnite',
-	'teamfortress2',
-	'amongus', 'innersloth', 'henrystickmin',
-	'halflife', 'halflife2', 'gordonfreeman',
-	'epic', 'epicgames', 'epicgamessupport',
-	'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
-	'office', 'office365',
-	'usa', 'america',
-	'donaldtrump', 'joebiden'
-];
-
 /**
  * Shared logic to validate passwords
  * @param password The password to check
@@ -134,8 +97,7 @@ function validateEmailFormat(email: string): boolean {
 }
 
 /**
- * Shared logic to validate usernames.
- * **Note**: Does not check if the username is taken, that's on the server to do.
+ * Shared logic to validate a username's *format* (length & allowed characters).
  * @param username The username to check
  * @returns `Ok` if the username is valid, otherwise another member of that enum
  * @todo Return a list of errors instead of just one, for better checking (then the Ok could also be replaced by just checking if the list length is 0, which might be cleaner)
@@ -143,15 +105,9 @@ function validateEmailFormat(email: string): boolean {
 function validateUsername(username: string): UsernameValidationResult {
 	if (username.length < 3) return UsernameValidationResult.UsernameTooShort;
 	if (username.length > 20) return UsernameValidationResult.UsernameTooLong;
-	if (!onlyLettersAndNumbers(username)) return UsernameValidationResult.OnlyLettersAndNumbers;
-	if (reservedUsernames.includes(username.toLowerCase()))
-		return UsernameValidationResult.UsernameIsReserved;
+	// Only alphanumeric characters
+	if (!/^[a-zA-Z0-9]+$/.test(username)) return UsernameValidationResult.UsernameAlphanumeric;
 	return UsernameValidationResult.Ok;
-}
-
-function onlyLettersAndNumbers(string: string): boolean {
-	if (!string) return true;
-	return /^[a-zA-Z0-9]+$/.test(string);
 }
 
 export default {

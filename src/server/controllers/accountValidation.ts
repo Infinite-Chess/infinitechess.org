@@ -34,6 +34,22 @@ const profanityMatcher = new RegExpMatcher({
 	...englishRecommendedTransformers,
 });
 
+/**
+ * Usernames new members may not claim. Purely an impersonation/identity guard — our own
+ * brand, generic staff/official roles, our engine, and reserved display identities like
+ * the guest/deleted-account placeholders.
+ */
+const reservedUsernames: ReadonlySet<string> = new Set([
+	'infinitechess', 'infinitechesssupport',
+	'admin', 'administrator', 'root', 'system',
+	'moderator', 'mod', 'staff', 'team', 'official',
+	'support', 'help', 'helpdesk', 'contact', 'info',
+	'security', 'abuse', 'billing', 'payments', 'noreply',
+	'hydro', 'hydrochess', 'engine', 'computer', 'bot',
+	'icn', 'ice', 'infinitechessengine', 'infinitechessorg',
+	'guest', 'anonymous', 'deleted',
+]); // prettier-ignore
+
 // Functions -------------------------------------------------------------------------
 
 /** Returns true if the username passes all format/content checks before account generation. */
@@ -79,6 +95,15 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 		return false;
 	}
 	return true;
+}
+
+/**
+ * Returns true if the username is reserved.
+ * @param username - The username to check. Case-insensitive.
+ */
+function checkReserved(username: string): boolean {
+	// All reserved names are in lowercase
+	return reservedUsernames.has(username.toLowerCase());
 }
 
 /**
@@ -184,6 +209,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 export {
 	PASSWORD_SALT_ROUNDS,
 	checkProfanity,
+	checkReserved,
 	doUsernameFormatChecks,
 	doEmailFormatChecks,
 	doPasswordFormatChecks,
