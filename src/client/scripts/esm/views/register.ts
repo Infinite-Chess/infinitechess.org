@@ -38,43 +38,44 @@ let turnstileWidgetId: string | undefined;
 /** The latest single-use Turnstile token, or undefined until solved / after it's spent or expires. */
 let turnstileToken: string | undefined;
 
-// Format error messages (hardcoded English) -------------------------
+// Format error messages -------------------------------------------------
 
-/** The English format error for a username value, or undefined if its format is valid. */
+/**
+ * Returns the localized format error for a username value, or undefined if its format is valid.
+ * Only bots or hand crafted PUTs can trigger UsernameTooLong, so that case is ignored.
+ */
 function usernameFormatError(value: string): string | undefined {
 	switch (validators.validateUsername(value)) {
 		case validators.UsernameValidationResult.UsernameTooShort:
-			return 'Username must be at least 3 characters long';
-		case validators.UsernameValidationResult.UsernameTooLong:
-			return 'Username must be between 3-20 characters';
-		case validators.UsernameValidationResult.OnlyLettersAndNumbers:
-			return 'Username must only contain letters A-Z and numbers 0-9';
-		case validators.UsernameValidationResult.UsernameIsReserved:
-			return 'That username is reserved';
+			return t.shared.account.username_short;
+		case validators.UsernameValidationResult.UsernameAlphanumeric:
+			return t.shared.account.username_alphanumeric;
 		default:
 			return undefined;
 	}
 }
 
-/** The English format error for an email value, or undefined if its format is valid. */
+/**
+ * Returns the localized format error for an email value, or undefined if its format is valid.
+ * Only bots or hand crafted PUTs can trigger EmailTooLong, so that case is ignored.
+ */
 function emailFormatError(value: string): string | undefined {
 	switch (validators.validateEmail(value)) {
 		case validators.EmailValidationResult.InvalidFormat:
-			return 'This is not a valid email';
-		case validators.EmailValidationResult.EmailTooLong:
-			return 'The email is too long';
+			return t.shared.account.email_invalid;
 		default:
 			return undefined;
 	}
 }
 
-/** The English format error for a password value, or undefined if its format is valid. */
+/**
+ * Returns the localized format error for a password value, or undefined if its format is valid.
+ * Only bots or hand crafted PUTs can trigger PasswordTooLong, so that case is ignored.
+ */
 function passwordFormatError(value: string): string | undefined {
 	switch (validators.validatePassword(value)) {
 		case validators.PasswordValidationResult.PasswordTooShort:
-			return 'Password must be 6+ characters long';
-		case validators.PasswordValidationResult.PasswordTooLong:
-			return "Password can't be over 72 characters long";
+			return t.shared.account.password_short;
 		default:
 			return undefined;
 	}
@@ -139,13 +140,13 @@ function renderTurnstileWidget(): void {
 		// Error: drop any token, re-gate submit, and ask the user to retry.
 		'error-callback': (): void => {
 			turnstileToken = undefined;
-			setFormError('Verification failed. Please try again.');
+			setFormError(t.register.verification_failed);
 			refreshSubmit();
 		},
 		// Expired: a previously-issued token aged out (~300s TTL); re-gate and prompt a retry.
 		'expired-callback': (): void => {
 			turnstileToken = undefined;
-			setFormError('Verification expired. Please try again.');
+			setFormError(t.register.verification_expired);
 			refreshSubmit();
 		},
 	});
@@ -231,7 +232,7 @@ async function submitRegister(): Promise<void> {
 			};
 			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
 			// beneath that input; systemic failures (server/network) have none and go form-level.
-			const message = result.message ?? t.shared.error_fallback;
+			const message = result.message ?? t.shared.errors.fallback;
 			switch (result.field) {
 				case 'username':
 					setFieldError(usernameInput, usernameError, message);
@@ -255,7 +256,7 @@ async function submitRegister(): Promise<void> {
 		}
 	} catch (e: unknown) {
 		console.error('Registration request failed:', e);
-		setFormError('Network error. Please try again.');
+		setFormError(t.shared.errors.network);
 		resetTurnstile(); // Re-issue a fresh token for the retry.
 		refreshSubmit();
 	}
@@ -297,8 +298,10 @@ usernameInput.addEventListener('blur', async (): Promise<void> => {
 		);
 		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
 		if (!response.ok) return;
-		const result = (await response.json()) as { allowed: boolean; reason: string };
-		if (!result.allowed) {
+		const result = (await response.json()) as
+			| { available: true }
+			| { available: false; reason: string };
+		if (!result.available) {
 			setFieldError(usernameInput, usernameError, result.reason);
 			usernameValid = false;
 			refreshSubmit();

@@ -14,7 +14,6 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { getTranslation } from '../utility/translate.js';
 import { escapeLogControlChars, logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
@@ -34,6 +33,22 @@ const profanityMatcher = new RegExpMatcher({
 	...englishRecommendedTransformers,
 });
 
+/**
+ * Usernames new members may not claim. Purely an impersonation/identity guard — our own
+ * brand, generic staff/official roles, our engine, and reserved display identities like
+ * the guest/deleted-account placeholders.
+ */
+const reservedUsernames: ReadonlySet<string> = new Set([
+	'infinitechess', 'infinitechesssupport',
+	'admin', 'administrator', 'root', 'system',
+	'moderator', 'mod', 'staff', 'team', 'official',
+	'support', 'help', 'helpdesk', 'contact', 'info',
+	'security', 'abuse', 'billing', 'payments', 'noreply',
+	'hydro', 'hydrochess', 'engine', 'computer', 'bot',
+	'icn', 'ice', 'infinitechessengine', 'infinitechessorg',
+	'guest', 'anonymous', 'deleted',
+]); // prettier-ignore
+
 // Functions -------------------------------------------------------------------------
 
 /** Returns true if the username passes all format/content checks before account generation. */
@@ -42,28 +57,26 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 	if (result !== validators.UsernameValidationResult.Ok) {
 		switch (result) {
 			case validators.UsernameValidationResult.UsernameTooShort:
+				res.status(400).json({
+					field: 'username',
+					message: req.t.shared.account.username_short,
+				});
+				return false;
 			case validators.UsernameValidationResult.UsernameTooLong:
+				// Unlocalized: only a bot bypassing the form's maxlength can trigger this.
 				res.status(400).json({
 					field: 'username',
-					message: getTranslation(
-						'create-account.javascript.js-username_length',
-						req.lang,
-					),
+					message: "Username can't be over 20 characters long",
 				});
 				return false;
-			case validators.UsernameValidationResult.OnlyLettersAndNumbers:
+			case validators.UsernameValidationResult.UsernameAlphanumeric:
 				res.status(400).json({
 					field: 'username',
-					message: getTranslation('server.javascript.ws-username_letters', req.lang),
+					message: req.t.shared.account.username_alphanumeric,
 				});
-				return false;
-			case validators.UsernameValidationResult.UsernameIsReserved:
-				res.status(409).json({
-					field: 'username',
-					message: getTranslation('server.javascript.ws-username_taken', req.lang),
-				}); // Code for reserved (but the users don't know that!)
 				return false;
 			default:
+				// Unlocalized: unreachable defensive fallback
 				res.status(400).json({
 					field: 'username',
 					message: 'Username is not valid, but the server could not determine why.',
@@ -74,11 +87,20 @@ function doUsernameFormatChecks(username: string, req: Request, res: Response): 
 	if (checkProfanity(username)) {
 		res.status(409).json({
 			field: 'username',
-			message: getTranslation('server.javascript.ws-username_bad_word', req.lang),
+			message: req.t.responses.account.username_profane,
 		});
 		return false;
 	}
 	return true;
+}
+
+/**
+ * Returns true if the username is reserved.
+ * @param username - The username to check. Case-insensitive.
+ */
+function checkReserved(username: string): boolean {
+	// All reserved names are in lowercase
+	return reservedUsernames.has(username.toLowerCase());
 }
 
 /**
@@ -100,16 +122,18 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			case validators.EmailValidationResult.InvalidFormat:
 				res.status(400).json({
 					field: 'email',
-					message: getTranslation('server.javascript.ws-email_invalid', req.lang),
+					message: req.t.shared.account.email_invalid,
 				});
 				return false;
 			case validators.EmailValidationResult.EmailTooLong:
+				// Unlocalized: only a bot bypassing the form's maxlength can trigger this.
 				res.status(400).json({
 					field: 'email',
-					message: getTranslation('server.javascript.ws-email_too_long', req.lang),
+					message: 'The email is too long',
 				});
 				return false;
 			default:
+				// Unlocalized: unreachable defensive fallback
 				res.status(400).json({
 					field: 'email',
 					message: 'Email is not valid, but the server could not determine why.',
@@ -125,7 +149,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 			);
 			res.status(422).json({
 				field: 'email',
-				message: getTranslation('server.javascript.ws-email_blacklisted', req.lang),
+				message: req.t.responses.account.email_blacklisted,
 			});
 			return false;
 		}
@@ -138,7 +162,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 	if (!(await isEmailDNSValid(email))) {
 		res.status(400).json({
 			field: 'email',
-			message: getTranslation('server.javascript.ws-email_domain_invalid', req.lang),
+			message: req.t.responses.account.email_domain_invalid,
 		});
 		return false;
 	}
@@ -164,13 +188,20 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 	if (result !== validators.PasswordValidationResult.Ok) {
 		switch (result) {
 			case validators.PasswordValidationResult.PasswordTooShort:
-			case validators.PasswordValidationResult.PasswordTooLong:
 				res.status(400).json({
 					field: 'password',
-					message: getTranslation('server.javascript.ws-password_length', req.lang),
+					message: req.t.shared.account.password_short,
+				});
+				return false;
+			case validators.PasswordValidationResult.PasswordTooLong:
+				// Unlocalized: only a bot bypassing the form's maxlength can trigger this.
+				res.status(400).json({
+					field: 'password',
+					message: "Password can't be over 72 characters long",
 				});
 				return false;
 			default:
+				// Unlocalized: unreachable defensive fallback
 				res.status(400).json({
 					field: 'password',
 					message: 'Password is not valid, but the server could not determine why.',
@@ -184,6 +215,7 @@ function doPasswordFormatChecks(password: string, req: Request, res: Response): 
 export {
 	PASSWORD_SALT_ROUNDS,
 	checkProfanity,
+	checkReserved,
 	doUsernameFormatChecks,
 	doEmailFormatChecks,
 	doPasswordFormatChecks,

@@ -1,0 +1,16 @@
+# Translation component: verify account page (/verify/:token).
+# Source template: src/server/views/verify.njk
+
+[prompt]
+title = "Verify your account"
+body = "Click the button below to activate your account."
+button = "Verify my account"
+
+[activated]
+title = "Account activated"
+body = "You may return to your previous tab."
+
+[expired]
+title = "Link expired"
+body = "This verification link is no longer valid. It may have expired or been invalidated."
+register_again = "Register again"

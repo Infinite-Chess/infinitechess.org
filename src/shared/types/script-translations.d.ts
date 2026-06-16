@@ -12,6 +12,9 @@
  * `getScriptTranslations(component, lang)` helper.
  */
 export interface ScriptTranslations {
+	awaiting: {
+		account_activated: string;
+	};
 	header: {
 		settings: {
 			appearance_dropdown: {
@@ -40,8 +43,9 @@ export interface ScriptTranslations {
 			};
 		};
 	};
-	login: {
-		network_error: string;
+	register: {
+		verification_failed: string;
+		verification_expired: string;
 	};
 	responses: {
 		errors: {
@@ -59,6 +63,15 @@ export interface ScriptTranslations {
 			login_retry_in_one: string;
 			login_retry_in_other: string;
 		};
+		account: {
+			username_taken: string;
+			username_reserved: string;
+			username_profane: string;
+			email_in_use: string;
+			email_blacklisted: string;
+			email_domain_invalid: string;
+			no_pending_registration: string;
+		};
 		seeks: {
 			already_in_game: string;
 			rated_requires_signin: string;
@@ -74,7 +87,16 @@ export interface ScriptTranslations {
 		};
 	};
 	shared: {
-		error_fallback: string;
+		errors: {
+			fallback: string;
+			network: string;
+		};
+		account: {
+			username_short: string;
+			username_alphanumeric: string;
+			email_invalid: string;
+			password_short: string;
+		};
 		socket: {
 			cookies_required: string;
 		};

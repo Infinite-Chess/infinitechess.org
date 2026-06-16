@@ -9,11 +9,6 @@
 <link rel="stylesheet" href="{{ manifest['css/login.css'] }}" />
 {% endblock %}
 
-{% block head %}
-{# Ship the login component's [script] strings to the browser, preserving the existing window.t from layout.njk. #}
-<script>window.t = Object.assign(window.t || {}, { login: {{ scriptT('login') | json | safe }} });</script>
-{% endblock %}
-
 {% block body %}
 {% include "components/header/header.njk" %}
 

@@ -45,7 +45,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 					'blacklistLog',
 				);
 				res.status(409).json({
-					message: getTranslation('server.javascript.ws-email_blacklisted', req.lang),
+					message: req.t.responses.account.email_blacklisted,
 				});
 				return;
 			}

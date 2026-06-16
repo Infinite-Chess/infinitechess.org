@@ -26,17 +26,11 @@ enum UsernameValidationResult {
 	Ok,
 	UsernameTooShort,
 	UsernameTooLong,
-	OnlyLettersAndNumbers,
-	UsernameIsReserved,
+	UsernameAlphanumeric,
 }
 
 type PasswordValidationResultTranslations = 'js-pwd_too_short' | 'js-pwd_too_long';
 type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid';
-type UsernameValidationResultTranslations =
-	| 'js-username_reserved'
-	| 'js-username_tooshort'
-	| 'js-username_length'
-	| 'js-username_wrongenc';
 
 const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
 passwordErrorTranslations.set(PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
@@ -45,15 +39,6 @@ passwordErrorTranslations.set(PasswordValidationResult.PasswordTooLong, 'js-pwd_
 const emailErrorTranslations = new Map<number, EmailValidationResultTranslations>();
 emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
 emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
-
-const usernameErrorTranslations = new Map<number, UsernameValidationResultTranslations>();
-usernameErrorTranslations.set(UsernameValidationResult.UsernameIsReserved, 'js-username_reserved');
-usernameErrorTranslations.set(UsernameValidationResult.UsernameTooShort, 'js-username_tooshort');
-usernameErrorTranslations.set(UsernameValidationResult.UsernameTooLong, 'js-username_length'); // there is no translation for js-username_toolong
-usernameErrorTranslations.set(
-	UsernameValidationResult.OnlyLettersAndNumbers,
-	'js-username_wrongenc',
-);
 
 function getPasswordErrorTranslation(
 	err: PasswordValidationResult,
@@ -66,42 +51,6 @@ function getEmailErrorTranslation(
 ): EmailValidationResultTranslations | undefined {
 	return emailErrorTranslations.get(err);
 }
-
-function getUsernameErrorTranslation(
-	err: UsernameValidationResult,
-): UsernameValidationResultTranslations | undefined {
-	return usernameErrorTranslations.get(err);
-}
-
-/** Usernames that are reserved. New members cannot use these are their name. */
-// prettier-ignore
-const reservedUsernames: string[] = [
-	'infinitechess',
-	'support', 'infinitechesssupport',
-	'administrator',
-	'amazon', 'amazonsupport', 'aws', 'awssupport',
-	'apple', 'applesupport',
-	'microsoft', 'microsoftsupport',
-	'google', 'googlesupport',
-	'adobe', 'adobesupport',
-	'youtube', 'facebook', 'tiktok', 'twitter', 'x', 'instagram', 'snapchat',
-	'tesla', 'elonmusk', 'meta',
-	'walmart', 'costco',
-	'valve', 'valvesupport',
-	'github',
-	'nvidia', 'amd', 'intel', 'msi', 'tsmc', 'gigabyte',
-	'roblox',
-	'minecraft',
-	'fortnite',
-	'teamfortress2',
-	'amongus', 'innersloth', 'henrystickmin',
-	'halflife', 'halflife2', 'gordonfreeman',
-	'epic', 'epicgames', 'epicgamessupport',
-	'taylorswift', 'kimkardashian', 'tomcruise', 'keanureeves', 'morganfreeman', 'willsmith',
-	'office', 'office365',
-	'usa', 'america',
-	'donaldtrump', 'joebiden'
-];
 
 /**
  * Shared logic to validate passwords
@@ -134,8 +83,7 @@ function validateEmailFormat(email: string): boolean {
 }
 
 /**
- * Shared logic to validate usernames.
- * **Note**: Does not check if the username is taken, that's on the server to do.
+ * Shared logic to validate a username's *format* (length & allowed characters).
  * @param username The username to check
  * @returns `Ok` if the username is valid, otherwise another member of that enum
  * @todo Return a list of errors instead of just one, for better checking (then the Ok could also be replaced by just checking if the list length is 0, which might be cleaner)
@@ -143,15 +91,9 @@ function validateEmailFormat(email: string): boolean {
 function validateUsername(username: string): UsernameValidationResult {
 	if (username.length < 3) return UsernameValidationResult.UsernameTooShort;
 	if (username.length > 20) return UsernameValidationResult.UsernameTooLong;
-	if (!onlyLettersAndNumbers(username)) return UsernameValidationResult.OnlyLettersAndNumbers;
-	if (reservedUsernames.includes(username.toLowerCase()))
-		return UsernameValidationResult.UsernameIsReserved;
+	// Only alphanumeric characters
+	if (!/^[a-zA-Z0-9]+$/.test(username)) return UsernameValidationResult.UsernameAlphanumeric;
 	return UsernameValidationResult.Ok;
-}
-
-function onlyLettersAndNumbers(string: string): boolean {
-	if (!string) return true;
-	return /^[a-zA-Z0-9]+$/.test(string);
 }
 
 export default {
@@ -163,5 +105,4 @@ export default {
 	UsernameValidationResult,
 	getPasswordErrorTranslation,
 	getEmailErrorTranslation,
-	getUsernameErrorTranslation,
 };

@@ -13,11 +13,8 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
-import validators from '../../shared/util/validators.js';
-
 import { getClientIP } from '../utility/IP.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { verifyTurnstileToken } from './turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
@@ -32,6 +29,7 @@ import {
 import {
 	PASSWORD_SALT_ROUNDS,
 	checkProfanity,
+	checkReserved,
 	doUsernameFormatChecks,
 	doEmailFormatChecks,
 	doPasswordFormatChecks,
@@ -94,14 +92,21 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 	if (usernameTaken) {
 		res.status(409).json({
 			field: 'username',
-			message: getTranslation('server.javascript.ws-username_taken', req.lang),
+			message: req.t.responses.account.username_taken,
+		});
+		return;
+	}
+	if (checkReserved(username)) {
+		res.status(409).json({
+			field: 'username',
+			message: req.t.responses.account.username_reserved,
 		});
 		return;
 	}
 	if (emailTaken) {
 		res.status(409).json({
 			field: 'email',
-			message: getTranslation('server.javascript.ws-email_in_use', req.lang),
+			message: req.t.responses.account.email_in_use,
 		});
 		return;
 	}
@@ -116,7 +121,7 @@ async function createNewMember(req: Request, res: Response): Promise<void> {
 			'newMemberLog',
 		);
 		res.status(403).json({
-			message: 'Verification failed. Please try again.',
+			message: req.t.register.verification_failed,
 			resetTurnstile: true,
 		});
 		return;
@@ -256,12 +261,13 @@ function getAwaitingPageState(req: Request): { email: string; blacklisted: boole
 async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	const pending = getOwnActivePendingRegistration(req);
 	if (pending === undefined) {
-		res.status(404).json({ message: 'No pending registration found.' });
+		res.status(404).json({ message: req.t.responses.account.no_pending_registration });
 		return;
 	}
 
 	const { email } = req.body;
 	if (!email || typeof email !== 'string') {
+		// Unlocalized: only a bot or crafted request can trigger this
 		res.status(400).json({ message: 'Email is required.' });
 		return;
 	}
@@ -277,7 +283,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 
 		if (emailTaken) {
 			res.status(409).json({
-				message: getTranslation('server.javascript.ws-email_in_use', req.lang),
+				message: req.t.responses.account.email_in_use,
 			});
 			return;
 		}
@@ -390,49 +396,39 @@ async function generateAccount({
 }
 
 /**
- * Route handler to check if a username is available to use (not taken, reserved, or baaaad word).
+ * Route handler to check if a username is available to use (not taken, reserved, or profane).
  * The username to test is supplied as the `username` query parameter (e.g. `?username=bob`).
  *
- * We send the client the object: `{ allowed: true, reason: '' } | { allowed: false, reason: string }`
+ * We send the client the object `{ available: true } | { available: false, reason: string }`
  */
 function checkUsernameAvailable(req: Request, res: Response): void {
 	const username = req.query['username'];
 	if (typeof username !== 'string' || username.length === 0) {
 		// Unlocalized because the client always provides this
-		res.status(400).json({ allowed: false, reason: 'Missing username query parameter.' });
+		res.status(400).json({ message: 'Missing username query parameter.' });
 		return;
 	}
-	let allowed = true;
-	let reason = '';
 
 	try {
 		if (isUsernameTakenOrPending(username)) {
-			allowed = false;
-			reason = getTranslation('server.javascript.ws-username_taken', req.lang);
+			res.json({ available: false, reason: req.t.responses.account.username_taken });
+			return;
 		}
 	} catch {
 		// DB read failed (already logged)
 		res.sendStatus(500);
 		return;
 	}
-	if (checkProfanity(username)) {
-		allowed = false;
-		reason = getTranslation('server.javascript.ws-username_bad_word', req.lang);
+	if (checkReserved(username)) {
+		res.json({ available: false, reason: req.t.responses.account.username_reserved });
+		return;
 	}
-	// we only check if it's reserved and ignore any other possible reasons it might not be a valid username
-	if (
-		validators.validateUsername(username) ===
-		validators.UsernameValidationResult.UsernameIsReserved
-	) {
-		allowed = false;
-		reason = getTranslation('create-account.javascript.js-username_reserved', req.lang);
+	if (checkProfanity(username)) {
+		res.json({ available: false, reason: req.t.responses.account.username_profane });
+		return;
 	}
 
-	res.json({
-		allowed,
-		reason,
-	});
-	return;
+	res.json({ available: true });
 }
 
 export {

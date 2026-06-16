@@ -1,0 +1,23 @@
+# Translation component: register awaiting page (/register/awaiting).
+# Source template: src/server/views/register-awaiting.njk
+
+[check_email]
+title = "Check your email"
+body = "We've sent you an email. Click the link inside to activate your account."
+help = "Not seeing it? Check your spam folder, and make sure your email address is correct."
+toggle = "Check email correctness"
+
+[bad_address]
+title = "Bad address"
+body = "The email address you registered with can't receive messages. Enter a different address below to continue."
+
+[change_email]
+label = "Your email address"
+submit = "Update it"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.awaiting.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+account_activated = "Your account has been activated!"
