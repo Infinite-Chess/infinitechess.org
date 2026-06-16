@@ -134,7 +134,7 @@ main {
 }
 
 .new-prompt-btn:hover {
-	background: rgb(255 88 0 / 45%);
+	background: var(--c-elev-face);
 }
 
 .new-prompt-btn.primary {
