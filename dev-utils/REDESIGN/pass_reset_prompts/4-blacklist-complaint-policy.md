@@ -11,7 +11,7 @@ password reset, password-changed receipts, and future account-deletion / ToS not
 **no marketing mail**. Yet the AWS SES webhook currently treats a **spam complaint** the same as
 a hard bounce: it permanently blacklists the address. The send guard (`isBlacklisted`) then
 blocks *all* future mail to it — so one stray "report spam" tap permanently strands a real user
-from password resets, security receipts, and account-deletion confirmations.
+from password resets, security receipts, ToS notices, and account-deletion confirmations.
 
 The rationale for complaint-suppression (don't keep sending *bulk* mail to people who don't want
 it) simply doesn't apply when all mail is transactional.

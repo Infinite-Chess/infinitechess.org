@@ -6,7 +6,7 @@ changed policy so spam complaints no longer blacklist anyone. This prompt cleans
 
 ## The task
 
-Write a **one-time maintenance script** (to be run once against the prod database) that removes
+Write a **one-time maintenance/migration function** in databaseTables.ts (to be run once against the prod database) that removes
 **every** `reason = 'spam_report'` row from `email_blacklist` — regardless of whether the address
 matches a current member. Rationale: every email this app sends is user-triggered, so a complaint
 always came from a real recipient of a real email, and under the new policy a complaint must never
@@ -37,9 +37,5 @@ conditioned on member membership.)
 - Follow the project's existing convention for one-off / maintenance scripts (inspect how any
   existing maintenance or seed scripts are structured and located, and match that). The script
   should be safe to run exactly once and clearly logged.
-
-## Note for the human running it
-This is a prod-only data fix; it isn't wired into normal startup. Decide separately whether to
-keep the script in the repo after running it or remove it.
 
 When done, ensure `npm run type-check --silent` and `npm run lint --silent` both pass.
