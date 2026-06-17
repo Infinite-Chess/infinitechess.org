@@ -7,6 +7,8 @@
 import db from './database.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { startDailyBackups } from './backupManager.js';
+import { removeFromBlacklist } from './blacklistManager.js';
+import { getMultipleMemberDataByCriteria } from './memberManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 
@@ -384,6 +386,7 @@ function initDatabase(): void {
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
 	dropLegacyVerificationColumnsIfPresent();
+	clearSpamReportBlacklistEntries();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -441,6 +444,26 @@ function dropLegacyVerificationColumnsIfPresent(): void {
 	db.run('ALTER TABLE members DROP COLUMN verification_code');
 	db.run('ALTER TABLE members DROP COLUMN is_verification_notified');
 	console.log('Temporary DB migration: dropped verification columns from members table.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Idempotent: clears every `reason = 'spam_report'` row from `email_blacklist`.
+ * Policy changed so spam complaints no longer suppress anyone (every email we send is transactional).
+ * Don't lock users out of their accounts.
+ */
+function clearSpamReportBlacklistEntries(): void {
+	// Clear every spam_report suppression.
+	const spamRows = db.all<{ email: string }>(
+		`SELECT email FROM email_blacklist WHERE reason = 'spam_report'`,
+	);
+	for (const row of spamRows) {
+		removeFromBlacklist(row.email); // Logs each removal to blacklistLog for auditability.
+	}
+	console.log(
+		`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
+	);
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
