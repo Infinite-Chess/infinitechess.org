@@ -104,12 +104,12 @@ async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string):
  */
 async function sendPasswordChangedEmail(recipientEmail: string): Promise<void> {
 	const baseUrl = getAppBaseUrl();
-	const loginUrl = new URL(`${baseUrl}/login`).toString();
+	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
 	const content = `
 		<p style="font-size: 16px; color: #555;">This is a confirmation that the password for your account was just changed.</p>
 		<p style="font-size: 16px; color: #555;">If this was you, no further action is needed.</p>
-		<p style="font-size: 14px; color: #666;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${loginUrl}">reset your password again</a> immediately and secure your email account.</p>
+		<p style="font-size: 14px; color: #666;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${forgotPassUrl}">reset your password again</a> immediately and secure your email account.</p>
 	`;
 
 	try {

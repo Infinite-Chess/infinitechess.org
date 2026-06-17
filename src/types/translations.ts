@@ -66,10 +66,6 @@ export type TranslationKeys =
 	| 'create-account.javascript.js-email_invalid'
 	| 'create-account.javascript.js-email_too_long'
 	| 'create-account.javascript.js-email_inuse'
-	| 'reset-password.javascript.js-pwd_no_match'
-	| 'reset-password.javascript.reset-password'
-	| 'reset-password.javascript.processing'
-	| 'reset-password.javascript.network-error'
 	| 'password-validation.js-pwd_too_short'
 	| 'password-validation.js-pwd_too_long'
 	| 'play.title'
@@ -501,11 +497,6 @@ export type TranslationKeys =
 	| 'login.back_to_login'
 	| 'login.forgot_instruction'
 	| 'login.javascript.network-error'
-	| 'reset_password.title'
-	| 'reset_password.instruction'
-	| 'reset_password.new_password'
-	| 'reset_password.confirm_password'
-	| 'reset_password.submit_button'
 	| 'error-pages.400_message'
 	| 'error-pages.409_message'
 	| 'error-pages.500_message'
@@ -599,14 +590,6 @@ export interface TranslationsObject {
 			'js-email_invalid': string;
 			'js-email_too_long': string;
 			'js-email_inuse': string;
-		};
-	};
-	'reset-password': {
-		javascript: {
-			'js-pwd_no_match': string;
-			'reset-password': string;
-			processing: string;
-			'network-error': string;
 		};
 	};
 	'password-validation': {
@@ -1107,13 +1090,6 @@ export interface TranslationsObject {
 		javascript: {
 			'network-error': string;
 		};
-	};
-	reset_password: {
-		title: string;
-		instruction: string;
-		new_password: string;
-		confirm_password: string;
-		submit_button: string;
 	};
 	'error-pages': {
 		'400_message': string;

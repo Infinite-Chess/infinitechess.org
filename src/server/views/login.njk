@@ -22,15 +22,13 @@
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
-			<input class="auth-input" type="text" id="username" name="username"
-			       autocomplete="username" autocapitalize="off" maxlength="320" required />
+			<input class="auth-input" type="text" id="username" name="username" autocomplete="username" autocapitalize="off" maxlength="320" required />
 		</div>
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
 			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
-			<input class="auth-input" type="password" id="password" name="password"
-			       autocomplete="current-password" maxlength="72" required />
+			<input class="auth-input" type="password" id="password" name="password" autocomplete="current-password" maxlength="72" required />
 		</div>
 
 		<div class="login-options">

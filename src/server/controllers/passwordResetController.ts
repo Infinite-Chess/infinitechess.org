@@ -234,4 +234,4 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 	}
 }
 
-export { handleForgotPasswordRequest, handleResetPassword, getResetPasswordPageState };
+export { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };

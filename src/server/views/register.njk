@@ -25,8 +25,7 @@
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 20: the username max length from validateUsername() in validators.ts. #}
-			<input class="auth-input" type="text" id="username" name="username"
-			       autocomplete="username" autocapitalize="off" maxlength="20" required />
+			<input class="auth-input" type="text" id="username" name="username" autocomplete="username" autocapitalize="off" maxlength="20" required />
 			{# Populated by register.ts on a failed format / availability check. #}
 			<p class="auth-error hidden" id="username-error"></p>
 		</div>
@@ -34,8 +33,7 @@
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
 			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
-			<input class="auth-input" type="password" id="password" name="password"
-			       autocomplete="new-password" maxlength="72" required />
+			<input class="auth-input" type="password" id="password" name="password" autocomplete="new-password" maxlength="72" required />
 			<p class="auth-error hidden" id="password-error"></p>
 		</div>
 
