@@ -39,45 +39,36 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// User exists, proceed with password reset flow
 			const userId: number = member.user_id;
 
-			// 2. Invalidate old tokens
+			// Invalidate any old tokens for this user.
 			db.run('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
 
-			// 3. Make sure they aren't blacklisted
+			// Blacklist gates only the send, never the response — a blacklisted member still
+			// falls through to the same generic 200, so it can't be told apart by the response.
 			if (isBlacklisted(email)) {
 				logEventsAndPrint(
-					`User has a blacklisted email ${escapeLogNewlines(email)} when attempting to request a password reset!`,
+					`Skipping sending password reset email to blacklisted address ${email} (user_id ${userId}).`,
 					'blacklistLog',
 				);
-				res.status(409).json({
-					message: req.t.responses.account.email_blacklisted,
-				});
-				return;
+			} else {
+				// Generate a high-entropy token, store only its hash, and email the plain token.
+				const plainToken: string = crypto.randomBytes(32).toString('base64url');
+				const hashedTokenForDb: string = hashResetToken(plainToken);
+				const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
+
+				db.run(
+					'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
+					[userId, hashedTokenForDb, expiresAt],
+				);
+
+				const baseUrl = getAppBaseUrl();
+				const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
+
+				logEvents(
+					`Sending password reset email to user_id (${userId})...`,
+					'loginAttempts',
+				);
+				sendPasswordResetEmail(email, resetUrl); // Fire-and-forget
 			}
-
-			// 4. Generate plain token
-			const plainToken: string = crypto.randomBytes(32).toString('base64url');
-
-			// 5. Hash the plain token for storage
-			const hashedTokenForDb: string = hashResetToken(plainToken);
-
-			// 6. Set expiration (e.g., ~1 hour from now in milliseconds)
-			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
-
-			// 7. Store new token in the database
-			db.run(
-				'INSERT INTO password_reset_tokens (user_id, hashed_token, expires_at) VALUES (?, ?, ?)',
-				[userId, hashedTokenForDb, expiresAt],
-			);
-
-			// 8. Construct reset URL using the utility
-			const baseUrl = getAppBaseUrl();
-			const resetUrl = new URL(`${baseUrl}/reset-password/${plainToken}`).toString();
-
-			// 9. Log the email send attempt
-			logEvents(`Sending password reset email to user_id (${userId})...`, 'loginAttempts');
-
-			// 10. Send email, fire-and-forget.
-			sendPasswordResetEmail(email, resetUrl);
 		} else {
 			logEventsAndPrint(
 				`No member exists with the email (${escapeLogNewlines(email)}). Not sending password reset email.`,
