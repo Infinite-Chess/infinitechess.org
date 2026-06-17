@@ -27,4 +27,5 @@ When you finish making any new changes to scripts, always ensure these checks pa
 - prettier automatically enforces consistent styling.
 - When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.
 - **Rendering:** When asked to add new complex graphics or visuals to the game (webgl canvas), refer to the Graphics Rendering Guide in `docs/GRAPHICS.md`.
-- **Translation system:** For any work involving localization or the TOML-based translation pipeline, `docs/systems/TRANSLATIONS.md` provides a detailed guide.
+- **Build system:** For anything involving esbuild, entry points, the asset manifest, content-hashing (e.g. adding a new page's CSS/JS), see `docs/systems/BUILD.md`.
+- **Translation system:** For any work involving localization or the TOML-based translation pipeline, see `docs/systems/TRANSLATIONS.md`.
