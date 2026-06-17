@@ -1,5 +1,7 @@
 // src/server/controllers/passwordResetController.ts
 
+import type { Role } from './roles.js';
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -8,7 +10,9 @@ import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
+import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { sendPasswordResetEmail } from './emailController.js';
+import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
@@ -192,14 +196,29 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// Recommended for security.
 		deleteAllRefreshTokensForUser(userId);
 
+		// 7. Issue a fresh session to this browser — the device that proved control
+		// of the account by clicking the email link and setting the new password.
+		const member = getMemberDataByCriteria(['username', 'roles'], 'user_id', userId);
+		if (member === undefined) {
+			// Should be unreachable: the password UPDATE above would have thrown if the user didn't exist.
+			logEventsAndPrint(
+				`Password reset succeeded for user_id (${userId}) but the member could not be found to mint a session.`,
+				'errLog',
+			);
+		} else {
+			// roles is a stringified JSON array in the database; parse it.
+			const roles: Role[] | null = member.roles !== null ? JSON.parse(member.roles) : null;
+			createNewSession(req, res, userId, member.username, roles, false);
+		}
+
 		// Optional but recommended: Send a confirmation email that the password was changed.
 
-		// 7. Send Success Response
+		// 8. Send Success Response. The session cookie is now set, so the client redirects home.
 		res.status(200).json({
 			message: getTranslation('server.javascript.ws-password-change-success', req.lang),
 		});
 
-		// 8. Log the successful password reset
+		// 9. Log the successful password reset
 		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts');
 	} catch (error) {
 		const errorMessage: string =

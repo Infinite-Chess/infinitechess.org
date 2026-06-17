@@ -9,6 +9,8 @@
  * seeding and tests.
  */
 
+import type { Role } from './roles.js';
+
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -346,6 +348,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 			pending.member_user_id,
 		);
 		if (member === undefined) {
+			// Should be unreachable: the pending row would never have been promoted if the member_user_id didn't exist.
 			logEventsAndPrint(
 				`Pending registration verified to non-existent member_user_id (${pending.member_user_id})!`,
 				'errLog',
@@ -355,7 +358,7 @@ function pollPendingRegistration(req: Request, res: Response): void {
 		}
 
 		// roles is a stringified JSON array in the database; parse it.
-		const roles = member.roles !== null ? JSON.parse(member.roles) : null;
+		const roles: Role[] | null = member.roles !== null ? JSON.parse(member.roles) : null;
 		createNewSession(req, res, pending.member_user_id, member.username, roles, false);
 
 		// Idempotent: do NOT delete the pending row (let the cleanup sweep handle it), so a refreshed
