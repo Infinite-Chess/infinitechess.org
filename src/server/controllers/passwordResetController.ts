@@ -57,8 +57,8 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 4. Generate plain token
 			const plainToken: string = crypto.randomBytes(32).toString('base64url');
 
-			// 5. Hash the plain token
-			const hashedTokenForDb: string = await bcrypt.hash(plainToken, PASSWORD_SALT_ROUNDS);
+			// 5. Hash the plain token for storage
+			const hashedTokenForDb: string = hashResetToken(plainToken);
 
 			// 6. Set expiration (e.g., ~1 hour from now in milliseconds)
 			const expiresAt: number = Date.now() + PASSWORD_RESET_TOKEN_EXPIRY_MILLIS;
@@ -101,33 +101,34 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 }
 
 /**
+ * Hashes a password-reset token for storage and lookup. SHA-256 (not bcrypt) is appropriate
+ * here: the token is 256 bits of entropy (crypto.randomBytes(32)), so it can't be brute-forced
+ * regardless of hash speed — a DB leak can't recover the token. Being a fast, deterministic
+ * hash, it also lets us look the token up by indexed equality instead of scanning + comparing.
+ */
+function hashResetToken(token: string): string {
+	return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
  * Computes the SSR state for the set-password page from the `:token` URL param:
  * whether the token currently matches an unexpired row, WITHOUT consuming it.
  */
-async function getResetPasswordPageState(req: Request): Promise<{ state: 'valid' | 'invalid' }> {
+function getResetPasswordPageState(req: Request): { state: 'valid' | 'invalid' } {
 	const token = req.params['token']!;
-	const match = await findUnexpiredResetTokenRecord(token);
-	return { state: match !== null ? 'valid' : 'invalid' };
+	const match = findUnexpiredResetTokenRecord(token);
+	return { state: match ? 'valid' : 'invalid' };
 }
 
 type TokenRecord = { user_id: number; hashed_token: string };
 
-/**
- * Finds the unexpired password-reset token row matching the given plain token, or returns null.
- *
- * Tokens are stored bcrypt-hashed and carry no user id, so we can't narrow to one row —
- * we select all unexpired rows table-wide and bcrypt-compare each. Small in practice (app
- * logic keeps at most one row per user), but be aware this is a table scan, not a point lookup.
- */
-async function findUnexpiredResetTokenRecord(token: string): Promise<TokenRecord | null> {
-	const potentialTokens = db.all<TokenRecord>(
-		'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
-		[Date.now()],
+/** Finds the unexpired password-reset token row matching the given plain token, or returns undefined. */
+function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
+	const hashed_token = hashResetToken(token);
+	return db.get<TokenRecord>(
+		'SELECT user_id, hashed_token FROM password_reset_tokens WHERE hashed_token = ? AND expires_at > ?',
+		[hashed_token, Date.now()],
 	);
-	for (const record of potentialTokens) {
-		if (await bcrypt.compare(token, record.hashed_token)) return record;
-	}
-	return null;
 }
 
 /**
@@ -155,7 +156,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 	try {
 		// 2. Find a matching, unexpired token.
-		const validTokenRecord = await findUnexpiredResetTokenRecord(token);
+		const validTokenRecord = findUnexpiredResetTokenRecord(token);
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {

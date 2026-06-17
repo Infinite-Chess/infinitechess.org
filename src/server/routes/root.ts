@@ -61,16 +61,11 @@ page('/verify/:token', (req: Request, res: Response) => {
 	res.setHeader('Referrer-Policy', 'no-referrer');
 	res.render('verify.njk', getVerifyPageState(req));
 });
-page('/reset-password/:token', async (req: Request, res: Response, next: NextFunction) => {
+page('/reset-password/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	// bcrypt comparison is async; forward any db error to the error handler (renders a 500 page).
-	try {
-		res.render('resetpassword.njk', await getResetPasswordPageState(req));
-	} catch (err) {
-		next(err);
-	}
+	res.render('resetpassword.njk', getResetPasswordPageState(req));
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));
