@@ -60,7 +60,7 @@ function usernameFormatError(value: string): string | undefined {
  * Only bots or hand crafted PUTs can trigger EmailTooLong, so that case is ignored.
  */
 function emailFormatError(value: string): string | undefined {
-	switch (validators.validateEmail(value)) {
+	switch (validators.validateEmail(value.trim())) {
 		case validators.EmailValidationResult.InvalidFormat:
 			return t.shared.account.email_invalid;
 		default:
@@ -203,7 +203,7 @@ async function submitRegister(): Promise<void> {
 	}
 
 	const username = usernameInput.value;
-	const email = emailInput.value;
+	const email = emailInput.value.trim();
 	const password = passwordInput.value;
 
 	setFormError();

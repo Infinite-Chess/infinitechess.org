@@ -30,9 +30,3 @@
 .register-change-toggle:hover {
 	background: var(--c-hover-overlay);
 }
-
-/* The change-email field group (revealed by the toggle, or shown expanded when blacklisted). */
-.register-change-submit {
-	margin-top: 8px;
-	padding: 10px;
-}

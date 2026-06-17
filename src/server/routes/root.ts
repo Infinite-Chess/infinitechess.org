@@ -44,6 +44,7 @@ page('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
+page('/forgot-password(.html)?', (_req: Request, res: Response) => res.render('forgotpassword.njk')); // prettier-ignore
 page('/register(.html)?', (req: Request, res: Response) => {
 	// Redirect to check-your-email page if register is pending
 	if (getAwaitingPageState(req)) res.redirect('/register/awaiting');

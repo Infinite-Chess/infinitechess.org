@@ -511,7 +511,6 @@ export type TranslationKeys =
 	| 'error-pages.500_message'
 	| 'news.title'
 	| 'news.more_dev_logs'
-	| 'server.javascript.ws-password-reset-link-sent'
 	| 'server.javascript.ws-password-change-success'
 	| 'server.javascript.ws-password-reset-token-invalid'
 	| 'server.javascript.ws-forbidden_wrong_account'
@@ -1127,7 +1126,6 @@ export interface TranslationsObject {
 	};
 	server: {
 		javascript: {
-			'ws-password-reset-link-sent': string;
 			'ws-password-change-success': string;
 			'ws-password-reset-token-invalid': string;
 			'ws-forbidden_wrong_account': string;

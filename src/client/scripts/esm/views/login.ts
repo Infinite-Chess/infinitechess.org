@@ -70,7 +70,7 @@ form.addEventListener('submit', (event: SubmitEvent): void => {
 });
 
 // Clear a stale error as soon as the user edits their credentials.
-usernameInput.addEventListener('input', (): void => setError());
-passwordInput.addEventListener('input', (): void => setError());
+usernameInput.addEventListener('input', () => setError());
+passwordInput.addEventListener('input', () => setError());
 
 usernameInput.focus();

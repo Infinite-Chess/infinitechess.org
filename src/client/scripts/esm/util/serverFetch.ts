@@ -8,6 +8,7 @@
 /**
  * Drop-in replacement for `fetch()` that defaults the `Accept`
  * header to JSON, without clobbering any caller-provided headers.
+ * Needed so if an endpoint errors, the server doesn't serve an HTML error page to an API call.
  * @param input - The resource to fetch (URL or Request), same as native fetch.
  * @param init - Optional fetch options, same as native fetch.
  * @returns A promise resolving to the fetch response.

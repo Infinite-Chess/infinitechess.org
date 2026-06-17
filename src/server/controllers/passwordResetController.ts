@@ -80,10 +80,8 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			);
 		}
 
-		// ALWAYS return a generic success message to prevent email enumeration.
-		res.status(200).json({
-			message: getTranslation('server.javascript.ws-password-reset-link-sent', req.lang),
-		});
+		// ALWAYS return the same generic 200 to prevent email enumeration.
+		res.sendStatus(200);
 	} catch (error) {
 		const errorMessage: string =
 			'Forgot password database error: ' +

@@ -41,6 +41,7 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/components/header/header.ts',
 	'src/client/scripts/esm/views/index/index.ts',
 	'src/client/scripts/esm/views/login.ts',
+	'src/client/scripts/esm/views/forgotpassword.ts',
 	'src/client/scripts/esm/views/register.ts',
 	'src/client/scripts/esm/views/register-awaiting.ts',
 	'src/client/scripts/esm/views/verify.ts',

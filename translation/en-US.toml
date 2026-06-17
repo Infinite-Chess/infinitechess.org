@@ -663,7 +663,6 @@ title = "News" # The tab name
 more_dev_logs = ["More dev logs are posted on the ", "official discord", ", and on the ", "chess.com forums!"]
 
 [server.javascript]
-ws-password-reset-link-sent = "If an account with that email exists, a password reset link has been sent."
 ws-password-change-success = "Password has been reset successfully. You will be redirected to the login page shortly."
 ws-password-reset-token-invalid = "Password reset token is invalid or has expired."
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
