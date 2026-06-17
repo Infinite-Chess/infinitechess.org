@@ -270,14 +270,12 @@ export function deleteMember(user_id: number, reason_deleted: DeleteReason): voi
 		if (deleteResult.changes === 0)
 			throw new Error(`No member found with user_id ${id} to delete`);
 
-		// Step 2: Add their user_id to the 'deleted_members' table
-		// If this fails (e.g., UNIQUE constraint), it will also throw an error
-		// and cause the entire transaction (including the DELETE) to roll back.
+		// Add their user_id to the 'deleted_members' table.
 		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
 		db.run(insertQuery, [id, reason]);
 
-		// Step 3: Remove the promoted pending registration that
-		// created this member, if it hasn't been cleaned up yet.
+		// Remove the promoted pending registration that created
+		// this member, if it hasn't been cleaned up yet.
 		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
 	});
 
