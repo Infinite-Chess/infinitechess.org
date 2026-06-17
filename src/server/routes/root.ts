@@ -54,12 +54,17 @@ page('/register/awaiting(.html)?', (req: Request, res: Response) => {
 	if (state === null) res.redirect('/register');
 	else res.render('register-awaiting.njk', state);
 });
-page('/reset-password/:token', (_req: Request, res: Response) => res.render('resetpassword.njk')); // prettier-ignore
 page('/verify/:token', (req: Request, res: Response) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
 	res.render('verify.njk', getVerifyPageState(req));
+});
+page('/reset-password/:token', (_req: Request, res: Response) => {
+	// The token sits in the URL; keep it out of any Referer
+	// header sent to third-party resources to avoid leaking it.
+	res.setHeader('Referrer-Policy', 'no-referrer');
+	res.render('resetpassword.njk');
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));
