@@ -18,6 +18,9 @@ All senders live in `src/server/controllers/emailController.ts`:
 - `sendEmailConfirmation` — verification email, links to `GET /verify/:token`. HTML via the
   shared wrapper.
 - `sendPasswordResetEmail` — password-reset email. HTML via the shared wrapper.
+- `sendPasswordChangedEmail` — password-changed receipt (an out-of-band security notice sent
+  after a successful reset; introduced by the password-reset backend work). HTML via the shared
+  wrapper.
 - `sendRatingAbuseEmail` — rating-abuse alert. **Currently text-only** (no HTML wrapper).
 
 `createEmailHtmlWrapper(title, contentHtml)` is the shared wrapper used by the first two.
@@ -27,19 +30,22 @@ it returns `false` and logs the HTML/link instead. `getAppBaseUrl()`
 
 ## Do
 1. Build one reusable, well-built **email-layout shell** (evolve `createEmailHtmlWrapper`, or
-   replace it with a better helper) and have **all three** emails use it, so they share the same
+   replace it with a better helper) and have **all four** emails use it, so they share the same
    header/footer/branding/spacing. Avoid redundancy — no near-duplicate wrappers.
 2. Redesign each email's body on that shell:
    - **Verification** — clear heading, short friendly line, prominent **"Verify Account"**
      button, plain-text fallback link.
    - **Password reset** — same structure with a **"Reset Password"** button + fallback link.
+   - **Password-changed receipt** — an informational security notice (the account's password was
+     just changed; if it wasn't them, secure the account). No token/button is required; at most a
+     link to the site or the reset page. Render it on the shared shell like the others.
    - **Rating abuse** — give it the shared HTML shell too (it's currently text-only); keep its
      dynamic subject/body but render it in the on-brand layout.
 3. **Copy can change.** The exact wording doesn't have to match today's emails — reword freely as
    long as each email gets its point across and carries its required button(s)/link(s). The goal
    is *prettier* emails, not preserving the current plain text verbatim. Write the redesign in
    **English** (inline); *localizing* the emails is a separate task (see
-   `20_localize_emails.md`) and is out of scope here.
+   `2_localize_emails.md`) and is out of scope here.
 4. Provide a **`text` alternative** alongside `html` in every `mailer.send(...)` call (improves
    deliverability and covers text-only clients).
 5. **Preview** each rendered email and confirm they look good and consistent with one another.
@@ -63,7 +69,7 @@ it returns `false` and logs the HTML/link instead. `getAppBaseUrl()`
 
 ## Acceptance
 - `npm run type-check --silent` and `npm run lint --silent` pass.
-- All three emails (verification, password reset, rating abuse) render as polished, on-brand
+- All four emails (verification, password reset, password-changed receipt, rating abuse) render as polished, on-brand
   messages sharing one consistent style, each with working absolute-URL buttons/links where
   applicable, a visible fallback link, and a plain-text alternative; all are legible with images
   off and in dark mode; you have previewed each.
