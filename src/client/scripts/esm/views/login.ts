@@ -11,6 +11,8 @@
 import docutil from '../util/docutil.js';
 import { serverFetch } from '../util/serverFetch.js';
 
+import '../util/passwordToggle.js';
+
 // Elements ----------------------------------------------------------
 
 const form = document.querySelector<HTMLFormElement>('#login-form')!;

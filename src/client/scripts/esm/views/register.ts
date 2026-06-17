@@ -14,6 +14,8 @@ import validators from '../../../../shared/util/validators.js';
 
 import { serverFetch } from '../util/serverFetch.js';
 
+import '../util/passwordToggle.js';
+
 // Elements ----------------------------------------------------------
 
 const form = document.querySelector<HTMLFormElement>('#register-form')!;

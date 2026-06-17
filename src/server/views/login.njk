@@ -1,5 +1,7 @@
 {% extends "layout.njk" %}
 
+{% from "components/forms.njk" import passwordInput %}
+
 {% set t = templateT('login') %}
 {% set pageName = t.title %}
 
@@ -27,8 +29,7 @@
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
-			{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
-			<input class="auth-input" type="password" id="password" name="password" autocomplete="current-password" maxlength="72" required />
+			{{ passwordInput("password", "password", "current-password") }}
 		</div>
 
 		<div class="login-options">

@@ -15,6 +15,8 @@ import docutil from '../util/docutil.js';
 import flashToast from '../util/flashToast.js';
 import { serverFetch } from '../util/serverFetch.js';
 
+import '../util/passwordToggle.js';
+
 // Elements ----------------------------------------------------------
 
 // All null in the invalid state (no form rendered).
