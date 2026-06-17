@@ -7,7 +7,7 @@ import { revokeSession } from '../controllers/authenticationTokens/sessionManage
 import { deleteRefreshToken } from '../database/refreshTokenManager.js';
 import { closeAllSocketsOfSession } from '../socket/socketManager.js';
 
-/** Handles member logout by revoking the session and deleting the refresh token. */
+/** `POST /api/logout` — revokes the caller's session, deletes its refresh token, and closes its sockets. */
 async function handleLogout(req: Request, res: Response): Promise<void> {
 	// Always clear the client's session cookies, signed in or not.
 	revokeSession(res);

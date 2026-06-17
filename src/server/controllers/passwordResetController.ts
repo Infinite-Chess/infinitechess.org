@@ -19,7 +19,11 @@ import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailControl
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
-/** Route for when a user REQUESTS a password reset email. */
+/**
+ * `POST /api/forgot-password` — looks up the member by email and, unless blacklisted, issues a
+ * single-use reset token and emails the reset link. Always returns the same generic 200
+ * (unknown, sendable, or blacklisted alike) to prevent email enumeration.
+ */
 async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
 	const { email } = req.body;
 
@@ -123,8 +127,9 @@ function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
 }
 
 /**
- * Route for when a user SENDS the password change API.
- * Changes their password in the database.
+ * `POST /api/reset-password` — validates the emailed token and new password, updates the
+ * password, invalidates the used token and all of the member's existing sessions, then logs
+ * this browser in and sends a password-changed receipt email.
  */
 async function handleResetPassword(req: Request, res: Response): Promise<void> {
 	const { token, password } = req.body;

@@ -13,11 +13,8 @@ import { performBackup } from '../database/backupManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
- * POST /api/prepare-restart
- *
- * Called by the GitHub Actions deploy workflow before `pm2 reload`.
- * The runner must wait for HTTP 200 before proceeding so all pre-deploy work
- * (currently: DB backup) completes before the process is reloaded.
+ * `POST /api/prepare-restart` — called by the GitHub Actions deploy workflow before `pm2 reload`.
+ * Runs all pre-deploy work (currently a DB backup) and only returns 200 once it's safe to reload.
  */
 async function handlePrepareRestart(req: Request, res: Response): Promise<void> {
 	const secret = process.env['RESTART_SECRET'];

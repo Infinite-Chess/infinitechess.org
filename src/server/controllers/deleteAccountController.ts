@@ -32,12 +32,7 @@ export type DeleteReason = (typeof validDeleteReasons)[number];
 
 // Functions -------------------------------------------------------------------------
 
-/**
- * Route that removes a user account if they request to delete it.
- * Checks if there password was correct first.
- * @param req - The request object.
- * @param res - The response object.
- */
+/** `DELETE /api/members/:member` — deletes the caller's own account after re-verifying their password. */
 async function removeAccount(req: Request, res: Response): Promise<void> {
 	const claimedUsername = req.params['member']; // case-insensitive username
 	if (!claimedUsername) {

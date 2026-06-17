@@ -29,12 +29,10 @@ const MAX_N_PLAYERS_REQUEST_CAP = 100;
 // Functions -------------------------------------------------------------
 
 /**
- * Responds to the request to fetch top (N = n_players) players of leaderboard
- * leaderboard_id, starting from start_rank, and also finds the requester's rank if include_requester_rank is true.
+ * `GET /api/leaderboards/:leaderboard_id/top` — returns the top N (`n_players`) players from
+ * `start_rank`, plus the requester's own rank when `include_requester_rank` is set.
  */
 function getLeaderboardData(req: Request, res: Response): void {
-	// route: GET /api/leaderboards/:leaderboard_id/top?start_rank&n_players&include_requester_rank
-
 	/** ID of leaderboard to be fetched (lives in the path b/c it identifies the resource) */
 	const leaderboard_id = Number(req.params['leaderboard_id']) as Leaderboard;
 

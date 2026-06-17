@@ -9,10 +9,7 @@ import type { Request, Response } from 'express';
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
 import { countUnreadNews, getLatestNewsDate, getUnreadNewsDates } from '../utility/newsUtil.js';
 
-/**
- * API endpoint to get the count of unread news posts for the current user.
- * Returns { count: number } or { count: 0 } if not logged in.
- */
+/** `GET /api/news/unread-count` — returns `{ count }` of the signed-in user's unread news posts. */
 function getUnreadNewsCount(req: Request, res: Response): void {
 	// Check if user is authenticated
 	if (!req.memberInfo?.signedIn) {
@@ -41,10 +38,7 @@ function getUnreadNewsCount(req: Request, res: Response): void {
 	}
 }
 
-/**
- * Gets the list of unread news dates for the current user.
- * Returns { dates: string[] } with dates in YYYY-MM-DD format.
- */
+/** `GET /api/news/unread-dates` — returns `{ dates }`, the signed-in user's unread news dates (YYYY-MM-DD). */
 function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		// Not logged in - no unread news
@@ -72,10 +66,7 @@ function getUnreadNewsDatesEndpoint(req: Request, res: Response): void {
 	}
 }
 
-/**
- * Updates the user's last read news date to the current latest news post.
- * This should be called when the user visits the news page.
- */
+/** `PATCH /api/news/read` — marks news read up to the latest post for the signed-in user. */
 function markNewsAsRead(req: Request, res: Response): void {
 	if (!req.memberInfo || !req.memberInfo.signedIn) {
 		// Not logged in - nothing to update

@@ -11,6 +11,7 @@ import { SeekIdSchema } from '../../shared/types.js';
 
 import { getSeekAndIndexByID } from '../game/seeksmanager/lobbymanager.js';
 
+/** `GET /api/seek-preview/:seekId` — returns `{ icn }` of a custom (ICN) lobby seek for hover previews. */
 function getSeekPreview(req: Request, res: Response): void {
 	const seekId = req.params['seekId']!;
 

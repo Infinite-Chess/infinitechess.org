@@ -94,11 +94,7 @@ function checkmatesBeatenToStringArray(checkmates_beaten: string): string[] {
 	return checkmates_beaten.match(/[^,]+/g) || []; // match() returns null if no matches
 }
 
-/**
- * Route that Handles a POST request to update user checkmates_beaten in the database.
- * @param req - Express request object
- * @param res - Express response object
- */
+/** `PUT /api/checkmates-progress` — records a checkmate the signed-in user has beaten. */
 function postCheckmateBeaten(req: Request, res: Response): void {
 	if (!req.memberInfo?.signedIn) {
 		logEventsAndPrint(

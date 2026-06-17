@@ -14,8 +14,8 @@ import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/l
 const validator = new MessageValidator();
 
 /**
- * Handles incoming webhooks from AWS SNS.
- * VERIFIES SIGNATURE to ensure request is actually from AWS.
+ * `POST /webhooks/ses` — handles AWS SNS notifications (bounces/complaints),
+ * verifying the SNS signature first so only genuine AWS requests are processed.
  */
 export async function handleSesWebhook(req: Request, res: Response): Promise<void> {
 	const body = req.body;

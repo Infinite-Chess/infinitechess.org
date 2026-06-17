@@ -40,6 +40,7 @@ router.use('/', passwordRouter);
 
 // One-off endpoints that don't form resource families ----------------------------
 
+/** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
 	const contributors = getContributors();
 	res.send(JSON.stringify(contributors));

@@ -19,10 +19,8 @@ import { updateLoginCountAndLastSeen } from '../database/memberManager.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 /**
- * Called when the login page submits login form data.
- * Tests their username and password. If correct, it logs
- * them in, generates tokens for them, and updates their member variables.
- * THIS SHOULD ALWAYS send a json response, because the errors we send are displayed on the page.
+ * `POST /api/auth` — verifies the submitted username/password and, on success, logs the user
+ * in (issues tokens, updates member vars). Always responds JSON; errors are shown on the page.
  */
 async function handleLogin(req: Request, res: Response): Promise<void> {
 	// Initial check - if this fails, it sends a response and returns.

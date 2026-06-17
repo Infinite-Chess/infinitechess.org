@@ -70,11 +70,7 @@ const PositionNameParamSchema = z.strictObject({
 
 // API Endpoints -----------------------------------------------------------------------------
 
-/**
- * API endpoint to get all saved positions for the current user.
- * Returns { saves: EditorSavesListRecord[] } with position_id, name, and size.
- * Requires authentication.
- */
+/** `GET /api/editor-saves` — returns `{ saves }` (position_id, name, size) for the signed-in user. */
 function getSavedPositions(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
@@ -110,11 +106,8 @@ function getSavedPositions(req: Request, res: Response): void {
 }
 
 /**
- * API endpoint to save a new position for the current user.
- * If a position with the same name already exists, it will be overwritten.
- * Expects { name: string, piece_count: number, timestamp: number, icn: string, pawn_double_push?: boolean, castling?: boolean } in request body.
- * Returns { saves } on success.
- * Requires authentication.
+ * `POST /api/editor-saves` — saves a position for the signed-in user (overwriting any of the
+ * same name) and returns `{ saves }`. Body: `{ name, piece_count, timestamp, icn, pawn_double_push?, castling? }`.
  */
 function savePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
@@ -180,11 +173,7 @@ function savePosition(req: Request, res: Response): void {
 	}
 }
 
-/**
- * API endpoint to get a specific saved position by position_name.
- * Returns { icn: string, pawn_double_push: number, castling: number } on success.
- * Requires authentication and ownership of the position.
- */
+/** `GET /api/editor-saves/:position_name` — returns the signed-in user's saved position of that name. */
 function getPosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({
@@ -246,11 +235,7 @@ function getPosition(req: Request, res: Response): void {
 	}
 }
 
-/**
- * API endpoint to delete a specific saved position by position_name.
- * Returns { saves } on success.
- * Requires authentication and ownership of the position.
- */
+/** `DELETE /api/editor-saves/:position_name` — deletes the signed-in user's saved position of that name; returns `{ saves }`. */
 function deletePosition(req: Request, res: Response): void {
 	if (!req.memberInfo) {
 		res.status(500).json({

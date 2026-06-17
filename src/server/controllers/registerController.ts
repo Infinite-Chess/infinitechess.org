@@ -58,7 +58,7 @@ const PENDING_REGISTRATION_COOKIE_NAME = 'pending_registration';
 // Functions -------------------------------------------------------------------------
 
 /**
- * `POST /register` — validates the submission, stages a pending registration,
+ * `POST /api/register` — validates the submission, stages a pending registration,
  * emails a verification link, and sets the pending cookie. Creates no member.
  */
 async function createNewMember(req: Request, res: Response): Promise<void> {
@@ -399,10 +399,8 @@ async function generateAccount({
 }
 
 /**
- * Route handler to check if a username is available to use (not taken, reserved, or profane).
- * The username to test is supplied as the `username` query parameter (e.g. `?username=bob`).
- *
- * We send the client the object `{ available: true } | { available: false, reason: string }`
+ * `GET /api/register/availability` — checks whether the `?username=` is free (not taken,
+ * reserved, or profane). Responds `{ available: true } | { available: false, reason: string }`.
  */
 function checkUsernameAvailable(req: Request, res: Response): void {
 	const username = req.query['username'];
