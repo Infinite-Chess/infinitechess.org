@@ -9,7 +9,7 @@ import type { Request, Response } from 'express';
 import MessageValidator from 'sns-validator';
 
 import { addToBlacklist } from '../database/blacklistManager.js';
-import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 
 const validator = new MessageValidator();
 
@@ -80,7 +80,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 		// console.log('[AWS WEBHOOK] Processing notification...');
 		// Log entire message so we can learn unexpected structures
 		logEvents(
-			`[AWS WEBHOOK] Received Notification: ${escapeLogControlChars(String(body.Message))}`,
+			`[AWS WEBHOOK] Received Notification: ${escapeLogNewlines(String(body.Message))}`,
 			'awsNotifications',
 		);
 
@@ -121,7 +121,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 					recipients.forEach((recipient: any) => {
 						const email = recipient.emailAddress;
 						logEvents(
-							`[AWS WEBHOOK] Hard Bounce: ${escapeLogControlChars(String(email))}`,
+							`[AWS WEBHOOK] Hard Bounce: ${escapeLogNewlines(String(email))}`,
 							'awsNotifications',
 						);
 						try {
@@ -146,7 +146,7 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 				recipients.forEach((recipient: any) => {
 					const email = recipient.emailAddress;
 					logEvents(
-						`[AWS WEBHOOK] Complaint: ${escapeLogControlChars(String(email))}`,
+						`[AWS WEBHOOK] Complaint: ${escapeLogNewlines(String(email))}`,
 						'awsNotifications',
 					);
 					try {

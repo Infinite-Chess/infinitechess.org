@@ -20,7 +20,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { verifyTurnstileToken } from './turnstile.js';
 import { sendEmailConfirmation } from './emailController.js';
-import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import {
 	addMember,
 	getMemberDataByCriteria,
@@ -211,7 +211,7 @@ function verifyBodyHasRegisterFormData(
 function formatRegistrationLogMeta(req: Request, username: unknown, email: unknown): string {
 	const ip = getClientIP(req) ?? 'Unknown ip';
 	const agent = req.headers['user-agent']!;
-	return escapeLogControlChars([ip, username ?? '', email ?? '', agent].join('   '));
+	return escapeLogNewlines([ip, username ?? '', email ?? '', agent].join('   '));
 }
 
 /** Generates a fresh, URL-safe secret for a pending registration's claim/verification token. */

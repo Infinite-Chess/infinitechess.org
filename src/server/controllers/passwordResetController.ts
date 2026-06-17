@@ -11,11 +11,11 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { sendPasswordResetEmail } from './emailController.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
-import { escapeLogControlChars, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
+import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailController.js';
 
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
@@ -45,7 +45,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 3. Make sure they aren't blacklisted
 			if (isBlacklisted(email)) {
 				logEventsAndPrint(
-					`User has a blacklisted email ${escapeLogControlChars(email)} when attempting to request a password reset!`,
+					`User has a blacklisted email ${escapeLogNewlines(email)} when attempting to request a password reset!`,
 					'blacklistLog',
 				);
 				res.status(409).json({
@@ -76,17 +76,11 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 			// 9. Log the email send attempt
 			logEvents(`Sending password reset email to user_id (${userId})...`, 'loginAttempts');
 
-			// 10. Send email (must have its own error handling since we're not await'ing an async method!!)
-			sendPasswordResetEmail(email, resetUrl).catch((error: unknown) => {
-				const detail = error instanceof Error ? error.stack : String(error);
-				logEventsAndPrint(
-					`Background password reset email send failed for user_id (${userId}), email (${escapeLogControlChars(email)}): ${detail}`,
-					'errLog',
-				);
-			});
+			// 10. Send email, fire-and-forget.
+			sendPasswordResetEmail(email, resetUrl);
 		} else {
 			logEventsAndPrint(
-				`No member exists with the email (${escapeLogControlChars(email)}). Not sending password reset email.`,
+				`No member exists with the email (${escapeLogNewlines(email)}). Not sending password reset email.`,
 				'loginAttempts',
 			);
 		}
@@ -198,7 +192,8 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 		// 7. Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.
-		const member = getMemberDataByCriteria(['username', 'roles'], 'user_id', userId);
+		// Also, send an out-of-band security receipt notifying them of the change.
+		const member = getMemberDataByCriteria(['username', 'roles', 'email'], 'user_id', userId);
 		if (member === undefined) {
 			// Should be unreachable: the password UPDATE above would have thrown if the user didn't exist.
 			logEventsAndPrint(
@@ -209,9 +204,10 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			// roles is a stringified JSON array in the database; parse it.
 			const roles: Role[] | null = member.roles !== null ? JSON.parse(member.roles) : null;
 			createNewSession(req, res, userId, member.username, roles, false);
-		}
 
-		// Optional but recommended: Send a confirmation email that the password was changed.
+			// Fire-and-forget security receipt.
+			sendPasswordChangedEmail(member.email);
+		}
 
 		// 8. Send Success Response. The session cookie is now set, so the client redirects home.
 		res.status(200).json({

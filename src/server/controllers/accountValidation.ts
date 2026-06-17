@@ -14,7 +14,7 @@ import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'o
 import validators from '../../shared/util/validators.js';
 
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { escapeLogControlChars, logEventsAndPrint } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEventsAndPrint } from '../middleware/logEvents.js';
 
 // Constants -------------------------------------------------------------------------
 
@@ -144,7 +144,7 @@ async function doEmailFormatChecks(email: string, req: Request, res: Response): 
 	try {
 		if (isBlacklisted(email)) {
 			logEventsAndPrint(
-				`Blacklisted email ${escapeLogControlChars(email)} tried to create an account!`,
+				`Blacklisted email ${escapeLogNewlines(email)} tried to create an account!`,
 				'blacklistLog',
 			);
 			res.status(422).json({
@@ -176,7 +176,7 @@ async function isEmailDNSValid(email: string): Promise<boolean> {
 	} catch (error) {
 		const err = error as Error; // Type assertion
 		logEventsAndPrint(
-			`Error when validating domain for email "${escapeLogControlChars(email)}": ${err.stack}`,
+			`Error when validating domain for email "${escapeLogNewlines(email)}": ${err.stack}`,
 			'errLog',
 		);
 		return true; // Default to true to avoid blocking users.

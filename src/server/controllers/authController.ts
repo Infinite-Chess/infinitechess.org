@@ -13,7 +13,7 @@ import type { MemberRecord } from '../database/memberManager.js';
 import bcrypt from 'bcrypt';
 
 import { getMemberDataByCriteria } from '../database/memberManager.js';
-import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
 import {
 	getBrowserAgent,
 	onCorrectPassword,
@@ -66,7 +66,7 @@ async function testPasswordForRequest(
 		if (!match) {
 			const attemptedIdentity = record?.username ?? searchValue;
 			logEvents(
-				`Failed login attempt for "${escapeLogControlChars(attemptedIdentity)}".`,
+				`Failed login attempt for "${escapeLogNewlines(attemptedIdentity)}".`,
 				'loginAttempts',
 			);
 			res.status(401).json({

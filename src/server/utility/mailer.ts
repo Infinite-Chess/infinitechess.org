@@ -17,7 +17,7 @@ import { logEvents } from '../middleware/logEvents.js';
  * The category of an outgoing email, recorded in the sent-email log.
  * FUTURE: Add 'tos-update'
  */
-type EmailType = 'registration' | 'password-reset' | 'rating-abuse-alert';
+type EmailType = 'registration' | 'password-reset' | 'password-changed' | 'rating-abuse-alert';
 
 /** Options for sending an email. */
 type SendMailOptions = {
@@ -61,6 +61,7 @@ const transporter = sesClient
  * @param type - The category of email, recorded in sentEmailsLog.txt.
  * @param options - Email options including recipient, subject, and content (html or text)
  * @returns Whether the email was sent, which won't be the case if env variables aren't present.
+ * @throws If the transporter fails to send the email (e.g. an SES or network error).
  */
 async function send(type: EmailType, options: SendMailOptions): Promise<boolean> {
 	if (!transporter) {

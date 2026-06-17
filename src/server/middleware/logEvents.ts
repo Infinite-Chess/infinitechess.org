@@ -55,7 +55,7 @@ const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
  * Call for ONLY the untrusted portion, so trusted multi-line
  * content (e.g. stack traces) on the same line stays readable.
  */
-function escapeLogControlChars(str: string): string {
+function escapeLogNewlines(str: string): string {
 	return str.replace(/\r/g, '\\r').replace(/\n/g, '\\n');
 }
 
@@ -145,4 +145,4 @@ function purgeOldRotatedLogs(): void {
 
 // Exports --------------------------------
 
-export { LOGS_DIR, logEvents, logEventsAndPrint, escapeLogControlChars, startPeriodicLogCleanup };
+export { LOGS_DIR, logEvents, logEventsAndPrint, escapeLogNewlines, startPeriodicLogCleanup };

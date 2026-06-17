@@ -17,7 +17,7 @@ import { logReqWebsocketIn } from './wsLogger.js';
 import { rateLimitWebSocket } from '../middleware/rateLimit.js';
 import { routeIncomingSocketMessage } from './socketRouter.js';
 import { deleteEchoTimerForMessageID } from './echoTracker.js';
-import { escapeLogControlChars, logEvents } from '../middleware/logEvents.js';
+import { escapeLogNewlines, logEvents } from '../middleware/logEvents.js';
 import { rescheduleHeartbeatTimer, sendSocketMessage } from './sendSocketMessage.js';
 
 // Types --------------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ function parseAndValidateMessage(messageStr: string): AnyIncomingMessage | null 
 		// Should only be reachable from explicitly crafted messages, but thus far
 		// no bots have exploited this. Safe to log in case it's ever a legit bug.
 		logEvents(
-			`Incoming websocket message is not JSON parseable. Message: "${escapeLogControlChars(messageStr)}"`,
+			`Incoming websocket message is not JSON parseable. Message: "${escapeLogNewlines(messageStr)}"`,
 			'errLog',
 		);
 		return null;

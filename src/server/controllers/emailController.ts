@@ -8,7 +8,7 @@
 import mailer from '../utility/mailer.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { escapeLogControlChars, logEventsAndPrint } from '../middleware/logEvents.js';
+import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // --- Helper Functions ---
 
@@ -19,34 +19,6 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 			${contentHtml}
 		</div>
 	`;
-}
-
-// --- Email Sending Functions ---
-
-async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
-	const content = `
-		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
-		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
-		<a href="${resetUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Reset Password</a>
-		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
-	`;
-
-	try {
-		const sent = await mailer.send('password-reset', {
-			to: recipientEmail,
-			subject: 'Your Password Reset Request',
-			html: createEmailHtmlWrapper('Password Reset Request', content),
-		});
-		if (sent) {
-			// console.log(`Password reset email sent to ${recipientEmail}`);
-		} else {
-			console.log(`Password Reset Link: ${resetUrl}`);
-		}
-	} catch (error: unknown) {
-		const detail = error instanceof Error ? error.stack : String(error);
-		logEventsAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
-		throw new Error('Unexpected transporter error sending password reset email.');
-	}
 }
 
 /**
@@ -64,7 +36,7 @@ async function sendEmailConfirmation(
 	try {
 		if (isBlacklisted(recipientEmail)) {
 			logEventsAndPrint(
-				`[BLOCKED] Skipping email confirmation to ${escapeLogControlChars(recipientEmail)} (Blacklisted)`,
+				`[BLOCKED] Skipping email confirmation to ${recipientEmail} (Blacklisted)`,
 				'blacklistLog',
 			);
 			return;
@@ -93,7 +65,64 @@ async function sendEmailConfirmation(
 	} catch (error: unknown) {
 		const detail = error instanceof Error ? error.stack : String(error);
 		logEventsAndPrint(
-			`Error during sendEmailConfirmation to ${escapeLogControlChars(recipientEmail)}: ${detail}`,
+			`Error during sendEmailConfirmation to ${recipientEmail}: ${detail}`,
+			'errLog',
+		);
+	}
+}
+
+// --- Email Sending Functions ---
+
+async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
+	const content = `
+		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
+		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
+		<a href="${resetUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Reset Password</a>
+		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
+	`;
+
+	try {
+		const sent = await mailer.send('password-reset', {
+			to: recipientEmail,
+			subject: 'Your Password Reset Request',
+			html: createEmailHtmlWrapper('Password Reset Request', content),
+		});
+		if (sent) {
+			// console.log(`Password reset email sent to ${recipientEmail}`);
+		} else {
+			console.log(`Password Reset Link: ${resetUrl}`);
+		}
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
+		logEventsAndPrint(`Error sending password reset email: ${detail}`, 'errLog');
+	}
+}
+
+/**
+ * Sends an out-of-band security receipt notifying the user that their
+ * account password was just changed (via the password reset flow).
+ */
+async function sendPasswordChangedEmail(recipientEmail: string): Promise<void> {
+	const baseUrl = getAppBaseUrl();
+	const loginUrl = new URL(`${baseUrl}/login`).toString();
+
+	const content = `
+		<p style="font-size: 16px; color: #555;">This is a confirmation that the password for your account was just changed.</p>
+		<p style="font-size: 16px; color: #555;">If this was you, no further action is needed.</p>
+		<p style="font-size: 14px; color: #666;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${loginUrl}">reset your password again</a> immediately and secure your email account.</p>
+	`;
+
+	try {
+		await mailer.send('password-changed', {
+			to: recipientEmail,
+			subject: 'Your Password Was Changed',
+			html: createEmailHtmlWrapper('Password Changed', content),
+		});
+		// console.log(`Password changed email sent to ${recipientEmail}`);
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.stack : String(error);
+		logEventsAndPrint(
+			`Error sending password changed email to ${recipientEmail}: ${detail}`,
 			'errLog',
 		);
 	}
@@ -118,7 +147,7 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 		}
 	} catch (error: unknown) {
 		const detail = error instanceof Error ? error.stack : String(error);
-		void logEventsAndPrint(
+		logEventsAndPrint(
 			`Error during the sending of rating abuse email with subject "${messageSubject}": ${detail}`,
 			'errLog',
 		);
@@ -126,4 +155,9 @@ async function sendRatingAbuseEmail(messageSubject: string, messageText: string)
 }
 
 // --- Exports ---
-export { sendPasswordResetEmail, sendEmailConfirmation, sendRatingAbuseEmail };
+export {
+	sendEmailConfirmation,
+	sendPasswordResetEmail,
+	sendPasswordChangedEmail,
+	sendRatingAbuseEmail,
+};
