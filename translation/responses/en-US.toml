@@ -9,7 +9,7 @@ server_error = "A server error occurred. Please try again."
 [rate_limiting]
 generic = "You have made too many requests, please try again later."
 account_creations = "Too many account creations are coming from this IP."
-verify_emails = "You have requested too many emails. Try again later."
+email_requests = "You have requested too many emails. Try again later."
 
 [auth]
 invalid_credentials = "Incorrect username/email or password."

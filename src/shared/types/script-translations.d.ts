@@ -55,7 +55,7 @@ export interface ScriptTranslations {
 		rate_limiting: {
 			generic: string;
 			account_creations: string;
-			verify_emails: string;
+			email_requests: string;
 		};
 		auth: {
 			invalid_credentials: string;

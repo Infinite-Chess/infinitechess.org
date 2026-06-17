@@ -80,7 +80,7 @@ export const verificationEmailLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
-	handler: make_handler('verify_emails'),
+	handler: make_handler('email_requests'),
 });
 
 /** Forgot Password Email Limiter */
@@ -88,7 +88,7 @@ export const forgotPasswordLimiter = rateLimit({
 	windowMs: 1000 * 60 * 60, // 1 hour
 	max: 8,
 	...default_options,
-	handler: make_handler('verify_emails'),
+	handler: make_handler('email_requests'),
 });
 
 /** Editor Save Limiter */
