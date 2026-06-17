@@ -149,11 +149,8 @@ export async function handleSesWebhook(req: Request, res: Response): Promise<voi
 						`[AWS WEBHOOK] Complaint: ${escapeLogNewlines(String(email))}`,
 						'awsNotifications',
 					);
-					try {
-						addToBlacklist(email, 'spam_report');
-					} catch {
-						// Already logged
-					}
+					// Don't blacklist on complaints, every email we send is transactional.
+					// Never strand a real user from account-recovery emails.
 				});
 			}
 		} else {

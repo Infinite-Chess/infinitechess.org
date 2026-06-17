@@ -129,10 +129,9 @@ server re-runs the full email checks (format, blacklist, MX), rejects a real mem
 _another_ party's pending email, rotates `verification_token`, refreshes `expires_at`, and re-sends.
 Success **reloads the page**; errors render inline. Re-submitting the same address acts as a resend.
 
-**Undeliverable / blacklisted** — hard bounces and spam complaints are recorded in `email_blacklist`
-([blacklistManager.ts](/src/server/database/blacklistManager.ts)), populated from AWS SES bounce/complaint
-webhooks ([awsWebhook.ts](/src/server/controllers/awsWebhook.ts); permanent bounces and complaints
-only). The server refuses to send to a blacklisted address. - The awaiting page has a dedicated **blacklisted variant**:
+**Undeliverable / blacklisted** — permanent hard bounces are recorded in `email_blacklist`
+([blacklistManager.ts](/src/server/database/blacklistManager.ts)), populated from the AWS SES webhook ([awsWebhook.ts](/src/server/controllers/awsWebhook.ts)). The server refuses to send to a
+blacklisted address. - The awaiting page has a dedicated **blacklisted variant**:
 when the pending address is blacklisted, the SSR template omits `data-awaiting` (so the client **doesn't poll**),
 the page displays "Bad address" and shows the change-email field **expanded by default** — changing it is the onl
 way forward. - The poll returns `blacklisted` (distinct from `pending`) if the address gets blacklisted
