@@ -100,7 +100,35 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 	}
 }
 
+/**
+ * Computes the SSR state for the set-password page from the `:token` URL param:
+ * whether the token currently matches an unexpired row, WITHOUT consuming it.
+ */
+async function getResetPasswordPageState(req: Request): Promise<{ state: 'valid' | 'invalid' }> {
+	const token = req.params['token']!;
+	const match = await findUnexpiredResetTokenRecord(token);
+	return { state: match !== null ? 'valid' : 'invalid' };
+}
+
 type TokenRecord = { user_id: number; hashed_token: string };
+
+/**
+ * Finds the unexpired password-reset token row matching the given plain token, or returns null.
+ *
+ * Tokens are stored bcrypt-hashed and carry no user id, so we can't narrow to one row —
+ * we select all unexpired rows table-wide and bcrypt-compare each. Small in practice (app
+ * logic keeps at most one row per user), but be aware this is a table scan, not a point lookup.
+ */
+async function findUnexpiredResetTokenRecord(token: string): Promise<TokenRecord | null> {
+	const potentialTokens = db.all<TokenRecord>(
+		'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
+		[Date.now()],
+	);
+	for (const record of potentialTokens) {
+		if (await bcrypt.compare(token, record.hashed_token)) return record;
+	}
+	return null;
+}
 
 /**
  * Route for when a user SENDS the password change API.
@@ -127,22 +155,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 
 	try {
 		// 2. Find a matching, unexpired token.
-		// Since we stored a HASH, we cannot query by the plain token directly.
-		// We must fetch potential tokens and compare them one by one.
-		const now = Date.now();
-		const potentialTokens = db.all<TokenRecord>(
-			'SELECT user_id, hashed_token FROM password_reset_tokens WHERE expires_at > ?',
-			[now],
-		);
-
-		let validTokenRecord: TokenRecord | null = null;
-		for (const record of potentialTokens) {
-			const isMatch = await bcrypt.compare(token, record.hashed_token);
-			if (isMatch) {
-				validTokenRecord = record;
-				break; // Found our match, exit the loop
-			}
-		}
+		const validTokenRecord = await findUnexpiredResetTokenRecord(token);
 
 		// 3. Handle Invalid or Expired Token
 		if (!validTokenRecord) {
@@ -226,4 +239,4 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 	}
 }
 
-export { handleForgotPasswordRequest, handleResetPassword };
+export { handleForgotPasswordRequest, handleResetPassword, getResetPasswordPageState };

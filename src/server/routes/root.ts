@@ -10,6 +10,7 @@ import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
 import { getBaseRenderContext } from '../utility/renderContext.js';
+import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
 
 const router = express.Router();
 
@@ -60,11 +61,16 @@ page('/verify/:token', (req: Request, res: Response) => {
 	res.setHeader('Referrer-Policy', 'no-referrer');
 	res.render('verify.njk', getVerifyPageState(req));
 });
-page('/reset-password/:token', (_req: Request, res: Response) => {
+page('/reset-password/:token', async (req: Request, res: Response, next: NextFunction) => {
 	// The token sits in the URL; keep it out of any Referer
 	// header sent to third-party resources to avoid leaking it.
 	res.setHeader('Referrer-Policy', 'no-referrer');
-	res.render('resetpassword.njk');
+	// bcrypt comparison is async; forward any db error to the error handler (renders a 500 page).
+	try {
+		res.render('resetpassword.njk', await getResetPasswordPageState(req));
+	} catch (err) {
+		next(err);
+	}
 });
 page('/terms(.html)?', (_req: Request, res: Response) => res.render('terms.njk'));
 page('/privacy(.html)?', (_req: Request, res: Response) => res.render('privacy.njk'));
