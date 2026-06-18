@@ -10,7 +10,8 @@ When you finish making any new changes to scripts, always ensure these checks pa
 2. Maintain existing code structure, organization, and consistency.
 3. Never re-exported types from inside scripts, always reference the source. Never use the Omit or Exclude utility types. Instead, have one type extend the other.
 4. Avoid redundancy like the plague for maximum maintainability, scalability, and bug-avoidance. After implementing a change, always ask if there now exists redundancy with it or the rest of the code.
-5. Unit/integration tests are not required for new features.
+5. All jsdoc and comments must be high signal, concise, and tight, not containing bloat information callers don't need.
+6. Unit/integration tests are not required for new features.
 
 ## Project Architecture
 
