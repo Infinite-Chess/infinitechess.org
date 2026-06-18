@@ -129,21 +129,11 @@ function findUnexpiredResetTokenRecord(token: string): TokenRecord | undefined {
  * this browser in and sends a password-changed receipt email.
  */
 async function handleResetPassword(req: Request, res: Response): Promise<void> {
-	const { token, password } = req.body;
+	// 1. Structural body validation.
+	const body = verifyBodyHasResetPasswordData(req, res);
+	if (!body) return; // Response already sent
+	const { token, password } = body;
 
-	// 1. Basic Input Validation
-	if (!token || !password) {
-		res.status(400).json({ message: 'Token and new password are required.' });
-		return;
-	}
-	if (typeof token !== 'string') {
-		res.status(400).json({ message: 'Token must be a string.' });
-		return;
-	}
-	if (typeof password !== 'string') {
-		res.status(400).json({ message: 'Password must be a string.' });
-		return;
-	}
 	// Password strength rules (e.g., length)
 	if (!doPasswordFormatChecks(password, req, res)) return;
 
@@ -225,6 +215,26 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			message: req.t.responses.errors.server_error,
 		});
 	}
+}
+
+/**
+ * The single structural gate for the reset-password body: requires `token` and `password` both
+ * be non-empty strings. Anything else is a hand-crafted request — auto-sends a 400 and returns undefined.
+ * @returns The two values, or undefined if the body is malformed (response already sent).
+ */
+function verifyBodyHasResetPasswordData(
+	req: Request,
+	res: Response,
+): { token: string; password: string } | undefined {
+	const { token, password } = req.body;
+
+	if (!token || !password || typeof token !== 'string' || typeof password !== 'string') {
+		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
+		res.status(400).json({ message: 'Request body malformed.' });
+		return undefined;
+	}
+
+	return { token, password };
 }
 
 export { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };
