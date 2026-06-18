@@ -31,8 +31,8 @@ One secret, 32 random bytes (`crypto.randomBytes(32)`) base64url-encoded:
   (`hashed_token` is the PRIMARY KEY) instead of scanning + comparing. See `hashResetToken`.
 - Valid for **1 hour** (`PASSWORD_RESET_TOKEN_EXPIRY_MILLIS`).
 - **At most one live token per user**: issuing a new one first `DELETE`s any existing rows for
-  that `user_id`. Consuming a token deletes it. Expiry is enforced in the lookup query
-  (`expires_at > ?`), not just by the sweep.
+  that `user_id`. Consuming is atomic in the reset transaction. Expiry is enforced in live
+  queries (`expires_at > ?`), not just by the sweep.
 
 ## Routes
 
@@ -81,14 +81,17 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
 
 1. `verifyBodyHasResetPasswordData` — both non-empty strings.
 2. `doPasswordFormatChecks` — server-side strength re-check (client checks are UX only).
-3. `findUnexpiredResetTokenRecord` — no match → `400 { tokenInvalid: true }`. **This flag tells
-   the client to reload**, re-SSRing the expired-link card.
-4. In **one transaction**: bcrypt-hash the new password and `UPDATE members`, then `DELETE` the used token.
-5. `deleteAllRefreshTokensForUser` — terminate **all** the user's other sessions.
-6. Mint a fresh session for **this** browser (`createNewSession`) — it just proved control of
+3. Fast pre-check (`findUnexpiredResetTokenRecord`) — no match → `400 { tokenInvalid: true }`.
+   **This flag tells the client to reload**, re-SSRing the expired-link card. This avoids doing
+   bcrypt work for obviously invalid/expired tokens.
+4. bcrypt-hash the new password.
+5. In **one transaction**: consume the token atomically (with the same expiry guard), then
+   `UPDATE members ...`. If the token was consumed by a concurrent request between pre-check and transaction, the delete returns no row and the request returns `400 { tokenInvalid: true }`.
+6. `deleteAllRefreshTokensForUser` — terminate **all** the user's other sessions.
+7. Mint a fresh session for **this** browser (`createNewSession`) — it just proved control of
    the account — and fire-and-forget `sendPasswordChangedEmail` (an out-of-band "your password
-   changed" security receipt).
-7. `res.sendStatus(200)`. The session cookie is now set, so the client
+   "your password changed" security receipt).
+8. `res.sendStatus(200)`. The session cookie is now set, so the client
    ([resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts)) queues a toast and
    navigates to `/`. `tokenInvalid` → reload; any other non-OK → inline error.
 
