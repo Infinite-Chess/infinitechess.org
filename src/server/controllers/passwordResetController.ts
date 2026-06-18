@@ -14,6 +14,10 @@ import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidatio
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailController.js';
 
+/**
+ * How long a password-reset token stays valid, in milliseconds.
+ * IF CHANGED: update the "1 hour" copy in the email toml component.
+ */
 const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
 
 /**
@@ -68,7 +72,7 @@ async function handleForgotPasswordRequest(req: Request, res: Response): Promise
 					`Sending password reset email to user_id (${userId})...`,
 					'loginAttempts',
 				);
-				sendPasswordResetEmail(email, resetUrl); // Fire-and-forget
+				sendPasswordResetEmail(email, resetUrl, req.lang); // Fire-and-forget
 			}
 		} else {
 			logEventsAndPrint(
@@ -214,7 +218,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		createNewSession(req, res, member.user_id, member.username, roles, false);
 
 		// Fire-and-forget security receipt.
-		sendPasswordChangedEmail(member.email);
+		sendPasswordChangedEmail(member.email, req.lang);
 
 		// Send Success Response. The session cookie is now set, so the client redirects home.
 		res.sendStatus(200);

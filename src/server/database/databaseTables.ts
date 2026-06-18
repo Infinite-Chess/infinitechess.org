@@ -460,9 +460,10 @@ function clearSpamReportBlacklistEntries(): void {
 	for (const row of spamRows) {
 		removeFromBlacklist(row.email); // Logs each removal to blacklistLog for auditability.
 	}
-	console.log(
-		`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
-	);
+	if (spamRows.length > 0)
+		console.log(
+			`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
+		);
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

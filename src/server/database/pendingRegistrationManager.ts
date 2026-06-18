@@ -36,7 +36,8 @@ export interface PendingRegistrationRecord {
 
 /**
  * How long a pending registration stays valid before it is swept, in milliseconds.
- * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this.
+ * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this,
+ * AND update the "24 hours" copy in the email toml component.
  */
 export const PENDING_REGISTRATION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24; // 1 day
 

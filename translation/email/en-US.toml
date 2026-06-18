@@ -1,0 +1,32 @@
+# Translation component: email.
+# The various emails we send to users.
+script_only = true
+
+[common] # Shared by multiple emails
+button_fallback = "Button not working? Try this link instead, and/or copying and pasting it into your browser:"
+tagline = "chess on an infinite board."
+
+[verify]
+subject = "Verify Your Account"
+preheader = "Confirm your email address to activate your account."
+heading = "Welcome, {username}!"
+intro = "Confirm your email address to activate your account."
+button = "Verify my account"
+footnote = "This link will expire in 24 hours. If you didn't create an account, please ignore this email."
+
+[reset]
+subject = "Password Reset Request"
+preheader = "Set a new password to regain access to your account."
+heading = "Password reset"
+intro = "We received a request to reset your password. Use the link below to choose a new one."
+button = "Reset my password"
+footnote = "This link will expire in 1 hour. If you didn't request a password reset, please ignore this email."
+
+[reset_receipt]
+subject = "Your Password Was Changed"
+preheader = "The password for your account was just changed."
+heading = "Password changed"
+body = "This is a confirmation that the password for your account was just changed. If this was you, no further action is needed."
+# Preserve the <strong></strong> tags, it bolds the text inside.
+warning = "If you did <strong>not</strong> make this change, your account may be compromised. Please {resetLink} immediately and secure your email account."
+reset_link_text = "reset your password"

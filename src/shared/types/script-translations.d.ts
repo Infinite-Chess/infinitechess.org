@@ -15,6 +15,36 @@ export interface ScriptTranslations {
 	awaiting: {
 		account_activated: string;
 	};
+	email: {
+		common: {
+			button_fallback: string;
+			tagline: string;
+		};
+		verify: {
+			subject: string;
+			preheader: string;
+			heading: string;
+			intro: string;
+			button: string;
+			footnote: string;
+		};
+		reset: {
+			subject: string;
+			preheader: string;
+			heading: string;
+			intro: string;
+			button: string;
+			footnote: string;
+		};
+		reset_receipt: {
+			subject: string;
+			preheader: string;
+			heading: string;
+			body: string;
+			warning: string;
+			reset_link_text: string;
+		};
+	};
 	header: {
 		settings: {
 			appearance_dropdown: {
