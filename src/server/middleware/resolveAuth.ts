@@ -24,26 +24,35 @@ import {
 } from '../controllers/authenticationTokens/tokenValidator.js';
 
 /**
- * [HTTP] Reads the request's bearer token (from the authorization header)
- * OR the refresh cookie (contains refresh token),
- * sets req.memberInfo properties if it is valid (are signed in).
- * Further middleware can read these properties to not send
- * private information to unauthorized users.
- * It also triggers session renewal to keep active users' sessions alive.
- *
- * Does DB work. Only use on routes that need authentication.
+ * Seeds `req.memberInfo` with a signed-out baseline before a resolver runs.
+ * @returns false if auth was already resolved this request (caller should skip re-resolving).
  */
-function resolveAuth(req: Request, res: Response, next: NextFunction): void {
+function beginResolveAuth(req: Request): boolean {
 	// Idempotent: skip if auth was already resolved for this request
-	if (req.memberInfo !== undefined) return next();
+	if (req.memberInfo !== undefined) return false;
 
 	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
+	return true;
+}
 
-	const hasAccessToken = tryAccessToken(req, res);
-	if (!hasAccessToken) tryRefreshToken(req, res);
+/**
+ * [HTTP] Resolves identity from the bearer access token, else the refresh-token cookie, setting
+ * `req.memberInfo` so downstream middleware can gate private data. Also renews active sessions.
+ * Does DB work — only use on routes that need authentication.
+ */
+function resolveAuth(req: Request, res: Response, next: NextFunction): void {
+	if (beginResolveAuth(req)) {
+		const hasAccessToken = tryAccessToken(req, res);
+		if (!hasAccessToken) tryRefreshToken(req, res);
+	}
+	next();
+}
 
-	next(); // Continue down the middleware waterfall
+/** [HTTP] Resolves identity from the refresh-token cookie ONLY (no bearer access token). */
+function resolveRefreshAuth(req: Request, res: Response, next: NextFunction): void {
+	if (beginResolveAuth(req)) tryRefreshToken(req, res);
+	next();
 }
 
 /**
@@ -143,4 +152,4 @@ function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
 
-export { resolveAuth, resolveAuth_WebSocket };
+export { resolveAuth, resolveRefreshAuth, resolveAuth_WebSocket };
