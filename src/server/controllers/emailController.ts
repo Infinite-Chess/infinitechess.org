@@ -10,18 +10,25 @@ import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { logEventsAndPrint } from '../middleware/logEvents.js';
 
-// --- Helper Functions ---
+// Constants ---------------------------------------------
 
 /** Header/button accent color: a dark neutral grey. */
 const ACCENT_COLOR = '#383838';
 /** Page background behind the email card: a warm off-white. */
 const PAGE_BG_COLOR = '#f4f1ea';
 
-/** Builds the HTML for the account verification email. */
-function buildVerificationEmailHtml(username: string, verificationUrl: string): string {
+// Helper Functions ---------------------------------------------
+
+/**
+ * Wraps body content in the shared, on-brand email layout: off-white page,
+ * dark accent header with branding, white body card, and footer.
+ * @param preheader - Inbox preview text, hidden in the rendered body.
+ * @param bodyHtml - The email-specific content placed inside the white body card.
+ */
+function buildEmailShell(preheader: string, bodyHtml: string): string {
 	return `
 		<!-- Preheader: inbox preview text, hidden in the body. -->
-		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Confirm your email address to activate your account.</div>
+		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>
 		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
 			<tr>
 				<td align="center" style="padding:24px 12px;">
@@ -35,19 +42,7 @@ function buildVerificationEmailHtml(username: string, verificationUrl: string): 
 						<!-- Body -->
 						<tr>
 							<td style="background-color:#ffffff;padding:40px 40px 32px;">
-								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Welcome, ${username}!</h1>
-								<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">Confirm your email address to activate your account.</p>
-								<!-- Bulletproof button -->
-								<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
-									<tr>
-										<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
-											<a href="${verificationUrl}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Verify my account</a>
-										</td>
-									</tr>
-								</table>
-								<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">Button not working? Try this link instead, and/or copying and pasting it into your browser:</p>
-								<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${verificationUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${verificationUrl}</a></p>
-								<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">This link will expire in 24 hours. If you didn't create an account, please ignore this email.</p>
+								${bodyHtml}
 							</td>
 						</tr>
 						<!-- Footer -->
@@ -61,6 +56,51 @@ function buildVerificationEmailHtml(username: string, verificationUrl: string): 
 			</tr>
 		</table>
 	`;
+}
+
+/**
+ * Builds an action email — heading, intro line, prominent button, fallback link,
+ * and footnote — on the shared shell. Used by the verification & password-reset emails.
+ */
+function buildActionEmailHtml(opts: {
+	preheader: string;
+	heading: string;
+	intro: string;
+	buttonLabel: string;
+	url: string;
+	footnote: string;
+}): string {
+	const body = `
+		<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">${opts.heading}</h1>
+		<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">${opts.intro}</p>
+		<!-- Bulletproof button -->
+		<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+			<tr>
+				<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
+					<a href="${opts.url}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">${opts.buttonLabel}</a>
+				</td>
+			</tr>
+		</table>
+		<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">Button not working? Try this link instead, and/or copying and pasting it into your browser:</p>
+		<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${opts.url}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${opts.url}</a></p>
+		<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">${opts.footnote}</p>
+	`;
+	return buildEmailShell(opts.preheader, body);
+}
+
+// Email-Specific Builders & Senders ---------------------------------------------
+
+/** Builds the HTML for the account verification email. */
+function buildVerificationEmailHtml(username: string, verificationUrl: string): string {
+	return buildActionEmailHtml({
+		preheader: 'Confirm your email address to activate your account.',
+		heading: `Welcome, ${username}!`,
+		intro: 'Confirm your email address to activate your account.',
+		buttonLabel: 'Verify my account',
+		url: verificationUrl,
+		footnote:
+			"This link will expire in 24 hours. If you didn't create an account, please ignore this email.",
+	});
 }
 
 /** Plain-text alternative to the verification email, for text-only clients & deliverability. */
@@ -78,48 +118,15 @@ This link will expire in 24 hours. If you didn't create an account, please ignor
 
 /** Builds the HTML for the password reset email. */
 function buildPasswordResetEmailHtml(resetUrl: string): string {
-	return `
-		<!-- Preheader: inbox preview text, hidden in the body. -->
-		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Set a new password to regain access to your account.</div>
-		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
-			<tr>
-				<td align="center" style="padding:24px 12px;">
-					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
-						<!-- Header -->
-						<tr>
-							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
-								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
-							</td>
-						</tr>
-						<!-- Body -->
-						<tr>
-							<td style="background-color:#ffffff;padding:40px 40px 32px;">
-								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Password reset</h1>
-								<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">We received a request to reset your password. Click the button below to choose a new one.</p>
-								<!-- Bulletproof button -->
-								<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
-									<tr>
-										<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
-											<a href="${resetUrl}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Reset my password</a>
-										</td>
-									</tr>
-								</table>
-								<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">Button not working? Try this link instead, and/or copying and pasting it into your browser:</p>
-								<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${resetUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${resetUrl}</a></p>
-								<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.</p>
-							</td>
-						</tr>
-						<!-- Footer -->
-						<tr>
-							<td align="center" style="padding:24px 24px 8px;">
-								<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; chess on an infinite board.</p>
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-		</table>
-	`;
+	return buildActionEmailHtml({
+		preheader: 'Set a new password to regain access to your account.',
+		heading: 'Password reset',
+		intro: 'We received a request to reset your password. Click the button below to choose a new one.',
+		buttonLabel: 'Reset my password',
+		url: resetUrl,
+		footnote:
+			"This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.",
+	});
 }
 
 /** Plain-text alternative to the password reset email, for text-only clients & deliverability. */
@@ -137,38 +144,12 @@ This link will expire in 1 hour. If you didn't request a password reset, please 
 
 /** Builds the HTML for the password-changed security receipt. */
 function buildPasswordChangedEmailHtml(forgotPassUrl: string): string {
-	return `
-		<!-- Preheader: inbox preview text, hidden in the body. -->
-		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">The password for your account was just changed.</div>
-		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
-			<tr>
-				<td align="center" style="padding:24px 12px;">
-					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
-						<!-- Header -->
-						<tr>
-							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
-								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
-							</td>
-						</tr>
-						<!-- Body -->
-						<tr>
-							<td style="background-color:#ffffff;padding:40px 40px 32px;">
-								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Password changed</h1>
-								<p style="margin:0 0 16px;color:#444444;font-size:16px;line-height:1.6;">This is a confirmation that the password for your account was just changed. If this was you, no further action is needed.</p>
-								<p style="margin:0;color:#777777;font-size:13px;line-height:1.6;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${forgotPassUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">reset your password</a> immediately and secure your email account.</p>
-							</td>
-						</tr>
-						<!-- Footer -->
-						<tr>
-							<td align="center" style="padding:24px 24px 8px;">
-								<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; chess on an infinite board.</p>
-							</td>
-						</tr>
-					</table>
-				</td>
-			</tr>
-		</table>
+	const body = `
+		<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Password changed</h1>
+		<p style="margin:0 0 16px;color:#444444;font-size:16px;line-height:1.6;">This is a confirmation that the password for your account was just changed. If this was you, no further action is needed.</p>
+		<p style="margin:0;color:#777777;font-size:13px;line-height:1.6;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${forgotPassUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">reset your password</a> immediately and secure your email account.</p>
 	`;
+	return buildEmailShell('The password for your account was just changed.', body);
 }
 
 /** Plain-text alternative to the password-changed receipt, for text-only clients & deliverability. */
