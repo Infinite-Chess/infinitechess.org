@@ -59,9 +59,9 @@ export const createAccountAttemptLimiter = rateLimit({
  * A per-IP cap that complements the per-username+IP limiter in authRatelimiter.ts:
  * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
  */
-export const loginAttemptLimiter = rateLimit({
+export const authAttemptLimiter = rateLimit({
 	windowMs: 1000 * 60, // 1 minute
-	max: 15,
+	max: 20,
 	...default_options,
 });
 

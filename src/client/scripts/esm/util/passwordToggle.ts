@@ -22,4 +22,8 @@ for (const toggle of document.querySelectorAll<HTMLButtonElement>('.password-tog
 		eye.classList.toggle('hidden', reveal);
 		eyeOff.classList.toggle('hidden', !reveal);
 	});
+
+	// Prevent the button from stealing keyboard focus when clicked, so that
+	// the focus (and the Enter-to-submit behavior) stays on the password input.
+	toggle.addEventListener('mousedown', (e: MouseEvent): void => e.preventDefault());
 }
