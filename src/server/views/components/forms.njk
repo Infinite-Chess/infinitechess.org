@@ -1,5 +1,14 @@
-{# Password input with a show/hide eye toggle, shared by the login, register, and reset-password
-   pages. The toggle's behavior is wired by util/passwordToggle.ts (which keys off the .password-toggle class). #}
+{# Shared building blocks for the auth pages (login, register, register-awaiting, verify,
+   forgotpassword, resetpassword) #}
+
+{# Text/email input. `value` is autoescaped, so it's safe even for user-controlled emails.
+   Pass each page's documented maxlength (the relevant validators.ts limit). #}
+{% macro textInput(id, name, type, autocomplete, maxlength, required=true, value="") %}
+<input class="auth-input" type="{{ type }}" id="{{ id }}" name="{{ name }}" autocomplete="{{ autocomplete }}" autocapitalize="off" maxlength="{{ maxlength }}"{% if value %} value="{{ value }}"{% endif %}{% if required %} required{% endif %} />
+{% endmacro %}
+
+{# Password input with a show/hide eye toggle. The toggle's behavior is wired by
+   util/passwordToggle.ts (which keys off the .password-toggle class). #}
 {% macro passwordInput(id, name, autocomplete) %}
 <div class="password-wrap">
 	{# maxlength 72: the password max length from validatePassword() in validators.ts (bcrypt's 72-byte limit). #}
@@ -10,3 +19,7 @@
 	</button>
 </div>
 {% endmacro %}
+
+{# Status glyphs shown in auth-card titles: a checkmark for success, an X for failure/expiry. #}
+{% macro successGlyph() %}<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>{% endmacro %}
+{% macro errorGlyph() %}<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>{% endmacro %}

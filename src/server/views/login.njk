@@ -1,6 +1,6 @@
 {% extends "layout.njk" %}
 
-{% from "components/forms.njk" import passwordInput %}
+{% from "components/forms.njk" import textInput, passwordInput %}
 
 {% set t = templateT('login') %}
 {% set pageName = t.title %}
@@ -24,7 +24,7 @@
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
 			{# maxlength 320: the email max length from validateEmail() in validators.ts (larger than the 20-char username max). #}
-			<input class="auth-input" type="text" id="username" name="username" autocomplete="username" autocapitalize="off" maxlength="320" required />
+			{{ textInput("username", "username", "text", "username", 320) }}
 		</div>
 
 		<div class="auth-field">

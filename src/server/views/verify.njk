@@ -1,5 +1,7 @@
 {% extends "layout.njk" %}
 
+{% from "components/forms.njk" import successGlyph, errorGlyph %}
+
 {% set t = templateT('verify') %}
 {% set pageName = t.prompt.title %}
 
@@ -28,7 +30,7 @@
 		{# Success state; on the prompt page it's hidden and revealed by js after a click. #}
 		{% if state == 'prompt' or state == 'verified' %}
 		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-success-title">
-			<svg class="glyph" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+			{{ successGlyph() }}
 			{{ t.activated.title }}
 		</h1>
 		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">{{ t.activated.body }}</p>
@@ -37,7 +39,7 @@
 		{# Expired/invalid state; on the prompt page it's hidden and revealed by js if a click reports token invalid. #}
 		{% if state == 'prompt' or state == 'invalid' %}
 		<h1 class="auth-title{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-title">
-			<svg class="glyph" viewBox="0 0 24 24"><path d="M6 6 18 18M18 6 6 18"/></svg>
+			{{ errorGlyph() }}
 			{{ t.expired.title }}
 		</h1>
 		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">{{ t.expired.body }}</p>
