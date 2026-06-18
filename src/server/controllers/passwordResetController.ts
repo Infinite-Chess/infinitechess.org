@@ -12,7 +12,7 @@ import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
-import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailController.js';
+import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utility/emailService.js';
 
 /**
  * How long a password-reset token stays valid, in milliseconds.
