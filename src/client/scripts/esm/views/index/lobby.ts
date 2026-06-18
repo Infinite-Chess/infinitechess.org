@@ -335,10 +335,11 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 	const speedCategory = clockutil.getSpeedCategory(seek.time);
 	const speedTitle = t.shared.speeds[speedCategory];
-	const displayName = seek.isOurs
-		? t.shared.user_status.you_indicator
-		: seek.player.type === 'guest'
-			? t.shared.user_status.guest_indicator
+	const displayName =
+		seek.player.type === 'guest'
+			? seek.isOurs
+				? t.shared.user_status.you_indicator
+				: t.shared.user_status.guest_indicator
 			: seek.player.username;
 
 	return h(
