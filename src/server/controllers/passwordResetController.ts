@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 
+import validators from '../../shared/util/validators.js';
+
 import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
@@ -26,12 +28,8 @@ const PASSWORD_RESET_TOKEN_EXPIRY_MILLIS: number = 1000 * 60 * 60; // 1 Hour
  * (unknown, sendable, or blacklisted alike) to prevent email enumeration.
  */
 async function handleForgotPasswordRequest(req: Request, res: Response): Promise<void> {
-	const { email } = req.body;
-
-	if (!email || typeof email !== 'string') {
-		res.status(400).json({ message: 'Email is required and must be a string.' });
-		return;
-	}
+	const email = verifyBodyHasForgotPasswordData(req, res);
+	if (!email) return; // Response already sent
 
 	try {
 		// 1. Find user by email (case-insensitive)
@@ -260,6 +258,30 @@ function verifyBodyHasResetPasswordData(
 	}
 
 	return { token, password };
+}
+
+/**
+ * Structural gate for the forgot-password body: `email` must be a non-empty, well-formed email
+ * string. Format validity is independent of registration, so this never reveals whether the
+ * address has an account.
+ * @returns The email, or undefined if malformed (400 already sent).
+ */
+function verifyBodyHasForgotPasswordData(req: Request, res: Response): string | undefined {
+	const { email } = req.body;
+
+	if (
+		!email ||
+		typeof email !== 'string' ||
+		// Reject malformed/oversized emails before the DB lookup.
+		// A string that fails format validation can never be registered anyway.
+		validators.validateEmail(email) !== validators.EmailValidationResult.Ok
+	) {
+		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
+		res.status(400).json({ message: 'Request body malformed.' });
+		return undefined;
+	}
+
+	return email;
 }
 
 export { handleForgotPasswordRequest, getResetPasswordPageState, handleResetPassword };
