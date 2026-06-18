@@ -29,23 +29,6 @@ enum UsernameValidationResult {
 	UsernameAlphanumeric,
 }
 
-type PasswordValidationResultTranslations = 'js-pwd_too_short' | 'js-pwd_too_long';
-type EmailValidationResultTranslations = 'js-email_too_long' | 'js-email_invalid';
-
-const passwordErrorTranslations = new Map<number, PasswordValidationResultTranslations>();
-passwordErrorTranslations.set(PasswordValidationResult.PasswordTooShort, 'js-pwd_too_short');
-passwordErrorTranslations.set(PasswordValidationResult.PasswordTooLong, 'js-pwd_too_long');
-
-const emailErrorTranslations = new Map<number, EmailValidationResultTranslations>();
-emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
-emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
-
-function getEmailErrorTranslation(
-	err: EmailValidationResult,
-): EmailValidationResultTranslations | undefined {
-	return emailErrorTranslations.get(err);
-}
-
 /**
  * Shared logic to validate passwords
  * @param password The password to check
@@ -91,11 +74,10 @@ function validateUsername(username: string): UsernameValidationResult {
 }
 
 export default {
-	validatePassword,
 	PasswordValidationResult,
-	validateEmail,
 	EmailValidationResult,
-	validateUsername,
 	UsernameValidationResult,
-	getEmailErrorTranslation,
+	validatePassword,
+	validateEmail,
+	validateUsername,
 };

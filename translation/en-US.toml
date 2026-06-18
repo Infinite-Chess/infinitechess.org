@@ -94,15 +94,6 @@ password = "Password:"
 create_button = "Create Account"
 agreement = ["I agree to the ", "Terms of Service", "."]  # the middle entry is a hyperlink, the others are not
 
-[create-account.javascript]
-js-email_invalid = "This is not a valid email"
-js-email_too_long = "The email is too long"
-js-email_inuse = "This email is already in use"
-
-[password-validation]
-js-pwd_too_short = "Password must be 6+ characters long"
-js-pwd_too_long = "Password can't be over 72 characters long"
-
 [leaderboard]
 title = "Leaderboard"
 inactive_players = ["Inactive players with a rating deviation above ", " are excluded from the leaderboard."] # A number is inserted between these two quotes

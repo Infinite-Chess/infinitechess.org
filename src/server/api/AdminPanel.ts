@@ -184,8 +184,7 @@ function banEmailCommand(
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
 	if (validationResult !== validators.EmailValidationResult.Ok) {
-		const errorKey = validators.getEmailErrorTranslation(validationResult);
-		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		sendAndLogResponse(res, 422, 'Invalid email format.');
 		return;
 	}
 
@@ -212,8 +211,7 @@ function unbanEmailCommand(
 	// Validate email format
 	const validationResult = validators.validateEmail(email);
 	if (validationResult !== validators.EmailValidationResult.Ok) {
-		const errorKey = validators.getEmailErrorTranslation(validationResult);
-		sendAndLogResponse(res, 422, `Invalid email format: ${errorKey ?? 'unknown error'}`);
+		sendAndLogResponse(res, 422, 'Invalid email format.');
 		return;
 	}
 

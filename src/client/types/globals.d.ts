@@ -14,9 +14,7 @@ type LegacyClientTranslations = TranslationsObject['play']['javascript'] &
 	TranslationsObject['play']['play-menu'] &
 	TranslationsObject['member']['javascript'] &
 	TranslationsObject['login']['javascript'] &
-	TranslationsObject['leaderboard']['javascript'] &
-	TranslationsObject['create-account']['javascript'] &
-	TranslationsObject['password-validation'];
+	TranslationsObject['leaderboard']['javascript'];
 
 /** The subset of Cloudflare Turnstile's `window.turnstile` API we use. */
 interface Turnstile {

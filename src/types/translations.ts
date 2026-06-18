@@ -63,11 +63,6 @@ export type TranslationKeys =
 	| 'create-account.password'
 	| 'create-account.create_button'
 	| 'create-account.agreement'
-	| 'create-account.javascript.js-email_invalid'
-	| 'create-account.javascript.js-email_too_long'
-	| 'create-account.javascript.js-email_inuse'
-	| 'password-validation.js-pwd_too_short'
-	| 'password-validation.js-pwd_too_long'
 	| 'play.title'
 	| 'play.loading'
 	| 'play.error'
@@ -580,15 +575,6 @@ export interface TranslationsObject {
 		password: string;
 		create_button: string;
 		agreement: string[];
-		javascript: {
-			'js-email_invalid': string;
-			'js-email_too_long': string;
-			'js-email_inuse': string;
-		};
-	};
-	'password-validation': {
-		'js-pwd_too_short': string;
-		'js-pwd_too_long': string;
 	};
 	play: {
 		title: string;
