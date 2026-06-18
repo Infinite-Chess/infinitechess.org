@@ -10,9 +10,13 @@
  * polling, and the change-email recovery control).
  */
 
-import validators from '../../../../shared/util/validators.js';
-
 import { serverFetch } from '../util/serverFetch.js';
+import {
+	usernameFormatError,
+	emailFormatError,
+	passwordFormatError,
+	setFieldError as setInlineError,
+} from '../util/accountFormatErrors.js';
 
 import '../util/passwordToggle.js';
 
@@ -40,49 +44,6 @@ let turnstileWidgetId: string | undefined;
 /** The latest single-use Turnstile token, or undefined until solved / after it's spent or expires. */
 let turnstileToken: string | undefined;
 
-// Format error messages -------------------------------------------------
-
-/**
- * Returns the localized format error for a username value, or undefined if its format is valid.
- * Only bots or hand crafted PUTs can trigger UsernameTooLong, so that case is ignored.
- */
-function usernameFormatError(value: string): string | undefined {
-	switch (validators.validateUsername(value)) {
-		case validators.UsernameValidationResult.UsernameTooShort:
-			return t.shared.account.username_short;
-		case validators.UsernameValidationResult.UsernameAlphanumeric:
-			return t.shared.account.username_alphanumeric;
-		default:
-			return undefined;
-	}
-}
-
-/**
- * Returns the localized format error for an email value, or undefined if its format is valid.
- * Only bots or hand crafted PUTs can trigger EmailTooLong, so that case is ignored.
- */
-function emailFormatError(value: string): string | undefined {
-	switch (validators.validateEmail(value.trim())) {
-		case validators.EmailValidationResult.InvalidFormat:
-			return t.shared.account.email_invalid;
-		default:
-			return undefined;
-	}
-}
-
-/**
- * Returns the localized format error for a password value, or undefined if its format is valid.
- * Only bots or hand crafted PUTs can trigger PasswordTooLong, so that case is ignored.
- */
-function passwordFormatError(value: string): string | undefined {
-	switch (validators.validatePassword(value)) {
-		case validators.PasswordValidationResult.PasswordTooShort:
-			return t.shared.account.password_short;
-		default:
-			return undefined;
-	}
-}
-
 // Functions ---------------------------------------------------------
 
 /** Shows an error beneath a field, or clears it when called with no message. */
@@ -91,15 +52,12 @@ function setFieldError(
 	errorElement: HTMLParagraphElement,
 	message?: string,
 ): void {
-	errorElement.textContent = message ?? '';
-	errorElement.classList.toggle('hidden', message === undefined);
-	input.classList.toggle('input-error', message !== undefined);
+	setInlineError(errorElement, message, input);
 }
 
 /** Shows the form-level submit error, or clears it when called with no message. */
 function setFormError(message?: string): void {
-	formError.textContent = message ?? '';
-	formError.classList.toggle('hidden', message === undefined);
+	setInlineError(formError, message);
 }
 
 /**

@@ -9,11 +9,10 @@
  * errors show inline.
  */
 
-import validators from '../../../../shared/util/validators.js';
-
 import docutil from '../util/docutil.js';
 import flashToast from '../util/flashToast.js';
 import { serverFetch } from '../util/serverFetch.js';
+import { passwordFormatError, setFieldError } from '../util/accountFormatErrors.js';
 
 import '../util/passwordToggle.js';
 
@@ -30,24 +29,9 @@ const token = docutil.getLastSegmentOfURL();
 
 // Functions ---------------------------------------------------------
 
-/**
- * Returns the localized format error for a password value, or undefined if its format is valid.
- * Only bots or hand crafted PUTs can trigger PasswordTooLong, so that case is ignored.
- */
-function passwordFormatError(value: string): string | undefined {
-	switch (validators.validatePassword(value)) {
-		case validators.PasswordValidationResult.PasswordTooShort:
-			return t.shared.account.password_short;
-		default:
-			return undefined;
-	}
-}
-
 /** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
 function setError(message?: string): void {
-	errorElement!.textContent = message ?? '';
-	errorElement!.classList.toggle('hidden', message === undefined);
-	passwordInput!.classList.toggle('input-error', message !== undefined);
+	setFieldError(errorElement!, message, passwordInput!);
 }
 
 /** Enables the submit button once the password is a valid length. */

@@ -40,12 +40,6 @@ const emailErrorTranslations = new Map<number, EmailValidationResultTranslations
 emailErrorTranslations.set(EmailValidationResult.EmailTooLong, 'js-email_too_long');
 emailErrorTranslations.set(EmailValidationResult.InvalidFormat, 'js-email_invalid');
 
-function getPasswordErrorTranslation(
-	err: PasswordValidationResult,
-): PasswordValidationResultTranslations | undefined {
-	return passwordErrorTranslations.get(err);
-}
-
 function getEmailErrorTranslation(
 	err: EmailValidationResult,
 ): EmailValidationResultTranslations | undefined {
@@ -103,6 +97,5 @@ export default {
 	EmailValidationResult,
 	validateUsername,
 	UsernameValidationResult,
-	getPasswordErrorTranslation,
 	getEmailErrorTranslation,
 };

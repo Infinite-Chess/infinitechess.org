@@ -10,6 +10,7 @@
 
 import docutil from '../util/docutil.js';
 import { serverFetch } from '../util/serverFetch.js';
+import { setFieldError } from '../util/accountFormatErrors.js';
 
 import '../util/passwordToggle.js';
 
@@ -26,8 +27,7 @@ const errorElement = document.querySelector<HTMLParagraphElement>('#login-error'
 
 /** Displays an error beneath the form, or clears it when called with no message. */
 function setError(message?: string): void {
-	errorElement.textContent = message ?? '';
-	errorElement.classList.toggle('hidden', message === undefined);
+	setFieldError(errorElement, message);
 }
 
 /** Submits the login form to the server. */

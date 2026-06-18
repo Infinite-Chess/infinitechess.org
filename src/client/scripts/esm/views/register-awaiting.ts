@@ -9,10 +9,9 @@
  * address is PUT to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
-import validators from '../../../../shared/util/validators.js';
-
 import flashToast from '../util/flashToast.js';
 import { serverFetch } from '../util/serverFetch.js';
+import { emailFormatError, setFieldError } from '../util/accountFormatErrors.js';
 
 // Constants ---------------------------------------------------------
 
@@ -162,22 +161,7 @@ function handleVisibilityChange(): void {
 
 /** Shows an inline error beneath the change-email field, or clears it when called with no message. */
 function setEmailError(message?: string): void {
-	newEmailError.textContent = message ?? '';
-	newEmailError.classList.toggle('hidden', message === undefined);
-	newEmailInput.classList.toggle('input-error', message !== undefined);
-}
-
-/**
- * Returns the localized format error for an email value, or undefined if its format is valid.
- * Only bots or hand crafted PUTs can trigger EmailTooLong, so that case is ignored.
- */
-function emailFormatError(value: string): string | undefined {
-	switch (validators.validateEmail(value)) {
-		case validators.EmailValidationResult.InvalidFormat:
-			return t.shared.account.email_invalid;
-		default:
-			return undefined;
-	}
+	setFieldError(newEmailError, message, newEmailInput);
 }
 
 /**
@@ -205,7 +189,7 @@ async function submitNewEmail(): Promise<void> {
 		const response = await serverFetch('/api/register/awaiting/email', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email: newEmailInput.value }),
+			body: JSON.stringify({ email: newEmailInput.value.trim() }),
 		});
 		if (response.ok) {
 			window.location.reload();
