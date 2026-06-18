@@ -83,6 +83,10 @@ When the caller holds only a resolved language code (e.g. SSR template-render co
 
 There's nothing structurally special about `responses` — any component's script-facing strings are reachable the same way. The `responses` convention exists so server-emitted strings are visually grouped in one folder for translators.
 
+### Don't localize unreachable-by-a-good-client errors
+
+If a response can only be triggered by a malformed request that a well-behaved client would never send (e.g. a missing or wrong-typed body field), leave it as a plain English literal — no `req.t` key. A real user never sees it; only hand-crafted/malicious requests do. Collapse all such structural checks into one generic 400 ("Request body malformed.") rather than a customized string per offending field — the sender already knows what they sent. Reserve localized response strings for messages a behaving client can actually surface to a user.
+
 ## Interpolating dynamic values
 
 Translated strings are static — there is no built-in interpolation. Put `{name}` placeholders in the TOML value and resolve them with `interpolate(template, vars)` from [src/shared/util/interpolate.ts](/src/shared/util/interpolate.ts) (shared, so it works on both sides; unknown placeholders are left intact):
