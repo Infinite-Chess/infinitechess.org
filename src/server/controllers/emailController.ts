@@ -21,6 +21,70 @@ function createEmailHtmlWrapper(title: string, contentHtml: string): string {
 	`;
 }
 
+/** Header/button accent color: a dark neutral grey. */
+const ACCENT_COLOR = '#383838';
+/** Page background behind the email card: a warm off-white. */
+const PAGE_BG_COLOR = '#f4f1ea';
+
+/** Builds the HTML for the account verification email. */
+function buildVerificationEmailHtml(username: string, verificationUrl: string): string {
+	return `
+		<!-- Preheader: inbox preview text, hidden in the body. -->
+		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Confirm your email address to activate your account.</div>
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
+			<tr>
+				<td align="center" style="padding:24px 12px;">
+					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
+						<!-- Header -->
+						<tr>
+							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
+								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
+							</td>
+						</tr>
+						<!-- Body -->
+						<tr>
+							<td style="background-color:#ffffff;padding:40px 40px 32px;">
+								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Welcome, ${username}!</h1>
+								<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">Confirm your email address to activate your account.</p>
+								<!-- Bulletproof button -->
+								<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+									<tr>
+										<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
+											<a href="${verificationUrl}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Verify my account</a>
+										</td>
+									</tr>
+								</table>
+								<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">Button not working? Try this link instead, and/or copying and pasting it into your browser:</p>
+								<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${verificationUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${verificationUrl}</a></p>
+								<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">This link will expire in 24 hours. If you didn't create an account, please ignore this email.</p>
+							</td>
+						</tr>
+						<!-- Footer -->
+						<tr>
+							<td align="center" style="padding:24px 24px 8px;">
+								<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; chess on an infinite board.</p>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	`;
+}
+
+/** Plain-text alternative to the verification email, for text-only clients & deliverability. */
+function buildVerificationEmailText(username: string, verificationUrl: string): string {
+	return `Welcome to InfiniteChess.org, ${username}!
+
+Confirm your email address to activate your account:
+
+${verificationUrl}
+
+This link will expire in 24 hours. If you didn't create an account, please ignore this email.
+
+— InfiniteChess.org`;
+}
+
 /**
  * Sends an account verification email, IF the recipient is not blacklisted.
  * The link points at the verify endpoint that promotes the pending registration.
@@ -45,16 +109,11 @@ async function sendEmailConfirmation(
 		const baseUrl = getAppBaseUrl();
 		const verificationUrl = new URL(`${baseUrl}/verify/${verificationToken}`).toString();
 
-		const content = `
-			<p style="font-size: 16px; color: #555;">Thank you, <strong>${username}</strong>, for creating an account. Please click the button below to verify your account.</p>
-			<a href="${verificationUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Verify Account</a>
-			<p style="font-size: 14px; color: #666;">If this wasn't you, please ignore this email.</p>
-		`;
-
 		const sent = await mailer.send('registration', {
 			to: recipientEmail,
 			subject: 'Verify Your Account',
-			html: createEmailHtmlWrapper('Welcome to InfiniteChess.org!', content),
+			html: buildVerificationEmailHtml(username, verificationUrl),
+			text: buildVerificationEmailText(username, verificationUrl),
 		});
 
 		if (sent) {

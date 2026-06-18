@@ -1,17 +1,8 @@
 # Redesign all outgoing emails (unified style)
 
-Rebuilds *every* outgoing email at once so they all look polished, on-brand, and
+Rebuilds *every* outgoing email so they all look polished, on-brand, and
 share a consistent visual style. This is the emails' *visual design* only — their links,
 recipients, and triggering logic are already correct.
-
-> **Prerequisites** This task is deliberately scheduled last; the
-> following are expected to already be complete before it begins, and are tracked elsewhere:
-> - The **password reset page** redesign.
-> - **Localization** of the register-flow pages (register + awaiting + verify) and the password reset page.
->
-> Scheduling the emails after that work lets us restyle them as a single set with one shared
-> shell, instead of redesigning the verification email now and re-touching it again later for
-> consistency.
 
 ## Current state
 All senders live in `src/server/controllers/emailController.ts`:
@@ -63,7 +54,6 @@ it returns `false` and logs the HTML/link instead. `getAppBaseUrl()`
 - Keep markup simple and well-indented (tabs).
 
 ## Out of scope
-- The verify / password-reset landing page UIs and any link/token mechanics. No new email types.
 - **Localization / translation** of email copy — tracked separately in `2_localize_emails.md`.
   Write English here.
 
@@ -73,8 +63,3 @@ it returns `false` and logs the HTML/link instead. `getAppBaseUrl()`
   messages sharing one consistent style, each with working absolute-URL buttons/links where
   applicable, a visible fallback link, and a plain-text alternative; all are legible with images
   off and in dark mode; you have previewed each.
-
-## Gotcha
-- `mailer.send` doesn't send in dev — it logs. To preview, render each email's HTML to a file and
-  open it in a browser (and ideally an email-testing tool, since browser ≠ email-client
-  rendering); test Gmail + an Outlook-style client if you can.
