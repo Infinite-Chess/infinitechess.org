@@ -25,6 +25,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 
 - All scripts have their file path on line 1. This is automatic via hook, you don't have to bother maintaining it.
 - Almost all scripts have a brief description of their purpose on lines 3-7+. Useful for gaining a quick understanding of them without bloating the context window.
+- Shell is zsh: always quote glob patterns in command args (e.g. `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
 - All typescript files' indentation is in tabs, not spaces.
 - prettier automatically enforces consistent styling.
 - **UI Changes:** When asked to make UI changes, please verify the changes look good via the integrated browser.

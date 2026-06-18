@@ -1,0 +1,19 @@
+# Translation component: set-new-password page (/reset-password/:token).
+# Source template: src/server/views/resetpassword.njk
+
+[form]
+title = "Change password"
+new_password_label = "New password"
+submit = "Update password"
+
+[expired]
+title = "Link expired"
+body = "This password reset link is invalid or has expired."
+request_new_link = "Request a new reset link"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.resetpassword.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+password_reset = "Your password has been reset!"

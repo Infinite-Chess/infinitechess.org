@@ -8,7 +8,6 @@ import db from './database.js';
 import { deleteAccount } from '../controllers/deleteAccountController.js';
 import { startDailyBackups } from './backupManager.js';
 import { removeFromBlacklist } from './blacklistManager.js';
-import { getMultipleMemberDataByCriteria } from './memberManager.js';
 import { startPeriodicDatabaseCleanupTasks } from './cleanupTasks.js';
 import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsManager.js';
 

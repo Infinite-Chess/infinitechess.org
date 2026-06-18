@@ -1,0 +1,13 @@
+# Translation component: forgot-password page (/forgot-password).
+# Source template: src/server/views/forgotpassword.njk
+
+[form]
+title = "Reset Password"
+prompt = "Enter your account's email address and we'll send you a link to reset your password."
+email_label = "Email"
+submit = "Send reset link"
+
+[confirmation]
+title = "Check your email"
+body = "If an account exists for that email address, we've sent a reset link."
+back_to_login = "Back to log in"

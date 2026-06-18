@@ -492,18 +492,12 @@ export type TranslationKeys =
 	| 'login.username'
 	| 'login.password'
 	| 'login.login_button'
-	| 'login.send_reset_link'
-	| 'login.forgot_question'
-	| 'login.back_to_login'
-	| 'login.forgot_instruction'
 	| 'login.javascript.network-error'
 	| 'error-pages.400_message'
 	| 'error-pages.409_message'
 	| 'error-pages.500_message'
 	| 'news.title'
 	| 'news.more_dev_logs'
-	| 'server.javascript.ws-password-change-success'
-	| 'server.javascript.ws-password-reset-token-invalid'
 	| 'server.javascript.ws-forbidden_wrong_account'
 	| 'server.javascript.ws-deleting_account_not_found'
 	| 'server.javascript.ws-deleting_account_in_game'
@@ -1083,10 +1077,6 @@ export interface TranslationsObject {
 		username: string;
 		password: string;
 		login_button: string;
-		send_reset_link: string;
-		forgot_question: string;
-		back_to_login: string;
-		forgot_instruction: string;
 		javascript: {
 			'network-error': string;
 		};
@@ -1102,8 +1092,6 @@ export interface TranslationsObject {
 	};
 	server: {
 		javascript: {
-			'ws-password-change-success': string;
-			'ws-password-reset-token-invalid': string;
 			'ws-forbidden_wrong_account': string;
 			'ws-deleting_account_not_found': string;
 			'ws-deleting_account_in_game': string;

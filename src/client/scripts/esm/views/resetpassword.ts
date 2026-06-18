@@ -77,7 +77,7 @@ async function submit(): Promise<void> {
 
 		if (response.ok) {
 			// The session cookie is now set; queue a toast that survives the navigation home.
-			flashToast.queue('Your password has been reset!');
+			flashToast.queue(t.resetpassword.password_reset);
 			window.location.assign('/');
 			return;
 		}

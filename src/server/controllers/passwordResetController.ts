@@ -9,7 +9,6 @@ import { Request, Response } from 'express';
 import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
-import { getTranslation } from '../utility/translate.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
 import { getMemberDataByCriteria } from '../database/memberManager.js';
 import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
@@ -156,10 +155,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		if (!validTokenRecord) {
 			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts');
 			res.status(400).json({
-				message: getTranslation(
-					'server.javascript.ws-password-reset-token-invalid',
-					req.lang,
-				),
+				message: req.t.responses.password_reset.token_invalid,
 			});
 			return;
 		}
@@ -218,9 +214,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		}
 
 		// 8. Send Success Response. The session cookie is now set, so the client redirects home.
-		res.status(200).json({
-			message: getTranslation('server.javascript.ws-password-change-success', req.lang),
-		});
+		res.sendStatus(200);
 
 		// 9. Log the successful password reset
 		logEvents(`Password reset successful for user_id (${userId})`, 'loginAttempts');

@@ -11,12 +11,6 @@ generic = "You have made too many requests, please try again later."
 account_creations = "Too many account creations are coming from this IP."
 email_requests = "You have requested too many emails. Try again later."
 
-[auth]
-invalid_credentials = "Incorrect username/email or password."
-login_failed = "Login failed due to an internal server error. Please try again later."
-login_retry_in_one = "Failed to login, try again in {n} second."
-login_retry_in_other = "Failed to login, try again in {n} seconds."
-
 [account] # Account-creation/validation responses the server alone emits (never needed client-side).
 username_taken = "That username is taken"
 username_reserved = "That username is reserved"
@@ -25,6 +19,15 @@ email_in_use = "This email is already in use"
 email_blacklisted = "This address either can't receive mail, or is blacklisted."
 email_domain_invalid = "Invalid domain."
 no_pending_registration = "No pending registration found."
+
+[auth]
+invalid_credentials = "Incorrect username/email or password."
+login_failed = "Login failed due to an internal server error. Please try again later."
+login_retry_in_one = "Failed to login, try again in {n} second."
+login_retry_in_other = "Failed to login, try again in {n} seconds."
+
+[password_reset]
+token_invalid = "Password reset token is invalid or has expired."
 
 [seeks]
 already_in_game = "You are already in a game."

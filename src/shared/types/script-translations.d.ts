@@ -47,6 +47,9 @@ export interface ScriptTranslations {
 		verification_failed: string;
 		verification_expired: string;
 	};
+	resetpassword: {
+		password_reset: string;
+	};
 	responses: {
 		errors: {
 			not_found: string;
@@ -57,12 +60,6 @@ export interface ScriptTranslations {
 			account_creations: string;
 			email_requests: string;
 		};
-		auth: {
-			invalid_credentials: string;
-			login_failed: string;
-			login_retry_in_one: string;
-			login_retry_in_other: string;
-		};
 		account: {
 			username_taken: string;
 			username_reserved: string;
@@ -71,6 +68,15 @@ export interface ScriptTranslations {
 			email_blacklisted: string;
 			email_domain_invalid: string;
 			no_pending_registration: string;
+		};
+		auth: {
+			invalid_credentials: string;
+			login_failed: string;
+			login_retry_in_one: string;
+			login_retry_in_other: string;
+		};
+		password_reset: {
+			token_invalid: string;
 		};
 		seeks: {
 			already_in_game: string;
