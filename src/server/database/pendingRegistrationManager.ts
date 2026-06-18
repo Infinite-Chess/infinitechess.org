@@ -13,9 +13,13 @@ import db, { dbCall } from './database.js';
 
 /** Structure of a complete pending_registrations record. */
 export interface PendingRegistrationRecord {
-	/** httpOnly cookie secret; unchanging. */
+	/** HttpOnly cookie secret; unchanging. */
 	claim_token: string;
-	/** email-link secret; rotates on an email change. */
+	/**
+	 * Email-link secret; rotates on an email change.
+	 * Stored as plaintext (unlike the hashed password-reset token): these guard a pre-member,
+	 * 24h-expiring row, so a DB-read leak isn't worth the round-trip hashing complexity here.
+	 */
 	verification_token: string;
 	username: string;
 	email: string;
