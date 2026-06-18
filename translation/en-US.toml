@@ -618,15 +618,6 @@ conclusion_paragraphs = [
 ]
 thanks = "Thank you!"
 
-[login]
-title = "Log In" # The tab name
-username = "Username:"
-password = "Password:"
-login_button = "Log In"
-
-[login.javascript]
-network-error = "A network error occurred. Please try again."
-
 [error-pages] # Messages shown on some error pages explaining what went wrong
 400_message = "Invalid parameters were received."
 409_message = ["There may have been a clashing username or email. Please ", "reload", ", the page."]

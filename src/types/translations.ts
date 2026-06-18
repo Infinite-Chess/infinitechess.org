@@ -483,11 +483,6 @@ export type TranslationKeys =
 	| 'terms.conclusion_header'
 	| 'terms.conclusion_paragraphs'
 	| 'terms.thanks'
-	| 'login.title'
-	| 'login.username'
-	| 'login.password'
-	| 'login.login_button'
-	| 'login.javascript.network-error'
 	| 'error-pages.400_message'
 	| 'error-pages.409_message'
 	| 'error-pages.500_message'
@@ -1057,15 +1052,6 @@ export interface TranslationsObject {
 		conclusion_header: string;
 		conclusion_paragraphs: string[];
 		thanks: string;
-	};
-	login: {
-		title: string;
-		username: string;
-		password: string;
-		login_button: string;
-		javascript: {
-			'network-error': string;
-		};
 	};
 	'error-pages': {
 		'400_message': string;
