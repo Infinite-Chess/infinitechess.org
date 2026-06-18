@@ -10,7 +10,6 @@ import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
-import { deleteAllRefreshTokensForUser } from '../database/refreshTokenManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from './emailController.js';
@@ -158,7 +157,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		const hashedNewPassword = await bcrypt.hash(password, PASSWORD_SALT_ROUNDS);
 		const hashedToken = precheckTokenRecord.hashed_token;
 
-		// In one transaction, atomically consume the token and update the password.
+		// In one transaction: atomically consume the token, update the password, and kill all existing sessions.
 		// If two requests race with the same token, only one can consume it.
 		const resetTransaction = db.transaction((): ResetTransactionResult | undefined => {
 			const consumedToken = db.get<{ user_id: number }>(
@@ -186,6 +185,9 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 				throw new Error(`Failed to update password for user_id (${user_id}), user may not exist.`); // prettier-ignore
 			}
 
+			// Terminate all of the user's active sessions.
+			db.run('DELETE FROM refresh_tokens WHERE user_id = ?', [user_id]);
+
 			return { user_id, ...updatedMember };
 		});
 
@@ -203,10 +205,6 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			res.status(400).json({ tokenInvalid: true });
 			return;
 		}
-
-		// Terminate all of the user's active sessions.
-		// Recommended for security.
-		deleteAllRefreshTokensForUser(member.user_id);
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.
@@ -244,7 +242,14 @@ function verifyBodyHasResetPasswordData(
 ): { token: string; password: string } | undefined {
 	const { token, password } = req.body;
 
-	if (!token || !password || typeof token !== 'string' || typeof password !== 'string') {
+	if (
+		!token ||
+		!password ||
+		typeof token !== 'string' ||
+		typeof password !== 'string' ||
+		// Clearly more than the 43 chars of a valid token. Don't waste time hashing it.
+		token.length > 100
+	) {
 		// Unlocalized as this can only be hit from hand-crafted/malformed requests.
 		res.status(400).json({ message: 'Request body malformed.' });
 		return undefined;
