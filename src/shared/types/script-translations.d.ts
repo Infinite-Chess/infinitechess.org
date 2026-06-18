@@ -75,9 +75,6 @@ export interface ScriptTranslations {
 			login_retry_in_one: string;
 			login_retry_in_other: string;
 		};
-		password_reset: {
-			token_invalid: string;
-		};
 		seeks: {
 			already_in_game: string;
 			rated_requires_signin: string;

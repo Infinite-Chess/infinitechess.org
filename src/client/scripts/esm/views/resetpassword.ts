@@ -82,9 +82,17 @@ async function submit(): Promise<void> {
 			return;
 		}
 
-		// Non-OK: e.g. the token expired between page-load and submit, the server's independent
-		// format re-check (doPasswordFormatChecks) rejected it, or a server error. Surface inline.
-		const result = (await response.json()) as { message?: string };
+		const result = (await response.json()) as { message?: string; tokenInvalid?: boolean };
+
+		// Token expired since page-load: reload to re-SSR the expired-link card,
+		// rather than showing a misleading error beneath the password field.
+		if (result.tokenInvalid) {
+			window.location.reload();
+			return;
+		}
+
+		// Other non-OK: the server's independent format re-check (doPasswordFormatChecks)
+		// rejected the password, or a server error happened. Surface inline.
 		setError(result.message ?? t.shared.errors.fallback);
 		refreshSubmit();
 	} catch (e: unknown) {

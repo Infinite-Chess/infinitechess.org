@@ -151,12 +151,11 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 		// 2. Find a matching, unexpired token.
 		const validTokenRecord = findUnexpiredResetTokenRecord(token);
 
-		// 3. Handle Invalid or Expired Token
+		// 3. Handle Invalid or Expired Token.
+		// The tokenInvalid flag tells the client to reload (re-SSRing the expired-link card).
 		if (!validTokenRecord) {
 			logEvents(`Invalid or expired password reset token used.`, 'loginAttempts');
-			res.status(400).json({
-				message: req.t.responses.password_reset.token_invalid,
-			});
+			res.status(400).json({ tokenInvalid: true });
 			return;
 		}
 
