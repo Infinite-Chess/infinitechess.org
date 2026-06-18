@@ -12,15 +12,6 @@ import { logEventsAndPrint } from '../middleware/logEvents.js';
 
 // --- Helper Functions ---
 
-function createEmailHtmlWrapper(title: string, contentHtml: string): string {
-	return `
-		<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #999; border-radius: 5px;">
-			<h2 style="color: #333;">${title}</h2>
-			${contentHtml}
-		</div>
-	`;
-}
-
 /** Header/button accent color: a dark neutral grey. */
 const ACCENT_COLOR = '#383838';
 /** Page background behind the email card: a warm off-white. */
@@ -85,6 +76,112 @@ This link will expire in 24 hours. If you didn't create an account, please ignor
 — InfiniteChess.org`;
 }
 
+/** Builds the HTML for the password reset email. */
+function buildPasswordResetEmailHtml(resetUrl: string): string {
+	return `
+		<!-- Preheader: inbox preview text, hidden in the body. -->
+		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Set a new password to regain access to your account.</div>
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
+			<tr>
+				<td align="center" style="padding:24px 12px;">
+					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
+						<!-- Header -->
+						<tr>
+							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
+								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
+							</td>
+						</tr>
+						<!-- Body -->
+						<tr>
+							<td style="background-color:#ffffff;padding:40px 40px 32px;">
+								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Password reset</h1>
+								<p style="margin:0 0 28px;color:#444444;font-size:16px;line-height:1.6;">We received a request to reset your password. Click the button below to choose a new one.</p>
+								<!-- Bulletproof button -->
+								<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+									<tr>
+										<td bgcolor="${ACCENT_COLOR}" style="border-radius:6px;">
+											<a href="${resetUrl}" target="_blank" style="display:inline-block;padding:14px 36px;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Reset my password</a>
+										</td>
+									</tr>
+								</table>
+								<p style="margin:0 0 8px;color:#777777;font-size:13px;line-height:1.6;">Button not working? Try this link instead, and/or copying and pasting it into your browser:</p>
+								<p style="margin:0 0 24px;font-size:13px;line-height:1.6;word-break:break-all;"><a href="${resetUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">${resetUrl}</a></p>
+								<p style="margin:0;color:#999999;font-size:13px;line-height:1.6;">This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.</p>
+							</td>
+						</tr>
+						<!-- Footer -->
+						<tr>
+							<td align="center" style="padding:24px 24px 8px;">
+								<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; chess on an infinite board.</p>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	`;
+}
+
+/** Plain-text alternative to the password reset email, for text-only clients & deliverability. */
+function buildPasswordResetEmailText(resetUrl: string): string {
+	return `Password reset
+
+We received a request to reset your password. Set a new one here:
+
+${resetUrl}
+
+This link will expire in 1 hour. If you didn't request a password reset, please ignore this email.
+
+— InfiniteChess.org`;
+}
+
+/** Builds the HTML for the password-changed security receipt. */
+function buildPasswordChangedEmailHtml(forgotPassUrl: string): string {
+	return `
+		<!-- Preheader: inbox preview text, hidden in the body. -->
+		<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">The password for your account was just changed.</div>
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${PAGE_BG_COLOR};">
+			<tr>
+				<td align="center" style="padding:24px 12px;">
+					<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;">
+						<!-- Header -->
+						<tr>
+							<td align="center" style="background-color:${ACCENT_COLOR};border-radius:12px 12px 0 0;padding:28px 24px;">
+								<div style="color:#ffffff;font-size:22px;font-weight:bold;letter-spacing:0.5px;"><span style="font-size:26px;">&#937;</span> InfiniteChess.org</div>
+							</td>
+						</tr>
+						<!-- Body -->
+						<tr>
+							<td style="background-color:#ffffff;padding:40px 40px 32px;">
+								<h1 style="margin:0 0 16px;color:#1e1e1e;font-size:24px;font-weight:bold;">Password changed</h1>
+								<p style="margin:0 0 16px;color:#444444;font-size:16px;line-height:1.6;">This is a confirmation that the password for your account was just changed. If this was you, no further action is needed.</p>
+								<p style="margin:0;color:#777777;font-size:13px;line-height:1.6;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${forgotPassUrl}" target="_blank" style="color:${ACCENT_COLOR};text-decoration:underline;">reset your password</a> immediately and secure your email account.</p>
+							</td>
+						</tr>
+						<!-- Footer -->
+						<tr>
+							<td align="center" style="padding:24px 24px 8px;">
+								<p style="margin:0;color:#999999;font-size:12px;line-height:1.6;">InfiniteChess.org &mdash; chess on an infinite board.</p>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	`;
+}
+
+/** Plain-text alternative to the password-changed receipt, for text-only clients & deliverability. */
+function buildPasswordChangedEmailText(forgotPassUrl: string): string {
+	return `Password changed
+
+This is a confirmation that the password for your account was just changed. If this was you, no further action is needed.
+
+If you did NOT make this change, your account may be compromised. Please reset your password immediately and secure your email account: ${forgotPassUrl}
+
+— InfiniteChess.org`;
+}
+
 /**
  * Sends an account verification email, IF the recipient is not blacklisted.
  * The link points at the verify endpoint that promotes the pending registration.
@@ -133,18 +230,12 @@ async function sendEmailConfirmation(
 // --- Email Sending Functions ---
 
 async function sendPasswordResetEmail(recipientEmail: string, resetUrl: string): Promise<void> {
-	const content = `
-		<p style="font-size: 16px; color: #555;">We received a request to reset the password for your account.</p>
-		<p style="font-size: 16px; color: #555;">Please click the button below to set a new password. This link will expire in 1 hour.</p>
-		<a href="${resetUrl}" style="font-size: 16px; background-color: #fff; color: black; padding: 10px 20px; text-decoration: none; border: 1px solid black; border-radius: 6px; display: inline-block; margin: 20px 0;">Reset Password</a>
-		<p style="font-size: 14px; color: #666;">If you did not request a password reset, you can safely ignore this email.</p>
-	`;
-
 	try {
 		const sent = await mailer.send('password-reset', {
 			to: recipientEmail,
-			subject: 'Your Password Reset Request',
-			html: createEmailHtmlWrapper('Password Reset Request', content),
+			subject: 'Password Reset Request',
+			html: buildPasswordResetEmailHtml(resetUrl),
+			text: buildPasswordResetEmailText(resetUrl),
 		});
 		if (sent) {
 			// console.log(`Password reset email sent to ${recipientEmail}`);
@@ -165,17 +256,12 @@ async function sendPasswordChangedEmail(recipientEmail: string): Promise<void> {
 	const baseUrl = getAppBaseUrl();
 	const forgotPassUrl = new URL(`${baseUrl}/forgot-password`).toString();
 
-	const content = `
-		<p style="font-size: 16px; color: #555;">This is a confirmation that the password for your account was just changed.</p>
-		<p style="font-size: 16px; color: #555;">If this was you, no further action is needed.</p>
-		<p style="font-size: 14px; color: #666;">If you did <strong>not</strong> make this change, your account may be compromised. Please <a href="${forgotPassUrl}">reset your password again</a> immediately and secure your email account.</p>
-	`;
-
 	try {
 		await mailer.send('password-changed', {
 			to: recipientEmail,
 			subject: 'Your Password Was Changed',
-			html: createEmailHtmlWrapper('Password Changed', content),
+			html: buildPasswordChangedEmailHtml(forgotPassUrl),
+			text: buildPasswordChangedEmailText(forgotPassUrl),
 		});
 		// console.log(`Password changed email sent to ${recipientEmail}`);
 	} catch (error: unknown) {
