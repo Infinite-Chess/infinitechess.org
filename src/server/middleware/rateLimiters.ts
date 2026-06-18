@@ -55,17 +55,6 @@ export const createAccountAttemptLimiter = rateLimit({
 });
 
 /**
- * Login Attempt Limiter
- * A per-IP cap that complements the per-username+IP limiter in authRatelimiter.ts:
- * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
- */
-export const authAttemptLimiter = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
-	max: 20,
-	...default_options,
-});
-
-/**
  * Username Availability Limiter (the register form's blur-triggered username check).
  * Generous. Cap only helps prevent rapid username enumeration.
  */
@@ -81,6 +70,17 @@ export const verificationEmailLimiter = rateLimit({
 	max: 8,
 	...default_options,
 	handler: make_handler('email_requests'),
+});
+
+/**
+ * Login Attempt Limiter
+ * A per-IP cap that complements the per-username+IP limiter in authRatelimiter.ts:
+ * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
+ */
+export const authAttemptLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 20,
+	...default_options,
 });
 
 /** Forgot Password Email Limiter */
