@@ -9,7 +9,7 @@ toggle = "Check email correctness"
 
 [bad_address]
 title = "Bad address"
-body = "The email address you registered with can't receive messages. Enter a different address below to continue."
+body = "The email you registered with can't receive messages. Enter a different address below to continue."
 
 [change_email]
 label = "Your email address"
