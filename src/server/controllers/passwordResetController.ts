@@ -12,6 +12,7 @@ import db from '../database/database.js';
 import { getAppBaseUrl } from '../utility/urlUtils.js';
 import { isBlacklisted } from '../database/blacklistManager.js';
 import { createNewSession } from './authenticationTokens/sessionManager.js';
+import { closeAllSocketsOfMember } from '../socket/socketManager.js';
 import { doPasswordFormatChecks, PASSWORD_SALT_ROUNDS } from './accountValidation.js';
 import { escapeLogNewlines, logEvents, logEventsAndPrint } from '../middleware/logEvents.js';
 import { sendPasswordResetEmail, sendPasswordChangedEmail } from '../utility/emailService.js';
@@ -187,7 +188,7 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 				throw new Error(`Failed to update password for user_id (${user_id}), user may not exist.`); // prettier-ignore
 			}
 
-			// Terminate all of the user's active sessions.
+			// Terminate all of the user's active sessions (socket closures below).
 			db.run('DELETE FROM refresh_tokens WHERE user_id = ?', [user_id]);
 
 			return { user_id, ...updatedMember };
@@ -207,6 +208,9 @@ async function handleResetPassword(req: Request, res: Response): Promise<void> {
 			res.status(400).json({ tokenInvalid: true });
 			return;
 		}
+
+		// Terminate all their open sockets, forcing them to reconnect and re-auth.
+		closeAllSocketsOfMember(member.user_id, 1008, 'Password changed');
 
 		// Issue a fresh session to this browser — the device that proved control
 		// of the account by clicking the email link and setting the new password.
