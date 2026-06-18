@@ -297,6 +297,12 @@ button:disabled {
 	gap: 0.4em;
 }
 
+/* The flex display above outranks the equal-specificity .hidden utility, so restore hiding
+   for the verify page's toggled state headings. */
+.auth-title.hidden {
+	display: none;
+}
+
 /* Prevent text wrapping of titles on thin screens */
 @media (max-width: 390px) {
 	.auth-title {
@@ -409,6 +415,18 @@ button:disabled {
 .auth-prompt {
 	color: var(--c-text-muted);
 	font-size: 0.9em;
+}
+
+/* Muted explanatory text beneath an auth-card heading (verify / register-awaiting pages). */
+.auth-state-text {
+	color: var(--c-text-muted);
+	font-size: 0.95em;
+}
+
+/* Centers the Cloudflare Turnstile widget within the register card. */
+.turnstile-widget {
+	display: flex;
+	justify-content: center;
 }
 
 /* ============================================================

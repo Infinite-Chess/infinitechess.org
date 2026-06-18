@@ -7,9 +7,7 @@
 
 {% block bodyClass %}sticky-footer{% endblock %}
 
-{% block style %}
-<link rel="stylesheet" href="{{ manifest['css/verify.css'] }}" />
-{% endblock %}
+{# No page-specific stylesheet: only uses shared rules from global.css. #}
 
 {% block body %}
 {% include "components/header/header.njk" %}
@@ -22,7 +20,7 @@
 		{% if state == 'prompt' %}
 		{# Prompt state. The button verifies the account. #}
 		<h1 class="auth-title" id="verify-title">{{ t.prompt.title }}</h1>
-		<p class="verify-state-text" id="verify-subtitle">{{ t.prompt.body }}</p>
+		<p class="auth-state-text" id="verify-subtitle">{{ t.prompt.body }}</p>
 		<button class="btn-primary" id="verify-button">{{ t.prompt.button }}</button>
 		<p class="auth-error center hidden" id="verify-error"></p>
 		{% endif %}
@@ -33,7 +31,7 @@
 			{{ successGlyph() }}
 			{{ t.activated.title }}
 		</h1>
-		<p class="verify-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">{{ t.activated.body }}</p>
+		<p class="auth-state-text center{% if state == 'prompt' %} hidden{% endif %}" id="verify-success">{{ t.activated.body }}</p>
 		{% endif %}
 
 		{# Expired/invalid state; on the prompt page it's hidden and revealed by js if a click reports token invalid. #}
@@ -42,7 +40,7 @@
 			{{ errorGlyph() }}
 			{{ t.expired.title }}
 		</h1>
-		<p class="verify-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">{{ t.expired.body }}</p>
+		<p class="auth-state-text{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-text">{{ t.expired.body }}</p>
 		<p class="auth-prompt center{% if state == 'prompt' %} hidden{% endif %}" id="verify-invalid-prompt"><a class="auth-link" href="/register">{{ t.expired.register_again }}</a></p>
 		{% endif %}
 	</section>

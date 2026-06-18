@@ -33,9 +33,7 @@ const ESMEntryPoints = [
 	'src/client/css/toast.css',
 	'src/client/css/index.css',
 	'src/client/css/login.css',
-	'src/client/css/register.css',
 	'src/client/css/register-awaiting.css',
-	'src/client/css/verify.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',

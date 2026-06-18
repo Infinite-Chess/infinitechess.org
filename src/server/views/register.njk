@@ -5,9 +5,9 @@
 {% set t = templateT('register') %}
 {% set pageName = t.title %}
 
-{% block style %}
-<link rel="stylesheet" href="{{ manifest['css/register.css'] }}" />
-{% endblock %}
+{% block bodyClass %}sticky-footer{% endblock %}
+
+{# No page-specific stylesheet: only uses shared rules from global.css. #}
 
 {% block head %}
 {# Ship the register [script] strings to the browser, preserving window.t from layout.njk. #}
@@ -17,7 +17,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main class="bg-checkerboard">
+<main class="bg-checkerboard page-centered">
 	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
 	<div id="bg-overlay"></div>
 

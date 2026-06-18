@@ -2,17 +2,11 @@
 
 /* The post-registration "check your email" page: a single centered card. */
 
-/* ============================================================
-   Awaiting-state pieces
-   ============================================================ */
-
-/* Explanatory message block beneath the heading. */
+/* Stacks the multiple paragraphs of an .auth-state-text block (text color/size come from that class). */
 .register-state-text {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
-	color: var(--c-text-muted);
-	font-size: 0.95em;
 }
 
 /* "Check email correctness" toggle — a secondary button that reveals the change-email field. */
