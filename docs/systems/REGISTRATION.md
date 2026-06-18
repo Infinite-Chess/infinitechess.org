@@ -1,7 +1,9 @@
 # Registration & Account Verification
 
-How an infinitechess.org account is created, end to end. Read this before touching anything
-under `/register`, `/register/awaiting`, or `/verify/:token`.
+How an infinitechess.org account is created, end to end: the verify-first registration that
+stages a pending row, the emailed verification link, and the poll that promotes it to a real
+member and signs them in. Covers the two secrets, anti-enumeration, recovery/deliverability,
+rate limits, and the `pending_registrations` table.
 
 ## The core idea: verify-first
 
@@ -41,7 +43,7 @@ endpoint is the action the page's script calls.
 | `GET /register/awaiting`                   | The "check your email" page. **If no active pending registration, redirects to `/register`.**                              |
 | `GET /api/register/awaiting/status`        | Polled by the awaiting page while it waits; returns the pending registration's status.                                     |
 | `PUT /api/register/awaiting/email`         | Change-email recovery.                                                                                                     |
-| `GET /verify/:token`                       | **Inert** landing page. Shows a "Verify my account" button.                                                                |
+| `GET /verify/:token`                       | **Inert** landing page. Shows a "Verify my account" button. Sets `Referrer-Policy: no-referrer`.                           |
 | `POST /api/verify/:token`                  | The actual promotion: creates the `members` row.                                                                           |
 
 ## End-to-end flow
@@ -79,7 +81,8 @@ states ([verifyAccountController.ts](/src/server/controllers/verifyAccountContro
 `prompt` (live, unverified → shows the button), `verified` (already promoted → confirmation),
 `invalid` (unknown or expired token). It's inert (requiring real button click) because email
 security scanners GET every link in a message, which would otherwise let a scanner activate
-the account prematurely without the email owner's consent.
+the account prematurely without the email owner's consent. Also sets `Referrer-Policy: no-referrer`
+so the token in the URL doesn't leak via `Referer` to third-party resources.
 
 Clicking the button → `POST /api/verify/:token` → looks up the pending row by
 `verification_token` and **promotes** it: atomically creates the `members` row and sets the
