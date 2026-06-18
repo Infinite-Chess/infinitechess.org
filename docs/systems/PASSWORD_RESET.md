@@ -79,19 +79,21 @@ The GET is read-only and consumes nothing, so an email scanner pre-fetching it d
 
 `handleResetPassword` (body `{ token, password }`):
 
-1. `verifyBodyHasResetPasswordData` — both non-empty strings.
+1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars
+   (a valid token is 43 chars — rejects obviously invalid values before hashing).
 2. `doPasswordFormatChecks` — server-side strength re-check (client checks are UX only).
 3. Fast pre-check (`findUnexpiredResetTokenRecord`) — no match → `400 { tokenInvalid: true }`.
    **This flag tells the client to reload**, re-SSRing the expired-link card. This avoids doing
    bcrypt work for obviously invalid/expired tokens.
 4. bcrypt-hash the new password.
-5. In **one transaction**: consume the token atomically (with the same expiry guard), then
-   `UPDATE members ...`. If the token was consumed by a concurrent request between pre-check and transaction, the delete returns no row and the request returns `400 { tokenInvalid: true }`.
-6. `deleteAllRefreshTokensForUser` — terminate **all** the user's other sessions.
-7. Mint a fresh session for **this** browser (`createNewSession`) — it just proved control of
+5. In **one transaction**: atomically consume the token (with the same expiry guard), then
+   `UPDATE members ...`, and terminates all of the user's active sessions. If the token was
+   consumed by a concurrent request between pre-check and transaction, the delete returns
+   no row and the request returns `400 { tokenInvalid: true }`.
+6. Mint a fresh session for **this** browser (`createNewSession`) — it just proved control of
    the account — and fire-and-forget `sendPasswordChangedEmail` (an out-of-band "your password
-   "your password changed" security receipt).
-8. `res.sendStatus(200)`. The session cookie is now set, so the client
+   changed" security receipt).
+7. `res.sendStatus(200)`. The session cookie is now set, so the client
    ([resetpassword.ts](/src/client/scripts/esm/views/resetpassword.ts)) queues a toast and
    navigates to `/`. `tokenInvalid` → reload; any other non-OK → inline error.
 
