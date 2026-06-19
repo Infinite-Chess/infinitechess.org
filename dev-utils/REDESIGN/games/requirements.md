@@ -1,6 +1,6 @@
 # Game Page — Requirements
 
-Brief, running list of decided requirements for the redesigned game page.
+Running list of decided requirements for the redesigned game page.
 
 ## URL
 

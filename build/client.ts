@@ -34,6 +34,7 @@ const ESMEntryPoints = [
 	'src/client/css/index.css',
 	'src/client/css/login.css',
 	'src/client/css/register-awaiting.css',
+	'src/client/css/game.css',
 
 	// Scripts
 	'src/client/scripts/esm/components/header/header.ts',
@@ -44,6 +45,7 @@ const ESMEntryPoints = [
 	'src/client/scripts/esm/views/login.ts',
 	'src/client/scripts/esm/views/forgotpassword.ts',
 	'src/client/scripts/esm/views/resetpassword.ts',
+	'src/client/scripts/esm/views/game/game.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

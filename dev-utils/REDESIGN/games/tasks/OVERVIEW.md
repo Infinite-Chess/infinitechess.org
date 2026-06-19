@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T3 — `/game/:id` page shell ([T3-game-page-shell.md](T3-game-page-shell.md))
-Add the `page('/game/:id')` route: a shared `decodeGameId` helper (base62 decode + range + canonical check) in `gamesManager`, an existence/liveness check (`getGameByID` / `isGameIdTaken`), `send404` in place for malformed/nonexistent ids, else render. Add the minimal `game.njk` shell (standard scaffold — header, empty `<main class="game">`, footer; **no** game UI), a client entry skeleton, `game.css`, build entries, and inject `window.gamePageData = { id, isLive }`.
-
 ## T4 — Dead-game state producer ([T4-dead-game-state.md](T4-dead-game-state.md))
 Define `DeadGameState = GameStateBase.extend({ icn, ratingChanges?, finalClocks? })` and `produceDeadGameState(game_id)` built **from DB columns only** (no ICN parsing): `gameConclusion` from the `termination` (condition key) + `result` columns; `players` from `player_games` (a color absent ⇒ guest); `ratingChanges` from `elo_at_game + elo_change_from_game` (`confident: true`); `finalClocks` from `clock_at_end_millis` (needed because the ICN only stamps clocks on moves). Deleted-account username → `"(Deleted User)"`.
 
