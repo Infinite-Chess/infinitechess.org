@@ -1,8 +1,13 @@
 // src/server/controllers/roles.ts
 
 /**
- * This module handles the addition
- * and removal of roles from members.
+ * This module handles the addition and removal of roles from members.
+ *
+ * NOTE: Roles are baked into the JWT and read off the decoded token during auth — never
+ * re-checked against the DB — so mutations here don't take effect until the token rotates.
+ * Harmless today (only caller is additive dev seeding), but a demotion feature MUST close
+ * this: resolve roles from `members.roles` per request, or re-issue + evict the member's
+ * sessions/sockets on change.
  */
 
 import { getMemberDataByCriteria, updateMemberColumns } from '../database/memberManager.js';
