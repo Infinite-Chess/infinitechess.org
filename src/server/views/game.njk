@@ -1,0 +1,24 @@
+{% extends "layout.njk" %}
+
+{% set pageName = "Game" %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
+{% endblock %}
+
+{% block head %}
+{# SSR→client channel: the numeric game id and a best-effort liveness hint (can be innacurate by the time they render). #}
+<script>window.gamePageData = {{ gamePageData | json | safe }};</script>
+{% endblock %}
+
+{% block body %}
+{% include "components/header/header.njk" %}
+
+<main></main>
+
+{% include "components/footer/footer.njk" %}
+{% endblock %}
+
+{% block script %}
+<script type="module" src="{{ manifest['scripts/esm/views/game/game.ts'] }}"></script>
+{% endblock %}
