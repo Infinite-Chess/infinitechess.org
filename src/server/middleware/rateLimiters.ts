@@ -111,3 +111,10 @@ export const seekPreviewLimiter = rateLimit({
 	max: 20,
 	...default_options,
 });
+
+/** Dead-game state fetch limiter. Game states can be large. */
+export const gameStateLimiter = rateLimit({
+	windowMs: 1000 * 60, // 1 minute
+	max: 30,
+	...default_options,
+});
