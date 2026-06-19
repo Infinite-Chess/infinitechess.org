@@ -185,6 +185,41 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 	change: z.number(),
 });
 
+// Game State Schemas ---------------------------------------------------------------
+
+/**
+ * The role-agnostic typed core of a game, shared by live {@link FullGameState}
+ * and dead `DeadGameState` shapes.
+ *
+ * Note: this overlaps the client's `ServerGameInfo`/`JoinGameMessage`
+ * (`src/client/scripts/esm/websocket/socketschemas.ts`); that de-dup is
+ * deferred to a later task that reshapes the live socket protocol.
+ */
+export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
+export const GameStateBaseSchema = z.strictObject({
+	id: z.int().nonnegative(),
+	rated: z.boolean(),
+	variant: z.enum(variantregistry.VARIANT_CODES),
+	timeControl: TimeControlSchema,
+	/** Epoch milliseconds the game was created. */
+	timeCreated: z.number(),
+	/** Per-color username container, with rating embedded per player. */
+	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
+	gameConclusion: winconutil.gameConclusionSchema.optional(),
+});
+
+/**
+ * The full state of a LIVE game, sent over the WebSocket on subscribe.
+ * Does not include role information.
+ */
+export type FullGameState = z.infer<typeof FullGameStateSchema>;
+export const FullGameStateSchema = GameStateBaseSchema.extend({
+	/** Each move carries its optional `clockStamp` (per-move clock history for rewind). */
+	moves: z.array(MovePacketSchema),
+	/** The live ticking clocks. Absent for untimed games. */
+	clockValues: ClockValuesSchema.optional(),
+});
+
 // Seek Helper Schemas ---------------------------------------------------------------
 
 /**
