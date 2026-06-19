@@ -18,12 +18,15 @@ import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.j
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	ClockValues,
+	FullGameState,
 	GameUpdateMessage,
 	MetaData,
+	MovePacket,
 	OpponentsMoveMessage,
 	ParticipantState,
 	PlayerRatingChangeInfo,
 	Rating,
+	ServerUsernameContainer,
 	TimeControl,
 } from '../../../shared/types.js';
 
@@ -40,11 +43,15 @@ import {
 
 import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-import { memberInfoEq, AuthSeek } from '../seeksmanager/seekutility.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+import {
+	memberInfoEq,
+	AuthSeek,
+	buildServerUsernameContainer,
+} from '../seeksmanager/seekutility.js';
 
 // Constants ------------------------------------------------------------------------------------
 
@@ -398,6 +405,38 @@ function getRatingDataForGamePlayers(
 	}
 
 	return ratingData;
+}
+
+/**
+ * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent
+ * to clients on subscribe. The per-viewer overlay (youAreColor, participantState) is
+ * layered on separately at delivery time, not here.
+ * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
+ */
+function produceFullGameState(servergame: ServerGame): FullGameState {
+	const match = servergame.match;
+	const ratings = getRatingDataForGamePlayers(match.playerData, match.variant);
+
+	const players: PlayerGroup<ServerUsernameContainer> = {};
+	for (const [p, data] of Object.entries(match.playerData)) {
+		const color = Number(p) as Player;
+		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
+	}
+
+	const state: FullGameState = {
+		id: match.id,
+		rated: match.rated,
+		variant: match.variant,
+		timeControl: match.clock,
+		timeCreated: match.timeCreated,
+		players,
+		moves: servergame.moves.map((m) => simplifyMove(m)),
+	};
+
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+	if (!servergame.untimed) state.clockValues = getGameClockValues(servergame);
+
+	return state;
 }
 
 /**
@@ -788,10 +827,13 @@ function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord
 }
 
 /**
- * Simplifies a game's move into the minimal info needed for the client to reconstruct the move.
+ * Simplifies a game's move into the {@link MovePacket} sent over the wire: its
+ * serialized token plus its clockStamp (the clock at that move, for rewind display).
  */
-function simplifyMove(move: MoveRecord): { token: string } {
-	return { token: move.token };
+function simplifyMove(move: MoveRecord): MovePacket {
+	const packet: MovePacket = { token: move.token };
+	if (move.clockStamp !== undefined) packet.clockStamp = move.clockStamp;
+	return packet;
 }
 
 /**
@@ -840,6 +882,7 @@ export default {
 	unsubClientFromGame,
 	resyncToGame,
 	assignWhiteBlackPlayersFromSeek,
+	produceFullGameState,
 	constructMetadataOfGame,
 	broadcastGameUpdate,
 	sendGameUpdateToColor,
