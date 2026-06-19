@@ -9,7 +9,7 @@
 
 import jwt from 'jsonwebtoken';
 
-import { doesMemberOfIDExist, updateLastSeen } from '../../database/memberManager.js';
+import { updateLastSeen } from '../../database/memberManager.js';
 import { refreshTokenGracePeriodMillis, TokenPayload } from './tokenSigner.js';
 import {
 	deleteRefreshToken,
@@ -18,49 +18,22 @@ import {
 	type RefreshTokenRecord,
 } from '../../database/refreshTokenManager.js';
 
-if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
-const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET'];
 const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 // Validating Tokens ---------------------------------------------------------------------------------
-
-/**
- * Checks if an access token is valid => not expired,
- * nor tampered, and the user account still exists.
- */
-function validateAccessToken(token: string): { payload: TokenPayload } | undefined {
-	// Decode the token
-	const payload = decodeToken(token, false);
-	if (!payload) return undefined; // Expired or tampered
-
-	try {
-		// Check if the user account still exists.
-		if (!doesMemberOfIDExist(payload.user_id)) return undefined; // Account deleted
-	} catch {
-		// DB error (already logged)
-		return undefined;
-	}
-
-	try {
-		updateLastSeen(payload.user_id);
-	} catch {
-		// DB error (already logged). Token is still valid
-	}
-	return { payload };
-}
 
 /**
  * Checks if a refresh token is valid. Not expired, nor tampered, and it's still
  * in the database (not manually invalidated by logging out, or deleting the account).
  * @param IP - Has a chance to not be defined on HTTP requests.
  */
-function validateRefreshToken(
+export function validateRefreshToken(
 	token: string,
 	IP?: string,
 ): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
 	// Decode the token
-	const payload = decodeToken(token, true);
+	const payload = decodeToken(token);
 	if (!payload) return undefined; // Expired or tampered
 
 	let tokenRecord: RefreshTokenRecord | undefined;
@@ -124,14 +97,13 @@ function resolveRefreshTokenRecord(token: string, IP?: string): RefreshTokenReco
 }
 
 /**
- * Extracts and decodes the payload from an access or refresh token.
+ * Extracts and decodes the payload from a refresh token.
  * @returns The decoded payload if the token is valid, or null if it is expired or tampered.
  */
-function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | null {
-	const secret = isRefreshToken ? REFRESH_TOKEN_SECRET : ACCESS_TOKEN_SECRET;
+function decodeToken(token: string): TokenPayload | null {
 	try {
 		// Decode the JWT and return the payload
-		const jwtPayload = jwt.verify(token, secret) as jwt.JwtPayload; // Can cast here because we know we originally signed it as an object, not a string.
+		const jwtPayload = jwt.verify(token, REFRESH_TOKEN_SECRET) as jwt.JwtPayload; // Can cast here because we know we originally signed it as an object, not a string.
 		return {
 			user_id: jwtPayload['user_id'],
 			username: jwtPayload['username'],
@@ -144,5 +116,3 @@ function decodeToken(token: string, isRefreshToken: boolean): TokenPayload | nul
 		return null;
 	}
 }
-
-export { validateAccessToken, validateRefreshToken };

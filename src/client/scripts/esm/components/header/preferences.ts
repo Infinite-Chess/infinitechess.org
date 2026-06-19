@@ -125,7 +125,6 @@ function savePreferences(): void {
 
 function onChangeMade(): void {
 	changeWasMade = true;
-	validatorama.getAccessToken(); // Preload the access token so that we are ready to quickly save our preferences on the server if the page is unloaded
 }
 
 async function sendPrefsToServer(): Promise<void> {
@@ -139,21 +138,14 @@ async function sendPrefsToServer(): Promise<void> {
 }
 
 async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
-	// Configure the PUT request
-	const config = {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		} as Record<string, string>,
-		body: JSON.stringify({ preferences: preparedPrefs }), // Send the preferences as JSON
-	};
-
-	// Get the access token and add it to the Authorization header
-	const token: string | undefined = await validatorama.getAccessToken();
-	if (token) config.headers['Authorization'] = `Bearer ${token}`; // If you use tokens for authentication
-
 	try {
-		const response: Response = await serverFetch('/api/preferences', config);
+		const response: Response = await serverFetch('/api/preferences', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			} as Record<string, string>,
+			body: JSON.stringify({ preferences: preparedPrefs }), // Send the preferences as JSON
+		});
 
 		// Check if the response status code indicates success (e.g., 200-299 range)
 		if (response.ok) {

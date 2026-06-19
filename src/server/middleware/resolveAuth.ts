@@ -1,11 +1,8 @@
 // src/server/middleware/resolveAuth.ts
 
 /*
- * This module reads incoming requests, searching for a
- * valid authorization header, or a valid refresh token cookie,
- * to verify their identity, and sets the `user` and `role`
- * properties of the request (or of the websocket metadata)
- * if they are logged in.
+ * Reads a request's refresh-token cookie, validates it, and sets `req.memberInfo`
+ * (or the websocket metadata's memberInfo) with the signed-in user's identity.
  */
 
 import type { Request, Response, NextFunction } from 'express';
@@ -14,80 +11,33 @@ import { getClientIP } from '../utility/IP.js';
 import { ParsedCookies } from '../types.js';
 import { CustomWebSocket } from '../socket/socketUtility.js';
 import { logEventsAndPrint } from './logEvents.js';
+import { validateRefreshToken } from '../controllers/authenticationTokens/tokenValidator.js';
 import {
 	freshenSession,
 	revokeSession,
 } from '../controllers/authenticationTokens/sessionManager.js';
-import {
-	validateAccessToken,
-	validateRefreshToken,
-} from '../controllers/authenticationTokens/tokenValidator.js';
 
 /**
- * Seeds `req.memberInfo` with a signed-out baseline before a resolver runs.
- * @returns false if auth was already resolved this request (caller should skip re-resolving).
+ * [HTTP] Resolves identity from the refresh-token cookie, setting `req.memberInfo` so downstream
+ * middleware can gate private data. Also renews active sessions. Does DB work — only use on routes
+ * that need authentication.
  */
-function beginResolveAuth(req: Request): boolean {
+function resolveAuth(req: Request, res: Response, next: NextFunction): void {
 	// Idempotent: skip if auth was already resolved for this request
-	if (req.memberInfo !== undefined) return false;
+	if (req.memberInfo !== undefined) return next();
 
 	const cookies: ParsedCookies = req.cookies;
 	req.memberInfo = { signedIn: false, browser_id: cookies['browser-id'] };
-	return true;
-}
 
-/**
- * [HTTP] Resolves identity from the bearer access token, else the refresh-token cookie, setting
- * `req.memberInfo` so downstream middleware can gate private data. Also renews active sessions.
- * Does DB work — only use on routes that need authentication.
- */
-function resolveAuth(req: Request, res: Response, next: NextFunction): void {
-	if (beginResolveAuth(req)) {
-		const hasAccessToken = tryAccessToken(req, res);
-		if (!hasAccessToken) tryRefreshToken(req, res);
-	}
+	tryRefreshToken(req, res);
+
 	next();
-}
-
-/** [HTTP] Resolves identity from the refresh-token cookie ONLY (no bearer access token). */
-function resolveRefreshAuth(req: Request, res: Response, next: NextFunction): void {
-	if (beginResolveAuth(req)) tryRefreshToken(req, res);
-	next();
-}
-
-/**
- * [HTTP] Reads the request's bearer token (from the authorization header),
- * sets the connections `memberInfo` property if it is valid (are signed in).
- *
- * Returns whether they have a valid access token or not.
- */
-function tryAccessToken(req: Request, res: Response): boolean {
-	const authHeader = req.headers.authorization;
-	if (!authHeader) return false; // No authentication header included
-	if (!authHeader.startsWith('Bearer ')) return false; // Authentication header doesn't look correct
-
-	const accessToken = authHeader.split(' ')[1];
-	if (!accessToken) return false; // Authentication header doesn't contain a token
-
-	const result = validateAccessToken(accessToken);
-	if (!result) {
-		// Revoke their session now, in case they were manually logged out, and their client didn't know that.
-		revokeSession(res);
-		return false;
-	}
-
-	// Token is valid and hasn't hit the 15m expiry
-
-	// console.log('A valid access token was used! :D :D');
-
-	req.memberInfo = { ...req.memberInfo, signedIn: true, ...result.payload }; // Username was our payload when we generated the access token
-	return true;
 }
 
 /**
  * [HTTP] Reads the request's refresh token cookie,
  * updates the connections `memberInfo` property if it is valid (are signed in).
- * Only call if they did not have a valid access token, as this performs database queries!
+ * Performs database queries.
  */
 function tryRefreshToken(req: Request, res: Response): void {
 	const cookies: ParsedCookies = req.cookies;
@@ -152,4 +102,4 @@ function tryRefreshToken_WebSocket(ws: CustomWebSocket): void {
 	ws.metadata.memberInfo = { ...ws.metadata.memberInfo, signedIn: true, ...result.payload };
 }
 
-export { resolveAuth, resolveRefreshAuth, resolveAuth_WebSocket };
+export { resolveAuth, resolveAuth_WebSocket };

@@ -55,9 +55,6 @@ let initialized = false;
 	setSupportedVariantsDisplay();
 	createEmptyLeaderboardTable();
 
-	// On page load, we wait for validatorama to renew our session if needed,
-	// as the server reads our session info to know who to return a global ranking for.
-	await validatorama.waitUntilInitialRequestBack();
 	loggedInAs = validatorama.getOurUsername();
 
 	await populateTable(LEADERBOARD_LENGTH_ON_LOAD);

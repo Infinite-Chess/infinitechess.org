@@ -9,7 +9,6 @@
 import config from '../game/config.js';
 import thread from '../util/thread.js';
 import socketclose from './socketclose.js';
-import validatorama from '../util/validatorama.js';
 import socketrouter from './socketrouter.js';
 import { SocketBus } from './SocketBus.js';
 
@@ -122,9 +121,6 @@ async function establishSocket(): Promise<boolean> {
 	if (socket && socket.readyState === WebSocket.OPEN) return true;
 
 	openingSocket = true;
-
-	// Await validatorama because it may be refreshing our session cookies
-	await validatorama.waitUntilInitialRequestBack();
 
 	const success = await openSocket();
 

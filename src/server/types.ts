@@ -56,7 +56,7 @@ interface ParsedCookies {
 	 * Information about the session for the user to read.
 	 * The server must NOT trust this information as it can be tampered!
 	 */
-	memberInfo?: string; // Stringified: { user_id: number, username: string, issued: number, expires: number }
+	memberInfo?: string; // Stringified MemberInfoCookie (src/shared/types/memberInfo.ts)
 }
 
 export type { AuthMemberInfo, ParsedCookies };

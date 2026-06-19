@@ -23,12 +23,10 @@ function ensureExists(): void {
 
 	// Doesn't exist, generate it with default values
 
-	const ACCESS_TOKEN_SECRET = generateSecret(32); // 32 bytes = 64 characters in hex
-	const REFRESH_TOKEN_SECRET = generateSecret(32);
+	const REFRESH_TOKEN_SECRET = generateSecret(32); // 32 bytes = 64 characters in hex
 
 	const content = `
 NODE_ENV=development
-ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
 REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
 RESTART_SECRET=
 AWS_REGION=

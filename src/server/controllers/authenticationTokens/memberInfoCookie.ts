@@ -13,20 +13,11 @@
 
 import type { Request, Response } from 'express';
 import type { ParsedCookies } from '../../types.js';
+import type { MemberInfoCookie } from '../../../shared/types/memberInfo.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
-
-/** The shape of the (JavaScript-readable) `memberInfo` cookie. */
-export type MemberInfoCookie = {
-	user_id: number;
-	username: string;
-	/** When the session was issued, in milliseconds since the epoch. */
-	issued: number;
-	/** When the session expires, in milliseconds since the epoch. */
-	expires: number;
-};
 
 /**
  * Sets the `memberInfo` cookie (readable by JavaScript, not HTTP-only).

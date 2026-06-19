@@ -6,7 +6,6 @@
 
 import type { CompressionMode } from '../../../../../shared/util/compression';
 
-import validatorama from '../../util/validatorama';
 import { serverFetch } from '../../util/serverFetch.js';
 import { fetchWithDeduplication } from '../../util/fetchDeduplicator.js';
 
@@ -32,14 +31,9 @@ export interface CloudPositionRecord {
 	castling?: boolean;
 }
 
-// Helpers --------------------------------------------------------------------------
+// Constants -----------------------------------------------------------------------
 
-async function buildAuthHeaders(): Promise<Record<string, string>> {
-	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-	const token = await validatorama.getAccessToken();
-	if (token) headers['Authorization'] = `Bearer ${token}`;
-	return headers;
-}
+const HEADERS: Record<string, string> = { 'Content-Type': 'application/json' };
 
 // API Wrappers --------------------------------------------------------------------
 
@@ -49,10 +43,9 @@ async function buildAuthHeaders(): Promise<Record<string, string>> {
  * @throws If the request fails or the server returns a non-OK response.
  */
 async function getSavedPositions(): Promise<CloudSaveListRecord[]> {
-	const headers = await buildAuthHeaders();
 	const response = await serverFetch('/api/editor-saves', {
 		method: 'GET',
-		headers,
+		headers: HEADERS,
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { message?: string };
@@ -76,10 +69,9 @@ async function savePosition(
 	pawn_double_push?: boolean,
 	castling?: boolean,
 ): Promise<CloudSaveListRecord[]> {
-	const headers = await buildAuthHeaders();
 	const response = await serverFetch('/api/editor-saves', {
 		method: 'POST',
-		headers,
+		headers: HEADERS,
 		body: JSON.stringify({
 			name,
 			piece_count,
@@ -104,12 +96,11 @@ async function savePosition(
  * @throws If the request fails or the server returns a non-OK response. Can happen if the position has since been deleted.
  */
 async function getPosition(position_name: string): Promise<CloudPositionRecord> {
-	const headers = await buildAuthHeaders();
 	const response = await fetchWithDeduplication(
 		`/api/editor-saves/${encodeURIComponent(position_name)}`,
 		{
 			method: 'GET',
-			headers,
+			headers: HEADERS,
 		},
 	);
 	if (!response.ok) {
@@ -126,10 +117,9 @@ async function getPosition(position_name: string): Promise<CloudPositionRecord> 
  * @throws If the request fails or the server returns a non-OK response.
  */
 async function deletePosition(position_name: string): Promise<CloudSaveListRecord[]> {
-	const headers = await buildAuthHeaders();
 	const response = await serverFetch(`/api/editor-saves/${encodeURIComponent(position_name)}`, {
 		method: 'DELETE',
-		headers,
+		headers: HEADERS,
 	});
 	if (!response.ok) {
 		const errorData = (await response.json()) as { message?: string };

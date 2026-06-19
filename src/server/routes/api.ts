@@ -55,7 +55,7 @@ router.post('/verify/:token', verifyPendingRegistration);
 
 // Routers that manage their own authentication (per-router or per-route resolveAuth) -
 
-router.use('/', authRouter); // login (public), logout + access-token (authed)
+router.use('/', authRouter); // login + logout (both public)
 router.use('/editor-saves', editorSavesRouter);
 router.use('/news', newsRouter);
 router.use('/preferences', preferencesRouter);

@@ -168,5 +168,4 @@ jobs:
         env:
           NODE_ENV: development
           HTTPPORT_LOCAL: 3000
-          ACCESS_TOKEN_SECRET: ci-smoke-test-placeholder
           REFRESH_TOKEN_SECRET: ci-smoke-test-placeholder

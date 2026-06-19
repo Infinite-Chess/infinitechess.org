@@ -152,8 +152,7 @@ function closeAllSocketsOfSession(jwt: string, closureCode: number, closureReaso
 	connectedSessions[jwt]?.slice().forEach((socketID) => {
 		// slice() makes a copy of it
 		const ws = websocketConnections[socketID];
-		if (!ws) return;
-		ws.close(closureCode, closureReason);
+		if (ws) ws.close(closureCode, closureReason);
 	});
 }
 
@@ -174,8 +173,7 @@ function closeAllSocketsOfMember(
 	socketIDs.slice().forEach((socketID) => {
 		// slice() makes a copy of it
 		const ws = websocketConnections[socketID];
-		if (!ws) return;
-		ws.close(closureCode, closureReason);
+		if (ws) ws.close(closureCode, closureReason);
 	});
 }
 

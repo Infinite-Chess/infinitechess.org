@@ -297,10 +297,6 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 		},
 		body: JSON.stringify({ new_checkmate_beaten: checkmatePracticeID }),
 	};
-
-	const token: string | undefined = await validatorama.getAccessToken();
-	if (token) (fetchInit.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-
 	const retryOptions: RetryFetchOptions = {
 		// With these settings, the fifth attempt occurs 1m 15s after the first.
 		maxAttempts: 5,

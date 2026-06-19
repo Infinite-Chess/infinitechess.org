@@ -1,53 +1,25 @@
 // src/client/scripts/esm/util/validatorama.ts
 
-// I called it validatorama because "validator" was already something
-// in the Node environment or somewhere and so jsdoc wasn't auto suggesting the right one
-
 /*
- * Fetches an access token and our username if we are logged in.
- *
- * If we are not logged in, the server will give us a browser-id
- * cookie to validate our identity in future requests.
+ * Exposes our login state and username/user_id, read from the `memberInfo` cookie. Auth itself
+ * rides on the httpOnly refresh-token cookie (auto-sent same-site).
  */
 
-import tokenConfig from '../../../../shared/util/tokenConfig.js';
+import type { MemberInfoCookie } from '../../../../shared/types/memberInfo.js';
 
 import docutil from './docutil.js';
-import { serverFetch } from './serverFetch.js';
+
+// Types ----------------------------------------------------------------------------
+
+/** Our identity (the cookie payload) when signed in, else just the flag. */
+type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: false };
 
 // Variables ----------------------------------------------------------------------------
 
-/** Cushion time in milliseconds before the access token expires, when we'll fetch a new one. */
-const ACCESS_TOKEN_CUSHION_MILLIS: number = 10_000;
-
-let reqIsOut: boolean = false;
-const resolvers: (() => void)[] = [];
 /** The timeout ID for the timer to check session expiry. */
 let sessionExpiryTimer: number | undefined;
 
-let memberInfo: {
-	signedIn: boolean;
-	user_id?: number;
-	username?: string;
-	issued?: number;
-	expires?: number;
-} = {
-	signedIn: false,
-	user_id: undefined,
-	username: undefined,
-	issued: undefined,
-	expires: undefined,
-};
-
-let tokenInfo: {
-	/** Access token for authentication, if we are logged in AND have requested one! */
-	accessToken?: string;
-	/** Last refresh time of the access token, in milliseconds. */
-	lastRefreshTime?: number;
-} = {
-	accessToken: undefined,
-	lastRefreshTime: undefined,
-};
+let memberInfo: MemberInfoState = { signedIn: false };
 
 // Functions ----------------------------------------------------------------------------
 
@@ -56,8 +28,6 @@ let tokenInfo: {
 
 	// Sets our memberInfo properties if we are logged in
 	readMemberInfoCookie();
-	// Most of the time we don't need an immediate access token
-	// refreshToken();
 })();
 
 function initListeners(): void {
@@ -65,82 +35,8 @@ function initListeners(): void {
 }
 
 /**
- * Checks if the access token is expired or near-expiring.
- * If expired, it calls `refreshToken()` to get a new one.
- *
- * If we're not signed in, the server will give/renew us a browser-id cookie for validating our identity.
- * @returns Resolves with the access token, or undefined if not logged in.
- */
-async function getAccessToken(): Promise<string | undefined> {
-	if (reqIsOut) await waitUntilInitialRequestBack();
-
-	if (!memberInfo.signedIn) return;
-
-	const timeSinceLastRefresh = Date.now() - (tokenInfo.lastRefreshTime || 0);
-
-	// Check if token is expired or near expiring
-	if (
-		!tokenInfo.accessToken ||
-		timeSinceLastRefresh > tokenConfig.ACCESS_TOKEN_EXPIRY_MILLIS - ACCESS_TOKEN_CUSHION_MILLIS
-	) {
-		await refreshToken();
-	}
-
-	return tokenInfo.accessToken;
-}
-
-/**
- * Inits the access token and our username if we are logged in.
- *
- * Reads the `memberInfo` cookie to get the member details (username).
- * If not signed in, the server will renew the browser-id cookie.
- *
- * @returns Resolves when the token refresh process is complete.
- */
-
-async function refreshToken(): Promise<void> {
-	reqIsOut = true;
-	try {
-		const response = await serverFetch('/api/access-token', { method: 'POST' });
-		if (response.ok) {
-			// Session token (refresh token cookie) is valid!
-			const accessToken = docutil.getCookieValue('token'); // Read access token from cookie
-			if (!accessToken) throw new Error('Token cookie not found!');
-			tokenInfo = { accessToken, lastRefreshTime: Date.now() };
-
-			// Delete the token cookie after reading it
-			docutil.deleteCookie('token');
-
-			// It's possible the server renewed our session. Let's read the memberInfo cookie again!
-			readMemberInfoCookie();
-
-			// Dispatch event to inform other parts of the app that we are logged in.
-			// document.dispatchEvent(new CustomEvent('login'));
-		} else if (response.status === 403) {
-			// Auth failure: , our session token (refresh token cookie) is invalid or not present.
-			console.log('Token refresh: not signed in (invalid or missing refresh token).');
-			reloadAfterLogout();
-		} else {
-			// Any other non-OK status (e.g. 429 rate-limited, or 5xx). Don't log the user out!
-			// Leave the session as-is; a later refresh attempt will retry.
-			console.error(`Token refresh failed with status ${response.status}.`);
-		}
-	} catch (error) {
-		console.error('Error occurred during token refresh:', error);
-		readMemberInfoCookie();
-	} finally {
-		reqIsOut = false;
-		// Resolve all pending promises
-		while (resolvers.length > 0) {
-			resolvers.shift()!(); // Get the first resolver and resolve it
-		}
-	}
-}
-
-/**
- * Read the memberInfo cookie, which will be present
- * if we have a refreshed token cookie, to grab our
- * username and user_id properties if we are signed in.
+ * Read the memberInfo cookie, which is present if we have a session,
+ * to grab our username and user_id properties if we are signed in.
  */
 function readMemberInfoCookie(): void {
 	resetMemberInfo();
@@ -150,23 +46,20 @@ function readMemberInfoCookie(): void {
 	// JSON objects can't be stringified into cookies because cookies can't hold special characters
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
 	if (!encodedMemberInfo) return; // No cookie, not signed in.
-	// Decode the URL-encoded string
-	const memberInfoStringified = decodeURIComponent(encodedMemberInfo);
-	memberInfo = JSON.parse(memberInfoStringified); // { user_id, username, issued (timestamp), expires (timestamp) }
-	memberInfo.signedIn = true;
+	// Decode the URL-encoded string (cookies can't hold the special characters of raw JSON).
+	const parsed: MemberInfoCookie = JSON.parse(decodeURIComponent(encodedMemberInfo));
+	memberInfo = { signedIn: true, ...parsed };
 
 	scheduleSessionLogout();
 }
 
 /**
  * Cleans up local auth state, then reloads the page to reflect the logged-out state.
- * Cleanup prevents stale tokens/cookies being used in the brief window before the
- * navigation completes, and cancels the session-expiry timer so it can't fire again.
+ * Cleanup cancels the session-expiry timer so it can't fire again after the reset.
  */
 function reloadAfterLogout(): void {
 	docutil.deleteCookie('memberInfo');
 	resetMemberInfo();
-	tokenInfo = {};
 	window.location.reload();
 }
 
@@ -187,12 +80,9 @@ function scheduleSessionLogout(): void {
 
 /**
  * Callback for the session expiry timer.
- * Re-verifies cookie existence/expiry before deciding to dispatch logout event or reschedule.
+ * Re-verifies cookie existence/expiry before deciding to reload or reschedule.
  */
 function checkSessionExpiry(): void {
-	// If a refresh request is currently out, trust that logic to handle the outcome instead of forcing a logout here.
-	if (reqIsOut) return;
-
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
 
 	// If cookie is gone, or we can't parse it, we are definitely logged out.
@@ -216,19 +106,6 @@ function checkSessionExpiry(): void {
 		console.log('Detected session expired. Reloading. - 2');
 		reloadAfterLogout();
 	}
-}
-
-/**
- * Waits until the initial request for an access token is completed.
- */
-async function waitUntilInitialRequestBack(): Promise<void> {
-	if (!reqIsOut) return; // If no request is out, resolve immediately
-	// console.log("Waiting until initial request for an access token is completed... (Delete later)");
-
-	// Create a promise that resolves when the request is completed
-	return new Promise<void>((resolve): void => {
-		resolvers.push(resolve); // Add this resolver to the list
-	});
 }
 
 /**
@@ -257,11 +134,8 @@ function getOurUserId(): number | undefined {
 // --------------------------------------------------------------------------------
 
 export default {
-	waitUntilInitialRequestBack,
 	areWeLoggedIn,
 	getOurUsername,
 	getOurUserId,
-	getAccessToken,
-	refreshToken,
 	reloadAfterLogout,
 };

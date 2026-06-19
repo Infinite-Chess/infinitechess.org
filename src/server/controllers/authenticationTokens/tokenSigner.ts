@@ -15,8 +15,6 @@ import type { Role } from '../roles.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-import tokenConfig from '../../../shared/util/tokenConfig.js';
-
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
 /** The payload of the JWT token, containing user information. */
@@ -26,9 +24,7 @@ interface TokenPayload {
 	roles: Role[] | null;
 }
 
-if (!process.env['ACCESS_TOKEN_SECRET']) throw new Error('Missing ACCESS_TOKEN_SECRET');
 if (!process.env['REFRESH_TOKEN_SECRET']) throw new Error('Missing REFRESH_TOKEN_SECRET');
-const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET'];
 const REFRESH_TOKEN_SECRET = process.env['REFRESH_TOKEN_SECRET'];
 
 // Session tokens expiry times ------------------------------------------------------
@@ -47,16 +43,6 @@ const EXTENDED_SESSION_EXPIRY_MILLIS = 1000 * 60 * 60 * 24 * 180; // 180 days (~
 const refreshTokenGracePeriodMillis = 1000 * 10; // 10 seconds
 
 // Signing Tokens ------------------------------------------------------------------------------------
-
-/**
- * Signs and generates an access token for the user.
- * @throws If the token fails to sign (payload not serializable, bad expiresIn, etc).
- */
-function signAccessToken(user_id: number, username: string, roles: Role[] | null): string {
-	const payload = generatePayload(user_id, username, roles);
-	const accessTokenExpirySecs = tokenConfig.ACCESS_TOKEN_EXPIRY_MILLIS / 1000;
-	return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: accessTokenExpirySecs }); // Typically short-lived, for in-memory storage only.
-}
 
 /**
  * Signs and generates a refresh token for the user.
@@ -90,7 +76,6 @@ export {
 	DEFAULT_SESSION_EXPIRY_MILLIS,
 	EXTENDED_SESSION_EXPIRY_MILLIS,
 	refreshTokenGracePeriodMillis,
-	signAccessToken,
 	signRefreshToken,
 };
 

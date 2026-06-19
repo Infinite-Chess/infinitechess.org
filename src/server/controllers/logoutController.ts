@@ -13,7 +13,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
 	revokeSession(res);
 
 	const refreshToken = req.cookies['jwt'];
-	if (typeof refreshToken === 'string' && refreshToken) {
+	if (refreshToken && typeof refreshToken === 'string') {
 		// string, and not empty
 		try {
 			// Invalidate the token server-side.
