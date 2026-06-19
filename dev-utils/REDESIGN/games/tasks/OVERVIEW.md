@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T2 — Shared `GameStateBase` + live `FullGameState` serializer ([T2-fullgamestate.md](T2-fullgamestate.md))
-In `shared/types.ts` define `GameStateBase` (`id, rated, variant, timeControl, timeCreated, players: PlayerGroup<ServerUsernameContainer>, gameConclusion?`) and `FullGameState = GameStateBase.extend({ moves, clockValues? })` — **no `MetaData`** (that's ICN/eyeball-only; the state spreads typed fields). Add server `produceFullGameState(servergame)` reusing existing helpers, with moves keeping `clockStamp`. Also extract a shared `buildServerUsernameContainer` helper (refactor `createseek` onto it). Leaves the dormant old `JoinGameMessage` path untouched.
-
 ## T3 — `/game/:id` page shell ([T3-game-page-shell.md](T3-game-page-shell.md))
 Add the `page('/game/:id')` route: a shared `decodeGameId` helper (base62 decode + range + canonical check) in `gamesManager`, an existence/liveness check (`getGameByID` / `isGameIdTaken`), `send404` in place for malformed/nonexistent ids, else render. Add the minimal `game.njk` shell (standard scaffold — header, empty `<main class="game">`, footer; **no** game UI), a client entry skeleton, `game.css`, build entries, and inject `window.gamePageData = { id, isLive }`.
 
