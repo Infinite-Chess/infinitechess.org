@@ -43,7 +43,7 @@ router.use('/', passwordRouter);
 /** `GET /api/contributors` — returns the JSON list of project contributors. */
 router.get('/contributors', (_req: Request, res: Response) => {
 	const contributors = getContributors();
-	res.send(JSON.stringify(contributors));
+	res.json(contributors);
 });
 
 router.get('/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
