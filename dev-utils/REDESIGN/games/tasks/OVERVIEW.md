@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T5 — `GET /api/game/:id` endpoint + rate limiter ([T5-dead-game-endpoint.md](T5-dead-game-endpoint.md))
-`getGameState` handler in `GameAPI.ts`: `decodeGameId` → 400 on malformed; `produceDeadGameState` → 404 if not a concluded game; else `res.json(state)` with **no explicit `Cache-Control`** (names can change, so let the browser re-request). Add a dedicated `gameStateLimiter` (~30/min) and wire `router.get('/game/:id', gameStateLimiter, getGameState)` in `api.ts`.
-
 ## T6 — Subscribe-by-id + live delivery (players) ([T6-live-player-subscribe.md](T6-live-player-subscribe.md))
 Server-only. New game-route actions: client `subscribe {id}` → server `gamestate {SubscribedGameState}`, where `SubscribedGameState = FullGameState.extend({ youAreColor?, participantState? })`. `onSubscribeToGame` resolves the game by id, finds the player color (`doesSocketBelongToGame_ReturnColor`), attaches via `subscribeClientToGame({sendGameInfo:false})`, sends the new `gamestate`, and runs the reconnect side-effects (extracted into a shared helper). The dormant old `joingame` path is left untouched; the not-a-player branch is a `// TODO(T7)` stub.
 
