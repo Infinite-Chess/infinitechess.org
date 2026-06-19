@@ -4,13 +4,16 @@ import express, { NextFunction, Request, RequestHandler, Response } from 'expres
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
+import send404 from '../middleware/send404.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
+import { getGameByID } from '../game/gamemanager/gamemanager.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
 import { getBaseRenderContext } from '../utility/renderContext.js';
 import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
+import { decodeGameId, isGameIdTaken } from '../database/gamesManager.js';
 
 const router = express.Router();
 
@@ -40,7 +43,16 @@ const variantGroups = variantregistry.getVariantGroupsWithVariants();
 page('^/$|/index(.html)?', (req: Request, res: Response) => res.render('index.njk', { variantGroups, splashText: getRandomSplashText(req) })); // prettier-ignore
 page('/about(.html)?', (_req: Request, res: Response) => res.render('about.njk'));
 page('/credits(.html)?', (_req: Request, res: Response) => res.render('credits.njk'));
-page('/play(.html)?', (_req: Request, res: Response) => res.render('play.njk'));
+page('/game/:id', (req: Request, res: Response) => {
+	const decoded = decodeGameId(req.params['id']!);
+	if (decoded === undefined) return send404(req, res); // Malformed id
+
+	// Existence + liveness: live games live in memory, concluded games in the DB.
+	const isLive = getGameByID(decoded) !== undefined;
+	if (!isLive && !isGameIdTaken(decoded)) return send404(req, res); // Game doesn't exist
+
+	res.render('game.njk', { gamePageData: { id: decoded, isLive } });
+});
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));

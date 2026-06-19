@@ -13,8 +13,10 @@ import { startPeriodicLeaderboardRatingDeviationUpdate } from './leaderboardsMan
 
 // Variables -----------------------------------------------------------------------------------
 
-const user_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique user id with 4-digit base-62 user ids!
-const game_id_upper_cap: number = 14_776_336; // 62**4: Limit of unique game id with 4-digit base-62 game ids!
+/** 62**4: Limit of unique user id with 4-digit base-62 user ids! EXCLUSIVE. */
+const user_id_upper_cap: number = 14_776_336;
+/** 62**4: Limit of unique game id with 4-digit base-62 game ids! EXCLUSIVE. */
+const game_id_upper_cap: number = 14_776_336;
 
 /** All unique columns of the members table. Each of these would be valid to search for to find a single member. */
 const uniqueMemberKeys: string[] = ['user_id', 'username', 'email'];

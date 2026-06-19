@@ -4,6 +4,7 @@
  * This script handles queries to the games table.
  */
 
+import uuid from '../../shared/util/uuid.js';
 import jsutil from '../../shared/util/jsutil.js';
 
 import db, { dbCall } from './database.js';
@@ -35,6 +36,24 @@ type GamesColumn = keyof GamesRecord;
 // Methods --------------------------------------------------------------------------------------------
 
 /**
+ * Decodes a base62 game-id string (as it appears in `/game/:id`) into its numeric id.
+ * @returns The numeric id, or `undefined` if the string is malformed, out of range, or
+ * non-canonical (e.g. leading zeros) — ensuring each game has exactly one valid URL.
+ */
+export function decodeGameId(idStr: string): number | undefined {
+	let decoded: number;
+	try {
+		decoded = uuid.base62ToBase10(idStr);
+	} catch {
+		return undefined; // Invalid base62 characters
+	}
+	if (decoded >= game_id_upper_cap) return undefined; // Out of range
+	// Prevents '000f6Ke' from being treated as game id 'f6Ke'
+	if (uuid.base10ToBase62(decoded) !== idStr) return undefined; // Non-canonical encoding
+	return decoded;
+}
+
+/**
  * Generates a game_id **UNIQUE** to all other game ids in the games table.
  * @returns - A unique game_id.
  * @throws If a database error occurs.
@@ -62,7 +81,7 @@ function generateRandomGameId(): number {
  * @returns - Returns true if the game_id exists, false otherwise.
  * @throws If a database error occurs.
  */
-function isGameIdTaken(game_id: number): boolean {
+export function isGameIdTaken(game_id: number): boolean {
 	const query = 'SELECT EXISTS(SELECT 1 FROM games WHERE game_id = ?) AS found';
 	const row = dbCall(
 		() => db.get<{ found: 0 | 1 }>(query, [game_id]),

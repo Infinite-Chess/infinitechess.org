@@ -7,7 +7,11 @@
  */
 
 const BASE_36_CHARSET: string = '0123456789abcdefghijklmnopqrstuvwxyz';
-const BASE_62_CHARSET: string = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+/**
+ * The base62 alphabet. Ordering must NEVER change — numeric-id
+ * conversion depends on it, so stored ids would decode differently.
+ */
+const BASE_62_CHARSET: string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 /**
  * Generates a random ID of the provided length, with the characters 0-9, a-z, and A-Z.
@@ -60,16 +64,13 @@ function generateNumbID(length: number): number {
 
 /**
  * Converts a number from base 10 to base 62.
- * MUST BE POSITIVE!!!	0+
+ * @throws If the input number is not a non-negative integer.
  */
 function base10ToBase62(num: number): string {
-	if (!Number.isInteger(num) || num < 0)
-		throw new Error(
-			'Input must be a non-negative integer when converting base 10 to base 62. Received: ' +
-				num,
-		);
+	if (!Number.isInteger(num) || num < 0) {
+		throw new Error('Input must be a non-negative integer when converting base 10 to base 62. Received: ' + num); // prettier-ignore
+	}
 
-	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	let result = '';
 
 	// Handle zero as a special case
@@ -77,7 +78,7 @@ function base10ToBase62(num: number): string {
 
 	while (num > 0) {
 		const remainder = num % 62;
-		result = characters[remainder] + result;
+		result = BASE_62_CHARSET[remainder] + result;
 		num = Math.floor(num / 62);
 	}
 
@@ -86,19 +87,20 @@ function base10ToBase62(num: number): string {
 
 /**
  * Converts a number from base 62 to base 10.
- * MUST BE VALID BASE 62!!!
+ * @throws If the input string is not a valid base 62 number.
+ * @returns The base 10 representation of the input string. Always a non-negative integer.
  */
 function base62ToBase10(base62Str: string): number {
-	if (typeof base62Str !== 'string' || base62Str.length === 0)
+	if (base62Str.length === 0) {
 		throw new Error('Input must be a non-empty string when converting base 62 to base 10.');
+	}
 
-	const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 	const base = 62;
 
 	let result = 0;
 	for (let i = 0; i < base62Str.length; i++) {
 		const char = base62Str[i]!;
-		const value = characters.indexOf(char);
+		const value = BASE_62_CHARSET.indexOf(char);
 
 		if (value === -1) {
 			throw new Error(`Invalid character '${char}' in base 62 string.`);

@@ -236,11 +236,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	}
 }
 
-/**
- * Returns the game with the specified id.
- * @param id - The id of the game to pull.
- * @returns The game
- */
+/** Returns the live game with the specified id, if it exists. */
 function getGameByID(id: number): ServerGame | undefined {
 	return activeGames[id];
 }
