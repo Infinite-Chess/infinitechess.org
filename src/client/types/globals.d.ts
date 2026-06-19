@@ -76,6 +76,14 @@ declare global {
 	 */
 	var $downsamplerProcessorUrl: string;
 
+	/** SSR→client data for the game page (/game/:id), injected by game.njk. */
+	var gamePageData: {
+		/** The numeric game id, decoded from the base62 URL segment. */
+		id: number;
+		/** Best-effort liveness hint at SSR time; may be stale by render, so the client re-confirms. */
+		isLive: boolean;
+	};
+
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;
 	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */
