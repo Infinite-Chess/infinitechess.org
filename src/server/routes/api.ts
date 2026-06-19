@@ -17,15 +17,16 @@ import adminRouter from './admin.js';
 import membersRouter from './members.js';
 import registerRouter from './register.js';
 import passwordRouter from './password.js';
+import { getGameState } from '../api/GameAPI.js';
 import editorSavesRouter from './editorSaves.js';
 import preferencesRouter from './preferences.js';
 import leaderboardsRouter from './leaderboards.js';
 import { getSeekPreview } from '../api/SeekPreviewAPI.js';
 import { getContributors } from '../api/GitHub.js';
 import practiceProgressRouter from './practiceProgress.js';
-import { seekPreviewLimiter } from '../middleware/rateLimiters.js';
 import { handlePrepareRestart } from '../controllers/deployController.js';
 import { verifyPendingRegistration } from '../controllers/verifyAccountController.js';
+import { seekPreviewLimiter, gameStateLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
@@ -47,6 +48,8 @@ router.get('/contributors', (_req: Request, res: Response) => {
 });
 
 router.get('/seek-preview/:seekId', seekPreviewLimiter, getSeekPreview);
+
+router.get('/game/:id', gameStateLimiter, getGameState);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', handlePrepareRestart);
