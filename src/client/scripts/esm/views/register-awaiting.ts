@@ -19,13 +19,15 @@ import { emailFormatError, setFieldError } from '../util/accountFormatErrors.js'
  * Backoff schedule for verification polling. Each step's `intervalMs` applies until that much
  * total elapsed time (`untilMs`) has passed since polling began; the final step (`untilMs: Infinity`)
  * then holds steady until the pending registration expires.
+ *
+ * The medium verify time is ~27 seconds. It drops off sharply after 3-4m.
  */
 const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly intervalMs: number }[] =
 	[
 		{ untilMs: 1000 * 60 * 1, intervalMs: 3000 }, // 0–1m: every 3s
-		{ untilMs: 1000 * 60 * 2, intervalMs: 5000 }, // 1–2m: every 5s
-		{ untilMs: 1000 * 60 * 4, intervalMs: 10000 }, // 2–4m: every 10s
-		{ untilMs: 1000 * 60 * 10, intervalMs: 20000 }, // 4–10m: every 20s
+		{ untilMs: 1000 * 60 * 3, intervalMs: 5000 }, // 1–3m: every 5s
+		{ untilMs: 1000 * 60 * 4, intervalMs: 10000 }, // 3–5m: every 10s
+		{ untilMs: 1000 * 60 * 10, intervalMs: 20000 }, // 5–10m: every 20s
 		{ untilMs: Infinity, intervalMs: 30000 }, // 10m+: every 30s
 	];
 
@@ -146,7 +148,7 @@ async function pollVerification(): Promise<void> {
 	pollNowOrScheduleNext();
 }
 
-/** Page Visibility handler. Hiding the tab pauses the pooll loop. */
+/** Page Visibility handler. Hiding the tab pauses the poll loop. */
 function handleVisibilityChange(): void {
 	if (!pollingActive) return; // Loop already terminated; nothing to pause or resume.
 	if (document.visibilityState === 'hidden') {
