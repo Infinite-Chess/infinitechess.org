@@ -1,0 +1,39 @@
+# Game-page redesign — task overview
+
+Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
+
+## T1 — Sound completion signal ([T1-sound-completion.md](T1-sound-completion.md))
+Add a `whenEnded: Promise<void>` to `AudioManager`'s `SoundObject`, resolved at the sound's **full lifetime** (note + effect tails), reusing the single `setTimeout` already in `scheduleDisconnection` (not `source.onended`, which would cut the reverb tail). Widen `gamesound.playSoundEffect` to return the `SoundObject`. Purely additive; consumed later by T12's gamestart notify.
+
+## T2 — Shared `GameStateBase` + live `FullGameState` serializer ([T2-fullgamestate.md](T2-fullgamestate.md))
+In `shared/types.ts` define `GameStateBase` (`id, rated, variant, timeControl, timeCreated, players: PlayerGroup<ServerUsernameContainer>, gameConclusion?`) and `FullGameState = GameStateBase.extend({ moves, clockValues? })` — **no `MetaData`** (that's ICN/eyeball-only; the state spreads typed fields). Add server `produceFullGameState(servergame)` reusing existing helpers, with moves keeping `clockStamp`. Also extract a shared `buildServerUsernameContainer` helper (refactor `createseek` onto it). Leaves the dormant old `JoinGameMessage` path untouched.
+
+## T3 — `/game/:id` page shell ([T3-game-page-shell.md](T3-game-page-shell.md))
+Add the `page('/game/:id')` route: a shared `decodeGameId` helper (base62 decode + range + canonical check) in `gamesManager`, an existence/liveness check (`getGameByID` / `isGameIdTaken`), `send404` in place for malformed/nonexistent ids, else render. Add the minimal `game.njk` shell (standard scaffold — header, empty `<main class="game">`, footer; **no** game UI), a client entry skeleton, `game.css`, build entries, and inject `window.gamePageData = { id, isLive }`.
+
+## T4 — Dead-game state producer ([T4-dead-game-state.md](T4-dead-game-state.md))
+Define `DeadGameState = GameStateBase.extend({ icn, ratingChanges?, finalClocks? })` and `produceDeadGameState(game_id)` built **from DB columns only** (no ICN parsing): `gameConclusion` from the `termination` (condition key) + `result` columns; `players` from `player_games` (a color absent ⇒ guest); `ratingChanges` from `elo_at_game + elo_change_from_game` (`confident: true`); `finalClocks` from `clock_at_end_millis` (needed because the ICN only stamps clocks on moves). Deleted-account username → `"(Deleted User)"`.
+
+## T5 — `GET /api/game/:id` endpoint + rate limiter ([T5-dead-game-endpoint.md](T5-dead-game-endpoint.md))
+`getGameState` handler in `GameAPI.ts`: `decodeGameId` → 400 on malformed; `produceDeadGameState` → 404 if not a concluded game; else `res.json(state)` with **no explicit `Cache-Control`** (names can change, so let the browser re-request). Add a dedicated `gameStateLimiter` (~30/min) and wire `router.get('/game/:id', gameStateLimiter, getGameState)` in `api.ts`.
+
+## T6 — Subscribe-by-id + live delivery (players) ([T6-live-player-subscribe.md](T6-live-player-subscribe.md))
+Server-only. New game-route actions: client `subscribe {id}` → server `gamestate {SubscribedGameState}`, where `SubscribedGameState = FullGameState.extend({ youAreColor?, participantState? })`. `onSubscribeToGame` resolves the game by id, finds the player color (`doesSocketBelongToGame_ReturnColor`), attaches via `subscribeClientToGame({sendGameInfo:false})`, sends the new `gamestate`, and runs the reconnect side-effects (extracted into a shared helper). The dormant old `joingame` path is left untouched; the not-a-player branch is a `// TODO(T7)` stub.
+
+## T7 — Spectator support (server) ([T7-spectators.md](T7-spectators.md))
+Server-only. Add a transient `spectators: Set<CustomWebSocket>` to `ServerGame` and a `spectating?: { id }` subscription marker. Fill T6's not-a-player branch: add to the set, send the initial `gamestate` with no overlay. Broadcast role-agnostic updates via `broadcastToSpectators` (reusing `move`/`clock`/`gameratingchange` verbatim); non-move conclusions re-send `FullGameState`. Never send spectators `participantState`/AFK/disconnect/draw-offer. Cleanup on unsub (`handleUnsubbing` `spectating` case), socket close, and `deleteGame`.
+
+## T8 — Game-page UI structure (canvas + side bar) ([T8-game-page-structure.md](T8-game-page-structure.md))
+Replace T3's empty `<main>` with the WebGL `<canvas>` + side bar (clocks, move history, chat, material) — **markup + CSS layout only, no behavior**. The implementing agent **must consult the user on the side-bar design** (using `design.md` "## Games" as a starting reference) rather than inventing it.
+
+## T9 — Client entry + new loader (live player) ([T9-client-entry-live-player.md](T9-client-entry-live-player.md))
+The game page gets its **own** slim entry (NOT `main.ts`; reuses the rendering bootstrap modules) and a **new purpose-built loader** that consumes `FullGameState` directly — building the `MetaData` the gamefile primitive needs from the typed fields (via `clientmetadatautil`) and calling `gameslot.loadGamefile` (no adapter to the old `startOnlineGame`). Wires the live player path: `subscribe {id}` → `gamestate` → loader → render; reuses `onlinegamerouter`'s `move`/`clock`/`gameupdate` delta handlers. Import-graph slimming is a **separate later refactor with the user**.
+
+## T10 — Client dead/review load ([T10-client-dead-review.md](T10-client-dead-review.md))
+The `!isLive` branch: fetch `GET /api/game/:id`, validate `DeadGameState`, parse the ICN **for moves only** (authoritative everything-else from the typed fields), normalize into a `FullGameState` (base + parsed moves + `clockValues` from `finalClocks`), and reuse T9's loader (no socket). Determine `youAreColor` for board orientation only; surface `ratingChanges` in the side bar.
+
+## T11 — Client spectator view ([T11-client-spectator.md](T11-client-spectator.md))
+A spectator's `gamestate` has no `youAreColor`, so T9's loader already renders white-POV. T11 adds: **read-only** enforcement (no `submitmove`/resign/abort/draw), verifying the reused delta handlers work with no self-color, and a guard so a second `gamestate` for an already-loaded game (non-move conclusion from T7) **applies the conclusion in place instead of reloading**.
+
+## T12 — Gamestart wiring + notify sound (NOT YET WRITTEN — needs finalizing)
+Design is mostly settled but the task doc still needs to be written. Direction: on seek acceptance, `createGame` sends both players a new `gamestart {id}` message (a lobby-route action) instead of the in-place `subscribeClientToGame`; the lobby client preloads a reverb notify, on `gamestart` **plays it and awaits it (1.5s cap, via T1's `whenEnded`)**, then hard-navigates to `/game/:id` (where it subscribes via T6). **Open detail to finalize:** the "initial join" grace — leaning toward reusing the existing **not-by-choice disconnect cushion** (`startDisconnectCushionTimerAndPersist`, ~5s silent grace before alerting the opponent / starting the auto-resign timer) at game creation, so a fast navigation reconnects silently and only a slow/no-show triggers the disconnect UX. `cancelDisconnectTimer` already clears the cushion (`startID`) on reconnect, so T6's reconnect side-effects cancel it. Pick the notify sound (`'bell'` + reverb is the candidate; no dedicated notify sound exists yet). Write up `T12-*.md` on this basis.

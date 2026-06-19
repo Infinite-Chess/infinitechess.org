@@ -85,6 +85,8 @@ async function decompressStringBase64(compressedBase64: string): Promise<string>
  * - Compression does not actually reduce the string length, or
  * - An unexpected error occurs during compression.
  *
+ * Large ICN strings get compressed to ~30% their original size.
+ *
  * @returns An object with `data` (the compressed-and-base64-encoded string, or
  *          the original string when compression is `'none'`) and `compression`
  *          indicating which mode was used.

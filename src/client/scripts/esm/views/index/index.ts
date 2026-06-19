@@ -17,7 +17,7 @@ import './gameSetupModal.js';
 
 // Initial setup -----------------------------------------------------
 
-// Show any toast queued before a redirect here (e.g. "Account activated!" after registering).
+// Show any toast queued before a redirect here (e.g. "Account activated!" after registering or "Your password was reset!").
 flashToast.consume();
 
 lobby.subscribe();
