@@ -25,7 +25,7 @@ type ActionEmailContent = {
 /** Header/button accent color: a dark neutral grey. */
 export const EMAIL_ACCENT_COLOR = '#383838';
 /** Page background behind the email card: a warm off-white. */
-const PAGE_BG_COLOR = '#f4f1ea';
+const PAGE_BG_COLOR = '#f1eeea';
 /** Sign-off appended to every email's plain-text alternative. */
 const SIGNATURE = '— InfiniteChess.org';
 
