@@ -7,7 +7,7 @@
 import type { GameConclusion } from '../../../../shared/chess/util/winconutil.js';
 
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p, Player } from '../../../../shared/chess/util/typeutil.js';
+import metadatautil from '../../../../shared/chess/util/metadatautil.js';
 
 import gameformulator from '../game/chess/gameformulator.js';
 
@@ -207,17 +207,7 @@ function validateTermination(
 		throw new Error(`Disallowed Termination metadata: "${termination}"`);
 	}
 
-	if (victor !== undefined && result) {
-		const resultMappings: Record<string, Player | null> = {
-			'1-0': p.WHITE,
-			'0-1': p.BLACK,
-			'1/2-1/2': null,
-		};
-		if (result in resultMappings) {
-			if (victor !== resultMappings[result])
-				throw new Error(`Result "${result}" does not match victor ${victor}`);
-		} else {
-			throw new Error(`Unknown Result metadata: "${result}"`);
-		}
+	if (victor !== undefined && result && victor !== metadatautil.getVictorFromResult(result)) {
+		throw new Error(`Result "${result}" does not match victor ${victor}`);
 	}
 }

@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T4 — Dead-game state producer ([T4-dead-game-state.md](T4-dead-game-state.md))
-Define `DeadGameState = GameStateBase.extend({ icn, ratingChanges?, finalClocks? })` and `produceDeadGameState(game_id)` built **from DB columns only** (no ICN parsing): `gameConclusion` from the `termination` (condition key) + `result` columns; `players` from `player_games` (a color absent ⇒ guest); `ratingChanges` from `elo_at_game + elo_change_from_game` (`confident: true`); `finalClocks` from `clock_at_end_millis` (needed because the ICN only stamps clocks on moves). Deleted-account username → `"(Deleted User)"`.
-
 ## T5 — `GET /api/game/:id` endpoint + rate limiter ([T5-dead-game-endpoint.md](T5-dead-game-endpoint.md))
 `getGameState` handler in `GameAPI.ts`: `decodeGameId` → 400 on malformed; `produceDeadGameState` → 404 if not a concluded game; else `res.json(state)` with **no explicit `Cache-Control`** (names can change, so let the browser re-request). Add a dedicated `gameStateLimiter` (~30/min) and wire `router.get('/game/:id', gameStateLimiter, getGameState)` in `api.ts`.
 

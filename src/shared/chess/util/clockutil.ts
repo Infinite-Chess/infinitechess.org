@@ -113,6 +113,18 @@ function splitTimeControl(time_control: TimeControl): {
 }
 
 /**
+ * Builds a {@link TimeControl} string from base/increment seconds.
+ * A `null` base time -> untimed (`'-'`).
+ */
+function buildTimeControl(
+	base_time_seconds: number | null,
+	increment_seconds: number | null,
+): TimeControl {
+	if (base_time_seconds === null) return '-';
+	return `${base_time_seconds}+${increment_seconds ?? 0}`;
+}
+
+/**
  * Estimates total game seconds as `base_time + 40 × increment`, matching
  * lichess's classification ranges, and returns the speed category.
  */
@@ -144,6 +156,7 @@ export default {
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
 	splitTimeControl,
+	buildTimeControl,
 	getSpeedCategory,
 	getSpeedIconId,
 };

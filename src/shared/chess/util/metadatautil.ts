@@ -39,6 +39,7 @@ function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): numbe
  * Returns the value of the game's Result metadata, depending on the victor.
  * @param victor - The victor of the game, in player number. Or none if undefined.
  * @returns The result of the game in the format '1-0', '0-1', '1/2-1/2', or '*' (aborted).
+ * @throws If the victor is not one of the four valid values.
  */
 function getResultFromVictor(victor?: Player | null): string {
 	if (victor === p.WHITE) return '1-0';
@@ -46,6 +47,19 @@ function getResultFromVictor(victor?: Player | null): string {
 	else if (victor === null) return '1/2-1/2';
 	else if (victor === undefined) return '*';
 	throw new Error(`Cannot get game result from unsupported victor ${victor}!`);
+}
+
+/**
+ * Resolves the victor from a Result string.
+ * `'1/2-1/2'` (draw) yields `null`; `'*'` (aborted) yields `undefined`.
+ * @throws If the result string is not one of the four valid values.
+ */
+function getVictorFromResult(result: string): Player | null | undefined {
+	if (result === '1-0') return p.WHITE;
+	else if (result === '0-1') return p.BLACK;
+	else if (result === '1/2-1/2') return null;
+	else if (result === '*') return undefined;
+	throw new Error(`Cannot get victor from unsupported game result ${result}!`);
 }
 
 /** Rounds the elo. And, if we're not confident about its value, appends a question mark "?" to it. */
@@ -68,6 +82,7 @@ export default {
 	GUEST_NAME_ICN_METADATA,
 	resolveTimestampFromMetadata,
 	getResultFromVictor,
+	getVictorFromResult,
 	getFormattedElo,
 	getWhiteBlackRatingDiff,
 };

@@ -45,19 +45,13 @@ export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 	return dbCall(
 		() => {
 			// Validate the arguments...
-			if (!Array.isArray(columns))
-				throw new Error(
-					`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-				);
-			if (
-				!columns.every(
-					(column) =>
-						typeof column === 'string' && allPlayerGamesColumns.includes(column),
-				)
-			)
-				throw new Error(
-					`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`,
-				);
+			if (!Array.isArray(columns)) {
+				throw new Error(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+			}
+			// prettier-ignore
+			if (!columns.every((column) => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
+				throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
+			}
 
 			// Move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
@@ -82,6 +76,29 @@ export function getOpponentsOfUserFromGames<K extends PlayerGamesColumn>(
 }
 
 /**
+ * Fetches the requested columns of every player_games row for a single game.
+ * @returns One row per signed-in player (guests have no row).
+ * @throws If invalid arguments are provided, or if a database error occurs.
+ */
+export function getPlayerGamesOfGame<K extends PlayerGamesColumn>(
+	game_id: number,
+	columns: K[],
+): Pick<PlayerGamesRecord, K>[] {
+	return dbCall(() => {
+		if (!Array.isArray(columns)) {
+			throw new Error(`When getting player_games data, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+		}
+		// prettier-ignore
+		if (!columns.every((column) => typeof column === 'string' && allPlayerGamesColumns.includes(column))) {
+			throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
+		}
+
+		const query = `SELECT ${columns.join(', ')} FROM player_games WHERE game_id = ?`;
+		return db.all<Pick<PlayerGamesRecord, K>>(query, [game_id]);
+	}, `Error getting player_games entries for game_id "${game_id}"`);
+}
+
+/**
  * Retrieves the most recent N rated entries for a user on a specific leaderboard, returning only the specified columns from player_games.
  * Aborted games (where score is null) are skipped.
  * @param user_id - The ID of the user
@@ -99,14 +116,13 @@ export function getRecentNRatedGamesForUser<K extends PlayerGamesColumn>(
 ): Pick<PlayerGamesRecord, K>[] {
 	return dbCall(() => {
 		// Validate columns argument
-		if (!Array.isArray(columns))
-			throw new Error(
-				`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`,
-			);
-		if (!columns.every((col) => typeof col === 'string' && allPlayerGamesColumns.includes(col)))
-			throw new Error(
-				`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`,
-			);
+		if (!Array.isArray(columns)) {
+			throw new Error(`When fetching recent games, columns must be an array of strings! Received: ${jsutil.ensureJSONString(columns)}`); // prettier-ignore
+		}
+		// prettier-ignore
+		if (!columns.every((col) => typeof col === 'string' && allPlayerGamesColumns.includes(col))) {
+			throw new Error(`Invalid columns requested from player_games table: ${jsutil.ensureJSONString(columns)}`);
+		}
 
 		// Move on to the SQL query
 		const selectClause = columns.map((col) => `pg.${col}`).join(', ');

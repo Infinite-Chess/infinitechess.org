@@ -220,6 +220,23 @@ export const FullGameStateSchema = GameStateBaseSchema.extend({
 	clockValues: ClockValuesSchema.optional(),
 });
 
+/**
+ * The full state of a DEAD (concluded) game, served over HTTP (`GET /api/game/:id`).
+ * Built from DB columns only — the server does not parse the ICN.
+ */
+export type DeadGameState = z.infer<typeof DeadGameStateSchema>;
+export const DeadGameStateSchema = GameStateBaseSchema.extend({
+	/**
+	 * Source of truth for moves + clock stamps (+ start position
+	 * only for custom-position games); the client parses it.
+	 */
+	icn: z.string(),
+	/** Per signed-in player rating change. Rated games only; omitted otherwise. */
+	ratingChanges: typeschemas.GenPlayerGroupSchema(PlayerRatingChangeInfoSchema).optional(),
+	/** Ms remaining per color at game end. Timed games only; a guest color may be absent. */
+	finalClocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
+});
+
 // Seek Helper Schemas ---------------------------------------------------------------
 
 /**

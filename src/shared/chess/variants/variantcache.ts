@@ -42,7 +42,7 @@ async function ensureVariantLoaded(variantCode: VariantCode): Promise<void> {
 /** Loads all variant modules. Call once at startup on the server. */
 async function loadAllVariants(): Promise<void> {
 	await Promise.all(variantregistry.VARIANT_CODES.map((code) => ensureVariantLoaded(code)));
-	console.log('-- All variants loaded! --');
+	// console.log('-- All variants loaded! --');
 }
 
 /**
