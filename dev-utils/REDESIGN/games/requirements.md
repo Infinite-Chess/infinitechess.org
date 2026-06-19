@@ -32,7 +32,6 @@ Brief, running list of decided requirements for the redesigned game page.
 - On acceptance, server sends both players a socket message (example `{ action: 'gamestart', id }`).
 - Clients hard-navigate to `/game/:id` (MPA hard navigation). Existing reconnect machinery handles the reload.
 - On gamestart, play a notify sound (with a bit of reverb — already supported) *before* navigating, and await it so the hard-navigate doesn't cut it off. Cap the wait at 1.5s. Preload the sound on the lobby so there's no fetch delay.
-- Requires a sound-system addition: nothing currently signals when a sound finishes. `gamesound`/`AudioManager` must expose an `onended`-backed completion promise (the `AudioBufferSourceNode` already fires `ended`).
 
 ## Architecture
 

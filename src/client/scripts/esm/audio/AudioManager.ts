@@ -19,6 +19,12 @@ interface SoundObject {
 	/** Whether to loop the sound indefinitely. */
 	readonly looping: boolean;
 	/**
+	 * Resolves once the note AND its effect tails (e.g. reverb) have fully finished —
+	 * await before anything that would cut the sound off (e.g. a hard navigation).
+	 * Never resolves for looping sounds.
+	 */
+	whenEnded: Promise<void>;
+	/**
 	 * Stops the sound from playing.
 	 * If this creates static pops, use fadeOut() instead.
 	 */
@@ -179,18 +185,11 @@ function fadeOutDownsampler(durationMillis: number): void {
 // Sound Playing ------------------------------------------------------------------------------------------
 
 /** Plays the specified audio buffer with the specified options. */
-function playAudio(
-	buffer: AudioBuffer | undefined,
-	playOptions: PlaySoundOptions,
-): SoundObject | undefined {
+function playAudio(buffer: AudioBuffer, playOptions: PlaySoundOptions): SoundObject | undefined {
 	// Attempt to resume if it was suspended (e.g., due to browser autoplay policy)
 	if (audioContext.state === 'suspended') audioContext.resume();
 	if (!audioContext) {
 		console.warn(`Can't play sound when audioContext isn't initialized yet. (Still loading)`);
-		return;
-	}
-	if (!buffer) {
-		console.warn(`Can't play sound when buffer isn't loaded yet. (Still loading)`);
 		return;
 	}
 
@@ -220,10 +219,15 @@ function playAudio(
 	// 3. Connect the nodes in order: Source -> Gain -> Effect1 -> Effect2 -> Effects Bus -> Master Gain -> Limiter -> Destination
 	connectNodeChain(mainSource.gainNode, effectNodes, bypassDownsampler);
 
+	// Resolved by scheduleDisconnection's single timer once the sound + tails finish.
+	let resolveWhenEnded!: () => void;
+	const whenEnded = new Promise<void>((resolve) => (resolveWhenEnded = resolve));
+
 	// The SoundObject is now much simpler!
 	const soundObject: SoundObject = {
 		source: mainSource,
 		looping: loop,
+		whenEnded,
 
 		stop: (): void => {
 			soundObject.source.stop();
@@ -247,7 +251,7 @@ function playAudio(
 	// Start the playback
 	soundObject.source.start(startAt, startTime, duration);
 
-	scheduleDisconnection(mainSource, buffer, loop, delay, effects, duration, startTime);
+	scheduleDisconnection(mainSource, buffer, loop, delay, effects, resolveWhenEnded, duration, startTime); // prettier-ignore
 
 	return soundObject;
 }
@@ -265,10 +269,11 @@ function scheduleDisconnection(
 	loop: boolean,
 	delay: number,
 	effects: EffectConfig[],
+	onEnded: () => void,
 	duration?: number,
 	startTime?: number,
 ): void {
-	if (loop) return;
+	if (loop) return; // A loop never ends, so onEnded is intentionally never called.
 
 	const sourceDurationSecs = duration ?? buffer.duration - (startTime ?? 0);
 
@@ -285,7 +290,11 @@ function scheduleDisconnection(
 	const totalLifetimeMillis = (sourceDurationSecs + maxTailSecs + delay) * 1000;
 
 	// Keep a reference to the source for the entire lifetime of the sound + effects.
-	setTimeout(() => source.disconnect(), totalLifetimeMillis);
+	// This same timer marks the full completion (note + tails), so resolve onEnded here too.
+	setTimeout(() => {
+		source.disconnect();
+		onEnded();
+	}, totalLifetimeMillis);
 }
 
 // Audio Nodes ------------------------------------------------------------------------------------------

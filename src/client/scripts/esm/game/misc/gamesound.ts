@@ -5,6 +5,7 @@
  * on first play, then plays it via AudioManager.
  */
 
+import type { SoundObject } from '../../audio/AudioManager.js';
 import type { EffectConfig } from '../../audio/AudioEffects.js';
 
 import AudioManager from '../../audio/AudioManager.js';
@@ -63,9 +64,11 @@ async function playSoundEffect(
 		playbackRate?: number;
 		bypassDownsampler?: boolean;
 	} = {},
-): Promise<void> {
-	if (!audioCache.has(soundName))
-		return console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would inquire a delay to fetch
+): Promise<SoundObject | undefined> {
+	if (!audioCache.has(soundName)) {
+		console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would inquire a delay to fetch
+		return;
+	}
 	const buffer = await getBuffer(soundName);
 	if (!buffer) return; // Sound failed to load
 
@@ -82,7 +85,7 @@ async function playSoundEffect(
 			wetLevel: reverbWetLevel,
 		});
 
-	AudioManager.playAudio(buffer, { volume, delay, playbackRate, effects, bypassDownsampler });
+	return AudioManager.playAudio(buffer, { volume, delay, playbackRate, effects, bypassDownsampler }); // prettier-ignore
 }
 
 // Named Play Functions --------------------------------------------------------------------------

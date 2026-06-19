@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T1 — Sound completion signal ([T1-sound-completion.md](T1-sound-completion.md))
-Add a `whenEnded: Promise<void>` to `AudioManager`'s `SoundObject`, resolved at the sound's **full lifetime** (note + effect tails), reusing the single `setTimeout` already in `scheduleDisconnection` (not `source.onended`, which would cut the reverb tail). Widen `gamesound.playSoundEffect` to return the `SoundObject`. Purely additive; consumed later by T12's gamestart notify.
-
 ## T2 — Shared `GameStateBase` + live `FullGameState` serializer ([T2-fullgamestate.md](T2-fullgamestate.md))
 In `shared/types.ts` define `GameStateBase` (`id, rated, variant, timeControl, timeCreated, players: PlayerGroup<ServerUsernameContainer>, gameConclusion?`) and `FullGameState = GameStateBase.extend({ moves, clockValues? })` — **no `MetaData`** (that's ICN/eyeball-only; the state spreads typed fields). Add server `produceFullGameState(servergame)` reusing existing helpers, with moves keeping `clockStamp`. Also extract a shared `buildServerUsernameContainer` helper (refactor `createseek` onto it). Leaves the dormant old `JoinGameMessage` path untouched.
 
