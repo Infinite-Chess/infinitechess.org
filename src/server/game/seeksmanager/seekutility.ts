@@ -6,9 +6,17 @@
  */
 
 import type { AuthMemberInfo } from '../../types.js';
-import type { AuthSeekVariant, BaseSeek, OutSeek, OutSeekVariant } from '../../../shared/types.js';
+import type {
+	AuthSeekVariant,
+	BaseSeek,
+	OutSeek,
+	OutSeekVariant,
+	Rating,
+	ServerUsernameContainer,
+} from '../../../shared/types.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
+import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
 // Type Definitions
 
@@ -52,6 +60,21 @@ function safelyCopySeek(seek: AuthSeek): OutSeek {
 	return makeSeekSafe(seekDeepCopy);
 }
 
+/**
+ * Builds the public {@link ServerUsernameContainer} for a player from their auth identity.
+ * Guests get the generic ICN guest name. Never exposes `browser_id`.
+ */
+function buildServerUsernameContainer(
+	identifier: AuthMemberInfo,
+	rating?: Rating,
+): ServerUsernameContainer {
+	return {
+		type: identifier.signedIn ? 'player' : 'guest',
+		username: identifier.signedIn ? identifier.username : metadatautil.GUEST_NAME_ICN_METADATA,
+		rating,
+	};
+}
+
 /** Compares two MemberInfo objects to see if they are the same person or not. */
 function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 	if (u1.signedIn) {
@@ -64,4 +87,4 @@ function memberInfoEq(u1: AuthMemberInfo, u2: AuthMemberInfo): boolean {
 
 //-------------------------------------------------------------------------------------------
 
-export { safelyCopySeek, memberInfoEq };
+export { safelyCopySeek, memberInfoEq, buildServerUsernameContainer };

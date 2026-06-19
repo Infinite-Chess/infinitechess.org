@@ -4,8 +4,8 @@
  * This script handles seek creation, making sure that the seeks have valid properties.
  */
 
+import type { Rating } from '../../../shared/types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { Rating, ServerUsernameContainer } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -13,7 +13,6 @@ import uuid from '../../../shared/util/uuid.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import compression, { CompressionMode } from '../../../shared/util/compression.js';
 import {
@@ -35,11 +34,11 @@ import {
 	GameModeSchema,
 } from '../../../shared/types.js';
 
-import { AuthSeek } from './seekutility.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { getSavedPositionICN } from '../../database/editorSavesManager.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { AuthSeek, buildServerUsernameContainer } from './seekutility.js';
 import {
 	existingSeekHasID,
 	deleteUsersExistingSeek,
@@ -140,11 +139,7 @@ async function getSeekFromWebsocketMessageContents(
 		rating = getEloOfPlayerInLeaderboard(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	const player: ServerUsernameContainer = {
-		type: owner.signedIn ? 'player' : 'guest',
-		username: owner.signedIn ? owner.username : metadatautil.GUEST_NAME_ICN_METADATA,
-		rating,
-	};
+	const player = buildServerUsernameContainer(owner, rating);
 
 	// Resolve cloudSave seeks to plain ICN
 	let variant = messageContents.variant;
