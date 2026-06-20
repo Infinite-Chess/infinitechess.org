@@ -149,10 +149,9 @@ function submitMove(
 		gameutility.sendUpdatedClockToColor(servergame, color);
 	}
 
-	// Send their move to their opponent (carries any move-triggered conclusion).
-	gameutility.sendMoveToColor(servergame, opponentColor, moveRecord);
-	// Broadcast the same move to spectators.
+	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = gameutility.buildMoveMessage(servergame, moveRecord);
+	gameutility.sendMoveToColor(servergame, opponentColor, moveMessage);
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Tear down the game after sends. teardownGame skips broadcastGameUpdate for

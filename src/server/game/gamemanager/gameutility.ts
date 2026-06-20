@@ -826,8 +826,13 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
  * Sends a move to the player provided
  * @param servergame - The game
  * @param color - The color of the player to send the latest move to
+ * @param message - The move message to send (from {@link buildMoveMessage})
  */
-function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord): void {
+function sendMoveToColor(
+	servergame: ServerGame,
+	color: Player,
+	message: OpponentsMoveMessage,
+): void {
 	const match = servergame.match;
 	if (!(color in match.playerData)) {
 		logEventsAndPrint(
@@ -840,8 +845,7 @@ function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord
 	const sendToWS = match.playerData[color]!.socket;
 	if (!sendToWS) return; // They are not connected, can't send message
 
-	const moveMessage = buildMoveMessage(servergame, move);
-	sendSocketMessage(sendToWS, 'game', 'move', moveMessage);
+	sendSocketMessage(sendToWS, 'game', 'move', message);
 }
 
 /**
