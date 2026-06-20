@@ -2,6 +2,12 @@
 
 Part of the game-page redesign (see `../requirements.md`). Build the **static structure** of the game page on top of the T3 shell: the WebGL `<canvas>` play area and the side bar (clocks, move history, chat, material). Markup + CSS layout only — **no game logic, no rendering, no data wiring** (that's T9, client render).
 
+## Requirements
+
+- One vertical bar on the left, spanning top to bottom, with clocks, moves, and chat, and material lost per side (take inspiration from how the variant preview tooltips render little silhouettes of the pieces when there is a promotion gamerule override).
+- Game canvas covers the remaining right side of the screen, spanning from top to bottom.
+- Game history moves bar: Lichess style. Each move is prepended with a tiny silhouette of the piece type that moved (take inspiration from variant preview tooltips again). Move coordinates too long are truncated, but hovering over them shows the full coordinates via the title attribute.
+
 ## MUST consult the user on the side-bar design
 
 This is a UI-design task. **Do not invent the side-bar layout.** Before writing the markup/CSS, ask the user how they want the side bar — and build to their answers. Use `dev-utils/REDESIGN/design.md` "## Games" as the starting reference, not as a finished spec. Questions to resolve with the user (at least):
@@ -16,8 +22,8 @@ Present concrete options (ASCII mockups are fine) and let the user choose before
 
 ## Scope (after the consultation)
 
-- **`src/server/views/game.njk`** — replace the empty `<main class="game">` (from T3) with the canvas + side-bar structure the user approved. Static markup only: a `<canvas>` for the board, and side-bar containers/regions as empty, clearly-classed placeholders (populated by T9). Use Nunjucks `{% include %}` for any reusable sub-component (e.g. a username/clock block) if it fits existing conventions.
-- **`src/client/css/game.css`** — the layout under the single top-level `.game { }` block (per the per-page CSS methodology in `stack.md`): canvas sizing/positioning, side-bar dimensions, and the agreed responsive behavior. Theme via the existing `[data-theme]` CSS variables.
+- **`src/server/views/game.njk`** — replace the empty `<main>` with the canvas + side-bar structure the user approved. Static markup only: a `<canvas>` for the board, and side-bar containers/regions as empty, clearly-classed placeholders (populated by T9). Use Nunjucks `{% include %}` for any reusable sub-component (e.g. a username/clock block) if it fits existing conventions.
+- **`src/client/css/game.css`** — the layout under the single top-level `.game { }` block: canvas sizing/positioning, side-bar dimensions, and the agreed responsive behavior. Theme via the existing `[data-theme]` CSS variables.
 - The `<canvas>` is just the element (id/class for T9 to grab). Do **not** initialize WebGL or any rendering here.
 
 ## Out of scope / deferred
