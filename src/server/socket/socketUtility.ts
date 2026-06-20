@@ -28,6 +28,11 @@ export interface CustomWebSocket extends WebSocket {
 				/** The color they are playing as. */
 				color: Player;
 			};
+			/** Will be defined if they are spectating a game (non-participant). */
+			spectating?: {
+				/** The id of the game they're spectating. */
+				id: number;
+			};
 		};
 		/** The parsed cookie object */
 		cookies: ParsedCookies;

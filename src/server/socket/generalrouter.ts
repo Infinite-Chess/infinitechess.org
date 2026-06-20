@@ -11,7 +11,11 @@ import * as z from 'zod';
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
 
-const validUnsubs = ['lobby', 'game'] as const;
+/**
+ * The subscription lists a client may explicitly request
+ * to unsub from (also the full set handled on socket close).
+ */
+const validUnsubs = ['lobby', 'game', 'spectating'] as const;
 
 type ValidUnsub = (typeof validUnsubs)[number];
 
@@ -67,6 +71,9 @@ function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoic
 			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
 			// a 5 second cushion before starting an auto-resignation timer
 			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
+			break;
+		case 'spectating':
+			// TODO: remove the socket from its game's `spectators` set and clear the marker.
 			break;
 		default:
 			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);

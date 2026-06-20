@@ -171,6 +171,8 @@ type ServerGame = Game & {
 	gameRules: GameRules;
 	/** The color whose turn it currently is at the front of the game. */
 	whosTurn: Player;
+	/** Sockets spectating this game (non-participants). */
+	spectators: Set<CustomWebSocket>;
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
@@ -240,7 +242,7 @@ function initServerGame(
 	if (validateMoves) {
 		const boardsim = boardinit.initBoard(gameWithRules.gameRules, variant);
 		if (moves.length > 0) movepiece.makeAllMovesInGame(boardsim, moves);
-		return { ...gameWithRules, match, ...boardsim, validateMoves: true };
+		return { ...gameWithRules, match, ...boardsim, spectators: new Set(), validateMoves: true };
 	} else {
 		return {
 			...gameWithRules,
@@ -250,6 +252,7 @@ function initServerGame(
 					moves.length % gameWithRules.gameRules.turnOrder.length
 				]!,
 			moves,
+			spectators: new Set(),
 			validateMoves: false,
 		};
 	}
