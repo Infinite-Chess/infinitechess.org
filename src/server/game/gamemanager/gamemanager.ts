@@ -236,6 +236,17 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 	}
 }
 
+/**
+ * Removes a spectator's websocket from the game it's spectating (explicit unsub or socket close).
+ * Unlike participants, spectators have no disconnect timers or opponent to notify.
+ */
+function unsubSpectatorFromGameBySocket(ws: CustomWebSocket): void {
+	const gameID = ws.metadata.subscriptions.spectating?.id;
+	if (gameID === undefined) return; // Not spectating any game
+	delete ws.metadata.subscriptions.spectating;
+	getGameByID(gameID)!.spectators.delete(ws);
+}
+
 /** Returns the live game with the specified id, if it exists. */
 function getGameByID(id: number): ServerGame | undefined {
 	return activeGames[id];
@@ -543,6 +554,12 @@ function deleteGame(servergame: ServerGame): void {
 		sendSocketMessage(data.socket, 'game', 'unsub');
 		gameutility.unsubClientFromGame(servergame.match, data.socket);
 	}
+	// Unsubscribe all spectators too.
+	for (const ws of servergame.spectators) {
+		sendSocketMessage(ws, 'game', 'unsub');
+		delete ws.metadata.subscriptions.spectating;
+	}
+	servergame.spectators.clear();
 
 	// Monitor suspicion levels for all players who participated in the game
 	// Doesn't have to be in the same transaction as the game logging,
@@ -698,6 +715,7 @@ export {
 	createGame,
 	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
+	unsubSpectatorFromGameBySocket,
 	onPlayerLostByAbandonment,
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,

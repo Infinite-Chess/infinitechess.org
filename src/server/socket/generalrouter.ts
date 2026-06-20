@@ -9,7 +9,10 @@ import type { CustomWebSocket } from './socketUtility.js';
 import * as z from 'zod';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
-import { unsubClientFromGameBySocket } from '../game/gamemanager/gamemanager.js';
+import {
+	unsubClientFromGameBySocket,
+	unsubSpectatorFromGameBySocket,
+} from '../game/gamemanager/gamemanager.js';
 
 /**
  * The subscription lists a client may explicitly request
@@ -73,7 +76,8 @@ function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoic
 			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
 			break;
 		case 'spectating':
-			// TODO: remove the socket from its game's `spectators` set and clear the marker.
+			// Read-only spectator: no cushion/auto-resign, just detach.
+			unsubSpectatorFromGameBySocket(ws);
 			break;
 		default:
 			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);

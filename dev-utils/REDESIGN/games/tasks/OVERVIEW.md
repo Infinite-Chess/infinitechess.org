@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T7 — Spectator support (server) ([T7-spectators.md](T7-spectators.md))
-Server-only. Add a transient `spectators: Set<CustomWebSocket>` to `ServerGame` and a `spectating?: { id }` subscription marker. Fill T6's not-a-player branch: add to the set, send the initial `gamestate` with no overlay. Broadcast role-agnostic updates via `broadcastToSpectators` (reusing `move`/`gameratingchange` verbatim; move-triggered conclusions ride on `move`); non-move conclusions send a lean `gameconclusion` message (`gameConclusion` + final clocks only — spectators can't desync, so no full re-send). Never send spectators `participantState`/AFK/disconnect/draw-offer. Cleanup on unsub (`handleUnsubbing` `spectating` case), socket close, and `deleteGame`.
-
 ## T8 — Game-page UI structure (canvas + side bar) ([T8-game-page-structure.md](T8-game-page-structure.md))
 Replace T3's empty `<main>` with the WebGL `<canvas>` + side bar (clocks, move history, chat, material) — **markup + CSS layout only, no behavior**. The implementing agent **must consult the user on the side-bar design** (using `design.md` "## Games" as a starting reference) rather than inventing it.
 
