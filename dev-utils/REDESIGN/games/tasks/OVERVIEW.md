@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T6 — Subscribe-by-id + live delivery (players) ([T6-live-player-subscribe.md](T6-live-player-subscribe.md))
-Server-only. New game-route actions: client `subscribe {id}` → server `gamestate {SubscribedGameState}`, where `SubscribedGameState = FullGameState.extend({ youAreColor?, participantState? })`. `onSubscribeToGame` resolves the game by id, finds the player color (`doesSocketBelongToGame_ReturnColor`), attaches via `subscribeClientToGame({sendGameInfo:false})`, sends the new `gamestate`, and runs the reconnect side-effects (extracted into a shared helper). The dormant old `joingame` path is left untouched; the not-a-player branch is a `// TODO(T7)` stub.
-
 ## T7 — Spectator support (server) ([T7-spectators.md](T7-spectators.md))
 Server-only. Add a transient `spectators: Set<CustomWebSocket>` to `ServerGame` and a `spectating?: { id }` subscription marker. Fill T6's not-a-player branch: add to the set, send the initial `gamestate` with no overlay. Broadcast role-agnostic updates via `broadcastToSpectators` (reusing `move`/`clock`/`gameratingchange` verbatim); non-move conclusions re-send `FullGameState`. Never send spectators `participantState`/AFK/disconnect/draw-offer. Cleanup on unsub (`handleUnsubbing` `spectating` case), socket close, and `deleteGame`.
 
