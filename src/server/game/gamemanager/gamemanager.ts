@@ -403,7 +403,7 @@ function teardownGame(servergame: ServerGame): void {
 
 	// Move-triggered conclusions already send the gameConclusion in the move response.
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition)) {
-		gameutility.broadcastGameUpdate(servergame);
+		gameutility.broadcastParticipantGameUpdate(servergame);
 		// Spectators are read-only and can't desync (except for hard socket close), so they
 		// only need the conclusion plus the frozen final clocks — not a full-state re-send.
 		const conclusionMessage: GameConclusionMessage = { gameConclusion: conclusion };

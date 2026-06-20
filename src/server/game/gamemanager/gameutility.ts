@@ -526,11 +526,13 @@ function resyncToGame(
 }
 
 /**
- * Alerts both players in the game of the game conclusion
- * if it has ended, and the current moves list and timers.
+ * Alerts both participants (not spectators) of the game conclusion if it has ended,
+ * and the current moves list and timers. Each gets a per-player participant overlay.
+ * Participants-only because it carries the move list for desync resync (a participant's
+ * in-flight move can race a conclusion); spectators are read-only and can't desync.
  * @param servergame - The game
  */
-function broadcastGameUpdate(servergame: ServerGame): void {
+function broadcastParticipantGameUpdate(servergame: ServerGame): void {
 	// Build the agnostic core once; only the per-player participant overlay differs.
 	const base = buildGameUpdateBase(servergame, false);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
@@ -945,7 +947,7 @@ export default {
 	assignWhiteBlackPlayersFromSeek,
 	produceFullGameState,
 	constructMetadataOfGame,
-	broadcastGameUpdate,
+	broadcastParticipantGameUpdate,
 	sendGameUpdateToColor,
 	sendRatingChangeToAllPlayers,
 	doesSocketBelongToGame_ReturnColor,

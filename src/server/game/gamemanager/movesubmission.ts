@@ -154,8 +154,8 @@ function submitMove(
 	gameutility.sendMoveToColor(servergame, opponentColor, moveMessage);
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
-	// Tear down the game after sends. teardownGame skips broadcastGameUpdate for
-	// move-triggered conclusions since clients were already notified individually above.
+	// Tear down the game after sends. teardownGame skips broadcastParticipantGameUpdate
+	// for move-triggered conclusions since clients were already notified individually above.
 	if (gameIsOver) teardownGame(servergame);
 }
 
