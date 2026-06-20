@@ -38,6 +38,15 @@ Add the incoming `gamestate` action carrying `SubscribedGameStateSchema` (from T
 
 Reuse the existing `onlinegamerouter` handlers for `move`/`clock`/`gameupdate`/`gameratingchange` (they operate on the loaded `gameslot.getGamefile()` and are agnostic to how it was loaded). Route the new `gamestate` action to the new loader. Reuse or thinly wrap `onlinegamerouter`'s routing — implementer's call; don't rewrite the delta handlers.
 
+### 5. Collapse `subscribeClientToGame` into attach-only (gated cleanup)
+
+`subscribeClientToGame` currently has two responsibilities, gated by its `sendGameInfo` flag: attach the socket, and (optionally) send the old `joingame` payload via `sendGameInfoToPlayer`. The `sendGameInfo: true` branch has exactly two callers — `onJoinGame` (dormant) and `createGame` (in-place game start). Both disappear: the old `joingame` server path is removed in the post-T9–T11 cleanup, and `createGame` stops sending in-place in **T12** (sends `gamestart {id}`; clients navigate + `subscribe`). The remaining callers (`resyncToGame`, `onSubscribeToGame`) already pass `sendGameInfo: false`.
+
+**Once both `true`-callers are gone** (gate — do not do this earlier; the flag must stay while either remains):
+- Reduce `subscribeClientToGame` → `attachClientToGame(servergame, ws, color)`: pure socket attach (current steps 1–2), no `sendGameInfo` flag, no DB, can't throw.
+- Delete `sendGameInfoToPlayer` (dead old `joingame` sender; superseded by `sendParticipantGameState`).
+- `resyncToGame` / `onSubscribeToGame` drop the now-empty `{ sendGameInfo: false }` options object.
+
 ## Out of scope / deferred
 
 - Dead/review load (T10), spectator read-only view (T11), gamestart navigation + sound (T12).
