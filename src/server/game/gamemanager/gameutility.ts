@@ -582,10 +582,7 @@ function getGameUpdateMessageContents(
 /** Alerts all players and spectators in the game of the rating changes of the game. */
 function sendRatingChangeToAllPlayers(servergame: ServerGame, ratingdata: RatingData): void {
 	const messageContents = getRatingChangeMessageContents(ratingdata);
-	for (const playerdata of Object.values(servergame.match.playerData)) {
-		if (playerdata.socket === undefined) continue; // Not connected, can't send message
-		sendSocketMessage(playerdata.socket, 'game', 'gameratingchange', messageContents);
-	}
+	broadcastToParticipants(servergame, 'gameratingchange', messageContents);
 	broadcastToSpectators(servergame, 'gameratingchange', messageContents);
 }
 
@@ -860,6 +857,14 @@ function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMo
 	};
 	if (!servergame.untimed) message.clockValues = getGameClockValues(servergame);
 	return message;
+}
+
+/** Broadcasts a game-route message to every connected participant of the game. */
+function broadcastToParticipants(servergame: ServerGame, action: string, value: any): void {
+	for (const data of Object.values(servergame.match.playerData)) {
+		if (data.socket === undefined) continue; // Not connected, can't send message
+		sendSocketMessage(data.socket, 'game', action, value);
+	}
 }
 
 /** Broadcasts a role-agnostic game-route message to every spectator of the game. */
