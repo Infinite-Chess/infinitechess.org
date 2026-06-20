@@ -11,6 +11,7 @@ import * as z from 'zod';
 
 import { onJoinGame } from './joingame.js';
 import { resyncToGame } from './resync.js';
+import { onSubscribeToGame } from './subscribetogame.js';
 import { onAFK, onAFK_Return } from './onAFK.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
@@ -27,6 +28,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
 	z.strictObject({ action: z.literal('joingame') }),
+	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
@@ -50,6 +52,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 			return;
 		case 'joingame':
 			onJoinGame(ws);
+			return;
+		case 'subscribe':
+			onSubscribeToGame(ws, contents.value);
 			return;
 	}
 

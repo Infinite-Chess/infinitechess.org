@@ -27,6 +27,7 @@ import type {
 	PlayerRatingChangeInfo,
 	Rating,
 	ServerUsernameContainer,
+	SubscribedGameState,
 	TimeControl,
 } from '../../../shared/types.js';
 
@@ -382,6 +383,27 @@ function sendGameInfoToPlayer(
 	};
 
 	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents);
+}
+
+/**
+ * Sends a participant the `gamestate` message: the role-agnostic
+ * {@link FullGameState} plus their per-player overlay.
+ * @param servergame - The game they're in.
+ * @param ws - Their websocket.
+ * @param color - The color they are.
+ * @throws If a database error occurs (from {@link produceFullGameState}).
+ */
+function sendParticipantGameState(
+	servergame: ServerGame,
+	ws: CustomWebSocket,
+	color: Player,
+): void {
+	const value: SubscribedGameState = {
+		...produceFullGameState(servergame),
+		youAreColor: color,
+		participantState: getParticipantState(servergame, color),
+	};
+	sendSocketMessage(ws, 'game', 'gamestate', value);
 }
 
 /**
@@ -881,6 +903,7 @@ export default {
 	subscribeClientToGame,
 	unsubClientFromGame,
 	resyncToGame,
+	sendParticipantGameState,
 	assignWhiteBlackPlayersFromSeek,
 	produceFullGameState,
 	constructMetadataOfGame,

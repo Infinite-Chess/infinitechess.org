@@ -221,6 +221,19 @@ export const FullGameStateSchema = GameStateBaseSchema.extend({
 });
 
 /**
+ * A {@link FullGameState} with the per-subscriber overlay sent on `subscribe`.
+ * Both overlay fields are present if the subscriber is a participant of an
+ * ongoing game; spectators (and concluded games) omit them.
+ */
+export type SubscribedGameState = z.infer<typeof SubscribedGameStateSchema>;
+export const SubscribedGameStateSchema = FullGameStateSchema.extend({
+	/** The subscriber's color. Present if they are a participant. */
+	youAreColor: typeschemas.PlayerSchema.optional(),
+	/** Participant-only ongoing-game state. Present if they are a participant. */
+	participantState: ParticipantStateSchema.optional(),
+});
+
+/**
  * The full state of a DEAD (concluded) game, served over HTTP (`GET /api/game/:id`).
  * Built from DB columns only — the server does not parse the ICN.
  */

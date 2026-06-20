@@ -5,6 +5,8 @@
  * message, and if so, sends them the game info
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import gameutility from './gameutility.js';
@@ -26,7 +28,7 @@ function onJoinGame(ws: CustomWebSocket): void {
 	try {
 		gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
 	} catch {
-		// DB error (already logged
+		// DB error (already logged)
 		sendSocketMessage(
 			ws,
 			'game',
@@ -36,14 +38,23 @@ function onJoinGame(ws: CustomWebSocket): void {
 		return;
 	}
 
+	runReconnectSideEffects(servergame, colorPlayingAs);
+}
+
+/**
+ * Runs the side-effects of a player (re)attaching their socket to a live game:
+ * cancels their auto-AFK-resign timer if it's their turn, clears any disconnect
+ * timer, and notifies live-game tracking they reconnected.
+ */
+function runReconnectSideEffects(servergame: ServerGame, color: Player): void {
 	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
-	if (servergame.whosTurn === colorPlayingAs) {
+	if (servergame.whosTurn === color) {
 		const hadAFKTimer = servergame.match.autoAFKResignTime !== undefined;
 		cancelAutoAFKResignTimer(servergame, true);
 		if (hadAFKTimer) liveGameValues.onPlayerAFKReturn(servergame);
 	}
-	cancelDisconnectTimer(servergame.match, colorPlayingAs);
-	liveGameValues.onPlayerReconnected(servergame, colorPlayingAs);
+	cancelDisconnectTimer(servergame.match, color);
+	liveGameValues.onPlayerReconnected(servergame, color);
 }
 
-export { onJoinGame };
+export { onJoinGame, runReconnectSideEffects };
