@@ -114,13 +114,12 @@ export const ParticipantStateSchema = z.strictObject({
 	millisUntilAutoAFKResign: z.number().optional(),
 });
 
-/** The message contents of a server websocket `'gameupdate'` message. */
-export type GameUpdateMessage = z.infer<typeof GameUpdateMessageSchema>;
-export const GameUpdateMessageSchema = z.strictObject({
+/** The agnostic core of a `'gameupdate'` message — identical for every recipient (no per-player overlay). */
+export type GameUpdateBase = z.infer<typeof GameUpdateBaseSchema>;
+export const GameUpdateBaseSchema = z.strictObject({
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	/** Existing moves, if any, to forward to the front of the game. */
 	moves: z.array(MovePacketSchema),
-	participantState: ParticipantStateSchema,
 	clockValues: ClockValuesSchema.optional(),
 	/**
 	 * When true, the client's resync logic should force its move list to exactly match
@@ -128,6 +127,12 @@ export const GameUpdateMessageSchema = z.strictObject({
 	 * The client must revert it rather than re-submitting it.
 	 */
 	forceSync: z.boolean(),
+});
+
+/** The message contents of a server websocket `'gameupdate'` message: the agnostic core plus the recipient's participant overlay. */
+export type GameUpdateMessage = z.infer<typeof GameUpdateMessageSchema>;
+export const GameUpdateMessageSchema = GameUpdateBaseSchema.extend({
+	participantState: ParticipantStateSchema,
 });
 
 /**

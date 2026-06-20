@@ -19,6 +19,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type {
 	ClockValues,
 	FullGameState,
+	GameUpdateBase,
 	GameUpdateMessage,
 	MetaData,
 	MovePacket,
@@ -525,13 +526,20 @@ function resyncToGame(
 }
 
 /**
- * Alerts both players in the game of the game conclusion if it has ended,
- * and the current moves list and timers.
+ * Alerts both players in the game of the game conclusion
+ * if it has ended, and the current moves list and timers.
  * @param servergame - The game
  */
 function broadcastGameUpdate(servergame: ServerGame): void {
-	for (const player in servergame.match.playerData) {
-		sendGameUpdateToColor(servergame, Number(player) as Player, false);
+	// Build the agnostic core once; only the per-player participant overlay differs.
+	const base = buildGameUpdateBase(servergame, false);
+	for (const [color, data] of Object.entries(servergame.match.playerData)) {
+		if (data.socket === undefined) continue; // Not connected, can't send message
+		const message: GameUpdateMessage = {
+			...base,
+			participantState: getParticipantState(servergame, Number(color) as Player),
+		};
+		sendSocketMessage(data.socket, 'game', 'gameupdate', message);
 	}
 }
 
@@ -556,6 +564,17 @@ function sendGameUpdateToColor(
 	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
 }
 
+/** Builds the agnostic core of a gameupdate, identical for every recipient. */
+function buildGameUpdateBase(servergame: ServerGame, forceSync: boolean): GameUpdateBase {
+	const base: GameUpdateBase = {
+		gameConclusion: servergame.gameConclusion,
+		moves: servergame.moves.map((m) => simplifyMove(m)),
+		forceSync,
+	};
+	if (!servergame.untimed) base.clockValues = getGameClockValues(servergame);
+	return base;
+}
+
 /**
  * Constructs a gameupdate message UNIQUE to the player!
  * Unique because only one person receives the millisUntilAutoAFKResign
@@ -566,17 +585,10 @@ function getGameUpdateMessageContents(
 	color: Player,
 	forceSync: boolean,
 ): GameUpdateMessage {
-	const messageContents: GameUpdateMessage = {
-		gameConclusion: servergame.gameConclusion,
-		moves: servergame.moves.map((m) => simplifyMove(m)),
+	return {
+		...buildGameUpdateBase(servergame, forceSync),
 		participantState: getParticipantState(servergame, color),
-		forceSync,
 	};
-
-	// Include timer info if it's timed
-	if (!servergame.untimed) messageContents.clockValues = getGameClockValues(servergame);
-
-	return messageContents;
 }
 
 /** Alerts all players and spectators in the game of the rating changes of the game. */
