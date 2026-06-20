@@ -20,13 +20,13 @@ Gate these on "are we a participant" (`youAreColor !== undefined`). Wire the onl
 
 ### 2. Live deltas as a spectator
 
-Spectators receive the same role-agnostic `move` / `clock` / `gameratingchange` messages (T7), handled by the reused `onlinegamerouter` handlers (T9). Verify these work with **no self-color**: every `move` is someone else's, so the handler should just apply + animate it and update clocks. Fix any participant-centric assumption that breaks for a spectator (e.g. "it's now our turn" logic should be a no-op, not an error).
+Spectators receive the same role-agnostic `move` / `gameratingchange` messages (T7), handled by the reused `onlinegamerouter` handlers (T9). Verify these work with **no self-color**: every `move` is someone else's, so the handler should just apply + animate it and update clocks. Fix any participant-centric assumption that breaks for a spectator (e.g. "it's now our turn" logic should be a no-op, not an error).
 
 ### 3. Conclusion while spectating
 
 For **move-triggered** conclusions, the `move` message already carries `gameConclusion` → handled by the move handler, no extra work.
 
-For **non-move** conclusions (resign/time/agreement/abort), T7 re-sends spectators a full `gamestate` (carrying the now-set `gameConclusion` + final clocks). The client must **not blindly reload** on this second `gamestate`: if a game with this id is **already loaded**, treat the incoming `gamestate` as a conclusion/sync — apply its `gameConclusion` (conclude the game) and final clock values rather than rebuilding the board. (Moves are unchanged for a non-move ending; if they ever differ, reconcile via the existing resync path.) Add this "already-loaded ⇒ apply, don't reload" guard to the `gamestate` handler.
+For **non-move** conclusions (resign/time/agreement/abort), T7 sends spectators a lean `gameconclusion` message (`GameConclusionMessage` = `gameConclusion` + final `clockValues`; no moves, no full state — the game is already loaded and a spectator can't desync). Add a `gameconclusion` handler that simply concludes the loaded game (`gamefileutility.setConclusion` + conclude) and applies the final clock values — no board rebuild. Wire the incoming `gameconclusion` action (carrying `GameConclusionMessageSchema`) into the client `GameSchema` in `socketschemas.ts` (T9 wires only `gamestate`, since `gameconclusion` is spectator-only).
 
 ## Out of scope / deferred
 

@@ -29,26 +29,40 @@ function onSubscribeToGame(ws: CustomWebSocket, gameId: number): void {
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws);
 
 	if (color === undefined) {
-		// TODO: spectator subscription
-		return;
-	}
+		// Spectator path (not a participant): send the role-agnostic
+		// state (no youAreColor/participantState overlay), then attach.
+		try {
+			const value = gameutility.produceFullGameState(servergame);
+			servergame.spectators.add(ws);
+			ws.metadata.subscriptions.spectating = { id: gameId };
+			sendSocketMessage(ws, 'game', 'gamestate', value);
+		} catch {
+			// DB error (already logged)
+			sendSocketMessage(
+				ws,
+				'game',
+				'notifyerror',
+				"Couldn't connect to game. A server error occurred. Please refresh.",
+			);
+		}
+	} else {
+		// Participant path: attach without the old joingame payload, then send the new state.
+		gameutility.subscribeClientToGame(servergame, ws, color, { sendGameInfo: false });
+		try {
+			gameutility.sendParticipantGameState(servergame, ws, color);
+		} catch {
+			// DB error (already logged)
+			sendSocketMessage(
+				ws,
+				'game',
+				'notifyerror',
+				"Couldn't connect to game. A server error occurred. Please refresh.",
+			);
+			return;
+		}
 
-	// Player path: attach without the old joingame payload, then send the new state.
-	gameutility.subscribeClientToGame(servergame, ws, color, { sendGameInfo: false });
-	try {
-		gameutility.sendParticipantGameState(servergame, ws, color);
-	} catch {
-		// DB error (already logged)
-		sendSocketMessage(
-			ws,
-			'game',
-			'notifyerror',
-			"Couldn't connect to game. A server error occurred. Please refresh.",
-		);
-		return;
+		runReconnectSideEffects(servergame, color);
 	}
-
-	runReconnectSideEffects(servergame, color);
 }
 
 export { onSubscribeToGame };

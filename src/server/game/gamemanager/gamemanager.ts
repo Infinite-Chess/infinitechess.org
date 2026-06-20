@@ -4,13 +4,13 @@
  * The script keeps track of all our active online games.
  */
 
-import type { Rating } from '../../../shared/types.js';
 import type { AuthSeek } from '../seeksmanager/seekutility.js';
 import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { GameConclusionMessage, Rating } from '../../../shared/types.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -402,8 +402,16 @@ function teardownGame(servergame: ServerGame): void {
 	const conclusion = servergame.gameConclusion!;
 
 	// Move-triggered conclusions already send the gameConclusion in the move response.
-	if (!winconutil.isConclusionMoveTriggered(conclusion.condition))
+	if (!winconutil.isConclusionMoveTriggered(conclusion.condition)) {
 		gameutility.broadcastGameUpdate(servergame);
+		// Spectators are read-only and can't desync (except for hard socket close), so they
+		// only need the conclusion plus the frozen final clocks — not a full-state re-send.
+		const conclusionMessage: GameConclusionMessage = { gameConclusion: conclusion };
+		if (!servergame.untimed) {
+			conclusionMessage.clockValues = gameutility.getGameClockValues(servergame);
+		}
+		gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
+	}
 
 	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
 	if (servergame.validateMoves) {
@@ -509,7 +517,7 @@ function deleteGame(servergame: ServerGame): void {
 
 		// Send rating changes to all players of game, if relevant
 		if (ratingdata !== undefined)
-			gameutility.sendRatingChangeToAllPlayers(servergame.match, ratingdata);
+			gameutility.sendRatingChangeToAllPlayers(servergame, ratingdata);
 	} catch {
 		// log failure already logged
 		// Notify both players

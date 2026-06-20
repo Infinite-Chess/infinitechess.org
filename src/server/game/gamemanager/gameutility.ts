@@ -579,17 +579,14 @@ function getGameUpdateMessageContents(
 	return messageContents;
 }
 
-/**
- * Alerts all players in the game of the rating changes of the game
- * @param match - The game
- * @param ratingdata - The rating data
- */
-function sendRatingChangeToAllPlayers(match: MatchInfo, ratingdata: RatingData): void {
+/** Alerts all players and spectators in the game of the rating changes of the game. */
+function sendRatingChangeToAllPlayers(servergame: ServerGame, ratingdata: RatingData): void {
 	const messageContents = getRatingChangeMessageContents(ratingdata);
-	for (const playerdata of Object.values(match.playerData)) {
+	for (const playerdata of Object.values(servergame.match.playerData)) {
 		if (playerdata.socket === undefined) continue; // Not connected, can't send message
 		sendSocketMessage(playerdata.socket, 'game', 'gameratingchange', messageContents);
 	}
+	broadcastToSpectators(servergame, 'gameratingchange', messageContents);
 }
 
 /**
@@ -840,15 +837,32 @@ function sendMoveToColor(servergame: ServerGame, color: Player, move: MoveRecord
 		return;
 	}
 
+	const sendToWS = match.playerData[color]!.socket;
+	if (!sendToWS) return; // They are not connected, can't send message
+
+	const moveMessage = buildMoveMessage(servergame, move);
+	sendSocketMessage(sendToWS, 'game', 'move', moveMessage);
+}
+
+/**
+ * Builds the role-agnostic {@link OpponentsMoveMessage} for
+ * the latest move, sent to both player and spectator sends.
+ */
+function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMoveMessage {
 	const message: OpponentsMoveMessage = {
 		move: simplifyMove(move),
 		gameConclusion: servergame.gameConclusion,
 		moveNumber: servergame.moves.length,
 	};
 	if (!servergame.untimed) message.clockValues = getGameClockValues(servergame);
-	const sendToSocket = match.playerData[color]!.socket;
-	if (!sendToSocket) return; // They are not connected, can't send message
-	sendSocketMessage(sendToSocket, 'game', 'move', message);
+	return message;
+}
+
+/** Broadcasts a role-agnostic game-route message to every spectator of the game. */
+function broadcastToSpectators(servergame: ServerGame, action: string, value: any): void {
+	for (const ws of servergame.spectators) {
+		sendSocketMessage(ws, 'game', action, value);
+	}
 }
 
 /**
@@ -922,6 +936,8 @@ export default {
 	getGameClockValues,
 	sendUpdatedClockToColor,
 	sendMoveToColor,
+	buildMoveMessage,
+	broadcastToSpectators,
 	cancelDeleteGameTimer,
 	isGameResignable,
 	isGameBorderlineResignable,

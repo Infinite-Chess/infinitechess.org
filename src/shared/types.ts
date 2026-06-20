@@ -130,6 +130,18 @@ export const GameUpdateMessageSchema = z.strictObject({
 	forceSync: z.boolean(),
 });
 
+/**
+ * Server websocket `'gameconclusion'` message — a non-move-triggered conclusion for spectators.
+ * Spectators can't desync so long as their socket is open, so they need only the conclusion
+ * + frozen clocks, not a full re-send. (Move-triggered conclusions reach them via `'move'`.)
+ */
+export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
+export const GameConclusionMessageSchema = z.strictObject({
+	gameConclusion: winconutil.gameConclusionSchema,
+	/** If the game is timed, the frozen final clock values. */
+	clockValues: ClockValuesSchema.optional(),
+});
+
 /** The message contents of a server websocket `'move'` message — our opponent's move. */
 export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
 export const OpponentsMoveMessageSchema = z.strictObject({
