@@ -40,6 +40,8 @@
 
 - Also audit `global.css` as to whether or not it should be split up. Are there rules in there that are only used by a few pages? If so, consider moving them into the per-page CSS files instead of having them ship on every page.
 
+- Also audit the shared svg symbols in header.njk as to if any are just used on one or just a couple pages. If so, consider moving them into the per-page templates.
+
 - Once all pages are localized: Remove whitelisted XSS tags from xss_options constant that aren't used in any toml component.
 
 - Setup Weblate.

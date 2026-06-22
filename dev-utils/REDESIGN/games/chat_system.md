@@ -1,4 +1,4 @@
-# Chat System — Design & Legal Compliance
+# Chat System — Design
 
 ## 1. Chat implementation requirements
 
@@ -10,7 +10,8 @@
 - **Hide chat.** A toggle to collapse the chat so a player can stop being
   exposed to unwanted messages.
 - Only allow signed in users to send chat messages, so they can't abuse us not
-  being able to ban them.
+  being able to ban them. UNLESS the game is created fro the "Challenge a friend"
+  flow, then guests can send chat messages, too.
 - **Message storage — retained permanently.** It is surfaced back to the two
   participants on the finished game's page.
     - Visible only to the two participants, never public or spectators.
