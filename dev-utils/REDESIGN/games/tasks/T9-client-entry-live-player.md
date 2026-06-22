@@ -58,6 +58,24 @@ Reuse the existing `onlinegamerouter` handlers for `move`/`clock`/`gameupdate`/`
 - Delete `sendGameInfoToPlayer` (dead old `joingame` sender; superseded by `sendParticipantGameState`).
 - `resyncToGame` / `onSubscribeToGame` drop the now-empty `{ sendGameInfo: false }` options object.
 
+## Commit plan
+
+T9 is safe to land as a sequence of small commits: it adds a **parallel** page and touches nothing on the existing game path (no `main.ts`, no `startOnlineGame`), so the old page keeps working and the new page stays inert until the entry (E) wires it up. Each chunk below is self-contained — it passes `type-check` + `lint` on its own. The only hard rule: **add an import in the same commit that first uses it** (lint flags unused imports), which is why the entry lands last.
+
+**The user commits each chunk personally and reviews before the next begins.** After finishing a chunk, run `type-check` + `lint`, report what changed, and **stop** — do not start the next chunk until the user has reviewed and committed.
+
+Dependency graph: A, B, D are independent leaves; C depends on A; E (capstone) depends on A–D.
+
+- [ ] **A — `clientmetadatautil` builder** (§2): add the `FullGameState → MetaData` builder, reusing existing helpers (`getRatingFromWhiteBlackElo`, `getGameConclusionFromResultAndTermination`) inversely. Pure function; exported-but-unused is fine for lint.
+- [ ] **B — schema wiring** (§3): add the incoming `gamestate` action (`SubscribedGameStateSchema`) + outgoing `subscribe` to `socketschemas.ts`. Leave `joingame` dormant.
+- [ ] **D — side-bar render handlers** (§"T8 side-bar structure"): new DOM population against T8 markup. Independent of the socket/loader plumbing; **may be split further** into per-handler commits — clocks, move-table (+`.game-result`), material bars, username-embed script, coord readout.
+- [ ] **C — loader** `gameStateLoader.ts` (§2): `loadGameFromState(...)` consuming `FullGameState` and calling `gameslot.loadGamefile`. Depends on A. Standalone module; type-checks before anything imports it.
+- [ ] **E — entry + delta wiring** (§1 + §4): real `views/game/game.ts` — reuse the rendering bootstrap, read `gamePageData`, open socket, send `subscribe`, route `gamestate` → loader (C), wire the reused `onlinegamerouter` deltas, call the render handlers (D). Capstone; lands last.
+
+Suggested order: **A → B → D(×N) → C → E** (A/B/D can be done in any order). To consolidate: `{A+B+C}` loader stack, `{D}` side-bar render, `{E}` entry — a clean 3-commit split.
+
+**Not part of T9:** the §5 `subscribeClientToGame` collapse is gated on T12 — do **not** fold it into any chunk above.
+
 ## Out of scope / deferred
 
 - Dead/review load (T10), spectator read-only view (T11), gamestart navigation + sound (T12).
