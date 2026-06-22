@@ -36,7 +36,7 @@ Call `loadGameFromState(fullGameState, youAreColor)` (T9). The conclusion is alr
 
 ### 4. Rating changes display
 
-If `deadState.ratingChanges` is present, surface the per-player rating deltas in the side bar (reuse the existing rating-change UI, e.g. `guigameinfo.addRatingChangeToExistingUsernameContainers`, if it fits). Display only — no logic.
+If `deadState.ratingChanges` is present, surface the per-player rating deltas in the side bar. T8 uses its own username-container markup (`.username-embed` with an `.eloChange` slot, present in both `.player-bar` and `.meta-players`), so this goes through the **new username-container script** written for the redesign (see T9's "T8 side-bar structure" note) — **not** the old `guigameinfo.addRatingChangeToExistingUsernameContainers`, which targets the old DOM. Display only — no logic.
 
 ## Out of scope / deferred
 

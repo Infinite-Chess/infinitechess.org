@@ -10,6 +10,17 @@ Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure)
 - **New loader, not an adapter.** Do **not** bridge the new state into the old `gameloader.startOnlineGame`. Write a new loader for this page that consumes `FullGameState`/`SubscribedGameState` directly and calls the lower-level primitive `gameslot.loadGamefile(...)`. Building the `MetaData` that `gameslot.loadGamefile` requires from the typed state fields is the **new loader's own job** (reuse `clientmetadatautil` for the field conversions) — that's not an adapter to old code, it's the loader producing what the gamefile primitive needs.
 - Reuse lower-level primitives and existing live-delta handlers; replace only the entry + load orchestration.
 
+## T8 side-bar structure — new DOM handlers needed
+
+T8 rebuilt the game page with all-new markup and class names, so the **side-bar DOM population is not reusable** from the old page — only the data-level delta handlers (§4, which touch the gamefile + canvas) carry over. The old `guigameinfo` / clock-DOM code targets the old selectors. Plan for new render handlers (and a **new username-container script** — see T10 §4) against the actual T8 structure:
+
+- **Clocks** — a `.clock` in each `.player-bar`; `.clock.active` marks the side to move.
+- **Move list** — `.moves-table` of `.move-row`s (`.move-num` + `.ply` cells: `.move-piece` silhouette + `.move-coord`, truncated with full value in `title`). The **game-over result renders *inside* this table** (`.game-result`, appended after the last move so it scrolls away with the moves) — not as a separate region.
+- **Material** — `.material` bars (`#material-top` / `#material-bottom`): inject one `.material-piece` svg per surplus piece via `svgcache.getSilhouetteSVG`, plus a `.material-lead` (e.g. "+2").
+- **Usernames / ratings** — `.username-embed` (`.username` + `.elo`, optional `.eloChange`) appears in both `.player-bar` (board POV) and `.meta-players` (white/black list); populated by the new username-container script.
+- **Coordinate readout** — editable `#coord-x` / `#coord-y` inputs in `.coords`; wire "jump the view to these coordinates" on edit/Enter.
+- **State slots** — chat collapse toggle (`.chat.collapsed`), and draw-offer / disconnect / result blocks toggled via `.hidden`.
+
 ## Required changes
 
 ### 1. New entry — `src/client/scripts/esm/views/game/game.ts`

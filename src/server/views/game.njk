@@ -14,9 +14,363 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main></main>
+{# ════════════════════════════════════════════════════════════════════════
+   Game-page icon sprite — hand-authored glyphs used only by this page.
+   (Shared icons live in header.njk: speed, eye, arrows, perspective, flag.)
+   ════════════════════════════════════════════════════════════════════════ #}
+<svg class="hidden">
+	{# Board-view navigation (ported from the old play page, recolored to currentColor) #}
+	<symbol id="svg-board-back" viewBox="-1.68 -1.68 27.36 27.36" fill="currentColor">
+		<path fill-rule="evenodd" clip-rule="evenodd" d="M10.5303 5.46967C10.8232 5.76256 10.8232 6.23744 10.5303 6.53033L5.81066 11.25H20C20.4142 11.25 20.75 11.5858 20.75 12C20.75 12.4142 20.4142 12.75 20 12.75H5.81066L10.5303 17.4697C10.8232 17.7626 10.8232 18.2374 10.5303 18.5303C10.2374 18.8232 9.76256 18.8232 9.46967 18.5303L3.46967 12.5303C3.17678 12.2374 3.17678 11.7626 3.46967 11.4697L9.46967 5.46967C9.76256 5.17678 10.2374 5.17678 10.5303 5.46967Z"/>
+	</symbol>
+	<symbol id="svg-board-expand" viewBox="-3.84 -3.84 31.68 31.68" fill="currentColor">
+		<path d="M3 7C3 7.55228 2.55228 8 2 8C1.44772 8 1 7.55228 1 7V3C1 1.89543 1.89543 1 3 1H7C7.55228 1 8 1.44772 8 2C8 2.55228 7.55228 3 7 3H4.41421L10.7071 9.29289C11.0976 9.68342 11.0976 10.3166 10.7071 10.7071C10.3166 11.0976 9.68342 11.0976 9.29289 10.7071L3 4.41422V7Z"/>
+		<path d="M21 17C21 16.4477 21.4477 16 22 16C22.5523 16 23 16.4477 23 17V21C23 22.1046 22.1046 23 21 23H17C16.4477 23 16 22.5523 16 22C16 21.4477 16.4477 21 17 21H19.5858L13.2929 14.7071C12.9024 14.3166 12.9024 13.6834 13.2929 13.2929C13.6834 12.9024 14.3166 12.9024 14.7071 13.2929L21 19.5858V17Z"/>
+		<path d="M21 7C21 7.55228 21.4477 8 22 8C22.5523 8 23 7.55228 23 7V3C23 1.89543 22.1046 1 21 1H17C16.4477 1 16 1.44772 16 2C16 2.55228 16.4477 3 17 3H19.5858L13.2929 9.29289C12.9024 9.68342 12.9024 10.3166 13.2929 10.7071C13.6834 11.0976 14.3166 11.0976 14.7071 10.7071L21 4.41421V7Z"/>
+		<path d="M3 17C3 16.4477 2.55228 16 2 16C1.44772 16 1 16.4477 1 17V21C1 22.1046 1.89543 23 3 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H4.41421L10.7071 14.7071C11.0976 14.3166 11.0976 13.6834 10.7071 13.2929C10.3166 12.9024 9.68342 12.9024 9.29289 13.2929L3 19.5858V17Z"/>
+	</symbol>
+	<symbol id="svg-board-recenter" viewBox="-59.11 -59.11 610.81 610.81" fill="currentColor">
+		<path d="M468.467,222.168h-28.329c-9.712-89.679-80.46-161.18-169.71-172.258V24.135c0-13.338-10.791-24.134-24.134-24.134 c-13.311,0-24.117,10.796-24.117,24.134V49.91C132.924,60.988,62.177,132.488,52.482,222.168H24.153 C10.806,222.168,0,232.964,0,246.286c0,13.336,10.806,24.132,24.153,24.132h29.228c12.192,86.816,81.551,155.4,168.797,166.229 v31.804c0,13.336,10.806,24.135,24.117,24.135c13.343,0,24.134-10.799,24.134-24.135v-31.804 c87.228-10.829,156.607-79.413,168.775-166.229h29.264c13.33,0,24.122-10.796,24.122-24.132 C492.589,232.964,481.797,222.168,468.467,222.168z M246.294,398.093c-85.345,0-154.804-69.453-154.804-154.813 c0-85.363,69.459-154.813,154.804-154.813c85.376,0,154.823,69.45,154.823,154.813 C401.117,328.639,331.671,398.093,246.294,398.093z"/>
+		<path d="M246.294,176.93c-36.628,0-66.34,29.704-66.34,66.349c0,36.635,29.711,66.349,66.34,66.349 c36.66,0,66.34-29.713,66.34-66.349C312.634,206.635,282.955,176.93,246.294,176.93z"/>
+	</symbol>
+	{# Moves-list navigation row — a consistent hand-authored set #}
+	<symbol id="svg-move-first" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="2.5" height="14"/><path d="M19 5 10 12l9 7Z"/></symbol>
+	<symbol id="svg-move-prev" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5 7 12l9 7Z"/></symbol>
+	<symbol id="svg-move-next" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l9 7-9 7Z"/></symbol>
+	<symbol id="svg-move-last" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5l9 7-9 7Z"/><rect x="15.5" y="5" width="2.5" height="14"/></symbol>
+	{# Draw-offer accept (check) and reject / abort (x) — same x glyph for both #}
+	<symbol id="svg-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+	<symbol id="svg-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+	{# Chat expand/collapse chevron — points down when open; T9 rotates it 180° when collapsed #}
+	<symbol id="svg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
+	{# Offer draw — the "½" glyph (provided in the asset inventory) #}
+	<symbol id="svg-offer-draw" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></symbol>
+	{# Mobile annotation tools (ported from the old play page, recolored). The pencil reuses header.njk's #svg-pencil. #}
+	<symbol id="svg-erase" viewBox="0 0 240 240" fill="currentColor"><path d="M114 55C131 38 140 30 150 30s18 8 35 25S210 80 210 90s-8 20-25 36l-42 42-70-71 41-42Z"/><path d="m62 108 70 70-6 7-10 10H210a8 8 0 01 0 15H90c-10 0-19-9-35-25C38 168 30 160 30 150s8-20 25-36l7-6Z"/></symbol>
+	<symbol id="svg-collapse" viewBox="0 0 256 256" fill="currentColor" stroke="currentColor" stroke-width="6.912"><path d="M8 104a8 8 0 0 1 4.031-6.946l112-64a8.004 8.004 0 0 1 7.938 0l112 64a8 8 0 0 1 0 13.893l-112 64a8.001 8.001 0 0 1-7.937 0l-112-64A8 8 0 0 1 8 104zm228.031 33.054L128 198.786 19.969 137.054a8 8 0 0 0-7.937 13.893l112 64a8.001 8.001 0 0 0 7.938 0l112-64a8 8 0 0 0-7.937-13.893z"/></symbol>
+</svg>
 
-{% include "components/footer/footer.njk" %}
+{# ════════════════════════════════════════════════════════════════════════
+   NOTE FOR T9 (client wiring): every region below is static structure only.
+   Blocks tagged "EXAMPLE" in comments contain hard-coded sample content purely
+   to show the intended shape — the runtime client will REPLACE their contents
+   (and toggle the `.hidden` state markers) once real game data is loaded.
+   ════════════════════════════════════════════════════════════════════════ #}
+<main class="game">
+
+	{# ── Left side bar ─────────────────────────────────────────────────── #}
+	<aside class="sidebar scrollbar-thin">
+
+		{# Board-view navigation + view toggles #}
+		<div class="board-controls unselectable">
+			<div class="ctrl-row">
+				{# View toggles #}
+				<div class="ctrl-group">
+					{# Perspective is desktop-only (hidden on touch via pointer: coarse). #}
+					<button class="btn-bare icon-btn tooltip-d desktop-only" id="btn-perspective" data-tooltip="Perspective view">
+						<svg><use href="#svg-perspective"/></svg>
+					</button>
+					{# Arrow-indicators mode — cycles defense → all → all+hippogonals → off.
+						T9 swaps the <use> href + title to reflect the active state. #}
+					<button class="btn-bare icon-btn tooltip-d" id="btn-arrows" data-tooltip="Arrow indicators: Defense">
+						<svg><use href="#svg-arrows-defense"/></svg>
+					</button>
+				</div>
+				{# Annotation tools — mobile only (hidden on desktop via pointer: fine). Sits in the
+				   middle, between the view toggles and the board-view navigation. #}
+				<div class="ctrl-group mobile-only">
+					<button class="btn-bare icon-btn tooltip-d" id="btn-annotations" data-tooltip="Draw annotations">
+						<svg><use href="#svg-pencil"/></svg>
+					</button>
+					{# Erase / Collapse-rays share one slot (mutually exclusive). Collapse is commented
+					   out so only one shows — uncomment it (and hide erase) to swap. #}
+					<button class="btn-bare icon-btn tooltip-d" id="btn-erase" data-tooltip="Erase annotations">
+						<svg><use href="#svg-erase"/></svg>
+					</button>
+					{# <button class="btn-bare icon-btn tooltip-d" id="btn-collapse" data-tooltip="Collapse rays">
+						<svg><use href="#svg-collapse"/></svg>
+					</button> #}
+				</div>
+				{# Board-view navigation #}
+				<div class="ctrl-group">
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-back" data-tooltip="Undo board transition">
+						<svg><use href="#svg-board-back"/></svg>
+					</button>
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-expand" data-tooltip="Fit entire game on screen">
+						<svg><use href="#svg-board-expand"/></svg>
+					</button>
+					<button class="btn-bare icon-btn tooltip-d" id="btn-board-recenter" data-tooltip="Recenter board">
+						<svg><use href="#svg-board-recenter"/></svg>
+					</button>
+				</div>
+			</div>
+
+			{# Coordinate readout — the board coordinates currently centered in view; the fields
+			   are editable to jump the view there. EXAMPLE — T9 keeps X/Y in sync with the board. #}
+			<div class="coords">
+				<span class="coord">
+					<span class="coord-label">X</span>
+					<input class="coord-value" id="coord-x" type="text" value="14" aria-label="X coordinate" />
+				</span>
+				<span class="coord">
+					<span class="coord-label">Y</span>
+					<input class="coord-value" id="coord-y" type="text" value="7" aria-label="Y coordinate" />
+				</span>
+			</div>
+		</div>
+
+		{# Game metadata — mirrors a lobby seek row's cells, then the variant's gamerule
+		   modifications (as in the variant preview tooltip), then when the game started. #}
+		<div class="game-meta panel">
+
+			{# Row 1 — Variant (icon) • speed icon + time control • Mode, exactly like a seek row.
+			   EXAMPLE — T9 fills the variant icon + name, speed icon + time control, and mode. #}
+			<div class="meta-info">
+				<span class="meta-item">
+					{# T9 swaps #svg-pawn for the variant's icon (same one shown on seek rows). #}
+					<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
+					<span class="meta-variant">Classical</span>
+				</span>
+				<span class="meta-sep">•</span>
+				<span class="meta-item" title="Rapid">
+					<svg class="meta-icon svg-speed-rapid"><use href="#svg-speed-rapid"/></svg>
+					<span class="meta-time">10+4</span>
+				</span>
+				<span class="meta-sep">•</span>
+				<span class="meta-mode">Rated</span>
+			</div>
+
+			{# Row 2 — gamerule modifications, same wording/shape as the variant preview tooltip.
+			   EXAMPLE — T9 builds this from the game's gamerules, and omits the row when none. #}
+			<p class="meta-rules">Black moves first. No promotion. No 50-move rule.</p>
+
+			{# Row 3 — when the game started + live spectator count.
+			   EXAMPLE — T9 sets the relative start time and the spectator count (hidden if none). #}
+			<div class="meta-foot">
+				<time class="meta-started">3 minutes ago</time>
+				<span class="meta-spectators" title="Spectators">
+					<svg class="meta-eye"><use href="#svg-eye"/></svg>
+					<span class="spectator-count">1</span>
+				</span>
+			</div>
+
+			{# Participants — white row then black row, each a color dot (like a seek's
+			   side-dot) beside the player's username container.
+			   EXAMPLE — T9 fills each player's ServerUsernameContainer. #}
+			<div class="meta-players">
+				<div class="meta-player">
+					<span class="side-dot" title="White"></span>
+					<span class="username-embed">
+						<span class="username">Naviary</span>
+						<span class="elo">1899</span>
+					</span>
+				</div>
+				<div class="meta-player">
+					<span class="side-dot black" title="Black"></span>
+					<span class="username-embed">
+						<span class="username">FinalBozz</span>
+						<span class="elo">2507</span>
+					</span>
+				</div>
+			</div>
+
+			{# Result banner; shown only on game over. Example content: #}
+			<div class="result-banner">
+				<span class="result-score">1-0</span>
+				<span class="result-text">White wins by checkmate</span>
+			</div>
+		</div>
+
+		{# Material bars + match panel grouped so the bars touch the panel (no gap),
+		   while the group still gets the side bar's gap above (game-meta) and below (chat). #}
+		<div class="play-group">
+
+			{# Top side's captured material — bare bar above the match panel (no border/bg);
+			always reserves height, even when empty. Top = the opponent (player view) or
+			black (spectator view). T9 injects one <svg> per surplus piece via
+			svgcache.getSilhouetteSVG(); the #svg-pawn uses below are placeholders. #}
+			<div class="material" id="material-top">
+				{# EXAMPLE #}
+				<svg class="material-piece"><use href="#svg-pawn"/></svg>
+				<svg class="material-piece"><use href="#svg-pawn"/></svg>
+				<span class="material-lead">+2</span>
+				{# /EXAMPLE #}
+			</div>
+
+			{# Zones 3–7 share one panel (top container, moves, actions, disconnect,
+			bottom container) — no gaps between them, just an internal divider per sub-section. #}
+			<div class="match-panel panel">
+
+				{# Zone 3 — Top username container (name + rating + clock). The far side:
+				   the opponent for a player, or black for a spectator. #}
+				{# EXAMPLE — T9 fills this from the top player's ServerUsernameContainer + clock. #}
+				<div class="player-bar top">
+					<span class="username-embed">
+						<span class="username">FinalBozz</span>
+						<span class="elo">2507</span>
+						{# .eloChange (e.g. "-12") is added by T9 on game end:
+						<span class="eloChange negative">-12</span> #}
+					</span>
+					<span class="clock">9:58</span>
+				</div>
+				{# /EXAMPLE #}
+
+				{# Zone 4 — Moves list (nav row + scrolling table + game-over result line) #}
+				<div class="moves">
+					<div class="moves-nav unselectable">
+						<button class="btn-bare move-btn" id="btn-move-first" title="Rewind to start"><svg class="move-icon"><use href="#svg-move-first"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-prev" title="Previous move"><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-next" title="Next move"><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
+						<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest"><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
+					</div>
+					<div class="moves-table scrollbar-thin">
+						{# EXAMPLE — T9 renders one .move-row per full move. Each ply cell carries a
+						silhouette of the moved piece (svgcache) + the move's coordinates; long
+						coordinates are truncated by CSS, full value via the title attribute.
+						The #svg-pawn placeholders below stand in for the real piece silhouettes. #}
+						<div class="move-row">
+							<span class="move-num">1</span>
+							<button class="ply" title="1,2 → 1,4"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">1,4</span></button>
+							<button class="ply" title="5,7 → 5,5"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">5,5</span></button>
+						</div>
+						<div class="move-row">
+							<span class="move-num">2</span>
+							<button class="ply" title="7,1 → 6,3"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">6,3</span></button>
+							<button class="ply current" title="123456789,987654320 → 123456789,-987654321"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">123456789,-987654321</span></button>
+						</div>
+						<div class="move-row">
+							<span class="move-num">3</span>
+							<button class="ply" title="1,2 → 1,4"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">1,4</span></button>
+							<button class="ply" title="5,7 → 5,5"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">5,5</span></button>
+						</div>
+						<div class="move-row">
+							<span class="move-num">4</span>
+							<button class="ply" title="1,2 → 1,4"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">1,4</span></button>
+							<button class="ply" title="5,7 → 5,5"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">5,5</span></button>
+						</div>
+						<div class="move-row">
+							<span class="move-num">5</span>
+							<button class="ply" title="2,1 → 3,3"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">3,3</span></button>
+							{# black has not moved yet → empty ply slot #}
+							<span class="ply empty"></span>
+						</div>
+						{# /EXAMPLE #}
+
+						{# Game result — lives INSIDE the scrolling table, immediately after the last
+						move, so it eats into the table's height (not the panel's) and scrolls away with
+						the moves as the user scrolls up to past moves. Game over only; T9 keeps it
+						`.hidden`, then unhides + fills it. EXAMPLE — previews the game-over result. #}
+						<div class="game-result">
+							<span class="result-score">1–0</span>
+							<span class="result-text">White wins by checkmate</span>
+						</div>
+					</div>
+				</div>
+
+				{# Zone 5 — Game actions. Only one if these divs is every visible at one time. actions-over trumps,
+				followed by actions-draw-offer if there is an incoming draw offer, followed by actions-live if the
+				game is live. T9 toggles `.hidden` on each of the three divs. #}
+				<div class="game-actions">
+					{# Default live-game actions: offer draw + resign-or-abort (one shared slot). #}
+					<div class="actions-live">
+						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw">
+							<svg class="action-icon"><use href="#svg-offer-draw"/></svg>
+						</button>
+						{# Resign / Abort share one slot (mutually exclusive). T9 shows abort while
+						resignable (0–1 plies), resign otherwise. Resign is commented out so only
+						one shows — uncomment to review it. #}
+						{# <button class="action-btn tooltip-d" id="btn-abort" data-tooltip="Abort">
+							<svg class="action-icon"><use href="#svg-x"/></svg>
+						</button> #}
+						<button class="action-btn tooltip-d" id="btn-resign" data-tooltip="Resign">
+							<svg class="action-icon"><use href="#svg-flag"/></svg>
+						</button>
+					</div>
+					{# Incoming draw offer — commented out for now; REPLACES the live actions while active. #}
+					<div class="actions-draw-offer">
+						<span class="draw-offer-label">Accept draw offer?</span>
+						<div class="draw-offer-buttons">
+							<button class="action-btn accept" title="Accept draw"><svg class="action-icon"><use href="#svg-check"/></svg></button>
+							<button class="action-btn reject" title="Decline draw"><svg class="action-icon"><use href="#svg-x"/></svg></button>
+						</div>
+					</div>
+					{# Post-game actions: rematch + analysis — commented out for now; shown on game over. #}
+					<div class="actions-over">
+						<button class="action-btn" id="btn-rematch">Rematch</button>
+						<button class="action-btn" id="btn-analysis">Analysis</button>
+					</div>
+				</div>
+
+				{# Zone 6 — Opponent-disconnect status. T9 keeps it `.hidden` unless the opponent
+				has dropped, shows the countdown text, then unhides the claim buttons on expiry. #}
+				{# EXAMPLE — previews the disconnect countdown. The claim buttons are hidden
+				(mutually exclusive with the countdown) until the timer expires. #}
+				<div class="disconnect-status">
+					<span class="disconnect-text">Opponent disconnected. You can claim victory in 10 seconds.</span>
+					<div class="disconnect-buttons">
+						<button class="action-btn" id="btn-claim-victory">Claim victory</button>
+						<button class="action-btn" id="btn-claim-draw">Call a draw</button>
+					</div>
+				</div>
+				{# /EXAMPLE #}
+
+				{# Zone 7 — Bottom username container (name + rating + clock). The near side:
+				   you for a player, or white for a spectator. #}
+				{# EXAMPLE — mirrors Zone 3 for the near side. #}
+				<div class="player-bar bottom tempo">
+					<span class="username-embed">
+						<span class="username">Naviary</span>
+						<span class="elo">1899</span>
+					</span>
+					<span class="clock">10:03</span>
+				</div>
+				{# /EXAMPLE #}
+
+			</div>{# .match-panel #}
+
+			{# Bottom side's captured material — bare bar below the match panel (no border/bg).
+			   Bottom = you (player view) or white (spectator view). #}
+			<div class="material" id="material-bottom">
+				{# EXAMPLE #}
+				{# <svg class="material-piece"><use href="#svg-pawn"/></svg> #}
+				{# /EXAMPLE #}
+			</div>
+
+		</div>{# .play-group #}
+
+		{# Zone 8 — Chat (log + static notifications, then the input row) #}
+		<div class="chat panel">
+			{# The whole left part of the bar is the expand/collapse toggle; the report flag
+			   sits on the far right. T9 toggles `.collapsed` on the .chat panel. #}
+			<div class="chat-bar unselectable">
+				<button class="btn-bare chat-toggle" id="btn-toggle-chat">
+					<svg class="chat-chevron"><use href="#svg-chevron"/></svg>
+					<span class="chat-title">Chat</span>
+				</button>
+				<button class="btn-bare icon-btn tooltip-d" id="btn-report" title="Report the chat">
+					<svg><use href="#svg-flag"/></svg>
+				</button>
+			</div>
+			<div class="chat-log scrollbar-thin">
+				{# EXAMPLE — T9 renders chat messages and static event notifications here.
+				   Message bubbles are deferred this session; the two notices below show the
+				   static-notification shape (draw/rematch offers & rejections, no buttons). #}
+				<div class="chat-notice">Opponent offered a draw.</div>
+				<div class="chat-notice">Draw offer declined.</div>
+				{# /EXAMPLE #}
+			</div>
+			{# Chat input — T9 disables/hides it for guests in non-friend games. #}
+			<input class="chat-input" type="text" placeholder="Please be nice!" maxlength="280" />
+		</div>
+
+	</aside>
+
+	{# ── Board (canvas) — fills the remaining width; T9 grabs the canvas for WebGL ── #}
+	<div class="board bg-checkerboard">
+		<canvas class="board-canvas" id="board-canvas"></canvas>
+	</div>
+
+</main>
 {% endblock %}
 
 {% block script %}

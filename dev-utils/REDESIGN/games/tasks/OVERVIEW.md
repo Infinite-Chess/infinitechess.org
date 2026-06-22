@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T8 — Game-page UI structure (canvas + side bar) ([T8-game-page-structure.md](T8-game-page-structure.md))
-Replace T3's empty `<main>` with the WebGL `<canvas>` + side bar (clocks, move history, chat, material) — **markup + CSS layout only, no behavior**. The implementing agent **must consult the user on the side-bar design** (using `design.md` "## Games" as a starting reference) rather than inventing it.
-
 ## T9 — Client entry + new loader (live player) ([T9-client-entry-live-player.md](T9-client-entry-live-player.md))
 The game page gets its **own** slim entry (NOT `main.ts`; reuses the rendering bootstrap modules) and a **new purpose-built loader** that consumes `FullGameState` directly — building the `MetaData` the gamefile primitive needs from the typed fields (via `clientmetadatautil`) and calling `gameslot.loadGamefile` (no adapter to the old `startOnlineGame`). Wires the live player path: `subscribe {id}` → `gamestate` → loader → render; reuses `onlinegamerouter`'s `move`/`clock`/`gameupdate` delta handlers. Import-graph slimming is a **separate later refactor with the user**.
 

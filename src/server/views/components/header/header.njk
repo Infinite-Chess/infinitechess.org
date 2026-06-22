@@ -97,6 +97,59 @@
 	<symbol id="svg-slide-limit" fill="none" viewBox="0 0 240 240">
 		<path d="M200 40v160M40 120h120m0 0-40-40m40 40-40 40" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="24"/>
 	</symbol>
+
+	{# ── Game-page side-bar icons ──────────────────────────────────────── #}
+
+	{# Shared rook body for the four arrow-indicator toggles below. #}
+	<symbol id="svg-rook-silhouette" viewBox="0 0 45 45" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+		<path d="M9 39.3h27v-3H9v3zm3.5-7 1.5-2.5h17l1.5 2.5h-20zm-.5 4v-4h21v4H12z" stroke-linecap="butt"/>
+		<path d="M14 29.8v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter"/>
+		<path d="m14 16.8-3-2.5h23l-3 2.5H14zm-3-2.5v-5h4v2h5v-2h5v2h5v-2h4v5H11z" stroke-linecap="butt"/>
+	</symbol>
+	{# Arrow-indicators mode toggle — defense / all / all+hippogonals / off. #}
+	<symbol id="svg-arrows-defense" viewBox="0 0 48 48">
+		<use href="#svg-rook-silhouette" width="45" height="45" transform="translate(7.95 2.13) scale(0.9)"/>
+		<polygon points="9.2,19 9.2,29 4.2,24" fill="currentColor"/>
+	</symbol>
+	<symbol id="svg-arrows-all" viewBox="0 0 48 48">
+		<use href="#svg-rook-silhouette" width="45" height="45" transform="translate(7.95 3.63) scale(0.9)"/>
+		<g fill="currentColor">
+			<polygon points="9.2,20.5 9.2,30.5 4.2,25.5"/>
+			<polygon points="9.2,20.5 9.2,30.5 4.2,25.5" transform="rotate(45 28.2 25.5)"/>
+		</g>
+	</symbol>
+	<symbol id="svg-arrows-hippogonals" viewBox="0 0 48 48">
+		<use href="#svg-rook-silhouette" width="45" height="45" transform="translate(7.95 3.63) scale(0.9)"/>
+		<g fill="currentColor">
+			<polygon points="9.2,20.5 9.2,30.5 4.2,25.5"/>
+			<polygon points="9.2,20.5 9.2,30.5 4.2,25.5" transform="rotate(26.57 28.2 25.5)"/>
+			<polygon points="9.2,20.5 9.2,30.5 4.2,25.5" transform="rotate(45 28.2 25.5)"/>
+		</g>
+	</symbol>
+	<symbol id="svg-arrows-off" viewBox="0 0 48 48">
+		<defs>
+			<mask id="off-slash" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+				<rect x="0" y="0" width="48" height="48" fill="white"/>
+				<line x1="10" y1="38" x2="38" y2="10" stroke="black" stroke-width="6" stroke-linecap="round"/>
+			</mask>
+		</defs>
+		<g mask="url(#off-slash)">
+			<use href="#svg-rook-silhouette" width="45" height="45" transform="translate(3.75 2.13) scale(0.9)"/>
+		</g>
+		<line x1="10" y1="38" x2="38" y2="10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+	</symbol>
+	<!-- Author: IconPark | License: MIT License | Source: https://www.svgrepo.com/svg/336825/perspective -->
+	<symbol id="svg-perspective" fill="none" viewBox="0 0 480 480">
+		<path d="M0 0h480v480H0" fill="none"/>
+		<path d="M440 280v80l-130 26M440 280 40 320m400-40v-80M40 320v120l130-26M40 320V160m400 40v-80L310 94M440 200 40 160m0 0V40l130 26m140 28v292m0-292L170 66m140 320-140 28m0-348v348" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="40"/>
+	</symbol>
+	{# Flag — resign action + chat report button. #}
+	<symbol id="svg-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<g transform="translate(2 -1) rotate(-12 12 12)">
+			<path d="M4 22V3"/>
+			<path d="M4 4C7.5 2 10.5 6 14 4C15.4 3.2 16.6 3.3 18 4L18 12C16.6 11.3 15.4 11.2 14 12C10.5 14 7.5 10 4 12Z" fill="currentColor"/>
+		</g>
+	</symbol>
 </svg>
 
 {# Site-wide header. Included by every page. #}
