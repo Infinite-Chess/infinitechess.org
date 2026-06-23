@@ -22,7 +22,6 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../rendering/area.js';
@@ -306,11 +305,6 @@ function concludeGame(): void {
 	console.warn('Game conclude sound has not been added yet.');
 }
 
-/** Undoes the conclusion of the game. */
-function unConcludeGame(): void {
-	gamefileutility.setConclusion(loadedGamefile!, undefined);
-}
-
 export default {
 	getGamefile,
 	getMesh,
@@ -320,7 +314,6 @@ export default {
 	unloadGame,
 	startStartingTransition,
 	concludeGame,
-	unConcludeGame,
 };
 
 export type { PresetAnnotes, Additional };

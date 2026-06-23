@@ -33,7 +33,7 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
  */
 function doGameOverChecks(gamefile: GameFile): void {
 	const conclusion = getGameConclusion(gamefile);
-	gamefileutility.setConclusion(gamefile, conclusion);
+	gamefile.gameConclusion = conclusion;
 	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
 		moveutil.flagLastMoveAsMate(gamefile);
 }

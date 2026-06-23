@@ -16,7 +16,6 @@ import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
@@ -347,7 +346,7 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	gamefileutility.setConclusion(servergame, conclusion);
+	servergame.gameConclusion = conclusion;
 
 	if (conclusion === undefined) return;
 

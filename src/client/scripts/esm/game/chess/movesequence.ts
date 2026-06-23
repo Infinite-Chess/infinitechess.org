@@ -113,7 +113,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, meshChanges, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
-	if (gamefileutility.isGameOver(gamefile)) gameslot.unConcludeGame();
+	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
 	updateGui(false); // GUI changes
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.

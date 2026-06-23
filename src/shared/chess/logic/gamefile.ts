@@ -141,7 +141,7 @@ function initGame(
 
 	const gameWithRules = { ...game, gameRules };
 
-	gamefileutility.setConclusion(gameWithRules, gameConclusion);
+	gameWithRules.gameConclusion = gameConclusion;
 
 	return gameWithRules;
 }

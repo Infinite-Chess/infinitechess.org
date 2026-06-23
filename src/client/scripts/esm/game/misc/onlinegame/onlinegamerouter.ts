@@ -10,7 +10,6 @@ import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/t
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import afk from './afk.js';
@@ -270,7 +269,7 @@ function handleLogin(gamefile: GameFile): void {
 function handleNoGame(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(gamefile, { condition: 'aborted' });
+	gamefile.gameConclusion = { condition: 'aborted' };
 	gameslot.concludeGame();
 }
 

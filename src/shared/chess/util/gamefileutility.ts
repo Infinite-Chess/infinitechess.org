@@ -39,19 +39,6 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
 }
 
 /**
- * Sets (or clears, if undefined) the conclusion of the game.
- * `Result`/`Termination` are NOT stored — they are derived on demand from the
- * `gameConclusion` only when a `MetaData` is assembled (e.g. ICN serialization).
- * @param gamefile - The minimum properties needed from the gamefile to set the conclusion. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
- */
-function setConclusion(
-	gamefile: { gameConclusion?: GameConclusion },
-	conclusion: GameConclusion | undefined,
-): void {
-	gamefile.gameConclusion = conclusion;
-}
-
-/**
  * Tests if the color's opponent can win from the specified win condition.
  * @param game - The gamefile with the gameRules to check the win condition against.
  * @param friendlyColor - The color of friendlies.
@@ -78,7 +65,6 @@ export default {
 	isGameOver,
 	isCurrentViewedPositionInCheck,
 	getCheckCoordsOfCurrentViewedPosition,
-	setConclusion,
 	isOpponentUsingWinCondition,
 	getPlayerCount,
 };

@@ -6,7 +6,6 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
@@ -263,7 +262,7 @@ function makeEngineMove(tokenMove: unknown): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefileutility.setConclusion(gamefile, { condition: 'resignation', victor: ourColor! });
+		gamefile.gameConclusion = { condition: 'resignation', victor: ourColor! };
 		gameslot.concludeGame();
 		return;
 	}
