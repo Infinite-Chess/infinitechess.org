@@ -406,7 +406,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 			}),
 		};
 		const loadedGamefile = await gamefile.initGameFile(
-			longformOut.metadata,
+			longformOut.metadata.TimeControl ?? '-',
 			timestamp,
 			resolvedVariantCode,
 			additional,

@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/types.js';
+import type { TimeControl } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
@@ -53,8 +53,8 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 /** Options for loading a game. */
 interface LoadOptions {
-	/** The metadata of the game */
-	metadata: MetaData;
+	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
+	timeControl: TimeControl;
 	/** The variant code. Pass undefined for custom/unknown positions. */
 	variant: VariantCode | undefined;
 	/** The game's start timestamp in milliseconds since epoch. */
@@ -163,7 +163,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	loadedGamefile = await gamefile.initGameFile(
-		loadOptions.metadata,
+		loadOptions.timeControl,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,
 		loadOptions.additional,

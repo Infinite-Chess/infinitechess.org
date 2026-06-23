@@ -46,8 +46,7 @@ import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
 import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
 import frameratelimiter from '../rendering/frameratelimiter.js';
-import clientmetadatautil from './clientmetadatautil.js';
-import { engineDictionary, getFormattedEngineName } from './engines/engine.js';
+import { engineDictionary } from './engines/engine.js';
 
 // Variables --------------------------------------------------------------------
 
@@ -143,20 +142,13 @@ async function startLocalGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const variantName = variantregistry.getVariantName(options.variant);
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		`Casual local ${variantName} infinite chess game`,
-		options.timeControl,
-		dateTimestamp,
-	);
-	metadata.Variant = variantName;
 
 	const viewWhitePerspective = true;
 
 	gameslot
 		.loadGamefile({
-			metadata,
+			timeControl: options.timeControl,
 			variant: options.variant,
 			dateTimestamp,
 			viewWhitePerspective,
@@ -211,7 +203,7 @@ async function startOnlineGame(options: {
 
 	gameslot
 		.loadGamefile({
-			metadata: options.metadata,
+			timeControl: options.metadata.TimeControl ?? '-',
 			variant: resolvedVariant,
 			dateTimestamp: resolvedTimestamp,
 			viewWhitePerspective,
@@ -268,31 +260,13 @@ async function startEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const formattedEngineName = getFormattedEngineName(
-		options.currentEngine,
-		options.engineConfig.strengthLevel,
-	);
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		options.event,
-		options.timeControl,
-		dateTimestamp,
-	);
-	if (options.variant) metadata.Variant = variantregistry.getVariantName(options.variant);
-	metadata.White =
-		options.youAreColor === p.WHITE
-			? clientmetadatautil.YOU_NAME_ICN_METADATA
-			: formattedEngineName;
-	metadata.Black =
-		options.youAreColor === p.BLACK
-			? clientmetadatautil.YOU_NAME_ICN_METADATA
-			: formattedEngineName;
 
 	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
 	gameslot
 		.loadGamefile({
-			metadata,
+			timeControl: options.timeControl,
 			variant: options.variant,
 			dateTimestamp,
 			viewWhitePerspective,
@@ -324,19 +298,13 @@ async function startBoardEditor(): Promise<void> {
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		'Position created using ingame board editor',
-		'-',
-		dateTimestamp,
-	);
 	const variantCode: VariantCode = 'Classical';
-	metadata.Variant = variantregistry.getVariantName(variantCode);
 
 	const viewWhitePerspective = true;
 
 	gameslot
 		.loadGamefile({
-			metadata,
+			timeControl: '-',
 			variant: variantCode,
 			dateTimestamp,
 			viewWhitePerspective,
@@ -373,18 +341,13 @@ async function startCustomLocalGame(options: {
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		'Casual local custom infinite chess game',
-		'-',
-		dateTimestamp,
-	);
 
 	const viewWhitePerspective = true;
 
 	gameslot
 		.loadGamefile({
 			...options,
-			metadata,
+			timeControl: '-',
 			dateTimestamp,
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
@@ -420,30 +383,13 @@ async function startCustomEngineGame(options: {
 	// Has to be awaited to give the document a chance to repaint.
 	await loadingscreen.open();
 
-	const formattedEngineName = getFormattedEngineName(
-		options.currentEngine,
-		options.engineConfig.strengthLevel,
-	);
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		'Casual computer custom infinite chess game',
-		options.timeControl,
-		dateTimestamp,
-	);
-	metadata.White =
-		options.youAreColor === p.WHITE
-			? clientmetadatautil.YOU_NAME_ICN_METADATA
-			: formattedEngineName;
-	metadata.Black =
-		options.youAreColor === p.BLACK
-			? clientmetadatautil.YOU_NAME_ICN_METADATA
-			: formattedEngineName;
 
 	const viewWhitePerspective = options.youAreColor === p.WHITE;
 
 	gameslot
 		.loadGamefile({
-			metadata,
+			timeControl: options.timeControl,
 			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
@@ -490,11 +436,6 @@ async function startBoardEditorFromCustomPosition(
 	await loadingscreen.open();
 
 	const dateTimestamp = Date.now();
-	const metadata = clientmetadatautil.buildBaseGameMetadata(
-		'Position created using ingame board editor',
-		'-',
-		dateTimestamp,
-	);
 
 	// Variant options are copied before the gamefile is loaded and this potentially manipualtes them
 	const variantOptionsCopy = jsutil.deepCopyObject(options.additional.variantOptions);
@@ -503,7 +444,7 @@ async function startBoardEditorFromCustomPosition(
 
 	gameslot
 		.loadGamefile({
-			metadata,
+			timeControl: '-',
 			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
@@ -547,7 +488,7 @@ async function pasteGame(options: {
 
 	gameslot
 		.loadGamefile({
-			metadata: options.metadata,
+			timeControl: options.metadata.TimeControl ?? '-',
 			variant: options.variant,
 			dateTimestamp: options.dateTimestamp,
 			viewWhitePerspective,

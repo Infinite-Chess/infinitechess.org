@@ -7,7 +7,7 @@ Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure)
 ## Approach (confirmed)
 
 - **No `main.ts`.** This page gets its own slim entry. It's fine if it initially pulls in much of the existing `game/` graph by reusing modules — slimming is a **separate, later iterative refactor** (done with the user), not part of this task.
-- **New loader, not an adapter.** Do **not** bridge the new state into the old `gameloader.startOnlineGame`. Write a new loader for this page that consumes `FullGameState`/`SubscribedGameState` directly and calls the lower-level primitive `gameslot.loadGamefile(...)`. Building the `MetaData` that `gameslot.loadGamefile` requires from the typed state fields is the **new loader's own job** (reuse `clientmetadatautil` for the field conversions) — that's not an adapter to old code, it's the loader producing what the gamefile primitive needs.
+- **New loader, not an adapter.** Do **not** bridge the new state into the old `gameloader.startOnlineGame`. Write a new loader for this page that consumes `FullGameState`/`SubscribedGameState` directly and calls the lower-level primitive `gameslot.loadGamefile(...)`. `gameslot.loadGamefile` takes the gamefile's source-of-truth fields directly (`timeControl`, `variant`, `dateTimestamp`, …).
 - Reuse lower-level primitives and existing live-delta handlers; replace only the entry + load orchestration.
 
 ## T8 side-bar structure — new DOM handlers needed
@@ -33,10 +33,9 @@ Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that 
 ### 2. New loader — `src/client/scripts/esm/views/game/gameStateLoader.ts` (or similar)
 
 `loadGameFromState(state: FullGameState, youAreColor?: Player)`:
-- Build a `MetaData` from the typed fields (`variant` → `Variant`, `players` → `White`/`Black`/`WhiteElo`/`BlackElo`, `timeControl` → `TimeControl`, `timeCreated` → `UTCDate`/`UTCTime`, `gameConclusion` → `Result`/`Termination`) — add a `FullGameState → MetaData` builder to `clientmetadatautil` (reuse its existing helpers like `getRatingFromWhiteBlackElo`, `getGameConclusionFromResultAndTermination` inversely).
-- Resolve variant (`variantregistry.resolveVariantCode`) + timestamp (`metadatautil.resolveTimestampFromMetadata`).
+- `gameslot.loadGamefile` takes the gamefile's source-of-truth fields directly. `FullGameState` already carries them as typed fields, so the loader forwards them straight: `timeControl`, `variant` (already a `VariantCode`), `dateTimestamp` ← `state.timeCreated`. (Player identity/elos for the side bar come from `state.players` into the username-container DOM script — §"T8 side-bar structure" / T10 §4 — not through the gamefile.)
 - `viewWhitePerspective = youAreColor === undefined || youAreColor === WHITE` (spectator/white POV).
-- Call `gameslot.loadGamefile({ metadata, variant, dateTimestamp, viewWhitePerspective, allowEditCoords: false, additional: { moves: state.moves, gameConclusion: state.gameConclusion, clockValues: state.clockValues } })`.
+- Call `gameslot.loadGamefile({ timeControl: state.timeControl, variant: state.variant, dateTimestamp: state.timeCreated, viewWhitePerspective, allowEditCoords: false, additional: { moves: state.moves, gameConclusion: state.gameConclusion, clockValues: state.clockValues } })`.
 - Set up online-game state for a participant (reuse `onlinegame.initOnlineGame` with `gameInfo`-equivalent + `youAreColor` + `participantState`, or a new minimal equivalent — implementer's call).
 
 This loader is shared with T10 (dead) and T11 (spectator); design its signature with that in mind, but only the live-player path is wired here.
@@ -64,15 +63,14 @@ T9 is safe to land as a sequence of small commits: it adds a **parallel** page a
 
 **The user commits each chunk personally and reviews before the next begins.** After finishing a chunk, run `type-check` + `lint`, report what changed, and **stop** — do not start the next chunk until the user has reviewed and committed.
 
-Dependency graph: A, B, D are independent leaves; C depends on A; E (capstone) depends on A–D.
+Dependency graph: B, C, D are independent leaves; E (capstone) depends on B–D.
 
-- [ ] **A — `clientmetadatautil` builder** (§2): add the `FullGameState → MetaData` builder, reusing existing helpers (`getRatingFromWhiteBlackElo`, `getGameConclusionFromResultAndTermination`) inversely. Pure function; exported-but-unused is fine for lint.
 - [ ] **B — schema wiring** (§3): add the incoming `gamestate` action (`SubscribedGameStateSchema`) + outgoing `subscribe` to `socketschemas.ts`. Leave `joingame` dormant.
 - [ ] **D — side-bar render handlers** (§"T8 side-bar structure"): new DOM population against T8 markup. Independent of the socket/loader plumbing; **may be split further** into per-handler commits — clocks, move-table (+`.game-result`), material bars, username-embed script, coord readout.
-- [ ] **C — loader** `gameStateLoader.ts` (§2): `loadGameFromState(...)` consuming `FullGameState` and calling `gameslot.loadGamefile`. Depends on A. Standalone module; type-checks before anything imports it.
+- [ ] **C — loader** `gameStateLoader.ts` (§2): `loadGameFromState(...)` consuming `FullGameState` and forwarding its typed fields into `gameslot.loadGamefile`. Standalone module; type-checks before anything imports it.
 - [ ] **E — entry + delta wiring** (§1 + §4): real `views/game/game.ts` — reuse the rendering bootstrap, read `gamePageData`, open socket, send `subscribe`, route `gamestate` → loader (C), wire the reused `onlinegamerouter` deltas, call the render handlers (D). Capstone; lands last.
 
-Suggested order: **A → B → D(×N) → C → E** (A/B/D can be done in any order). To consolidate: `{A+B+C}` loader stack, `{D}` side-bar render, `{E}` entry — a clean 3-commit split.
+Suggested order: **B → D(×N) → C → E** (B/C/D can be done in any order). To consolidate: `{B+C}` loader stack, `{D}` side-bar render, `{E}` entry — a clean 3-commit split.
 
 **Not part of T9:** the §5 `subscribeClientToGame` collapse is gated on T12 — do **not** fold it into any chunk above.
 

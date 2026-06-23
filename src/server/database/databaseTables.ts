@@ -120,7 +120,6 @@ const allLivePlayerGamesColumns: string[] = [
 	'player_number',
 	'user_id',
 	'browser_id',
-	'elo',
 	'last_draw_offer_ply',
 	'time_remaining_ms',
 	'disconnect_cushion_end_time',
@@ -370,7 +369,6 @@ function generateTables(): void {
 			player_number                   INTEGER NOT NULL,
 			user_id                         INTEGER,
 			browser_id                      TEXT NOT NULL,
-			elo                             TEXT,
 			last_draw_offer_ply             INTEGER,
 			time_remaining_ms               INTEGER,
 			disconnect_cushion_end_time     INTEGER,
@@ -385,6 +383,7 @@ function generateTables(): void {
 function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
+	dropLegacyLivePlayerGamesEloColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
 	dropLegacyVerificationColumnsIfPresent();
 	clearSpamReportBlacklistEntries();
@@ -404,6 +403,20 @@ function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
 
 	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
 	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: Remove this function once it has run in production.
+ *
+ * The `elo` column used to store a start-of-game elo snapshot on `live_player_games`.
+ * Player elos are now derived live at log time, so the column is vestigial and needs
+ * removing from old DBs. This only logs when the column is found and deleted.
+ */
+function dropLegacyLivePlayerGamesEloColumnIfPresent(): void {
+	if (!db.columnExists('live_player_games', 'elo')) return; // Already migrated
+
+	db.run('ALTER TABLE live_player_games DROP COLUMN elo');
+	console.log('Temporary DB migration: deleted live_player_games.elo column.');
 }
 
 /**

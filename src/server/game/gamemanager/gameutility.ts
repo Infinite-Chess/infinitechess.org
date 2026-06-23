@@ -32,18 +32,21 @@ import type {
 	TimeControl,
 } from '../../../shared/types.js';
 
+import uuid from '../../../shared/util/uuid.js';
 import clock from '../../../shared/chess/logic/clock.js';
+import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
+import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import {
 	Leaderboards,
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
-import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
@@ -381,7 +384,7 @@ function sendGameInfoToPlayer(
 			rated: servergame.match.rated,
 			playerRatings: ratings,
 		},
-		metadata: servergame.metadata,
+		metadata: buildMetadataOfGame(servergame),
 		youAreColor: playerColor,
 		...gameUpdateContents,
 	};
@@ -466,39 +469,74 @@ function produceFullGameState(servergame: ServerGame): FullGameState {
 }
 
 /**
- * Generates metadata for a game including event details, player information, and timestamps.
+ * Assembles the ICN {@link MetaData} of a game on demand from its properties
+ * (`match`, `gameConclusion`, ratings). Built only for serialization (ICN logging)
+ * — never stored on the game. Metadata is always in English.
+ * @param ratingData - Present for a concluded rated game: supplies the pre-calc display
+ *   elos + rating diffs. Absent otherwise, in which case display elos are read live from
+ *   the leaderboard ("rating immediately before the new rating was calculated").
  */
-function constructMetadataOfGame(
-	rated: boolean,
-	variantCode: VariantCode,
-	clock: TimeControl,
-	dateTimestamp: number,
-	playerdata: PlayerGroup<{ rating?: Rating; identifier: AuthMemberInfo }>,
-): MetaData {
-	const white = playerdata[p.WHITE]!.identifier;
-	const black = playerdata[p.BLACK]!.identifier;
-	const whiteIdentity = {
-		name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-		id: white.signedIn ? white.user_id : undefined,
-		elo: playerdata[p.WHITE]?.rating
-			? metadatautil.getFormattedElo(playerdata[p.WHITE]!.rating!)
-			: undefined,
+function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): MetaData {
+	const { match } = servergame;
+
+	// Resolve each player's display rating: from the pre-calc snapshot
+	// when logging a rated game, else read live from the leaderboard.
+	const ratings: PlayerGroup<Rating> = {};
+	if (ratingData) {
+		for (const [color, rd] of Object.entries(ratingData)) {
+			ratings[Number(color) as Player] = {
+				value: rd.elo_at_game,
+				confident: rd.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
+			};
+		}
+	} else {
+		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
+	}
+
+	const white = match.playerData[p.WHITE]!.identifier;
+	const black = match.playerData[p.BLACK]!.identifier;
+	const variantEnglishName = variantregistry.getVariantName(match.variant);
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated);
+
+	const metadata: MetaData = {
+		Event: `${match.rated ? 'Rated' : 'Casual'} ${variantEnglishName} infinite chess game`,
+		Site: 'https://www.infinitechess.org/',
+		Round: '-',
+		Variant: variantEnglishName,
+		White: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
+		Black: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA,
+		TimeControl: match.clock,
+		UTCDate,
+		UTCTime,
 	};
-	const blackIdentity = {
-		name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-		id: black.signedIn ? black.user_id : undefined,
-		elo: playerdata[p.BLACK]?.rating
-			? metadatautil.getFormattedElo(playerdata[p.BLACK]!.rating!)
-			: undefined,
-	};
-	return servermetadatautil.buildGameMetadata(
-		rated,
-		variantCode,
-		clock,
-		dateTimestamp,
-		whiteIdentity,
-		blackIdentity,
-	);
+
+	// ID + display elo, present only for signed-in players.
+	if (white.signedIn) {
+		metadata.WhiteID = uuid.base10ToBase62(white.user_id);
+		if (ratings[p.WHITE]) metadata.WhiteElo = metadatautil.getFormattedElo(ratings[p.WHITE]!);
+	}
+	if (black.signedIn) {
+		metadata.BlackID = uuid.base10ToBase62(black.user_id);
+		if (ratings[p.BLACK]) metadata.BlackElo = metadatautil.getFormattedElo(ratings[p.BLACK]!);
+	}
+
+	if (servergame.gameConclusion) {
+		metadata.Result = metadatautil.getResultFromVictor(servergame.gameConclusion.victor);
+		metadata.Termination = winconutil.getTerminationInEnglish(
+			servergame.gameRules,
+			servergame.gameConclusion.condition,
+		);
+	}
+	if (ratingData) {
+		metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+			ratingData[p.WHITE]!.elo_change_from_game!,
+		);
+		metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
+			ratingData[p.BLACK]!.elo_change_from_game!,
+		);
+	}
+
+	return metadata;
 }
 
 /**
@@ -743,10 +781,13 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 	if (servergame.moves.length > 0) moves = servergame.moves.map((m) => m.token);
 	const simplifiedGame = {
 		id: servergame.match.id,
-		timeCreated: `${servergame.metadata.UTCDate} ${servergame.metadata.UTCTime}`,
-		timeEnded: servergame.match.timeEnded,
+		timeCreated: timeutil.timestampToISO(servergame.match.timeCreated),
+		timeEnded:
+			servergame.match.timeEnded !== undefined
+				? timeutil.timestampToISO(servergame.match.timeEnded)
+				: undefined,
 		variant: servergame.match.variant,
-		clock: servergame.metadata.TimeControl,
+		clock: servergame.match.clock,
 		rated: servergame.match.rated,
 		players,
 		moves,
@@ -946,7 +987,7 @@ export default {
 	sendParticipantGameState,
 	assignWhiteBlackPlayersFromSeek,
 	produceFullGameState,
-	constructMetadataOfGame,
+	buildMetadataOfGame,
 	broadcastParticipantGameUpdate,
 	sendGameUpdateToColor,
 	sendRatingChangeToAllPlayers,

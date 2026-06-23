@@ -9,15 +9,15 @@
  * that reconstructs a concluded game from these columns.
  */
 
+import type { MetaData } from '../../../shared/types.js';
 import type { RatingData } from './ratingcalculation.js';
 import type { MatchInfo, ServerGame } from './gameutility.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
-import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import { VariantLeaderboards } from '../../../shared/chess/variants/validleaderboard.js';
-import { PlayerGroup, Player, players } from '../../../shared/chess/util/typeutil.js';
+import { PlayerGroup, Player } from '../../../shared/chess/util/typeutil.js';
 
 import db from '../../database/database.js';
 import gameutility from './gameutility.js';
@@ -87,16 +87,6 @@ function logGame_orchestrator(servergame: ServerGame): RatingData | undefined {
 
 	// --- Part 1: Handle Rating Updates ---
 	const ratingData = updateLeaderboardsInTransaction(servergame.match, victor);
-	// Immediately stamp the rating diffs onto the game's metadata so that
-	// they're present for ICN generation and any other downstream use.
-	if (ratingData !== undefined) {
-		servergame.metadata.WhiteRatingDiff = metadatautil.getWhiteBlackRatingDiff(
-			ratingData[players.WHITE]!.elo_change_from_game!,
-		);
-		servergame.metadata.BlackRatingDiff = metadatautil.getWhiteBlackRatingDiff(
-			ratingData[players.BLACK]!.elo_change_from_game!,
-		);
-	}
 
 	// --- Part 2: Create Game Records in games and player_games tables ---
 	addGameRecordsInTransaction(servergame, victor, termination, ratingData);
@@ -194,8 +184,11 @@ function addGameRecordsInTransaction(
 	const match = servergame.match;
 	const { base_time_seconds, increment_seconds } = clockutil.splitTimeControl(match.clock);
 
+	// Assemble the ICN metadata once on demand from the game's source-of-truth props.
+	const metadata = gameutility.buildMetadataOfGame(servergame, ratingData);
+
 	// --- Prepare ICN ---
-	const icn = getICNOfGame(servergame); // This will throw on failure.
+	const icn = getICNOfGame(servergame, metadata); // This will throw on failure.
 
 	const dateSqliteString = timeutil.timestampToSqlite(match.timeCreated);
 
@@ -216,7 +209,7 @@ function addGameRecordsInTransaction(
 		match.rated ? 1 : 0,
 		VariantLeaderboards[match.variant] ?? null,
 		0, // All matches are considered public for now, even "Challenge a friend" games.
-		servergame.metadata.Result!,
+		metadata.Result!,
 		termination,
 		servergame.moves.length,
 		match.timeEnded ? match.timeEnded - match.timeCreated : null,
@@ -336,8 +329,11 @@ function updateSinglePlayerStatsInTransaction(
 	}
 }
 
-/** Converts a server-side game into an ICN */
-function getICNOfGame(servergame: ServerGame): string {
+/**
+ * Converts a server-side game into an ICN. Takes the metadata assembled on demand for the game.
+ * @throws If the ICN conversion fails.
+ */
+function getICNOfGame(servergame: ServerGame, metadata: MetaData): string {
 	// Get ICN of game
 	let ICN: string;
 	const fullMove = servergame.validateMoves ? servergame.startSnapshot.fullMove : 1;
@@ -353,6 +349,7 @@ function getICNOfGame(servergame: ServerGame): string {
 		ICN = icnconverter.LongToShort_Format(
 			{
 				...servergame,
+				metadata,
 				fullMove,
 				state_global: {
 					moveRuleState,

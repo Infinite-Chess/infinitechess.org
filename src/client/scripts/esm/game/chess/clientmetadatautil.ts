@@ -4,60 +4,45 @@
  * Client-side helpers for building and parsing ICN game metadata.
  */
 
-import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MetaData, Rating } from '../../../../../shared/types.js';
 import type { Condition, GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
-import type { MetaData, Rating, TimeControl } from '../../../../../shared/types.js';
 
 import * as z from 'zod';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-
-// Constants -----------------------------------------------------------------------
-
-/**
- * The hardcoded English string used in ICN metadata to represent the human player
- * in engine and board-editor games. Metadata must always be in English.
- */
-const YOU_NAME_ICN_METADATA = '(You)' as const;
 
 // Functions -----------------------------------------------------------------------
 
 /**
- * Builds a {@link MetaData} object for client-side games (local, engine, board editor).
- * Automatically populates `Site`, `Round`, `UTCDate`, and `UTCTime`.
- * @param event - The `Event` string describing the game.
- * @param timeControl - The time control string (e.g. `"600+5"`), or `"-"` for untimed.
- * @param utcTimestamp - The epoch-ms timestamp used for the `UTCDate`/`UTCTime` fields.
+ * Builds a {@link MetaData} on demand from a loaded
+ * gamefile's properties, for serializing the game to ICN.
+ *
+ * Player identity (`White`/`Black`/elos) is NOT represented — the client gamefile
+ * does not store it; the authoritative, complete ICN comes from the server.
  */
-function buildBaseGameMetadata(
-	event: string,
-	timeControl: TimeControl,
-	utcTimestamp: number,
-): MetaData {
-	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(utcTimestamp);
-	return {
-		Event: event,
+function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
+	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(gamefile.dateTimestamp);
+	const metadata: MetaData = {
 		Site: 'https://www.infinitechess.org/',
 		Round: '-',
-		TimeControl: timeControl,
+		TimeControl: gamefile.timeControl,
 		UTCDate,
 		UTCTime,
 	};
-}
-
-/**
- * Helper function that uses generics to link the metadata key to its value type.
- * Inside the function typescript doesn't error when we are transferring the property.
- */
-function copyMetadataField<K extends MetadataKey>(
-	target: MetaData,
-	source: MetaData,
-	key: K,
-): void {
-	// TS knows that target[key] and source[key] have the same type: MetaData[K]
-	target[key] = source[key];
+	if (gamefile.variant) metadata.Variant = variantregistry.getVariantName(gamefile.variant.code);
+	if (gamefile.gameConclusion) {
+		metadata.Result = metadatautil.getResultFromVictor(gamefile.gameConclusion.victor);
+		metadata.Termination = winconutil.getTerminationInEnglish(
+			gamefile.gameRules,
+			gamefile.gameConclusion.condition,
+		);
+	}
+	return metadata;
 }
 
 /** Calculates the game conclusion from the Result metadata and termination CODE. */
@@ -102,9 +87,7 @@ function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
 // Exports -----------------------------------------------------------------------
 
 export default {
-	YOU_NAME_ICN_METADATA,
-	buildBaseGameMetadata,
-	copyMetadataField,
+	buildMetaDataFromGamefile,
 	getGameConclusionFromResultAndTermination,
 	getRatingFromWhiteBlackElo,
 };

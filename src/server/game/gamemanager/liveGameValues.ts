@@ -17,7 +17,6 @@ import type {
 } from '../../database/livePlayerGamesManager.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../shared/chess/util/typeutil.js';
 
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
@@ -41,18 +40,6 @@ function getMovesString(servergame: ServerGame): string {
 		comments: !servergame.untimed,
 		move_numbers: false,
 	});
-}
-
-/**
- * Extracts the elo display string for a player from game metadata.
- */
-function getPlayerEloString(servergame: ServerGame, player: Player): string | null {
-	// The elo is stored in metadata as WhiteElo/BlackElo strings like "1500" or "1200?"
-	// prettier-ignore
-	const eloKey = player === p.WHITE ? 'WhiteElo' :
-				   player === p.BLACK ? 'BlackElo' :
-				   (() => { throw new Error(`Invalid player ${player} when getting elo string`); })();
-	return servergame.metadata[eloKey] ?? null;
 }
 
 /**
@@ -97,7 +84,6 @@ function buildPlayerRecord(
 		player_number: player,
 		user_id: identifier.signedIn ? identifier.user_id : null,
 		browser_id: identifier.browser_id,
-		elo: getPlayerEloString(servergame, player),
 		last_draw_offer_ply: playerData.lastOfferPly ?? null,
 		time_remaining_ms: servergame.untimed
 			? null

@@ -7,14 +7,11 @@
 import type { Board } from '../logic/boardinit.js';
 import type { Coords } from './coordutil.js';
 import type { Player } from './typeutil.js';
-import type { MetaData } from '../../types.js';
 import type { GameRules } from './gamerules.js';
 import type { GameruleWinCondition, GameConclusion } from './winconutil.js';
 
 import typeutil from './typeutil.js';
 import gamerules from './gamerules.js';
-import winconutil from './winconutil.js';
-import metadatautil from './metadatautil.js';
 
 // Methods -------------------------------------------------------------
 
@@ -42,32 +39,16 @@ function getCheckCoordsOfCurrentViewedPosition(boardsim: Board): Coords[] {
 }
 
 /**
- * Sets the conclusion of the game, and sets/clears
- * the `Termination` `Result` and metadata accordingly.
- * If the conclusion is undefined, it removes the metadata,
- * essentially un-concluding the game if it was already concluded.
+ * Sets (or clears, if undefined) the conclusion of the game.
+ * `Result`/`Termination` are NOT stored — they are derived on demand from the
+ * `gameConclusion` only when a `MetaData` is assembled (e.g. ICN serialization).
  * @param gamefile - The minimum properties needed from the gamefile to set the conclusion. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
  */
 function setConclusion(
-	gamefile: {
-		metadata: MetaData;
-		gameConclusion?: GameConclusion;
-		gameRules: GameRules;
-	},
+	gamefile: { gameConclusion?: GameConclusion },
 	conclusion: GameConclusion | undefined,
 ): void {
 	gamefile.gameConclusion = conclusion;
-
-	if (conclusion !== undefined) {
-		gamefile.metadata.Termination = winconutil.getTerminationInEnglish(
-			gamefile.gameRules,
-			conclusion.condition,
-		);
-		gamefile.metadata.Result = metadatautil.getResultFromVictor(conclusion.victor);
-	} else {
-		delete gamefile.metadata.Result;
-		delete gamefile.metadata.Termination;
-	}
 }
 
 /**

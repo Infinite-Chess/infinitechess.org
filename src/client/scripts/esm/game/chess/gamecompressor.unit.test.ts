@@ -12,21 +12,9 @@ import gamecompressor from './gamecompressor.js';
 describe('gamecompressor', () => {
 	describe('compressGamefile', () => {
 		it('should compress a basic gamefile correctly', () => {
-			const mockMetaData = {
-				Event: 'Boston Infinite Chess Party',
-				Site: 'https://www.infinitechess.org/',
-				TimeControl: '-',
-				Round: '-',
-				UTCDate: '1987.06.27',
-				UTCTime: '12:00:00',
-				Variant: 'standard',
-				White: 'Rick',
-				Black: 'Waterman',
-			} as const;
-
 			const mockGame: GameFile = {
-				metadata: mockMetaData,
-				dateTimestamp: Date.now(),
+				timeControl: '-',
+				dateTimestamp: Date.UTC(1987, 5, 27, 12, 0, 0),
 				whosTurn: p.WHITE,
 				untimed: true,
 				clocks: undefined,
@@ -51,7 +39,14 @@ describe('gamecompressor', () => {
 
 			const result = gamecompressor.compressGamefile(mockGame);
 
-			expect(result.metadata).toEqual(mockGame.metadata);
+			// Metadata is assembled on demand from the gamefile's source-of-truth props.
+			expect(result.metadata).toEqual({
+				Site: 'https://www.infinitechess.org/',
+				Round: '-',
+				TimeControl: '-',
+				UTCDate: '1987.06.27',
+				UTCTime: '12:00:00',
+			});
 			expect(result.fullMove).toBe(1);
 			expect(result.moves).toEqual([]);
 		});
