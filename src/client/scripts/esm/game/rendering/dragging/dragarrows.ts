@@ -40,11 +40,9 @@ import { Mouse } from '../../input.js';
 import maskedDraw from '../../../webgl/maskedDraw.js';
 import primitives from '../primitives.js';
 import droparrows from './droparrows.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 import arrowshifts from '../arrows/arrowshifts.js';
 import frametracker from '../frametracker.js';
 import draganimation from './draganimation.js';
-import guinavigation from '../../gui/guinavigation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowscalculator from '../arrows/arrowscalculator.js';
 import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
@@ -269,16 +267,10 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.direction;
 
-	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
-	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
-		guigameinfo.getHeightOfGameInfoBar(),
-	);
-
 	const inRight = dir[0] > 0n && mouseWorld[0] > screenBox.right - slideZoneDepth;
 	const inLeft = dir[0] < 0n && mouseWorld[0] < screenBox.left + slideZoneDepth;
-	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth - topBarDepth;
-	const inBottom =
-		dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth + bottomBarDepth;
+	const inTop = dir[1] > 0n && mouseWorld[1] > screenBox.top - slideZoneDepth;
+	const inBottom = dir[1] < 0n && mouseWorld[1] < screenBox.bottom + slideZoneDepth;
 	currentlyInSlideZone = inRight || inLeft || inTop || inBottom;
 
 	if (currentlyInSlideZone) {
@@ -371,15 +363,8 @@ function renderCandidateArrows(): void {
 	const screenBox = camera.getScreenBoundingBox(false);
 	const cx = worldLocation[0];
 	const cy = worldLocation[1];
-	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
-	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
-		guigameinfo.getHeightOfGameInfoBar(),
-	);
 	const distToHorizontalEdge = screenBox.right - Math.abs(cx);
-	const distToVerticalEdge = Math.min(
-		screenBox.top - topBarDepth - cy,
-		cy - screenBox.bottom - bottomBarDepth,
-	);
+	const distToVerticalEdge = Math.min(screenBox.top - cy, cy - screenBox.bottom);
 	// px/py is the unit vector along which the extra arrows oscillate
 	let px: number, py: number;
 	if (distToHorizontalEdge < distToVerticalEdge) {
@@ -437,15 +422,11 @@ function renderSlideZone(): void {
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
 	const maskData: number[] = [];
 	const dummyColor: Color = [0, 0, 0, 1];
-	const topBarDepth = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
-	const bottomBarDepth = space.convertPixelsToWorldSpace_Virtual(
-		guigameinfo.getHeightOfGameInfoBar(),
-	);
 
 	if (dir[0] > 0n) maskData.push(...primitives.Quad_Color(screenBox.right - depth, screenBox.bottom, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
 	if (dir[0] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.left + depth, screenBox.top, dummyColor)); // prettier-ignore
-	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth - topBarDepth, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
-	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth + bottomBarDepth, dummyColor)); // prettier-ignore
+	if (dir[1] > 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.top - depth, screenBox.right, screenBox.top, dummyColor)); // prettier-ignore
+	if (dir[1] < 0n) maskData.push(...primitives.Quad_Color(screenBox.left, screenBox.bottom, screenBox.right, screenBox.bottom + depth, dummyColor)); // prettier-ignore
 
 	if (maskData.length === 0) return;
 

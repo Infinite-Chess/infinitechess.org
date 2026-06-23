@@ -26,7 +26,6 @@ import animation from '../rendering/animation.js';
 import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -198,7 +197,6 @@ function updateGui(showMoveCounter: boolean): void {
 	if (showMoveCounter) stats.showMoves();
 	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
-	guigameinfo.updateWhosTurn();
 }
 
 // --------------------------------------------------------------------------------------------------------------------------

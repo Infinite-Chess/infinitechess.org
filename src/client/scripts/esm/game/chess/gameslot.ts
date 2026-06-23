@@ -39,7 +39,6 @@ import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
 import piecemodels from '../rendering/piecemodels.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
 import preferences from '../../components/header/preferences.js';
@@ -301,7 +300,6 @@ function concludeGame(): void {
 
 	clock.endGame(gamefile);
 	guiclock.stopClocks(gamefile);
-	guigameinfo.gameEnd(gamefile.gameConclusion);
 
 	GameBus.dispatch('game-concluded');
 

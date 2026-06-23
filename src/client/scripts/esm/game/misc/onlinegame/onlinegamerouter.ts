@@ -26,7 +26,6 @@ import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
 import socketsubs from '../../../websocket/socketsubs.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
@@ -84,7 +83,10 @@ function routeMessage(contents: GameMessage): void {
 			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
 			break;
 		case 'gameratingchange':
-			guigameinfo.addRatingChangeToExistingUsernameContainers(contents.value);
+			// TODO: surface rating changes in the new game page's side bar.
+			console.error(
+				`Received 'gameratingchange' message from server, but this is not yet implemented in the new game page. Message: ${JSON.stringify(contents)}`,
+			);
 			break;
 		case 'unsub':
 			handleUnsubbing();

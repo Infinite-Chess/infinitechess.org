@@ -41,7 +41,6 @@ import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import guipalette from '../gui/boardeditor/guipalette.js';
 import perspective from '../rendering/perspective.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import boardeditor from '../boardeditor/boardeditor.js';
 import loadingscreen from '../gui/loadingscreen.js';
 import guinavigation from '../gui/guinavigation.js';
@@ -170,7 +169,7 @@ async function startLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, false);
+	concludeGameIfOver();
 }
 
 /** Starts an online game according to the options provided by the server. */
@@ -236,7 +235,7 @@ async function startOnlineGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+	concludeGameIfOver();
 }
 
 /** Starts an engine game according to the options provided. */
@@ -314,7 +313,7 @@ async function startEngineGame(options: {
 		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
+	concludeGameIfOver();
 }
 
 /** Initializes the board editor. */
@@ -398,7 +397,7 @@ async function startCustomLocalGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, false);
+	concludeGameIfOver();
 }
 
 /** Starts an engine game from a custom position. */
@@ -465,7 +464,7 @@ async function startCustomEngineGame(options: {
 		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
 		.catch((err: Error) => onCatchLoadingError(err));
 
-	openGameinfoBarAndConcludeGameIfOver(metadata, options.showGameControlButtons);
+	concludeGameIfOver();
 }
 
 /** Initializes the board editor from a custom position. */
@@ -563,7 +562,7 @@ async function pasteGame(options: {
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	openGameinfoBarAndConcludeGameIfOver(options.metadata, false);
+	concludeGameIfOver();
 }
 
 /**
@@ -595,16 +594,8 @@ function onCatchLoadingError(err: Error): void {
 	loadingscreen.onError();
 }
 
-/**
- * These items must be done after the logical parts of the gamefile are fully loaded
- * @param metadata - The metadata of the gamefile
- * @param showGameControlButtons - Whether to show the practice game control buttons "Undo Move" and "Retry"
- */
-function openGameinfoBarAndConcludeGameIfOver(
-	metadata: MetaData,
-	showGameControlButtons: boolean = false,
-): void {
-	guigameinfo.open(metadata, showGameControlButtons);
+/** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
+function concludeGameIfOver(): void {
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
 }
 
@@ -624,8 +615,6 @@ function unloadGame(): void {
 
 	perspective.resetRotations();
 	guinavigation.close();
-	guigameinfo.close();
-	guigameinfo.clearUsernameContainers();
 	guiboardeditor.close();
 	unloadLogicalAndRendering();
 	frameratelimiter.setFpsLimit(TARGET_FPS_TITLE_SCREEN); // Return to title-screen throttle on game exit
@@ -652,7 +641,6 @@ export default {
 	startCustomEngineGame,
 	startBoardEditorFromCustomPosition,
 	pasteGame,
-	openGameinfoBarAndConcludeGameIfOver,
 	unloadLogicalAndRendering,
 	unloadGame,
 };

@@ -11,7 +11,6 @@
 import gameslot from '../chess/gameslot.js';
 import guiclock from './guiclock.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
-import guigameinfo from './guigameinfo.js';
 
 // Variables -------------------------------------------------------------------
 
@@ -48,7 +47,6 @@ function close(): void {
 	if (!drawOfferUICramped) return;
 	// We had hid the names and clocks to make room for the UI, reveal them here!
 	// console.log("revealing");
-	guigameinfo.revealPlayerNames();
 	guiclock.showClocks();
 	drawOfferUICramped = false; // Reset for next draw offer UI opening
 }
@@ -76,14 +74,12 @@ function updateVisibilityOfNamesAndClocksWithDrawOffer(): void {
 		if (drawOfferUICramped) return; // Already hidden
 		// console.log("hiding");
 		drawOfferUICramped = true;
-		guigameinfo.hidePlayerNames();
 		guiclock.hideClocks();
 	} else {
 		// We have space now, reveal them!
 		if (!drawOfferUICramped) return; // Already revealed
 		// console.log("revealing");
 		drawOfferUICramped = false;
-		guigameinfo.revealPlayerNames();
 		guiclock.showClocks();
 	}
 }

@@ -27,7 +27,6 @@ import selection from '../chess/selection.js';
 import gameloader from './gameloader.js';
 import enginegame from '../misc/enginegame.js';
 import guipractice from '../gui/guipractice.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
@@ -76,7 +75,7 @@ let undoingIsLegal: boolean = false;
 
 function setUndoingIsLegal(value: boolean): void {
 	undoingIsLegal = value;
-	guigameinfo.update_GameControlButtons(value);
+	// TODO: reflect undo/restart button state in the new game page's side bar.
 }
 
 function areInCheckmatePractice(): boolean {

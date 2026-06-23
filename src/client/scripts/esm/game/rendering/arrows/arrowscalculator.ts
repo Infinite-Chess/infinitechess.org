@@ -49,8 +49,6 @@ import movehints from '../highlights/movehints.js';
 import boardtiles from '../boardtiles.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
-import guigameinfo from '../../gui/guigameinfo.js';
-import guinavigation from '../../gui/guinavigation.js';
 import { listener_overlay } from '../../chess/game.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
@@ -201,27 +199,6 @@ function updateBoundingBoxesOfVisibleScreen(): void {
 	boundingBoxFloat = perspective.getEnabled()
 		? boardtiles.generatePerspectiveBoundingBox(PERSPECTIVE_EDGE_DIST)
 		: boardtiles.gboundingBoxFloat();
-
-	// Apply the padding of the navigation and gameinfo bars to the screen bounding box.
-	if (!perspective.getEnabled()) {
-		// Perspective is OFF
-		let headerPad = space.convertPixelsToWorldSpace_Virtual(guinavigation.getHeightOfNavBar());
-		let footerPad = space.convertPixelsToWorldSpace_Virtual(
-			guigameinfo.getHeightOfGameInfoBar(),
-		);
-		// Reverse header and footer pads if we're viewing black's side
-		if (!gameslot.isLoadedGameViewingWhitePerspective())
-			[headerPad, footerPad] = [footerPad, headerPad]; // Swap values
-		// Apply the paddings to the bounding box
-		boundingBoxFloat.top = bd.subtract(
-			boundingBoxFloat.top,
-			space.convertWorldSpaceToGrid(headerPad),
-		);
-		boundingBoxFloat.bottom = bd.add(
-			boundingBoxFloat.bottom,
-			space.convertWorldSpaceToGrid(footerPad),
-		);
-	}
 
 	// If any part of the square is on screen, this box rounds outward to contain it.
 	boundingBoxInt = boardtiles.roundAwayBoundingBox(boundingBoxFloat);
