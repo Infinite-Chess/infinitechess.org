@@ -28,13 +28,13 @@ function getSeekPreview(req: Request, res: Response): void {
 
 	const { seek } = result;
 
-	if (seek.variant.kind !== 'icn') {
+	if (seek.variant.kind !== 'custom') {
 		// Preset seeks don't have a custom ICN to preview
 		res.status(400).send('Only custom ICN seeks have previews.');
 		return;
 	}
 
-	res.json({ icn: seek.variant.content });
+	res.json({ icn: seek.variant.position });
 }
 
 export { getSeekPreview };

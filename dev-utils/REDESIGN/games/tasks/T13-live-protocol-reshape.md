@@ -11,9 +11,7 @@ This is the home for the "later task that reshapes the live socket protocol" ref
 
 1. **T9–T12 landed and the new page is canonical.** The old `main.ts` / `joingame` live path is
    dormant and no longer the route any real game uses.
-2. **Custom-variant `variant` union settled** (separate decision) — determines what the client
-   still needs typed on the wire.
-3. **Audit** that no client logic consumes the now-SSR'd `rated` / `players` beyond display
+2. **Audit** that no client logic consumes the now-SSR'd `rated` / `players` beyond display
    (suspects: `onlinegame.ts`, `onlinegamerouter.ts`, `guipromotion.ts`).
 
 ## Scope (to flesh out)

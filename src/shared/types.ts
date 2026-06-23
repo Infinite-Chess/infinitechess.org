@@ -204,6 +204,13 @@ export const PlayerRatingChangeInfoSchema = z.strictObject({
 
 // Game State Schemas ---------------------------------------------------------------
 
+/** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
+export type GameStateVariant = z.infer<typeof GameStateVariantSchema>;
+export const GameStateVariantSchema = z.discriminatedUnion('kind', [
+	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
+	z.strictObject({ kind: z.literal('custom') }),
+]);
+
 /**
  * The role-agnostic typed core of a game, shared by live {@link FullGameState}
  * and dead `DeadGameState` shapes.
@@ -216,7 +223,7 @@ export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 export const GameStateBaseSchema = z.strictObject({
 	id: z.int().nonnegative(),
 	rated: z.boolean(),
-	variant: z.enum(variantregistry.VARIANT_CODES),
+	variant: GameStateVariantSchema,
 	timeControl: TimeControlSchema,
 	/** Epoch milliseconds the game was created. */
 	timeCreated: z.number(),
@@ -271,14 +278,14 @@ export const DeadGameStateSchema = GameStateBaseSchema.extend({
 
 /**
  * The variant kinds that a fully-resolved seek can have.
- * CloudSave seeks are converted to 'icn' at creation time and never stored as 'cloudSave'.
+ * CloudSave seeks are converted to 'custom' at creation time and never stored as 'cloudSave'.
  */
 export type AuthSeekVariant = z.infer<typeof AuthSeekVariantSchema>;
 export const AuthSeekVariantSchema = z.discriminatedUnion('kind', [
 	z.strictObject({ kind: z.literal('preset'), code: z.enum(variantregistry.VARIANT_CODES) }),
 	z.strictObject({
-		kind: z.literal('icn'),
-		content: z.string().min(1).max(POSITION_STRING_THRESHOLD),
+		kind: z.literal('custom'),
+		position: z.string().min(1).max(POSITION_STRING_THRESHOLD),
 	}),
 ]);
 

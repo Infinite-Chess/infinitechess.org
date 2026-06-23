@@ -204,7 +204,7 @@ function generateTables(): void {
 			date TIMESTAMP NOT NULL,
 			base_time_seconds INTEGER, -- null if untimed
 			increment_seconds INTEGER, -- null if untimed
-			variant TEXT NOT NULL,
+			variant TEXT, -- preset variant code, or null for a custom-position game (position lives in the ICN)
 			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
 			leaderboard_id INTEGER, -- Specified only if the variant belongs to a leaderboard, ignoring whether the game was rated
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
@@ -345,7 +345,7 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS live_games (
 			game_id               INTEGER PRIMARY KEY,
 			time_created          INTEGER NOT NULL,
-			variant               TEXT NOT NULL,
+			variant               TEXT, -- preset variant code, or null for a custom-position game (position lives in the ICN)
 			clock                 TEXT NOT NULL,
 			rated                 BOOLEAN NOT NULL CHECK (rated IN (0, 1)),
 			private               BOOLEAN NOT NULL CHECK (private IN (0, 1)),
@@ -387,6 +387,7 @@ function initDatabase(): void {
 	addIsPersistentColumnToRefreshTokens();
 	dropLegacyVerificationColumnsIfPresent();
 	clearSpamReportBlacklistEntries();
+	makeVariantColumnsNullableIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -479,6 +480,31 @@ function clearSpamReportBlacklistEntries(): void {
 		console.log(
 			`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
 		);
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Makes the `variant` column nullable on `games` and `live_games` — NULL now marks a
+ * custom-position game (no preset code; its position lives in the ICN). SQLite can't relax
+ * NOT NULL in place, so we shuffle through a temp column: add nullable `variant_tmp`, copy
+ * the codes across, drop the old `variant`, rename `variant_tmp` back. No table rebuild, so
+ * the `player_games` → `games` FK cascade is never triggered. Idempotent: skips a table whose
+ * `variant` is already nullable. Fresh DBs get nullable from `generateTables()` directly.
+ */
+function makeVariantColumnsNullableIfNeeded(): void {
+	for (const table of ['games', 'live_games'] as const) {
+		if (db.columnIsNullable(table, 'variant')) continue; // Fresh DB or already migrated.
+
+		const migrate = db.transaction(() => {
+			db.run(`ALTER TABLE ${table} ADD COLUMN variant_tmp TEXT`);
+			db.run(`UPDATE ${table} SET variant_tmp = variant`);
+			db.run(`ALTER TABLE ${table} DROP COLUMN variant`);
+			db.run(`ALTER TABLE ${table} RENAME COLUMN variant_tmp TO variant`);
+		});
+		migrate();
+		console.log(`Temporary DB migration: made ${table}.variant nullable.`);
+	}
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

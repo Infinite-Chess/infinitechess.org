@@ -455,7 +455,8 @@ function produceFullGameState(servergame: ServerGame): FullGameState {
 	const state: FullGameState = {
 		id: match.id,
 		rated: match.rated,
-		variant: match.variant,
+		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
+		variant: { kind: 'preset', code: match.variant },
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 		players,

@@ -20,7 +20,11 @@ export interface LiveGamesRecord extends LiveGameData {
 /** Live game data columns, excluding the primary key. */
 export interface LiveGameData {
 	time_created: number;
-	variant: string;
+	/**
+	 * Preset variant code, or null for a
+	 * custom-position game (position lives in the ICN).
+	 */
+	variant: string | null;
 	clock: string;
 	/** 0 = casual, 1 = rated */
 	rated: 0 | 1;

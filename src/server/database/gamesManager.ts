@@ -18,7 +18,11 @@ export interface GamesRecord {
 	date: string;
 	base_time_seconds: number | null;
 	increment_seconds: number | null;
-	variant: string;
+	/**
+	 * Preset variant code, or null for a
+	 * custom-position game (position lives in the ICN).
+	 */
+	variant: string | null;
 	/** 0 => false  1 => true */
 	rated: 0 | 1;
 	leaderboard_id: number | null;
@@ -28,6 +32,10 @@ export interface GamesRecord {
 	termination: string;
 	move_count: number;
 	time_duration_millis: number | null;
+	/**
+	 * Contains the moves list and clock timestamps,
+	 * and if the variant is null (custom), the position as well.
+	 */
 	icn: string;
 }
 
