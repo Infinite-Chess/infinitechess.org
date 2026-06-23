@@ -25,7 +25,7 @@ T8 rebuilt the game page with all-new markup and class names, so the **side-bar 
 
 ### 1. New entry — `src/client/scripts/esm/views/game/game.ts`
 
-Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener) — import the same modules. Then:
+Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener. You can take inspiration from how variantPreviewTooltip.ts reuses much of the rendering bootstrap itself. Our case will be a little different because the game page canvas needs continuous rendering, and all other features liek arrow indicators, etc. so our implementation will be require slightly more scripts to reuse) — import the same modules. Then:
 - Read `window.gamePageData` (`{ id, isLive }`, injected in T3).
 - **Live** (`isLive`): open the socket and send the new `subscribe` action with the numeric `id` (replaces `main.ts`'s `send('game','joingame')`). Handle the incoming `gamestate` via the new loader. Live deltas reuse existing handlers (§4).
 - **Dead** (`!isLive`): out of scope here — stub/defer to T10.
