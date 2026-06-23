@@ -2,7 +2,17 @@
 
 Part of the game-page redesign (see `../requirements.md`). Build the new game page's **own** client entry (NOT `main.ts`) and a **new, purpose-built loader** that consumes the new state shapes directly, then wire the **live player** path end-to-end: subscribe by id → receive `gamestate` → load & render → live deltas.
 
-Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure), T2 (`FullGameState`/`SubscribedGameState`).
+Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure), T2 (`FullGameState`/`SubscribedGameState`), and **T8.5 (lands first)**.
+
+> **T8.5 changes two assumptions in this doc:**
+> 1. **Role comes from `window.gamePageData.youAreColor`** (SSR-resolved), *not* from the
+>    `gamestate` overlay. `SubscribedGameState` no longer carries `youAreColor` — only an optional
+>    `participantState`. Wherever this doc says "youAreColor from the state/overlay," read it as
+>    "`gamePageData.youAreColor`."
+> 2. **The static side-bar regions are SSR'd** (game-meta info, white/black participant list,
+>    player-bar names + ratings, `XX:XX` clock placeholders). The render handlers below (§D / the
+>    "T8 side-bar structure" note) must **not** re-render those — they own only dynamic content
+>    (live clock values, eloChange deltas, moves, material, result, spectator count, chat).
 
 ## Approach (confirmed)
 
@@ -12,12 +22,12 @@ Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure)
 
 ## T8 side-bar structure — new DOM handlers needed
 
-T8 rebuilt the game page with all-new markup and class names, so the **side-bar DOM population is not reusable** from the old page — only the data-level delta handlers (§4, which touch the gamefile + canvas) carry over. The old `guigameinfo` / clock-DOM code targets the old selectors. Plan for new render handlers (and a **new username-container script** — see T10 §4) against the actual T8 structure:
+T8 rebuilt the game page with all-new markup and class names, so the **side-bar DOM population is not reusable** from the old page — only the data-level delta handlers (§4, which touch the gamefile + canvas) carry over. The old `guigameinfo` / clock-DOM code targets the old selectors. Plan for new render handlers against the actual T8 structure (note: the static username containers are SSR'd by T8.5, so the only remaining username-container client concern is the dynamic `.eloChange` delta — see T10 §4):
 
-- **Clocks** — a `.clock` in each `.player-bar`; `.clock.active` marks the side to move.
+- **Clocks** — a `.clock` in each `.player-bar`; `.clock.active` marks the side to move. The `XX:XX` placeholder + bar orientation are SSR'd (T8.5); this handler writes the **live ticking values** into the existing `.clock`.
 - **Move list** — `.moves-table` of `.move-row`s (`.move-num` + `.ply` cells: `.move-piece` silhouette + `.move-coord`, truncated with full value in `title`). The **game-over result renders *inside* this table** (`.game-result`, appended after the last move so it scrolls away with the moves) — not as a separate region.
 - **Material** — `.material` bars (`#material-top` / `#material-bottom`): inject one `.material-piece` svg per surplus piece via `svgcache.getSilhouetteSVG`, plus a `.material-lead` (e.g. "+2").
-- **Usernames / ratings** — `.username-embed` (`.username` + `.elo`, optional `.eloChange`) appears in both `.player-bar` (board POV) and `.meta-players` (white/black list); populated by the new username-container script.
+- **Usernames / ratings** — `.username-embed` (`.username` + `.elo`) in both `.player-bar` (board POV) and `.meta-players` (white/black list) is **SSR'd by T8.5** — not rendered here. The client only adds the dynamic **`.eloChange`** delta on game end (rating change), into the SSR'd embeds.
 - **Coordinate readout** — editable `#coord-x` / `#coord-y` inputs in `.coords`; wire "jump the view to these coordinates" on edit/Enter.
 - **State slots** — chat collapse toggle (`.chat.collapsed`), and draw-offer / disconnect / result blocks toggled via `.hidden`.
 
@@ -25,24 +35,25 @@ T8 rebuilt the game page with all-new markup and class names, so the **side-bar 
 
 ### 1. New entry — `src/client/scripts/esm/views/game/game.ts`
 
-Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener. You can take inspiration from how variantPreviewTooltip.ts reuses much of the rendering bootstrap itself. Our case will be a little different because the game page canvas needs continuous rendering, and all other features liek arrow indicators, etc. so our implementation will be require slightly more scripts to reuse) — import the same modules. Then:
-- Read `window.gamePageData` (`{ id, isLive }`, injected in T3).
+Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener. You can take inspiration from how variantPreviewTooltip.ts reuses much of the rendering bootstrap itself. Our case will be a little different because the game page canvas needs continuous rendering, and all other features like arrow indicators, etc. so our implementation will be require slightly more scripts to reuse) — import the same modules. Then:
+- Read `window.gamePageData` (`{ id, isLive, youAreColor? }` — T8.5 added the SSR-resolved `youAreColor`).
 - **Live** (`isLive`): open the socket and send the new `subscribe` action with the numeric `id` (replaces `main.ts`'s `send('game','joingame')`). Handle the incoming `gamestate` via the new loader. Live deltas reuse existing handlers (§4).
 - **Dead** (`!isLive`): out of scope here — stub/defer to T10.
 
 ### 2. New loader — `src/client/scripts/esm/views/game/gameStateLoader.ts` (or similar)
 
 `loadGameFromState(state: FullGameState, youAreColor?: Player)`:
-- `gameslot.loadGamefile` takes the gamefile's source-of-truth fields directly. `FullGameState` already carries them as typed fields, so the loader forwards them straight: `timeControl`, `variant` (already a `VariantCode`), `dateTimestamp` ← `state.timeCreated`. (Player identity/elos for the side bar come from `state.players` into the username-container DOM script — §"T8 side-bar structure" / T10 §4 — not through the gamefile.)
+- `gameslot.loadGamefile` takes the gamefile's source-of-truth fields directly. `FullGameState` already carries them as typed fields, so the loader forwards them straight: `timeControl`, `variant` (already a `VariantCode`), `dateTimestamp` ← `state.timeCreated`. (Player names/elos for the side bar are **SSR'd by T8.5** — the loader does not render them; `state.players` is still available if any dynamic player-derived rendering needs it.)
+- `youAreColor` is the caller-supplied role from `window.gamePageData.youAreColor` (T8.5), not a field of `state`.
 - `viewWhitePerspective = youAreColor === undefined || youAreColor === WHITE` (spectator/white POV).
 - Call `gameslot.loadGamefile({ timeControl: state.timeControl, variant: state.variant, dateTimestamp: state.timeCreated, viewWhitePerspective, allowEditCoords: false, additional: { moves: state.moves, gameConclusion: state.gameConclusion, clockValues: state.clockValues } })`.
-- Set up online-game state for a participant (reuse `onlinegame.initOnlineGame` with `gameInfo`-equivalent + `youAreColor` + `participantState`, or a new minimal equivalent — implementer's call).
+- Set up online-game state for a participant (reuse `onlinegame.initOnlineGame` with `gameInfo`-equivalent + `youAreColor` (from `gamePageData`) + `participantState` (from the `gamestate` overlay), or a new minimal equivalent — implementer's call).
 
 This loader is shared with T10 (dead) and T11 (spectator); design its signature with that in mind, but only the live-player path is wired here.
 
 ### 3. Client schema wiring — `src/client/scripts/esm/websocket/socketschemas.ts`
 
-Add the incoming `gamestate` action carrying `SubscribedGameStateSchema` (from T2/T6) to the client `GameSchema`. Wire the `subscribe` outgoing send. Leave the old `joingame` action/schema in place for now (dormant; retired later).
+Add the incoming `gamestate` action carrying `SubscribedGameStateSchema` (from T2/T6) to the client `GameSchema`. Wire the `subscribe` outgoing send. Leave the old `joingame` action/schema in place for now (dormant; retired later). **Note (T8.5):** `SubscribedGameStateSchema` no longer has `youAreColor` — only an optional `participantState`. If T8.5 has already retargeted this schema, this chunk just confirms the wiring agrees.
 
 ### 4. Live deltas
 
