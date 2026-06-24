@@ -226,11 +226,11 @@
 	justify-content: center;
 	gap: 0.5em;
 	text-align: center;
+	border-top: 1px solid var(--c-border-muted);
 }
 
 .result-banner {
 	padding-top: 6px;
-	border-top: 1px solid var(--c-border-muted);
 	font-size: 14px;
 }
 
@@ -406,7 +406,6 @@
 	align-items: center;
 	gap: 2px;
 	padding: 8px 12px;
-	border-top: 1px solid var(--c-border-muted);
 }
 
 /* ============================================================

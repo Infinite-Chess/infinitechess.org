@@ -103,4 +103,4 @@ Suggested order: **B → D(×N) → C → E** (B/C/D can be done in any order). 
 - `npm run lint --silent` passes (fix any pre-existing warning touched).
 - The client build succeeds with the new `views/game/game.ts` entry. Loading `/game/<live id>` as a participant subscribes, receives `gamestate`, and the new loader renders the board + clocks from the typed `FullGameState`; subsequent `move`/`clock`/`gameupdate` deltas update the board. (Runtime depends on T6 being deployed.)
 
-When finished, also delete the "NOTE FOR T9 (client wiring):..." comment block from game.njk, including all other comments in there that mention T9, and in game.css.
+When finished, also delete the "NOTE FOR T9 (client wiring):..." comment block from game.njk, including all other comments in there that mention T9, and in game.css, and in user.njk.

@@ -14,6 +14,9 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
+{# ── Macros ────────────────────────────────────────────#}
+{% from "components/user.njk" import usernameEmbed %}
+
 {# ════════════════════════════════════════════════════════════════════════
    NOTE FOR T9 (client wiring): every region below is static structure only.
    Blocks tagged "EXAMPLE" in comments contain hard-coded sample content purely
@@ -118,20 +121,15 @@
 			{# Participants
 			   EXAMPLE — T9 fills each player's ServerUsernameContainer. #}
 			<div class="meta-players">
+				{% for p in [
+					{ dot: "",      dotTitle: "White", name: "Naviary",   elo: "1899" },
+					{ dot: "black", dotTitle: "Black", name: "FinalBozz", elo: "2507" }
+				] %}
 				<div class="meta-player">
-					<span class="side-dot" title="White"></span>
-					<span class="username-embed">
-						<span class="username">Naviary</span>
-						<span class="elo">1899</span>
-					</span>
+					<span class="side-dot{{ (' ' + p.dot) if p.dot }}" title="{{ p.dotTitle }}"></span>
+					{{ usernameEmbed(p.name, p.elo) }}
 				</div>
-				<div class="meta-player">
-					<span class="side-dot black" title="Black"></span>
-					<span class="username-embed">
-						<span class="username">FinalBozz</span>
-						<span class="elo">2507</span>
-					</span>
-				</div>
+				{% endfor %}
 			</div>
 
 			{# Result banner - shown only on game over
@@ -162,12 +160,8 @@
 				{# Top username container + clock. The far side: the opponent for a player, or black for a spectator. #}
 				{# EXAMPLE — T9 fills this from the top player's ServerUsernameContainer + clock. #}
 				<div class="player-bar" id="player-bar-top">
-					<span class="username-embed">
-						<span class="username">FinalBozz</span>
-						<span class="elo">2507</span>
-						{# .eloChange (e.g. "-12") is added by T9 on game end:
-						<span class="eloChange negative">-12</span> #}
-					</span>
+					{# T9 appends <span class="eloChange negative">-12</span> after .elo on game end. #}
+					{{ usernameEmbed("FinalBozz", "2507") }}
 					<span class="clock">9:58</span>
 				</div>
 				{# /EXAMPLE #}
@@ -185,11 +179,11 @@
 						silhouette of the moved piece (svgcache) + the move's coordinates; long
 						coordinates are truncated by CSS, full value via the title attribute.
 						The #svg-pawn placeholders below stand in for the real piece silhouettes. #}
-						<div class="move-row">
+							<div class="move-row">
 							<span class="move-num">1</span>
 							<button class="ply" title="1,2 → 1,4"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">1,4</span></button>
 							<button class="ply" title="5,7 → 5,5"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">5,5</span></button>
-						</div>
+							</div>
 						<div class="move-row">
 							<span class="move-num">2</span>
 							<button class="ply" title="7,1 → 6,3"><svg class="move-piece"><use href="#svg-pawn"/></svg><span class="move-coord">6,3</span></button>
@@ -273,10 +267,7 @@
 				{# Bottom username container + clock. The near side: you for a player, or white for a spectator. #}
 				{# EXAMPLE — mirrors Zone 3 for the near side. #}
 				<div class="player-bar tempo" id="player-bar-bottom">
-					<span class="username-embed">
-						<span class="username">Naviary</span>
-						<span class="elo">1899</span>
-					</span>
+					{{ usernameEmbed("Naviary", "1899") }}
 					<span class="clock">10:03</span>
 				</div>
 				{# /EXAMPLE #}
