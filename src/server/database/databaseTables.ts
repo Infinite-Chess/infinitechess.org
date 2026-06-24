@@ -99,6 +99,7 @@ const allLiveGamesColumns: string[] = [
 	'game_id',
 	'time_created',
 	'variant',
+	'position',
 	'clock',
 	'rated',
 	'private',
@@ -345,7 +346,8 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS live_games (
 			game_id               INTEGER PRIMARY KEY,
 			time_created          INTEGER NOT NULL,
-			variant               TEXT, -- preset variant code, or null for a custom-position game (position lives in the ICN)
+			variant               TEXT, -- preset variant code, or null for a custom-position game (see position)
+			position              TEXT, -- custom game's start position; null for preset games (complementary to variant)
 			clock                 TEXT NOT NULL,
 			rated                 BOOLEAN NOT NULL CHECK (rated IN (0, 1)),
 			private               BOOLEAN NOT NULL CHECK (private IN (0, 1)),
@@ -388,6 +390,7 @@ function initDatabase(): void {
 	dropLegacyVerificationColumnsIfPresent();
 	clearSpamReportBlacklistEntries();
 	makeVariantColumnsNullableIfNeeded();
+	addPositionColumnToLiveGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -505,6 +508,19 @@ function makeVariantColumnsNullableIfNeeded(): void {
 		migrate();
 		console.log(`Temporary DB migration: made ${table}.variant nullable.`);
 	}
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the nullable `position` column to `live_games` — holds a custom game's start position
+ * (null for preset games), so custom games can be restored across a restart (preset games
+ * rebuild from the variant code alone). Fresh DBs get the column from `generateTables()`.
+ */
+function addPositionColumnToLiveGamesIfNeeded(): void {
+	if (db.columnExists('live_games', 'position')) return; // Already present, nothing to do.
+	db.run('ALTER TABLE live_games ADD COLUMN position TEXT');
+	console.log('Temporary DB migration: added live_games.position column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

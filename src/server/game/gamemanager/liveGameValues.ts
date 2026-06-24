@@ -116,6 +116,7 @@ function onGameCreated(servergame: ServerGame): void {
 		game_id: match.id,
 		time_created: match.timeCreated,
 		variant: match.variant,
+		position: null, // Custom games (which would set this) aren't yet startable; preset games have no custom position.
 		clock: match.clock,
 		rated: match.rated ? 1 : 0,
 		private: 0, // All games are public for now, even "Challenge a friend" games.
