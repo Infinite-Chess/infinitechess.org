@@ -377,6 +377,7 @@
 	padding: 6px 12px;
 }
 
+/* The side whose turn it is gets its whole bar highlighted (T9 toggles `.tempo`). */
 .player-bar.tempo {
 	background-color: #00677c;
 }
@@ -387,11 +388,6 @@
 	font-variant-numeric: tabular-nums;
 	color: var(--c-text-emphasis);
 	font-family: monospace;
-}
-
-/* The side whose turn it is gets a highlighted clock (toggled by T9). */
-.clock.active {
-	color: var(--c-accent);
 }
 
 /* ============================================================

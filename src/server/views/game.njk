@@ -95,12 +95,12 @@
 					<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
 					<span class="meta-variant">Classical</span>
 				</span>
-				<span class="meta-sep">•</span>
+				•
 				<span class="meta-item" title="Rapid">
 					<svg class="meta-icon svg-speed-rapid"><use href="#svg-speed-rapid"/></svg>
 					<span class="meta-time">10+4</span>
 				</span>
-				<span class="meta-sep">•</span>
+				•
 				<span class="meta-mode">Rated</span>
 			</div>
 
@@ -168,7 +168,7 @@
 				{# Zone 3 — Top username container (name + rating + clock). The far side:
 				   the opponent for a player, or black for a spectator. #}
 				{# EXAMPLE — T9 fills this from the top player's ServerUsernameContainer + clock. #}
-				<div class="player-bar top">
+				<div class="player-bar" id="player-bar-top">
 					<span class="username-embed">
 						<span class="username">FinalBozz</span>
 						<span class="elo">2507</span>
@@ -254,10 +254,10 @@
 					<div class="actions-draw-offer">
 						<span class="draw-offer-label">Accept draw offer?</span>
 						<div class="draw-offer-buttons">
-							<button class="action-btn accept">
+							<button class="action-btn" id="btn-accept-draw">
 								<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 							</button>
-							<button class="action-btn reject"><svg class="action-icon"><use href="#svg-x"/></svg></button>
+							<button class="action-btn" id="btn-reject-draw"><svg class="action-icon"><use href="#svg-x"/></svg></button>
 						</div>
 					</div>
 					{# Post-game actions: rematch + analysis — commented out for now; shown on game over. #}
@@ -283,7 +283,7 @@
 				{# Zone 7 — Bottom username container (name + rating + clock). The near side:
 				   you for a player, or white for a spectator. #}
 				{# EXAMPLE — mirrors Zone 3 for the near side. #}
-				<div class="player-bar bottom tempo">
+				<div class="player-bar tempo" id="player-bar-bottom">
 					<span class="username-embed">
 						<span class="username">Naviary</span>
 						<span class="elo">1899</span>
