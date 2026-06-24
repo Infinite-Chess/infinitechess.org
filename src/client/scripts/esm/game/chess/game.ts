@@ -13,14 +13,12 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import clock from '../../../../../shared/chess/logic/clock.js';
 import bimath from '../../../../../shared/util/math/bimath.js';
 
-import gui from '../gui/gui.js';
 import mouse from '../../util/mouse.js';
 import pieces from '../rendering/pieces.js';
 import arrows from '../rendering/arrows/arrows.js';
 import border from '../rendering/border.js';
 import camera from '../rendering/camera.js';
 import gameslot from './gameslot.js';
-import guititle from '../gui/guititle.js';
 import boardpos from '../rendering/boardpos.js';
 import controls from '../misc/controls.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -102,10 +100,6 @@ function init(): void {
 
 	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
-
-	gui.prepareForOpen();
-
-	guititle.open();
 
 	// Update the pipeline on canvas resize
 	document.addEventListener('canvas_resize', (event) => {

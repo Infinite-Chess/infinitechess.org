@@ -13,7 +13,7 @@ import * as z from 'zod';
 
 import gameutility from '../gamemanager/gameutility.js';
 import { createGame } from '../gamemanager/gamemanager.js';
-import { memberInfoEq } from './seekutility.js';
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { isSocketInAnActiveGame } from '../gamemanager/activeplayers.js';

@@ -214,13 +214,15 @@ export const GameStateVariantSchema = z.discriminatedUnion('kind', [
 /**
  * The role-agnostic typed core of a game, shared by live {@link FullGameState}
  * and dead `DeadGameState` shapes.
+ * This is all the properties that are unchanging since the
+ * game's inception, live or dead, EXCEPT for the gameConclusion.
  *
  * Note: this overlaps the client's `ServerGameInfo`/`JoinGameMessage`
  * (`src/client/scripts/esm/websocket/socketschemas.ts`); that de-dup is
  * deferred to a later task that reshapes the live socket protocol.
  */
-export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
-export const GameStateBaseSchema = z.strictObject({
+export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
+export const StaticGameStateSchema = z.strictObject({
 	id: z.int().nonnegative(),
 	rated: z.boolean(),
 	variant: GameStateVariantSchema,
@@ -237,7 +239,7 @@ export const GameStateBaseSchema = z.strictObject({
  * Does not include role information.
  */
 export type FullGameState = z.infer<typeof FullGameStateSchema>;
-export const FullGameStateSchema = GameStateBaseSchema.extend({
+export const FullGameStateSchema = StaticGameStateSchema.extend({
 	/** Each move carries its optional `clockStamp` (per-move clock history for rewind). */
 	moves: z.array(MovePacketSchema),
 	/** The live ticking clocks. Absent for untimed games. */
@@ -262,7 +264,7 @@ export const SubscribedGameStateSchema = FullGameStateSchema.extend({
  * Built from DB columns only — the server does not parse the ICN.
  */
 export type DeadGameState = z.infer<typeof DeadGameStateSchema>;
-export const DeadGameStateSchema = GameStateBaseSchema.extend({
+export const DeadGameStateSchema = StaticGameStateSchema.extend({
 	/**
 	 * Source of truth for moves + clock stamps (+ start position
 	 * only for custom-position games); the client parses it.

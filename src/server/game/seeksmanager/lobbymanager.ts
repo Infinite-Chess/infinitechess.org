@@ -12,8 +12,9 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import { IDLengthOfSeeks } from '../../../shared/types.js';
 
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { safelyCopySeek, memberInfoEq, AuthSeek } from './seekutility.js';
+import { safelyCopySeek, AuthSeek } from './seekutility.js';
 import {
 	getLobbySubscribers,
 	getSubscriberCount,

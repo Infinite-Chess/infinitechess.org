@@ -10,7 +10,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameConclusionMessage } from '../../../shared/types.js';
+import type { GameConclusionMessage, StaticGameState } from '../../../shared/types.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -30,6 +30,7 @@ import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
+import { produceDeadStaticGameState } from './deadgamestate.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	addUserToActiveGames,
@@ -226,6 +227,22 @@ function unsubSpectatorFromGameBySocket(ws: CustomWebSocket): void {
 /** Returns the live game with the specified id, if it exists. */
 function getGameByID(id: number): ServerGame | undefined {
 	return activeGames[id];
+}
+
+/**
+ * Resolves a game id's {@link StaticGameState} — live (in memory) or dead (in the DB) —
+ * plus its liveness, for the SSR game page. `undefined` if no such game.
+ * @throws If a database error occurs.
+ */
+function produceStaticGameState(
+	id: number,
+): { state: StaticGameState; game?: ServerGame } | undefined {
+	const game = getGameByID(id); // Defined if live
+	if (game !== undefined) return { game, state: gameutility.buildStaticGameState(game) };
+
+	const deadState = produceDeadStaticGameState(id);
+	if (deadState === undefined) return undefined; // Game doesn't exist
+	return { state: deadState };
 }
 
 /**
@@ -700,6 +717,7 @@ export {
 	teardownGame,
 	pushGameClock,
 	getGameByID,
+	produceStaticGameState,
 	// Shutdown Preparation & Startup Restoration
 	prepGamesForShutdown,
 	restoreLiveGames,

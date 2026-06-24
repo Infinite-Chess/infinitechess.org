@@ -8,7 +8,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { memberInfoEq } from './seekutility.js';
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getSeekAndIndexByID, deleteSeekByIndex, IDLengthOfSeeks } from './lobbymanager.js';
 

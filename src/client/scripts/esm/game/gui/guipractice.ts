@@ -11,7 +11,6 @@ import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import style from './style.js';
-import guititle from './guititle.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import validatorama from '../../util/validatorama.js';
 import checkmatepractice from '../chess/checkmatepractice.js';
@@ -416,7 +415,6 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 
 function callback_practiceBack(_event: Event): void {
 	close();
-	guititle.open();
 }
 
 function callback_practicePlay(): void {

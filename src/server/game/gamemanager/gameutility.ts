@@ -19,6 +19,7 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type {
 	ClockValues,
 	FullGameState,
+	StaticGameState,
 	GameUpdateBase,
 	GameUpdateMessage,
 	MetaData,
@@ -47,16 +48,15 @@ import {
 	VariantLeaderboards,
 } from '../../../shared/chess/variants/validleaderboard.js';
 
+import tconfig from '../../config/translationconfig.js';
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
+import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
+import { AuthSeek, buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
-import {
-	memberInfoEq,
-	AuthSeek,
-	buildServerUsernameContainer,
-} from '../seeksmanager/seekutility.js';
 
 // Constants ------------------------------------------------------------------------------------
 
@@ -437,12 +437,12 @@ function getRatingDataForGamePlayers(
 }
 
 /**
- * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent
- * to clients on subscribe. The per-viewer overlay (youAreColor, participantState) is
- * layered on separately at delivery time, not here.
+ * Assembles the role-agnostic {@link StaticGameState} of a live game.
+ * This is all the properties that are unchanging since the
+ * game's inception, live or dead, EXCEPT for the gameConclusion.
  * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
-function produceFullGameState(servergame: ServerGame): FullGameState {
+function buildStaticGameState(servergame: ServerGame): StaticGameState {
 	const match = servergame.match;
 	const ratings = getRatingDataForGamePlayers(match.playerData, match.variant);
 
@@ -452,7 +452,7 @@ function produceFullGameState(servergame: ServerGame): FullGameState {
 		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
 
-	const state: FullGameState = {
+	const state: StaticGameState = {
 		id: match.id,
 		rated: match.rated,
 		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
@@ -460,10 +460,25 @@ function produceFullGameState(servergame: ServerGame): FullGameState {
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 		players,
-		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
 
 	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+
+	return state;
+}
+
+/**
+ * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent
+ * to clients on subscribe. The per-viewer overlay (youAreColor, participantState) is
+ * layered on separately at delivery time, not here.
+ * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
+ */
+function produceFullGameState(servergame: ServerGame): FullGameState {
+	const state: FullGameState = {
+		...buildStaticGameState(servergame),
+		moves: servergame.moves.map((m) => simplifyMove(m)),
+	};
+
 	if (!servergame.untimed) state.clockValues = getGameClockValues(servergame);
 
 	return state;
@@ -496,7 +511,8 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 
 	const white = match.playerData[p.WHITE]!.identifier;
 	const black = match.playerData[p.BLACK]!.identifier;
-	const variantEnglishName = variantregistry.getVariantName(match.variant);
+	const scriptT = getScriptTranslations('shared', tconfig.DEFAULT_LANGUAGE); // Game metadata should only ever be in English
+	const variantEnglishName = variantregistry.getVariantName(match.variant, scriptT);
 	const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(match.timeCreated);
 
 	const metadata: MetaData = {
@@ -781,7 +797,7 @@ function getSimplifiedGameString(servergame: ServerGame): string {
 	let moves: undefined | string[];
 	if (servergame.moves.length > 0) moves = servergame.moves.map((m) => m.token);
 	const simplifiedGame = {
-		id: servergame.match.id,
+		id: `${servergame.match.id} (${uuid.base10ToBase62(servergame.match.id)})`,
 		timeCreated: timeutil.timestampToISO(servergame.match.timeCreated),
 		timeEnded:
 			servergame.match.timeEnded !== undefined
@@ -987,6 +1003,7 @@ export default {
 	resyncToGame,
 	sendParticipantGameState,
 	assignWhiteBlackPlayersFromSeek,
+	buildStaticGameState,
 	produceFullGameState,
 	buildMetadataOfGame,
 	broadcastParticipantGameUpdate,

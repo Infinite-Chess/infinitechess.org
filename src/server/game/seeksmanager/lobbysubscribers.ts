@@ -10,7 +10,7 @@
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
-import { memberInfoEq } from './seekutility.js';
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /** Set of clients currently subscribed to the lobby. */

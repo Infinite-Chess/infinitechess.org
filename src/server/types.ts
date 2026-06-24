@@ -22,7 +22,7 @@ declare global {
 }
 
 /** Information to identify a specific user, logged in or not. */
-type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
+export type MemberInfo = SignedInMemberInfo | SignedOutMemberInfo;
 
 export type SignedInMemberInfo = {
 	signedIn: true;
@@ -42,10 +42,10 @@ type SignedOutMemberInfo = {
  * This means the user is fully authenticated, cause we only need one
  * identifier to identify them.
  */
-type AuthMemberInfo = MemberInfo & { browser_id: string };
+export type AuthMemberInfo = MemberInfo & { browser_id: string };
 
 /** All possible cookies we set on the client. */
-interface ParsedCookies {
+export interface ParsedCookies {
 	/** The unique id of the browser. Almost always defined, but may not be on first connection, or if client's cookies are disabled. */
 	'browser-id'?: string;
 	/** Their preferred language override. For example, 'de-DE'. */
@@ -58,5 +58,3 @@ interface ParsedCookies {
 	 */
 	memberInfo?: string; // Stringified MemberInfoCookie (src/shared/types/memberInfo.ts)
 }
-
-export type { AuthMemberInfo, ParsedCookies };

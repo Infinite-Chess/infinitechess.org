@@ -1,20 +1,22 @@
 // src/server/game/gamemanager/deadgamestate.ts
 
 /**
- * Builds the {@link DeadGameState} for a concluded game from DB columns alone —
- * never reading `activeGames` or parsing the ICN (passed through verbatim for the client).
+ * Builds the {@link StaticGameState} / {@link DeadGameState} of a concluded game from DB.
  *
  * This is the READ side; `gamelogger.ts` is the WRITE
  * side that persists these columns when a game ends.
  */
 
-import type { PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { VariantCode } from '../../../shared/chess/variants/variantregistry.js';
+import type { GamesRecord } from '../../database/gamesManager.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	DeadGameState,
 	PlayerRatingChangeInfo,
 	ServerUsernameContainer,
+	StaticGameState,
 } from '../../../shared/types.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
@@ -31,26 +33,24 @@ import { getMemberDataByCriteria } from '../../database/memberManager.js';
 /** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
 const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
 
+/** The `games` columns needed to assemble a {@link StaticGameState}. */
+const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination'] as const; // prettier-ignore
+/** The `player_games` columns needed to assemble a {@link StaticGameState}. */
+const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game'] as const;
+
 // Methods ------------------------------------------------------------------------------------------------
 
 /**
- * Builds the {@link DeadGameState} for a concluded game from the database.
- * @returns The state, or `undefined` if no such game row exists (caller 404s).
- * @throws If a database error occurs.
+ * Maps already-fetched DB rows into the {@link StaticGameState} base. Pure (no queries
+ * beyond the per-player username lookup), so both readers below share one field mapping.
  */
-export function produceDeadGameState(game_id: number): DeadGameState | undefined {
-	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
-	if (game === undefined) return undefined;
-
-	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'elo_change_from_game', 'clock_at_end_millis']); // prettier-ignore
-
+function assembleStaticGameState(
+	game_id: number,
+	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
+	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
+): StaticGameState {
 	/** Per-color username container; a color absent from `playerRows` -> guest. */
 	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
-	/** Per signed-in player rating change; populated only for rated games. */
-	const ratingChanges: PlayerGroup<PlayerRatingChangeInfo> = {};
-	/** Per-color ms remaining at game end; populated only for timed games. */
-	const finalClocks: PlayerGroup<number> = {};
-
 	for (const color of [players.WHITE, players.BLACK]) {
 		const row = playerRows.find((r) => r.player_number === color);
 		if (row === undefined) {
@@ -68,19 +68,10 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 			type: 'player',
 			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
 		};
-		// at-game confidence isn't stored, so dead games are always confident.
-		if (row.elo_at_game !== null) {
+		// Assume confident until we actually store their confidence in the DB
+		if (row.elo_at_game !== null)
 			container.rating = { value: row.elo_at_game, confident: true };
-		}
 		playerContainers[color] = container;
-
-		if (row.elo_at_game !== null && row.elo_change_from_game !== null) {
-			ratingChanges[color] = {
-				newRating: { value: row.elo_at_game + row.elo_change_from_game, confident: true },
-				change: row.elo_change_from_game,
-			};
-		}
-		if (row.clock_at_end_millis !== null) finalClocks[color] = row.clock_at_end_millis;
 	}
 
 	const gameConclusion = {
@@ -88,7 +79,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 		victor: metadatautil.getVictorFromResult(game.result),
 	} as GameConclusion;
 
-	const state: DeadGameState = {
+	return {
 		id: game_id,
 		rated: Boolean(game.rated),
 		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
@@ -100,6 +91,64 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 		timeCreated: timeutil.sqliteToTimestamp(game.date),
 		players: playerContainers,
 		gameConclusion,
+	};
+}
+
+/**
+ * Returns the color a signed-in user played in a concluded game, or `undefined` if they
+ * weren't a participant. Dead guests aren't identifiable (their browser-id isn't stored).
+ * @throws If a database error occurs.
+ */
+export function resolveDeadParticipantColor(game_id: number, user_id: number): Player | undefined {
+	const rows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id']);
+	return rows.find((r) => r.user_id === user_id)?.player_number as Player | undefined;
+}
+
+/**
+ * Builds just the {@link StaticGameState} of a concluded game — the static side bar info.
+ * @returns The state, or `undefined` if no such game row exists.
+ * @throws If a database error occurs.
+ */
+export function produceDeadStaticGameState(game_id: number): StaticGameState | undefined {
+	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS]);
+	if (game === undefined) return undefined;
+	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
+	return assembleStaticGameState(game_id, game, playerRows);
+}
+
+/**
+ * Builds the full {@link DeadGameState} for a concluded game from the database —
+ * the static base plus the `icn`, rating changes, and final clocks.
+ * @returns The state, or `undefined` if no such game row exists.
+ * @throws If a database error occurs.
+ */
+export function produceDeadGameState(game_id: number): DeadGameState | undefined {
+	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
+	if (game === undefined) return undefined;
+
+	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'elo_change_from_game', 'clock_at_end_millis']); // prettier-ignore
+
+	/** Per signed-in player rating change; populated only for rated games. */
+	const ratingChanges: PlayerGroup<PlayerRatingChangeInfo> = {};
+	/** Per-color ms remaining at game end; populated only for timed games. */
+	const finalClocks: PlayerGroup<number> = {};
+
+	for (const color of [players.WHITE, players.BLACK]) {
+		const row = playerRows.find((r) => r.player_number === color);
+		if (row === undefined) continue; // Guest color -> no rating change / clock row.
+
+		if (row.elo_at_game !== null && row.elo_change_from_game !== null) {
+			ratingChanges[color] = {
+				// Assume confident until we actually store their confidence in the DB
+				newRating: { value: row.elo_at_game + row.elo_change_from_game, confident: true },
+				change: row.elo_change_from_game,
+			};
+		}
+		if (row.clock_at_end_millis !== null) finalClocks[color] = row.clock_at_end_millis;
+	}
+
+	const state: DeadGameState = {
+		...assembleStaticGameState(game_id, game, playerRows),
 		icn: game.icn,
 	};
 

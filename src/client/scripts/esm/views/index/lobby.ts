@@ -7,10 +7,7 @@
 
 import type { VNode } from 'snabbdom';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type {
-	VariantGroup,
-	VariantInfo,
-} from '../../../../../shared/chess/variants/variantregistry.js';
+import type { VariantInfo } from '../../../../../shared/chess/variants/variantregistry.js';
 import type {
 	TimeControl,
 	Rating,
@@ -288,15 +285,6 @@ function getClockLabel(clock: TimeControl): string | undefined {
 	return `${minutesAndIncrement.minutes}+${minutesAndIncrement.increment}`;
 }
 
-/**
- * Returns the symbol ID of the SVG icon that represents the variant group.
- * Includes the `custom` group for custom variants.
- */
-function getVariantIcon(group: VariantGroup | 'custom'): string {
-	if (group === 'custom') return 'svg-wrench';
-	return variantregistry.getVariantGroupIconId(group);
-}
-
 /** Patches the lobby table body with the latest seek rows. */
 function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
@@ -327,7 +315,7 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<string>): VNode
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 	const playerRating = createPlayerRatingVNode(seek.player.rating);
 	const sideDot = createSideDotVNode(seek.color);
-	const variantIcon = getVariantIcon(seek.variant.group);
+	const variantIcon = variantregistry.getVariantGroupIconId(seek.variant.group);
 	const variantName =
 		seek.variant.group === 'custom'
 			? t.shared.variant_groups.custom.display_label

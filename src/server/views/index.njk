@@ -184,7 +184,6 @@
 						{% for g in variantGroups %}
 						{{ variantGroupItem(g.group, g.iconId, s.variant_groups[g.group].name, s.variant_groups[g.group].description) }}
 						{% endfor %}
-						{{ variantGroupItem("custom", "svg-wrench", s.variant_groups.custom.name, s.variant_groups.custom.description) }}
 					</div>
 					{% for g in variantGroups %}
 					<div class="variant-dropdown variant-list-panel" data-group="{{ g.group }}">

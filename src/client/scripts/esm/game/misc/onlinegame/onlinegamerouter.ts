@@ -14,10 +14,8 @@ import { players as p, Player } from '../../../../../../shared/chess/util/typeut
 
 import afk from './afk.js';
 import toast from '../../../components/toast.js';
-import guiplay from '../../gui/guiplay.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
-import guititle from '../../gui/guititle.js';
 import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
 import disconnect from './disconnect.js';
@@ -139,8 +137,6 @@ function handleJoinGame(message: JoinGameMessage): void {
 	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
 	socketsubs.deleteSub('lobby');
 	socketsubs.addSub('game');
-	guititle.close();
-	guiplay.close();
 	// If the clock values are present, adjust them for ping.
 	if (message.clockValues)
 		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
@@ -285,7 +281,6 @@ function handleLeaveGame(): void {
 	toast.show(translations.onlinegame.another_window_connected);
 	socketsubs.deleteSub('game');
 	gameloader.unloadGame();
-	guititle.open();
 }
 
 export default {

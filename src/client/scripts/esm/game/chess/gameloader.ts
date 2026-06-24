@@ -33,7 +33,6 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import gui from '../gui/gui.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import Transition from '../rendering/transitions/Transition.js';
@@ -560,8 +559,6 @@ function unloadGame(): void {
 	unloadLogicalAndRendering();
 	frameratelimiter.setFpsLimit(TARGET_FPS_TITLE_SCREEN); // Return to title-screen throttle on game exit
 	typeOfGameWeAreIn = undefined;
-
-	gui.prepareForOpen();
 }
 
 // Exports --------------------------------------------------------------------

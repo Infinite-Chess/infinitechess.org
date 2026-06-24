@@ -34,7 +34,8 @@ function buildMetaDataFromGamefile(gamefile: GameFile): MetaData {
 		UTCDate,
 		UTCTime,
 	};
-	if (gamefile.variant) metadata.Variant = variantregistry.getVariantName(gamefile.variant.code);
+	if (gamefile.variant)
+		metadata.Variant = variantregistry.getVariantName(gamefile.variant.code, t.shared);
 	if (gamefile.gameConclusion) {
 		metadata.Result = metadatautil.getResultFromVictor(gamefile.gameConclusion.victor);
 		metadata.Termination = winconutil.getTerminationInEnglish(

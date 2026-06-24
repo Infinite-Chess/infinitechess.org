@@ -9,6 +9,7 @@
  */
 
 import type { VariantModule } from './variant_scripts/variantutil.js';
+import type { ScriptTranslations } from '../../types/script-translations.js';
 
 // Types -------------------------------------------------------------------------------
 
@@ -40,11 +41,12 @@ export type VariantRegistryEntry = {
 
 // ================================ VARIANT GROUP REGISTRY ================================
 
-const VARIANT_GROUP_ICONS: Record<VariantGroup, string> = {
+const VARIANT_GROUP_ICONS: Record<VariantGroup | 'custom', string> = {
 	standard: 'svg-pawn',
 	horde: 'svg-keypad',
 	'4D': 'svg-tesseract',
 	showcase: 'svg-trophy',
+	custom: 'svg-wrench',
 };
 
 /** An array of all valid variant groups. */
@@ -205,7 +207,7 @@ const VARIANT_CODES = Object.keys(VARIANT_REGISTRY) as (keyof typeof VARIANT_REG
 // Functions ------------------------------------------------------------------
 
 /** Returns the id for the icon of the given variant group. */
-function getVariantGroupIconId(group: VariantGroup): string {
+function getVariantGroupIconId(group: VariantGroup | 'custom'): string {
 	return VARIANT_GROUP_ICONS[group];
 }
 
@@ -228,9 +230,18 @@ function resolveVariantCode(variantName: string | undefined): VariantCode | unde
 	return undefined;
 }
 
-/** Returns the English display name of the given variant code. */
-function getVariantName(variantCode: VariantCode): string {
-	return VARIANT_REGISTRY[variantCode].name;
+/**
+ * Returns the English display name of the given variant code.
+ * @param variantCode - The variant code to look up.
+ * @param sharedT - The shared translations object, used to translate 'Custom Variant'.
+ */
+function getVariantName(
+	variantCode: VariantCode | null,
+	sharedT: ScriptTranslations['shared'],
+): string {
+	return variantCode
+		? VARIANT_REGISTRY[variantCode].name
+		: sharedT.variant_groups.custom.display_label; // Translate 'Custom Variant'
 }
 
 /** Returns the group of the given variant code. */

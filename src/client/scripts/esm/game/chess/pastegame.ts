@@ -151,7 +151,7 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
 	if (resolved !== undefined) {
 		// Normalize to English display name
-		metadata.Variant = variantregistry.getVariantName(resolved);
+		metadata.Variant = variantregistry.getVariantName(resolved, t.shared);
 	} else {
 		// Unrecognized Variant: Treat as if no variant was specified
 		delete metadata.Variant;
