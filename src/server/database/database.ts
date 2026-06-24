@@ -141,6 +141,25 @@ function columnExists(tableName: string, columnName: string): boolean {
 }
 
 /**
+ * Returns whether an existing column is nullable (i.e. NOT declared `NOT NULL`).
+ * Returns false if the column does not exist.
+ * @throws If a database error occurs.
+ */
+function columnIsNullable(tableName: string, columnName: string): boolean {
+	try {
+		// PRAGMA queries are special and should not use the statement cache.
+		// We access the raw db instance's prepare method directly.
+		const row = db
+			.prepare(`SELECT * FROM pragma_table_info(?) WHERE name = ?`)
+			.get(tableName, columnName) as { notnull: number } | undefined;
+		return row !== undefined && row.notnull === 0;
+	} catch (error) {
+		console.error(`Error checking if column ${columnName} is nullable in ${tableName}:`, error);
+		throw error; // Rethrow
+	}
+}
+
+/**
  * Creates a transaction function that wraps the given callback in a database transaction.
  * The callback will be executed atomically - either all operations succeed or all are rolled back.
  *
@@ -173,5 +192,6 @@ export default {
 	close,
 	backup,
 	columnExists,
+	columnIsNullable,
 	transaction,
 };

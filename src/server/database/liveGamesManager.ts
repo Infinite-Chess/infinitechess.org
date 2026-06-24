@@ -20,7 +20,13 @@ export interface LiveGamesRecord extends LiveGameData {
 /** Live game data columns, excluding the primary key. */
 export interface LiveGameData {
 	time_created: number;
-	variant: string;
+	/**
+	 * Preset variant code, or null for a custom-position
+	 * game (its start position is in `position`).
+	 */
+	variant: string | null;
+	/** A custom game's start position; null for preset games (complementary to `variant`). */
+	position: string | null;
 	clock: string;
 	/** 0 = casual, 1 = rated */
 	rated: 0 | 1;
@@ -49,13 +55,13 @@ export interface LiveGameData {
 export function insertLiveGame(record: LiveGamesRecord): void {
 	const query = `
 			INSERT INTO live_games (
-				game_id, time_created, variant, clock, rated, private,
+				game_id, time_created, variant, position, clock, rated, private,
 				moves, color_ticking, clock_snapshot_time,
 				draw_offer_state,
 				conclusion_condition, conclusion_victor, time_ended,
 				afk_resign_time, delete_time,
 				validate_moves
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	dbCall(
 		() =>
@@ -63,6 +69,7 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				record.game_id,
 				record.time_created,
 				record.variant,
+				record.position,
 				record.clock,
 				record.rated,
 				record.private,

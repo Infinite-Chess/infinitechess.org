@@ -28,7 +28,6 @@ import arrows from './arrows/arrows.js';
 import boardpos from './boardpos.js';
 import boardtiles from './boardtiles.js';
 import primitives from './primitives.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import perspective from './perspective.js';
 import preferences from '../../components/header/preferences.js';
 import textrenderer from './text/textrenderer.js';
@@ -187,15 +186,8 @@ function render(): void {
 	// X-axis: file labels centered on each file column, fixed at the bottom of the screen.
 	// Shifted down by ATLAS_DESCENDER_FRACTION so the invisible descender space goes below
 	// the screen edge rather than adding unwanted gap above the visible characters.
-	// Shifted up by the game info bar height so labels aren't covered when it's visible.
-	const gameInfoBarOffsetWorld = space.convertPixelsToWorldSpace_Virtual(
-		guigameinfo.getHeightOfGameInfoBar(),
-	);
 	const fileWorldY =
-		screenBox.bottom +
-		gameInfoBarOffsetWorld +
-		paddingWorld +
-		sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
+		screenBox.bottom + paddingWorld + sizeWorld * (0.5 - ATLAS_DESCENDER_FRACTION);
 	const firstFile = ceilToMultiple(tileBox.left, stepBig);
 
 	// Y-axis: rank labels left-aligned from the left edge of the screen, at each rank row.

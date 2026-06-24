@@ -4,7 +4,7 @@
  * This script restores live games from the database on server startup.
  *
  * It reads all rows from live_games and live_player_games, reconstructs
- * the full ServerGame objects (metadata, clocks, boardsim, player identities),
+ * the full ServerGame objects (clocks, boardsim, player identities),
  * and determines which pending timers (AFK resign, auto time loss, disconnect,
  * delete) need to be reinstated.
  *
@@ -18,8 +18,8 @@ import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
+import type { ClockValues, TimeControl } from '../../../shared/types.js';
 import type { MatchInfo, PlayerData, ServerGame } from './gameutility.js';
-import type { ClockValues, MetaData, TimeControl } from '../../../shared/types.js';
 import type {
 	Condition,
 	DrawCondition,
@@ -27,13 +27,10 @@ import type {
 } from '../../../shared/chess/util/winconutil.js';
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import { players as p } from '../../../shared/chess/util/typeutil.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 
 import gameutility from './gameutility.js';
-import servermetadatautil from '../servermetadatautil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
 import { getLivePlayerGamesForGame } from '../../database/livePlayerGamesManager.js';
@@ -137,23 +134,20 @@ function restoreSingleGame(
 	// 1. Reconstruct AuthMemberInfo for each player
 	const playerIdentities = reconstructPlayerIdentities(playerRows);
 
-	// 2. Reconstruct MetaData
-	const game = reconstructMetadata(gameRow, playerRows, playerIdentities);
-
-	// 3. Reconstruct clock values for timed games
+	// 2. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
 
-	// 4. Reconstruct game conclusion
+	// 3. Reconstruct game conclusion
 	const gameConclusion = reconstructConclusion(gameRow);
 
-	// 5. Create the game (also computes gameRules)
+	// 4. Create the game (also computes gameRules)
 	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
 		dateTimestamp: gameRow.time_created,
 	};
 	const gameWithRules = gamefile.initGame(
-		game,
+		gameRow.clock as TimeControl,
 		gameRow.time_created,
 		variant,
 		gameConclusion,
@@ -239,39 +233,6 @@ function reconstructPlayerIdentities(
 	}
 
 	return identities;
-}
-
-/**
- * Reconstructs MetaData from the stored atomic values.
- */
-function reconstructMetadata(
-	gameRow: LiveGamesRecord,
-	playerRows: LivePlayerGamesRecord[],
-	playerIdentities: PlayerGroup<AuthMemberInfo>,
-): MetaData {
-	const white = playerIdentities[p.WHITE]!;
-	const black = playerIdentities[p.BLACK]!;
-
-	// Find per-player rows for signed-in identity lookup
-	const whiteRow = playerRows.find((r) => r.player_number === p.WHITE)!;
-	const blackRow = playerRows.find((r) => r.player_number === p.BLACK)!;
-
-	return servermetadatautil.buildGameMetadata(
-		Boolean(gameRow.rated),
-		gameRow.variant as VariantCode,
-		gameRow.clock as TimeControl,
-		gameRow.time_created,
-		{
-			name: white.signedIn ? white.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-			id: white.signedIn ? white.user_id : undefined,
-			elo: whiteRow.elo ?? undefined,
-		},
-		{
-			name: black.signedIn ? black.username : metadatautil.GUEST_NAME_ICN_METADATA, // Protect browser's browser-id cookie
-			id: black.signedIn ? black.user_id : undefined,
-			elo: blackRow.elo ?? undefined,
-		},
-	);
 }
 
 /**

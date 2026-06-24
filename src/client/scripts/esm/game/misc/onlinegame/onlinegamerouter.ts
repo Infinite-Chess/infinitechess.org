@@ -10,7 +10,6 @@ import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/t
 import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import afk from './afk.js';
@@ -26,7 +25,6 @@ import drawoffers from './drawoffers.js';
 import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
 import socketsubs from '../../../websocket/socketsubs.js';
-import guigameinfo from '../../gui/guigameinfo.js';
 import validatorama from '../../../util/validatorama.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
@@ -84,7 +82,10 @@ function routeMessage(contents: GameMessage): void {
 			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
 			break;
 		case 'gameratingchange':
-			guigameinfo.addRatingChangeToExistingUsernameContainers(contents.value);
+			// TODO: surface rating changes in the new game page's side bar.
+			console.error(
+				`Received 'gameratingchange' message from server, but this is not yet implemented in the new game page. Message: ${JSON.stringify(contents)}`,
+			);
 			break;
 		case 'unsub':
 			handleUnsubbing();
@@ -268,7 +269,7 @@ function handleLogin(gamefile: GameFile): void {
 function handleNoGame(gamefile: GameFile): void {
 	toast.show(translations.onlinegame.game_no_longer_exists, { durationMultiplier: 1.5 });
 	socketsubs.deleteSub('game');
-	gamefileutility.setConclusion(gamefile, { condition: 'aborted' });
+	gamefile.gameConclusion = { condition: 'aborted' };
 	gameslot.concludeGame();
 }
 

@@ -30,13 +30,13 @@ Construct a `FullGameState` from the `DeadGameState`:
 - `moves` = the parsed moves,
 - `clockValues` = built from `finalClocks` (`{ clocks: finalClocks }`, no `colorTicking` — game's over). For any color missing from `finalClocks` (guest), fall back to that color's last parsed `clockStamp`.
 
-Determine `youAreColor` for board orientation only (the game is over — no controls): match the viewer's identity to `players` (logged-in username vs `players[color].username`); fall back to white POV if not a participant.
+`youAreColor` is **already resolved server-side and injected into `window.gamePageData` by T8.5** (the SSR route matches the viewer's identity against the game's `player_games` rows). Do **not** re-match usernames client-side — read `gamePageData.youAreColor` (undefined = white POV).
 
-Call `loadGameFromState(fullGameState, youAreColor)` (T9). The conclusion is already set, so it loads into the review/end state.
+Call `loadGameFromState(fullGameState, gamePageData.youAreColor)` (T9). The conclusion is already set, so it loads into the review/end state.
 
 ### 4. Rating changes display
 
-If `deadState.ratingChanges` is present, surface the per-player rating deltas in the side bar (reuse the existing rating-change UI, e.g. `guigameinfo.addRatingChangeToExistingUsernameContainers`, if it fits). Display only — no logic.
+The base name + rating in each `.username-embed` is **SSR'd by T8.5**; only the rating **delta** is a client concern here. If `deadState.ratingChanges` is present, inject the per-player `.eloChange` into the SSR'd `.username-embed`s (present in both `.player-bar` and `.meta-players`) — **not** via the old `guigameinfo.addRatingChangeToExistingUsernameContainers`, which targets the old DOM. Display only — no logic.
 
 ## Out of scope / deferred
 

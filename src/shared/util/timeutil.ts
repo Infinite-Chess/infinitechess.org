@@ -143,14 +143,16 @@ function isCurrentDateWithinRange(
 }
 
 /**
- * Converts a timestamp (milliseconds since the UNIX epoch) to an ISO 8601 string.
+ * Converts a timestamp (milliseconds since the UNIX epoch)
+ * to an ISO 8601 string `2026-06-23T14:30:07.000Z`.
  */
 function timestampToISO(timestamp: number): string {
 	return new Date(timestamp).toISOString();
 }
 
 /**
- * Converts an ISO 8601 string to a timestamp in milliseconds since the UNIX epoch.
+ * Converts an ISO 8601 string from `2026-06-23T14:30:07.000Z`
+ * to a timestamp in milliseconds since the UNIX epoch.
  */
 function isoToTimestamp(isoString: string): number {
 	return new Date(isoString).getTime();

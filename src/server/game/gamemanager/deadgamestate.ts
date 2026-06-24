@@ -91,7 +91,11 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	const state: DeadGameState = {
 		id: game_id,
 		rated: Boolean(game.rated),
-		variant: game.variant as VariantCode,
+		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
+		variant:
+			game.variant !== null
+				? { kind: 'preset', code: game.variant as VariantCode }
+				: { kind: 'custom' },
 		timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
 		timeCreated: timeutil.sqliteToTimestamp(game.date),
 		players: playerContainers,

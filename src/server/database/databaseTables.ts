@@ -99,6 +99,7 @@ const allLiveGamesColumns: string[] = [
 	'game_id',
 	'time_created',
 	'variant',
+	'position',
 	'clock',
 	'rated',
 	'private',
@@ -120,7 +121,6 @@ const allLivePlayerGamesColumns: string[] = [
 	'player_number',
 	'user_id',
 	'browser_id',
-	'elo',
 	'last_draw_offer_ply',
 	'time_remaining_ms',
 	'disconnect_cushion_end_time',
@@ -205,7 +205,7 @@ function generateTables(): void {
 			date TIMESTAMP NOT NULL,
 			base_time_seconds INTEGER, -- null if untimed
 			increment_seconds INTEGER, -- null if untimed
-			variant TEXT NOT NULL,
+			variant TEXT, -- preset variant code, or null for a custom-position game (position lives in the ICN)
 			rated BOOLEAN NOT NULL CHECK (rated IN (0, 1)), -- Ensures only 0 or 1
 			leaderboard_id INTEGER, -- Specified only if the variant belongs to a leaderboard, ignoring whether the game was rated
 			private BOOLEAN NOT NULL CHECK (private IN (0, 1)), -- Ensures only 0 or 1
@@ -346,7 +346,8 @@ function generateTables(): void {
 		CREATE TABLE IF NOT EXISTS live_games (
 			game_id               INTEGER PRIMARY KEY,
 			time_created          INTEGER NOT NULL,
-			variant               TEXT NOT NULL,
+			variant               TEXT, -- preset variant code, or null for a custom-position game (see position)
+			position              TEXT, -- custom game's start position; null for preset games (complementary to variant)
 			clock                 TEXT NOT NULL,
 			rated                 BOOLEAN NOT NULL CHECK (rated IN (0, 1)),
 			private               BOOLEAN NOT NULL CHECK (private IN (0, 1)),
@@ -370,7 +371,6 @@ function generateTables(): void {
 			player_number                   INTEGER NOT NULL,
 			user_id                         INTEGER,
 			browser_id                      TEXT NOT NULL,
-			elo                             TEXT,
 			last_draw_offer_ply             INTEGER,
 			time_remaining_ms               INTEGER,
 			disconnect_cushion_end_time     INTEGER,
@@ -385,9 +385,12 @@ function generateTables(): void {
 function initDatabase(): void {
 	generateTables();
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
+	dropLegacyLivePlayerGamesEloColumnIfPresent();
 	addIsPersistentColumnToRefreshTokens();
 	dropLegacyVerificationColumnsIfPresent();
 	clearSpamReportBlacklistEntries();
+	makeVariantColumnsNullableIfNeeded();
+	addPositionColumnToLiveGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -404,6 +407,20 @@ function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
 
 	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
 	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: Remove this function once it has run in production.
+ *
+ * The `elo` column used to store a start-of-game elo snapshot on `live_player_games`.
+ * Player elos are now derived live at log time, so the column is vestigial and needs
+ * removing from old DBs. This only logs when the column is found and deleted.
+ */
+function dropLegacyLivePlayerGamesEloColumnIfPresent(): void {
+	if (!db.columnExists('live_player_games', 'elo')) return; // Already migrated
+
+	db.run('ALTER TABLE live_player_games DROP COLUMN elo');
+	console.log('Temporary DB migration: deleted live_player_games.elo column.');
 }
 
 /**
@@ -466,6 +483,44 @@ function clearSpamReportBlacklistEntries(): void {
 		console.log(
 			`Temporary DB migration: cleared ${spamRows.length} 'spam_report' blacklist entries.`,
 		);
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Makes the `variant` column nullable on `games` and `live_games` — NULL now marks a
+ * custom-position game (no preset code; its position lives in the ICN). SQLite can't relax
+ * NOT NULL in place, so we shuffle through a temp column: add nullable `variant_tmp`, copy
+ * the codes across, drop the old `variant`, rename `variant_tmp` back. No table rebuild, so
+ * the `player_games` → `games` FK cascade is never triggered. Idempotent: skips a table whose
+ * `variant` is already nullable. Fresh DBs get nullable from `generateTables()` directly.
+ */
+function makeVariantColumnsNullableIfNeeded(): void {
+	for (const table of ['games', 'live_games'] as const) {
+		if (db.columnIsNullable(table, 'variant')) continue; // Fresh DB or already migrated.
+
+		const migrate = db.transaction(() => {
+			db.run(`ALTER TABLE ${table} ADD COLUMN variant_tmp TEXT`);
+			db.run(`UPDATE ${table} SET variant_tmp = variant`);
+			db.run(`ALTER TABLE ${table} DROP COLUMN variant`);
+			db.run(`ALTER TABLE ${table} RENAME COLUMN variant_tmp TO variant`);
+		});
+		migrate();
+		console.log(`Temporary DB migration: made ${table}.variant nullable.`);
+	}
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the nullable `position` column to `live_games` — holds a custom game's start position
+ * (null for preset games), so custom games can be restored across a restart (preset games
+ * rebuild from the variant code alone). Fresh DBs get the column from `generateTables()`.
+ */
+function addPositionColumnToLiveGamesIfNeeded(): void {
+	if (db.columnExists('live_games', 'position')) return; // Already present, nothing to do.
+	db.run('ALTER TABLE live_games ADD COLUMN position TEXT');
+	console.log('Temporary DB migration: added live_games.position column.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */

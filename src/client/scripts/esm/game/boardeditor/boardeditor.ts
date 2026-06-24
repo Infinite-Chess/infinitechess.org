@@ -11,7 +11,6 @@ import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
@@ -107,7 +106,7 @@ async function initBoardEditor(
 	gamefile.state.local.checks = [];
 	// Also set gameConclusion to undefined. Otherwise, starting from a position that
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
-	gamefileutility.setConclusion(gamefile, undefined);
+	gamefile.gameConclusion = undefined;
 
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();

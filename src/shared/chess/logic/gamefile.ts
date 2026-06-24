@@ -10,7 +10,7 @@ import type { VariantCode } from '../variants/variantregistry.js';
 import type { VariantModule } from '../variants/variant_scripts/variantutil.js';
 import type { GameConclusion } from '../util/winconutil.js';
 import type { GlobalGameState } from './state.js';
-import type { ClockValues, MetaData } from '../../types.js';
+import type { ClockValues, TimeControl } from '../../types.js';
 
 import clock from './clock.js';
 import movepiece from './movepiece.js';
@@ -66,9 +66,9 @@ export interface VariantOptions {
  * portion of {@link GameFile}.
  */
 export type Game = {
-	/** Information about the game */
-	metadata: MetaData;
-	/** The game's start timestamp in milliseconds since epoch, derived from UTCDate/UTCTime metadata. */
+	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
+	timeControl: TimeControl;
+	/** The game's start timestamp in milliseconds since epoch. */
 	dateTimestamp: number;
 	gameConclusion?: GameConclusion;
 } & ClockDependant;
@@ -112,7 +112,7 @@ export interface Additional {
 
 /** Creates a new {@link Game} object from provided arguments. */
 function initGame(
-	metadata: MetaData,
+	timeControl: TimeControl,
 	dateTimestamp: number,
 	variant: LoadedVariant | undefined,
 	gameConclusion?: GameConclusion,
@@ -123,10 +123,10 @@ function initGame(
 
 	const clockDependantVars: ClockDependant = clock.init(
 		gamerules.getUniquePlayersInTurnOrder(gameRules.turnOrder),
-		metadata.TimeControl ?? '-', // Fallback to untimed if TimeControl metadata not specified
+		timeControl,
 	);
 	const game: Game = {
-		metadata,
+		timeControl,
 		dateTimestamp,
 		...clockDependantVars,
 	};
@@ -141,7 +141,7 @@ function initGame(
 
 	const gameWithRules = { ...game, gameRules };
 
-	gamefileutility.setConclusion(gameWithRules, gameConclusion);
+	gameWithRules.gameConclusion = gameConclusion;
 
 	return gameWithRules;
 }
@@ -186,7 +186,7 @@ function loadGameWithBoard(
  * @param validateMoves - During game construction, throws an error if any move played is illegal.
  */
 async function initGameFile(
-	metadata: MetaData,
+	timeControl: TimeControl,
 	dateTimestamp: number,
 	variantCode: VariantCode | undefined,
 	additional: Additional = {},
@@ -199,7 +199,7 @@ async function initGameFile(
 	}
 
 	const gameWithRules = initGame(
-		metadata,
+		timeControl,
 		dateTimestamp,
 		variant,
 		additional.gameConclusion,

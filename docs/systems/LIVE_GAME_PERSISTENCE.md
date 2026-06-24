@@ -82,7 +82,6 @@ One row per player per live game.
 | `player_number`               | INTEGER NOT NULL | 1 = White, 2 = Black, etc. Supports future multi-player games.                                                                              |
 | `user_id`                     | INTEGER          | NULL if guest.                                                                                                                              |
 | `browser_id`                  | TEXT NOT NULL    | Always present (guests are identified by `browser_id` alone).                                                                               |
-| `elo`                         | TEXT             | Snapshot at game start (e.g. `"1500"` or `"1200?"`). NULL if guest.                                                                         |
 | `last_draw_offer_ply`         | INTEGER          | Ply (0-based) of the player's last draw offer. NULL if never offered.                                                                       |
 | `time_remaining_ms`           | INTEGER          | Milliseconds remaining at time of snapshot. NULL if untimed.                                                                                |
 | `disconnect_cushion_end_time` | INTEGER          | Epoch ms when the 5-second reconnection cushion expires. NULL if no cushion is active.                                                      |
@@ -101,7 +100,7 @@ One row per player per live game.
 
 | Event                       | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                  |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Game created**            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, elo, defaults)                                                  |
+| **Game created**            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, defaults)                                                       |
 | **Move submitted**          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (both players)                                                                   |
 | **Draw offer extended**     | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (offering player)                                                              |
 | **Draw offer declined**     | `draw_offer_state` → NULL                                                                                        | —                                                                                                    |

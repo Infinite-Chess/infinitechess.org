@@ -31,8 +31,6 @@ import Transition from '../rendering/transitions/Transition.js';
 import enginegame from './enginegame.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
-import guigameinfo from '../gui/guigameinfo.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import guipromotion from '../gui/guipromotion.js';
 import guinavigation from '../gui/guinavigation.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
@@ -264,7 +262,6 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	}
 	if (listener_document.isKeyDown('KeyN')) {
 		guinavigation.toggle();
-		if (!boardeditor.areInBoardEditor()) guigameinfo.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 

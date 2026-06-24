@@ -21,7 +21,6 @@ import gameconfig from '../../../shared/util/gameconfig.js';
 import wincondition from '../../../shared/chess/logic/wincondition.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import movevalidation from '../../../shared/chess/logic/movevalidation.js';
-import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
 
 import liveGameValues from './liveGameValues.js';
 import { declineDraw } from './onOfferDraw.js';
@@ -232,7 +231,7 @@ function applyClientReportedMove(
 	if (clockStamp !== undefined) moveRecord.clockStamp = clockStamp; // If the clock stamp was set, add it to the move.
 
 	// Manually set gameConclusion to client-reported conclusion
-	gamefileutility.setConclusion(servergame, messageContents.gameConclusion);
+	servergame.gameConclusion = messageContents.gameConclusion;
 
 	return moveRecord;
 }

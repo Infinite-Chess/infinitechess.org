@@ -1,0 +1,5 @@
+{# Shared user-identity building blocks used across pages (game, …) #}
+
+{# Renders a player's username + rating inline.
+   T9 replaces the contents at runtime with a real ServerUsernameContainer. #}
+{% macro usernameEmbed(name, elo) %}<span class="username-embed"><span class="username">{{ name }}</span><span class="elo">{{ elo }}</span></span>{% endmacro %}

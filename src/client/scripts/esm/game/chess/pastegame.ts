@@ -7,7 +7,6 @@
 import type { MetaData } from '../../../../../shared/types.js';
 import type { MovePacket } from '../../../../../shared/types.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
-import type { MetadataKey } from '../../../../../shared/chess/util/metadatautil.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
@@ -23,30 +22,7 @@ import icnconverter, {
 import toast from '../../components/toast.js';
 import gameloader from './gameloader.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import clientmetadatautil from './clientmetadatautil.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
-
-/**
- * A list of metadata properties that are retained from the current game when pasting an external game.
- * These will overwrite the pasted game's metadata with the current game's metadata.
- */
-const retainMetadataWhenPasting: MetadataKey[] = [
-	'White',
-	'Black',
-	'WhiteID',
-	'BlackID',
-	'WhiteElo',
-	'BlackElo',
-	'WhiteRatingDiff',
-	'BlackRatingDiff',
-	'TimeControl',
-	'Event',
-	'Site',
-	'Round',
-];
-/** The pasted game will refuse to override these unless specified explicitly. This prevents them from just being deleted.
- * It means if the pasted game doesn't have these properties, we fall back to the current game's properties. */
-const retainIfNotOverridden: MetadataKey[] = ['UTCDate', 'UTCTime'];
 
 /**
  * Pastes the clipboard ICN to the current game.
@@ -98,28 +74,6 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 	console.log('Pasting game...');
 
 	// Create a new gamefile from the longformat...
-
-	// Retain most of the existing metadata on the currently loaded gamefile
-	const currentGamefile = gameslot.getGamefile()!;
-	const currentGameMetadata = currentGamefile.metadata;
-	retainMetadataWhenPasting.forEach((metadataName) => {
-		delete longformOut.metadata[metadataName];
-		if (currentGameMetadata[metadataName] !== undefined)
-			clientmetadatautil.copyMetadataField(
-				longformOut.metadata,
-				currentGameMetadata,
-				metadataName,
-			);
-	});
-
-	for (const metadataName of retainIfNotOverridden) {
-		if (currentGameMetadata[metadataName] && !longformOut.metadata[metadataName])
-			clientmetadatautil.copyMetadataField(
-				longformOut.metadata,
-				currentGameMetadata,
-				metadataName,
-			);
-	}
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = resolveAndNormalizeVariantFromMetadata(longformOut.metadata);

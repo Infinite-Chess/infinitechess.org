@@ -6,17 +6,17 @@ Depends on T9 (entry + `loadGameFromState` + live deltas) and T7 (server spectat
 
 ## What already works via T9
 
-When a non-participant sends `subscribe {id}` (T9's entry), the server (T7) replies with a `gamestate` whose overlay is **omitted** (`youAreColor`/`participantState` absent). T9's `loadGameFromState(state, undefined)` then loads with `viewWhitePerspective = true` (white POV) — so the board renders correctly for a spectator already. T11 only adds the behaviors below.
+When a non-participant loads `/game/:id`, T8.5's SSR resolves them as a non-participant, so `window.gamePageData.youAreColor` is **undefined**; the server (T7) also replies to their `subscribe {id}` with a `gamestate` carrying no `participantState`. T9's `loadGameFromState(state, gamePageData.youAreColor)` thus loads with `viewWhitePerspective = true` (white POV) — so the board renders correctly for a spectator already. T11 only adds the behaviors below.
 
 ## Required changes
 
 ### 1. Spectator (read-only) mode
 
-When `gamestate.youAreColor` is `undefined`, the page is a spectator: it must be **read-only**. Ensure no participant-only action can be taken or sent:
+When `gamePageData.youAreColor` is `undefined` (T8.5's SSR-resolved role), the page is a spectator: it must be **read-only**. Ensure no participant-only action can be taken or sent:
 - No move submission (selection/drag must not send `submitmove`).
 - No resign / abort / draw-offer / draw-accept controls (hide/disable them).
 
-Gate these on "are we a participant" (`youAreColor !== undefined`). Wire the online-game state so a `gamestate` with no `youAreColor` puts the page in spectator mode (e.g. `onlinegame.initOnlineGame` called with `youAreColor: undefined`, and the existing participant checks naturally block actions — verify they do).
+Gate these on "are we a participant" (`gamePageData.youAreColor !== undefined`). Wire the online-game state so an undefined `youAreColor` puts the page in spectator mode (e.g. `onlinegame.initOnlineGame` called with `youAreColor: undefined`, and the existing participant checks naturally block actions — verify they do).
 
 ### 2. Live deltas as a spectator
 

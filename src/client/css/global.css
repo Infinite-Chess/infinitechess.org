@@ -65,6 +65,10 @@ body {
 
 	/* Error/danger red. Theme-independent (identical in light and dark). */
 	--c-error: #e05555;
+
+	/* Tiled checkerboard backdrop pattern (home, login, game side bar, …). */
+	--checkerboard: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%)
+		50% / 200px 200px;
 }
 
 [data-theme='dark'] {
@@ -191,6 +195,20 @@ body {
 	user-select: text;
 }
 
+/* Pointer-based visibility. `.mobile-only` shows only on touch (hidden where the primary
+   pointer is fine); `.desktop-only` is the inverse (hidden on coarse pointers). */
+@media (pointer: fine) {
+	.mobile-only {
+		display: none !important;
+	}
+}
+
+@media (pointer: coarse) {
+	.desktop-only {
+		display: none !important;
+	}
+}
+
 .set-cursor-to-not-allowed {
 	cursor: not-allowed;
 }
@@ -214,18 +232,9 @@ button:disabled {
    Page background layers
    ============================================================ */
 
-/* Tiled checkerboard backdrop (home, login, etc.). Apply to the page's <main>. */
-.bg-checkerboard {
-	background: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%) 50% /
-		200px 200px;
-}
-
-/* Fixed overlay that dims the checkerboard so foreground content stays legible. */
-#bg-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: -1;
-	background-color: var(--c-bg-overlay);
+/* Tiled checkerboard backdrop with the shared overlay baked in as the top layer. */
+.bg-checkerboard-dimmed {
+	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
 }
 
 /* ============================================================
@@ -462,6 +471,31 @@ button:disabled {
 
 .username-embed .eloChange.negative {
 	color: red;
+}
+
+/* ============================================================
+   Player color dot — white = filled, black = ring; inverts under the light theme.
+   ============================================================ */
+
+.side-dot {
+	width: 0.903em;
+	aspect-ratio: 1;
+	flex-shrink: 0;
+	border-radius: 50%;
+	border: 2px solid var(--c-text);
+	background: var(--c-text);
+}
+
+.side-dot.black {
+	background: transparent;
+}
+
+[data-theme='light'] .side-dot {
+	background: transparent;
+}
+
+[data-theme='light'] .side-dot.black {
+	background: var(--c-text);
 }
 
 /* ============================================================

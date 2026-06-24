@@ -10,14 +10,12 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameConclusionMessage, Rating } from '../../../shared/types.js';
+import type { GameConclusionMessage } from '../../../shared/types.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
-import gamefileutility from '../../../shared/chess/util/gamefileutility.js';
-import { Leaderboards } from '../../../shared/chess/variants/validleaderboard.js';
 import gamefile, { LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import { doesVariantSupportServerValidation } from '../../../shared/chess/variants/servervalidation.js';
 
@@ -32,7 +30,6 @@ import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
-import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	addUserToActiveGames,
@@ -70,45 +67,24 @@ const activeGames: Record<number, ServerGame> = {};
  * Auto-subscribes the players to receive game updates.
  * @param seek - The seek with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
- * @throws If a database error occurs (from {@link getEloOfPlayerInLeaderboard} or {@link gameutility.subscribeClientToGame}).
+ * @throws If a database error occurs (from {@link gameutility.subscribeClientToGame}).
  */
 function createGame(
 	seek: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 ): void {
-	const ratinginfo: typeof assignments & PlayerGroup<{ rating?: Rating }> = {};
-	for (const [color, data] of Object.entries(assignments)) {
-		const player: Player = Number(color) as Player;
-
-		ratinginfo[player] = data;
-
-		if (data.identifier.signedIn) {
-			ratinginfo[player].rating = getEloOfPlayerInLeaderboard(
-				data.identifier.user_id,
-				Leaderboards.INFINITY,
-			);
-		}
-	}
-
 	if (seek.variant.kind !== 'preset')
 		throw new Error('Custom variant game starting is not yet implemented.');
 	const variantCode = seek.variant.code;
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
-	const metadata = gameutility.constructMetadataOfGame(
-		seek.mode === 'rated',
-		variantCode,
-		seek.time,
-		dateTimestamp,
-		ratinginfo,
-	);
 	const variant: LoadedVariant = {
 		code: variantCode,
 		mod: variantcache.getModule(variantCode),
 		dateTimestamp,
 	};
-	const gameWithRules = gamefile.initGame(metadata, dateTimestamp, variant);
+	const gameWithRules = gamefile.initGame(seek.time, dateTimestamp, variant);
 	const match = gameutility.initMatch(seek, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
@@ -370,7 +346,7 @@ function setGameConclusion(servergame: ServerGame, conclusion: GameConclusion | 
  * @param conclusion - The new game conclusion
  */
 function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion | undefined): void {
-	gamefileutility.setConclusion(servergame, conclusion);
+	servergame.gameConclusion = conclusion;
 
 	if (conclusion === undefined) return;
 

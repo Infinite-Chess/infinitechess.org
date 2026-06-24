@@ -535,7 +535,7 @@ function getInviteVariant(): SeekVariant | null {
 		return { kind: 'cloudSave', name: selection.name };
 	} else if (selection.kind === 'local') {
 		if (!icnResult?.isValid) return null;
-		const content = icnconverter.LongToShort_Format(
+		const position = icnconverter.LongToShort_Format(
 			{
 				metadata: {},
 				position: icnResult.options.position,
@@ -545,11 +545,11 @@ function getInviteVariant(): SeekVariant | null {
 			},
 			{ compact: true, spaces: false, comments: false, make_new_lines: false, move_numbers: false }, // prettier-ignore
 		);
-		return { kind: 'icn', content };
+		return { kind: 'custom', position };
 	} else if (selection.kind === 'icn') {
-		const content = element_icnInput.value;
-		if (!icnResult?.isValid || !content) return null;
-		return { kind: 'icn', content };
+		const position = element_icnInput.value;
+		if (!icnResult?.isValid || !position) return null;
+		return { kind: 'custom', position };
 	}
 	return null;
 }

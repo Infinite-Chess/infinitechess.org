@@ -9,7 +9,7 @@
 
 import type { Mesh } from '../rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { MetaData } from '../../../../../shared/types.js';
+import type { TimeControl } from '../../../../../shared/types.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
@@ -22,7 +22,6 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import area from '../rendering/area.js';
@@ -39,7 +38,6 @@ import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import Transition from '../rendering/transitions/Transition.js';
 import piecemodels from '../rendering/piecemodels.js';
-import guigameinfo from '../gui/guigameinfo.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
 import preferences from '../../components/header/preferences.js';
@@ -54,8 +52,8 @@ import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
 /** Options for loading a game. */
 interface LoadOptions {
-	/** The metadata of the game */
-	metadata: MetaData;
+	/** The time control of the game (e.g. `"600+5"`, or `"-"` for untimed). */
+	timeControl: TimeControl;
 	/** The variant code. Pass undefined for custom/unknown positions. */
 	variant: VariantCode | undefined;
 	/** The game's start timestamp in milliseconds since epoch. */
@@ -164,7 +162,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 /** Loads all of the logical components of a game */
 async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	loadedGamefile = await gamefile.initGameFile(
-		loadOptions.metadata,
+		loadOptions.timeControl,
 		loadOptions.dateTimestamp,
 		loadOptions.variant,
 		loadOptions.additional,
@@ -301,16 +299,10 @@ function concludeGame(): void {
 
 	clock.endGame(gamefile);
 	guiclock.stopClocks(gamefile);
-	guigameinfo.gameEnd(gamefile.gameConclusion);
 
 	GameBus.dispatch('game-concluded');
 
 	console.warn('Game conclude sound has not been added yet.');
-}
-
-/** Undoes the conclusion of the game. */
-function unConcludeGame(): void {
-	gamefileutility.setConclusion(loadedGamefile!, undefined);
 }
 
 export default {
@@ -322,7 +314,6 @@ export default {
 	unloadGame,
 	startStartingTransition,
 	concludeGame,
-	unConcludeGame,
 };
 
 export type { PresetAnnotes, Additional };

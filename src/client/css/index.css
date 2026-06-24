@@ -453,26 +453,15 @@ svg.bg-omega {
    Side color dot
    ============================================================ */
 
+/* The dot's shape/fill/theme-inversion live in global.css (.side-dot). Here we add
+   only the seek-row's own spacing and its hover recolor. */
 .side-dot {
-	width: 0.903em;
-	aspect-ratio: 1;
 	margin-left: 0.417em;
-	border-radius: 50%;
-	background: var(--c-text);
-	border-color: var(--c-text);
-	border-width: 2px;
-	border-style: solid;
 }
 
 .seek-row:hover .side-dot {
 	background: var(--c-text-emphasis);
 	border-color: var(--c-text-emphasis);
-}
-
-.side-dot.black {
-	background: transparent;
-	border-color: var(--c-text);
-	flex-shrink: 0;
 }
 
 .seek-row:hover .side-dot.black {
@@ -481,18 +470,9 @@ svg.bg-omega {
 }
 
 [data-theme='light'] {
-	.side-dot {
-		background: transparent;
-		border-color: var(--c-text);
-	}
-
 	.seek-row:hover .side-dot {
 		background: transparent;
 		border-color: var(--c-text-emphasis);
-	}
-
-	.side-dot.black {
-		background: var(--c-text);
 	}
 
 	.seek-row:hover .side-dot.black {

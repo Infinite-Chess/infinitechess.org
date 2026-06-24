@@ -22,7 +22,6 @@ export interface LivePlayerGamesRecord extends LivePlayerData {
 export interface LivePlayerData extends LivePlayerDisconnectData {
 	user_id: number | null;
 	browser_id: string;
-	elo: string | null;
 	last_draw_offer_ply: number | null;
 	time_remaining_ms: number | null;
 }
@@ -45,10 +44,10 @@ export interface LivePlayerDisconnectData {
 export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 	const query = `
 		INSERT INTO live_player_games (
-			game_id, player_number, user_id, browser_id, elo,
+			game_id, player_number, user_id, browser_id,
 			last_draw_offer_ply, time_remaining_ms,
 			disconnect_cushion_end_time, disconnect_resign_time, disconnect_by_choice
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	dbCall(
 		() =>
@@ -57,7 +56,6 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 				record.player_number,
 				record.user_id,
 				record.browser_id,
-				record.elo,
 				record.last_draw_offer_ply,
 				record.time_remaining_ms,
 				record.disconnect_cushion_end_time,

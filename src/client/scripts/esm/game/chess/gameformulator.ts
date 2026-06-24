@@ -53,7 +53,7 @@ async function formulateGame(longformIn: LongFormatIn, validateMoves?: true): Pr
 	const resolvedVariant = variantregistry.resolveVariantCode(longformIn.metadata.Variant);
 
 	return gamefile.initGameFile(
-		longformIn.metadata,
+		longformIn.metadata.TimeControl ?? '-',
 		resolvedTimestamp,
 		resolvedVariant,
 		{ variantOptions, moves },

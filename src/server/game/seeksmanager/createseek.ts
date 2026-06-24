@@ -168,16 +168,16 @@ async function getSeekFromWebsocketMessageContents(
 			const message = localizePositionError('position_too_large', ws);
 			return sendSocketMessage(ws, 'general', 'notify', message);
 		}
-		const content = await compression.decompressString(
+		const position = await compression.decompressString(
 			record.icn,
 			record.compression as CompressionMode,
 		);
-		variant = { kind: 'icn', content };
+		variant = { kind: 'custom', position };
 	}
 
 	// Validate the resolved ICN's position is legal
-	if (variant.kind === 'icn') {
-		const illegalReason = validateIcnSeekContent(variant.content);
+	if (variant.kind === 'custom') {
+		const illegalReason = validateIcnSeekContent(variant.position);
 		if (illegalReason !== null) {
 			const message = localizePositionError(illegalReason, ws);
 			return sendSocketMessage(ws, 'general', 'notify', message);

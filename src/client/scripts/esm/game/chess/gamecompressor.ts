@@ -20,6 +20,8 @@ import {
 	PresetAnnotes,
 } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
+import clientmetadatautil from './clientmetadatautil.js';
+
 /**
  * This is the bare minimum gamefile you need to keep track of STATE,
  * or, properties of a gamefile that may change from making moves,
@@ -73,7 +75,7 @@ function compressGamefile(
 
 	// Start constructing the abridged gamefile
 	const long_format_in: LongFormatIn = {
-		metadata: jsutil.deepCopyObject(gamefile.metadata),
+		metadata: clientmetadatautil.buildMetaDataFromGamefile(gamefile),
 		position: gamestate.position,
 		gameRules: gameRulesCopy,
 		fullMove: gamestate.fullMove,

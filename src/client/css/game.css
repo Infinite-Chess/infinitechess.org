@@ -1,6 +1,646 @@
 /* src/client/css/game.css */
 
-/* The game page (/game/:id). The canvas + side bar layout will be added later. */
+/* The game page (/game/:id): a fixed-width left side bar and a board canvas
+   filling the rest of the area below the site header. */
 
 .game {
+	display: flex;
+	height: calc(100dvh - var(--header-height));
+}
+
+/* ============================
+   Side bar
+   ============================ */
+
+.sidebar {
+	flex: 0 0 380px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	padding: 15px;
+	overflow-y: auto;
+	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
+	background-attachment: local;
+}
+
+.panel {
+	background: var(--c-surface);
+	border: 1px solid var(--c-border-muted);
+	border-radius: 6px;
+}
+
+.btn-bare {
+	display: flex;
+	align-items: center;
+	background: none;
+	cursor: pointer;
+}
+
+/* ============================================================
+   Icon buttons — a transparent square button whose glyph scales up on hover.
+   ============================================================ */
+
+.icon-btn {
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	color: var(--c-text-emphasis);
+}
+
+.board-controls .icon-btn svg {
+	width: 100%;
+	height: 100%;
+}
+
+#btn-perspective svg {
+	width: 69%;
+	height: 69%;
+}
+
+.chat-bar .icon-btn svg {
+	width: 65%;
+	height: 65%;
+}
+
+.mobile-only .icon-btn svg {
+	width: 70%;
+	height: 70%;
+}
+
+.icon-btn:hover svg {
+	transform: scale(1.1);
+}
+
+/* ========================================
+   Board-view navigation + view toggles
+   ======================================== */
+
+.board-controls {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 3px 6px;
+}
+
+.ctrl-row {
+	display: flex;
+	align-items: center;
+	gap: 30px;
+}
+
+.ctrl-group {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+/* ============================================================
+   Coordinate fields - the board coordinates currently being hovered over
+   ============================================================ */
+
+.coords {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1em;
+}
+
+.coord {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2em;
+}
+
+.coord-label {
+	font-size: 0.85em;
+	font-weight: 600;
+	color: var(--c-text-muted);
+}
+
+.coord-value {
+	field-sizing: content;
+	max-width: 120px;
+	padding: 1px 4px;
+	font: inherit;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+	background: none;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+
+.coord-value:hover {
+	background: var(--c-surface);
+	border-color: var(--c-border-muted);
+}
+
+.coord-value:focus {
+	outline: none;
+	background: var(--c-surface);
+	border-color: var(--c-accent);
+}
+
+/* ====================================================
+   Game metadata — all static information about a game
+   ==================================================== */
+
+.game-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 12px;
+}
+
+/* Original seek's properties */
+.meta-info {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5em;
+	font-size: 14px;
+}
+
+.meta-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+}
+
+/* Variant + speed icons */
+.meta-icon {
+	width: 1.389em;
+	aspect-ratio: 1;
+	flex-shrink: 0;
+}
+
+/* Gamerule modifications */
+.meta-rules {
+	font-size: 11px;
+	color: var(--c-text-muted);
+}
+
+/* Started X ago + live spectator count */
+.meta-foot {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	font-size: 12px;
+	color: var(--c-text-muted);
+}
+
+.meta-spectators {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	margin-left: auto;
+}
+
+.meta-eye {
+	width: 1.1em;
+	height: 1.1em;
+}
+
+/* Participants */
+.meta-players {
+	display: flex;
+	flex-direction: column;
+	font-size: 13px;
+}
+
+.meta-player {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.meta-player .username-embed .username {
+	color: var(--c-text);
+}
+
+/* Result banner */
+.result-banner,
+.game-result {
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	gap: 0.5em;
+	text-align: center;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.result-banner {
+	padding-top: 6px;
+	font-size: 14px;
+}
+
+.result-score {
+	font-size: 1.1em;
+	font-weight: 800;
+	color: var(--c-text-emphasis);
+}
+
+.result-text {
+	font-style: italic;
+}
+
+/* ==================================================
+   Play group — captured-material bars + match panel
+   ================================================== */
+
+.play-group {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* Captured-material bars */
+.material {
+	display: flex;
+	align-items: center;
+	height: 30px;
+}
+
+.material-piece {
+	width: 30px;
+	height: 30px;
+	color: var(--c-text-muted);
+}
+
+.material-piece:not(:first-child) {
+	margin-left: -3px;
+}
+
+.material-lead {
+	margin-left: 0.4em;
+	font-size: 0.85em;
+	font-weight: 700;
+	color: var(--c-text-muted);
+}
+
+/* Match panel - Clocks, moves list, game actions */
+.match-panel {
+	display: flex;
+	flex-direction: column;
+}
+
+/* ========================================
+   Player bars — name + rating + clock
+   ======================================== */
+
+.player-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 12px;
+}
+
+/* The side whose turn it is gets its whole bar highlighted (T9 toggles `.tempo`). */
+.player-bar.tempo {
+	background-color: #00677c;
+}
+
+.clock {
+	font-size: 1.4em;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+	font-family: monospace;
+}
+
+/* ==============================
+   Moves list
+   ============================== */
+
+.moves {
+	display: flex;
+	flex-direction: column;
+}
+
+.moves-nav {
+	display: flex;
+	border-top: 1px solid var(--c-border-muted);
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+/* Move-navigation buttons */
+.move-btn {
+	flex: 1;
+	justify-content: center;
+	padding: 3px 0;
+	color: var(--c-text);
+}
+
+.move-icon {
+	width: 25px;
+	height: 25px;
+}
+
+.move-btn:hover {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+.moves-table {
+	overflow-y: auto;
+	height: 104px; /* 4 rows of moves, each 26px tall. */
+}
+
+.move-row {
+	display: grid;
+	grid-template-columns: 2.4em 1fr 1fr;
+}
+
+.move-num {
+	display: flex;
+	align-items: center;
+	padding-left: 8px;
+	font-size: 0.85em;
+	color: var(--c-text-muted);
+}
+
+.ply {
+	display: flex;
+	align-items: center;
+	gap: 0.3em;
+	height: 26px;
+	min-width: 0;
+	padding: 0px 6px;
+	background: none;
+	font: inherit;
+	font-size: 0.9em;
+	color: var(--c-text);
+}
+
+.ply:not(.empty) {
+	cursor: pointer;
+}
+
+.ply:not(.empty):hover {
+	background: var(--c-hover-overlay);
+	color: var(--c-text-emphasis);
+}
+
+/* The position currently being viewed stands out. */
+.ply.current {
+	background: var(--c-hover-brighten);
+	color: var(--c-text-emphasis);
+	font-weight: 600;
+}
+
+.move-piece {
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	color: currentColor;
+}
+
+.move-coord {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.game-result {
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 8px 12px;
+}
+
+/* ============================================================
+   Game actions — live (offer draw / resign) + draw-offer + post-game (rematch / analysis)
+   ============================================================ */
+
+.game-actions {
+	display: flex;
+	flex-direction: column;
+}
+
+.actions-live,
+.draw-offer-buttons {
+	display: flex;
+}
+
+.actions-live,
+.actions-draw-offer {
+	justify-content: center;
+}
+
+.actions-over {
+	display: flex;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+/* Base properties for all action buttons */
+.action-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+	cursor: pointer;
+}
+
+/* Bare action icons */
+.actions-live .action-btn,
+.draw-offer-buttons .action-btn {
+	color: var(--c-text);
+	background: none;
+	border-radius: 6px;
+}
+
+/* Post-game actions (rematch, analysis) */
+.actions-over .action-btn {
+	flex: 1;
+	background: transparent;
+}
+
+.action-btn:hover {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+/* Live actions: fixed-size buttons (not full-width). */
+.actions-live .action-btn {
+	width: 75px;
+	height: 40px;
+}
+
+/* Draw-offer accept/reject */
+.draw-offer-buttons .action-btn {
+	width: 40px;
+	height: 40px;
+}
+
+#btn-offer-draw .action-icon,
+#btn-abort .action-icon {
+	height: 72%;
+}
+
+.actions-live .action-icon,
+.draw-offer-buttons .action-icon {
+	height: 66%;
+	width: auto;
+}
+
+.actions-draw-offer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.draw-offer-label {
+	font-size: 0.9em;
+	color: var(--c-text-emphasis);
+}
+
+/* =================================
+   Opponent-disconnect status
+   ================================= */
+
+.disconnect-status {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 12px;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.disconnect-text {
+	font-size: 0.9em;
+	text-align: center;
+}
+
+.disconnect-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 6px;
+}
+
+.disconnect-buttons .action-btn {
+	padding: 8px 12px;
+	border-radius: 6px;
+	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+	border: 1px solid var(--c-border);
+	box-shadow:
+		inset 0 1px 0 var(--c-elev-highlight),
+		0 2px 5px var(--c-shadow-elev);
+}
+
+.disconnect-buttons .action-btn:hover {
+	border-color: var(--c-border-2);
+	background:
+		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
+		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+}
+
+.disconnect-buttons .action-btn:active {
+	transform: translateY(1px);
+}
+
+/* ================================
+   Chat
+   ================================ */
+
+.chat {
+	flex: 1 1 auto;
+	min-height: 220px;
+	display: flex;
+	flex-direction: column;
+}
+
+.chat-bar {
+	display: flex;
+	align-items: center;
+	padding-right: 4px;
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+/* Expand/collapse toggle: fills the bar left of the report flag */
+.chat-toggle {
+	flex: 1;
+	gap: 6px;
+	padding: 4px 12px;
+	font: inherit;
+}
+
+/* Points down when open; flips up via the .collapsed state below. */
+.chat-chevron {
+	width: 16px;
+	height: 16px;
+	color: var(--c-text-muted);
+	transition: transform 0.15s ease;
+}
+
+.chat-title {
+	font-size: 0.85em;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--c-text-muted);
+}
+
+/* The report flag */
+#btn-report {
+	color: var(--c-border-2);
+}
+
+.chat-log {
+	flex: 1 1 auto;
+	overflow-y: auto;
+	padding: 8px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 0.9em;
+}
+
+/* Static event notice (draw/rematch offers & rejections). */
+.chat-notice {
+	font-style: italic;
+	text-align: center;
+	color: var(--c-text-muted);
+}
+
+.chat-input {
+	padding: 7px 12px;
+	background: var(--c-surface-2);
+	color: var(--c-text-emphasis);
+	font-size: 14px;
+}
+
+.chat-input:focus {
+	outline: none;
+}
+
+/* Collapsed state (T9 toggles `.collapsed` on the .chat panel): the bar shrinks to just
+   its header, the log + input are hidden, and the chevron flips to point up. */
+.chat.collapsed {
+	flex: 0 0 auto;
+	min-height: 0;
+}
+
+.chat.collapsed .chat-bar {
+	border-bottom: none;
+}
+
+.chat.collapsed .chat-log,
+.chat.collapsed .chat-input {
+	display: none;
+}
+
+.chat.collapsed .chat-chevron {
+	transform: rotate(180deg);
+}
+
+/* =============================
+   Board
+   ============================= */
+
+.board-canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
 }
