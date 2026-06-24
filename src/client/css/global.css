@@ -474,10 +474,7 @@ button:disabled {
 }
 
 /* ============================================================
-   Player color dot — white = filled, black = ring; inverts under the
-   light theme so the dot always reads as that piece's color. Shared by
-   the lobby seek rows and the game page's participant list. (Seek rows
-   add their own :hover recolor + spacing in index.css.)
+   Player color dot — white = filled, black = ring; inverts under the light theme.
    ============================================================ */
 
 .side-dot {
