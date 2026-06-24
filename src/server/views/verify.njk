@@ -12,9 +12,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main class="bg-checkerboard page-centered">
-	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
-	<div id="bg-overlay"></div>
+<main class="bg-checkerboard-dimmed page-centered">
 
 	<section class="auth-card" id="verify-card">
 		{% if state == 'prompt' %}

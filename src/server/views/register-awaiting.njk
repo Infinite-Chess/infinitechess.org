@@ -20,9 +20,7 @@
 {% block body %}
 {% include "components/header/header.njk" %}
 
-<main class="bg-checkerboard page-centered">
-	{# Semi-opaque dark overlay sits above the checkerboard background, below all page content #}
-	<div id="bg-overlay"></div>
+<main class="bg-checkerboard-dimmed page-centered">
 
 	{# data-awaiting marks a deliverable pending registration, telling register-awaiting.ts to poll
 	   for verification (omitted for the blacklisted variant — no email was sent). #}

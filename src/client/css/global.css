@@ -232,17 +232,9 @@ button:disabled {
    Page background layers
    ============================================================ */
 
-/* Tiled checkerboard backdrop (home, login, etc.). Apply to the page's <main>. */
-.bg-checkerboard {
-	background: var(--checkerboard);
-}
-
-/* Fixed overlay that dims the checkerboard so foreground content stays legible. */
-#bg-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: -1;
-	background-color: var(--c-bg-overlay);
+/* Tiled checkerboard backdrop with the shared overlay baked in as the top layer. */
+.bg-checkerboard-dimmed {
+	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
 }
 
 /* ============================================================
