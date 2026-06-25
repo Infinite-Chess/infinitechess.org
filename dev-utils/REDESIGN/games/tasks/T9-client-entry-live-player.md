@@ -48,7 +48,7 @@ T8 rebuilt the game page with all-new markup and class names, so the **side-bar 
 
 ### 1. New entry — `src/client/scripts/esm/views/game/game.ts`
 
-Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener. You can take inspiration from how variantPreviewTooltip.ts reuses much of the rendering bootstrap itself. Our case will be a little different because the game page canvas needs continuous rendering, and all other features like arrow indicators, etc. so our implementation will be require slightly more scripts to reuse) — import the same modules. Then:
+Replace the T3 skeleton with the real entry. Reuse the rendering bootstrap that `main.ts` does (`webgl.init`, `camera.init`, `game.init`, the game loop via `loadbalancer`/`frameratelimiter`, the `beforeunload` socket-close listener. You can take inspiration from how variantPreviewTooltip.ts reuses much of the rendering bootstrap itself. Our case will be a little different because the game page canvas needs continuous rendering, and all other features like arrow indicators, etc. so our implementation will be slightly more similar to the old `main.ts` (and require slightly more scripts to reuse) — import the same modules. Then:
 - Read `window.gamePageData` (`{ id, isLive, youAreColor? }` — T8.5 added the SSR-resolved `youAreColor`).
 - **Live** (`isLive`): open the socket and send the new `subscribe` action with the numeric `id` (replaces `main.ts`'s `send('game','joingame')`). Handle the incoming `gamestate` via the new loader. Live deltas reuse existing handlers (§4).
 - **Dead** (`!isLive`): out of scope here — stub/defer to T10.
@@ -81,28 +81,12 @@ Reuse the existing `onlinegamerouter` handlers for `move`/`clock`/`gameupdate`/`
 - Delete `sendGameInfoToPlayer` (dead old `joingame` sender; superseded by `sendParticipantGameState`).
 - `resyncToGame` / `onSubscribeToGame` drop the now-empty `{ sendGameInfo: false }` options object.
 
-## Commit plan
-
-T9 is safe to land as a sequence of small commits: it adds a **parallel** page and touches nothing on the existing game path (no `main.ts`, no `startOnlineGame`), so the old page keeps working and the new page stays inert until the entry (E) wires it up. Each chunk below is self-contained — it passes `type-check` + `lint` on its own. The only hard rule: **add an import in the same commit that first uses it** (lint flags unused imports), which is why the entry lands last.
-
-**The user commits each chunk personally and reviews before the next begins.** After finishing a chunk, run `type-check` + `lint`, report what changed, and **stop** — do not start the next chunk until the user has reviewed and committed.
-
-Dependency graph: B, C, D are independent leaves; E (capstone) depends on B–D.
-
-- [ ] **B — schema wiring** (§3): add the incoming `gamestate` action (`SubscribedGameStateSchema`) + outgoing `subscribe` to `socketschemas.ts`. Leave `joingame` dormant.
-- [ ] **D — side-bar render handlers** (§"T8 side-bar structure"): new DOM population against T8 markup. Independent of the socket/loader plumbing; **may be split further** into per-handler commits — clocks (create + tick), started-ago refresh, move-table (+`.game-result`), material bars, eloChange delta, coord readout.
-- [ ] **C — loader** `gameStateLoader.ts` (§2): `loadGameFromState(...)` consuming `FullGameState` and forwarding its typed fields into `gameslot.loadGamefile`. Standalone module; type-checks before anything imports it.
-- [ ] **E — entry + delta wiring** (§1 + §4): real `views/game/game.ts` — reuse the rendering bootstrap, read `gamePageData`, open socket, send `subscribe`, route `gamestate` → loader (C), wire the reused `onlinegamerouter` deltas, call the render handlers (D). Capstone; lands last.
-
-Suggested order: **B → D(×N) → C → E** (B/C/D can be done in any order). To consolidate: `{B+C}` loader stack, `{D}` side-bar render, `{E}` entry — a clean 3-commit split.
-
-**Not part of T9:** the §5 `subscribeClientToGame` collapse is gated on T12 — do **not** fold it into any chunk above.
-
 ## Out of scope / deferred
 
 - Dead/review load (T10), spectator read-only view (T11), gamestart navigation + sound (T12).
 - Slimming the import graph / decoupling editor & engines — **separate later refactor with the user**.
 - Removing the dormant old `main.ts`/`joingame` path — folds into a later cleanup once T9–T11 land.
+- The §5 `subscribeClientToGame` collapse is gated on T12.
 
 ## Constraints
 
@@ -114,6 +98,6 @@ Suggested order: **B → D(×N) → C → E** (B/C/D can be done in any order). 
 
 - `npm run type-check --silent` passes.
 - `npm run lint --silent` passes (fix any pre-existing warning touched).
-- The client build succeeds with the new `views/game/game.ts` entry. Loading `/game/<live id>` as a participant subscribes, receives `gamestate`, and the new loader renders the board + clocks from the typed `FullGameState`; subsequent `move`/`clock`/`gameupdate` deltas update the board. (Runtime depends on T6 being deployed.)
+- The client build succeeds with the new `views/game/game.ts` entry. Loading `/game/<live id>` as a participant subscribes, receives `gamestate`, and the new loader renders the board + clocks from the typed `FullGameState`; subsequent `move`/`clock`/`gameupdate` deltas update the board. The user may be the one to verify these, you do not have to spin up a webpage. (Runtime depends on T6 being deployed.)
 
-When finished, also delete the "NOTE FOR T9 (client wiring):..." comment block from game.njk, including all other comments in there that mention T9, and in game.css, and in user.njk.
+When finished, also delete the "NOTE FOR T9 (client wiring):..." comment block from game.njk, including all other comments in there that mention T9 (clean up all the comments that are specifically notes for this task doc, T9), and the ones in game.css too, and any in user.njk. Then you may delete this task doc itself, T9 complete.
