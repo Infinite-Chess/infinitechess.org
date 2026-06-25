@@ -221,8 +221,9 @@ function addGameRecordsInTransaction(
 	const playerGamesQuery = `
 		INSERT INTO player_games (
 			user_id, game_id, player_number, score,
-			clock_at_end_millis, elo_at_game, elo_change_from_game
-		) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+			clock_at_end_millis, elo_at_game, elo_change_from_game,
+			rating_deviation_at_game, rating_deviation_after_game
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 	const ending_clocks = !servergame.untimed
 		? gameutility.getGameClockValues(servergame).clocks
@@ -243,6 +244,8 @@ function addGameRecordsInTransaction(
 			!servergame.untimed ? ending_clocks![player]! : null,
 			ratingData?.[player]?.elo_at_game ?? null,
 			ratingData?.[player]?.elo_change_from_game ?? null,
+			ratingData?.[player]?.rating_deviation_at_game ?? null,
+			ratingData?.[player]?.rating_deviation_after_game ?? null,
 		]);
 	}
 }

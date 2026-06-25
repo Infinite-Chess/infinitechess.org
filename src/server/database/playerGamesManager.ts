@@ -22,6 +22,8 @@ export interface PlayerGamesRecord {
 	clock_at_end_millis: number | null;
 	elo_at_game: number | null;
 	elo_change_from_game: number | null;
+	rating_deviation_at_game: number | null;
+	rating_deviation_after_game: number | null;
 }
 
 type PlayerGamesColumn = keyof PlayerGamesRecord;

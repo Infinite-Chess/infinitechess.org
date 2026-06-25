@@ -27,6 +27,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import { getGameData } from '../../database/gamesManager.js';
 import { getPlayerGamesOfGame } from '../../database/playerGamesManager.js';
 import { getMemberDataByCriteria } from '../../database/memberManager.js';
+import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 
 // Constants ----------------------------------------------------------------------------------------------
 
@@ -36,7 +37,7 @@ const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
 /** The `games` columns needed to assemble a {@link StaticGameState}. */
 const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination'] as const; // prettier-ignore
 /** The `player_games` columns needed to assemble a {@link StaticGameState}. */
-const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game'] as const;
+const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'rating_deviation_at_game'] as const; // prettier-ignore
 
 // Methods ------------------------------------------------------------------------------------------------
 
@@ -68,9 +69,11 @@ function assembleStaticGameState(
 			type: 'player',
 			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
 		};
-		// Assume confident until we actually store their confidence in the DB
 		if (row.elo_at_game !== null)
-			container.rating = { value: row.elo_at_game, confident: true };
+			container.rating = {
+				value: row.elo_at_game,
+				confident: isRatingConfident(row.rating_deviation_at_game),
+			};
 		playerContainers[color] = container;
 	}
 
@@ -126,7 +129,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
 	if (game === undefined) return undefined;
 
-	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'elo_change_from_game', 'clock_at_end_millis']); // prettier-ignore
+	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'elo_change_from_game', 'clock_at_end_millis', 'rating_deviation_at_game', 'rating_deviation_after_game']); // prettier-ignore
 
 	/** Per signed-in player rating change; populated only for rated games. */
 	const ratingChanges: PlayerGroup<PlayerRatingChangeInfo> = {};
@@ -139,8 +142,10 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 
 		if (row.elo_at_game !== null && row.elo_change_from_game !== null) {
 			ratingChanges[color] = {
-				// Assume confident until we actually store their confidence in the DB
-				newRating: { value: row.elo_at_game + row.elo_change_from_game, confident: true },
+				newRating: {
+					value: row.elo_at_game + row.elo_change_from_game,
+					confident: isRatingConfident(row.rating_deviation_after_game),
+				},
 				change: row.elo_change_from_game,
 			};
 		}
@@ -156,4 +161,12 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;
 
 	return state;
+}
+
+/**
+ * Derives a stored rating's confidence from its Glicko RD, mirroring the live path.
+ * Pre-migration rows have no stored RD (null) -> fall back to confident (unrecoverable).
+ */
+function isRatingConfident(rating_deviation: number | null): boolean {
+	return rating_deviation === null || rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
 }

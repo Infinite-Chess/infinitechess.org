@@ -67,6 +67,8 @@ const allPlayerGamesColumns: string[] = [
 	'clock_at_end_millis',
 	'elo_at_game',
 	'elo_change_from_game',
+	'rating_deviation_at_game',
+	'rating_deviation_after_game',
 ];
 
 /** All columns of the games table. Each of these would be valid to retrieve from any game. */
@@ -238,6 +240,8 @@ function generateTables(): void {
 			clock_at_end_millis INTEGER, -- Number of milliseconds that player still has left on his clock when the game ended. Null if game has no clock or info is missing.
 			elo_at_game REAL, -- Specified if they have a rating for the leaderboard, ignoring whether the game was rated
 			elo_change_from_game REAL, -- Specified only if the game was rated
+			rating_deviation_at_game REAL, -- Glicko RD before the game; drives the pre-game rating's confidence. Specified only if the game was rated.
+			rating_deviation_after_game REAL, -- Glicko RD after the game; drives the new rating's confidence. Specified only if the game was rated.
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link
 		);
 	`);
@@ -391,6 +395,7 @@ function initDatabase(): void {
 	clearSpamReportBlacklistEntries();
 	makeVariantColumnsNullableIfNeeded();
 	addPositionColumnToLiveGamesIfNeeded();
+	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
 	startDailyBackups();
@@ -521,6 +526,22 @@ function addPositionColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'position')) return; // Already present, nothing to do.
 	db.run('ALTER TABLE live_games ADD COLUMN position TEXT');
 	console.log('Temporary DB migration: added live_games.position column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the nullable `rating_deviation_at_game` / `rating_deviation_after_game` columns to
+ * `player_games` — the Glicko RDs before/after the game, so a concluded game's pre-game and
+ * new ratings can each report faithful confidence in review (mirroring the live path) instead
+ * of being hardcoded confident. Old rows stay NULL (treated as confident, unrecoverable).
+ * Fresh DBs get the columns from `generateTables()`.
+ */
+function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
+	if (db.columnExists('player_games', 'rating_deviation_at_game')) return; // Already present, nothing to do.
+	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_at_game REAL');
+	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_after_game REAL');
+	console.log('Temporary DB migration: added player_games rating_deviation columns.');
 }
 
 /** Wipes all data from all tables. ONLY call in a test environment! */
