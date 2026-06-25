@@ -1,18 +1,30 @@
 # T9 — Game-page client entry + new loader (live player)
 
 Part of the game-page redesign (see `../requirements.md`). Build the new game page's **own** client entry (NOT `main.ts`) and a **new, purpose-built loader** that consumes the new state shapes directly, then wire the **live player** path end-to-end: subscribe by id → receive `gamestate` → load & render → live deltas.
-
-Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure), T2 (`FullGameState`/`SubscribedGameState`), and **T8.5 (lands first)**.
-
-> **T8.5 changes two assumptions in this doc:**
-> 1. **Role comes from `window.gamePageData.youAreColor`** (SSR-resolved), *not* from the
->    `gamestate` overlay. `SubscribedGameState` no longer carries `youAreColor` — only an optional
->    `participantState`. Wherever this doc says "youAreColor from the state/overlay," read it as
->    "`gamePageData.youAreColor`."
-> 2. **The static side-bar regions are SSR'd** (game-meta info, white/black participant list,
->    player-bar names + ratings, `XX:XX` clock placeholders). The render handlers below (§D / the
->    "T8 side-bar structure" note) must **not** re-render those — they own only dynamic content
->    (live clock values, eloChange deltas, moves, material, result, spectator count, chat).
+> 1. **Role comes from `window.gamePageData.youAreColor`** (SSR-resolved server-side, so it works
+>    for guests whose `httpOnly` `browser-id` can't be read client-side), *not* from the `gamestate`
+>    overlay. `SubscribedGameState` no longer carries `youAreColor` — only an optional
+>    `participantState` (T8.5 removed it from `SubscribedGameStateSchema` and the server overlay
+>    builder). Wherever this doc says "youAreColor from the state/overlay," read it as
+>    "`gamePageData.youAreColor`," and the client infers participant-ness from `youAreColor !== undefined`.
+> 2. **The static side-bar regions are SSR'd** (game-meta info — variant/speed/mode, the relative
+>    "started X ago" string + creation epoch, white/black participant list, player-bar names +
+>    ratings, and the `.result-banner` skeleton — visible + filled if the game is **already
+>    concluded at load**, else `.hidden` and empty). The
+>    render handlers below (§D / the "T8 side-bar structure" note) must **not** re-render those.
+>    **Clocks are NOT SSR'd** (T8.5 dropped the `XX:XX` placeholders): the `.clock` element doesn't
+>    exist at load, so the clocks handler **creates** it in each bar. The handlers own all remaining
+>    dynamic content (clock element + values, eloChange deltas, gamerule-mods, moves, material, the
+>    live `.game-result`, spectator count, chat) and toggling/filling the SSR'd `.hidden`
+>    skeletons (`.result-banner`, draw-offer, disconnect-status).
+>
+>    Two display strings are produced by **shared helpers** so SSR and client agree byte-for-byte —
+>    reuse them, don't re-derive: `timeutil.getRelativeTimeString(epochMs, locale?)`
+>    ([src/shared/util/timeutil.ts](../../../../src/shared/util/timeutil.ts), date-fns)
+>    for the ticking "started ago" refresh, and `gameresultutil.getResultDisplay(gameConclusion)`
+>    ([src/shared/chess/util/gameresultutil.ts](../../../../src/shared/chess/util/gameresultutil.ts))
+>    for the result `{ score, text }`. The participant display names ("(You)"/"(Guest)") are also
+>    resolved server-side (mirroring the lobby), so the SSR'd `.username` text is final.
 
 ## Approach (confirmed)
 
@@ -24,12 +36,13 @@ Depends on T6 (server `subscribe`/`gamestate`), T8 (canvas + side-bar structure)
 
 T8 rebuilt the game page with all-new markup and class names, so the **side-bar DOM population is not reusable** from the old page — only the data-level delta handlers (§4, which touch the gamefile + canvas) carry over. The old `guigameinfo` / clock-DOM code targets the old selectors. Plan for new render handlers against the actual T8 structure (note: the static username containers are SSR'd by T8.5, so the only remaining username-container client concern is the dynamic `.eloChange` delta — see T10 §4):
 
-- **Clocks** — a `.clock` in each `.player-bar`; the side to move is marked by `.tempo` on its `.player-bar` (whole-bar highlight). The `XX:XX` placeholder + bar orientation are SSR'd (T8.5); this handler writes the **live ticking values** into the existing `.clock`.
-- **Move list** — `.moves-table` of `.move-row`s (`.move-num` + `.ply` cells: `.move-piece` silhouette + `.move-coord`, truncated with full value in `title`). The **game-over result renders *inside* this table** (`.game-result`, appended after the last move so it scrolls away with the moves) — not as a separate region.
+- **Clocks** — a `.clock` in each `.player-bar`; the side to move is marked by `.tempo` on its `.player-bar` (whole-bar highlight). Only the **bar orientation** is SSR'd (T8.5) — the `.clock` element is **not** (no `XX:XX` placeholder). This handler **creates** the `.clock` in each bar (only for a timed game) and writes the live ticking values into it, and toggles `.tempo`.
+- **Started-ago** — `#meta-started` is SSR'd with the relative string + a `data-created` epoch (ms). This handler periodically re-derives the string from `data-created` via the shared `timeutil.getRelativeTimeString` (same helper the server used) so SSR and client stay in sync.
+- **Move list** — `.moves-table` of `.move-row`s (`.move-num` + `.ply` cells: `.move-piece` silhouette + `.move-coord`, truncated with full value in `title`). The **game-over result renders *inside* this table** (`.game-result`, appended after the last move so it scrolls away with the moves) — not as a separate region. For a conclusion that happens **live** (game ends while playing), build the `.game-result` from `gameresultutil.getResultDisplay`, and reveal + fill the SSR'd `.result-banner` skeleton (un-`.hidden` it and set its score/text); a game **already concluded at load** has its `.result-banner` SSR'd visible + filled (leave it).
 - **Material** — `.material` bars (`#material-top` / `#material-bottom`): inject one `.material-piece` svg per surplus piece via `svgcache.getSilhouetteSVG`, plus a `.material-lead` (e.g. "+2").
-- **Usernames / ratings** — `.username-embed` (`.username` + `.elo`) in both `.player-bar` (board POV) and `.meta-players` (white/black list) is **SSR'd by T8.5** — not rendered here. The client only adds the dynamic **`.eloChange`** delta on game end (rating change), into the SSR'd embeds.
+- **Usernames / ratings** — `.username-embed` (`.username` + `.elo`) in both `.player-bar` (board POV) and `.meta-players` (white/black list) is **SSR'd by T8.5**, including the final display name ("(You)"/"(Guest)") and rating — not rendered here. A ratingless player has **no `.elo` span** (omitted, matching the lobby), so don't assume one exists. The client only adds the dynamic **`.eloChange`** delta on game end (rating change), into the SSR'd embeds.
 - **Coordinate readout** — editable `#coord-x` / `#coord-y` inputs in `.coords`; wire "jump the view to these coordinates" on edit/Enter.
-- **State slots** — chat collapse toggle (`.chat.collapsed`), and draw-offer / disconnect / result blocks toggled via `.hidden`.
+- **State slots** — chat collapse toggle (`.chat.collapsed`). The game-actions blocks (`.actions-over`, `.actions-live`, `.actions-draw-offer`), disconnect-status (`.disconnect-status`) and result-banner (`.result-banner`) are all SSR'd as fixed skeletons (the inactive ones `.hidden`) — this handler **toggles `.hidden`** among them and writes their text (the disconnect countdown into `.disconnect-text`, the result score/text), but **must not rebuild their markup**. On a live game-end it hides `.actions-live` and reveals `.actions-over`. Note `.actions-live`, `.actions-draw-offer` and `.disconnect-status` are **live-only**: they're omitted from the SSR entirely for a game that loaded already concluded (none can occur once a game is over — it can't return to live), so don't assume they exist. (The disconnect block also reveals its inner `.disconnect-buttons` skeleton on expiry; the result-banner is already visible + filled when the game was concluded at load — see Move list.) Only the gamerule-mods row (`.meta-rules`) is still **built** here — its EXAMPLE markup is commented out as a shape reference, since the rule list is variable-length, not a fixed skeleton.
 
 ## Required changes
 
@@ -53,7 +66,7 @@ This loader is shared with T10 (dead) and T11 (spectator); design its signature 
 
 ### 3. Client schema wiring — `src/client/scripts/esm/websocket/socketschemas.ts`
 
-Add the incoming `gamestate` action carrying `SubscribedGameStateSchema` (from T2/T6) to the client `GameSchema`. Wire the `subscribe` outgoing send. Leave the old `joingame` action/schema in place for now (dormant; retired later). **Note (T8.5):** `SubscribedGameStateSchema` no longer has `youAreColor` — only an optional `participantState`. If T8.5 has already retargeted this schema, this chunk just confirms the wiring agrees.
+Add the incoming `gamestate` action carrying `SubscribedGameStateSchema` (from T2/T6) to the client `GameSchema`. Wire the `subscribe` outgoing send. Leave the old `joingame` action/schema in place for now (dormant; retired later). **From T8.5:** `SubscribedGameStateSchema` no longer carries `youAreColor` — only an optional `participantState` (T8.5 removed it from the shared schema + server overlay builder). Do **not** reintroduce a wire `youAreColor`; the client's sole role source is `window.gamePageData.youAreColor`.
 
 ### 4. Live deltas
 
@@ -77,7 +90,7 @@ T9 is safe to land as a sequence of small commits: it adds a **parallel** page a
 Dependency graph: B, C, D are independent leaves; E (capstone) depends on B–D.
 
 - [ ] **B — schema wiring** (§3): add the incoming `gamestate` action (`SubscribedGameStateSchema`) + outgoing `subscribe` to `socketschemas.ts`. Leave `joingame` dormant.
-- [ ] **D — side-bar render handlers** (§"T8 side-bar structure"): new DOM population against T8 markup. Independent of the socket/loader plumbing; **may be split further** into per-handler commits — clocks, move-table (+`.game-result`), material bars, username-embed script, coord readout.
+- [ ] **D — side-bar render handlers** (§"T8 side-bar structure"): new DOM population against T8 markup. Independent of the socket/loader plumbing; **may be split further** into per-handler commits — clocks (create + tick), started-ago refresh, move-table (+`.game-result`), material bars, eloChange delta, coord readout.
 - [ ] **C — loader** `gameStateLoader.ts` (§2): `loadGameFromState(...)` consuming `FullGameState` and forwarding its typed fields into `gameslot.loadGamefile`. Standalone module; type-checks before anything imports it.
 - [ ] **E — entry + delta wiring** (§1 + §4): real `views/game/game.ts` — reuse the rendering bootstrap, read `gamePageData`, open socket, send `subscribe`, route `gamestate` → loader (C), wire the reused `onlinegamerouter` deltas, call the render handlers (D). Capstone; lands last.
 

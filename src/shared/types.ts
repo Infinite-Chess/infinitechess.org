@@ -248,13 +248,11 @@ export const FullGameStateSchema = StaticGameStateSchema.extend({
 
 /**
  * A {@link FullGameState} with the per-subscriber overlay sent on `subscribe`.
- * Both overlay fields are present if the subscriber is a participant of an
- * ongoing game; spectators (and concluded games) omit them.
+ * participantState is present if the subscriber is a participant of an ongoing
+ * game; spectators (and concluded games) omit it.
  */
 export type SubscribedGameState = z.infer<typeof SubscribedGameStateSchema>;
 export const SubscribedGameStateSchema = FullGameStateSchema.extend({
-	/** The subscriber's color. Present if they are a participant. */
-	youAreColor: typeschemas.PlayerSchema.optional(),
 	/** Participant-only ongoing-game state. Present if they are a participant. */
 	participantState: ParticipantStateSchema.optional(),
 });

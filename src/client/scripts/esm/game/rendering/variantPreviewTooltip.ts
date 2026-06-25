@@ -346,7 +346,10 @@ async function populateRules(
 				for (const player of condPlayers) {
 					const color = typeutil.strcolors[player];
 					items.push(
-						interpolate(tp.color_wins_by, { color: t.shared.sides[color], label }),
+						interpolate(t.shared.game_result.color_wins_by, {
+							color: t.shared.sides[color],
+							label,
+						}),
 					);
 				}
 			}
@@ -414,7 +417,7 @@ async function populateRules(
 
 /** Returns a human-readable label for a win condition code. */
 function formatWinCondition(cond: GameruleWinCondition): string {
-	return t.shared.variant_preview.win_conditions[cond] ?? cond;
+	return t.shared.conditions[cond] ?? cond;
 }
 
 /** Whether the turn order in gameRules matches the given order. */

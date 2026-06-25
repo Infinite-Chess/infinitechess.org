@@ -2,9 +2,6 @@
 
 Each task is its own `T#-*.md` doc and is meant to land as a single commit that passes `npm run type-check` + `npm run lint`. See `../requirements.md` for the decisions behind them. Order is dependency order (later tasks may depend on earlier ones).
 
-## T8.5 — SSR the static game info (lands before T9) ([T8.5-ssr-static-info.md](T8.5-ssr-static-info.md))
-The game-meta panel + player username containers are static for a game's whole life, so the `/game/:id` route renders them server-side for first paint (no waiting on the socket/HTTP state). Also resolves the viewer's `youAreColor` **once, server-side** (works for guests, whose `httpOnly` `browser-id` can't be read client-side), injects it into `window.gamePageData`, and **drops `youAreColor` from the live socket overlay** — making live/dead role resolution symmetric. Slots after T8 (its markup) and **before T9**, since T9–T11 read role from `gamePageData` and skip the SSR'd static regions.
-
 ## T9 — Client entry + new loader (live player) ([T9-client-entry-live-player.md](T9-client-entry-live-player.md))
 The game page gets its **own** slim entry (NOT `main.ts`; reuses the rendering bootstrap modules) and a **new purpose-built loader** that consumes `FullGameState` directly — passing its typed fields (`timeControl`, `variant`, `dateTimestamp`, `gameConclusion`, …) straight into `gameslot.loadGamefile` (no `MetaData` build; no adapter to the old `startOnlineGame`). Wires the live player path: `subscribe {id}` → `gamestate` → loader → render; reuses `onlinegamerouter`'s `move`/`clock`/`gameupdate` delta handlers. Import-graph slimming is a **separate later refactor with the user**.
 

@@ -32,7 +32,7 @@ Construct a `FullGameState` from the `DeadGameState`:
 
 `youAreColor` is **already resolved server-side and injected into `window.gamePageData` by T8.5** (the SSR route matches the viewer's identity against the game's `player_games` rows). Do **not** re-match usernames client-side — read `gamePageData.youAreColor` (undefined = white POV).
 
-Call `loadGameFromState(fullGameState, gamePageData.youAreColor)` (T9). The conclusion is already set, so it loads into the review/end state.
+Call `loadGameFromState(fullGameState, gamePageData.youAreColor)` (T9). The conclusion is already set, so it loads into the review/end state. A dead game is always concluded, so its game-meta `.result-banner` skeleton is **SSR'd visible + filled by T8.5** (via `gameresultutil.getResultDisplay`, not `.hidden`) — leave it as-is (don't toggle or rebuild it); T9's move-list handler still renders the in-table `.game-result`.
 
 ### 4. Rating changes display
 

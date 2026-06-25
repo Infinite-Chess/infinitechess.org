@@ -9,13 +9,17 @@
 
 import type { Request } from 'express';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
+import type { StaticGameState } from '../../shared/types.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
-import type { StaticGameState, TimeControl } from '../../shared/types.js';
 
+import timeutil from '../../shared/util/timeutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
+import gameresultutil from '../../shared/chess/util/gameresultutil.js';
+import { players as p } from '../../shared/chess/util/typeutil.js';
 import variantregistry, { VariantCode } from '../../shared/chess/variants/variantregistry.js';
 
+import tconfig from '../config/translationconfig.js';
 import { decodeGameId } from '../database/gamesManager.js';
 import { memberInfoEqPartial } from '../utility/memberInfoUtil.js';
 import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
@@ -27,15 +31,19 @@ interface GameMetaViewModel {
 	variant: { iconId: string; name: string };
 	/** Speed category icon id + category, for the speed badge. */
 	speed: { iconId: string; category: SpeedCategory };
-	/** Raw time control text, e.g. `"10+4"` or `"-"`. */
-	timeControl: TimeControl;
-	/** Whether to render clock placeholders. */
-	isTimed: boolean;
+	/** User-facing time control label in `m+s` format, e.g. `"10+4"` or `"-"`. */
+	timeControl: string;
 	rated: boolean;
-	/** Epoch ms the game was created; the client formats the (ticking) relative string. */
+	/** Epoch ms the game was created; the client re-derives the ticking relative string. */
 	timeCreated: number;
-	/** Name + formatted elo per color (fixed white/black order; bars orient by youAreColor). */
+	/** SSR'd relative "time ago" string for first paint, e.g. `"2 minutes ago"`. */
+	startedAgo: string;
+	/** Present only if the game has concluded: the result banner's score + sentence. */
+	result?: { score: string; text: string };
+	/** Name + formatted elo per color (fixed white/black order; bars orient by {@link bars}). */
 	players: PlayerGroup<{ name: string; elo?: string }>;
+	/** Player-bar orientation from the viewer's role; bottom = you (or white for spectators). */
+	bars: { top: Player; bottom: Player };
 }
 
 /** The full render context for `game.njk`. */
@@ -74,12 +82,16 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	return {
 		gamePageData: { id, isLive: !!game, youAreColor },
-		meta: buildGameMetaViewModel(state, req),
+		meta: buildGameMetaViewModel(state, youAreColor, req),
 	};
 }
 
 /** Derives the display-ready {@link GameMetaViewModel} from a {@link StaticGameState}. */
-function buildGameMetaViewModel(state: StaticGameState, req: Request): GameMetaViewModel {
+function buildGameMetaViewModel(
+	state: StaticGameState,
+	youAreColor: Player | undefined,
+	req: Request,
+): GameMetaViewModel {
 	const variantGroup =
 		state.variant.kind === 'preset'
 			? variantregistry.getVariantGroup(state.variant.code)
@@ -92,23 +104,36 @@ function buildGameMetaViewModel(state: StaticGameState, req: Request): GameMetaV
 	};
 
 	const players: PlayerGroup<{ name: string; elo?: string }> = {};
-	for (const [color, container] of Object.entries(state.players)) {
-		players[Number(color) as Player] = {
-			name: container.username,
+	for (const [strColor, container] of Object.entries(state.players)) {
+		const color = Number(strColor) as Player;
+		// A guest who is the viewer shows "(You)"; every other name is the container's own
+		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
+		const isYouGuest = container.type === 'guest' && color === youAreColor;
+		players[color] = {
+			name: isYouGuest ? req.t.shared.user_status.you_indicator : container.username,
 			...(container.rating && { elo: metadatautil.getFormattedElo(container.rating) }),
 		};
 	}
 
+	const bottom = youAreColor ?? p.WHITE;
+	const top = bottom === p.WHITE ? p.BLACK : p.WHITE;
+
+	const locale = tconfig.getDateLocale(req.lang);
+
 	return {
 		variant,
+		bars: { top, bottom },
 		speed: {
 			iconId: clockutil.getSpeedIconId(state.timeControl),
 			category: clockutil.getSpeedCategory(state.timeControl),
 		},
-		timeControl: state.timeControl,
-		isTimed: state.timeControl !== '-',
+		timeControl: clockutil.getTimeControlLabel(state.timeControl),
 		rated: state.rated,
 		timeCreated: state.timeCreated,
+		startedAgo: timeutil.getRelativeTimeString(state.timeCreated, locale),
+		...(state.gameConclusion && {
+			result: gameresultutil.getResultDisplay(state.gameConclusion, req.t.shared),
+		}),
 		players,
 	};
 }

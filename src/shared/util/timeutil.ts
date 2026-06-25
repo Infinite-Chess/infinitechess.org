@@ -2,9 +2,11 @@
 
 /**
  * This script contains utility methods for working with dates and timestamps.
- *
- * ZERO dependencies.
  */
+
+import type { Locale } from 'date-fns';
+
+import { formatDistanceToNow } from 'date-fns';
 
 /**
  * Converts minutes to milliseconds.
@@ -211,6 +213,15 @@ function timestampToSqlite(timestamp: number): string {
 	return isoString.slice(0, 19).replace('T', ' ');
 }
 
+/**
+ * Formats an epoch-ms timestamp as a relative "time ago" string (e.g. "2 minutes ago").
+ * @param timestampMs - Epoch milliseconds.
+ * @param locale - date-fns locale.
+ */
+function getRelativeTimeString(timestampMs: number, locale: Locale): string {
+	return formatDistanceToNow(timestampMs, { addSuffix: true, locale });
+}
+
 export default {
 	minutesToMillis,
 	secondsToMillis,
@@ -226,4 +237,5 @@ export default {
 	sqliteToISO,
 	isoToSQLite,
 	timestampToSqlite,
+	getRelativeTimeString,
 };

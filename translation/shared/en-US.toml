@@ -121,13 +121,40 @@ consecutive_turns_with_checkmate = "Players cannot have consecutive turns when u
 too_many_royals_for_checkmate = "Too many royals for using checkmate."
 king_capture_on_turn_1 = "King capture possible on turn 1."
 
+[game_result] # Sentences shown when a game ends (the result banner).
+# {color} is filled in from [sides] above; {label} from [conditions] below.
+color_wins_by = "{color} wins by {label}." # Also reused in the variant preview tooltips to show how a specific color can win.
+draw_by = "Draw by {label}."
+aborted = "Game aborted"
+
+[conditions]
+# Each label fills the blank after "by" in three phrases: "Win by ___.",
+# "... wins by ___.", and "Draw by ___.". Use a short word or phrase that
+# fits all three — not a full sentence. Should not contain punctuation.
+# -------------------
+# Win conditions — move-triggered, also selectable as gamerules
+checkmate = "checkmate"
+royalcapture = "royal capture"
+allroyalscaptured = "capturing all royals"
+allpiecescaptured = "capturing all pieces"
+koth = "reaching the center"
+# Win conditions — non move-triggered, can happen any time
+time = "time forfeit"
+resignation = "resignation"
+disconnect = "abandonment"
+# Draw conditions
+stalemate = "stalemate"
+moverule = "the move rule"
+repetition = "repetition"
+insuffmat = "insufficient material"
+agreement = "agreement"
+
 [variant_preview]
 # Narrative phrasing for the variant preview tooltip's rules list.
 four_d_movement = "Pieces travel four-dimensionally."
 black_moves_first = "Black moves first."
 turn_order = "Turn order: {order}."
-win_by = "Win by {label}." # Description of how either player can win the game. Label examples are below in client.variant_preview.win_conditions
-color_wins_by = "{color} wins by {label}."
+win_by = "Win by {label}." # How either player can win. {label} comes from [conditions] above.
 no_promotion = "No promotion." # Indicates promotion is disabled in the game
 promotion_prefix = "Promotion: " # To the right of this is inserted small icons of the pieces you can promote to, followed by a period
 no_move_rule = "No 50-move rule."
@@ -137,12 +164,3 @@ plies_since_capture = "{n} plies passed since last capture or pawn push."
 # Parameterized rule-list phrasing for the active slide-limit modifier.
 # Other modifiers' rule-list lines can likely reuse [modifiers.<code>].description directly.
 slide_limit_rule = "Pieces can't slide more than {n} squares."
-
-[variant_preview.win_conditions]
-# Display labels for non-checkmate win conditions
-# Each of these are inserted as labels above in the variant_preview.win_by and color_wins_by strings
-checkmate = "checkmate"
-royalcapture = "royal capture"
-allroyalscaptured = "capturing all royals"
-allpiecescaptured = "capturing all pieces"
-koth = "reaching the center"

@@ -407,7 +407,6 @@ function sendParticipantGameState(
 ): void {
 	const value: SubscribedGameState = {
 		...produceFullGameState(servergame),
-		youAreColor: color,
 		participantState: getParticipantState(servergame, color),
 	};
 	sendSocketMessage(ws, 'game', 'gamestate', value);
@@ -469,8 +468,8 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 
 /**
  * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent
- * to clients on subscribe. The per-viewer overlay (youAreColor, participantState) is
- * layered on separately at delivery time, not here.
+ * to clients on subscribe. The per-viewer `participantState` overlay is layered on
+ * separately at delivery time, not here.
  * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
 function produceFullGameState(servergame: ServerGame): FullGameState {

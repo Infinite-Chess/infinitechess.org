@@ -86,6 +86,16 @@ function getMinutesAndIncrementFromClock(
 }
 
 /**
+ * Formats an internal `s+s` time control as its user-facing `m+s` label (e.g. "10+4"),
+ * or an empty string if untimed (the infinity speed icon conveys it; no text needed).
+ */
+function getTimeControlLabel(clock: TimeControl): string {
+	const minutesAndIncrement = getMinutesAndIncrementFromClock(clock);
+	if (minutesAndIncrement === null) return '';
+	return `${minutesAndIncrement.minutes}+${minutesAndIncrement.increment}`;
+}
+
+/**
  * Splits the clock from the form `s+s` into the `base_time_seconds` and `increment_seconds` properties.
  * @param time_control
  * @returns
@@ -155,6 +165,7 @@ export default {
 	getTextContentFromTimeRemain,
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
+	getTimeControlLabel,
 	splitTimeControl,
 	buildTimeControl,
 	getSpeedCategory,

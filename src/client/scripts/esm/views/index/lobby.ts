@@ -278,13 +278,6 @@ function exitIdle(): void {
 
 // Snabbdom Rendering ----------------------------------------------
 
-/** Formats a time control into a human-readable string. */
-function getClockLabel(clock: TimeControl): string | undefined {
-	const minutesAndIncrement = clockutil.getMinutesAndIncrementFromClock(clock);
-	if (minutesAndIncrement === null) return;
-	return `${minutesAndIncrement.minutes}+${minutesAndIncrement.increment}`;
-}
-
 /** Patches the lobby table body with the latest seek rows. */
 function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): void {
 	tbodyVNode = patch(tbodyVNode, createSeekListVNode(seeks, newSeekIds));
@@ -381,7 +374,7 @@ function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
 						h('title', speedTitle),
 						h('use', { attrs: { href: `#${speedIcon}` } }),
 					]),
-					getClockLabel(seek.time),
+					clockutil.getTimeControlLabel(seek.time),
 				]),
 			]),
 			h(

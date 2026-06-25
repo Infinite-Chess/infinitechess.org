@@ -12,6 +12,8 @@ import path from 'path';
 import nunjucks from 'nunjucks';
 import { fileURLToPath } from 'node:url';
 
+import { players as p } from '../../shared/chess/util/typeutil.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const MANIFEST_PATH = path.join(process.cwd(), 'dist/manifest.json');
@@ -38,6 +40,7 @@ export function configureNunjucks(app: Application): void {
 	if (!fs.existsSync(MANIFEST_PATH))
 		throw new Error('Manifest file not found. Did we build first?');
 	nunjucksEnv.addGlobal('manifest', JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')));
+	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 
 	// Serializes a value to JSON safe for inline <script> injection.
 	// Escapes <, > and & to Unicode escapes so no HTML tag sequence can form.

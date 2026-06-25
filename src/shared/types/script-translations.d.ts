@@ -230,12 +230,31 @@ export interface ScriptTranslations {
 			too_many_royals_for_checkmate: string;
 			king_capture_on_turn_1: string;
 		};
+		game_result: {
+			color_wins_by: string;
+			draw_by: string;
+			aborted: string;
+		};
+		conditions: {
+			checkmate: string;
+			royalcapture: string;
+			allroyalscaptured: string;
+			allpiecescaptured: string;
+			koth: string;
+			time: string;
+			resignation: string;
+			disconnect: string;
+			stalemate: string;
+			moverule: string;
+			repetition: string;
+			insuffmat: string;
+			agreement: string;
+		};
 		variant_preview: {
 			four_d_movement: string;
 			black_moves_first: string;
 			turn_order: string;
 			win_by: string;
-			color_wins_by: string;
 			no_promotion: string;
 			promotion_prefix: string;
 			no_move_rule: string;
@@ -243,13 +262,6 @@ export interface ScriptTranslations {
 			en_passant: string;
 			plies_since_capture: string;
 			slide_limit_rule: string;
-			win_conditions: {
-				checkmate: string;
-				royalcapture: string;
-				allroyalscaptured: string;
-				allpiecescaptured: string;
-				koth: string;
-			};
 		};
 	};
 }

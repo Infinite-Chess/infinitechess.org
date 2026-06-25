@@ -6,7 +6,6 @@ import { marked } from 'marked';
 import { format, parseISO } from 'date-fns';
 
 import tconfig from './translationconfig.js';
-import { localeMap } from './dateLocales.js';
 
 /** The folder path containing English markdown news posts. */
 const englishNewsFolder = path.join(tconfig.NEWS_FOLDER, tconfig.DEFAULT_LANGUAGE);
@@ -44,7 +43,8 @@ export function loadNews(supportedLanguages: string[]): Record<string, string> {
 
 				// Date Formatting
 				const dateISO = fileName.replace('.md', ''); // YYYY-MM-DD
-				const date = format(parseISO(dateISO), 'PP', { locale: localeMap[languageCode] });
+				const locale = tconfig.getDateLocale(languageCode);
+				const date = format(parseISO(dateISO), 'PP', { locale });
 
 				return `<div class='news-post' data-date='${dateISO}'>
 							<span class='news-post-date'>${date}</span>
