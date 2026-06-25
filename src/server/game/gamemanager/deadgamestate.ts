@@ -42,62 +42,6 @@ const STATIC_PLAYER_COLUMNS = ['player_number', 'user_id', 'elo_at_game', 'ratin
 // Methods ------------------------------------------------------------------------------------------------
 
 /**
- * Maps already-fetched DB rows into the {@link StaticGameState} base. Pure (no queries
- * beyond the per-player username lookup), so both readers below share one field mapping.
- */
-function assembleStaticGameState(
-	game_id: number,
-	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
-	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
-): StaticGameState {
-	/** Per-color username container; a color absent from `playerRows` -> guest. */
-	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
-	for (const color of [players.WHITE, players.BLACK]) {
-		const row = playerRows.find((r) => r.player_number === color);
-		if (row === undefined) {
-			// No row -> this color was a guest.
-			playerContainers[color] = {
-				type: 'guest',
-				username: metadatautil.GUEST_NAME_ICN_METADATA,
-			};
-			continue;
-		}
-
-		// A deleted account keeps its row but loses its members lookup.
-		const member = getMemberDataByCriteria(['username'], 'user_id', row.user_id);
-		const container: ServerUsernameContainer = {
-			type: 'player',
-			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
-		};
-		if (row.elo_at_game !== null)
-			container.rating = {
-				value: row.elo_at_game,
-				confident: isRatingConfident(row.rating_deviation_at_game),
-			};
-		playerContainers[color] = container;
-	}
-
-	const gameConclusion = {
-		condition: game.termination,
-		victor: metadatautil.getVictorFromResult(game.result),
-	} as GameConclusion;
-
-	return {
-		id: game_id,
-		rated: Boolean(game.rated),
-		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
-		variant:
-			game.variant !== null
-				? { kind: 'preset', code: game.variant as VariantCode }
-				: { kind: 'custom' },
-		timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
-		timeCreated: timeutil.sqliteToTimestamp(game.date),
-		players: playerContainers,
-		gameConclusion,
-	};
-}
-
-/**
  * Returns the color a signed-in user played in a concluded game, or `undefined` if they
  * weren't a participant. Dead guests aren't identifiable (their browser-id isn't stored).
  * @throws If a database error occurs.
@@ -161,6 +105,62 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;
 
 	return state;
+}
+
+/**
+ * Maps already-fetched DB rows into the {@link StaticGameState} base. Pure (no queries
+ * beyond the per-player username lookup), so both readers below share one field mapping.
+ */
+function assembleStaticGameState(
+	game_id: number,
+	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
+	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
+): StaticGameState {
+	/** Per-color username container; a color absent from `playerRows` -> guest. */
+	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
+	for (const color of [players.WHITE, players.BLACK]) {
+		const row = playerRows.find((r) => r.player_number === color);
+		if (row === undefined) {
+			// No row -> this color was a guest.
+			playerContainers[color] = {
+				type: 'guest',
+				username: metadatautil.GUEST_NAME_ICN_METADATA,
+			};
+			continue;
+		}
+
+		// A deleted account keeps its row but loses its members lookup.
+		const member = getMemberDataByCriteria(['username'], 'user_id', row.user_id);
+		const container: ServerUsernameContainer = {
+			type: 'player',
+			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
+		};
+		if (row.elo_at_game !== null)
+			container.rating = {
+				value: row.elo_at_game,
+				confident: isRatingConfident(row.rating_deviation_at_game),
+			};
+		playerContainers[color] = container;
+	}
+
+	const gameConclusion = {
+		condition: game.termination,
+		victor: metadatautil.getVictorFromResult(game.result),
+	} as GameConclusion;
+
+	return {
+		id: game_id,
+		rated: Boolean(game.rated),
+		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
+		variant:
+			game.variant !== null
+				? { kind: 'preset', code: game.variant as VariantCode }
+				: { kind: 'custom' },
+		timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
+		timeCreated: timeutil.sqliteToTimestamp(game.date),
+		players: playerContainers,
+		gameConclusion,
+	};
 }
 
 /**
