@@ -170,7 +170,7 @@ async function paste(): Promise<undefined> {
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
-		const message: string = translations.copypaste.clipboard_denied;
+		const message: string = 'Clipboard permission denied. This might be your browser.';
 		toast.show(message + '\n' + error, { error: true });
 		return;
 	}
@@ -180,7 +180,7 @@ async function paste(): Promise<undefined> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		toast.show(translations.copypaste.clipboard_invalid, { error: true });
+		toast.show('Clipboard is not in valid ICN notation.', { error: true });
 		return;
 	}
 

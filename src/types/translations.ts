@@ -337,8 +337,6 @@ export type TranslationKeys =
 	| 'play.javascript.copypaste.cannot_paste_in_rated'
 	| 'play.javascript.copypaste.cannot_paste_in_engine'
 	| 'play.javascript.copypaste.cannot_paste_after_moves'
-	| 'play.javascript.copypaste.clipboard_denied'
-	| 'play.javascript.copypaste.clipboard_invalid'
 	| 'play.javascript.copypaste.game_needs_to_specify'
 	| 'play.javascript.copypaste.pasting_game'
 	| 'play.javascript.copypaste.pasting_in_private'
@@ -369,12 +367,6 @@ export type TranslationKeys =
 	| 'play.javascript.invites.cancel_invite'
 	| 'play.javascript.invites.start_game'
 	| 'play.javascript.invites.join_existing_active_games'
-	| 'play.javascript.onlinegame.afk_warning'
-	| 'play.javascript.onlinegame.opponent_afk'
-	| 'play.javascript.onlinegame.opponent_disconnected'
-	| 'play.javascript.onlinegame.opponent_lost_connection'
-	| 'play.javascript.onlinegame.auto_resigning_in'
-	| 'play.javascript.onlinegame.auto_aborting_in'
 	| 'play.javascript.onlinegame.not_logged_in'
 	| 'play.javascript.onlinegame.game_no_longer_exists'
 	| 'play.javascript.onlinegame.another_window_connected'
@@ -890,8 +882,6 @@ export interface TranslationsObject {
 				cannot_paste_in_rated: string;
 				cannot_paste_in_engine: string;
 				cannot_paste_after_moves: string;
-				clipboard_denied: string;
-				clipboard_invalid: string;
 				game_needs_to_specify: string;
 				pasting_game: string;
 				pasting_in_private: string;
@@ -928,12 +918,6 @@ export interface TranslationsObject {
 				join_existing_active_games: string;
 			};
 			onlinegame: {
-				afk_warning: string;
-				opponent_afk: string;
-				opponent_disconnected: string;
-				opponent_lost_connection: string;
-				auto_resigning_in: string;
-				auto_aborting_in: string;
 				not_logged_in: string;
 				game_no_longer_exists: string;
 				another_window_connected: string;

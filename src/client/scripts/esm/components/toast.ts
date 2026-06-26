@@ -15,8 +15,6 @@
 interface ToastOptions {
 	/** Whether the toast indicates an error. Renders with the error styling. */
 	error?: boolean;
-	/** Overrides the default duration of the toast. */
-	durationMillis?: number;
 	/** Multiplies the default duration of the toast. */
 	durationMultiplier?: number;
 }
@@ -56,9 +54,8 @@ function show(text: string, options: ToastOptions = {}): void {
 		return;
 	}
 
-	const { error = false, durationMillis, durationMultiplier = 1 } = options;
-	const duration =
-		durationMillis ?? (DURATION_BASE + text.length * DURATION_PER_CHAR) * durationMultiplier;
+	const { error = false, durationMultiplier = 1 } = options;
+	const duration = (DURATION_BASE + text.length * DURATION_PER_CHAR) * durationMultiplier;
 
 	if (error) console.error(text);
 
