@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/boardeditor/editortypes.ts
+// src/client/scripts/esm/game/editorstores/estoretypes.ts
 
 /**
  * All TypeScript types, constants, and Zod schemas for the board editor save system.
@@ -9,14 +9,9 @@
  */
 
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ActivePosition } from './boardeditor.js';
+import type { ActivePosition } from '../boardeditor/boardeditor.js';
 
 import * as z from 'zod';
-
-// Constants ------------------------------------------------------------------
-
-/** All valid storage locations for a saved editor position */
-const STORAGE_TYPES = ['local', 'cloud'] as const;
 
 // Types ------------------------------------------------------------------
 
@@ -81,25 +76,10 @@ const SaveStateSchema = z.strictObject({
 	...positionDataFields,
 });
 
-/** Schema for validating an AutosaveState */
-const AutosaveStateSchema = z.strictObject({
-	active_position: z
-		.union([
-			z.object({ name: z.string(), storage_type: z.literal('local') }),
-			z.object({ name: z.string(), storage_type: z.literal('cloud'), owner: z.string() }),
-		])
-		.optional(),
-	dirty: z.boolean(),
-	...positionDataFields,
-});
-
 // Exports --------------------------------------------------------------------
 
 export default {
-	STORAGE_TYPES,
-
 	positionDataFields,
 	AbridgedSaveStateSchema,
 	SaveStateSchema,
-	AutosaveStateSchema,
 };

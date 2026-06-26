@@ -6,7 +6,7 @@
 
 import type { MetaData } from '../../../../../shared/types';
 import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter';
-import type { EditorSaveState } from '../boardeditor/editortypes';
+import type { EditorSaveState } from './estoretypes';
 import type { CloudPositionRecord, CloudSaveListRecord } from './editorSavesAPI';
 
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';

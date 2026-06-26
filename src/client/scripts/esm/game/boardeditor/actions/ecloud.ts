@@ -5,7 +5,7 @@
  * Mirrors esave.ts for cloud storage.
  */
 
-import type { EditorSaveState } from '../editortypes';
+import type { EditorSaveState } from '../../editorstores/estoretypes';
 import type { CloudSaveListRecord } from '../../editorstores/editorSavesAPI';
 
 import toast from '../../../components/toast.js';

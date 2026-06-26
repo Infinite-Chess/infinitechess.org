@@ -4,10 +4,10 @@
  * Low-level IndexedDB read/write operations for board editor saves.
  */
 
-import type { EditorAbridgedSaveState, EditorSaveState } from '../boardeditor/editortypes.js';
+import type { EditorAbridgedSaveState, EditorSaveState } from './estoretypes.js';
 
 import IndexedDB from '../../util/IndexedDB.js';
-import editortypes from '../boardeditor/editortypes.js';
+import editortypes from './estoretypes.js';
 
 // Constants ----------------------------------------------------------------------
 

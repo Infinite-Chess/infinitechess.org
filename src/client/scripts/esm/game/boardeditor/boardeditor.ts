@@ -18,7 +18,6 @@ import eautosave from './actions/eautosave.js';
 import egamerules from './egamerules.js';
 import eclipboard from './eclipboard.js';
 import drawingtool from './tools/drawingtool.js';
-import editortypes from './editortypes.js';
 import edithistory from './edithistory.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
@@ -32,7 +31,7 @@ export type ActivePosition =
 	| { name: string; storage_type: 'cloud'; owner: string };
 
 /** Whether a position is stored locally (IndexedDB) or on the server (cloud) */
-export type StorageType = (typeof editortypes)['STORAGE_TYPES'][number];
+export type StorageType = ActivePosition['storage_type'];
 
 // State -------------------------------------------------------------------------
 

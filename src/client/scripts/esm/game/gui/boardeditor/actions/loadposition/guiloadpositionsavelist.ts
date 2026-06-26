@@ -8,7 +8,7 @@
 
 import type { StorageType } from '../../../../boardeditor/boardeditor';
 import type { CloudSaveListRecord } from '../../../../editorstores/editorSavesAPI';
-import type { EditorAbridgedSaveState } from '../../../../boardeditor/editortypes';
+import type { EditorAbridgedSaveState } from '../../../../editorstores/estoretypes';
 
 import style from '../../../style';
 import esave from '../../../../boardeditor/actions/esave';

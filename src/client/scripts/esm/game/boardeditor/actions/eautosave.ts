@@ -5,19 +5,33 @@
  * It autosaves periodically, but only if the position is dirty, aka if it has changed since last time.
  */
 
-import type { EditorAutosaveState } from '../editortypes';
+import type { EditorAutosaveState } from '../../editorstores/estoretypes';
+
+import z from 'zod';
 
 import eactions from './eactions';
 import IndexedDB from '../../../util/IndexedDB';
 import egamerules from '../egamerules';
 import boardeditor from '../boardeditor';
-import editortypes from '../editortypes';
+import estoretypes from '../../editorstores/estoretypes';
 import validatorama from '../../../util/validatorama';
 
 // Constants -------------------------------------------------------------
 
 /** Name of editor autosave in local storage */
 const EDITOR_AUTOSAVE_NAME = 'editor-autosave';
+
+/** Schema for validating an AutosaveState */
+const AutosaveStateSchema = z.strictObject({
+	active_position: z
+		.union([
+			z.object({ name: z.string(), storage_type: z.literal('local') }),
+			z.object({ name: z.string(), storage_type: z.literal('cloud'), owner: z.string() }),
+		])
+		.optional(),
+	dirty: z.boolean(),
+	...estoretypes.positionDataFields,
+});
 
 // Variables --------------------------------------------------------------
 
@@ -129,7 +143,7 @@ function clearAutosave(): void {
 async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
 	const raw = await IndexedDB.loadItem(EDITOR_AUTOSAVE_NAME);
 	if (raw === undefined) return undefined;
-	const parsed = editortypes.AutosaveStateSchema.safeParse(raw);
+	const parsed = AutosaveStateSchema.safeParse(raw);
 	if (!parsed.success) {
 		console.error('Corrupted board editor autosave data found, clearing autosave.');
 		clearAutosave();

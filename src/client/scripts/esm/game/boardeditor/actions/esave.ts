@@ -4,7 +4,7 @@
  * Handles the saving of positions in boardeditor
  */
 
-import type { EditorSaveState } from '../editortypes';
+import type { EditorSaveState } from '../../editorstores/estoretypes';
 
 import toast from '../../../components/toast.js';
 import eactions from './eactions';
