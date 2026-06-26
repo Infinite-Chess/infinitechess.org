@@ -66,6 +66,29 @@ jobs:
       - name: Run TypeScript compiler
         run: npm run type-check
 
+  import-rules:
+    name: Import Rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Mirror the script's report into the job summary so violations render
+      # on the PR's checks page. pipefail (GitHub's default) keeps the exit code.
+      - name: Check import rules
+        run: npx tsx scripts/importrules.ts 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
   test:
     name: Tests
     runs-on: ubuntu-latest

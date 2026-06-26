@@ -9,7 +9,6 @@ import type { PostProcessPass } from '../../webgl/post_processing/PostProcessing
 
 import bounds from '../../../../../shared/util/math/bounds';
 import bdcoords from '../../../../../shared/chess/util/bdcoords';
-import { players as p } from '../../../../../shared/chess/util/typeutil';
 import coordutil, { Coords } from '../../../../../shared/chess/util/coordutil';
 
 import space from '../misc/space';

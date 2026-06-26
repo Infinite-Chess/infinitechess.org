@@ -25,7 +25,7 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-const ESMEntryPoints = [
+export const ESMEntryPoints = [
 	// Stylesheets — bundled as content-hashed CSS entry points.
 	'src/client/css/global.css',
 	'src/client/css/header.css',
