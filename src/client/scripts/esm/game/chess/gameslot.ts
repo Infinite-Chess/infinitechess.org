@@ -14,8 +14,6 @@ import type { VariantCode } from '../../../../../shared/chess/variants/variantre
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { Additional, GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
-import bd from '@naviary/bigdecimal';
-
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefile from '../../../../../shared/chess/logic/gamefile.js';
@@ -24,27 +22,19 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import area from '../rendering/area.js';
 import arrows from '../rendering/arrows/arrows.js';
-import meshes from '../rendering/meshes.js';
 import { gl } from '../rendering/webgl.js';
-import boardpos from '../rendering/boardpos.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
-import copygame from './copygame.js';
 import miniimage from '../rendering/miniimage.js';
-import pastegame from './pastegame.js';
 import starfield from '../rendering/starfield.js';
 import imagecache from '../../chess/rendering/imagecache.js';
-import Transition from '../rendering/transitions/Transition.js';
 import piecemodels from '../rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
-import preferences from '../../components/header/preferences.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import guinavigation from '../gui/guinavigation.js';
 import { animateMove } from './graphicalchanges.js';
 import miniimagerenderer from '../rendering/miniimagerenderer.js';
 
@@ -60,8 +50,6 @@ interface LoadOptions {
 	dateTimestamp: number;
 	/** True if we should be viewing the game from white's perspective, false for black's perspective. */
 	viewWhitePerspective: boolean;
-	/** Whether the coordinate field box should be editable. */
-	allowEditCoords: boolean;
 	/** Preset ray overrides for the variant's rays. */
 	presetAnnotes?: PresetAnnotes;
 	additional?: Additional;
@@ -76,7 +64,7 @@ let loadedGamefile: GameFile | undefined;
 let mesh: Mesh | undefined;
 
 /** The player color we are viewing the perspective of in the current loaded game. */
-let youAreColor: Player;
+let viewColor: Player;
 
 /**
  * The timeout id of the timer that animates the latest-played
@@ -124,12 +112,12 @@ function areInGame(): boolean {
 	return loadedGamefile !== undefined;
 }
 
-function isLoadedGameViewingWhitePerspective(): boolean {
+function areViewingWhite(): boolean {
 	if (!loadedGamefile)
 		throw Error(
 			"Cannot ask if loaded game is from white's perspective when there isn't a loaded game.",
 		);
-	return youAreColor === p.WHITE;
+	return viewColor === p.WHITE;
 }
 
 /**
@@ -155,7 +143,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 		console.warn('Game start sound has not been added yet.');
 
 		// Start GRAPHICAL loading immediately and hand its promise to the caller.
-		return { graphical: loadGraphical(loadOptions) };
+		return { graphical: loadGraphical() };
 	});
 }
 
@@ -168,7 +156,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 		loadOptions.additional,
 	);
 
-	youAreColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
+	viewColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
 	const pieceCount = boardutil.getPieceCountOfGame(loadedGamefile.pieces);
 	// Disable miniimages if there's too many pieces
@@ -176,8 +164,6 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	// Disable arrows if there's too many pieces or lines in the game
 	if (pieceCount > arrows.MAX_PIECES || loadedGamefile.pieces.slides.length > arrows.MAX_LINES)
 		arrows.setMode(0);
-
-	initCopyPastGameListeners();
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
 	if (loadOptions.presetAnnotes?.squares)
@@ -189,9 +175,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 }
 
 /** Loads all of the graphical components of a game */
-async function loadGraphical(loadOptions: LoadOptions): Promise<void> {
-	// Opening the guinavigation needs to be done in gameslot.ts instead of gameloader.ts so pasting games still opens it
-	guinavigation.open({ allowEditCoords: loadOptions.allowEditCoords }); // Editing your coords allowed in local games
+async function loadGraphical(): Promise<void> {
 	guiclock.set(loadedGamefile!);
 
 	await imagecache.initImagesForGame(loadedGamefile!);
@@ -239,8 +223,6 @@ function unloadGame(): void {
 	loadedGamefile = undefined;
 	mesh = undefined;
 
-	removeCopyPasteGameListeners();
-
 	// Stop the timer that (animates the latest-played move when rejoining a game after a short delay)
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
@@ -249,56 +231,16 @@ function unloadGame(): void {
 }
 
 /**
- * Sets the camera to the recentered position, plus a little zoomed in.
- * THEN transitions to normal zoom.
- */
-function startStartingTransition(): void {
-	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-		loadedGamefile!.startSnapshot.box,
-	);
-	const centerArea = area.calculateFromUnpaddedBox(boxFloating);
-	boardpos.setBoardPos(centerArea.coords);
-	const INITIAL_ZOOM_MULTIPLIER = preferences.getFastTransitionsMode() ? 1.4 : 1.75; // We start 1.75x zoomed in then normal, then transition into 1x
-	const startScale = bd.multiply(centerArea.scale, bd.fromNumber(INITIAL_ZOOM_MULTIPLIER));
-	boardpos.setBoardScale(startScale);
-	guinavigation.recenter();
-	Transition.eraseTelHist();
-}
-
-/** Called when a game is loaded, loads the event listeners for when we are in a game. */
-function initCopyPastGameListeners(): void {
-	document.addEventListener('copy', callbackCopy);
-	document.addEventListener('paste', pastegame.callbackPaste);
-	document.addEventListener('copy-game', callbackCopy);
-	document.addEventListener('paste-game', pastegame.callbackPaste);
-}
-
-/** Called when a game is unloaded, closes the event listeners for being in a game. */
-function removeCopyPasteGameListeners(): void {
-	document.removeEventListener('copy', callbackCopy);
-	document.removeEventListener('paste', pastegame.callbackPaste);
-	document.removeEventListener('copy-game', callbackCopy);
-	document.removeEventListener('paste-game', pastegame.callbackPaste);
-}
-
-function callbackCopy(_event: Event): void {
-	if (document.activeElement instanceof HTMLInputElement) return; // Don't copy if the user is typing in an input field
-	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
-	copygame.copyGame(false);
-}
-
-/**
  * Ends the game. Call this when the game is over by the used win condition.
  * Stops the clocks, darkens the board, displays who won, plays a sound effect.
  */
 function concludeGame(): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
-	const gamefile = loadedGamefile;
-	if (gamefile.gameConclusion === undefined)
+	if (loadedGamefile.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
 
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
+	clock.endGame(loadedGamefile);
+	guiclock.stopClocks(loadedGamefile);
 
 	GameBus.dispatch('game-concluded');
 
@@ -309,10 +251,9 @@ export default {
 	getGamefile,
 	getMesh,
 	areInGame,
-	isLoadedGameViewingWhitePerspective,
+	areViewingWhite,
 	loadGamefile,
 	unloadGame,
-	startStartingTransition,
 	concludeGame,
 };
 

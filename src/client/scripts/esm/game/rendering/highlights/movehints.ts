@@ -21,7 +21,7 @@ import snapping from './snapping.js';
 import boardpos from '../boardpos.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
-import gameloader from '../../chess/gameloader.js';
+import gamesession from '../../chess/gamesession.js';
 import drawsquares from './annotations/drawsquares.js';
 import preferences from '../../../components/header/preferences.js';
 import { GameBus } from '../../GameBus.js';
@@ -55,7 +55,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (
 		selection.isOpponentPieceSelected() ||
-		!gameloader.isItOurTurn() ||
+		!gamesession.isItOurTurn() ||
 		!gamefileutility.isCurrentViewedPositionInCheck(gamefile)
 	) {
 		clearIndividualMoves();

@@ -17,10 +17,8 @@ import gameslot from '../chess/gameslot.js';
 import deltatime from '../misc/deltatime.js';
 import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
-import gameloader from '../chess/gameloader.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from './perspective.js';
-import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
 import {
 	AttributeInfoInstanced,
@@ -124,15 +122,9 @@ let desiredNumStars: number = 0;
 
 /** Event listener for when we toggle Starfield in the settings dropdown. */
 document.addEventListener('starfield-toggle', (e) => {
-	if (!gameloader.areInAGame()) return; // Not in a game => Starfield should not be initiated or terminated.
 	const enabled: boolean = e.detail;
 	if (enabled) init();
 	else terminate();
-});
-
-GameBus.addEventListener('game-unloaded', () => {
-	// Terminate starfield on game unload (can't be in gameloader since that doesn't unload its stuff on a pasted game)
-	terminate();
 });
 
 /**

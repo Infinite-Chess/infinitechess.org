@@ -15,9 +15,9 @@ import premoves from '../chess/premoves.js';
 import snapping from '../rendering/highlights/snapping.js';
 import boardpos from '../rendering/boardpos.js';
 import selection from '../chess/selection.js';
-import perspective from '../rendering/perspective.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
+import gamesession from '../chess/gamesession.js';
 import movesequence from '../chess/movesequence.js';
 import frametracker from '../rendering/frametracker.js';
 import gamecompressor from '../chess/gamecompressor.js';
@@ -39,7 +39,6 @@ interface EngineConfig {
 
 /** Whether we are currently in an engine game. */
 let inEngineGame: boolean = false;
-let ourColor: Player | undefined;
 let engineColor: Player | undefined;
 let currentEngine: string | undefined; // name of the current engine used
 let engineConfig: EngineConfig | undefined; // json that is sent to the engine, giving it extra config information
@@ -64,21 +63,6 @@ GameBus.addEventListener('game-concluded', () => {
 
 // Functions ------------------------------------------------------------------------
 
-function areInEngineGame(): boolean {
-	return inEngineGame;
-}
-
-function getOurColor(): Player | undefined {
-	if (!inEngineGame) throw Error('Cannot get our color if we are not in an engine game!');
-	return ourColor!;
-}
-
-function isItOurTurn(): boolean {
-	if (!inEngineGame)
-		throw Error("Cannot get isItOurTurn of engine game when we're not in an engine game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
-}
-
 function getCurrentEngine(): string | undefined {
 	return currentEngine;
 }
@@ -96,8 +80,7 @@ function initEngineGame(options: {
 	console.log(`Starting engine game with engine "${options.currentEngine}".`);
 
 	inEngineGame = true;
-	ourColor = options.youAreColor;
-	engineColor = typeutil.invertPlayer(ourColor);
+	engineColor = typeutil.invertPlayer(options.youAreColor);
 	currentEngine = options.currentEngine;
 	engineConfig = options.engineConfig;
 
@@ -133,32 +116,6 @@ function initEngineGame(options: {
 		// the engine generated legal moves are rendered as soon as the engine is ready.
 		requestMovesForCurrentPosition();
 	});
-}
-
-// Call when we leave an engine game
-function closeEngineGame(): void {
-	inEngineGame = false;
-	ourColor = undefined;
-	engineColor = undefined;
-	currentEngine = undefined;
-	engineConfig = undefined;
-	moveHistoryLegalMoves.clear();
-	pendingDebugRequests.length = 0;
-	perspective.resetRotations(); // Without this, leaving an engine game of which we were black, won't reset our rotation.
-
-	// terminate the webworker
-	if (engineWorker) engineWorker.terminate();
-	engineWorker = undefined;
-	checkmatepractice.onGameUnload();
-}
-
-/**
- * Tests if we are this color in the engine game.
- * @param color - p.WHITE / p.BLACK
- * @returns *true* if we are that color.
- */
-function areWeColor(color: Player): boolean {
-	return color === ourColor;
 }
 
 /**
@@ -262,7 +219,7 @@ function makeEngineMove(tokenMove: unknown): void {
 		// find any legal moves, or thought it was checkmate), or an error occurred.
 		// In this case, resign for the engine.
 		console.log(`Engine returned a null move. Resigning the game...`);
-		gamefile.gameConclusion = { condition: 'resignation', victor: ourColor! };
+		gamefile.gameConclusion = { condition: 'resignation', victor: gamesession.getRole()! };
 		gameslot.concludeGame();
 		return;
 	}
@@ -373,13 +330,8 @@ function render(): void {
 // Export ---------------------------------------------------------------------------------
 
 export default {
-	areInEngineGame,
-	getOurColor,
-	isItOurTurn,
 	getCurrentEngine,
 	initEngineGame,
-	closeEngineGame,
-	areWeColor,
 	onMovePlayed,
 	toggleDebug,
 	render,

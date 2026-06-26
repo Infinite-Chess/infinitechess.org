@@ -39,11 +39,10 @@ import {
 	hasColorInGameSeenConclusion,
 } from './activeplayers.js';
 import {
-	cancelAutoAFKResignTimer,
 	startDisconnectTimer,
 	cancelDisconnectTimers,
 	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
-} from './afkdisconnect.js';
+} from './disconnect.js';
 
 // Constants ----------------------------------------------------------------------------------
 
@@ -383,8 +382,6 @@ function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion |
 	// Cancel the timer that will auto terminate
 	// the game when the next player runs out of time
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
-	// Also cancel the one that auto loses by AFK
-	cancelAutoAFKResignTimer(servergame);
 	cancelDisconnectTimers(servergame.match);
 	closeDrawOffer(servergame.match);
 
@@ -475,24 +472,6 @@ function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): voi
 }
 
 /**
- * Called when a player in the game loses by abandonment (AFK).
- * Sets the gameConclusion, notifies both players.
- * Sets a 5 second timer to delete the game in case
- * one of them was disconnected when this happened.
- * @param servergame - The game
- * @param colorWon - The color that won by opponent abandonment (AFK)
- */
-function onPlayerLostByAbandonment(servergame: ServerGame, colorWon: Player): void {
-	if (gameutility.isGameResignable(servergame)) {
-		// console.log('Someone has lost by abandonment!');
-		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
-	} else {
-		// console.log('Game aborted from abandonment.');
-		setGameConclusion(servergame, { condition: 'aborted' });
-	}
-}
-
-/**
  * Deletes the game. Prints the active game count.
  * This should not be called until after both clients have had a chance
  * to see the game result, or after 15 seconds after the game ends
@@ -576,7 +555,6 @@ function prepGamesForShutdown(): void {
 
 		// Cancel all runtime timers
 		clearTimeout(servergame.match.autoTimeLossTimeoutID);
-		cancelAutoAFKResignTimer(servergame);
 		cancelDisconnectTimers(servergame.match);
 		gameutility.cancelDeleteGameTimer(servergame.match);
 
@@ -637,21 +615,7 @@ function restoreLiveGames(): void {
 			);
 		}
 
-		// 3. AFK resign timer
-		if (pendingTimers.afkResignTimerMs !== undefined) {
-			const opponentColor = typeutil.invertPlayer(servergame.whosTurn!);
-			if (pendingTimers.afkResignTimerMs <= 0) {
-				// AFK timer already expired during downtime
-				onPlayerLostByAbandonment(servergame, opponentColor);
-				continue;
-			}
-			servergame.match.autoAFKResignTimeoutID = setTimeout(
-				() => onPlayerLostByAbandonment(servergame, opponentColor),
-				pendingTimers.afkResignTimerMs,
-			);
-		}
-
-		// 4. Per-player disconnect timers
+		// 3. Per-player disconnect timers
 		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
 			const player = Number(playerStr) as Player;
 			const opponentColor = typeutil.invertPlayer(player);
@@ -709,7 +673,6 @@ export {
 	isMemberInSomeActiveGame,
 	unsubClientFromGameBySocket,
 	unsubSpectatorFromGameBySocket,
-	onPlayerLostByAbandonment,
 	getGameBySocket,
 	onRequestRemovalFromPlayersInActiveGames,
 	setGameConclusion,

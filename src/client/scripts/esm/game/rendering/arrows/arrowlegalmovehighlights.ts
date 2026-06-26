@@ -19,9 +19,8 @@ import coordutil, { Coords } from '../../../../../../shared/chess/util/coordutil
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import selection from '../../chess/selection.js';
-import gameloader from '../../chess/gameloader.js';
+import gamesession from '../../chess/gamesession.js';
 import preferences from '../../../components/header/preferences.js';
-import boardeditor from '../../boardeditor/boardeditor.js';
 import { GameBus } from '../../GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrows, { ArrowPiece } from './arrows.js';
@@ -139,16 +138,9 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 
 	// Determine what color the legal move highlights should be...
 	const pieceColor = typeutil.getColorFromType(piece.type);
-	const ourColor =
-		gameloader.areInLocalGame() || boardeditor.areInBoardEditor()
-			? gamefile.whosTurn
-			: gameloader.getOurColor();
-	const isOpponentPiece = pieceColor !== ourColor;
-	const isOurTurn = gamefile.whosTurn === pieceColor;
-	const color = preferences.getLegalMoveHighlightColor({
-		isOpponentPiece,
-		isPremove: !isOurTurn,
-	});
+	const isOpponentPiece = selection.isOpponentType(gamefile, piece.type);
+	const isPremove = !isOpponentPiece && !gamesession.isItOurTurn();
+	const color = preferences.getLegalMoveHighlightColor({ isOpponentPiece, isPremove });
 
 	const { NonCaptureModel, CaptureModel } =
 		legalmovemodel.generateModelsForPiecesLegalMoveHighlights(

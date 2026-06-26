@@ -29,15 +29,14 @@ import animation from '../rendering/animation.js';
 import selection from './selection.js';
 import boarddrag from '../rendering/boarddrag.js';
 import starfield from '../rendering/starfield.js';
-import gameloader from './gameloader.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import primitives from '../rendering/primitives.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
+import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import boardeditor from '../boardeditor/boardeditor.js';
@@ -66,8 +65,8 @@ import {
 
 // Variables -------------------------------------------------------------------------------
 
-const element_overlay: HTMLElement = document.getElementById('overlay')!;
-/** The input listener for the overlay element */
+const element_overlay: HTMLElement = document.getElementById('board-canvas')!;
+/** The input listener for the board canvas */
 let listener_overlay: InputListener;
 /** The input listener for the document element */
 let listener_document: InputListener;
@@ -115,7 +114,7 @@ function update(): void {
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
 		frametracker.onVisualChange();
-	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
+	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
@@ -134,9 +133,9 @@ function update(): void {
 
 	controls.testInGameToggles(gamefile, mesh);
 
-	const timeWinner = clock.update(gamefile);
-	if (timeWinner && !onlinegame.areInOnlineGame()) {
-		// undefined if no clock has ran out
+	const timeWinner = clock.update(gamefile); // undefined if no clock has ran out
+	// If the clock has ran out, and we are in an engine game, conclude the game.
+	if (timeWinner !== undefined && gamesession.getGameType() === 'engine') {
 		gamefile.gameConclusion = { victor: timeWinner, condition: 'time' };
 		gameslot.concludeGame();
 	}
@@ -196,8 +195,6 @@ function update(): void {
 	// After entities.updateEntitiesHovered() because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
 
-	gameloader.update(); // Updates whatever game is currently loaded.
-
 	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
 
 	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
@@ -248,8 +245,6 @@ function render(): void {
 
 /** Renders all in our scene. */
 function renderScene(): void {
-	if (gameloader.areWeLoadingGame()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
-
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
 	// if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.

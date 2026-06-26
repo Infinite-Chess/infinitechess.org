@@ -39,7 +39,6 @@ export interface LiveGameData {
 	conclusion_condition: string | null;
 	conclusion_victor: number | null;
 	time_ended: number | null;
-	afk_resign_time: number | null;
 	delete_time: number | null;
 	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
@@ -59,9 +58,8 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				moves, color_ticking, clock_snapshot_time,
 				draw_offer_state,
 				conclusion_condition, conclusion_victor, time_ended,
-				afk_resign_time, delete_time,
-				validate_moves
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				delete_time, validate_moves
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	dbCall(
 		() =>
@@ -80,7 +78,6 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				record.conclusion_condition,
 				record.conclusion_victor,
 				record.time_ended,
-				record.afk_resign_time,
 				record.delete_time,
 				record.validate_moves,
 			]),

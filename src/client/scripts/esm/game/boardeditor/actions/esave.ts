@@ -24,8 +24,6 @@ let positionSavePending = false;
 
 /** Saves current position under "position_name". */
 async function saveLocal(position_name: string): Promise<void> {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	// Coalesce: if a save is already running, request another and return.
 	if (positionSaveInFlight) {
 		positionSavePending = true;

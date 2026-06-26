@@ -153,13 +153,6 @@ interface MatchInfo {
 	 * whos turn it currently is when they run out of time. */
 	autoTimeLossTimeoutID?: ReturnType<typeof setTimeout>;
 
-	/** The ID of the timeout which will auto-lose the player
-	 * whos turn it currently is if they go AFK too long. */
-	autoAFKResignTimeoutID?: ReturnType<typeof setTimeout>;
-	/** The time the current player will be auto-resigned by
-	 * AFK if they are currently AFK. */
-	autoAFKResignTime?: number;
-
 	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise null. */
 	drawOfferState?: Player;
 
@@ -689,12 +682,6 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 	};
 
 	// Include other relevant stuff if defined...
-
-	// Only send AFK countdown to the opponent, not to the AFK player themselves.
-	if (match.autoAFKResignTime !== undefined && color !== servergame.whosTurn) {
-		const millisLeftUntilAutoAFKResign = match.autoAFKResignTime - now;
-		participantState.millisUntilAutoAFKResign = millisLeftUntilAutoAFKResign;
-	}
 
 	// If their opponent has disconnected, send them that info too.
 	if (opponentData.disconnect.timeToAutoLoss !== undefined) {

@@ -41,12 +41,7 @@ GameBus.addEventListener('user-move-played', () => {
  * if we're in an online game.
  */
 function sendMove(): void {
-	if (
-		!onlinegame.areInOnlineGame() ||
-		!onlinegame.areInSync() ||
-		!socketsubs.areSubbedToSub('game')
-	)
-		return; // Skip
+	if (!onlinegame.areInSync() || !socketsubs.areSubbedToSub('game')) return; // Skip
 	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
@@ -166,7 +161,7 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 		console.warn('Received clock values for untimed game??');
 		return;
 	}
-	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues);
 	guiclock.edit(gamefile);
 }

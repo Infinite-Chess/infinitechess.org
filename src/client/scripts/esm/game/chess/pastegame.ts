@@ -21,7 +21,7 @@ import icnconverter, {
 
 import toast from '../../components/toast.js';
 import gameloader from './gameloader.js';
-import boardeditor from '../boardeditor/boardeditor.js';
+import gamesession from './gamesession.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
 /**
@@ -30,10 +30,8 @@ import gameslot, { PresetAnnotes } from './gameslot.js';
  * @param event - The event fired from the event listener
  */
 async function callbackPaste(_event: Event): Promise<void> {
-	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
-
 	// Can't paste a game when the current gamefile isn't finished loading all the way.
-	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
 	console.error('Pasting games is no longer supported');
 
@@ -42,8 +40,10 @@ async function callbackPaste(_event: Event): Promise<void> {
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch (error) {
-		const message: string = translations.copypaste.clipboard_denied;
-		return toast.show(message + '\n' + error, { error: true });
+		return toast.show(
+			'Clipboard permission denied. This might be your browser.' + '\n' + error,
+			{ error: true },
+		);
 	}
 
 	// Convert clipboard text to object
@@ -52,7 +52,7 @@ async function callbackPaste(_event: Event): Promise<void> {
 		longformOut = icnconverter.ShortToLong_Format(clipboard);
 	} catch (e) {
 		console.error(e);
-		toast.show(translations.copypaste.clipboard_invalid, { error: true });
+		toast.show('Clipboard is not in valid ICN notation.', { error: true });
 		return;
 	}
 
@@ -123,16 +123,11 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
-		if (pieceCount >= pieceCountToDisableCheckmate) {
-			// TOO MANY pieces!
-			toast.show(
-				`${translations.copypaste.piece_count} ${pieceCount} ${translations.copypaste.exceeded} ${pieceCountToDisableCheckmate}! ${translations.copypaste.changed_wincon}`,
-				{ durationMultiplier: 1.5 },
-			);
-		} else {
-			// Only print "Loaded game from clipboard." if we haven't already shown a different toast cause of too many pieces
-			toast.show(`${translations.copypaste.loaded_from_clipboard}`);
-		}
+
+		console.log('Pasted game from clipboard!');
+
+		if (pieceCount >= pieceCountToDisableCheckmate)
+			toast.show('Checkmate win condition was swapped for royal captured.');
 	});
 
 	console.log('Loaded game from clipboard!');

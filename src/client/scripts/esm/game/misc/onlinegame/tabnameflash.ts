@@ -9,10 +9,12 @@ import bd from '@naviary/bigdecimal';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
-import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
 import movesound from '../movesound.js';
 import loadbalancer from '../loadbalancer.js';
+
+/** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
+const MOVE_SOUND_REMINDER_MS: number = 1000 * 20; // 20 seconds
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
 const originalDocumentTitle: string = document.title;
@@ -76,11 +78,10 @@ function cancelFlashTabTimer(): void {
 function scheduleMoveSound_timeoutID(): void {
 	if (!loadbalancer.isPageHidden()) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
-	const timeNextSoundFromNow = (afk.timeUntilAFKSecs * 1000) / 2;
 	const ZERO = bd.fromBigInt(0n);
 	moveSound_timeoutID = setTimeout(
 		() => movesound.playMove(ZERO, false, false),
-		timeNextSoundFromNow,
+		MOVE_SOUND_REMINDER_MS,
 	);
 }
 

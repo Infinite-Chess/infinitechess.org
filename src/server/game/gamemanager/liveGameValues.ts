@@ -127,7 +127,6 @@ function onGameCreated(servergame: ServerGame): void {
 		conclusion_condition: null,
 		conclusion_victor: null,
 		time_ended: null,
-		afk_resign_time: null,
 		delete_time: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 	};
@@ -176,7 +175,6 @@ function onGameConcluded(servergame: ServerGame): void {
 		time_ended: servergame.match.timeEnded!,
 		delete_time: servergame.match.timeEnded! + timeBeforeGameDeletionMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
-		afk_resign_time: null, // AFK timers are cancelled on conclusion
 	};
 
 	// Stop clock state
@@ -248,24 +246,6 @@ function onPlayerReconnected(servergame: ServerGame, color: Player): void {
 }
 
 /**
- * Called when a player goes AFK. Persists the AFK resign timestamp.
- */
-function onPlayerAFK(servergame: ServerGame): void {
-	persist(() =>
-		updateLiveGame(servergame.match.id, {
-			afk_resign_time: servergame.match.autoAFKResignTime ?? null,
-		}),
-	);
-}
-
-/**
- * Called when a player returns from AFK. Clears the AFK resign timestamp.
- */
-function onPlayerAFKReturn(servergame: ServerGame): void {
-	persist(() => updateLiveGame(servergame.match.id, { afk_resign_time: null }));
-}
-
-/**
  * Called when a game is fully deleted/logged. Removes the live game from the database.
  */
 function onGameDeleted(game_id: number): void {
@@ -283,7 +263,5 @@ export default {
 	onDrawOfferDeclined,
 	onPlayerDisconnected,
 	onPlayerReconnected,
-	onPlayerAFK,
-	onPlayerAFKReturn,
 	onGameDeleted,
 };

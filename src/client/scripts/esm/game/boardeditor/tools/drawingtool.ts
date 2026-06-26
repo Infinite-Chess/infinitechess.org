@@ -63,11 +63,6 @@ function init(): void {
 	guipalette.markPiece(currentPieceType);
 }
 
-function onCloseEditor(): void {
-	resetState();
-	specialrighthighlights.disable();
-}
-
 function resetState(): void {
 	thisEdit = undefined;
 	drawingToolPointerId = undefined;
@@ -236,7 +231,6 @@ function getColor(): Player {
 export default {
 	// Initialization
 	init,
-	onCloseEditor,
 	update,
 	// API
 	onToolChange,

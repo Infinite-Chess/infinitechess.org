@@ -6,7 +6,6 @@
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import stats from '../gui/stats.js';
 import config from '../config.js';
 import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
@@ -77,7 +76,6 @@ function trimFrames(): void {
 
 function updateFPS(): void {
 	fps = (frames.length * 1000) / fpsWindow;
-	stats.updateFPS(fps);
 }
 
 // Our highest-ever fps will be the monitor's refresh rate!

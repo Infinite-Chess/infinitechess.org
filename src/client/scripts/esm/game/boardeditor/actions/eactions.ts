@@ -51,6 +51,7 @@ import gameslot from '../../chess/gameslot';
 import pastegame from '../../chess/pastegame';
 import gameloader from '../../chess/gameloader';
 import egamerules from '../egamerules';
+import gamesession from '../../chess/gamesession';
 import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
@@ -74,10 +75,8 @@ const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
 
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	// Unload logical and rendering parts of current position
-	gameloader.unloadLogicalAndRendering();
+	gamesession.unloadLogicalAndRendering();
 
 	// Load default board editor position
 	boardeditor.clearActivePosition();
@@ -86,10 +85,8 @@ async function reset(): Promise<void> {
 
 /** Clears the entire board editor position. */
 async function clearAll(): Promise<void> {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	// Unload logical and rendering parts of current position
-	gameloader.unloadLogicalAndRendering();
+	gamesession.unloadLogicalAndRendering();
 
 	// Initialize board editor with empty position and bare minimum game rules
 	const gameRules = variantpreviewer.getBareMinimumGameRules();
@@ -117,10 +114,8 @@ async function clearAll(): Promise<void> {
 
 /** Loads a position from a savestate. */
 async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	// Unload logical and rendering parts of current position
-	gameloader.unloadLogicalAndRendering();
+	gamesession.unloadLogicalAndRendering();
 
 	// prettier-ignore
 	const new_active_position: ActivePosition =
@@ -148,8 +143,6 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
  * This function uses the position of pieces on the board.
  */
 function copy(): void {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
 		metadata:
@@ -170,8 +163,6 @@ function copy(): void {
 
 /** Loads the position from the clipboard. */
 async function paste(): Promise<undefined> {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	let longformOut: LongFormatOut;
 
 	// Do we have clipboard permission?
@@ -200,12 +191,10 @@ async function paste(): Promise<undefined> {
 
 /** Starts a local game from the current board editor position, to test play. */
 function startLocalGame(): void {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
 
-	gameloader.unloadGame();
+	gamesession.unloadGame();
 	gameloader.startCustomLocalGame({
 		additional: {
 			variantOptions,
@@ -214,8 +203,6 @@ function startLocalGame(): void {
 }
 
 function startEngineGame(engineUIConfig: EngineUIConfig): void {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	const currentEngine = 'hydrochess';
 
 	const variantOptions = getValidatedPosition();
@@ -268,7 +255,7 @@ function startEngineGame(engineUIConfig: EngineUIConfig): void {
 		return;
 	}
 
-	gameloader.unloadGame();
+	gamesession.unloadGame();
 	gameloader.startCustomEngineGame({
 		timeControl: engineUIConfig.timeControl,
 		additional: {

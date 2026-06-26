@@ -25,7 +25,7 @@ import docutil from '../../util/docutil.js';
 import gameslot from './gameslot.js';
 import selection from '../chess/selection.js';
 import gameloader from './gameloader.js';
-import enginegame from '../misc/enginegame.js';
+import gamesession from './gamesession.js';
 import guipractice from '../gui/guipractice.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import movesequence from '../chess/movesequence.js';
@@ -349,7 +349,7 @@ function onEngineGameConclude(): void {
 	// Did we win or lose?
 	if (gameConclusion.victor === undefined)
 		throw Error('Victor should never be undefined when concluding an engine game.');
-	if (!(enginegame.getOurColor() === gameConclusion.victor)) return; // Lost
+	if (!(gamesession.getRole() === gameConclusion.victor)) return; // Lost
 
 	// WON!!! 🎉
 
@@ -394,7 +394,7 @@ function undoMove(): void {
 	const mesh = gameslot.getMesh()!;
 	if (
 		undoingIsLegal &&
-		(enginegame.isItOurTurn() || gamefileutility.isGameOver(gamefile)) &&
+		(gamesession.isItOurTurn() || gamefileutility.isGameOver(gamefile)) &&
 		gamefile.moves.length > 0
 	) {
 		// > 0 catches scenarios where stalemate occurs on the first move
@@ -404,7 +404,7 @@ function undoMove(): void {
 		movesequence.viewFront(gamefile, mesh);
 
 		// If it's their turn, only rewind one move.
-		if (enginegame.isItOurTurn() && gamefile.moves.length > 1)
+		if (gamesession.isItOurTurn() && gamefile.moves.length > 1)
 			movesequence.rewindMove(gamefile, mesh);
 		movesequence.rewindMove(gamefile, mesh);
 		selection.reselectPiece();
@@ -417,7 +417,7 @@ function restartGame(): void {
 			'Restarting games is currently not supported for non-practice mode games',
 		);
 
-	gameloader.unloadGame(); // Unload current game
+	gamesession.unloadGame(); // Unload current game
 	startCheckmatePractice(guipractice.getCheckmateSelectedID());
 }
 

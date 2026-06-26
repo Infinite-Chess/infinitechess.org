@@ -18,7 +18,6 @@ import LocalStorage from '../util/LocalStorage.js';
 import frametracker from './rendering/frametracker.js';
 import loadbalancer from './misc/loadbalancer.js';
 import socketmessages from '../websocket/socketmessages.js';
-import frameratelimiter from './rendering/frameratelimiter.js';
 
 /** The play page game canvas. */
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -38,7 +37,7 @@ function start(): void {
 	socketmessages.send('game', 'joingame');
 
 	// Update & draw the scene repeatedly
-	frameratelimiter.requestFrame(gameLoop);
+	requestAnimationFrame(gameLoop);
 }
 
 function initListeners(): void {
@@ -66,7 +65,7 @@ function gameLoop(runtime: number): void {
 	document.dispatchEvent(new Event('reset-listener-events'));
 
 	// Loop again while app is running.
-	frameratelimiter.requestFrame(gameLoop);
+	requestAnimationFrame(gameLoop);
 }
 
 function render(): void {

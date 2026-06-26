@@ -27,6 +27,7 @@ import gameslot from '../../chess/gameslot.js';
 import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
+import gamesession from '../../chess/gamesession.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 
@@ -60,7 +61,7 @@ function handleServerGameUpdate(
 	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo_AutoAFKResign(message.participantState);
+	onlinegame.set_DrawOffers_DisconnectInfo(message.participantState);
 
 	// Must be set before editing the clocks.
 	gamefile.gameConclusion = claimedGameConclusion;
@@ -101,7 +102,7 @@ function synchronizeMovesList(
 	const finalMoveIsOurMove =
 		gamefile.moves.length > 0 &&
 		moveutil.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1) ===
-			onlinegame.getOurColor();
+			gamesession.getRole();
 	const previousMove =
 		gamefile.moves.length > 1 ? gamefile.moves[gamefile.moves.length - 2] : undefined;
 	const previousMoveMatches =
@@ -142,7 +143,7 @@ function synchronizeMovesList(
 
 	// Forward moves until we perfectly match the server's moves list.
 	premoves.performWithUnapplied(gamefile, mesh, () => {
-		const ourColor = onlinegame.getOurColor();
+		const ourColor = gamesession.getRole();
 		for (let i = latestMatchingMoveIndex + 1; i < moves.length; i++) {
 			// Incrementally add the server's correct moves to our own moves list
 			const isLastMove = i === moves.length - 1;

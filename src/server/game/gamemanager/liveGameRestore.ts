@@ -5,7 +5,7 @@
  *
  * It reads all rows from live_games and live_player_games, reconstructs
  * the full ServerGame objects (clocks, boardsim, player identities),
- * and determines which pending timers (AFK resign, auto time loss, disconnect,
+ * and determines which pending timers (auto time loss, disconnect,
  * delete) need to be reinstated.
  *
  * See dev-utils/live-game-persistence.md for the schema and restoration details.
@@ -52,8 +52,6 @@ interface RestoredGame {
 interface PendingTimers {
 	/** If defined, the delete game timer should fire after this many ms. 0 means immediately. */
 	deleteTimerMs?: number;
-	/** If defined, the AFK resign timer should fire after this many ms. 0 means immediately. */
-	afkResignTimerMs?: number;
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;
 	/**
@@ -328,7 +326,6 @@ function reconstructMatchInfo(
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
-		autoAFKResignTime: gameRow.afk_resign_time ?? undefined,
 	};
 }
 
@@ -358,12 +355,6 @@ function computePendingTimers(
 	if (gameRow.delete_time !== null) {
 		const remaining = gameRow.delete_time - now;
 		timers.deleteTimerMs = Math.max(remaining, 0);
-	}
-
-	// AFK resign timer
-	if (gameRow.afk_resign_time !== null) {
-		const remaining = gameRow.afk_resign_time - now;
-		timers.afkResignTimerMs = Math.max(remaining, 0);
 	}
 
 	// Auto time loss timer for timed, ongoing games

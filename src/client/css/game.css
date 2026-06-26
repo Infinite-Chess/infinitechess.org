@@ -296,7 +296,7 @@
 	padding: 6px 12px;
 }
 
-/* The side whose turn it is gets its whole bar highlighted (T9 toggles `.tempo`). */
+/* The side whose turn it is gets its whole bar highlighted */
 .player-bar.tempo {
 	background-color: #00677c;
 }
@@ -615,8 +615,6 @@
 	outline: none;
 }
 
-/* Collapsed state (T9 toggles `.collapsed` on the .chat panel): the bar shrinks to just
-   its header, the log + input are hidden, and the chevron flips to point up. */
 .chat.collapsed {
 	flex: 0 0 auto;
 	min-height: 0;

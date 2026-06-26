@@ -20,7 +20,6 @@ import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/st
 import typeutil, { players as p, rawTypes as r } from '../../../../../shared/chess/util/typeutil';
 
 import gameslot from '../chess/gameslot';
-import boardeditor from './boardeditor';
 import edithistory from './edithistory';
 import guigamerules from '../gui/boardeditor/actions/guigamerules';
 
@@ -275,8 +274,6 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): v
 
 /** Gives or removes all special rights of rooks and jumping royals according to the value of castling. */
 function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void {
-	if (!boardeditor.areInBoardEditor()) return;
-
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
 

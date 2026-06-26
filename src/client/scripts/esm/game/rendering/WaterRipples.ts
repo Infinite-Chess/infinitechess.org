@@ -16,7 +16,7 @@ import space from '../misc/space';
 import camera from './camera';
 import boardpos from './boardpos';
 import drawrays from './highlights/annotations/drawrays';
-import gameloader from '../chess/gameloader';
+import gameslot from '../chess/gameslot';
 import perspective from './perspective';
 import frametracker from './frametracker';
 import { RippleState, WaterRipplePass } from '../../webgl/post_processing/passes/WaterRipplePass';
@@ -134,7 +134,7 @@ function addRipple(sourceCoords: Coords): void {
 	let v = (rippleY - screenBox.bottom) / screenHeightWorld;
 
 	// If we're playing black, negate the UV coordinates
-	if (!gameloader.areInLocalGame() && gameloader.getOurColor() === p.BLACK) {
+	if (!gameslot.areViewingWhite()) {
 		u = 1 - u;
 		v = 1 - v;
 	}

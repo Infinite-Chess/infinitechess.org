@@ -146,8 +146,6 @@ function addEditToHistory(edit: Edit): void {
 
 /** Undoes the most recent edit. */
 function undo(): void {
-	if (!boardeditor.areInBoardEditor())
-		throw Error("Cannot undo edit when we're not using the board editor.");
 	if (drawingtool.isEditInProgress()) return; // Do not allow undoing or redoing while currently making an edit
 	if (indexOfThisEdit! <= 0) return;
 	const gamefile = gameslot.getGamefile()!;
@@ -178,8 +176,6 @@ function undo(): void {
 
 /** Redoes the next edit in the history. */
 function redo(): void {
-	if (!boardeditor.areInBoardEditor())
-		throw Error("Cannot redo edit when we're not using the board editor.");
 	if (drawingtool.isEditInProgress()) return; // Do not allow undoing or redoing while currently making an edit
 	if (indexOfThisEdit! >= edits!.length) return;
 	const gamefile = gameslot.getGamefile()!;

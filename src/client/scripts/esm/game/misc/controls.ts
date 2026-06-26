@@ -13,12 +13,10 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 
 import toast from '../../components/toast.js';
-import stats from '../gui/stats.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
 import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
-import copygame from '../chess/copygame.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
 import socketman from '../../websocket/socketman.js';
@@ -242,7 +240,6 @@ function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit4')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('Digit7')) enginegame.toggleDebug(); // Render engine generated legal moves
-	if (listener_document.isKeyDown('KeyM')) stats.toggleFPS();
 }
 
 /** Debug toggles that are only for in a game. */
@@ -252,16 +249,12 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
 	if (listener_document.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener_document.isKeyDown('Digit5')) copygame.copyGame(true); // Copies the gamefile as a single position, without all the moves.
-	if (listener_document.isKeyDown('Digit6')) specialrighthighlights.toggle(); // Highlights special rights and en passant
+	if (listener_document.isKeyDown('Digit5')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
 	if (listener_document.isKeyDown('Tab')) arrows.toggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile, mesh);
 		toast.show('Regenerated piece models.', { durationMultiplier: 0.5 });
-	}
-	if (listener_document.isKeyDown('KeyN')) {
-		guinavigation.toggle();
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 

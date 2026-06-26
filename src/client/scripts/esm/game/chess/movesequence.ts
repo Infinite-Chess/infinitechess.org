@@ -17,16 +17,15 @@ import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 import wincondition from '../../../../../shared/chess/logic/wincondition.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
-import stats from '../gui/stats.js';
 import gameslot from './gameslot.js';
 import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import premoves from './premoves.js';
 import animation from '../rendering/animation.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
+import gamesession from './gamesession.js';
 import frametracker from '../rendering/frametracker.js';
 import guinavigation from '../gui/guinavigation.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
@@ -51,9 +50,11 @@ function makeMove(
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 
 	// GUI changes
-	updateGui(false);
+	guinavigation.update_MoveButtons();
 
-	if (!onlinegame.areInOnlineGame() && !gamefile.untimed) {
+	// Push the clocks locally if we're in an engine game.
+	// The server handles clocks for online games.
+	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
 		const clockStamp = clock.push(gamefile);
 		guiclock.push(gamefile.clocks!);
 		// Add the clock stamp to the move
@@ -63,7 +64,7 @@ function makeMove(
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && !onlinegame.areInOnlineGame())
+		if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online')
 			gameslot.concludeGame();
 	}
 
@@ -114,7 +115,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
-	updateGui(false); // GUI changes
+	guinavigation.update_MoveButtons();
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }
@@ -152,7 +153,7 @@ function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): v
 	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
-	updateGui(false);
+	guinavigation.update_MoveButtons();
 }
 
 /**
@@ -184,18 +185,6 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
-	updateGui(true);
-}
-
-/**
- * Updates the display of whos turn it is (if it changed),
- * the transparency of the rewind/forward move buttons,
- * updates the move number below the move buttons.
- * @param showMoveCounter Whether to show the move counter below the move buttons in the navigation bar.
- */
-function updateGui(showMoveCounter: boolean): void {
-	if (showMoveCounter) stats.showMoves();
-	else stats.updateTextContentOfMoves(); // While we may not be OPENING the move counter, if it WAS already open we should still update the number!
 	guinavigation.update_MoveButtons();
 }
 

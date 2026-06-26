@@ -112,7 +112,6 @@ const allLiveGamesColumns: string[] = [
 	'conclusion_condition',
 	'conclusion_victor',
 	'time_ended',
-	'afk_resign_time',
 	'delete_time',
 	'validate_moves',
 ];
@@ -362,7 +361,6 @@ function generateTables(): void {
 			conclusion_condition  TEXT,
 			conclusion_victor     INTEGER,
 			time_ended            INTEGER,
-			afk_resign_time       INTEGER,
 			delete_time           INTEGER,
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
 		);
@@ -412,6 +410,9 @@ function dropLegacyLiveGamesPosPastedColumnIfPresent(): void {
 
 	db.run('ALTER TABLE live_games DROP COLUMN position_pasted');
 	console.log('Temporary DB migration: deleted live_games.position_pasted column.');
+
+	db.run('ALTER TABLE live_games DROP COLUMN afk_resign_time');
+	console.log('Temporary DB migration: deleted live_games.afk_resign_time column.');
 }
 
 /**

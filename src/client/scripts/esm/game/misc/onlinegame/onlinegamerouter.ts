@@ -1,18 +1,16 @@
 // src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
-import type { PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { LongFormatOut } from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { GameMessage, JoinGameMessage } from '../../../websocket/socketschemas.js';
-import type { ClockValues, MovePacket, Rating } from '../../../../../../shared/types.js';
+import type { GameMessage } from '../../../websocket/socketschemas.js';
+import type {
+	ClockValues,
+	FullGameState,
+	ParticipantState,
+} from '../../../../../../shared/types.js';
 
-import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
+import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
 
-import afk from './afk.js';
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
@@ -20,23 +18,11 @@ import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
-import gameloader from '../../chess/gameloader.js';
 import onlinegame from './onlinegame.js';
 import socketsubs from '../../../websocket/socketsubs.js';
-import validatorama from '../../../util/validatorama.js';
+import gamesession from '../../chess/gamesession.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
-import clientmetadatautil from '../../chess/clientmetadatautil.js';
-
-// Types -------------------------------------------------------------------------------------------------
-
-/** The game info of an ended game from the database, as sent by the server. */
-type LoggedGameInfo = {
-	game_id: number;
-	rated: 0 | 1;
-	termination: string;
-	icn: string;
-};
 
 // Routers --------------------------------------------------------------------------------------
 
@@ -51,23 +37,19 @@ SocketBus.addEventListener('game', (e) => routeMessage(e.detail));
 function routeMessage(contents: GameMessage): void {
 	// console.log(`Received ${contents.action} from server! Message contents:`)
 	// console.log(contents.value)
-
-	// These actions are listened to, even when we're not in a game.
-
-	if (contents.action === 'joingame') return handleJoinGame(contents.value);
-	else if (contents.action === 'logged-game-info') return handleLoggedGameInfo(contents.value);
-
-	// All other actions should be ignored if we're not in a game...
-
-	if (!onlinegame.areInOnlineGame()) {
-		console.log(
-			`Received server 'game' message when we're not in an online game. Ignoring. Message: ${JSON.stringify(contents)}`,
+	if (contents.action === 'gamestate')
+		return loadGameFromState(
+			contents.value,
+			window.gamePageData.youAreColor,
+			contents.value.participantState,
 		);
-		return;
-	}
 
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
+
+	// TODO: If the gamefile isn't defined yet (LOGICAL isn't finished loading),
+	// queue the message to be processed after the gamefile is loaded.
+	// HOWEVER, any message with clock values need to be adjusted for ping immediately.
 
 	switch (contents.action) {
 		case 'move':
@@ -97,12 +79,6 @@ function routeMessage(contents: GameMessage): void {
 		case 'leavegame':
 			handleLeaveGame();
 			break;
-		case 'opponentafk':
-			afk.startOpponentAFKCountdown(contents.value.millisUntilAutoAFKResign);
-			break;
-		case 'opponentafkreturn':
-			afk.stopOpponentAFKCountdown();
-			break;
 		case 'opponentdisconnect':
 			disconnect.startOpponentDisconnectCountdown(contents.value);
 			break;
@@ -126,93 +102,46 @@ function routeMessage(contents: GameMessage): void {
 }
 
 /**
- * Joins a game when the server tells us we are now in one.
- *
- * This happens when we click an invite, or our invite is accepted.
- *
- * This type of message contains the MOST information about the game.
- * Less then "gameupdate"s, or resyncing.
+ * Loads a game onto the board from its full typed state and sets up the online-game session.
+ * @param youAreColor - The viewer's color, if they're a participant; undefined => spectator (white POV).
+ * @param participantState - Participant-only ongoing-game properties, if we're a live participant.
  */
-function handleJoinGame(message: JoinGameMessage): void {
-	// We were auto-unsubbed from the invites list, BUT we want to keep open the socket!!
-	socketsubs.deleteSub('lobby');
-	socketsubs.addSub('game');
-	// If the clock values are present, adjust them for ping.
-	if (message.clockValues)
-		message.clockValues = onlinegame.adjustClockValuesForPing(message.clockValues);
-	gameloader.startOnlineGame(message);
-}
+function loadGameFromState(
+	state: FullGameState,
+	youAreColor?: Player,
+	participantState?: ParticipantState,
+): void {
+	gamesession.setSessionGame({ type: 'online', role: youAreColor });
 
-/**
- * Called when the server sends us the game info of an ENDED game inside the database.
- * This loads it, even if we didn't participate in the game, and immediately concludes it.
- * @param message - The message from the server containing the game info.
- */
-function handleLoggedGameInfo(message: LoggedGameInfo): void {
-	let parsedGame: LongFormatOut;
-	try {
-		parsedGame = icnconverter.ShortToLong_Format(message.icn);
-	} catch (e) {
-		// Hmm, this isn't good. Why is a server-sent ICN crashing?
-		console.error(e);
-		toast.show(
-			'There was an error processing the game ICN sent from the server. This is a bug, please report!',
-			{ error: true },
-		);
-		return;
-	}
+	// If the clock values are present, adjust the ticking timer for ping.
+	if (state.clockValues) onlinegame.adjustClockValuesForPing(state.clockValues);
 
-	// Unload the currently loaded game, if we are in one
-	if (gameloader.areInAGame()) {
-		gameloader.unloadGame();
-		socketsubs.deleteSub('game'); // The server will have already unsubscribed us from the previous game.
-	} // Else perhaps we need to close the title screen?? Or the loading screen??
+	gameslot
+		.loadGamefile({
+			timeControl: state.timeControl,
+			variant: state.variant.kind === 'preset' ? state.variant.code : undefined,
+			dateTimestamp: state.timeCreated,
+			// Spectators (no role) view white's side.
+			viewWhitePerspective: youAreColor === p.WHITE || youAreColor === undefined,
+			additional: {
+				moves: state.moves,
+				gameConclusion: state.gameConclusion,
+				clockValues: state.clockValues,
+			},
+		})
+		.then(({ graphical }) => {
+			// Logical loaded, return graphical promise
+			onlinegame.initOnlineGame({
+				gameInfo: { id: state.id, rated: state.rated },
+				participantState,
+			});
 
-	// Are we one of the players (automatically no, if there's only guests)
-	const ourUserId: number | undefined = validatorama.getOurUserId();
-	const whiteId: number | undefined = parsedGame.metadata.WhiteID
-		? uuid.base62ToBase10(parsedGame.metadata.WhiteID)
-		: undefined;
-	const blackId: number | undefined = parsedGame.metadata.BlackID
-		? uuid.base62ToBase10(parsedGame.metadata.BlackID)
-		: undefined;
-	// prettier-ignore
-	const ourRole: Player | undefined = ourUserId !== undefined ? (ourUserId === whiteId ? p.WHITE : ourUserId === blackId ? p.BLACK : undefined) : undefined;
+			gamesession.concludeGameIfOver();
 
-	// The clock values are already ingrained into the moves!
-	// prettier-ignore
-	const moves: MovePacket[] = parsedGame.moves ? parsedGame.moves.map(m => {
-		const move: { token: string, clockStamp?: number } = { token: m.token };
-				if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
-				return move;
-	}) : [];
-
-	// Display elo ratings, if any.
-	const playerRatings: PlayerGroup<Rating> = {};
-	if (parsedGame.metadata.WhiteElo)
-		playerRatings[p.WHITE] = clientmetadatautil.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.WhiteElo,
-		);
-	if (parsedGame.metadata.BlackElo)
-		playerRatings[p.BLACK] = clientmetadatautil.getRatingFromWhiteBlackElo(
-			parsedGame.metadata.BlackElo,
-		);
-
-	// Load the game.
-	gameloader.startOnlineGame({
-		gameInfo: {
-			id: message.game_id,
-			rated: Boolean(message.rated),
-			playerRatings,
-		},
-		metadata: parsedGame.metadata,
-		gameConclusion: clientmetadatautil.getGameConclusionFromResultAndTermination(
-			parsedGame.metadata.Result!,
-			message.termination as Condition,
-		),
-		moves,
-		youAreColor: ourRole,
-	});
+			return graphical;
+		})
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
 /**
@@ -222,7 +151,7 @@ function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void 
 	if (gamefile.untimed) throw Error('Received clock values for untimed game??');
 
 	// Adjust the timer whos turn it is depending on ping.
-	clockValues = onlinegame.adjustClockValuesForPing(clockValues);
+	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
 	guiclock.edit(gamefile);
 }
@@ -280,7 +209,7 @@ function handleNoGame(gamefile: GameFile): void {
 function handleLeaveGame(): void {
 	toast.show(translations.onlinegame.another_window_connected);
 	socketsubs.deleteSub('game');
-	gameloader.unloadGame();
+	gamesession.unloadGame();
 }
 
 export default {

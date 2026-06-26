@@ -55,7 +55,7 @@ async function fetchMissingTypes(locations: Set<string>): Promise<void> {
  * @returns A promise that resolves when the fetch and caching are complete.
  */
 async function fetchLocation(location: string): Promise<void> {
-	const url = `svg/pieces/${location}.svg`;
+	const url = `/svg/pieces/${location}.svg`;
 
 	if (!processingCache[url]) {
 		processingCache[url] = (async (): Promise<void> => {

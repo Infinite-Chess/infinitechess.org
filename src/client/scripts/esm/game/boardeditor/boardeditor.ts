@@ -22,7 +22,6 @@ import editortypes from './editortypes.js';
 import edithistory from './edithistory.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
-import stransformations from './tools/selection/stransformations.js';
 import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 
 // Types ------------------------------------------------------------------------
@@ -36,9 +35,6 @@ export type ActivePosition =
 export type StorageType = (typeof editortypes)['STORAGE_TYPES'][number];
 
 // State -------------------------------------------------------------------------
-
-/** Whether we are currently using the editor. */
-let inBoardEditor = false;
 
 /** The active position, if any, as displayed on editor bar and used for "Save" button by default */
 let active_position: ActivePosition | undefined = undefined;
@@ -60,7 +56,6 @@ async function initBoardEditor(
 	pawnDoublePush?: boolean,
 	castling?: boolean,
 ): Promise<void> {
-	inBoardEditor = true;
 	if (dirty) markPositionDirty();
 	else markPositionClean();
 
@@ -112,30 +107,10 @@ async function initBoardEditor(
 	eautosave.startPositionAutosave();
 }
 
-/** Closes the board editor and resets all state. */
-function closeBoardEditor(): void {
-	// Perform last autosave
-	eautosave.markPositionDirty();
-	void eautosave.autosaveCurrentPositionOnce();
-	eautosave.stopPositionAutosave();
-
-	// Reset state
-	inBoardEditor = false;
-	edithistory.reset();
-	etoolmanager.reset();
-	drawingtool.onCloseEditor();
-	selectiontool.resetState();
-	stransformations.resetState(); // Drops reference to clipboard
-
-	eclipboard.removeEventListeners();
-}
-
 // Update & Render -------------------------------------------------------------
 
 /** Called every frame while the board editor is open. */
 function update(): void {
-	if (!inBoardEditor) return;
-
 	etoolmanager.testShortcuts();
 
 	// Handle starting and ending the drawing state
@@ -147,18 +122,11 @@ function update(): void {
 
 /** Renders any graphics of the active tool, if we are in the board editor. */
 function render(): void {
-	if (!inBoardEditor) return;
-
 	// Render selection-tool graphics, if that is active
 	if (etoolmanager.getTool() === 'selection-tool') selectiontool.render();
 }
 
 // Utility --------------------------------------------------------------------
-
-/** Returns true if the board editor is currently open. */
-function areInBoardEditor(): boolean {
-	return inBoardEditor;
-}
 
 /** Returns true if the current board position has unsaved changes. */
 function isPositionDirty(): boolean {
@@ -226,10 +194,8 @@ function flushActivePositionToAutosave(): void {
 
 export default {
 	// State
-	areInBoardEditor,
 	// Initialization
 	initBoardEditor,
-	closeBoardEditor,
 	// Update & Render
 	update,
 	render,

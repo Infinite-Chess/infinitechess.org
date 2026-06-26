@@ -120,7 +120,7 @@ export class EffectZoneManager {
 
 		// Load perlin noise texture
 		const noiseTexture: Promise<WebGLTexture> = ImageLoader.loadImage(
-			'img/noise_texture/perlin_noise.webp',
+			'/img/noise_texture/perlin_noise.webp',
 		).then((image) => {
 			const texture = TextureLoader.loadTexture(gl, image);
 			this.perlinNoiseTexture = texture;
@@ -128,7 +128,7 @@ export class EffectZoneManager {
 		});
 
 		// Load white noise texture
-		ImageLoader.loadImage('img/noise_texture/white_noise.webp').then((image) => {
+		ImageLoader.loadImage('/img/noise_texture/white_noise.webp').then((image) => {
 			// Ensure texture filtering is set to NEAREST for a sharp, pixelated look
 			const texture = TextureLoader.loadTexture(gl, image, { mipmaps: false });
 			this.whiteNoiseTexture = texture;

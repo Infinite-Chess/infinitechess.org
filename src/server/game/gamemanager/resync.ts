@@ -21,7 +21,7 @@ import { getGameByID } from './gamemanager.js';
 import { getGameData } from '../../database/gamesManager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { cancelDisconnectTimer } from './afkdisconnect.js';
+import { cancelDisconnectTimer } from './disconnect.js';
 
 /**
  * Resyncs a client's websocket to a game. The client already

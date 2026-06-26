@@ -19,7 +19,6 @@ import drawrays from './drawrays.js';
 import keybinds from '../../../misc/keybinds.js';
 import { Mouse } from '../../../input.js';
 import drawarrows from './drawarrows.js';
-import gameloader from '../../../chess/gameloader.js';
 import drawsquares from './drawsquares.js';
 import preferences from '../../../../components/header/preferences.js';
 import { GameBus } from '../../../GameBus.js';
@@ -114,7 +113,6 @@ function getRelevantAnnotes(): Annotes {
 
 /** Event listener for when we change the Lingering Annotations mode */
 document.addEventListener('lingering-annotations-toggle', (e) => {
-	if (!gameloader.areInAGame()) return;
 	const enabled: boolean = e.detail;
 	const ply = gameslot.getGamefile()!.state.local.moveIndex + 1; // Change -1 based to 0 based index
 	if (enabled) {

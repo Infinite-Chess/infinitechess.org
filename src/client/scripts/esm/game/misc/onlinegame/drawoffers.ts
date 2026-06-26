@@ -15,7 +15,6 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
-import onlinegame from './onlinegame.js';
 import guidrawoffer from '../../gui/guidrawoffer.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
@@ -43,9 +42,7 @@ let isAcceptingDraw: boolean = false;
  */
 function isOfferingDrawLegal(): boolean {
 	const gamefile = gameslot.getGamefile()!;
-	if (!onlinegame.areInOnlineGame()) return false; // Can't offer draws in local games
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not at least 2+ moves
-	if (onlinegame.hasServerConcludedGame()) return false; // Can't offer draws after the game has ended
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
 }

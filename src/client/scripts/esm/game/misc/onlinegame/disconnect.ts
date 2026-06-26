@@ -10,7 +10,6 @@
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 
-import afk from './afk.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import pingManager from '../../../util/pingManager.js';
@@ -42,8 +41,6 @@ function startOpponentDisconnectCountdown({
 	millisUntilAutoDisconnectResign,
 	wasByChoice,
 }: OpponentDisconnectValue): void {
-	// This overwrites the "Opponent is AFK" timer
-	afk.stopOpponentAFKCountdown();
 	// Cancel the previous one if this is overwriting
 	stopOpponentDisconnectCountdown();
 	const timeLeftMillis = millisUntilAutoDisconnectResign - pingManager.getHalfPing();
@@ -60,18 +57,14 @@ function stopOpponentDisconnectCountdown(): void {
 
 function displayOpponentDisconnect(secsRemaining: number, wasByChoice: boolean): void {
 	const opponent_disconnectedOrLostConnection = wasByChoice
-		? translations.onlinegame.opponent_disconnected
-		: translations.onlinegame.opponent_lost_connection;
+		? 'Opponent has disconnected.'
+		: 'Opponent has lost connection.';
 	const resigningOrAborting = moveutil.isGameResignable(gameslot.getGamefile()!)
-		? translations.onlinegame.auto_resigning_in
-		: translations.onlinegame.auto_aborting_in;
-	// The "You are AFK" message should overwrite, be on top of, this message,
-	// so if that is running, don't display this 1-second disconnect message, but don't cancel it either!
-	if (!afk.isOurAFKAutoResignTimerRunning())
-		toast.show(
-			`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`,
-			{ durationMillis: 1000 },
-		);
+		? 'Auto-resigning in'
+		: 'Auto-aborting in';
+	toast.show(
+		`${opponent_disconnectedOrLostConnection} ${resigningOrAborting} ${secsRemaining}...`,
+	);
 	const nextSecsRemaining = secsRemaining - 1;
 	if (nextSecsRemaining === 0) return; // Stop
 	const timeRemainUntilDisconnectLoss = timeOpponentLoseFromDisconnect! - Date.now();

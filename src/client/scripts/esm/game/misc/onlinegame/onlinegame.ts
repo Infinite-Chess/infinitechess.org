@@ -5,59 +5,27 @@
  */
 
 import type { ServerGameInfo } from '../../../websocket/socketschemas.js';
-import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
-import type { ClockValues, ParticipantState, Rating } from '../../../../../../shared/types.js';
+import type { ClockValues, ParticipantState } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
 
-import afk from './afk.js';
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
+import gamesession from '../../chess/gamesession.js';
 import tabnameflash from './tabnameflash.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ------------------------------------------------------------------------------------------------------
 
-/** Whether or not we are currently in an online game. */
-let inOnlineGame: boolean = false;
-
-/** The id of the online game we are in, if we are in one. */
+/** The id of the online game we are in. */
 let id: number | undefined;
-
-/**
- * Whether the game is rated.
- */
-let rated: boolean | undefined;
-
-/**
- * The color we are in the online game, if we are in it.
- */
-let ourColor: Player | undefined;
-
-/**
- * The ratings of the non-guest players in the game.
- * If the variant doesn't have a leaderboard, we fall back to the INFINITY leaderboard.
- */
-let playerRatings: PlayerGroup<Rating> | undefined;
-
-/**
- * Different from gamefile.gameConclusion, because this is only true if {@link gamefileutility.concludeGame}
- * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
- */
-let serverHasConcludedGame: boolean | undefined;
-
-/**
- * Different from gamefile.gameConclusion, because this is true if the player has pressed the "Resign/Abort" button at some time during this game,
- * and NOT if the SERVER tells us that the game is concluded.
- */
-let playerHasPressedAbortOrResignButton: boolean | undefined;
 
 /**
  * Whether we are in sync with the game on the server.
@@ -69,97 +37,22 @@ let playerHasPressedAbortOrResignButton: boolean | undefined;
  */
 let inSync: boolean | undefined;
 
-// Events ------------------------------------------------------------------------------------------------------
+// Events -------------------------------------------------
 
 SocketBus.addEventListener('reconnected', () => {
-	if (!inOnlineGame) return;
 	resyncToGame();
 });
 
 GameBus.addEventListener('game-concluded', () => {
-	if (!inOnlineGame) return; // The game concluded wasn't an online game.
-
-	serverHasConcludedGame = true; // This NEEDS to be above drawoffers.onGameClose(), as that relies on this!
-	afk.onGameClose();
 	tabnameflash.onGameClose();
 	drawoffers.onGameClose();
 	requestRemovalFromPlayersInActiveGames();
 });
 
-// Getters --------------------------------------------------------------------------------------------------------------
-
-function areInOnlineGame(): boolean {
-	return inOnlineGame;
-}
-
-/** Returns the game id of the online game we're in.  */
-function getGameID(): number {
-	if (!inOnlineGame)
-		throw Error("Cannot get id of online game when we're not in an online game.");
-	return id!;
-}
-
-function isRated(): boolean {
-	if (!inOnlineGame) throw Error("Cannot ask if online game is rated when we're not in one.");
-	return rated!;
-}
-
-/** Returns whether we are one of the players in the online game. */
-function doWeHaveRole(): boolean {
-	if (!inOnlineGame)
-		throw Error(
-			"Cannot ask if we have a role in online game when we're not in an online game.",
-		);
-	return ourColor !== undefined;
-}
-
-function getOurColor(): Player | undefined {
-	if (!inOnlineGame)
-		throw Error("Cannot get color we are in online game when we're not in an online game.");
-	return ourColor;
-}
-
-function getPlayerRatings(): PlayerGroup<Rating> | undefined {
-	if (!inOnlineGame) throw Error("Cannot get player ratings when we're not in an online game.");
-	return playerRatings;
-}
-
-function areWeColorInOnlineGame(color: Player): boolean {
-	if (!inOnlineGame) return false; // Can't be that color, because we aren't even in a game.
-	return ourColor === color;
-}
-
-function isItOurTurn(): boolean {
-	if (!inOnlineGame)
-		throw Error("Cannot get isItOurTurn of online game when we're not in an online game.");
-	return gameslot.getGamefile()!.whosTurn === ourColor;
-}
-
-/** Whether we have pressed the Abort/Resign game button this game. NOT when it says main menu. */
-function hasPlayerPressedAbortOrResignButton(): boolean {
-	if (!inOnlineGame)
-		throw Error(
-			"Cannot get playerHasPressedAbortOrResignButton of online game when we're not in an online game.",
-		);
-	return playerHasPressedAbortOrResignButton!;
-}
+// Getters ------------------------------------------------------------
 
 function areInSync(): boolean {
-	if (!inOnlineGame)
-		throw Error("Cannot get inSync of online game when we're not in an online game.");
 	return inSync!;
-}
-
-/**
- * Different from {@link gamefileutility.isGameOver}, because this only returns true if {@link gamefileutility.concludeGame}
- * has been called, which IS ONLY called once the SERVER tells us the result of the game, not us!
- */
-function hasServerConcludedGame(): boolean {
-	if (!inOnlineGame)
-		throw Error(
-			"Cannot get serverHasConcludedGame of online game when we're not in an online game.",
-		);
-	return serverHasConcludedGame!;
 }
 
 function setInSyncTrue(): void {
@@ -167,71 +60,38 @@ function setInSyncTrue(): void {
 }
 
 function setInSyncFalse(): void {
-	if (!inOnlineGame) return;
 	inSync = false;
 }
 
-// Functions ------------------------------------------------------------------------------------------------------
+// Functions --------------------------------------------------
 
 function initOnlineGame(options: {
 	gameInfo: ServerGameInfo;
-	/** Specify if we are a participant in the game, not a spectator. */
-	youAreColor?: Player;
 	/** Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over! */
 	participantState?: ParticipantState;
 }): void {
-	inOnlineGame = true;
 	inSync = true;
 
 	// Set static game properties that never change
 	id = options.gameInfo.id;
-	rated = options.gameInfo.rated;
-	playerRatings = options.gameInfo.playerRatings;
-
-	ourColor = options.youAreColor;
 
 	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer.
-	set_DrawOffers_DisconnectInfo_AutoAFKResign(options.participantState);
+	set_DrawOffers_DisconnectInfo(options.participantState);
 
-	afk.onGameStart();
-	tabnameflash.onGameStart({ isOurMove: isItOurTurn() });
-
-	serverHasConcludedGame = false;
-	playerHasPressedAbortOrResignButton = false;
+	tabnameflash.onGameStart({ isOurMove: gamesession.isItOurTurn() });
 
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo_AutoAFKResign(participantState?: ParticipantState): void {
-	if (participantState) {
-		drawoffers.set(participantState.drawOffer);
+function set_DrawOffers_DisconnectInfo(participantState?: ParticipantState): void {
+	if (!participantState) return;
 
-		// If opponent is currently disconnected, display that countdown
-		if (participantState.disconnect)
-			disconnect.startOpponentDisconnectCountdown(participantState.disconnect);
-		else disconnect.stopOpponentDisconnectCountdown();
+	drawoffers.set(participantState.drawOffer);
 
-		// If Opponent is currently afk, display that countdown
-		if (participantState.millisUntilAutoAFKResign !== undefined)
-			afk.startOpponentAFKCountdown(participantState.millisUntilAutoAFKResign);
-		else afk.stopOpponentAFKCountdown();
-	}
-}
-
-// Call when we leave an online game
-function closeOnlineGame(): void {
-	inOnlineGame = false;
-	id = undefined;
-	rated = undefined;
-	ourColor = undefined;
-	inSync = undefined;
-	serverHasConcludedGame = undefined;
-	playerHasPressedAbortOrResignButton = undefined;
-	afk.onGameClose();
-	disconnect.stopOpponentDisconnectCountdown();
-	tabnameflash.onGameClose();
-	drawoffers.onGameClose();
-	closeEventListeners();
+	// If opponent is currently disconnected, display that countdown
+	if (participantState.disconnect)
+		disconnect.startOpponentDisconnectCountdown(participantState.disconnect);
+	else disconnect.stopOpponentDisconnectCountdown();
 }
 
 function initEventListeners(): void {
@@ -248,14 +108,6 @@ function initEventListeners(): void {
 	 */
 	document.querySelectorAll('a').forEach((link) => {
 		link.addEventListener('click', confirmNavigationAwayFromGame);
-	});
-}
-
-function closeEventListeners(): void {
-	SocketBus.removeEventListener('connection-lost', setInSyncFalse);
-	SocketBus.removeEventListener('closed', setInSyncFalse);
-	document.querySelectorAll('a').forEach((link) => {
-		link.removeEventListener('click', confirmNavigationAwayFromGame);
 	});
 }
 
@@ -287,15 +139,10 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	 */
 }
 
-function update(): void {
-	afk.updateAFK();
-}
-
 /**
  * Requests a game update from the server, since we are out of sync.
  */
 function resyncToGame(): void {
-	if (!inOnlineGame) throw Error("Don't call resyncToGame() if not in an online game.");
 	inSync = false;
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	socketmessages.send('game', 'resync', id!);
@@ -304,7 +151,6 @@ function resyncToGame(): void {
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 	// Inform all the scripts that rely on online game
 	// logic that a move occurred, so they can update accordingly
-	afk.onMovePlayed({ isOpponents });
 	tabnameflash.onMovePlayed({ isOpponents });
 	drawoffers.onMovePlayed({ isOpponents });
 }
@@ -323,31 +169,9 @@ function reportOpponentsMove(reason: string): void {
 
 /**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
 function onAbortOrResignButtonPress(): void {
-	if (!inOnlineGame) return;
-	if (serverHasConcludedGame) return; // Don't need to abort/resign, game is already over
-	if (playerHasPressedAbortOrResignButton) return; // Don't need to abort/resign, we have already done this during this game
-
-	playerHasPressedAbortOrResignButton = true;
-
 	const gamefile = gameslot.getGamefile()!;
 	if (moveutil.isGameResignable(gamefile)) socketmessages.send('game', 'resign');
 	else socketmessages.send('game', 'abort');
-}
-
-/**
- * Called when the player presses the "Main Menu" button in an onlinegame
- * This can happen if the game is already over or if the player has already pressed the "Abort / Resign" button.
- * This requests the server to stop serving us game updates, and allow us to join a new game.
- */
-function onMainMenuButtonPress(): void {
-	// MUST BE BEFORE UNSUBBING, since the code will skip
-	// sending this message if we are not subbed.
-	// This allows us to join a new game.
-	// Basically tells the server we don't want to see the game conclusion.
-	requestRemovalFromPlayersInActiveGames();
-
-	// Tell the server we no longer want game updates.
-	socketsubs.unsubFromSub('game');
 }
 
 /**
@@ -359,7 +183,6 @@ function onMainMenuButtonPress(): void {
  * and the server may change the players elos!
  */
 function requestRemovalFromPlayersInActiveGames(): void {
-	if (!areInOnlineGame()) return;
 	if (!socketsubs.areSubbedToSub('game')) {
 		// THE SERVER has deleted the game. Already removed from players in active games list!
 		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
@@ -372,11 +195,9 @@ function requestRemovalFromPlayersInActiveGames(): void {
 	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
-/**
- * Modifies the clock values to account for ping.
- */
-function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
-	if (!clockValues.colorTicking) return clockValues; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+/** Modifies the clock values to account for ping. */
+function adjustClockValuesForPing(clockValues: ClockValues): void {
+	if (!clockValues.colorTicking) return; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
 
 	// console.log(`Adjusting clock values for ping. Ping is ${pingManager.getPing()}.`);
 
@@ -400,33 +221,19 @@ function adjustClockValuesForPing(clockValues: ClockValues): ClockValues {
 	clockValues.timeColorTickingLosesAt =
 		Date.now() + clockValues.clocks[clockValues.colorTicking]!;
 
-	return clockValues;
+	return;
 }
 
 // Exports -------------------------------------------------------------------------
 
 export default {
-	onmessage,
-	getGameID,
-	isRated,
-	doWeHaveRole,
-	getOurColor,
-	getPlayerRatings,
 	setInSyncTrue,
 	initOnlineGame,
-	set_DrawOffers_DisconnectInfo_AutoAFKResign,
-	closeOnlineGame,
-	isItOurTurn,
-	hasPlayerPressedAbortOrResignButton,
+	set_DrawOffers_DisconnectInfo,
 	areInSync,
 	resyncToGame,
-	update,
 	onAbortOrResignButtonPress,
-	onMainMenuButtonPress,
-	hasServerConcludedGame,
 	reportOpponentsMove,
 	onMovePlayed,
-	areInOnlineGame,
-	areWeColorInOnlineGame,
 	adjustClockValuesForPing,
 };

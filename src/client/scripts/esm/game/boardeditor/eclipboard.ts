@@ -10,7 +10,7 @@
 import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import eactions from './actions/eactions.js';
-import gameloader from '../chess/gameloader.js';
+import gamesession from '../chess/gamesession.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
 import stransformations from './tools/selection/stransformations.js';
@@ -24,15 +24,6 @@ function addEventListeners(): void {
 	document.addEventListener('paste', onPaste);
 	document.addEventListener('copy-game', onCopyGame);
 	document.addEventListener('paste-game', onPasteGame);
-}
-
-/** Removes the copy/cut/paste event listeners from the document. */
-function removeEventListeners(): void {
-	document.removeEventListener('copy', onCopy);
-	document.removeEventListener('cut', onCut);
-	document.removeEventListener('paste', onPaste);
-	document.removeEventListener('copy-game', onCopyGame);
-	document.removeEventListener('paste-game', onPasteGame);
 }
 
 // Handlers -------------------------------------------------------------------
@@ -71,7 +62,7 @@ function onCut(): void {
 /** Custom Board Editor handler for the Paste event. */
 function onPaste(): void {
 	if (document.activeElement instanceof HTMLInputElement) return; // Don't paste if the user is typing in an input field
-	if (gameloader.areWeLoadingGame()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		// Paste game notation
@@ -99,5 +90,4 @@ function onPasteGame(): void {
 
 export default {
 	addEventListeners,
-	removeEventListeners,
 };

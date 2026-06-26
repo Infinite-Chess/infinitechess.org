@@ -10,18 +10,13 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 import webgl from './webgl.js';
 import config from '../config.js';
 import camera from './camera.js';
+import gameslot from '../chess/gameslot.js';
 import preferences from '../../components/header/preferences.js';
 import frametracker from './frametracker.js';
 import { Renderable, createRenderable } from '../../webgl/Renderable.js';
 
 /** Whether perspective mode is enabled. */
 let enabled = false;
-
-/**
- * Whether we're currently in white's perspective.
- * Affects rotation resets.
- */
-let viewWhitePerspective: boolean = true;
 
 const mouseSensitivityMultiplier = 0.13; // 0.13 Default   This is Multiplied by our perspective_sensitivity in the preferences.
 
@@ -68,13 +63,9 @@ function disable(): void {
 	resetRotations();
 }
 
-function setViewSide(whitePerspective: boolean): void {
-	viewWhitePerspective = whitePerspective;
-}
-
 // Sets rotations to orthographic view. Sensitive to if we're white or black.
 function resetRotations(): void {
-	camera.setPerspectiveRotation(0, viewWhitePerspective ? 0 : 180);
+	camera.setPerspectiveRotation(0, gameslot.areViewingWhite() ? 0 : 180);
 }
 
 // Called when the mouse re-clicks the screen after ALREADY in perspective.
@@ -159,7 +150,6 @@ export default {
 	toggle,
 	enable,
 	disable,
-	setViewSide,
 	resetRotations,
 	relockMouse,
 	addRotation,

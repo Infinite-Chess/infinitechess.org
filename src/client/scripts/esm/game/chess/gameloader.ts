@@ -12,121 +12,21 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { ValidEngine } from './engines/engine.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { EngineConfig } from '../misc/enginegame.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import type { ServerGameInfo } from '../../websocket/socketschemas.js';
-import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 import type { Additional, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
-import type {
-	ClockValues,
-	MetaData,
-	MovePacket,
-	ParticipantState,
-	TimeControl,
-} from '../../../../../shared/types.js';
+import type { MetaData, MovePacket, TimeControl } from '../../../../../shared/types.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
-import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from './gameslot.js';
-import boardpos from '../rendering/boardpos.js';
-import Transition from '../rendering/transitions/Transition.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import enginegame from '../misc/enginegame.js';
 import guipalette from '../gui/boardeditor/guipalette.js';
-import perspective from '../rendering/perspective.js';
+import gamesession from './gamesession.js';
 import boardeditor from '../boardeditor/boardeditor.js';
-import loadingscreen from '../gui/loadingscreen.js';
-import guinavigation from '../gui/guinavigation.js';
-import guiboardeditor from '../gui/boardeditor/guiboardeditor.js';
-import frameratelimiter from '../rendering/frameratelimiter.js';
-import { engineDictionary } from './engines/engine.js';
-
-// Variables --------------------------------------------------------------------
-
-/** The type of game we are in, whether local or online, if we are in a game. */
-let typeOfGameWeAreIn: undefined | 'local' | 'online' | 'engine' | 'editor';
-
-/**
- * True when the gamefile is currently loading either the graphical
- * (such as the SVG requests and spritesheet generation) or engine script.
- *
- * If so, the spinny pawn loading animation will be open.
- */
-let gameLoading: boolean = false;
-
-// Constants ---------------------------------------------------------------------
-
-/**
- * Target framerate when not in a game (title screen).
- *
- * I cannot actually tell a difference between 30fps and 240fps there.
- */
-const TARGET_FPS_TITLE_SCREEN = 30;
-
-// Getters --------------------------------------------------------------------
-
-/**
- * Returns true if we are in ANY type of game, whether local, online, engine, analysis, or editor.
- *
- * If we're on the title screen or the lobby, this will be false.
- */
-function areInAGame(): boolean {
-	return typeOfGameWeAreIn !== undefined;
-}
-
-/** Returns the type of game we are in. */
-function getTypeOfGameWeIn(): typeof typeOfGameWeAreIn {
-	return typeOfGameWeAreIn;
-}
-
-function areInLocalGame(): boolean {
-	return typeOfGameWeAreIn === 'local';
-}
-
-function isItOurTurn(): boolean {
-	if (typeOfGameWeAreIn === undefined)
-		throw Error("Can't tell if it's our turn when we're not in a game!");
-	if (typeOfGameWeAreIn === 'online') return onlinegame.isItOurTurn();
-	else if (typeOfGameWeAreIn === 'engine') return enginegame.isItOurTurn();
-	else if (typeOfGameWeAreIn === 'editor') return true;
-	else if (typeOfGameWeAreIn === 'local')
-		return true; // Always our turn in this case
-	else
-		throw Error(
-			"Don't know how to tell if it's our turn in this type of game: " + typeOfGameWeAreIn,
-		);
-}
-
-function getOurColor(): Player | undefined {
-	if (typeOfGameWeAreIn === undefined)
-		throw Error("Can't get our color when we're not in a game!");
-	if (typeOfGameWeAreIn === 'online') return onlinegame.getOurColor();
-	else if (typeOfGameWeAreIn === 'engine') return enginegame.getOurColor();
-	throw Error("Can't get our color in this type of game: " + typeOfGameWeAreIn);
-}
-
-/**
- * Returns true if either the graphics (spritesheet generating),
- * or engine script, of the gamefile are currently being loaded.
- *
- * If so, the spinny pawn loading animation will be open.
- */
-function areWeLoadingGame(): boolean {
-	return gameLoading;
-}
-
-/**
- * Updates whatever game is currently loaded, for what needs to be updated.
- */
-function update(): void {
-	if (typeOfGameWeAreIn === 'online') onlinegame.update();
-}
+import { engineDictionary, ValidEngine } from './engines/engine.js';
 
 // Start Game --------------------------------------------------------------------
 
@@ -135,11 +35,7 @@ async function startLocalGame(options: {
 	variant: VariantCode;
 	timeControl: TimeControl;
 }): Promise<void> {
-	typeOfGameWeAreIn = 'local';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'analysis' });
 
 	const dateTimestamp = Date.now();
 
@@ -151,82 +47,15 @@ async function startLocalGame(options: {
 			variant: options.variant,
 			dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: true,
 		})
 		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	concludeGameIfOver();
-}
-
-/** Starts an online game according to the options provided by the server. */
-async function startOnlineGame(options: {
-	gameInfo: ServerGameInfo;
-	/** The metadata of the game, including the TimeControl, player names, date, etc.. */
-	metadata: MetaData;
-	gameConclusion?: GameConclusion;
-	/** Existing moves, if any, to forward to the front of the game. Should be specified if reconnecting to an online. Each move should be in the most compact notation, e.g., `['1,2>3,4','10,7>10,8Q']`. */
-	moves: MovePacket[];
-	clockValues?: ClockValues;
-	youAreColor?: Player;
-	participantState?: ParticipantState;
-}): Promise<void> {
-	// console.log("Starting online game with invite options:");
-	// console.log(jsutil.deepCopyObject(options));
-
-	typeOfGameWeAreIn = 'online';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
-
-	const additional: Additional = {
-		moves: options.moves,
-		gameConclusion: options.gameConclusion,
-		// If the clock values are provided, adjust the timer of whos turn it is depending on ping.
-		clockValues: options.clockValues,
-	};
-
-	const resolvedVariant = variantregistry.resolveVariantCode(options.metadata.Variant);
-	const resolvedTimestamp = metadatautil.resolveTimestampFromMetadata(
-		options.metadata.UTCDate,
-		options.metadata.UTCTime,
-	);
-
-	const viewWhitePerspective =
-		options.youAreColor === undefined || options.youAreColor === p.WHITE; // Spectators view from white perspective
-
-	gameslot
-		.loadGamefile({
-			timeControl: options.metadata.TimeControl ?? '-',
-			variant: resolvedVariant,
-			dateTimestamp: resolvedTimestamp,
-			viewWhitePerspective,
-			allowEditCoords: false,
-			additional,
-		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-
-			return graphical;
-		})
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
-
-	onlinegame.initOnlineGame({
-		gameInfo: options.gameInfo,
-		youAreColor: options.youAreColor,
-		participantState: options.participantState,
-	});
-
-	// Open the gui stuff AFTER initiating the logical stuff,
-	// because the gui DEPENDS on the other stuff.
-
-	concludeGameIfOver();
+	gamesession.concludeGameIfOver();
 }
 
 /** Starts an engine game according to the options provided. */
@@ -253,11 +82,7 @@ async function startEngineGame(options: {
 	if (!options.variant && !options.variantOptions)
 		throw Error('Must provide either Variant or variantOptions when starting an engine game.');
 
-	typeOfGameWeAreIn = 'engine';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
 
 	const dateTimestamp = Date.now();
 
@@ -269,7 +94,6 @@ async function startEngineGame(options: {
 			variant: options.variant,
 			dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: false,
 			additional: {
 				variantOptions: options.variantOptions,
 				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
@@ -283,18 +107,15 @@ async function startEngineGame(options: {
 
 			return graphical;
 		})
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Both the engine and graphical promises have resolved
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
-	concludeGameIfOver();
+	gamesession.concludeGameIfOver();
 }
 
 /** Initializes the board editor. */
 async function startBoardEditor(): Promise<void> {
-	typeOfGameWeAreIn = 'editor';
-	gameLoading = true;
-
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'editor' });
 
 	const dateTimestamp = Date.now();
 	const variantCode: VariantCode = 'Classical';
@@ -307,7 +128,6 @@ async function startBoardEditor(): Promise<void> {
 			variant: variantCode,
 			dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: true,
 			/**
 			 * Enable to tell the gamefile to include large amounts of undefined slots for every single piece type in the game.
 			 * This lets us board edit without worry of regenerating the mesh every time we add a piece.
@@ -318,8 +138,8 @@ async function startBoardEditor(): Promise<void> {
 			additional: { editor: true },
 		})
 		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
 	await guipalette.initUI();
 	boardeditor.initBoardEditor(true); // Dirty position since its a new unsaved position being loaded
@@ -333,11 +153,7 @@ async function startCustomLocalGame(options: {
 	};
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
-	typeOfGameWeAreIn = 'local';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'analysis' });
 
 	const dateTimestamp = Date.now();
 
@@ -350,16 +166,15 @@ async function startCustomLocalGame(options: {
 			dateTimestamp,
 			variant: undefined, // Not specified for custom position
 			viewWhitePerspective,
-			allowEditCoords: true,
 		})
 		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	concludeGameIfOver();
+	gamesession.concludeGameIfOver();
 }
 
 /** Starts an engine game from a custom position. */
@@ -376,11 +191,7 @@ async function startCustomEngineGame(options: {
 	/** Whether to show the Undo and Restart buttons on the gameinfo bar. For checkmate practice games. */
 	showGameControlButtons?: true;
 }): Promise<void> {
-	typeOfGameWeAreIn = 'engine';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'engine', role: options.youAreColor });
 
 	const dateTimestamp = Date.now();
 
@@ -392,7 +203,6 @@ async function startCustomEngineGame(options: {
 			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: false,
 			additional: {
 				variantOptions: options.additional.variantOptions,
 				worldBorderDist: engineDictionary[options.currentEngine].worldBorder,
@@ -406,10 +216,10 @@ async function startCustomEngineGame(options: {
 
 			return graphical;
 		})
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Both the engine and graphical promises have resolved
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Both the engine and graphical promises have resolved
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
-	concludeGameIfOver();
+	gamesession.concludeGameIfOver();
 }
 
 /** Initializes the board editor from a custom position. */
@@ -428,11 +238,7 @@ async function startBoardEditorFromCustomPosition(
 	/** Whether the castling flag should be set for the position in the editor game rules */
 	castling?: boolean,
 ): Promise<void> {
-	typeOfGameWeAreIn = 'editor';
-	gameLoading = true;
-
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
+	gamesession.setSessionGame({ type: 'editor' });
 
 	const dateTimestamp = Date.now();
 
@@ -447,14 +253,13 @@ async function startBoardEditorFromCustomPosition(
 			variant: undefined, // Not specified for custom position
 			dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: true,
 			// See comment in startBoardEditor for why "editor: true" is needed
 			additional: { ...options.additional, editor: true },
 			presetAnnotes: options.presetAnnotes,
 		})
 		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
@@ -473,15 +278,12 @@ async function pasteGame(options: {
 	additional: Additional;
 	presetAnnotes?: PresetAnnotes;
 }): Promise<void> {
-	if (typeOfGameWeAreIn !== 'local' && typeOfGameWeAreIn !== 'online')
-		throw Error("Can't paste a game when we're not in a local or online game.");
+	if (gamesession.getGameType() !== 'analysis')
+		throw Error("Can't paste a game when we're not in an analysis game.");
 
-	gameLoading = true;
+	gamesession.markLoading();
 
-	// Has to be awaited to give the document a chance to repaint.
-	await loadingscreen.open();
-
-	const viewWhitePerspective = gameslot.isLoadedGameViewingWhitePerspective(); // Retain the same perspective as the current loaded game.
+	const viewWhitePerspective = gameslot.areViewingWhite(); // Retain the same perspective as the current loaded game.
 
 	gameslot.unloadGame();
 
@@ -491,94 +293,27 @@ async function pasteGame(options: {
 			variant: options.variant,
 			dateTimestamp: options.dateTimestamp,
 			viewWhitePerspective,
-			allowEditCoords: guinavigation.areCoordsAllowedToBeEdited(),
 			presetAnnotes: options.presetAnnotes,
 			additional: options.additional,
 		})
 		.then(({ graphical }) => graphical) // Logical loaded, return graphical promise
-		.then(() => onFinishedLoading(viewWhitePerspective)) // Graphical loaded
-		.catch((err: Error) => onCatchLoadingError(err));
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 
 	// Open the gui stuff AFTER initiating the logical stuff,
 	// because the gui DEPENDS on the other stuff.
 
-	concludeGameIfOver();
-}
-
-/**
- * A function that is executed when a game is FULLY loaded (graphical, spritesheet, engine, etc.)
- * This hides the spinny pawn loading animation that covers the board.
- */
-function onFinishedLoading(viewWhitePerspective: boolean): void {
-	// console.log('COMPLETELY finished loading game!');
-	gameLoading = false;
-
-	perspective.setViewSide(viewWhitePerspective);
-
-	frameratelimiter.setFpsLimit(null); // Run at full speed while in a game
-
-	// We can now close the loading screen.
-
-	// I don't think this one has to be awaited since we're pretty much
-	// done with loading, there's not gonna be another lag spike..
-	loadingscreen.close();
-	gameslot.startStartingTransition(); // Play the zoom-in animation at the start of games.
-}
-
-/**
- * Replaces the loading animation with the words
- * "ERROR. One or more resources failed to load. Please refresh."
- */
-function onCatchLoadingError(err: Error): void {
-	console.error(err);
-	loadingscreen.onError();
-}
-
-/** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
-function concludeGameIfOver(): void {
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
-}
-
-function unloadLogicalAndRendering(): void {
-	gameslot.unloadGame();
-	perspective.disable();
-	boardpos.eraseMomentum();
-	Transition.terminate();
-}
-
-function unloadGame(): void {
-	// console.log("Game loader unloading game...");
-
-	if (typeOfGameWeAreIn === 'online') onlinegame.closeOnlineGame();
-	else if (typeOfGameWeAreIn === 'engine') enginegame.closeEngineGame();
-	else if (typeOfGameWeAreIn === 'editor') boardeditor.closeBoardEditor();
-
-	perspective.resetRotations();
-	guinavigation.close();
-	guiboardeditor.close();
-	unloadLogicalAndRendering();
-	frameratelimiter.setFpsLimit(TARGET_FPS_TITLE_SCREEN); // Return to title-screen throttle on game exit
-	typeOfGameWeAreIn = undefined;
+	gamesession.concludeGameIfOver();
 }
 
 // Exports --------------------------------------------------------------------
 
 export default {
-	areInAGame,
-	areInLocalGame,
-	isItOurTurn,
-	getOurColor,
-	areWeLoadingGame,
-	getTypeOfGameWeIn,
-	update,
 	startLocalGame,
-	startOnlineGame,
 	startEngineGame,
 	startBoardEditor,
 	startCustomLocalGame,
 	startCustomEngineGame,
 	startBoardEditorFromCustomPosition,
 	pasteGame,
-	unloadLogicalAndRendering,
-	unloadGame,
 };

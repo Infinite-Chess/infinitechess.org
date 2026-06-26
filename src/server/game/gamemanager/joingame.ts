@@ -13,7 +13,7 @@ import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
 import { getGameBySocket } from './gamemanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { cancelAutoAFKResignTimer, cancelDisconnectTimer } from './afkdisconnect.js';
+import { cancelDisconnectTimer } from './disconnect.js';
 
 /**
  * The method that fires when a client sends the 'joingame' command after refreshing the page.
@@ -47,12 +47,6 @@ function onJoinGame(ws: CustomWebSocket): void {
  * timer, and notifies live-game tracking they reconnected.
  */
 function runReconnectSideEffects(servergame: ServerGame, color: Player): void {
-	// Cancel the timer that auto loses them by AFK, IF IT is their turn!
-	if (servergame.whosTurn === color) {
-		const hadAFKTimer = servergame.match.autoAFKResignTime !== undefined;
-		cancelAutoAFKResignTimer(servergame, true);
-		if (hadAFKTimer) liveGameValues.onPlayerAFKReturn(servergame);
-	}
 	cancelDisconnectTimer(servergame.match, color);
 	liveGameValues.onPlayerReconnected(servergame, color);
 }

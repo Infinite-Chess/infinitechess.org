@@ -1,5 +1,11 @@
 // src/client/scripts/esm/game/gui/guinavigation.ts
 
+/**
+ * This script handles the navigation bar, in a game,
+ * along the top of the screen, containing the teleporation
+ * buttons, rewind move, forward move, and pause buttons.
+ */
+
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
@@ -12,7 +18,6 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import toast from '../../components/toast.js';
-import stats from './stats.js';
 import mouse from '../../util/mouse.js';
 import space from '../misc/space.js';
 import gameslot from '../chess/gameslot.js';
@@ -20,23 +25,13 @@ import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import premoves from '../chess/premoves.js';
 import selection from '../chess/selection.js';
-import onlinegame from '../misc/onlinegame/onlinegame.js';
 import Transition from '../rendering/transitions/Transition.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import edithistory from '../boardeditor/edithistory.js';
-import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
-
-/**
- * This script handles the navigation bar, in a game,
- * along the top of the screen, containing the teleporation
- * buttons, rewind move, forward move, and pause buttons.
- */
-
-const element_Navigation = document.getElementById('navigation-bar')!;
 
 // Navigation
 const element_Recenter = document.getElementById('recenter')!;
@@ -71,69 +66,15 @@ let rightArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN f
 let rightArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE forwarding or redoing
 let touchIsInsideRight = false;
 
-let rewindIsLocked = false;
-const durationToLockRewindAfterMoveForwardingMillis = 750;
-
-/** Whether the navigation UI is visible (not hidden) */
-let navigationOpen = true;
-
 /**
  * Whether the annotations button is enabled.
  * If so, all left click actions are treated as right clicks.
  */
 let annotationsEnabled: boolean = false;
 
-// Events ----------------------------------------------------------------------------------
+// Functions -------------------------------------------------------------------------------
 
-GameBus.addEventListener('game-unloaded', () => {
-	// Reset Annotations mode button state, without closing the Navigation Bar.
-	annotationsEnabled = false;
-	listener_overlay.setTreatLeftasRight(false);
-	element_Annotations.classList.remove('enabled');
-
-	hideCollapse();
-});
-
-// =================================================================================
-
-// Functions
-
-function isOpen(): boolean {
-	return navigationOpen;
-}
-
-/** Called when we push 'N' on the keyboard */
-function toggle(): void {
-	if (navigationOpen) close();
-	else open({ allowEditCoords: !onlinegame.areInOnlineGame() });
-	// Flag next frame to be rendered, since the arrows indicators may change locations with the bars toggled.
-	frametracker.onVisualChange();
-}
-
-function open({ allowEditCoords = true }: { allowEditCoords?: boolean }): void {
-	element_Navigation.classList.remove('hidden');
-	if (!guiboardeditor.isOpen()) {
-		// Normal game => Show navigate move buttons
-		element_moveRewind.classList.remove('hidden');
-		element_moveForward.classList.remove('hidden');
-		element_undoEdit.classList.add('hidden');
-		element_redoEdit.classList.add('hidden');
-		update_MoveButtons();
-	} else {
-		// Board editor => Show undo/redo edit buttons
-		element_moveRewind.classList.add('hidden');
-		element_moveForward.classList.add('hidden');
-		element_undoEdit.classList.remove('hidden');
-		element_redoEdit.classList.remove('hidden');
-		update_EditButtons();
-	}
-	initListeners_Navigation();
-	initCoordinates({ allowEditCoords });
-	navigationOpen = true;
-	stats.updateStatsCSS();
-}
-
-function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): void {
+function _initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): void {
 	if (allowEditCoords) {
 		element_CoordsX.disabled = false;
 		element_CoordsY.disabled = false;
@@ -145,13 +86,6 @@ function initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): voi
 		element_CoordsX.classList.add('set-cursor-to-not-allowed');
 		element_CoordsY.classList.add('set-cursor-to-not-allowed');
 	}
-}
-
-function close(): void {
-	element_Navigation.classList.add('hidden');
-	closeListeners_Navigation();
-	navigationOpen = false;
-	stats.updateStatsCSS();
 }
 
 // =============================== Coordinate Fields ===============================
@@ -169,6 +103,11 @@ function updateElement_Coords(): void {
 	// If the number is too big to fit in the input box, display it in exponential notation instead.
 	displayBigIntInInput(element_CoordsX, xDisplayCoord, 3);
 	displayBigIntInInput(element_CoordsY, yDisplayCoord, 3);
+}
+
+/** Returns true if one of the coordinate fields is active (currently editing) */
+function isCoordinateActive(): boolean {
+	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
 
 /**
@@ -254,14 +193,7 @@ function parseStringToBigInt(value: string): bigint {
 
 // =================================================================================
 
-/**
- * Returns true if one of the coordinate fields is active (currently editing)
- */
-function isCoordinateActive(): boolean {
-	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
-}
-
-function initListeners_Navigation(): void {
+function _initListeners_Navigation(): void {
 	element_Recenter.addEventListener('click', recenter);
 	element_Expand.addEventListener('click', callback_Expand);
 	element_Back.addEventListener('click', callback_Back);
@@ -306,54 +238,6 @@ function initListeners_Navigation(): void {
 		element_redoEdit.addEventListener('touchmove', callback_RedoEditTouchMove);
 		element_redoEdit.addEventListener('touchend', callback_RedoEditTouchEnd);
 		element_redoEdit.addEventListener('touchcancel', callback_RedoEditTouchEnd);
-	}
-}
-
-function closeListeners_Navigation(): void {
-	element_Recenter.removeEventListener('click', recenter);
-	element_Expand.removeEventListener('click', callback_Expand);
-	element_Back.removeEventListener('click', callback_Back);
-	element_Annotations.removeEventListener('click', callback_Annotations);
-	element_Erase.removeEventListener('click', callback__Collapse);
-	element_Collapse.removeEventListener('click', callback__Collapse);
-
-	element_CoordsX.removeEventListener('change', callback_CoordsXChange);
-	element_CoordsY.removeEventListener('change', callback_CoordsYChange);
-
-	if (!guiboardeditor.isOpen()) {
-		element_moveRewind.removeEventListener('click', callback_MoveRewind);
-		element_moveRewind.removeEventListener('mousedown', callback_MoveRewindMouseDown);
-		element_moveRewind.removeEventListener('mouseleave', callback_MoveRewindMouseLeave);
-		element_moveRewind.removeEventListener('mouseup', callback_MoveRewindMouseUp);
-		element_moveRewind.removeEventListener('touchstart', callback_MoveRewindTouchStart);
-		element_moveRewind.removeEventListener('touchmove', callback_MoveRewindTouchMove);
-		element_moveRewind.removeEventListener('touchend', callback_MoveRewindTouchEnd);
-		element_moveRewind.removeEventListener('touchcancel', callback_MoveRewindTouchEnd);
-		element_moveForward.removeEventListener('click', callback_MoveForward);
-		element_moveForward.removeEventListener('mousedown', callback_MoveForwardMouseDown);
-		element_moveForward.removeEventListener('mouseleave', callback_MoveForwardMouseLeave);
-		element_moveForward.removeEventListener('mouseup', callback_MoveForwardMouseUp);
-		element_moveForward.removeEventListener('touchstart', callback_MoveForwardTouchStart);
-		element_moveForward.removeEventListener('touchmove', callback_MoveForwardTouchMove);
-		element_moveForward.removeEventListener('touchend', callback_MoveForwardTouchEnd);
-		element_moveForward.removeEventListener('touchcancel', callback_MoveForwardTouchEnd);
-	} else {
-		element_undoEdit.removeEventListener('click', callback_UndoEdit);
-		element_undoEdit.removeEventListener('mousedown', callback_UndoEditMouseDown);
-		element_undoEdit.removeEventListener('mouseleave', callback_UndoEditMouseLeave);
-		element_undoEdit.removeEventListener('mouseup', callback_UndoEditMouseUp);
-		element_undoEdit.removeEventListener('touchstart', callback_UndoEditTouchStart);
-		element_undoEdit.removeEventListener('touchmove', callback_UndoEditTouchMove);
-		element_undoEdit.removeEventListener('touchend', callback_UndoEditTouchEnd);
-		element_undoEdit.removeEventListener('touchcancel', callback_UndoEditTouchEnd);
-		element_redoEdit.removeEventListener('click', callback_RedoEdit);
-		element_redoEdit.removeEventListener('mousedown', callback_RedoEditMouseDown);
-		element_redoEdit.removeEventListener('mouseleave', callback_RedoEditMouseLeave);
-		element_redoEdit.removeEventListener('mouseup', callback_RedoEditMouseUp);
-		element_redoEdit.removeEventListener('touchstart', callback_RedoEditTouchStart);
-		element_redoEdit.removeEventListener('touchmove', callback_RedoEditTouchMove);
-		element_redoEdit.removeEventListener('touchend', callback_RedoEditTouchEnd);
-		element_redoEdit.removeEventListener('touchcancel', callback_RedoEditTouchEnd);
 	}
 }
 
@@ -474,19 +358,6 @@ function hideCollapse(): void {
 
 // =====================================================================
 
-/**
- * Returns true if the coords input box is currently not allowed to be edited.
- * This was set at the time they were opened.
- */
-function areCoordsAllowedToBeEdited(): boolean {
-	return !element_CoordsX.disabled;
-}
-
-/** Returns the height of the navigation bar in the document, in virtual pixels. */
-function getHeightOfNavBar(): number {
-	return element_Navigation.getBoundingClientRect().height;
-}
-
 /** Tests if the arrow keys have been pressed outisde of the board editor, signaling to rewind/forward the game. */
 function update(): void {
 	if (!guiboardeditor.isOpen()) {
@@ -501,7 +372,6 @@ function update(): void {
 // Move Buttons =====================================================
 
 function callback_MoveRewind(): void {
-	if (rewindIsLocked) return;
 	if (!isItOkayToRewindOrForward()) return;
 	lastRewindOrEdit = Date.now();
 	rewindMove();
@@ -641,25 +511,9 @@ function callback_MoveForwardTouchEnd(): void {
 	clearInterval(rightArrowIntervalID);
 }
 
-/**
- * Locks the rewind button for a brief moment. Typically called after forwarding the moves to the front.
- * This is so if our opponent moves while we're rewinding, there's a brief pause.
- */
-function lockRewind(): void {
-	rewindIsLocked = true;
-	lockLayers++;
-	setTimeout(() => {
-		lockLayers--;
-		if (lockLayers > 0) return;
-		rewindIsLocked = false;
-	}, durationToLockRewindAfterMoveForwardingMillis);
-}
-let lockLayers = 0;
-
 /** Tests if the left arrow key has been pressed, signaling to rewind the game. */
 function testIfRewindMove(): void {
 	if (!listener_document.isKeyDown('ArrowLeft')) return;
-	if (rewindIsLocked) return;
 	rewindMove();
 }
 
@@ -679,7 +533,7 @@ function rewindMove(): void {
 	// If we had premoves to cancel, just cancel them, don't rewind a move this time.
 	if (hadAtleastOnePremove) return;
 
-	if (!moveutil.isDecrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isDecrementingLegal(gamefile)) return;
 
 	frametracker.onVisualChange();
 
@@ -695,7 +549,7 @@ function forwardMove(): void {
 
 	premoves.cancelPremoves(gamefile, mesh);
 
-	if (!moveutil.isIncrementingLegal(gamefile)) return stats.showMoves();
+	if (!moveutil.isIncrementingLegal(gamefile)) return;
 
 	movesequence.navigateMove(gamefile, mesh, true);
 }
@@ -853,19 +707,11 @@ function callback_RedoEdit(): void {
 }
 
 export default {
-	isOpen,
-	open,
-	close,
 	updateElement_Coords,
 	update_MoveButtons,
 	update_EditButtons,
 	callback_Expand,
-	lockRewind,
 	update,
-	isCoordinateActive,
 	recenter,
-	toggle,
 	isAnnotationsButtonEnabled,
-	areCoordsAllowedToBeEdited,
-	getHeightOfNavBar,
 };

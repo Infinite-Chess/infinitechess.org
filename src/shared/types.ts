@@ -107,11 +107,6 @@ export const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect: DisconnectInfoSchema.optional(),
-	/**
-	 * If our opponent is AFK, this is how many milliseconds left until they will be auto-resigned,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
-	 */
-	millisUntilAutoAFKResign: z.number().optional(),
 });
 
 /** The agnostic core of a `'gameupdate'` message — identical for every recipient (no per-player overlay). */

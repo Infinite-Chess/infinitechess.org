@@ -13,7 +13,7 @@ let hasBeenVisualChange: boolean = true;
 
 /** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
 function onVisualChange(): void {
-	// console.error("onVisualChange()");
+	// console.error('onVisualChange()');
 	hasBeenVisualChange = true;
 }
 

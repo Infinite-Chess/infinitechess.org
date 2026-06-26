@@ -1,5 +1,6 @@
 // src/client/types/globals.d.ts
 
+import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
@@ -82,6 +83,8 @@ declare global {
 		id: number;
 		/** Best-effort liveness hint at SSR time; may be stale by render, so the client re-confirms. */
 		isLive: boolean;
+		/** The viewer's color, SSR-resolved from their cookie identity. Undefined for spectators. */
+		youAreColor?: Player;
 	};
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */

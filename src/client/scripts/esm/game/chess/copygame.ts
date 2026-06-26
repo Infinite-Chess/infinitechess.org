@@ -1,17 +1,15 @@
 // src/client/scripts/esm/game/chess/copygame.ts
 
 /**
- * This script handles copying games
+ * This script handles copying games.
  */
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { VARIANTS_TOO_LARGE_TO_INCLUDE_POSITION } from '../../../../../shared/chess/variants/servervalidation.js';
 
-import toast from '../../components/toast.js';
 import docutil from '../../util/docutil.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import gamecompressor from './gamecompressor.js';
 import gameslot, { PresetAnnotes } from './gameslot.js';
 
@@ -21,8 +19,6 @@ import gameslot, { PresetAnnotes } from './gameslot.js';
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  */
 function copyGame(copySinglePosition: boolean): void {
-	if (boardeditor.areInBoardEditor()) return; // Editor has its own handler
-
 	const gamefile = gameslot.getGamefile()!;
 	const variantCode = gamefile.variant?.code;
 
@@ -56,7 +52,7 @@ function copyGame(copySinglePosition: boolean): void {
 	});
 
 	docutil.copyToClipboard(shortformat);
-	toast.show(translations.copypaste.copied_game);
+	console.log('Copied game to clipboard.');
 }
 
 export default {

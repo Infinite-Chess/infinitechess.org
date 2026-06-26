@@ -59,10 +59,9 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 
 #### Group 6: Timer State
 
-| Column            | Type    | Notes                                                                                                                                                                            |
-| ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `afk_resign_time` | INTEGER | Epoch ms when the AFK auto-resign fires. NULL if no AFK timer active. On restoration, remaining = `stored - Date.now()`; if ≤ 0, immediately resign.                             |
-| `delete_time`     | INTEGER | Epoch ms when the concluded game is deleted and logged. NULL if ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis`. On restoration, if elapsed, immediately run logging. |
+| Column        | Type    | Notes                                                                                                                                                                            |
+| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `delete_time` | INTEGER | Epoch ms when the concluded game is deleted and logged. NULL if ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis`. On restoration, if elapsed, immediately run logging. |
 
 #### Group 7: Flags
 
@@ -98,20 +97,17 @@ One row per player per live game.
 
 ## Event Matrix: When Each Column Is Written
 
-| Event                       | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Game created**            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, defaults)                                                       |
-| **Move submitted**          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (both players)                                                                   |
-| **Draw offer extended**     | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (offering player)                                                              |
-| **Draw offer declined**     | `draw_offer_state` → NULL                                                                                        | —                                                                                                    |
-| **Draw accepted**           | `conclusion_condition`, `conclusion_victor`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                                                    |
-| **Resignation**             | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
-| **Abort**                   | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                                                    |
-| **Time loss**               | `conclusion_condition`, `conclusion_victor`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                                                  |
-| **Disconnect loss**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
-| **Player disconnects**      | —                                                                                                                | `disconnect_cushion_end_time`, `disconnect_resign_time`, `disconnect_by_choice`                      |
-| **Player reconnects**       | —                                                                                                                | `disconnect_cushion_end_time` → NULL, `disconnect_resign_time` → NULL, `disconnect_by_choice` → NULL |
-| **Player goes AFK**         | `afk_resign_time`                                                                                                | —                                                                                                    |
-| **Player returns from AFK** | `afk_resign_time` → NULL                                                                                         | —                                                                                                    |
-| **AFK auto-resign**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `afk_resign_time` → NULL, `delete_time`               | —                                                                                                    |
-| **Game deleted/logged**     | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                    |
+| Event                   | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Game created**        | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, defaults)                                                       |
+| **Move submitted**      | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (both players)                                                                   |
+| **Draw offer extended** | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (offering player)                                                              |
+| **Draw offer declined** | `draw_offer_state` → NULL                                                                                        | —                                                                                                    |
+| **Draw accepted**       | `conclusion_condition`, `conclusion_victor`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                                                    |
+| **Resignation**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
+| **Abort**               | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                                                    |
+| **Time loss**           | `conclusion_condition`, `conclusion_victor`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                                                  |
+| **Disconnect loss**     | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
+| **Player disconnects**  | —                                                                                                                | `disconnect_cushion_end_time`, `disconnect_resign_time`, `disconnect_by_choice`                      |
+| **Player reconnects**   | —                                                                                                                | `disconnect_cushion_end_time` → NULL, `disconnect_resign_time` → NULL, `disconnect_by_choice` → NULL |
+| **Game deleted/logged** | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                    |

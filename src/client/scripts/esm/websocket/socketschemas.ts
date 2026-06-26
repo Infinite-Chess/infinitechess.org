@@ -20,7 +20,7 @@ import {
 	OpponentsMoveMessageSchema,
 	OutSeekSchema,
 	PlayerRatingChangeInfoSchema,
-	RatingSchema,
+	SubscribedGameStateSchema,
 } from '../../../../shared/types.js';
 
 // Seek Helper Schemas ---------------------------------------------------------------
@@ -39,7 +39,6 @@ const ServerGameInfoSchema = z.strictObject({
 	/** The id of the online game. */
 	id: GameIDSchema,
 	rated: z.boolean(),
-	playerRatings: typeschemas.GenPlayerGroupSchema(RatingSchema),
 });
 
 /**
@@ -100,6 +99,7 @@ const LobbySchema = z.discriminatedUnion('action', [
 export type GameMessage = z.infer<typeof GameSchema>;
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame'), value: JoinGameMessageSchema }),
+	z.strictObject({ action: z.literal('gamestate'), value: SubscribedGameStateSchema }),
 	z.strictObject({
 		action: z.literal('logged-game-info'),
 		value: z.strictObject({
@@ -124,11 +124,6 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('login') }),
 	z.strictObject({ action: z.literal('nogame') }),
 	z.strictObject({ action: z.literal('leavegame') }),
-	z.strictObject({
-		action: z.literal('opponentafk'),
-		value: z.strictObject({ millisUntilAutoAFKResign: z.number() }),
-	}),
-	z.strictObject({ action: z.literal('opponentafkreturn') }),
 	z.strictObject({
 		action: z.literal('opponentdisconnect'),
 		value: DisconnectInfoSchema,

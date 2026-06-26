@@ -99,12 +99,10 @@ function startPositionAutosave(): void {
 	positionDirty = true;
 	void autosaveCurrentPositionOnce();
 
-	positionAutosaveTimer = window.setInterval(() => {
-		// Don't save if editor is closed mid-tick
-		if (!boardeditor.areInBoardEditor()) return;
-
-		void autosaveCurrentPositionOnce();
-	}, positionAutosaveIntervalMillis);
+	positionAutosaveTimer = window.setInterval(
+		() => autosaveCurrentPositionOnce(),
+		positionAutosaveIntervalMillis,
+	);
 }
 
 /** Kill running autosave interval */

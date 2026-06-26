@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/frameratelimiter.ts
+// dev-utils/scripts/frameratelimiter.ts
 
 /**
  * This module manages the framerate of the game.

@@ -34,6 +34,8 @@ interface GameMetaViewModel {
 	/** User-facing time control label in `m+s` format, e.g. `"10+4"` or `"-"`. */
 	timeControl: string;
 	rated: boolean;
+	/** Whether the game is timed. Drives whether the SSR'd `.clock` elements start hidden. */
+	timed: boolean;
 	/** Epoch ms the game was created; the client re-derives the ticking relative string. */
 	timeCreated: number;
 	/** SSR'd relative "time ago" string for first paint, e.g. `"2 minutes ago"`. */
@@ -127,6 +129,7 @@ function buildGameMetaViewModel(
 			iconId: clockutil.getSpeedIconId(state.timeControl),
 			category: clockutil.getSpeedCategory(state.timeControl),
 		},
+		timed: !clockutil.isClockValueInfinite(state.timeControl),
 		timeControl: clockutil.getTimeControlLabel(state.timeControl),
 		rated: state.rated,
 		timeCreated: state.timeCreated,

@@ -43,7 +43,7 @@ const padding: number = 0.03;
 const paddingMiniimage: number = 0.03; // Default: 0.2
 
 /** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
-const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(100);
+const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(70);
 /**
  * The minimum number of squares that should be visible when transitioning somewhere.
  * Prevents variant preview tooltips from being too zoomed in.

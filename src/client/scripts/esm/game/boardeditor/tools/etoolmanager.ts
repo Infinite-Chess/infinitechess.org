@@ -11,7 +11,6 @@ import selection from '../../chess/selection.js';
 import guitoolbar from '../../gui/boardeditor/guitoolbar.js';
 import drawingtool from './drawingtool.js';
 import perspective from '../../rendering/perspective.js';
-import boardeditor from '../boardeditor.js';
 import edithistory from '../edithistory.js';
 import selectiontool from './selection/selectiontool.js';
 import { listener_document } from '../../chess/game.js';
@@ -64,13 +63,11 @@ function setTool(tool: string): void {
 
 /** Whether any of the editor tools are actively using the left mouse button. */
 function isLeftMouseReserved(): boolean {
-	if (!boardeditor.areInBoardEditor()) return false;
 	return drawingtool.isToolADrawingTool(currentTool) || currentTool === 'selection-tool';
 }
 
 /** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
 function stealPointer(pointerIdToSteal: string): void {
-	if (!boardeditor.areInBoardEditor()) return;
 	if (currentTool === 'selection-tool')
 		return; // Don't steal (selection tool isn't capable of reverting to previous selection before starting a new one)
 	else if (drawingtool.isToolADrawingTool(currentTool))

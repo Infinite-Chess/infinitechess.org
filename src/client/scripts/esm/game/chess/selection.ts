@@ -32,11 +32,10 @@ import premoves from '../chess/premoves.js';
 import keybinds from '../misc/keybinds.js';
 import { Mouse } from '../input.js';
 import droparrows from '../rendering/dragging/droparrows.js';
-import gameloader from './gameloader.js';
 import Transition from '../rendering/transitions/Transition.js';
 import normaltool from '../boardeditor/tools/normaltool.js';
+import gamesession from './gamesession.js';
 import preferences from '../../components/header/preferences.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../GameBus.js';
 import movesequence from './movesequence.js';
@@ -197,7 +196,7 @@ function updateHoverSquareLegal(gamefile: GameFile): void {
 	);
 	hoverSquareLegal =
 		(legal && canMovePieceType(pieceSelected!.type)) ||
-		(boardeditor.areInBoardEditor() &&
+		(gamesession.getGameType() === 'editor' &&
 			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
 			(gamefile.gameRules.worldBorder === undefined ||
 				bounds.boxContainsSquare(gamefile.gameRules.worldBorder, hoverSquare))); // Allow ALL moves in board editor.
@@ -317,13 +316,13 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 function canSelectPieceType(gamefile: GameFile, type: number | undefined): 0 | 1 | 2 {
 	if (type === undefined) return 0; // Can't select nothing
 	const dragEnabled = keybinds.getEffectiveDragEnabled();
-	if (boardeditor.areInBoardEditor()) return dragEnabled ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
+	if (gamesession.getGameType() === 'editor') return dragEnabled ? 2 : 1; // In board editor, we can select and drag ANY piece type, even voids!
 	const [raw, player] = typeutil.splitType(type);
 	if (raw === r.VOID) return 0; // Can't select voids
 	if (player === p.NEUTRAL) return 0; // Can't select neutrals, period.
 	if (isOpponentType(gamefile, type)) return 1; // Can select opponent pieces, but not draggable..
 	// It is our piece type...
-	const isOurTurn = gameloader.isItOurTurn();
+	const isOurTurn = gamesession.isItOurTurn();
 	if (!isOurTurn && !preferences.getPremoveEnabled()) return 1; // Can select our piece when it's not our turn, but not draggable.
 	return dragEnabled ? 2 : 1; // Can select and move this piece type (draggable too IF THAT IS ENABLED).
 }
@@ -335,7 +334,7 @@ function canMovePieceType(pieceType: number): boolean {
 	const isOpponentPiece = isOpponentType(gameslot.getGamefile()!, pieceType);
 	if (isOpponentPiece) return false; // Don't move opponent pieces
 	// It is our piece type...
-	const isOurTurn = gameloader.isItOurTurn();
+	const isOurTurn = gamesession.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
 	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
 }
@@ -343,9 +342,9 @@ function canMovePieceType(pieceType: number): boolean {
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
 function isOpponentType(gamefile: GameFile, type: number): boolean {
 	const pieceColor = typeutil.getColorFromType(type);
-	if (boardeditor.areInBoardEditor()) return false;
-	else if (gameloader.areInLocalGame()) return pieceColor !== gamefile.whosTurn;
-	else return pieceColor !== gameloader.getOurColor();
+	if (gamesession.getGameType() === 'editor') return false;
+	else if (gamesession.getGameType() === 'analysis') return pieceColor !== gamefile.whosTurn;
+	else return pieceColor !== gamesession.getRole();
 }
 
 // Selection & Moving ---------------------------------------------------------------------------------------------
@@ -453,7 +452,7 @@ function initSelectedPieceInfo(gamefile: GameFile, mesh: Mesh | undefined, piece
 	pieceSelected = piece;
 
 	isOpponentPiece = isOpponentType(gamefile, piece.type);
-	isPremove = !isOpponentPiece && !gameloader.isItOurTurn();
+	isPremove = !isOpponentPiece && !gamesession.isItOurTurn();
 
 	// Calculate the legal moves it has...
 
@@ -482,7 +481,8 @@ function initSelectedPieceInfo(gamefile: GameFile, mesh: Mesh | undefined, piece
  */
 function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: CoordsTagged): void {
 	// Check if the move is a pawn promotion
-	if (coords.promoteTrigger && !boardeditor.areInBoardEditor()) return onPromoteTrigger(coords);
+	if (coords.promoteTrigger && gamesession.getGameType() !== 'editor')
+		return onPromoteTrigger(coords);
 
 	const strippedCoords: Coords = moveutil.stripSpecialMoveTagsFromCoords(coords);
 	const moveTagged: MoveTagged = {
@@ -495,11 +495,12 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// have to note whether it was being dragged BEFORE we move it!
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
-	const changes = boardeditor.areInBoardEditor()
-		? normaltool.makeMoveEdit(gamefile, mesh, moveTagged).changes
-		: isPremove
-			? premoves.addPremove(gamefile, mesh, moveTagged).changes
-			: movesequence.makeMove(gamefile, mesh, moveTagged).changes;
+	const changes =
+		gamesession.getGameType() === 'editor'
+			? normaltool.makeMoveEdit(gamefile, mesh, moveTagged).changes
+			: isPremove
+				? premoves.addPremove(gamefile, mesh, moveTagged).changes
+				: movesequence.makeMove(gamefile, mesh, moveTagged).changes;
 
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
@@ -581,4 +582,5 @@ export default {
 	stealPointer,
 	selectPiece,
 	canSelectPieceType,
+	isOpponentType,
 };

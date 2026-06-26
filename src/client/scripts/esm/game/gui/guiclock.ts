@@ -9,18 +9,28 @@ import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
+import gameslot from '../chess/gameslot.js';
 import gamesound from '../misc/gamesound.js';
-import gameloader from '../chess/gameloader.js';
+import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
 
-const element_timers: PlayerGroup<{ timer: HTMLElement }> = {
-	[p.WHITE]: {
-		timer: document.getElementById('timer-white')!,
+/** A player bar and the `.clock` it hosts. SSR'd by the game page, keyed by board POV. */
+type BarElements = { bar: HTMLElement; timer: HTMLElement };
+
+/** The two SSR'd player bars by board position. Bottom = you (or white for spectators). */
+const bars: { top: BarElements; bottom: BarElements } = {
+	top: {
+		bar: document.getElementById('player-bar-top')!,
+		timer: document.querySelector('#player-bar-top .clock')!,
 	},
-	[p.BLACK]: {
-		timer: document.getElementById('timer-black')!,
+	bottom: {
+		bar: document.getElementById('player-bar-bottom')!,
+		timer: document.querySelector('#player-bar-bottom .clock')!,
 	},
 };
+
+/** Player → bar elements for the loaded game, resolved by perspective in {@link set}. */
+let element_timers: PlayerGroup<BarElements> = {};
 
 /** Whether the low-time sound has already been played this game.. */
 let hasPlayedLowtimeSound = false;
@@ -57,7 +67,7 @@ function stopClocks(basegame?: GameFile): void {
 
 	if (basegame && !basegame.untimed) updateTextContent(basegame.clocks); // Ensures clock shows 0
 	for (const clockElements of Object.values(element_timers)) {
-		removeLowTimeState(clockElements.timer);
+		clockElements.bar.classList.remove('tempo'); // No side is on the move once stopped.
 	}
 }
 
@@ -74,31 +84,45 @@ function edit(basegame: GameFile): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 
-	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
+	for (const playerStr of Object.keys(element_timers)) {
 		const player = Number(playerStr) as Player;
 		if (player === basegame.clocks.colorTicking) continue;
-		removeLowTimeState(clockElements.timer);
 	}
 
+	updateTempo(basegame.clocks);
 	rescheduleLowtime(basegame.clocks);
 }
 
 /** Called when a move is pushed; removes the border from the clock that just stopped ticking and reschedules the low-time sound. */
 function push(clocks: ClockData): void {
-	for (const [color, clockElements] of Object.entries(element_timers)) {
-		const player = Number(color) as Player;
+	for (const playerStr of Object.keys(element_timers)) {
+		const player = Number(playerStr) as Player;
 		if (player === clocks.colorTicking) continue;
-		removeLowTimeState(clockElements.timer);
 	}
 
+	updateTempo(clocks);
 	rescheduleLowtime(clocks);
 }
 
 /** Initializes the clock display when a game is loaded. */
 function set(basegame: GameFile): void {
+	// Map each player to a bar by perspective: bottom = our POV (or white for spectators).
+	const bottomPlayer = gameslot.areViewingWhite() ? p.WHITE : p.BLACK;
+	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
+	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
+
 	if (basegame.untimed) return hideClocks();
-	else showClocks();
+	showClocks();
 	updateTextContent(basegame.clocks);
+	updateTempo(basegame.clocks);
+}
+
+/** Highlights the bar of the player whose clock is currently ticking via `.tempo`. */
+function updateTempo(clocks: ClockData): void {
+	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
+		const player = Number(playerStr) as Player;
+		clockElements.bar.classList.toggle('tempo', player === clocks.colorTicking);
+	}
 }
 
 /**
@@ -110,7 +134,7 @@ function rescheduleLowtime(clocks: ClockData): void {
 	lowtimeTimeoutID = undefined;
 	if (hasPlayedLowtimeSound) return;
 	if (clocks.colorTicking === undefined) return;
-	if (clocks.colorTicking !== gameloader.getOurColor()) return;
+	if (clocks.colorTicking !== gamesession.getRole()) return;
 
 	const timeRemaining = clock.getColorTickingTrueTimeRemaining(clocks);
 	if (timeRemaining === null || timeRemaining === undefined) return;
@@ -124,14 +148,7 @@ function rescheduleLowtime(clocks: ClockData): void {
 function playLowtimeSound(): void {
 	hasPlayedLowtimeSound = true;
 	lowtimeTimeoutID = undefined;
-	const ourColor = gameloader.getOurColor();
-	if (ourColor !== undefined) element_timers[ourColor]!.timer.classList.add('low-time');
 	gamesound.playLowtime();
-}
-
-/** Removes the low-time visual from a clock element. */
-function removeLowTimeState(element: HTMLElement): void {
-	element.classList.remove('low-time');
 }
 
 /** Updates the displayed time for both clocks. */
