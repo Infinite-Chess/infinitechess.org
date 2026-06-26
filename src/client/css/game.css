@@ -637,6 +637,8 @@
    Board
    ============================= */
 
+/* Container must also share properties, or it isn't resized properly on window resize. */
+.canvas-container,
 .board-canvas {
 	display: block;
 	width: 100%;
