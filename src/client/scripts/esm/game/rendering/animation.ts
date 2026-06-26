@@ -17,7 +17,6 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
-import toast from '../../components/toast.js';
 import meshes from './meshes.js';
 import camera from './camera.js';
 import splines from '../../util/splines.js';
@@ -249,7 +248,7 @@ function clearAnimations(playSounds = false): void {
 
 function toggleDebug(): void {
 	DEBUG = !DEBUG;
-	toast.show(`Toggled animation splines: ${DEBUG}`, { durationMultiplier: 0.5 });
+	console.log(`Toggled animation splines: ${DEBUG}`);
 }
 
 // Helper Functions -----------------------------------------------------------

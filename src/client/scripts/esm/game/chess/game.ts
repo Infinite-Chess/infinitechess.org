@@ -111,27 +111,20 @@ function init(): void {
 function update(): void {
 	screenshake.update();
 	controls.testOutGameToggles();
+	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
+
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
 		frametracker.onVisualChange();
-	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the loading animation.
 
-	const gamefile = gameslot.getGamefile();
-	const mesh = gameslot.getMesh();
-	if (!gamefile) {
-		// Only do title screen updates
-		boardpos.update();
-		boardtiles.recalcVariables();
-		// Update the effect zone manager.
-		effectZoneManager!.update(getFurthestTileVisible());
-		return;
-	}
-
-	// There is a gamefile, update everything board-related...
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
 
 	starfield.update(); // Update the star field animation, if needed.
 
 	controls.testInGameToggles(gamefile, mesh);
+
+	// LEFT OFF HERE ==============================
 
 	const timeWinner = clock.update(gamefile); // undefined if no clock has ran out
 	// If the clock has ran out, and we are in an engine game, conclude the game.

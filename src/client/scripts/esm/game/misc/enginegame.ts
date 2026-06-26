@@ -254,7 +254,7 @@ function makeEngineMove(tokenMove: unknown): void {
 /** Toggles the rendering of engine generated legal moves for debugging purposes. */
 function toggleDebug(): void {
 	move_gen_debug = !move_gen_debug;
-	toast.show(`Toggled engine move gen highlights: ${move_gen_debug}`);
+	console.log(`Toggled engine move gen highlights: ${move_gen_debug}`);
 
 	if (!move_gen_debug)
 		pendingDebugRequests.length = 0; // Turning off: Clear pending requests.

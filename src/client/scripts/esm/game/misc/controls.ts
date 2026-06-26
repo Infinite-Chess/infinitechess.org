@@ -12,7 +12,6 @@ import type { DoubleCoords } from '../../../../../shared/chess/util/coordutil.js
 import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
 
-import toast from '../../components/toast.js';
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
 import arrows from '../rendering/arrows/arrows.js';
@@ -238,23 +237,23 @@ function deccelerateScaleVel(scaleVel: number): number {
 /** Debug toggles that are not only for in a game, but outside. */
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
-	if (listener_document.isKeyDown('Digit4')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (listener_document.isKeyDown('Digit7')) enginegame.toggleDebug(); // Render engine generated legal moves
+	if (listener_document.isKeyDown('Digit3')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
+	if (listener_document.isKeyDown('Digit5')) enginegame.toggleDebug(); // Render engine generated legal moves
 }
 
 /** Debug toggles that are only for in a game. */
 function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
-	if (listener_document.isKeyDown('Digit2')) {
+	if (listener_document.isKeyDown('Digit1')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + jsutil.estimateMemorySizeOf(gamefile));
 	}
-	if (listener_document.isKeyDown('Digit3')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
-	if (listener_document.isKeyDown('Digit5')) specialrighthighlights.toggle(); // Highlights special rights and en passant
+	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
+	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
 	if (listener_document.isKeyDown('Tab')) arrows.toggleArrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile, mesh);
-		toast.show('Regenerated piece models.', { durationMultiplier: 0.5 });
+		console.log('Regenerated piece models.');
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 

@@ -11,7 +11,6 @@ import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 
 import coordutil from '../../../../../../shared/chess/util/coordutil.js';
 
-import toast from '../../../components/toast.js';
 import meshes from '../meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../boardpos.js';
@@ -62,7 +61,7 @@ function disable(): void {
 
 function toggle(): void {
 	enabled = !enabled;
-	toast.show(`Toggled special rights highlights: ${enabled}`, { durationMultiplier: 0.5 });
+	console.log(`Toggled special rights highlights: ${enabled}`);
 	regenModel();
 	frametracker.onVisualChange();
 }
