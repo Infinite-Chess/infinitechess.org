@@ -108,8 +108,15 @@ async function initBoardEditor(
 
 // Update & Render -------------------------------------------------------------
 
-/** Called every frame while the board editor is open. */
-function update(): void {
+/**
+ * Called every frame while the board editor is open.
+ * 
+ * NEEDS TO BE CALLED BEFORE selection.update() and boarddrag.checkIfBoardSingleGrabbed()
+ * because the drawing tools of the boad editor might take precedence and claim the left mouse click.
+ * We had it after boarddrag.checkIfBoardPinched() and before selection.update().
+ * Recommended to dispatch a specific update event that we can listen to to know when to update.
+ */
+function _update(): void {
 	etoolmanager.testShortcuts();
 
 	// Handle starting and ending the drawing state
@@ -119,8 +126,11 @@ function update(): void {
 	else if (currentTool === 'selection-tool') selectiontool.update();
 }
 
-/** Renders any graphics of the active tool, if we are in the board editor. */
-function render(): void {
+/**
+ * Renders any graphics of the active tool, if we are in the board editor.
+ * Recommended to listen for the 'render-above-pieces' even to know when to render.
+ */
+function _render(): void {
 	// Render selection-tool graphics, if that is active
 	if (etoolmanager.getTool() === 'selection-tool') selectiontool.render();
 }
@@ -195,9 +205,6 @@ export default {
 	// State
 	// Initialization
 	initBoardEditor,
-	// Update & Render
-	update,
-	render,
 	// Dirty State
 	isPositionDirty,
 	markPositionDirty,

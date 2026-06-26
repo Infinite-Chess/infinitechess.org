@@ -26,7 +26,7 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 function start(): void {
 	const gl = webgl.init(canvas); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(gl, canvas); // Initiates the camera/projection/model matrix uniforms.
-	game.init();
+	game.init(canvas);
 
 	initListeners();
 

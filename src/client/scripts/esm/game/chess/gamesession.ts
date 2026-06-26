@@ -15,6 +15,7 @@ import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
+import game from './game.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -33,11 +34,6 @@ type GameSession =
 			role: Player;
 	  }
 	| { type: 'analysis' | 'editor' };
-
-// Constants --------------------------------------------------------------------
-
-/** The board canvas element. */
-const element_canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 
 // Variables --------------------------------------------------------------------
 
@@ -89,7 +85,7 @@ function setSessionGame(gameSession: GameSession): void {
 function markLoading(): void {
 	// console.log('START loading.');
 	loading = true;
-	element_canvas.classList.add('visibility-hidden');
+	game.getOverlay().classList.add('visibility-hidden');
 }
 
 /**
@@ -99,7 +95,7 @@ function markLoading(): void {
 function markLoadingDone(): void {
 	// console.log('Game fully loaded.');
 	loading = false;
-	element_canvas.classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
+	game.getOverlay().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
 }
 

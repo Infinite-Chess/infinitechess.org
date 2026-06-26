@@ -22,6 +22,9 @@ import mat4 from './gl-matrix.js';
 import preferences from '../../components/header/preferences.js';
 import screenshake from './screenshake.js';
 import frametracker from './frametracker.js';
+import { createRenderable } from '../../webgl/Renderable.js';
+import primitives from './primitives.js';
+import type { Color } from '../../../../../shared/util/math/math.js';
 
 // Types --------------------------------------------------------------
 
@@ -464,6 +467,22 @@ function getCanvas(): HTMLCanvasElement {
 	return canvas;
 }
 
+/**
+ * [DEBUG] Renders an outline of the viewing screen bounding box.
+ * Will only be visible if camera debug mode is on.
+ */
+function renderOutlineofScreenBox(): void {
+	if (!DEBUG || isCameraRotated()) return;
+
+	const { left, right, bottom, top } = getScreenBoundingBox(false);
+
+	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
+	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
+	const data = primitives.Rect(left, bottom, right, top, color);
+
+	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
+}
+
 export default {
 	DIST_TO_RENDER_BOARD,
 	getRotX,
@@ -494,4 +513,5 @@ export default {
 	getCanvas,
 	resyncCanvasBuffer,
 	syncCanvasDimensions,
+	renderOutlineofScreenBox,
 };

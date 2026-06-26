@@ -208,9 +208,7 @@ export class PostProcessingPipeline {
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 	}
 
-	/**
-	 * Swaps the read and write FBOs for the ping-pong technique.
-	 */
+	/** Swaps the read and write FBOs for the ping-pong technique. */
 	private swapFBOs(): void {
 		const tempFBO = this.readFBO;
 		this.readFBO = this.writeFBO;

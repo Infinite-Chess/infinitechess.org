@@ -7,7 +7,6 @@
  */
 
 import type { Mesh } from '../rendering/piecemodels.js';
-import type { Color } from '../../../../../shared/util/math/math.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
@@ -34,12 +33,10 @@ import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
-import primitives from '../rendering/primitives.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
 import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import boardeditor from '../boardeditor/boardeditor.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import screenshake from '../rendering/screenshake.js';
@@ -56,7 +53,7 @@ import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import Renderable, { createRenderable } from '../../webgl/Renderable.js';
+import Renderable from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
@@ -65,7 +62,7 @@ import {
 
 // Variables -------------------------------------------------------------------------------
 
-const element_overlay: HTMLElement = document.getElementById('board-canvas') as HTMLCanvasElement;
+let element_overlay: HTMLCanvasElement;
 /** The input listener for the board canvas */
 let listener_overlay: InputListener;
 /** The input listener for the document element */
@@ -86,7 +83,8 @@ let effectZoneManager: EffectZoneManager | undefined;
 
 // Functions -------------------------------------------------------------------------------
 
-function init(): void {
+function init(canvas: HTMLCanvasElement): void {
+	element_overlay = canvas;
 	programManager = new ProgramManager(gl);
 	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
@@ -124,8 +122,6 @@ function update(): void {
 
 	controls.testInGameToggles(gamefile, mesh);
 
-	// LEFT OFF HERE ==============================
-
 	const timeWinner = clock.update(gamefile); // undefined if no clock has ran out
 	// If the clock has ran out, and we are in an engine game, conclude the game.
 	if (timeWinner !== undefined && gamesession.getGameType() === 'engine') {
@@ -137,58 +133,49 @@ function update(): void {
 	controls.updateNavControls(); // Update board dragging, and WASD to move, scroll to zoom
 	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
-	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), executeArrowShifts(), boardpos.update
+	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After updateNavControls(), boardpos.update()
 	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
 	Transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
-	// AFTER:transition.update() since that updates the board position
+	// AFTER transition.update() since that updates the board position
 	boardtiles.recalcVariables();
 
 	// Update the effect zone manager (after board variables are recalculated).
 	effectZoneManager!.update(getFurthestTileVisible());
 
 	// Check if the board needs to be pinched (will not single-pointer grab)
-	// This needs to be high up, as pinching the board has priority over the pointer than a lot of things.
+	// This needs to be early in the update loop, as pinching the board has priority over the pointer than a lot of things.
 	boarddrag.checkIfBoardPinched();
 
-	// NEEDS TO BE BEFORE selection.update() and boarddrag.checkIfBoardSingleGrabbed()
-	// because the drawing tools of the boad editor might take precedence and claim the left mouse click
-	boardeditor.update();
-
-	// NEEDS TO BE AFTER animation.update() because this updates droparrows.ts and that needs to overwrite animations.
-	// BEFORE arrows.update(), since this may forward to front, which changes all arrows visible.
+	// NEEDS TO BE BEFORE arrows.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
-	// NEEDS TO BE AFTER guinavigation.update(), because otherwise arrows.js may think we are hovering
-	// over a piece from before forwarding/rewinding a move, causing a crash.
 	arrows.update();
-	// NEEDS TO BE AFTER arrows.update() !!! Because this modifies the arrow indicator list.
+	// NEEDS TO BE AFTER arrows.update() because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardSingleGrabbed() because that shift arrows needs to overwrite this.
 	animation.update();
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
-	arrowshifts.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. Before arrowlegalmovehighlights.update(), dragBoard()
+	arrowshifts.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. BEFORE arrowlegalmovehighlights.update()
 	droparrows.updateLegalCaptureArrows(); // AFTER executeArrowShifts(), so rebuilt arrow lines don't reset pulsating opacities.
 
-	arrowlegalmovehighlights.update(); // After executeArrowShifts()
+	arrowlegalmovehighlights.update(); // AFTER executeArrowShifts()
 
-	// BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
-	// NEEDS TO BE BEFORE checkIfBoardDragged(), because clicks should prioritize teleporting to miniimages over dragging the board!
-	// AFTER: boardpos.dragBoard(), because whether the miniimage are visible or not depends on our updated board position and scale.
+	// NEEDS TO BE BEFORE annotations.update() since adding new highlights snaps to what mini image is being hovered over.
+	// BEFORE checkIfBoardSingleGrabbed(), because clicks should prioritize teleporting to miniimages over dragging the board!
 	snapping.transitionToHoveredIfClicked();
-	premoves.update(gamefile, mesh); // BEFORE annotations update(), since if right click cancels premoves, we don't want to draw arrows.
-	// AFTER snapping.updateEntitiesHovered(), since adding/removing depends on current hovered entities.
+	premoves.update(gamefile, mesh); // BEFORE annotations.update(), since if right click cancels premoves, we don't want to draw arrows.
+	// AFTER snapping updates entities hovered, since adding/removing depends on current hovered entities.
 	annotations.update();
 
-	// AFTER snapping.updateSnapping(), since clicking on a highlight line should claim the click that would other wise collapse all annotations.
+	// AFTER snapping updates, since clicking on a highlight line should claim the click that would other wise collapse all annotations.
 	testIfEmptyBoardRegionClicked(gamefile, mesh); // If we clicked an empty region of the board, collapse annotations and cancel premoves.
-	// Now we can check if the board needs to be single-pointer grabbed,
-	// as other scripts may have claimed the pointer first.
+	// Now we can check if the board needs to be single-pointer grabbed, as other scripts may have claimed the pointer first.
 	// AFTER: selection.update(), animation.update() because shift arrows needs to overwrite that.
-	// After entities.updateEntitiesHovered() because clicks prioritize those.
+	// After snapping updates entities hovered, because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
 
-	guinavigation.updateElement_Coords(); // Update the division on the screen displaying your current coordinates
+	guinavigation.updateElement_Coords(); // Update the coordinates on the side bar
 
 	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
 }
@@ -209,9 +196,7 @@ function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefine
 	}
 }
 
-/**
- * Renders everthing in-game, and applies post processing effects to the final image.
- */
+/** Renders everthing in-game, and applies post processing effects to the final image. */
 function render(): void {
 	// First gather all post processing effects this frame
 	const passes: PostProcessPass[] = [];
@@ -238,13 +223,18 @@ function render(): void {
 
 /** Renders all in our scene. */
 function renderScene(): void {
-	const gamefile = gameslot.getGamefile();
-	const mesh = gameslot.getMesh();
-	// if (!gamefile) return boardtiles.render(); // No gamefile, on the selection menu. Only render the checkerboard and nothing else.
-	if (!gamefile) {
-		effectZoneManager!.renderBoard();
-		return;
-	}
+	const gamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+
+	/**
+	 * Order of rendering:
+	 *
+	 * Board tiles
+	 * Highlights
+	 * Pieces
+	 * Arrows
+	 * Crosshair
+	 */
 
 	// Star Field Animation: Appears in border & voids
 	maskedDraw.execute(
@@ -259,21 +249,11 @@ function renderScene(): void {
 	maskedDraw.execute(
 		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // INCLUSION MASK containing playable region
 		() => piecemodels.renderVoids(mesh), // EXCLUSION MASK (voids)
-		() => renderTilesAndPromoteLines(), // MAIN SCENE
+		() => renderTilesAndPromoteLines(gamefile), // MAIN SCENE
 		'and', // Intersection Mode: Draw where the inclusion and inversion of exclusion regions intersect.
 	);
 
-	if (camera.getDebug() && !perspective.getEnabled()) renderOutlineofScreenBox();
-
-	/**
-	 * What is the order of rendering?
-	 *
-	 * Board tiles
-	 * Highlights
-	 * Pieces
-	 * Arrows
-	 * Crosshair
-	 */
+	camera.renderOutlineofScreenBox();
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
 	webgl.executeWithDepthFunc_ALWAYS(() => {
@@ -297,52 +277,36 @@ function renderScene(): void {
 		draganimation.renderPiece();
 		dragarrows.render();
 		arrowsgraphics.render();
-		boardeditor.render();
-		annotations.render_abovePieces();
 		GameBus.dispatch('render-above-pieces');
+		annotations.render_abovePieces();
 		perspective.renderCrosshair();
 	});
 }
 
 /** Renders items that need to be able to be masked by the world border. */
-function renderTilesAndPromoteLines(): void {
+function renderTilesAndPromoteLines(gamefile: GameFile): void {
 	effectZoneManager!.renderBoard();
 
-	const gamefile = gameslot.getGamefile()!;
 	// The start box determines how far out promotion lines are rendered.
 	// In editor mode, don't provide it, so the lines extend to the screen edges.
 	const startBox = gamefile.editor ? undefined : gamefile.startSnapshot.box;
 	promotionlines.render(gamefile.gameRules.promotion, startBox);
 }
 
-/**
- * [DEBUG] Renders an outline of the viewing screen bounding box.
- * Will only be visible if camera debug mode is on.
- */
-function renderOutlineofScreenBox(): void {
-	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
-
-	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
-	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
-	const data = primitives.Rect(left, bottom, right, top, color);
-
-	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
-}
-
 /** Returns the absolute value of the furthest tile from the origin on our screen. */
 function getFurthestTileVisible(): bigint {
 	const tileBox = boardtiles.gboundingBox(false);
 	let furthest: bigint = 0n;
-	if (bimath.abs(tileBox.left) > furthest) furthest = bimath.abs(tileBox.left);
-	if (bimath.abs(tileBox.right) > furthest) furthest = bimath.abs(tileBox.right);
-	if (bimath.abs(tileBox.top) > furthest) furthest = bimath.abs(tileBox.top);
-	if (bimath.abs(tileBox.bottom) > furthest) furthest = bimath.abs(tileBox.bottom);
+	furthest = bimath.max(furthest, bimath.abs(tileBox.left));
+	furthest = bimath.max(furthest, bimath.abs(tileBox.right));
+	furthest = bimath.max(furthest, bimath.abs(tileBox.bottom));
+	furthest = bimath.max(furthest, bimath.abs(tileBox.top));
 	return furthest;
 }
 
 /** Returns the overlay element covering the entire canvas. */
 function getOverlay(): HTMLElement {
-	return element_overlay;
+	return element_overlay!;
 }
 
 export default {
