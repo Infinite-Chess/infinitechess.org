@@ -143,9 +143,11 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
  * Requests a game update from the server, since we are out of sync.
  */
 function resyncToGame(): void {
+	if (id === undefined) return console.error('Cannot resync to game, game id is undefined.');
+
 	inSync = false;
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	socketmessages.send('game', 'resync', id!);
+	socketmessages.send('game', 'resync', id);
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {

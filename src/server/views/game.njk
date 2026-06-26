@@ -44,7 +44,7 @@
 						<svg><use href="#svg-perspective"/></svg>
 					</button>
 					{# Arrow-indicators mode - cycles defense → all → all+hippogonals → off.
-						T9 swaps the <use> href + title to reflect the active state. #}
+						The client swaps the <use> href + title to reflect the active state. #}
 					<button class="btn-bare icon-btn tooltip-d" id="btn-arrows" data-tooltip="Arrow indicators: Defense">
 						<svg><use href="#svg-arrows-defense"/></svg>
 					</button>
@@ -92,7 +92,7 @@
 		{# Game metadata — all static information about a game #}
 		<div class="game-meta panel">
 
-			{# Original seek's properties — SSR-OWNED (rendered from `meta`); T9 must not re-render. #}
+			{# Original seek's properties — SSR-OWNED (rendered from `meta`); not re-rendered by the client. #}
 			<div class="meta-info">
 				<span class="meta-item">
 					<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
@@ -108,14 +108,14 @@
 			</div>
 
 			{# Gamerule modifications
-			   EXAMPLE — T9 builds this from the game's gamerules, and omits the row when none.
+			   EXAMPLE — the client builds this from the game's gamerules, and omits the row when none.
 			   Wording takes inspiration from variant preview tooltips #}
 			{# <p class="meta-rules">Black moves first. No promotion. No 50-move rule.</p> #}
 
 			{# Started X ago + live spectator count.
 			   `#meta-started` is SSR-OWNED: rendered with the relative string for first paint + the
 			   creation epoch, so the client re-derives the ticking string (same shared helper).
-			   The spectator count stays dynamic (T9 sets + hides if none). #}
+			   The spectator count stays dynamic (the client sets + hides if none). #}
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
 				<span class="meta-spectators" title="Spectators">
@@ -124,7 +124,7 @@
 				</span>
 			</div>
 
-			{# Participants — SSR-OWNED (white row then black row, fixed order); T9 must not re-render. #}
+			{# Participants — SSR-OWNED (white row then black row, fixed order); not re-rendered by the client. #}
 			<div class="meta-players">
 				{% for color in [p.WHITE, p.BLACK] %}
 				{% set player = meta.players[color] %}
@@ -136,7 +136,7 @@
 			</div>
 
 			{# Result banner — static skeleton, always SSR'd. Visible + filled when the game is
-			   already concluded at load; otherwise `.hidden` and empty, and T9 reveals it +
+			   already concluded at load; otherwise `.hidden` and empty, and the client reveals it +
 			   sets the score/text the moment the game ends live. Structure is fixed, so the
 			   client only toggles `.hidden` and writes text — never rebuilds it. #}
 			<div class="result-banner{{ '' if meta.result else ' hidden' }}">
@@ -150,7 +150,7 @@
 
 			{# Top side's captured material
 			Top = the opponent (player view) or black (spectator view).
-			T9 injects one <svg> per surplus piece via svgcache.getSilhouetteSVG(); the #svg-pawn uses below are placeholders. #}
+			The client injects one <svg> per surplus piece via svgcache.getSilhouetteSVG(). #}
 			<div class="material" id="material-top">
 				{# EXAMPLE #}
 				{# <svg class="material-piece"><use href="#svg-pawn"/></svg>
@@ -163,11 +163,13 @@
 			<div class="match-panel panel">
 
 				{# Top username container — SSR-OWNED (far side: the opponent, or black for spectators).
-				   Only the username/rating are SSR'd; T9 adds the live `.clock`, `tempo`, and `eloChange`
-				   into this bar — it must not rebuild the SSR'd embed. #}
+				   Username/rating + clock are SSR'd; the client writes the live clock value + `tempo`,
+				   and appends the `eloChange` delta on game end — it must not rebuild the SSR'd embed. #}
 				<div class="player-bar" id="player-bar-top">
-					{# T9 appends <span class="eloChange negative">-12</span> after .elo on game end. #}
 					{{ usernameEmbed(meta.players[meta.bars.top].name, meta.players[meta.bars.top].elo) }}
+					{# Clock — SSR'd present (hidden for untimed games); the client only toggles `.hidden`
+					   and writes the ticking value. #}
+					<span class="clock{{ '' if meta.timed else ' hidden' }}"></span>
 				</div>
 
 				{# Moves list + game-over result #}
@@ -179,7 +181,7 @@
 						<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest"><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
 					</div>
 					<div class="moves-table scrollbar-thin">
-						{# EXAMPLE - T9 renders one .move-row per full move.
+						{# EXAMPLE - the client renders one .move-row per full move.
 						Each ply cell carries a silhouette of the moved piece (svgcache) + the move's
 						coordinates; long coordinates are truncated by CSS, full value via the title attribute.
 						The game-over result (.game-result) renders inside this table, after the last move.
@@ -211,7 +213,7 @@
 							<span class="ply empty"></span>
 						</div>
 
-						Game result — game over only; T9 builds + appends it after the last move:
+						Game result — game over only; the client builds + appends it after the last move:
 						<div class="game-result">
 							<span class="result-score">1-0</span>
 							<span class="result-text">White wins by checkmate</span>
@@ -223,12 +225,13 @@
 				{# Game actions — SSR'd skeletons; only one is visible at a time. actions-over is always
 				   present (every game reaches it); the live-only blocks (actions-live + actions-draw-offer)
 				   are omitted once the game is over (can't return to live). SSR un-hides actions-live
-				   during live play, else actions-over once concluded. T9 toggles `.hidden` among them as
-				   state changes — including hiding actions-live and revealing actions-over on live end. #}
+				   during live play, else actions-over once concluded. The client toggles `.hidden` among
+				   them as state changes — including hiding actions-live and revealing actions-over on live
+				   end. #}
 				<div class="game-actions">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) — omitted entirely
 					   once the game is over, since neither can occur in a concluded game (a game can't
-					   return to live), so T9 won't find them on a game that loaded concluded. #}
+					   return to live), so they won't be found on a game that loaded concluded. #}
 					{% if not meta.result %}
 					{# Default live-game actions: offer draw + resign/abort. Visible during live play,
 					   else `.hidden` (stale `isLive` hint — client reveals it once it confirms live). #}
@@ -237,7 +240,7 @@
 							<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></svg>
 						</button>
 						{# Resign / Abort share one slot (mutually exclusive).
-						T9 shows abort while resignable (0–1 plies), resign otherwise. #}
+						The client shows abort while resignable (0–1 plies), resign otherwise. #}
 						{# <button class="action-btn tooltip-d" id="btn-abort" data-tooltip="Abort">
 							<svg class="action-icon"><use href="#svg-x"/></svg>
 						</button> #}
@@ -246,7 +249,7 @@
 						</button>
 					</div>
 					{# Incoming draw offer — static skeleton, always `.hidden`; structure is fixed, so
-					   T9 only reveals/hides it as offers arrive and resolve (never rebuilds it). #}
+					   the client only reveals/hides it as offers arrive and resolve (never rebuilds it). #}
 					<div class="actions-draw-offer hidden">
 						<span class="draw-offer-label">Accept draw offer?</span>
 						<div class="draw-offer-buttons">
@@ -266,8 +269,8 @@
 
 				{# Opponent-disconnect status — live-only static skeleton; omitted entirely once the game
 				   is over (an opponent can't disconnect or be claimed against in a concluded game), so
-				   T9 won't find it on a game that loaded concluded. Starts `.hidden`: T9 reveals/hides
-				   the block as the opponent drops/returns and writes the live countdown into
+				   it won't be found on a game that loaded concluded. Starts `.hidden`: the client reveals/
+				   hides the block as the opponent drops/returns and writes the live countdown into
 				   `.disconnect-text`, then reveals `.disconnect-buttons` (also `.hidden`) on expiry. #}
 				{% if not meta.result %}
 				<div class="disconnect-status hidden">
@@ -280,9 +283,11 @@
 				{% endif %}
 
 				{# Bottom username container — SSR-OWNED (near side: you, or white for spectators).
-				   Only the username/rating are SSR'd; T9 adds the live `.clock`, `tempo`, and `eloChange`. #}
+				   Username/rating + clock are SSR'd; the client writes the live clock value, `tempo`,
+				   and `eloChange`. #}
 				<div class="player-bar" id="player-bar-bottom">
 					{{ usernameEmbed(meta.players[meta.bars.bottom].name, meta.players[meta.bars.bottom].elo) }}
+					<span class="clock{{ '' if meta.timed else ' hidden' }}"></span>
 				</div>
 
 			</div>{# .match-panel #}
@@ -299,7 +304,7 @@
 
 		{# Chat #}
 		<div class="chat panel">
-			{# T9 toggles `.collapsed` on the .chat panel. #}
+			{# The client toggles `.collapsed` on the .chat panel. #}
 			<div class="chat-bar">
 				<button class="btn-bare chat-toggle" id="btn-toggle-chat">
 					<svg class="chat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -310,20 +315,41 @@
 				</button>
 			</div>
 			<div class="chat-log scrollbar-thin">
-				{# EXAMPLE — T9 renders chat messages and static event notifications here.
+				{# EXAMPLE — the client renders chat messages and static event notifications here.
 				   The two notices below show the static-notification shape (draw/rematch offers & rejections, no buttons). #}
 				{# <div class="chat-notice">Opponent offered a draw.</div>
 				<div class="chat-notice">Draw offer declined.</div> #}
 			</div>
-			{# Chat input — T9 disables/hides it for guests in non-friend games. #}
-			<input class="chat-input" type="text" placeholder="Please be nice!" />
+			{# Chat input — the client disables/hides it for guests in non-friend games. #}
+			<input class="chat-input" type="text" placeholder="Please be nice!" id="chat-input" />
 		</div>
 
 	</aside>
 
-	{# Board (canvas); T9 grabs the canvas for WebGL #}
+	{# Board canvas #}
 	<div class="bg-checkerboard-dimmed">
-		<canvas class="board-canvas" id="board-canvas"></canvas>
+		{# The background is visible until the client reveals the canvas when the game is fully loaded #}
+		<canvas class="board-canvas visibility-hidden" id="board-canvas"></canvas>
+	</div>
+
+	{# ── Reuse bridge (TEMPORARY) ──────────────────────────────────────────
+	   The redesigned page reuses the existing `game/` render graph, which still queries the old
+	   play-page element ids at import/load (promotion UI, board-nav bar, dev stats, draw-offer UI).
+	   Until that graph is slimmed/decoupled — a separate later refactor with the user — host the ids
+	   it needs here, inert (`display:none`). Not part of the visible redesign; safe to delete once the
+	   graph stops referencing them. #}
+	<div class="legacy-reuse-bridge" style="display:none" aria-hidden="true">
+		{# guipromotion #}
+		<div id="promote"><div id="promotewhite"></div><div id="promoteblack"></div></div>
+		{# guinavigation #}
+		<div id="navigation-bar">
+			<input id="x" type="text"/>
+			<input id="y" type="text"/>
+			<button id="move-left"></button>
+			<button id="move-right"></button>
+			<button id="undo-edit"></button>
+			<button id="redo-edit"></button>
+		</div>
 	</div>
 
 </main>

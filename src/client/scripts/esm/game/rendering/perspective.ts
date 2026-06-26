@@ -60,11 +60,7 @@ function disable(): void {
 
 	enabled = false;
 
-	resetRotations();
-}
-
-// Sets rotations to orthographic view. Sensitive to if we're white or black.
-function resetRotations(): void {
+	// Reset rotations
 	camera.setPerspectiveRotation(0, gameslot.areViewingWhite() ? 0 : 180);
 }
 
@@ -150,7 +146,6 @@ export default {
 	toggle,
 	enable,
 	disable,
-	resetRotations,
 	relockMouse,
 	addRotation,
 	isMouseLocked,

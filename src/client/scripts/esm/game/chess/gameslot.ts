@@ -24,6 +24,7 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../rendering/webgl.js';
+import camera from '../rendering/camera.js';
 import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import miniimage from '../rendering/miniimage.js';
@@ -138,7 +139,7 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 	// Any canvas loading animation should close only when thre GRAPHICAL stuff is finished.
 
 	return loadLogical(loadOptions).then(() => {
-		// console.log('Finished loading LOGICAL game stuff.');
+		// console.log('LOGICAL loaded.');
 
 		console.warn('Game start sound has not been added yet.');
 
@@ -176,6 +177,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 /** Loads all of the graphical components of a game */
 async function loadGraphical(): Promise<void> {
+	camera.setPerspectiveRotation(0, areViewingWhite() ? 0 : 180);
 	guiclock.set(loadedGamefile!);
 
 	await imagecache.initImagesForGame(loadedGamefile!);
@@ -212,6 +214,8 @@ async function loadGraphical(): Promise<void> {
 
 	// Init the star field void animation
 	starfield.init();
+
+	// console.log('GRAPHICAL loaded.');
 }
 
 /** The canvas will no longer render the current game */

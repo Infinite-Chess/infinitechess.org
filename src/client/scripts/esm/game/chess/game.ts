@@ -65,7 +65,7 @@ import {
 
 // Variables -------------------------------------------------------------------------------
 
-const element_overlay: HTMLElement = document.getElementById('board-canvas')!;
+const element_overlay: HTMLElement = document.getElementById('board-canvas') as HTMLCanvasElement;
 /** The input listener for the board canvas */
 let listener_overlay: InputListener;
 /** The input listener for the document element */
