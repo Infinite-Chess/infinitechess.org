@@ -15,7 +15,6 @@ import meshes from './meshes.js';
 import camera from './camera.js';
 import primitives from './primitives.js';
 import boardtiles from './boardtiles.js';
-import perspective from './perspective.js';
 import { createRenderable } from '../../webgl/Renderable.js';
 
 /**
@@ -26,7 +25,7 @@ function drawPlayableRegionMask(worldBorder: UnboundedRectangle | undefined): vo
 	// No border, and in perspective mode => This is the best mask we can get!
 	// This is crucial for making as if the board goes infinitely into the horizon.
 	// Otherwise without this the solid cover isn't visible.
-	if (!worldBorder && perspective.getEnabled()) return boardtiles.renderSolidCover();
+	if (!worldBorder && camera.isCameraRotated()) return boardtiles.renderSolidCover();
 
 	const screenBox = camera.getRespectiveScreenBox();
 

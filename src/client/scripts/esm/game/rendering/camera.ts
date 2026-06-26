@@ -135,6 +135,14 @@ function getRotZ(): number {
 	return rotZ;
 }
 
+/**
+ * Returns true if the camera is rotated in any way, meaning we're not looking
+ * straight down at the board perfectly from white/black's perspective.
+ */
+function isCameraRotated(): boolean {
+	return rotX !== 0 || !(rotZ === 0 || rotZ === 180);
+}
+
 /** True when rotZ is between 90 and 270, meaning we're viewing from black's side. */
 function getIsViewingBlackPerspective(): boolean {
 	return rotZ > 90 && rotZ < 270;
@@ -235,7 +243,7 @@ function getScreenBoundingBox(debugMode: boolean = DEBUG, pad: boolean = false):
  * Ignorant of debug mode.
  */
 function getRespectiveScreenBox(): DoubleBoundingBox {
-	if (rotX !== 0 || !(rotZ === 0 || rotZ === 180)) return getPerspectiveScreenBox();
+	if (isCameraRotated()) return getPerspectiveScreenBox();
 	else return getScreenBoundingBox(false, true);
 }
 
@@ -460,6 +468,7 @@ export default {
 	DIST_TO_RENDER_BOARD,
 	getRotX,
 	getRotZ,
+	isCameraRotated,
 	getIsViewingBlackPerspective,
 	isLookingUp,
 	renderWithoutPerspectiveRotations,

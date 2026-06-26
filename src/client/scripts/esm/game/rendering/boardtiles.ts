@@ -20,7 +20,6 @@ import camera from './camera.js';
 import boardpos from './boardpos.js';
 import primitives from './primitives.js';
 import preferences from '../../components/header/preferences.js';
-import perspective from './perspective.js';
 import frametracker from './frametracker.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import webgl, { gl } from './webgl.js';
@@ -332,7 +331,6 @@ function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, any>): 
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	webgl.executeWithDepthFunc_ALWAYS(() => {
 		renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
-		// renderMainBoard(noiseTextures, uniforms);
 		renderFractalBoards(noiseTextures, uniforms);
 	});
 }
@@ -407,7 +405,7 @@ function renderFractalBoards(noiseTextures?: NoiseTextures, uniforms?: Record<st
 
 /** Returns what Z level the board tiles should be rendered at this frame. */
 function getRelativeZ(): number {
-	return perspective.getEnabled() ? perspectiveMode_z : 0;
+	return camera.isCameraRotated() ? perspectiveMode_z : 0;
 }
 
 /**
@@ -429,7 +427,7 @@ function generateBoardModel(
 	const isFractal = !bd.areEqual(zoom, ONE);
 	// Fractal boards get the texture with no antialiasing, but some moire.
 	const boardTexture =
-		isFractal || perspective.getEnabled() ? tilesTexture_2 : tilesTexture_256mips;
+		isFractal || camera.isCameraRotated() ? tilesTexture_2 : tilesTexture_256mips;
 	if (!boardTexture) return; // Texture not loaded yet
 
 	/** The scale of the RENDERED board. Final result should always be within a small, visible range. */
