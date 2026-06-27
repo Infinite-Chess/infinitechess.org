@@ -110,7 +110,7 @@ async function initBoardEditor(
 
 /**
  * Called every frame while the board editor is open.
- * 
+ *
  * NEEDS TO BE CALLED BEFORE selection.update() and boarddrag.checkIfBoardSingleGrabbed()
  * because the drawing tools of the boad editor might take precedence and claim the left mouse click.
  * We had it after boarddrag.checkIfBoardPinched() and before selection.update().
