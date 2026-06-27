@@ -24,10 +24,11 @@ import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
+import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import { listener_overlay } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/game.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -80,6 +81,10 @@ document.addEventListener('ray-count-change', (e) => {
 /** Toggles perspective view, glowing the button while it's enabled. */
 function callback_Perspective(): void {
 	if (!gameslot.getGamefile()) return; // Game not loaded yet
+	// Prevent the sidebar click that toggled perspective
+	// from being instantly absorbed by game interactions.
+	// Without this, any mini image underneath the crosshair instantly gets clicked.
+	listener_document.claimMouseClick(Mouse.LEFT);
 	perspective.toggle();
 	element_Perspective.classList.toggle('enabled', perspective.getEnabled());
 }
