@@ -91,7 +91,7 @@ function _initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): vo
 // =============================== Coordinate Fields ===============================
 
 // Update the division on the screen displaying your current coordinates
-function updateElement_Coords(): void {
+function updateCoords(): void {
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
 	const boardPos = boardpos.getBoardPos();
@@ -707,7 +707,7 @@ function callback_RedoEdit(): void {
 }
 
 export default {
-	updateElement_Coords,
+	updateCoords,
 	update_MoveButtons,
 	update_EditButtons,
 	callback_Expand,

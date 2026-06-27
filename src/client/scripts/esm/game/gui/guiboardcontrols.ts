@@ -192,7 +192,7 @@ function recenter(): void {
 // =============================== Coordinate Fields ===============================
 
 // Update the division on the screen displaying your current coordinates
-function updateElement_Coords(): void {
+function updateCoords(): void {
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
 	const boardPos = boardpos.getBoardPos();
@@ -362,7 +362,7 @@ initListeners();
 update_ArrowsButton(); // Reveal the glyph matching the starting arrow-indicators mode.
 
 export default {
-	updateElement_Coords,
+	updateCoords,
 	update_ArrowsButton,
 	isAnnotationsButtonEnabled,
 	callback_Expand,

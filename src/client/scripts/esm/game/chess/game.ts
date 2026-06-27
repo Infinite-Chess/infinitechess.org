@@ -175,7 +175,7 @@ function update(): void {
 	// After snapping updates entities hovered, because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
 
-	guiboardcontrols.updateElement_Coords(); // Update the coordinates on the side bar
+	guiboardcontrols.updateCoords(); // Update the coordinates on the side bar
 
 	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
 }
