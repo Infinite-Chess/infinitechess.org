@@ -10,14 +10,14 @@
 import perspective from '../rendering/perspective.js';
 import preferences from '../../components/header/preferences.js';
 import etoolmanager from '../boardeditor/tools/etoolmanager.js';
-import guinavigation from '../gui/guinavigation.js';
+import guiboardcontrols from '../gui/guiboardcontrols.js';
 import { listener_document } from '../chess/game.js';
 import { Mouse, MouseButton } from '../input.js';
 
 /** Returns the mouse button currently assigned to board dragging. */
 function getBoardDragMouseButton(): MouseButton | undefined {
 	if (perspective.getEnabled()) return undefined;
-	if (guinavigation.isAnnotationsButtonEnabled()) return Mouse.LEFT; // Allows a second pointer to pinch zoom the board even when drawing annote with first pointer.
+	if (guiboardcontrols.isAnnotationsButtonEnabled()) return Mouse.LEFT; // Allows a second pointer to pinch zoom the board even when drawing annote with first pointer.
 	if (etoolmanager.isLeftMouseReserved()) return Mouse.RIGHT;
 	// Default: Left mouse drags board
 	return Mouse.LEFT;
@@ -25,7 +25,8 @@ function getBoardDragMouseButton(): MouseButton | undefined {
 
 /** Returns the mouse button currently assigned to drawing annotations. */
 function getAnnotationMouseButton(): MouseButton | undefined {
-	if (guinavigation.isAnnotationsButtonEnabled() || perspective.getEnabled()) return Mouse.RIGHT;
+	if (guiboardcontrols.isAnnotationsButtonEnabled() || perspective.getEnabled())
+		return Mouse.RIGHT;
 	if (etoolmanager.isLeftMouseReserved()) return undefined; // NO BUTTON draws annotations (right click reserved for dragging)
 	// Default: Right mouse draws annotations
 	return Mouse.RIGHT;

@@ -34,6 +34,7 @@ import dragarrows from '../rendering/dragging/dragarrows.js';
 import boardtiles from '../rendering/boardtiles.js';
 import Transition from '../rendering/transitions/Transition.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
+import Renderable from '../../webgl/Renderable.js';
 import gamesession from './gamesession.js';
 import arrowshifts from '../rendering/arrows/arrowshifts.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
@@ -44,16 +45,15 @@ import { GameBus } from '../GameBus.js';
 import coordinates from '../rendering/coordinates.js';
 import frametracker from '../rendering/frametracker.js';
 import WaterRipples from '../rendering/WaterRipples.js';
-import guinavigation from '../gui/guinavigation.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import webgl, { gl } from '../rendering/webgl.js';
 import promotionlines from '../rendering/promotionlines.js';
 import arrowsgraphics from '../rendering/arrows/arrowsgraphics.js';
+import guiboardcontrols from '../gui/guiboardcontrols.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from '../rendering/effect_zone/EffectZoneManager.js';
 import arrowlegalmovehighlights from '../rendering/arrows/arrowlegalmovehighlights.js';
 import selectedpiecehighlightline from '../rendering/highlights/selectedpiecehighlightline.js';
-import Renderable from '../../webgl/Renderable.js';
 import { CreateInputListener, InputListener } from '../input.js';
 import {
 	PostProcessingPipeline,
@@ -175,7 +175,7 @@ function update(): void {
 	// After snapping updates entities hovered, because clicks prioritize those.
 	boarddrag.checkIfBoardSingleGrabbed();
 
-	guinavigation.updateElement_Coords(); // Update the coordinates on the side bar
+	guiboardcontrols.updateElement_Coords(); // Update the coordinates on the side bar
 
 	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
 }

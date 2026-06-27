@@ -56,9 +56,9 @@ import annotations from '../../rendering/highlights/annotations/annotations';
 import boardeditor from '../boardeditor';
 import edithistory from '../edithistory';
 import validatorama from '../../../util/validatorama';
-import guinavigation from '../../gui/guinavigation';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
+import guiboardcontrols from '../../gui/guiboardcontrols';
 import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -465,7 +465,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	edithistory.addEditToHistory(edit);
 	annotations.resetState(); // Clear all annotations
 
-	guinavigation.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
+	guiboardcontrols.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
 }
 
 // Exports --------------------------------------------------------------------

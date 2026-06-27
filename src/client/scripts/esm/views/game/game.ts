@@ -17,6 +17,7 @@ import frametracker from '../../game/rendering/frametracker.js';
 import loadbalancer from '../../game/misc/loadbalancer.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
+import '../../game/gui/guiboardcontrols.js';
 import '../../game/misc/onlinegame/onlinegamerouter.js';
 
 /** The game-page board canvas WebGL renders onto. */

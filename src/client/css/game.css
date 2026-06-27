@@ -71,6 +71,14 @@
 	transform: scale(1.1);
 }
 
+/* View-toggle / annotation buttons glow while their mode is active (perspective,
+   annotations), so it stays obvious how to switch the mode back off. */
+.board-controls .icon-btn.enabled {
+	border-radius: 6px;
+	color: var(--c-accent);
+	box-shadow: 0 0 8px 1px var(--c-accent);
+}
+
 /* ========================================
    Board-view navigation + view toggles
    ======================================== */
