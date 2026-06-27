@@ -10,6 +10,8 @@
 const ZERO: bigint = 0n;
 const ONE: bigint = 1n;
 
+const LOG10_2 = Math.log10(2); // 0.3010299956639812
+
 // Mathematical Operations ===========================================
 
 /**
@@ -34,7 +36,7 @@ function countDigits(bigint: bigint): number {
 	const bitLen = bitLength_bisection(abs_bigint);
 	// Convert bit length to decimal digits: log10(2^bitLen) = bitLen * log10(2)
 	// Use Math.floor and add 1 for high accuracy, sacrificing exactness.
-	return Math.floor(bitLen * Math.log10(2)) + 1;
+	return Math.floor(bitLen * LOG10_2) + 1;
 }
 
 // Big Length Algorithms =============================================================
@@ -219,21 +221,59 @@ function GCD(a: bigint, b: bigint): bigint {
 
 /**
  * Formats a bigint in scientific notation with the given number of significant figures.
- * e.g., formatBigIntExponential(123456789n, 3) => "1.23e8"
+ * e.g. formatBigIntExponential(123456789n, 3) => "1.23e8".
+ * Optimized for massive bigints to avoid O(N^2) base-10 string conversion bottlenecks.
  */
 function formatBigIntExponential(bigint: bigint, precision: number): string {
-	const isNegative = bigint < 0n;
-	const absString: string = abs(bigint).toString();
+	if (precision < 1 || precision > 15)
+		throw new Error('Precision must be between 1 and 15 significant figures.');
+	const absVal = abs(bigint);
+	const bitLen = bitLength_bisection(absVal);
 
-	const exponent: number = absString.length - 1;
-	const mantissaDigits: string = absString.substring(0, precision);
+	let exponent: number;
+	let str: string;
 
-	let mantissa: string;
-	if (mantissaDigits.length > 1) {
-		mantissa = mantissaDigits[0] + '.' + mantissaDigits.substring(1);
+	if (bitLen <= 53) {
+		// Fast path for numbers that safely fit within JavaScript's Number bounds (up to 53 bits).
+		// Calling .toString() on small bigints is virtually instantaneous and handles ZERO gracefully.
+		str = absVal.toString();
+		exponent = str.length - 1;
 	} else {
-		mantissa = mantissaDigits;
+		// O(1) Fast Math Path for Massive BigInts
+		// V8 BigInt.toString(10) is heavily O(N^2) and stalls the game thread.
+		// We instead extract the top 53 bits and use floating-point math.
+
+		// shiftNum is the exponent of base 2 we are throwing away
+		const shiftNum = bitLen - 53;
+		const topBits = Number(absVal >> BigInt(shiftNum));
+
+		// Mathematically: Value = topBits * 2^shift
+		// log10(Value) = log10(topBits) + shift * log10(2)
+		const log10 = Math.log10(topBits) + shiftNum * LOG10_2;
+
+		exponent = Math.floor(log10);
+
+		// mantissaFloat is strictly between 1.0 and 9.999...
+		// We use (log10_val - exponent) which is always in range [0, 1) to avoid Math.pow overflow
+		let mantissaFloat = Math.pow(10, log10 - exponent);
+
+		// Render to 15 significant figures (a double's full reliable precision).
+		let mStr = mantissaFloat.toFixed(14);
+
+		// If rounding pushed the float up to 10 (e.g. 9.99999999999), carry over exponent
+		if (mStr.startsWith('10.')) {
+			mantissaFloat /= 10;
+			exponent += 1;
+			mStr = mantissaFloat.toFixed(14);
+		}
+
+		str = mStr.replace('.', '');
 	}
+
+	// Cleanly apply truncation and decimal placement
+	const isNegative = bigint < ZERO;
+	const digits = str.substring(0, precision);
+	const mantissa = digits.length > 1 ? `${digits[0]}.${digits.slice(1)}` : digits;
 
 	return `${isNegative ? '-' : ''}${mantissa}e${exponent}`;
 }
