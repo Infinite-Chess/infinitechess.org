@@ -1,5 +1,13 @@
 // src/client/scripts/esm/game/gui/guiboardcontrols.ts
 
+/**
+ * This script handles the buttons and coordinate fields within the
+ * `.board-controls` element on the game page: view toggles (perspective,
+ * arrow indicators), annotation tools (draw, erase/collapse — mobile only),
+ * board-view navigation (undo transition, expand, recenter), and the
+ * editable coordinate readout.
+ */
+
 import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
 import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
 
@@ -8,7 +16,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import bimath from '../../../../../shared/util/math/bimath.js';
 import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import gameconfig from '../../../../../shared/util/gameconfig.js';
 
 import toast from '../../components/toast.js';
 import mouse from '../../util/mouse.js';
@@ -17,20 +24,10 @@ import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import { GameBus } from '../GameBus.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
-
-/**
- * This script handles the buttons and coordinate fields within the
- * `.board-controls` element on the game page, grouped by ctrl-group:
- * view toggles (perspective, arrow indicators), annotation tools
- * (draw, erase/collapse — mobile only), board-view navigation (undo
- * transition, expand, recenter), and the editable coordinate readout.
- */
+import { listener_overlay } from '../chess/game.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -72,17 +69,6 @@ let annotationsEnabled: boolean = false;
 
 // Events ------------------------------------------------------------------------------------
 
-GameBus.addEventListener('game-unloaded', () => {
-	// Reset Annotations mode button state.
-	annotationsEnabled = false;
-	listener_overlay.setTreatLeftasRight(false);
-	element_Annotations.classList.remove('enabled');
-	// Perspective is force-disabled on unload (gameloader); clear its glow to match.
-	element_Perspective.classList.remove('enabled');
-
-	hideCollapse();
-});
-
 document.addEventListener('ray-count-change', (e) => {
 	const rayCount = e.detail;
 	if (rayCount > 0) showCollapse();
@@ -94,8 +80,6 @@ document.addEventListener('ray-count-change', (e) => {
 /** Toggles perspective view, glowing the button while it's enabled. */
 function callback_Perspective(): void {
 	if (!gameslot.getGamefile()) return; // Game not loaded yet
-	// This prevents toggling perspective ON immediately erasing all annotations.
-	listener_document.claimMouseClick(Mouse.LEFT);
 	perspective.toggle();
 	element_Perspective.classList.toggle('enabled', perspective.getEnabled());
 }
@@ -158,7 +142,7 @@ function callback_Expand(): void {
 	// Add the square annotation highlights, too.
 
 	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
-	// I don't think it matters to much.
+	// I don't think it matters too much.
 	const annoteSnapPoints = snapping
 		.getAnnoteSnapPoints(false)
 		.map((point) => bdcoords.coordsToBigInt(point));
@@ -183,7 +167,7 @@ function callback_Expand(): void {
 	Transition.zoomToCoordsBox(definedBox);
 }
 
-function recenter(): void {
+function callback_Recenter(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
 	Transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
@@ -287,9 +271,7 @@ function parseStringToBigInt(value: string): bigint {
 	return BigInt(finalNumberString);
 }
 
-/**
- * Returns true if one of the coordinate fields is active (currently editing)
- */
+/** Returns true if one of the coordinate fields is active (currently editing). */
 function isCoordinateActive(): boolean {
 	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
 }
@@ -318,14 +300,19 @@ function callback_CoordsChange(index: 0 | 1): void {
 		proposed = parseStringToBigInt(target.value);
 	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
-		toast.show(translations['coords-invalid'], { error: true });
+		toast.show(
+			'Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4).',
+			{ error: true },
+		);
 		return;
 	}
 
-	if (bimath.abs(proposed) > gameconfig.TELEPORT_LIMIT) {
-		toast.show(translations['coords-exceeded'], { error: true });
-		return;
-	}
+	// TODO: Implement dynamic teleport limit based on the furthest the user has ever been.
+	// WHEN we do that, we can then delete gameconfig.TELEPORT_LIMIT.
+	// if (bimath.abs(proposed) > gameconfig.TELEPORT_LIMIT) {
+	// 	toast.show("You can't teleport that far! That would be too easy ;)", { error: true });
+	// 	return;
+	// }
 
 	if (index === 0) teleportX = bd.fromBigInt(proposed);
 	else teleportY = bd.fromBigInt(proposed);
@@ -336,10 +323,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 
 // =================================================================================
 
-/**
- * Wires the click/change listeners for every `.board-controls` element. The bar is a
- * permanent part of the sidebar, so listeners are attached once and never removed.
- */
+/** Wires the click/change listeners for every `.board-controls` element. */
 function initListeners(): void {
 	element_Perspective.addEventListener('click', callback_Perspective);
 	element_Arrows.addEventListener('click', callback_Arrows);
@@ -350,21 +334,17 @@ function initListeners(): void {
 
 	element_Back.addEventListener('click', callback_Back);
 	element_Expand.addEventListener('click', callback_Expand);
-	element_Recenter.addEventListener('click', recenter);
+	element_Recenter.addEventListener('click', callback_Recenter);
 
 	element_CoordsX.addEventListener('change', callback_CoordsXChange);
 	element_CoordsY.addEventListener('change', callback_CoordsYChange);
 }
 
-// Self-initialize ---------------------------------------------------------------------------
-
 initListeners();
-update_ArrowsButton(); // Reveal the glyph matching the starting arrow-indicators mode.
 
 export default {
 	updateCoords,
-	update_ArrowsButton,
+	callback_Arrows,
 	isAnnotationsButtonEnabled,
 	callback_Expand,
-	recenter,
 };

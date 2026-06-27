@@ -14,7 +14,6 @@ import vectors from '../../../../../shared/util/math/vectors.js';
 
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
-import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
@@ -251,10 +250,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
-	if (listener_document.isKeyDown('Tab')) {
-		arrows.toggleArrows();
-		guiboardcontrols.update_ArrowsButton(); // Keep the board-controls arrows button glyph + tooltip in sync.
-	}
+	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile, mesh);
 		console.log('Regenerated piece models.');

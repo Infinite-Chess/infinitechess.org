@@ -308,8 +308,6 @@ export type TranslationKeys =
 	| 'play.javascript.checkmate_bronze_unearned'
 	| 'play.javascript.checkmate_silver_unearned'
 	| 'play.javascript.checkmate_gold_unearned'
-	| 'play.javascript.coords-invalid'
-	| 'play.javascript.coords-exceeded'
 	| 'play.javascript.piecenames.void'
 	| 'play.javascript.piecenames.obstacle'
 	| 'play.javascript.piecenames.king'
@@ -850,8 +848,6 @@ export interface TranslationsObject {
 			checkmate_bronze_unearned: string;
 			checkmate_silver_unearned: string;
 			checkmate_gold_unearned: string;
-			'coords-invalid': string;
-			'coords-exceeded': string;
 			piecenames: {
 				void: string;
 				obstacle: string;

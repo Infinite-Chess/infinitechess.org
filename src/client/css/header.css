@@ -15,6 +15,14 @@
 	--switch-border-radius: 14px;
 }
 
+/* SVG symbol sprite — kept in render tree (not display:none) so masks resolve reliably. */
+.svg-defs {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}
+
 .site-header {
 	position: sticky;
 	top: 0;
