@@ -84,10 +84,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Mirror the script's report into the job summary so violations render
-      # on the PR's checks page. pipefail (GitHub's default) keeps the exit code.
+      # tee mirrors the report into the job summary. `shell: bash` adds -o
+      # pipefail (the default `bash -e` lacks it), else the pipe masks the
+      # script's exit code with tee's 0 and a failing check passes silently.
       - name: Check import rules
-        run: npx tsx scripts/importrules.ts 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+        run: npx tsx scripts/import-rules.ts 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
   test:
     name: Tests

@@ -34,6 +34,7 @@
 	align-items: center;
 	background: none;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 /* ============================================================
@@ -69,6 +70,13 @@
 
 .icon-btn:hover svg {
 	transform: scale(1.1);
+}
+
+/* View-toggle / annotation / arrows off buttons glow while their mode is active. */
+.board-controls .icon-btn.enabled svg,
+.board-controls #btn-arrows svg:has(use[href='#svg-arrows-off']:not(.hidden)) {
+	filter: drop-shadow(0 0 7px rgb(255, 0, 0)) drop-shadow(0 0 7px rgba(255, 0, 0, 0.482))
+		drop-shadow(0 0 10px rgba(255, 102, 0, 0.492));
 }
 
 /* ========================================
@@ -442,6 +450,7 @@
 	font-weight: 600;
 	color: var(--c-text-emphasis);
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
 
 /* Bare action icons */

@@ -6,47 +6,18 @@
  * buttons, rewind move, forward move, and pause buttons.
  */
 
-import type { BDCoords } from '../../../../../shared/chess/util/coordutil.js';
-import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
-
-import bd, { BigDecimal } from '@naviary/bigdecimal';
-
-import bimath from '../../../../../shared/util/math/bimath.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import bdcoords from '../../../../../shared/chess/util/bdcoords.js';
-import boardutil from '../../../../../shared/chess/util/boardutil.js';
-import gameconfig from '../../../../../shared/util/gameconfig.js';
 
-import toast from '../../components/toast.js';
-import mouse from '../../util/mouse.js';
-import space from '../misc/space.js';
 import gameslot from '../chess/gameslot.js';
-import boardpos from '../rendering/boardpos.js';
-import snapping from '../rendering/highlights/snapping.js';
 import premoves from '../chess/premoves.js';
 import selection from '../chess/selection.js';
-import Transition from '../rendering/transitions/Transition.js';
-import annotations from '../rendering/highlights/annotations/annotations.js';
 import edithistory from '../boardeditor/edithistory.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import guiboardeditor from './boardeditor/guiboardeditor.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import { listener_document } from '../chess/game.js';
 
 // Navigation
-const element_Recenter = document.getElementById('recenter')!;
-const element_Expand = document.getElementById('expand')!;
-const element_Back = document.getElementById('back')!;
-const element_Annotations = document.getElementById('annotations')!;
-const element_Erase = document.getElementById('erase')!;
-const element_Collapse = document.getElementById('collapse')!;
-
-// const element_AnnotationsContainer = document.querySelector('.buttoncontainer.annotations')!;
-const element_EraseContainer = document.querySelector('.buttoncontainer.erase')!;
-const element_CollapseContainer = document.querySelector('.buttoncontainer.collapse')!;
-
-const element_CoordsX = document.getElementById('x') as HTMLInputElement;
-const element_CoordsY = document.getElementById('y') as HTMLInputElement;
 
 const element_moveRewind = document.getElementById('move-left')!;
 const element_moveForward = document.getElementById('move-right')!;
@@ -66,144 +37,11 @@ let rightArrowTimeoutID: ReturnType<typeof setTimeout>; // setTimeout to BEGIN f
 let rightArrowIntervalID: ReturnType<typeof setTimeout>; // setInterval to CONTINUE forwarding or redoing
 let touchIsInsideRight = false;
 
-/**
- * Whether the annotations button is enabled.
- * If so, all left click actions are treated as right clicks.
- */
-let annotationsEnabled: boolean = false;
-
-// Functions -------------------------------------------------------------------------------
-
-function _initCoordinates({ allowEditCoords }: { allowEditCoords: boolean }): void {
-	if (allowEditCoords) {
-		element_CoordsX.disabled = false;
-		element_CoordsY.disabled = false;
-		element_CoordsX.classList.remove('set-cursor-to-not-allowed');
-		element_CoordsY.classList.remove('set-cursor-to-not-allowed');
-	} else {
-		element_CoordsX.disabled = true;
-		element_CoordsY.disabled = true;
-		element_CoordsX.classList.add('set-cursor-to-not-allowed');
-		element_CoordsY.classList.add('set-cursor-to-not-allowed');
-	}
-}
-
 // =============================== Coordinate Fields ===============================
-
-// Update the division on the screen displaying your current coordinates
-function updateElement_Coords(): void {
-	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
-
-	const boardPos = boardpos.getBoardPos();
-	const mouseTile = mouse.getTileMouseOver_Integer();
-
-	const xDisplayCoord = mouseTile ? mouseTile[0] : space.roundCoord(boardPos[0]);
-	const yDisplayCoord = mouseTile ? mouseTile[1] : space.roundCoord(boardPos[1]);
-
-	// If the number is too big to fit in the input box, display it in exponential notation instead.
-	displayBigIntInInput(element_CoordsX, xDisplayCoord, 3);
-	displayBigIntInInput(element_CoordsY, yDisplayCoord, 3);
-}
-
-/** Returns true if one of the coordinate fields is active (currently editing) */
-function isCoordinateActive(): boolean {
-	return element_CoordsX === document.activeElement || element_CoordsY === document.activeElement;
-}
-
-/**
- * Displays a BigInt in an input element. If it overflows,
- * it's displayed in exponential notation instead.
- * @param inputElement The input element to display the number in.
- * @param bigint The BigInt value to display.
- * @param precision The precision for the exponential notation.
- */
-function displayBigIntInInput(
-	inputElement: HTMLInputElement,
-	bigint: bigint,
-	precision: number,
-): void {
-	// First, try to display the full number by setting the .value
-	inputElement.value = bigint.toString();
-
-	// Check for overflow.
-	if (inputElement.scrollWidth > inputElement.clientWidth + 1) {
-		// Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
-		// Format it and set the .value again.
-		inputElement.value = bimath.formatBigIntExponential(bigint, precision);
-	}
-}
-
-/**
- * Parses a string representation (either standard or e-notation) into a BigInt.
- * This is the inverse of {@link formatBigIntExponential}.
- * @param value The string to parse. Can be "12345" or "1.23e8".
- * @returns The resulting BigInt.
- */
-function parseStringToBigInt(value: string): bigint {
-	const trimmedValue = value.trim();
-	if (trimmedValue === '') throw Error();
-
-	// Use case-insensitive check for 'e'
-	const eIndex = trimmedValue.toLowerCase().indexOf('e');
-
-	// Case 1: No scientific notation, just a plain integer string.
-	if (eIndex === -1) return BigInt(trimmedValue);
-
-	// Case 2: Scientific notation is present.
-	const mantissaStr = trimmedValue.substring(0, eIndex);
-	const exponentStr = trimmedValue.substring(eIndex + 1);
-
-	if (mantissaStr === '' || exponentStr === '') throw Error(); // Malformed e-notation: missing mantissa or exponent
-
-	const exponent = parseInt(exponentStr, 10);
-	// Check if exponent is a valid integer number
-	if (isNaN(exponent) || !Number.isInteger(exponent)) throw Error();
-
-	// Since BigInts are whole numbers, a negative exponent would result in a fraction.
-	if (exponent < 0) throw Error();
-
-	const isNegative = mantissaStr.startsWith('-');
-	const absMantissaStr = isNegative ? mantissaStr.substring(1) : mantissaStr;
-
-	const decimalIndex = absMantissaStr.indexOf('.');
-	let allDigits: string;
-	let fractionalDigitsCount = 0;
-
-	if (decimalIndex === -1) {
-		// e.g., "123e5"
-		allDigits = absMantissaStr;
-	} else {
-		// e.g., "1.23" -> allDigits = "123", fractionalDigitsCount = 2
-		const integerPart = absMantissaStr.substring(0, decimalIndex);
-		const fractionalPart = absMantissaStr.substring(decimalIndex + 1);
-
-		allDigits = integerPart + fractionalPart;
-		fractionalDigitsCount = fractionalPart.length;
-	}
-
-	// The number of zeros to append is the exponent minus the number of digits
-	// we already have after the decimal point.
-	const zerosToAppend = exponent - fractionalDigitsCount;
-
-	const zeros = '0'.repeat(zerosToAppend);
-	const finalNumberString = `${isNegative ? '-' : ''}${allDigits}${zeros}`;
-
-	return BigInt(finalNumberString);
-}
 
 // =================================================================================
 
 function _initListeners_Navigation(): void {
-	element_Recenter.addEventListener('click', recenter);
-	element_Expand.addEventListener('click', callback_Expand);
-	element_Back.addEventListener('click', callback_Back);
-	element_Annotations.addEventListener('click', callback_Annotations);
-	element_Erase.addEventListener('click', callback__Collapse);
-	element_Collapse.addEventListener('click', callback__Collapse);
-
-	element_CoordsX.addEventListener('change', callback_CoordsXChange);
-	element_CoordsY.addEventListener('change', callback_CoordsYChange);
-
 	if (!guiboardeditor.isOpen()) {
 		element_moveRewind.addEventListener('click', callback_MoveRewind);
 		element_moveRewind.addEventListener('mousedown', callback_MoveRewindMouseDown);
@@ -239,121 +77,6 @@ function _initListeners_Navigation(): void {
 		element_redoEdit.addEventListener('touchend', callback_RedoEditTouchEnd);
 		element_redoEdit.addEventListener('touchcancel', callback_RedoEditTouchEnd);
 	}
-}
-
-/** Called when the field is FINISHED being edited, not on every keystroke. */
-function callback_CoordsXChange(): void {
-	element_CoordsX.blur();
-	callback_CoordsChange(0);
-}
-
-/** Called when the field is FINISHED being edited, not on every keystroke. */
-function callback_CoordsYChange(): void {
-	element_CoordsY.blur();
-	callback_CoordsChange(1);
-}
-
-function callback_CoordsChange(index: 0 | 1): void {
-	const target: HTMLInputElement = index === 0 ? element_CoordsX : element_CoordsY;
-
-	const boardPos = boardpos.getBoardPos();
-	let teleportX: BigDecimal = boardPos[0];
-	let teleportY: BigDecimal = boardPos[1];
-
-	let proposed: bigint;
-	try {
-		proposed = parseStringToBigInt(target.value);
-	} catch (_e) {
-		console.log(`Entered: ${target.value}`);
-		toast.show(translations['coords-invalid'], { error: true });
-		return;
-	}
-
-	if (bimath.abs(proposed) > gameconfig.TELEPORT_LIMIT) {
-		toast.show(translations['coords-exceeded'], { error: true });
-		return;
-	}
-
-	if (index === 0) teleportX = bd.fromBigInt(proposed);
-	else teleportY = bd.fromBigInt(proposed);
-
-	const newPos: BDCoords = [teleportX, teleportY];
-	boardpos.setBoardPos(newPos);
-}
-
-function callback_Back(): void {
-	Transition.undoTransition();
-}
-
-function callback_Expand(): void {
-	const box: Partial<BoundingBox> =
-		boardutil.getBoundingBoxOfAllPieces(gameslot.getGamefile()!.pieces) ?? {};
-
-	// Add the square annotation highlights, too.
-
-	// THIS ROUNDS RAY intersections to the nearest integer coordinate, so the resulting area may be imperfect!!!!!
-	// I don't think it matters to much.
-	const annoteSnapPoints = snapping
-		.getAnnoteSnapPoints(false)
-		.map((point) => bdcoords.coordsToBigInt(point));
-
-	// Expand the box to include all annote snap points
-	for (const snapPoint of annoteSnapPoints) {
-		if (box.left === undefined || snapPoint[0] < box.left) box.left = snapPoint[0];
-		if (box.right === undefined || snapPoint[0] > box.right) box.right = snapPoint[0];
-		if (box.bottom === undefined || snapPoint[1] < box.bottom) box.bottom = snapPoint[1];
-		if (box.top === undefined || snapPoint[1] > box.top) box.top = snapPoint[1];
-	}
-
-	// If any sides are still undefined, set them to default values
-	const definedBox: BoundingBox =
-		box.left === undefined ||
-		box.right === undefined ||
-		box.bottom === undefined ||
-		box.top === undefined
-			? { left: 1n, right: 8n, bottom: 1n, top: 8n }
-			: (box as BoundingBox);
-
-	Transition.zoomToCoordsBox(definedBox);
-}
-
-function recenter(): void {
-	Transition.zoomToCoordsBox(gameslot.getGamefile()!.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
-}
-
-// Annotations Buttons ======================================
-
-function callback_Annotations(): void {
-	annotationsEnabled = !annotationsEnabled;
-	listener_overlay.setTreatLeftasRight(annotationsEnabled);
-	element_Annotations.classList.toggle('enabled');
-}
-
-/** Returns whether the annotations button on the navigation bar on mobile devices is enabled (glowing RED) */
-function isAnnotationsButtonEnabled(): boolean {
-	return annotationsEnabled;
-}
-
-function callback__Collapse(): void {
-	annotations.Collapse();
-}
-
-document.addEventListener('ray-count-change', (e) => {
-	const rayCount = e.detail;
-	if (rayCount > 0) showCollapse();
-	else hideCollapse();
-});
-
-/** Replaces eraser svg with collapse svg. */
-function showCollapse(): void {
-	element_EraseContainer.classList.add('hidden');
-	element_CollapseContainer.classList.remove('hidden');
-}
-
-/** Replaces collapse svg with eraser svg. */
-function hideCollapse(): void {
-	element_EraseContainer.classList.remove('hidden');
-	element_CollapseContainer.classList.add('hidden');
 }
 
 // =====================================================================
@@ -707,11 +430,7 @@ function callback_RedoEdit(): void {
 }
 
 export default {
-	updateElement_Coords,
 	update_MoveButtons,
 	update_EditButtons,
-	callback_Expand,
 	update,
-	recenter,
-	isAnnotationsButtonEnabled,
 };

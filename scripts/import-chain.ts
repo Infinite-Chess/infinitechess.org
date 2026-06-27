@@ -1,4 +1,4 @@
-// scripts/importchain.ts
+// scripts/import-chain.ts
 
 /**
  * Studies the entire import chain of a single script, grouped by depth.
@@ -13,9 +13,9 @@
  * refactored to stay healthy.
  *
  * Usage:
- *   npx tsx scripts/importchain.ts <path-to-script>
+ *   npx tsx scripts/import-chain.ts <path-to-script>
  *
- * Writes the depth-grouped markdown report to "<script-name>.importchain.md"
+ * Writes the depth-grouped markdown report to "<script-name>.import-chain.md"
  * in the current directory.
  */
 
@@ -28,7 +28,7 @@ import esbuild from 'esbuild';
 const entryArg = process.argv[2];
 
 if (!entryArg) {
-	console.error('Usage: tsx scripts/importchain.ts <path-to-script>');
+	console.error('Usage: tsx scripts/import-chain.ts <path-to-script>');
 	process.exit(1);
 }
 
@@ -50,7 +50,7 @@ const result = await esbuild.build({
 	// Mirror the real client build so resolution never errors on these.
 	loader: { '.wasm': 'file', '.glsl': 'text' },
 	external: ['/fonts/*'],
-	outdir: 'importchain-virtual-out', // Never written (write: false).
+	outdir: 'import-chain-virtual-out', // Never written (write: false).
 });
 
 const inputs = result.metafile.inputs;
@@ -136,6 +136,6 @@ for (let d = 0; d <= maxDepth; d++) {
 	lines.push('');
 }
 
-const outPath = `${path.basename(entry, path.extname(entry))}.importchain.md`;
+const outPath = `${path.basename(entry, path.extname(entry))}.import-chain.md`;
 fs.writeFileSync(outPath, lines.join('\n'));
 console.error(`Wrote ${outPath}`);

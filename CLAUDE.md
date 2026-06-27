@@ -25,6 +25,7 @@ When you finish making any new changes to scripts, always ensure these checks pa
 - All scripts have their file path on line 1. This is automatic via hook, you don't have to bother maintaining it.
 - Almost all scripts have a brief description of their purpose on lines 3-7+. Useful for gaining a quick understanding of them without bloating the context window.
 - Shell is zsh: always quote glob patterns in command args (e.g. `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
+- Always Read a file's relevant lines in-session before editing it — grep/sed/Bash output doesn't count. It's the Edit tool's hard rule.
 - All typescript files' indentation is in tabs, not spaces.
 - prettier automatically enforces consistent styling.
 - When determining which imports can safely be removed, the command `npm run lint --silent` automatically tells you what imports are unused.

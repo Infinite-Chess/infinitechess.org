@@ -1,4 +1,4 @@
-// scripts/importrules.ts
+// scripts/import-rules.ts
 
 /**
  * Enforces import-boundary rules across every page entry point.
@@ -9,7 +9,7 @@
  * reports any DISALLOWED entry that reaches the target anywhere in its tree.
  *
  * Run manually:
- *   npx tsx scripts/importrules.ts
+ *   npx tsx scripts/import-rules.ts
  *
  * Exits non-zero if any rule is violated.
  *
@@ -59,7 +59,7 @@ const RULES: Rule[] = [
 
 const SRC_PREFIX = 'src/';
 
-/** Trims the noisy common prefix so paths read cleanly (matches importchain.ts). */
+/** Trims the noisy common prefix so paths read cleanly (matches import-chain.ts). */
 function short(file: string): string {
 	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
 }
@@ -83,7 +83,7 @@ async function reachableModules(entry: string): Promise<string[]> {
 		format: 'esm',
 		loader: { '.wasm': 'file', '.glsl': 'text' },
 		external: ['/fonts/*'],
-		outdir: 'importrules-virtual-out', // Never written (write: false).
+		outdir: 'import-rules-virtual-out', // Never written (write: false).
 	});
 	return Object.keys(result.metafile.inputs).filter((f) => f.startsWith(SRC_PREFIX));
 }
@@ -101,7 +101,7 @@ await Promise.all(
 
 const lines: string[] = ['# Import rule check', ''];
 let violations = 0;
-/** Full paths of entry points that broke at least one rule — for the importchain tip. */
+/** Full paths of entry points that broke at least one rule — for the import-chain tip. */
 const offendingEntries = new Set<string>();
 
 for (const rule of RULES) {
@@ -146,6 +146,6 @@ console.error(
 	"\nTo trace how a target gets pulled in, view the offending page's full import chain:",
 );
 for (const entry of offendingEntries) {
-	console.error(`  npx tsx scripts/importchain.ts ${entry}`);
+	console.error(`  npx tsx scripts/import-chain.ts ${entry}`);
 }
 process.exit(1);

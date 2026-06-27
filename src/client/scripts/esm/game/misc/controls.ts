@@ -14,7 +14,6 @@ import vectors from '../../../../../shared/util/math/vectors.js';
 
 import mouse from '../../util/mouse.js';
 import camera from '../rendering/camera.js';
-import arrows from '../rendering/arrows/arrows.js';
 import docutil from '../../util/docutil.js';
 import boardpos from '../rendering/boardpos.js';
 import deltatime from '../misc/deltatime.js';
@@ -30,6 +29,7 @@ import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
 import guinavigation from '../gui/guinavigation.js';
+import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
 
@@ -250,7 +250,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
 	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
-	if (listener_document.isKeyDown('Tab')) arrows.toggleArrows();
+	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
 	if (mesh && listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamefile, mesh);
 		console.log('Regenerated piece models.');
