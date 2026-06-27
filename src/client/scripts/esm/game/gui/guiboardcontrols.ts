@@ -207,15 +207,13 @@ function displayBigIntInInput(
 	bigint: bigint,
 	precision: number,
 ): void {
-	// First, try to display the full number by setting the .value
-	inputElement.value = bigint.toString();
+	const digitCount = bimath.countDigits(bigint);
+	// countDigits() is sometimes off by 1. If it estimates the digit count is within bounds,
+	// verify exactly to be sure. This also ensures the negative sign is accounted for too.
+	const overflows = digitCount > 13 || bigint.toString().length > 12;
 
-	// Check for overflow.
-	if (inputElement.scrollWidth > inputElement.clientWidth + 1) {
-		// Needs the +1 due to floating point stuff. Else sometimes at random font sizes this is true when it shouldn't be.
-		// Format it and set the .value again.
-		inputElement.value = bimath.formatBigIntExponential(bigint, precision);
-	}
+	if (overflows) inputElement.value = bimath.formatBigIntExponential(bigint, precision);
+	else inputElement.value = bigint.toString();
 }
 
 /**
