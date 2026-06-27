@@ -35,12 +35,16 @@ export interface Area {
 const TWO = bd.fromNumber(2.0);
 
 /**
- * Padding between an area's pieces and the edge of thes creen,
- * as a percentage of the screen WIDTH/HEIGHT.
+ * Minimum padding between an area's pieces and the edge of
+ * the screen, as a percentage of the screen WIDTH/HEIGHT.
  */
-const padding: number = 0.03;
-/** The padding to use when miniimages are visible (zoomed out far) */
-const paddingMiniimage: number = 0.03; // Default: 0.2
+const padding: number = 0.04;
+/**
+ * When we're zoomed out (mini images visible), content is constrained within this
+ * fixed-size virtual pixel region in the center of the screen, canvas-size-independent.
+ * Falls back to standard {@link padding} when the canvas is smaller than this size.
+ */
+const MINIIMAGE_CONTENT_SIZE_VPIXELS: number = 600;
 
 /** The maximum width (in virtual pixels) that a single square should take up on screen for an area. */
 const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(70);
@@ -50,9 +54,11 @@ const AREA_MAX_SQUARE_VPIXELS: BigDecimal = bd.fromNumber(70);
  */
 const AREA_MIN_HEIGHT_SQUARES: number = 10; // Divided by screen width
 
-// Just the action of adding padding, changes the required scale to have that amount of padding,
-// so we need to iterate it a few times for more accuracy.
-// MUST BE GREATER THAN 0!
+/**
+ * Just the action of adding padding, changes the required scale to have that
+ * amount of padding, so we need to iterate it a few times for more accuracy.
+ * MUST BE GREATER THAN 0!
+ */
 const iterationsToRecalcPadding: number = 10;
 
 /**
@@ -66,7 +72,8 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 
 	const boxCopy: BoundingBoxBD = jsutil.deepCopyObject(box);
 
-	const canvasHeightVirtualSubNav = camera.getCanvasHeightVirtualPixels();
+	const canvasWidth = camera.getCanvasWidthVirtualPixels();
+	const canvasHeight = camera.getCanvasHeightVirtualPixels();
 
 	/** Start with a copy with zero padding. */
 	let paddedBox: BoundingBoxBD = jsutil.deepCopyObject(boxCopy);
@@ -74,10 +81,22 @@ function applyPaddingToBox(box: BoundingBoxBD): BoundingBoxBD {
 
 	// Iterate until we have desired padding
 	for (let i = 0; i < iterationsToRecalcPadding; i++) {
-		const paddingToUse: number =
-			bd.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0 ? paddingMiniimage : padding;
-		const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
-		const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse;
+		// Zoomed-in area: use standard padding, which is a percentage of the canvas size.
+		let paddingHorzPixels: number = canvasWidth * padding;
+		let paddingVertPixels: number = canvasHeight * padding;
+
+		if (bd.compare(scaleBD, camera.getScaleWhenZoomedOut()) < 0) {
+			// Zoomed-out area: constrain content to a fixed-size pixel region regardless of canvas
+			// size. Falls back to standard padding when the canvas is smaller than that region.
+			paddingHorzPixels = Math.max(
+				paddingHorzPixels,
+				(canvasWidth - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2,
+			);
+			paddingVertPixels = Math.max(
+				paddingVertPixels,
+				(canvasHeight - MINIIMAGE_CONTENT_SIZE_VPIXELS) / 2,
+			);
+		}
 
 		const paddingHorzWorldBD = bd.fromNumber(
 			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels),
