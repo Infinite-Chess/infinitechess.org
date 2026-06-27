@@ -43,8 +43,9 @@ function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): Double
  */
 function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
-		const physicalPointerId = listener_overlay.getMousePhysicalId(button);
-		if (!physicalPointerId) return undefined;
+		// Before the first click there may be no button-associated pointer yet,
+		// but the physical 'mouse' pointer still tracks hover movement.
+		const physicalPointerId = listener_overlay.getMousePhysicalId(button) ?? 'mouse';
 		let mousePos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!mousePos) {
 			// Pointer likely doesn't exist anymore (touch event lifted).
