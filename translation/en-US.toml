@@ -455,11 +455,6 @@ cancel_invite = "Cancel Invite"
 start_game = "Start Game"
 join_existing_active_games = "Join Existing - Active Games:"
 
-[play.javascript.onlinegame]
-not_logged_in = "You are not logged in. Please login to reconnect to this game."
-game_no_longer_exists = "Game no longer exists."
-another_window_connected = "Another window has connected."
-
 [play.javascript.websocket]
 no_connection = "No connection."
 reconnected = "Reconnected."

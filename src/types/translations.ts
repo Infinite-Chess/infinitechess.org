@@ -365,9 +365,6 @@ export type TranslationKeys =
 	| 'play.javascript.invites.cancel_invite'
 	| 'play.javascript.invites.start_game'
 	| 'play.javascript.invites.join_existing_active_games'
-	| 'play.javascript.onlinegame.not_logged_in'
-	| 'play.javascript.onlinegame.game_no_longer_exists'
-	| 'play.javascript.onlinegame.another_window_connected'
 	| 'play.javascript.websocket.no_connection'
 	| 'play.javascript.websocket.reconnected'
 	| 'play.javascript.websocket.unable_to_identify_ip'
@@ -912,11 +909,6 @@ export interface TranslationsObject {
 				cancel_invite: string;
 				start_game: string;
 				join_existing_active_games: string;
-			};
-			onlinegame: {
-				not_logged_in: string;
-				game_no_longer_exists: string;
-				another_window_connected: string;
 			};
 			websocket: {
 				no_connection: string;
