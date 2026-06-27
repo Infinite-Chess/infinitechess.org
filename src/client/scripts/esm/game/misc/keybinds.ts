@@ -1,49 +1,47 @@
 // src/client/scripts/esm/game/misc/keybinds.ts
 
 /**
- * This script will store the keybinds for various game actions.
+ * Stores the keybinds for various game actions.
  *
- * Currently we only store keybinds that actually CHANGE.
- * But in the future we can expand this with perhaps an option menu.
+ * Bindings are resolved through an InputProfile so individual pages can override them.
+ * The normal game uses DEFAULT_PROFILE; pages like the board editor may swap in
+ * their own profile via setProfile().
  */
 
 import perspective from '../rendering/perspective.js';
 import preferences from '../../components/header/preferences.js';
-import etoolmanager from '../boardeditor/tools/etoolmanager.js';
-import guiboardcontrols from '../gui/guiboardcontrols.js';
 import { listener_document } from '../chess/game.js';
 import { Mouse, MouseButton } from '../input.js';
 
-/** Returns the mouse button currently assigned to board dragging. */
-function getBoardDragMouseButton(): MouseButton | undefined {
-	if (perspective.getEnabled()) return undefined;
-	if (guiboardcontrols.isAnnotationsButtonEnabled()) return Mouse.LEFT; // Allows a second pointer to pinch zoom the board even when drawing annote with first pointer.
-	if (etoolmanager.isLeftMouseReserved()) return Mouse.RIGHT;
-	// Default: Left mouse drags board
-	return Mouse.LEFT;
+/**
+ * A set of mouse-button bindings for the core board actions.
+ * Pages may provide their own profile to remap any of these.
+ */
+export interface InputProfile {
+	/** The mouse button assigned to board dragging. */
+	getBoardDragMouseButton(): MouseButton | undefined;
+	/** The mouse button assigned to drawing annotations. */
+	getAnnotationMouseButton(): MouseButton | undefined;
+	/** The mouse button assigned to collapsing annotations, or cancelling premoves. */
+	getCollapseMouseButton(): MouseButton | undefined;
+	/** The mouse button assigned to piece selection. */
+	getPieceSelectionMouseButton(): MouseButton | undefined;
 }
 
-/** Returns the mouse button currently assigned to drawing annotations. */
-function getAnnotationMouseButton(): MouseButton | undefined {
-	if (guiboardcontrols.isAnnotationsButtonEnabled() || perspective.getEnabled())
-		return Mouse.RIGHT;
-	if (etoolmanager.isLeftMouseReserved()) return undefined; // NO BUTTON draws annotations (right click reserved for dragging)
-	// Default: Right mouse draws annotations
-	return Mouse.RIGHT;
-}
+/** The default bindings, used by most pages. */
+const DEFAULT_PROFILE: InputProfile = {
+	getBoardDragMouseButton: () => (perspective.getEnabled() ? undefined : Mouse.LEFT),
+	getAnnotationMouseButton: () => Mouse.RIGHT,
+	getCollapseMouseButton: () => Mouse.LEFT,
+	getPieceSelectionMouseButton: () => Mouse.LEFT,
+};
 
-/** Returns the mouse button currently assigned to collapsing annotations, or cancelling premoves. */
-function getCollapseMouseButton(): MouseButton | undefined {
-	if (etoolmanager.isLeftMouseReserved()) return undefined; // Left click reserved for drawing tool
-	// Default: Right mouse
-	return Mouse.LEFT;
-}
+/** The bindings currently in effect. */
+let activeProfile: InputProfile = DEFAULT_PROFILE;
 
-/** Returns the mouse button currently assigned to piece selection. */
-function getPieceSelectionMouseButton(): MouseButton | undefined {
-	if (etoolmanager.isLeftMouseReserved()) return undefined; // Left click reserved for drawing tool
-	// Default: Left mouse
-	return Mouse.LEFT;
+/** Overrides the active input profile. Used by pages that remap bindings, e.g. the board editor. */
+function setProfile(profile: InputProfile): void {
+	activeProfile = profile;
 }
 
 /**
@@ -58,9 +56,10 @@ function getEffectiveDragEnabled(): boolean {
 }
 
 export default {
-	getBoardDragMouseButton,
-	getAnnotationMouseButton,
-	getCollapseMouseButton,
-	getPieceSelectionMouseButton,
+	setProfile,
+	getBoardDragMouseButton: (): MouseButton | undefined => activeProfile.getBoardDragMouseButton(),
+	getAnnotationMouseButton: (): MouseButton | undefined => activeProfile.getAnnotationMouseButton(), // prettier-ignore
+	getCollapseMouseButton: (): MouseButton | undefined => activeProfile.getCollapseMouseButton(),
+	getPieceSelectionMouseButton: (): MouseButton | undefined => activeProfile.getPieceSelectionMouseButton(), // prettier-ignore
 	getEffectiveDragEnabled,
 };

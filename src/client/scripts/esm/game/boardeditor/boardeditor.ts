@@ -14,6 +14,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
+import keybinds from '../misc/keybinds.js';
 import eautosave from './actions/eautosave.js';
 import egamerules from './egamerules.js';
 import eclipboard from './eclipboard.js';
@@ -21,6 +22,7 @@ import drawingtool from './tools/drawingtool.js';
 import edithistory from './edithistory.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
+import EDITOR_PROFILE from './ekeybinds.js';
 import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 
 // Types ------------------------------------------------------------------------
@@ -60,6 +62,9 @@ async function initBoardEditor(
 
 	etoolmanager.setTool('normal');
 	drawingtool.init();
+
+	// Editor tools may reserve the left mouse button, shifting board dragging to the right mouse.
+	keybinds.setProfile(EDITOR_PROFILE);
 
 	let initial_pawnDoublePush: boolean | undefined;
 	let initial_castling: boolean | undefined;
