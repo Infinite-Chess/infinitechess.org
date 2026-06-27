@@ -196,8 +196,8 @@ function updateCoords(): void {
 }
 
 /**
- * Displays a BigInt in an input element. If it overflows,
- * it's displayed in exponential notation instead.
+ * Displays a BigInt in an input element. If it would overflow,
+ * it's displayed in exponential notation instead. Optimized.
  * @param inputElement The input element to display the number in.
  * @param bigint The BigInt value to display.
  * @param precision The precision for the exponential notation.
