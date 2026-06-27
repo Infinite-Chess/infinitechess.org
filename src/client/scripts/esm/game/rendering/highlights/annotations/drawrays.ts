@@ -27,9 +27,18 @@ import boardpos from '../../boardpos.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
 import annotations from './annotations.js';
+import { GameBus } from '../../../GameBus.js';
 import legalmovemodel from '../legalmovemodel.js';
 import highlightline, { Line } from '../highlightline.js';
 import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
+
+// Events --------------------------------------------------------------------
+
+// Stop drawing ray if the board steals our pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the ray, don't stop using it.
+	stopDrawing();
+});
 
 // Variables -----------------------------------------------------------------
 
@@ -154,12 +163,6 @@ function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
-}
-
-/** If the given pointer is currently being used to draw a ray, this stops using it. */
-function stealPointer(pointerIdToSteal: string): void {
-	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the ray, don't stop using it.
-	stopDrawing();
 }
 
 /** Returns all the Rays converted to Lines, which are rendered easily. */
@@ -481,7 +484,6 @@ export default {
 	getPresetRays,
 	update,
 	getPointerId,
-	stealPointer,
 	stopDrawing,
 	getLines,
 	findClosestPredefinedVector,

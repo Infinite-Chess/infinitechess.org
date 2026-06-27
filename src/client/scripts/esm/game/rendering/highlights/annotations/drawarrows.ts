@@ -31,7 +31,16 @@ import snapping from '../snapping.js';
 import boardpos from '../../boardpos.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../components/header/preferences.js';
+import { GameBus } from '../../../GameBus.js';
 import { createRenderable } from '../../../../webgl/Renderable.js';
+
+// Events --------------------------------------------------------------------
+
+// Stop drawing arrow if the board steals our pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the arrow, don't stop using it.
+	stopDrawing();
+});
 
 // Constants -----------------------------------------------------------------
 
@@ -120,12 +129,6 @@ function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
 	pointerWorld = undefined;
-}
-
-/** If the given pointer is currently being used to draw an arrow, this stops using it. */
-function stealPointer(pointerIdToSteal: string): void {
-	if (pointerId !== pointerIdToSteal) return; // Not the pointer drawing the arrow, don't stop using it.
-	stopDrawing();
 }
 
 /**
@@ -421,6 +424,5 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 export default {
 	update,
 	stopDrawing,
-	stealPointer,
 	render,
 };

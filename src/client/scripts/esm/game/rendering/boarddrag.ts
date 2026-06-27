@@ -15,13 +15,10 @@ import coordutil from '../../../../../shared/chess/util/coordutil.js';
 
 import mouse from '../../util/mouse.js';
 import boardpos from './boardpos.js';
-import drawrays from './highlights/annotations/drawrays.js';
 import keybinds from '../misc/keybinds.js';
-import selection from '../chess/selection.js';
 import Transition from './transitions/Transition.js';
-import drawarrows from './highlights/annotations/drawarrows.js';
 import perspective from './perspective.js';
-import etoolmanager from '../boardeditor/tools/etoolmanager.js';
+import { GameBus } from '../GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
 import { listener_overlay } from '../chess/game.js';
 
@@ -139,7 +136,9 @@ function checkIfBoardPinched(): void {
 		// This pointer may have been claimed elsewhere, STEAL it.
 		if (!boardIsGrabbed) {
 			initSinglePointerDrag(pointerId);
-			stealPointer(pointerId);
+			// If the given pointer has been claimed by something else (piece dragging, arrow/ray drawing, etc),
+			// this will STEAL it from them, so that it can be used for board pinching, which takes priority.
+			GameBus.dispatch('steal-pointer', { pointerId });
 		}
 	}
 	// For every new pointer touched down / created this frame...
@@ -167,18 +166,6 @@ function checkIfBoardSingleGrabbed(): void {
 
 	listener_overlay.claimPointerDown(allPointersDown[0]!); // Remove the pointer down so other scripts don't use it
 	initSinglePointerDrag(allPointersDown[0]!); // If multiple pointers down, just use the first one.
-}
-
-/**
- * If the given pointer has been claimed by something else (piece dragging, arrow/ray drawing, etc),
- * this will STEAL it from them, so that it can be used for board pinching, which takes priority.
- * Essentially this just tells them to stop using it.
- */
-function stealPointer(pointerId: string): void {
-	selection.stealPointer(pointerId);
-	drawarrows.stealPointer(pointerId);
-	drawrays.stealPointer(pointerId);
-	etoolmanager.stealPointer(pointerId);
 }
 
 /** Grabs board with the given pointer. */

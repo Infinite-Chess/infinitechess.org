@@ -28,7 +28,16 @@ import { Mouse } from '../../input';
 import egamerules from '../egamerules';
 import guipalette from '../../gui/boardeditor/guipalette';
 import edithistory from '../edithistory';
+import { GameBus } from '../../GameBus';
 import specialrighthighlights from '../../rendering/highlights/specialrighthighlights';
+
+// Events ----------------------------------------------------------
+
+// Cancel the in-progress edit if the board steals its pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (drawingToolPointerId !== e.detail.pointerId) return; // Not the pointer drawing the edit, don't stop using it.
+	cancelEdit();
+});
 
 // Constants -------------------------------------------------------
 
@@ -204,11 +213,6 @@ function isToolADrawingTool(tool: Tool): boolean {
 	return drawingTools.includes(tool);
 }
 
-function stealPointer(pointerIdToSteal: string): void {
-	if (drawingToolPointerId !== pointerIdToSteal) return; // Not the pointer drawing the edit, don't stop using it.
-	cancelEdit();
-}
-
 /** Set the piece type to be added to the board */
 function setPiece(pieceType: number): void {
 	currentPieceType = pieceType;
@@ -236,7 +240,6 @@ export default {
 	onToolChange,
 	isEditInProgress,
 	isToolADrawingTool,
-	stealPointer,
 	setPiece,
 	getPiece,
 	setColor,

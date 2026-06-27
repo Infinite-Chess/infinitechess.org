@@ -77,6 +77,15 @@ GameBus.addEventListener('game-concluded', () => {
 GameBus.addEventListener('game-unloaded', () => {
 	unselectPiece();
 });
+// Release the dragged piece if the board steals its pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (!pieceSelected || !draganimation.areDraggingPiece()) return;
+	const pointerDraggingPiece = draganimation.getPointerIdDraggingPiece();
+	if (pointerDraggingPiece !== e.detail.pointerId) return; // Not the pointer dragging the piece, don't stop using it.
+
+	if (draganimation.getDragParity()) return unselectPiece();
+	return draganimation.dropPiece();
+});
 
 // Getters ---------------------------------------------------------------------------------------
 
@@ -533,16 +542,6 @@ function makePromotionMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	perspective.relockMouse();
 }
 
-/** If the given pointer is currently being used to drag a piece, this stops using it. */
-function stealPointer(pointerIdToSteal: string): void {
-	if (!pieceSelected || !draganimation.areDraggingPiece()) return;
-	const pointerDraggingPiece = draganimation.getPointerIdDraggingPiece();
-	if (pointerDraggingPiece !== pointerIdToSteal) return; // Not the pointer dragging the piece, don't stop using it.
-
-	if (draganimation.getDragParity()) return unselectPiece();
-	return draganimation.dropPiece();
-}
-
 // Rendering ---------------------------------------------------------------------------------------------------------
 
 /** Renders the translucent piece underneath your mouse when hovering over the blue legal move fields. */
@@ -579,7 +578,6 @@ export default {
 	renderGhostPiece,
 	isOpponentPieceSelected,
 	arePremoving,
-	stealPointer,
 	selectPiece,
 	canSelectPieceType,
 	isOpponentType,

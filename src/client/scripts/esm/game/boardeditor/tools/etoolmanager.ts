@@ -66,14 +66,6 @@ function isLeftMouseReserved(): boolean {
 	return drawingtool.isToolADrawingTool(currentTool) || currentTool === 'selection-tool';
 }
 
-/** If the given pointer is currently being used by a drawing tool for an edit, this stops using it. */
-function stealPointer(pointerIdToSteal: string): void {
-	if (currentTool === 'selection-tool')
-		return; // Don't steal (selection tool isn't capable of reverting to previous selection before starting a new one)
-	else if (drawingtool.isToolADrawingTool(currentTool))
-		drawingtool.stealPointer(pointerIdToSteal);
-}
-
 // Shortcuts ------------------------------------------------------------------
 
 /** Tests for keyboard shortcuts in the board editor. */
@@ -106,7 +98,6 @@ export default {
 	getTool,
 	setTool,
 	isLeftMouseReserved,
-	stealPointer,
 	// Shortcuts
 	testShortcuts,
 };

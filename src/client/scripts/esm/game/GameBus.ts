@@ -26,6 +26,12 @@ interface GameBusEvents {
 	'user-move-played': void;
 	/** Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit. */
 	'physical-move': void;
+	/**
+	 * Dispatched when the board is about to be pinched. Tells any
+	 * single-pointer action using the given pointer (piece drag, annotation
+	 * draw, board editor edit) to release it, since pinching takes priority.
+	 */
+	'steal-pointer': { pointerId: string };
 	// =========== Graphical Events ===========
 	'render-below-pieces': void;
 	'render-above-pieces': void;
