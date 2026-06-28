@@ -719,17 +719,19 @@ function CreateInputListener(
 
 	if (keyboard) {
 		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
-			// If spacebar pressed when checkbox focused => Prevent default.
-			// Prevents pushing spacebar in the board editor game rules UI after
-			// toggling a checkbox from toggling it again when you intend to zoom.
+			// Ignore typing in text fields, but let bare keys (Space, arrows…) still
+			// control the board when a checkbox is focused, rather than re-toggling it.
 			if (
-				e.code === 'Space' &&
 				document.activeElement instanceof HTMLInputElement &&
-				document.activeElement.type === 'checkbox'
+				document.activeElement.type !== 'checkbox'
 			)
-				e.preventDefault();
-			// if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
-			if (document.activeElement instanceof HTMLInputElement) return; // Ignore events when the user is typing in a text box.
+				return;
+
+			// Suppress the browser's default action for any bare key (no Ctrl/Meta/Alt), so keys
+			// like Space and the arrows control the board instead of scrolling the page/sidebar
+			// Modifier combos (clipboard, undo/redo, browser shortcuts) are left untouched.
+			if (!(e.ctrlKey || e.metaKey || e.altKey)) e.preventDefault();
+
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
 			if (!keyDowns.some((keyInfo) => keyInfo.keyCode === e.code)) {
@@ -755,8 +757,6 @@ function CreateInputListener(
 			// This still allows copy & paste events to bubble through to our listeners,
 			// but for example it prevents Ctrl+A from selecting all text on the page.
 			if (manual_shortcuts.includes(e.code) && (e.ctrlKey || e.metaKey)) e.preventDefault();
-
-			if (e.key === 'Tab') e.preventDefault(); // Prevents the default tabbing behavior of cycling through elements on the page.
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
