@@ -122,7 +122,7 @@
 			   The spectator count stays dynamic (the client sets + hides if none). #}
 			<div class="meta-foot">
 				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
-				<span class="meta-spectators" title="Spectators">
+				<span class="meta-spectators hidden" title="Spectators">
 					<svg class="meta-eye"><use href="#svg-eye"/></svg>
 					<span class="spectator-count">0</span>
 				</span>
@@ -167,8 +167,8 @@
 			<div class="match-panel panel">
 
 				{# Top username container — SSR-OWNED (far side: the opponent, or black for spectators).
-				   Username/rating + clock are SSR'd; the client writes the live clock value + `tempo`,
-				   and appends the `eloChange` delta on game end — it must not rebuild the SSR'd embed. #}
+				   Username/rating + clock are SSR'd; guiclock.ts writes the live clock value + `tempo`,
+				   and appends the `eloChange` delta on game end #}
 				<div class="player-bar" id="player-bar-top">
 					{{ usernameEmbed(meta.players[meta.bars.top].name, meta.players[meta.bars.top].elo) }}
 					{# Clock — SSR'd present (hidden for untimed games); the client only toggles `.hidden`
@@ -273,7 +273,7 @@
 
 		</div>{# .play-group #}
 
-		{# Chat #}
+		{# Chat window #}
 		<div class="chat panel">
 			{# The client toggles `.collapsed` on the .chat panel. #}
 			<div class="chat-bar">
