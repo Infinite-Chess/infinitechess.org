@@ -333,28 +333,12 @@
 	<div class="canvas-container bg-checkerboard-dimmed">
 		{# The background is visible until the client reveals the canvas when the game is fully loaded #}
 		<canvas class="board-canvas visibility-hidden" id="board-canvas"></canvas>
-	</div>
-
-	{# ── Reuse bridge (TEMPORARY) ──────────────────────────────────────────
-	   The redesigned page reuses the existing `game/` render graph, which still queries the old
-	   play-page element ids at import/load (promotion UI, board-nav bar, dev stats, draw-offer UI).
-	   Until that graph is slimmed/decoupled — a separate later refactor with the user — host the ids
-	   it needs here, inert (`display:none`). Not part of the visible redesign; safe to delete once the
-	   graph stops referencing them. #}
-	<div class="legacy-reuse-bridge" style="display:none" aria-hidden="true">
-		{# guipromotion #}
-		<div id="promote"><div id="promotewhite"></div><div id="promoteblack"></div></div>
-		{# guinavigation #}
-		<div id="navigation-bar">
-			<input id="x" type="text"/>
-			<input id="y" type="text"/>
-			<button id="move-left"></button>
-			<button id="move-right"></button>
-			<button id="undo-edit"></button>
-			<button id="redo-edit"></button>
+		{# Promotion UI #}
+		<div id="promote" class="hidden">
+			<div id="promote-white" class="promotecolor hidden"></div>
+			<div id="promote-black" class="promotecolor hidden"></div>
 		</div>
 	</div>
-
 </main>
 {% endblock %}
 

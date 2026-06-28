@@ -73,8 +73,12 @@ function createGame(
 	seek: AuthSeek,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
 ): void {
-	if (seek.variant.kind !== 'preset')
-		throw new Error('Custom variant game starting is not yet implemented.');
+	if (seek.variant.kind !== 'preset') {
+		const errText = 'Custom variant game starting is not yet implemented.';
+		console.error(errText);
+		throw new Error(errText);
+	}
+
 	const variantCode = seek.variant.code;
 
 	const gameID = issueUniqueGameId();

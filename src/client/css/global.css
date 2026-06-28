@@ -23,9 +23,9 @@
 	font-display: swap; /* Show fallback font immediately; swap in Noto Sans once loaded */
 }
 
-/* ============================================================
+/* =====================================
    CSS Reset
-   ============================================================ */
+   ===================================== */
 
 *,
 *::before,
@@ -36,9 +36,9 @@
 	border: 0;
 }
 
-/* ============================================================
+/* =====================================
    Base
-   ============================================================ */
+   ===================================== */
 
 html {
 	height: 100%;
@@ -144,9 +144,9 @@ body {
 	--c-text-elev-bottom: rgb(0, 0, 0);
 }
 
-/* ============================================================
+/* ==================================
    Page layout
-   ============================================================ */
+   ================================== */
 
 /* Sticky-footer: body fills the viewport; main grows to push footer down.
    Applied to <body> via the `bodyClass` block in layout.njk. */
@@ -167,9 +167,9 @@ body {
 	z-index: 1;
 }
 
-/* ============================================================
+/* ==================================
    Utility classes
-   ============================================================ */
+   ================================== */
 
 .hidden {
 	display: none;
@@ -228,18 +228,18 @@ button:disabled {
 	mask-image: linear-gradient(to right, black calc(100% - 1em), transparent 100%);
 }
 
-/* ============================================================
+/* ==========================================
    Page background layers
-   ============================================================ */
+   ========================================== */
 
 /* Tiled checkerboard backdrop with the shared overlay baked in as the top layer. */
 .bg-checkerboard-dimmed {
 	background: linear-gradient(var(--c-bg-overlay), var(--c-bg-overlay)), var(--checkerboard);
 }
 
-/* ============================================================
+/* ==========================================
    Buttons
-   ============================================================ */
+   ========================================== */
 
 /* Solid accent-colored primary action button (login, modal submit, etc.). */
 .btn-primary {
@@ -438,9 +438,9 @@ button:disabled {
 	justify-content: center;
 }
 
-/* ============================================================
+/* ========================================
    Username embed containers
-   ============================================================ */
+   ======================================== */
 
 .username-embed {
 	display: flex;
@@ -499,8 +499,89 @@ button:disabled {
 }
 
 /* ============================================================
-   Tooltips
+   Board. Shared on all pages with a live interactive board
+   (game, analysis, board editor, practice checkmate, tutorial)
    ============================================================ */
+
+/* Container must also share properties, or it isn't resized properly on window resize. */
+.canvas-container,
+.board-canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.canvas-container {
+	position: relative;
+	overflow: hidden;
+	container-type: inline-size; /* Enables container queries on this element */
+}
+
+/* ===============================================================
+   Promotion UI. Shared on all pages with a live interactive board
+   (game, analysis, board editor, practice checkmate, tutorial)
+   =============================================================== */
+
+#promote {
+	padding: 8px;
+	border-radius: 10px;
+	position: absolute;
+	/* For some reason prevents the container from gradually shrinking width as the screen width is decreased. */
+	width: max-content;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	background: white;
+	box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.917);
+}
+
+.promotecolor {
+	display: flex;
+	justify-content: space-evenly;
+	flex-wrap: wrap;
+	max-width: 325px;
+}
+
+.promotepiece {
+	width: 80px;
+	height: 80px;
+	padding: 3px;
+	border: 1px solid transparent;
+	border-radius: 10px;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.promotepiece:hover {
+	background-color: rgba(0, 0, 0, 0.1);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.promotepiece:active {
+	background-color: rgba(0, 0, 0, 0.158);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Narrow screens: Shrink the whole promotion UI instantly */
+@container (max-width: 500px) {
+	#promote {
+		padding: 6px;
+		border-radius: 7px;
+	}
+	.promotecolor {
+		max-width: 245px;
+	}
+	.promotepiece {
+		width: 60px;
+		height: 60px;
+		padding: 2px;
+		border-radius: 7px;
+	}
+}
+
+/* ==================================
+   Tooltips
+   ==================================*/
 
 #tooltip-popup {
 	position: fixed;
@@ -544,9 +625,9 @@ button:disabled {
 	border-color: black transparent transparent transparent;
 }
 
-/* ============================================================
+/* =====================================
    Badge shine
-   ============================================================ */
+   ===================================== */
 
 #checkmate-badge-bronze {
 	--shine-color: rgba(229, 203, 180, 0.3);
@@ -602,9 +683,9 @@ button:disabled {
 	}
 }
 
-/* ============================================================
+/* =====================================
    Range slider (.slider)
-   ============================================================ */
+   ===================================== */
 
 .slider {
 	appearance: none;

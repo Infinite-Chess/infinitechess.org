@@ -646,18 +646,6 @@
 	transform: rotate(180deg);
 }
 
-/* =============================
-   Board
-   ============================= */
-
-/* Container must also share properties, or it isn't resized properly on window resize. */
-.canvas-container,
-.board-canvas {
-	display: block;
-	width: 100%;
-	height: 100%;
-}
-
 /* ========================
    Utility classes
    ======================== */
