@@ -10,7 +10,7 @@
 
 import perspective from '../rendering/perspective.js';
 import preferences from '../../components/header/preferences.js';
-import { listener_document } from '../chess/game.js';
+import { listener_document } from '../chess/gamecore.js';
 import { Mouse, MouseButton } from '../input.js';
 
 /**

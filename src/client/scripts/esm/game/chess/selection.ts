@@ -46,7 +46,7 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
-import { listener_overlay } from './game.js';
+import { listener_overlay } from './gamecore.js';
 
 // Types -----------------------------------------------------------------------------
 

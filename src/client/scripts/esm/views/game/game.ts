@@ -4,9 +4,9 @@
  * Client entry for the game page (/game/:id).
  */
 
-import game from '../../game/chess/game.js';
 import webgl from '../../game/rendering/webgl.js';
 import camera from '../../game/rendering/camera.js';
+import gamecore from '../../game/chess/gamecore.js';
 import socketman from '../../websocket/socketman.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import socketsubs from '../../websocket/socketsubs.js';
@@ -28,7 +28,7 @@ const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
 function start(): void {
 	const gl = webgl.init(canvas); // Initiate the WebGL context. This is our web-based render engine.
 	camera.init(gl, canvas); // Initiates the camera/projection/model matrix uniforms.
-	game.init(canvas);
+	gamecore.init(canvas);
 
 	initListeners();
 
@@ -57,7 +57,7 @@ function initListeners(): void {
 export function gameLoop(runtime: number): void {
 	loadbalancer.update(runtime); // Updates fps, delta time, etc..
 
-	game.update(); // Always update the game, far cheaper than rendering.
+	gamecore.update(); // Always update the game, far cheaper than rendering.
 
 	render();
 
@@ -78,7 +78,7 @@ function render(): void {
 	webgl.clearScreen(); // Clear the color + depth buffers
 	maskedDraw.onFrameStart(); // Reset stencil bit-pair index for this frame
 
-	game.render();
+	gamecore.render();
 
 	frametracker.onFrameRender();
 }

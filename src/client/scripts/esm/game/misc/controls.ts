@@ -31,7 +31,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/gamecore.js';
 
 // Constants -------------------------------------------------------------------
 

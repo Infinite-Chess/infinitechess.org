@@ -9,7 +9,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import config from '../config.js';
 import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/gamecore.js';
 
 // Variables -------------------------------------------------------------
 

@@ -13,9 +13,9 @@ import area from '../rendering/area.js';
 import meshes from '../rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
+import gamecore from './gamecore.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
-import game from './game.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ function setSessionGame(gameSession: GameSession): void {
 function markLoading(): void {
 	// console.log('START loading.');
 	loading = true;
-	game.getOverlay().classList.add('visibility-hidden');
+	gamecore.getOverlay().classList.add('visibility-hidden');
 }
 
 /**
@@ -95,7 +95,7 @@ function markLoading(): void {
 function markLoadingDone(): void {
 	// console.log('Game fully loaded.');
 	loading = false;
-	game.getOverlay().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
+	gamecore.getOverlay().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
 }
 

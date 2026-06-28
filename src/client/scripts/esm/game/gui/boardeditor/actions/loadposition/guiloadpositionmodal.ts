@@ -5,7 +5,7 @@
  * Accepts a generic onConfirm callback so it stays decoupled from the list and save-form modules.
  */
 
-import { listener_document } from '../../../../chess/game';
+import { listener_document } from '../../../../chess/gamecore';
 
 // Types -------------------------------------------------------------------------
 

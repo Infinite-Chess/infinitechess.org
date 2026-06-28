@@ -17,7 +17,7 @@ import holdrepeat from '../../util/holdrepeat.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import { listener_document } from '../chess/game.js';
+import { listener_document } from '../chess/gamecore.js';
 
 // Elements ----------------------------------------------------------------------------------
 

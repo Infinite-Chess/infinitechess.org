@@ -7,7 +7,7 @@
  * when hovering over the selection area's edges or fill handle.
  */
 
-import game from '../../../chess/game';
+import gamecore from '../../../chess/gamecore';
 
 // Types ----------------------------------------------------
 
@@ -39,7 +39,7 @@ function removeCursor(cursor: Cursor): void {
 
 /** Updates the current cursor style, if needed, to the highest priority active style. */
 function updateCursor(): void {
-	const overlay = game.getOverlay();
+	const overlay = gamecore.getOverlay();
 
 	// Set cursor to default if no cursor styles are active
 	if (current.size === 0) {

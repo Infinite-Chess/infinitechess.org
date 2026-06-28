@@ -13,7 +13,7 @@ import drawingtool from './drawingtool.js';
 import perspective from '../../rendering/perspective.js';
 import edithistory from '../edithistory.js';
 import selectiontool from './selection/selectiontool.js';
-import { listener_document } from '../../chess/game.js';
+import { listener_document } from '../../chess/gamecore.js';
 
 // Types ----------------------------------------------------------------------
 

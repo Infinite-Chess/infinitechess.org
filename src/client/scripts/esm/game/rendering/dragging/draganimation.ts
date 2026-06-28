@@ -35,7 +35,7 @@ import texturecache from '../../../chess/rendering/texturecache.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../instancedshapes.js';
-import { listener_overlay } from '../../chess/game.js';
+import { listener_overlay } from '../../chess/gamecore.js';
 import { createRenderable, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------------------------------

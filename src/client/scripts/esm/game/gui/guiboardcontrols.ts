@@ -28,7 +28,7 @@ import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
-import { listener_document, listener_overlay } from '../chess/game.js';
+import { listener_document, listener_overlay } from '../chess/gamecore.js';
 
 // Elements ----------------------------------------------------------------------------------
 

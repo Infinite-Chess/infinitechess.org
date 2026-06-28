@@ -13,7 +13,7 @@ import { players as p } from '../../../../../../../shared/chess/util/typeutil';
 import eactions from '../../../boardeditor/actions/eactions';
 import gameslot from '../../../chess/gameslot';
 import guifloatingwindow from '../guifloatingwindow';
-import { listener_document } from '../../../chess/game';
+import { listener_document } from '../../../chess/gamecore';
 
 // Types -------------------------------------------------------------
 

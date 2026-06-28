@@ -27,7 +27,7 @@ import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
 import guipositionheader from '../../../gui/boardeditor/guipositionheader';
-import { listener_document, listener_overlay } from '../../../chess/game';
+import { listener_document, listener_overlay } from '../../../chess/gamecore';
 
 // State ----------------------------------------------
 

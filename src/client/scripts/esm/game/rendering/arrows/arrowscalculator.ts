@@ -49,7 +49,7 @@ import movehints from '../highlights/movehints.js';
 import boardtiles from '../boardtiles.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
-import { listener_overlay } from '../../chess/game.js';
+import { listener_overlay } from '../../chess/gamecore.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
 // Types -------------------------------------------------------------------------------

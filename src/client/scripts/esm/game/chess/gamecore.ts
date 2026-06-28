@@ -1,9 +1,8 @@
-// src/client/scripts/esm/game/chess/game.ts
+// src/client/scripts/esm/game/chess/gamecore.ts
 
 /**
- * This script prepares our game.
- *
- * And contains our main update() and render() methods
+ * This script runs the update and render loops of the interactive game.
+ * Shared across multiple pages (game, analysis, editor...).
  */
 
 import type { Mesh } from '../rendering/piecemodels.js';
