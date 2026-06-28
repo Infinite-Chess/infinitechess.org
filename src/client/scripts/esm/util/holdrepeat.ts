@@ -33,9 +33,9 @@ function makeHoldRepeatable(
 
 	/** Starts the hold-delay → repeat-interval chain, gated by `stillHeld`. */
 	function beginRepeat(stillHeld: () => boolean): void {
-		timeoutID = setTimeout(() => {
+		timeoutID = window.setTimeout(() => {
 			if (!stillHeld()) return;
-			intervalID = setInterval(onFire, repeatInterval);
+			intervalID = window.setInterval(onFire, repeatInterval);
 		}, holdDelay);
 	}
 
