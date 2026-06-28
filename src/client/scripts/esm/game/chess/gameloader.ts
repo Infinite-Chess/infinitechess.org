@@ -103,7 +103,7 @@ async function startEngineGame(options: {
 			// Logical loaded, return graphical promise
 
 			/** A promise that resolves when the engine script has been fetched. */
-			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+			await enginegame.initEngineGame(options);
 
 			return graphical;
 		})
@@ -212,7 +212,7 @@ async function startCustomEngineGame(options: {
 			// Logical loaded, return graphical promise
 
 			/** A promise that resolves when the engine script has been fetched. */
-			await enginegame.initEngineGame(options).then(() => enginegame.onMovePlayed()); // Without this, the engine won't start calculating moves if it's first to move.
+			await enginegame.initEngineGame(options);
 
 			return graphical;
 		})
