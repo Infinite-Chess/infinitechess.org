@@ -32,6 +32,8 @@ interface GameBusEvents {
 	 * draw, board editor edit) to release it, since pinching takes priority.
 	 */
 	'steal-pointer': { pointerId: string };
+	/** Fire when the keybind assigned to toggling the engine debug mode is pressed. */
+	'engine-debug': void;
 	// =========== Graphical Events ===========
 	'render-below-pieces': void;
 	'render-above-pieces': void;

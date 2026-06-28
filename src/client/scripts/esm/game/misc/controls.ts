@@ -24,7 +24,6 @@ import animation from '../rendering/animation.js';
 import miniimage from '../rendering/miniimage.js';
 import { Mouse } from '../input.js';
 import Transition from '../rendering/transitions/Transition.js';
-import enginegame from './enginegame.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -238,7 +237,7 @@ function deccelerateScaleVel(scaleVel: number): number {
 function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit3')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
-	if (listener_document.isKeyDown('Digit5')) enginegame.toggleDebug(); // Render engine generated legal moves
+	if (listener_document.isKeyDown('Digit5')) GameBus.dispatch('engine-debug'); // Render engine generated legal moves
 }
 
 /** Debug toggles that are only for in a game. */
