@@ -28,6 +28,7 @@ import animation from '../rendering/animation.js';
 import selection from './selection.js';
 import boarddrag from '../rendering/boarddrag.js';
 import starfield from '../rendering/starfield.js';
+import gamesound from '../misc/gamesound.js';
 import highlights from '../rendering/highlights/highlights.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import dragarrows from '../rendering/dragging/dragarrows.js';
@@ -103,6 +104,18 @@ function init(canvas: HTMLCanvasElement): void {
 		const { width, height } = event.detail;
 		pipeline.resize(width, height);
 	});
+
+	preloadSounds();
+}
+
+/** Preloads all game sounds so they are ready to play without delay. */
+function preloadSounds(): void {
+	gamesound.preload('move');
+	gamesound.preload('capture');
+	gamesound.preload('bell');
+	gamesound.preload('ripple_a3');
+	gamesound.preload('base_staccato_c2');
+	gamesound.preload('low_time');
 }
 
 // Update the game every single frame

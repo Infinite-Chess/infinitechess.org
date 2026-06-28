@@ -27,7 +27,7 @@ import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../rendering/frametracker.js';
-import guinavigation from '../gui/guinavigation.js';
+import guimoveslist from '../gui/guimoveslist.js';
 import { animateMove, meshChanges } from './graphicalchanges.js';
 
 // Global Moving ----------------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ function makeMove(
 	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 
 	// GUI changes
-	guinavigation.update_MoveButtons();
+	guimoveslist.updateNavButtons();
 
 	// Push the clocks locally if we're in an engine game.
 	// The server handles clocks for online games.
@@ -115,7 +115,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
-	guinavigation.update_MoveButtons();
+	guimoveslist.updateNavButtons();
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }
@@ -153,12 +153,16 @@ function viewIndex(gamefile: GameFile, mesh: Mesh | undefined, index: number): v
 	movepiece.goToMove(gamefile, index, (move: MoveFull) =>
 		viewMove(gamefile, mesh, move, index >= gamefile.state.local.moveIndex),
 	);
-	guinavigation.update_MoveButtons();
+	guimoveslist.updateNavButtons();
 }
 
-/**
- * Makes the game view the last move
- */
+/** Makes the game view the start of the game, before the first move. */
+function viewStart(gamefile: GameFile, mesh: Mesh | undefined): void {
+	/** Call {@link viewIndex} with the index before the first move */
+	viewIndex(gamefile, mesh, -1);
+}
+
+/** Makes the game view the last move. */
 function viewFront(gamefile: GameFile, mesh: Mesh | undefined): void {
 	/** Call {@link viewIndex} with the index of the last move in the game */
 	viewIndex(gamefile, mesh, gamefile.moves.length - 1);
@@ -185,7 +189,7 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	animateMove(move.changes, forward); // Animate
-	guinavigation.update_MoveButtons();
+	guimoveslist.updateNavButtons();
 }
 
 // --------------------------------------------------------------------------------------------------------------------------
@@ -196,6 +200,7 @@ export default {
 	makeMoveAndAnimate,
 	rewindMove,
 	viewMove,
+	viewStart,
 	viewFront,
 	viewIndex,
 	runMeshChanges,

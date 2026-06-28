@@ -28,7 +28,7 @@ import enginegame from './enginegame.js';
 import perspective from '../rendering/perspective.js';
 import piecemodels from '../rendering/piecemodels.js';
 import guipromotion from '../gui/guipromotion.js';
-import guinavigation from '../gui/guinavigation.js';
+import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
 import { listener_document, listener_overlay } from '../chess/game.js';
@@ -257,7 +257,7 @@ function testInGameToggles(gamefile: GameFile, mesh: Mesh | undefined): void {
 	}
 	if (listener_document.isKeyDown('KeyP')) miniimage.toggle();
 
-	guinavigation.update();
+	guimoveslist.update();
 }
 
 // Exports ---------------------------------------------------------------------------------
