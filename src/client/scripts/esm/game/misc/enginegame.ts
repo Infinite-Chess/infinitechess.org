@@ -63,10 +63,6 @@ GameBus.addEventListener('game-concluded', () => {
 
 // Functions ------------------------------------------------------------------------
 
-function getCurrentEngine(): string | undefined {
-	return currentEngine;
-}
-
 /**
  * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
  * This method launches an engine webworker for the current game.
@@ -330,11 +326,8 @@ function render(): void {
 // Export ---------------------------------------------------------------------------------
 
 export default {
-	getCurrentEngine,
 	initEngineGame,
 	onMovePlayed,
-	toggleDebug,
-	render,
 	onViewMove,
 };
 
