@@ -56,6 +56,7 @@ const pendingDebugRequests: number[] = [];
 GameBus.addEventListener('engine-debug', () => toggleDebug());
 GameBus.addEventListener('render-below-pieces', () => render());
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
+GameBus.addEventListener('view-move', () => onViewMove());
 GameBus.addEventListener('game-concluded', () => {
 	if (!inEngineGame) return;
 	checkmatepractice.onEngineGameConclude();
@@ -331,7 +332,6 @@ function render(): void {
 export default {
 	initEngineGame,
 	onMovePlayed,
-	onViewMove,
 };
 
 export type { EngineConfig };

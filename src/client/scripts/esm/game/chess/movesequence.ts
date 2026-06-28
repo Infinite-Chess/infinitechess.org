@@ -22,7 +22,6 @@ import guiclock from '../gui/guiclock.js';
 import { Mesh } from '../rendering/piecemodels.js';
 import premoves from './premoves.js';
 import animation from '../rendering/animation.js';
-import enginegame from '../misc/enginegame.js';
 import piecemodels from '../rendering/piecemodels.js';
 import { GameBus } from '../GameBus.js';
 import gamesession from './gamesession.js';
@@ -142,7 +141,7 @@ function viewMove(
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
-	enginegame.onViewMove();
+	GameBus.dispatch('view-move');
 }
 
 /**

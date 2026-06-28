@@ -26,6 +26,8 @@ interface GameBusEvents {
 	'user-move-played': void;
 	/** Dispatched when a physical move is made on the board by any player, even our own premoves, or making a board editor edit. */
 	'physical-move': void;
+	/** Dispatched when a move is locally viewed (navigated to), forward or backward, without changing game state. */
+	'view-move': void;
 	/**
 	 * Dispatched when the board is about to be pinched. Tells any
 	 * single-pointer action using the given pointer (piece drag, annotation
