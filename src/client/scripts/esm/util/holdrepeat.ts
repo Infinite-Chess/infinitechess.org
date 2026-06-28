@@ -35,7 +35,12 @@ function makeHoldRepeatable(
 	function beginRepeat(stillHeld: () => boolean): void {
 		timeoutID = window.setTimeout(() => {
 			if (!stillHeld()) return;
-			intervalID = window.setInterval(onFire, repeatInterval);
+			intervalID = window.setInterval(() => {
+				// A button disabled mid-hold swallows its own mouseup/touchend, so
+				// the disabled state is our only reliable signal the hold should end.
+				if (element.matches(':disabled')) stopRepeat();
+				else onFire();
+			}, repeatInterval);
 		}, holdDelay);
 	}
 
