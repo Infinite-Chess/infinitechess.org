@@ -767,6 +767,7 @@ function LongToShort_Format(
 			make_new_lines: options.make_new_lines,
 			turnOrder: longformat.gameRules.turnOrder,
 			fullmove: longformat.fullMove,
+			abbrev: true, // Only applies when compact = false, so safe to hardcode true
 		};
 		segments.push(getShortFormMovesFromMoves(longformat.moves, move_options));
 	}
@@ -1222,10 +1223,16 @@ function getCompactMoveFromParts(
  *     IF FALSE THEN THE MOVES must have their `type` and `flags` properties!!!
  * spaces => Spaces between segments of a move => 'P1,7 x 2,8 =Q +'
  * comments => Include move comments and clk embeded command sequences => 'P1,7x2,8=Q+{[%clk 0:09:56.7] Capture, promotion, and a check!}'
+ * abbrev => Prepend the moved piece's abbreviation to the start coords. Default true; ONLY APPLIES when compact is false => '1,7x2,8=Q+'
  */
 function getShortFormMoveFromMove(
 	move: MovePreprint,
-	options: { compact: boolean; spaces: boolean; comments: boolean },
+	options: {
+		compact: boolean;
+		spaces: boolean;
+		comments: boolean;
+		abbrev: boolean;
+	},
 ): string {
 	// console.log("Options for getShortFormMoveFromMove:", options);
 
@@ -1252,8 +1259,9 @@ function getShortFormMoveFromMove(
 	if (options.compact)
 		segments.push(startCoordsKey); // '1,2'
 	else {
-		const pieceAbbr = getAbbrFromType(move.type!);
-		segments.push(pieceAbbr + startCoordsKey); // 'P1,2'
+		// Default to including the piece abbreviation unless explicitly disabled.
+		const pieceAbbr = options.abbrev === false ? '' : getAbbrFromType(move.type!);
+		segments.push(pieceAbbr + startCoordsKey); // 'P1,2' | '1,2'
 	}
 
 	// 2nd segment: If it was a capture, use 'x' instead of '>'
@@ -1363,7 +1371,7 @@ function getParsedMoveFromNamedCapturedMoveGroups(
  */
 function getShortFormMovesFromMoves(
 	moves: MovePreprint[],
-	options: { compact: boolean; spaces: boolean; comments: boolean } & (
+	options: { compact: boolean; spaces: boolean; comments: boolean; abbrev: boolean } & (
 		| { move_numbers: false }
 		| { move_numbers: true; turnOrder: Player[]; fullmove: number; make_new_lines: boolean }
 	),
@@ -1402,6 +1410,7 @@ function getShortFormMovesFromMoves_MoveNumbers(
 		spaces: boolean;
 		comments: boolean;
 		make_new_lines: boolean;
+		abbrev: boolean;
 	},
 ): string {
 	/**
@@ -1641,6 +1650,7 @@ export default {
 	generateSpecialRights,
 	generatePositionFromShortForm,
 
+	getShortFormMoveFromMove,
 	getShortFormMovesFromMoves,
 	parseShortFormMoves,
 

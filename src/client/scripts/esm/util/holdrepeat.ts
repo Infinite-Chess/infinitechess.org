@@ -16,7 +16,7 @@ interface HoldRepeatOptions {
 }
 
 const DEFAULT_HOLD_DELAY = 250;
-const DEFAULT_REPEAT_INTERVAL = 50;
+const DEFAULT_REPEAT_INTERVAL = 60;
 
 /** Makes `element` fire `onFire` on click, and auto-repeat `onFire` while held. */
 function makeHoldRepeatable(

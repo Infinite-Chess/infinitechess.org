@@ -374,7 +374,7 @@
 .ply {
 	display: flex;
 	align-items: center;
-	gap: 0.3em;
+	gap: 2px;
 	height: 26px;
 	min-width: 0;
 	padding: 0px 6px;
@@ -382,13 +382,10 @@
 	font: inherit;
 	font-size: 0.9em;
 	color: var(--c-text);
-}
-
-.ply:not(.empty) {
 	cursor: pointer;
 }
 
-.ply:not(.empty):hover {
+.ply:hover {
 	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
 }

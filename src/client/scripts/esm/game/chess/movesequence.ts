@@ -50,6 +50,9 @@ function makeMove(
 
 	// GUI changes
 	guimoveslist.updateNavButtons();
+	// Forward chokepoint for the committed move list. MUST stay above the game-over checks: its reconcile
+	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
+	GameBus.dispatch('moves-changed');
 
 	// Push the clocks locally if we're in an engine game.
 	// The server handles clocks for online games.
@@ -115,6 +118,7 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// Un-conclude the game if it was concluded
 	if (gamefileutility.isGameOver(gamefile)) gamefile.gameConclusion = undefined;
 	guimoveslist.updateNavButtons();
+	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
 
 	premoves.cancelPremoves(gamefile, mesh); // Any move change invalidates all premoves.
 }

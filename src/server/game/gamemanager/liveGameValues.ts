@@ -39,6 +39,7 @@ function getMovesString(servergame: ServerGame): string {
 		spaces: false,
 		comments: !servergame.untimed,
 		move_numbers: false,
+		abbrev: true, // Irrelevant here — only applies when compact is false.
 	});
 }
 
