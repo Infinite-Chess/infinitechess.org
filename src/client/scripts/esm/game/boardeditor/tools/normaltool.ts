@@ -17,6 +17,7 @@ import movepiece from '../../../../../../shared/chess/logic/movepiece';
 import boardutil from '../../../../../../shared/chess/util/boardutil';
 import coordutil from '../../../../../../shared/chess/util/coordutil';
 
+import selection from '../../chess/selection';
 import edithistory from '../edithistory';
 import { GameBus } from '../../GameBus';
 import movesequence from '../../chess/movesequence';
@@ -70,6 +71,11 @@ function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
 
 	return edit;
 }
+
+// Registration ---------------------------------------------------------------
+
+// Override selection's default move logic with the editor's on load.
+selection.setEditorMoveHandler(makeMoveEdit);
 
 // Exports --------------------------------------------------------------------
 

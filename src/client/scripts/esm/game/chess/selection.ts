@@ -9,7 +9,11 @@ import type { Mesh } from '../rendering/piecemodels.js';
 import type { Piece } from '../../../../../shared/chess/util/boardutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
-import type { CoordsTagged, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type {
+	CoordsTagged,
+	MoveTagged,
+	Edit,
+} from '../../../../../shared/chess/logic/movepiece.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -33,7 +37,6 @@ import keybinds from '../misc/keybinds.js';
 import { Mouse } from '../input.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import Transition from '../rendering/transitions/Transition.js';
-import normaltool from '../boardeditor/tools/normaltool.js';
 import gamesession from './gamesession.js';
 import preferences from '../../components/header/preferences.js';
 import perspective from '../rendering/perspective.js';
@@ -44,6 +47,14 @@ import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
 import { listener_overlay } from './game.js';
+
+// Types -----------------------------------------------------------------------------
+
+/**
+ * Executes a move and returns its resulting edit.
+ * The board editor may inject its own implementation to override the default move logic.
+ */
+type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: MoveTagged) => Edit;
 
 // Variables -----------------------------------------------------------------------------
 
@@ -68,6 +79,9 @@ let hoverSquareLegal: boolean = false;
 let pawnIsPromotingOn: CoordsTagged | undefined;
 /** When a promotion UI piece is selected, this is set to the promotion you selected. */
 let promoteTo: number | undefined;
+
+/** The move logic override, if registered. The board editor may register one. */
+let moveHandler: MoveHandler | undefined;
 
 // Events ----------------------------------------------------------------------------------------
 
@@ -125,6 +139,11 @@ function getSquarePawnIsCurrentlyPromotingOn(): CoordsTagged | undefined {
  */
 function promoteToType(type: number): void {
 	promoteTo = type;
+}
+
+/** Overrides the default move logic with the provided handler. */
+function setEditorMoveHandler(handler: MoveHandler): void {
+	moveHandler = handler;
 }
 
 // Updating ---------------------------------------------------------------------------------------------
@@ -505,11 +524,10 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	const wasBeingDragged = draganimation.areDraggingPiece();
 
 	const changes =
-		gamesession.getGameType() === 'editor'
-			? normaltool.makeMoveEdit(gamefile, mesh, moveTagged).changes
-			: isPremove
-				? premoves.addPremove(gamefile, mesh, moveTagged).changes
-				: movesequence.makeMove(gamefile, mesh, moveTagged).changes;
+		moveHandler?.(gamefile, mesh, moveTagged).changes ??
+		(isPremove
+			? premoves.addPremove(gamefile, mesh, moveTagged).changes
+			: movesequence.makeMove(gamefile, mesh, moveTagged).changes);
 
 	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
@@ -569,6 +587,7 @@ function renderGhostPiece(): void {
 export default {
 	isAPieceSelected,
 	getPieceSelected,
+	setEditorMoveHandler,
 	reselectPiece,
 	unselectPiece,
 	getLegalMovesOfSelectedPiece,

@@ -25,6 +25,8 @@ import selectiontool from './tools/selection/selectiontool.js';
 import EDITOR_PROFILE from './ekeybinds.js';
 import guipositionheader from '../gui/boardeditor/guipositionheader.js';
 
+import './tools/normaltool.js'; // Self-registers its move logic with selection.ts on load
+
 // Types ------------------------------------------------------------------------
 
 /** The active position loaded in the board editor, if any. */
