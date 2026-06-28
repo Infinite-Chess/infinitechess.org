@@ -54,6 +54,7 @@ const pendingDebugRequests: number[] = [];
 // Events -----------------------------------------------------------------------
 
 GameBus.addEventListener('engine-debug', () => toggleDebug());
+GameBus.addEventListener('render-below-pieces', () => render());
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
 GameBus.addEventListener('game-concluded', () => {
 	if (!inEngineGame) return;

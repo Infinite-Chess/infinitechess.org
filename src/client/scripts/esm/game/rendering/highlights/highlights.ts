@@ -16,7 +16,6 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import boardpos from '../boardpos.js';
 import premoves from '../../chess/premoves.js';
 import movehints from './movehints.js';
-import enginegame from '../../misc/enginegame.js';
 import annotations from './annotations/annotations.js';
 import preferences from '../../../components/header/preferences.js';
 import checkhighlight from './checkhighlight.js';
@@ -45,7 +44,6 @@ function render(boardsim: Board): void {
 	// Needs to render EVEN if zoomed out (different mode)
 	annotations.render_belowPieces(); // The square highlights added by the user
 	movehints.render(); // Individual legal move hints when in check
-	enginegame.render(); // Engine games can render a debug of engine generated moves
 }
 
 /** Highlights the start and end squares of the most recently played move. */
