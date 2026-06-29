@@ -193,25 +193,16 @@
 					</div>
 				</div>
 
-				{# Game actions — SSR'd skeletons; only one is visible at a time. actions-over is always
-				   present (every game reaches it); the live-only blocks (actions-live + actions-draw-offer)
-				   are omitted once the game is over (can't return to live). SSR un-hides actions-live
-				   during live play, else actions-over once concluded. The client toggles `.hidden` among
-				   them as state changes — including hiding actions-live and revealing actions-over on live
-				   end. #}
+				{# Game actions — only one is visible at a time. Managed by guigameactions.ts #}
 				<div class="game-actions unselectable">
-					{# Live-only actions (actions-live + the incoming draw-offer prompt) — omitted entirely
-					   once the game is over, since neither can occur in a concluded game (a game can't
-					   return to live), so they won't be found on a game that loaded concluded. #}
+					{# Live-only actions (actions-live + the incoming draw-offer prompt) #}
 					{% if not meta.result %}
-					{# Default live-game actions: offer draw + resign/abort. Visible during live play,
-					   else `.hidden` (stale `isLive` hint — client reveals it once it confirms live). #}
+					{# Default live-game actions: offer draw + resign/abort. Visible during live play. #}
 					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
 						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw"{% if not meta.resignable %} disabled{% endif %}>
 							<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></svg>
 						</button>
-						{# Resign / Abort share one slot (mutually exclusive).
-						The client shows abort while resignable (0–1 plies), resign otherwise. #}
+						{# Resign / Abort share one slot (mutually exclusive) #}
 						<button class="action-btn tooltip-d{{ '' if not meta.resignable else ' hidden'}}" id="btn-abort" data-tooltip="Abort">
 							<svg class="action-icon"><use href="#svg-x"/></svg>
 						</button>
@@ -219,8 +210,7 @@
 							<svg class="action-icon"><use href="#svg-flag"/></svg>
 						</button>
 					</div>
-					{# Incoming draw offer — static skeleton, always `.hidden`; structure is fixed, so
-					   the client only reveals/hides it as offers arrive and resolve (never rebuilds it). #}
+					{# Incoming draw offer #}
 					<div class="actions-draw-offer hidden">
 						<span class="draw-offer-label">Accept draw offer?</span>
 						<div class="draw-offer-buttons">
@@ -231,7 +221,7 @@
 						</div>
 					</div>
 					{% endif %}
-					{# Post-game actions: rematch + analysis. `.hidden` until the game is over. #}
+					{# Post-game actions: rematch + analysis. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
 						<button class="action-btn" id="btn-rematch">Rematch</button>
 						<button class="action-btn" id="btn-analysis">Analysis</button>

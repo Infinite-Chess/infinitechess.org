@@ -97,6 +97,43 @@ function updateResignAbortButtons(): void {
 	element_Abort.classList.toggle('hidden', resignable);
 }
 
+// Two-click confirmation ---------------------------------------------------------------------
+
+const CONFIRM_REVERT_MILLIS = 3000;
+
+/** Buttons mid-confirmation, mapped to their pending auto-revert timer. */
+const confirmTimers = new Map<HTMLElement, number>();
+
+/**
+ * Wraps a one-click action behind a two-click confirmation. The first click
+ * adds the `confirming` class (a purely visual cue) and arms a 3s auto-revert;
+ * a second click within that window clears the state and runs `action`.
+ */
+function withConfirmation(button: HTMLElement, action: () => void): () => void {
+	return (): void => {
+		if (confirmTimers.has(button)) {
+			// Second click: confirm.
+			clearConfirmation(button);
+			action();
+			return;
+		}
+		// First click: arm the confirmation.
+		button.classList.add('confirming');
+		confirmTimers.set(
+			button,
+			window.setTimeout(() => clearConfirmation(button), CONFIRM_REVERT_MILLIS),
+		);
+	};
+}
+
+/** Reverts a button out of its confirming state, cancelling any pending auto-revert. */
+function clearConfirmation(button: HTMLElement): void {
+	const timer = confirmTimers.get(button);
+	if (timer !== undefined) clearTimeout(timer);
+	confirmTimers.delete(button);
+	button.classList.remove('confirming');
+}
+
 // Button handlers ----------------------------------------------------------------------------
 
 /** Extends a draw offer, if legal. */
@@ -134,9 +171,11 @@ function callback_Rematch(): void {
 
 /** Wires the click listeners for every `.game-actions` button present in the DOM. */
 function initListeners(): void {
-	element_OfferDraw?.addEventListener('click', callback_OfferDraw);
+	if (element_OfferDraw)
+		element_OfferDraw.addEventListener('click', withConfirmation(element_OfferDraw, callback_OfferDraw)); // prettier-ignore
 	element_Abort?.addEventListener('click', callback_Abort);
-	element_Resign?.addEventListener('click', callback_Resign);
+	if (element_Resign)
+		element_Resign.addEventListener('click', withConfirmation(element_Resign, callback_Resign)); // prettier-ignore
 
 	element_AcceptDraw?.addEventListener('click', drawoffers.callback_AcceptDraw);
 	element_RejectDraw?.addEventListener('click', drawoffers.callback_declineDraw);
