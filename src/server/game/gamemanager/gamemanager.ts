@@ -63,11 +63,12 @@ const activeGames: Record<number, ServerGame> = {};
 // Functions -----------------------------------------------------------------------------------
 
 /**
- * Creates the `ServerGame` object and subscibes each player to the game
- * Auto-subscribes the players to receive game updates.
+ * Creates and persists the `ServerGame`, then signals each connected player's lobby
+ * client to navigate to the game page (where they re-subscribe to the live game),
+ * arming a silent disconnect cushion in the meantime.
  * @param seek - The seek with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
  * @param assignments - The color each player has
- * @throws If a database error occurs (from {@link gameutility.subscribeClientToGame}).
+ * @throws If a database error occurs (from {@link liveGameValues.onGameCreated}).
  */
 function createGame(
 	seek: AuthSeek,
@@ -98,17 +99,6 @@ function createGame(
 		validateMoves,
 		variant,
 	);
-	for (const [strcolor, { socket }] of Object.entries(assignments)) {
-		const player = Number(strcolor) as Player;
-		if (socket) {
-			gameutility.subscribeClientToGame(servergame, socket, player);
-			// Tell the player's lobby client to navigate to the game page. They
-			// re-subscribe to the live game there; the navigation closes this socket
-			// starting the silent disconnect cushion that their re-subscribe cancels.
-			sendSocketMessage(socket, 'lobby', 'gamestart', servergame.match.id);
-		} else startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
-	}
-
 	for (const data of Object.values(match.playerData)) {
 		addUserToActiveGames(data.identifier, servergame.match.id);
 	}
@@ -116,7 +106,22 @@ function createGame(
 	activeGames[servergame.match.id] = servergame;
 
 	// Persist the new game to the database for restoration after server restart.
+	// Must precede the per-player cushion below, which persists disconnect
+	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
+
+	for (const [strcolor, { socket }] of Object.entries(assignments)) {
+		const player = Number(strcolor) as Player;
+		if (socket) {
+			// Tell the player's lobby client to navigate to the game page, where they re-subscribe
+			// to the live game. Arm the silent disconnect cushion up front: the re-subscribe
+			// cancels it, while a no-show (e.g. tab close) auto-resigns after the cushion.
+			sendSocketMessage(socket, 'lobby', 'gamestart', servergame.match.id);
+			startDisconnectCushionTimerAndPersist(servergame, player);
+		} else {
+			startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
+		}
+	}
 
 	if (PRINT_GAMES) {
 		console.log('Starting new game:');
