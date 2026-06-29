@@ -12,6 +12,8 @@ dismiss_button = "I'm experienced"
 title = "Lobby" 
 viewer_count = "Viewer count (other than you)"
 idle_overlay = "Hover to reconnect."
+ingame_banner = "You're already in a game."
+ingame_join = "Rejoin game"
 
 [lobby.table]
 player = "Player"

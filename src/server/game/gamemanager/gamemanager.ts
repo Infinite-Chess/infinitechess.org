@@ -31,6 +31,7 @@ import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
 import { produceDeadStaticGameState } from './deadgamestate.js';
+import { broadcastMemberInGameStatus } from '../seeksmanager/lobbymanager.js';
 import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	addUserToActiveGames,
@@ -110,15 +111,14 @@ function createGame(
 	// state and therefore requires the game row to already exist.
 	liveGameValues.onGameCreated(servergame);
 
-	for (const [strcolor, { socket }] of Object.entries(assignments)) {
+	for (const [strcolor, { identifier }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		if (socket) {
-			// Tell the player's lobby client they're now in a game; it navigates to
-			// the game page, where they re-subscribe to the live game. Arm the silent
-			// disconnect cushion up front: the re-subscribe cancels it, while a no-show
-			// (e.g. tab close) auto-resigns after the cushion.
-			sendSocketMessage(socket, 'lobby', 'ingame', servergame.match.id);
-		}
+		// Tell ALL of this member's lobby tabs they're now in a game; the tab that
+		// initiated navigates to the game page (re-subscribing to the live game),
+		// while any other open lobby tabs show the in-game banner.
+		broadcastMemberInGameStatus(identifier);
+		// Arm the silent disconnect cushion up front: the re-subscribe cancels it,
+		// while a no-show (e.g. tab close) auto-resigns after the cushion.
 		startDisconnectCushionTimerAndPersist(servergame, player);
 	}
 
@@ -303,6 +303,7 @@ function onRequestRemovalFromPlayersInActiveGames(
 
 	const user = ws.metadata.memberInfo;
 	removeUserFromActiveGame(user, servergame.match.id);
+	broadcastMemberInGameStatus(user); // Their clients may now hide their lobby in-game banner, if shown
 
 	// If both players have requested this (i.e. have seen the game conclusion),
 	// and the game is scheduled to be deleted, just delete it now!
@@ -533,6 +534,7 @@ function deleteGame(servergame: ServerGame): void {
 	// And remove them from the list of users in active games to allow them to join a new game.
 	for (const data of Object.values(servergame.match.playerData)) {
 		removeUserFromActiveGame(data.identifier, servergame.match.id);
+		broadcastMemberInGameStatus(data.identifier); // Their clients may now hide their lobby in-game banner, if shown
 		if (!data.socket) continue; // They don't have a socket connected.
 		// We inform their opponent they have disconnected inside js when we call this method.
 		// Tell the client to unsub on their end

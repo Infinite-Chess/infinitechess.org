@@ -58,8 +58,15 @@ type CreateSeekOptions = {
 // Constants ------------------------------------------
 
 const element_lobbyTbody = document.getElementById('lobby-tbody')!;
-const element_lobbyIdleOverlay = document.getElementById('lobby-idle-overlay')!;
+const element_lobbyIdleOverlay = document.getElementById('lobby-overlay')!;
+const element_lobbyIngameOverlay = document.getElementById('lobby-ingame-overlay')!;
+const element_lobbyIngameJoin = document.getElementById('lobby-ingame-join')!;
 const element_lobbyViewerCount = document.getElementById('lobby-viewer-count')!;
+/** Buttons disabled while the in-game banner is shown (the user must rejoin their game first). */
+const elements_disabledWhileInGame = [
+	document.getElementById('btn-create-game')!,
+	document.getElementById('btn-challenge-friend')!,
+];
 let tbodyVNode: VNode | Element = element_lobbyTbody;
 
 // Constants -----------------------------------------
@@ -82,6 +89,8 @@ const seekMap = new Map<string, OutSeek>();
 
 /** Whether the user is currently idle (lobby unsubbed, overlay visible). */
 let isIdle = false;
+/** Whether the in-a-game banner is currently shown (set by the server's 'ingame'/'outgame' pushes). */
+let inGameBannerShown = false;
 
 // Init -----------------------------------------------
 
@@ -207,9 +216,31 @@ async function onInGame(id: number): Promise<void> {
 		if (sound) await sound.whenEnded;
 		window.location.href = `/game/${uuid.base10ToBase62(id)}`;
 	} else {
-		// TODO: surface a "You're in a game — rejoin / resign" banner instead of just logging.
-		console.warn(`In game ${id} but didn't initiate it here; staying on the lobby.`);
+		// A fresh page-load while already in a game: stay on the lobby but show a banner
+		// letting them rejoin. The server pushes 'outgame' once we leave (see onOutGame).
+		showInGameBanner(id);
 	}
+}
+
+/** Called on the server's 'outgame' push — we've left our game, so hide the banner. */
+function onOutGame(): void {
+	hideInGameBanner();
+}
+
+/** Shows the "you're in a game" banner, pointing its rejoin link at game `id`. */
+function showInGameBanner(id: number): void {
+	inGameBannerShown = true;
+	element_lobbyIngameJoin.setAttribute('href', `/game/${uuid.base10ToBase62(id)}`);
+	element_lobbyIngameOverlay.classList.remove('hidden');
+	for (const btn of elements_disabledWhileInGame) btn.setAttribute('disabled', '');
+}
+
+/** Hides the in-game banner. */
+function hideInGameBanner(): void {
+	if (!inGameBannerShown) return;
+	inGameBannerShown = false;
+	element_lobbyIngameOverlay.classList.add('hidden');
+	for (const btn of elements_disabledWhileInGame) btn.removeAttribute('disabled');
 }
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
@@ -284,6 +315,7 @@ function onLobbyIdle(): void {
 	if (ourSeekId !== undefined) return; // Keep subbed so seek-acceptance sounds reach them
 	isIdle = true;
 	unsubscribe();
+	hideInGameBanner();
 	showIdleOverlay();
 }
 
@@ -494,6 +526,7 @@ export default {
 	onSeekListUpdate,
 	onViewerCountUpdate,
 	onInGame,
+	onOutGame,
 	createSeek,
 	subscribe,
 	unsubscribe,

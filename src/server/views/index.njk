@@ -99,8 +99,15 @@
 				</h2>
 				<div class="lobby-wrap scrollbar-thin unselectable">
 					{# Idle overlay - shown after prolonged inactivity #}
-					<div id="lobby-idle-overlay" class="lobby-idle-overlay hidden">
+					<div id="lobby-overlay" class="lobby-overlay hidden">
 						<p>{{ t.lobby.idle_overlay }}</p>
+					</div>
+					{# In-game banner - shown when already in an active game #}
+					<div id="lobby-ingame-overlay" class="lobby-overlay hidden">
+						<div class="lobby-ingame-banner">
+							<p>{{ t.lobby.ingame_banner }}</p>
+							<a id="lobby-ingame-join" class="lobby-btn">{{ t.lobby.ingame_join }}</a>
+						</div>
 					</div>
 					{# Faint omega background - references symbol already defined in header.njk #}
 					<div class="omega-anchor">

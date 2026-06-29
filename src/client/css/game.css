@@ -344,13 +344,13 @@
 	height: 25px;
 }
 
-.move-btn:hover:not(:disabled) {
+.move-btn:hover {
 	color: var(--c-text-emphasis);
 	background: var(--c-hover-overlay);
 }
 
 .move-btn:disabled {
-	cursor: default;
+	pointer-events: none;
 }
 
 .moves-table {

@@ -225,6 +225,10 @@ html[data-home-prompt='dismissed'] .new-prompt {
 		0 1px 4px var(--c-shadow-elev);
 }
 
+.lobby-btn:disabled {
+	pointer-events: none;
+}
+
 .btn-icon {
 	width: 1.875em;
 	height: 1.875em;
@@ -397,10 +401,10 @@ svg.bg-omega {
 }
 
 /* ============================================================
-   Lobby idle overlay
+   Lobby idle/in-game overlay
    ============================================================ */
 
-.lobby-idle-overlay {
+.lobby-overlay {
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -411,9 +415,27 @@ svg.bg-omega {
 	text-align: center;
 }
 
-.lobby-idle-overlay p {
+.lobby-overlay p {
 	color: var(--c-text-muted);
 	font-size: 1.3em;
+}
+
+/* In-game banner */
+.lobby-ingame-banner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1em;
+	padding: 0 1em;
+}
+
+.lobby-ingame-banner p {
+	color: var(--c-text-emphasis);
+}
+
+.lobby-ingame-banner .lobby-btn {
+	min-height: 0;
+	text-decoration: none;
 }
 
 /* ============================================================

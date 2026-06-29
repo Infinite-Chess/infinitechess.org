@@ -41,6 +41,9 @@ function onLobbyMessage(contents: LobbyMessage): void {
 		case 'ingame':
 			void lobby.onInGame(contents.value);
 			break;
+		case 'outgame':
+			lobby.onOutGame();
+			break;
 		default:
 			// @ts-ignore
 			console.error(`Unknown lobby action: ${contents.action}`);

@@ -84,6 +84,20 @@ function broadcastSeeks(): void {
 }
 
 /**
+ * Broadcasts the member's current in-game status to ALL their lobby-subscribed sockets, so
+ * every open lobby tab shows/hides its in-game banner (or navigates). Call right after adding
+ * them to, or removing them from, the active games list.
+ */
+function broadcastMemberInGameStatus(user: AuthMemberInfo): void {
+	const gameID = getIDOfGamePlayerIsIn(user);
+	for (const ws of getLobbySubscribers()) {
+		if (!memberInfoEq(user, ws.metadata.memberInfo)) continue;
+		if (gameID !== undefined) sendSocketMessage(ws, 'lobby', 'ingame', gameID);
+		else sendSocketMessage(ws, 'lobby', 'outgame');
+	}
+}
+
+/**
  * Sends the full lobby snapshot state (seeks list + current viewer count) to a single client.
  * Called once when a socket first subscribes.
  * @param ws - The socket of the player to send the snapshot to.
@@ -302,6 +316,7 @@ export {
 	getSeekAndIndexByID,
 	deleteUsersExistingSeek,
 	findSocketFromOwner,
+	broadcastMemberInGameStatus,
 	onPublicSeeksChange,
 	IDLengthOfSeeks,
 };
