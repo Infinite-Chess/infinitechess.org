@@ -287,6 +287,7 @@ function deleteUsersExistingSeek(info: AuthMemberInfo, { broadCastNewSeeks = tru
 export {
 	subToLobby,
 	unsubFromLobby,
+	broadcastViewerCount,
 	existingSeekHasID,
 	addSeek,
 	deleteSeekByIndex,

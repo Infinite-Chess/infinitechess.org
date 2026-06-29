@@ -24,6 +24,7 @@ import {
 	deleteUsersExistingSeek,
 	findSocketFromOwner,
 	onPublicSeeksChange,
+	broadcastViewerCount,
 	IDLengthOfSeeks,
 } from './lobbymanager.js';
 
@@ -121,6 +122,7 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 	// Unsubscribe them both from the lobby.
 	if (player1Socket) removeSocketFromLobbySubs(player1Socket); // Could be undefined occasionally
 	removeSocketFromLobbySubs(player2Socket);
+	broadcastViewerCount(); // Notify the remaining lobby subscribers of the decremented viewer count
 
 	// Broadcast the seeks list change after creating the game,
 	// because the new game ups the game count.
