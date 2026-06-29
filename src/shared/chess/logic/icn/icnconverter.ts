@@ -2,12 +2,13 @@
 
 /**
  * Universal Infinite Chess Notation [Converter] and Interface
- * by Naviary and Andreas Tsevas
- * https://github.com/tsevasa/infinite-chess-notation
  *
  * This script converts games from a JSON notation to a
  * compact ICN (Infinite Chess Noation) and back,
  * still human-readable, but taking less space to describe positions.
+ *
+ * Old github version:
+ * https://github.com/tsevasa/infinite-chess-notation
  */
 
 import type { BaseRay } from '../../../util/math/geometry.js';
