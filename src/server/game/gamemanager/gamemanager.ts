@@ -117,10 +117,8 @@ function createGame(
 			// to the live game. Arm the silent disconnect cushion up front: the re-subscribe
 			// cancels it, while a no-show (e.g. tab close) auto-resigns after the cushion.
 			sendSocketMessage(socket, 'lobby', 'gamestart', servergame.match.id);
-			startDisconnectCushionTimerAndPersist(servergame, player);
-		} else {
-			startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
 		}
+		startDisconnectCushionTimerAndPersist(servergame, player);
 	}
 
 	if (PRINT_GAMES) {
