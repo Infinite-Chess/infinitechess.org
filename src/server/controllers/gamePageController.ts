@@ -13,6 +13,7 @@ import type { StaticGameState } from '../../shared/types.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
 
 import timeutil from '../../shared/util/timeutil.js';
+import moveutil from '../../shared/chess/util/moveutil.js';
 import clockutil from '../../shared/chess/util/clockutil.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../shared/chess/util/gameresultutil.js';
@@ -46,6 +47,11 @@ interface GameMetaViewModel {
 	players: PlayerGroup<{ name: string; elo?: string }>;
 	/** Player-bar orientation from the viewer's role; bottom = you (or white for spectators). */
 	bars: { top: Player; bottom: Player };
+	/**
+	 * Whether the game is resignable (2+ plies played). Drives whether the offer
+	 * draw button is enabled, and whether the abort or resign button is visible.
+	 */
+	resignable: boolean;
 }
 
 /** The full render context for `game.njk`. */
@@ -70,6 +76,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	const memberInfo = req.memberInfo!;
 	let youAreColor: Player | undefined;
+	let resignable: boolean = false;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
 			if (memberInfoEqPartial(identifier, memberInfo)) {
@@ -77,6 +84,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 				break;
 			}
 		}
+		resignable = moveutil.isGameResignable(game);
 	} else if (memberInfo.signedIn) {
 		// Dead games match members only (dead guests aren't identifiable).
 		youAreColor = resolveDeadParticipantColor(id, memberInfo.user_id);
@@ -84,7 +92,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	return {
 		gamePageData: { id, isLive: !!game, youAreColor },
-		meta: buildGameMetaViewModel(state, youAreColor, req),
+		meta: buildGameMetaViewModel(state, youAreColor, resignable, req),
 	};
 }
 
@@ -92,6 +100,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 function buildGameMetaViewModel(
 	state: StaticGameState,
 	youAreColor: Player | undefined,
+	resignable: boolean,
 	req: Request,
 ): GameMetaViewModel {
 	const variantGroup =
@@ -138,5 +147,6 @@ function buildGameMetaViewModel(
 			result: gameresultutil.getResultDisplay(state.gameConclusion, req.t.shared),
 		}),
 		players,
+		resignable,
 	};
 }
