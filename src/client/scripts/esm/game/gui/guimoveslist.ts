@@ -19,6 +19,7 @@ import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
+import animation from '../rendering/animation.js';
 import holdrepeat from '../../util/holdrepeat.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
@@ -94,6 +95,7 @@ function jumpToStart(): void {
 	frametracker.onVisualChange();
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
+	animation.clearAnimations();
 }
 
 /** Jumps to the latest move, unselecting any piece. */
@@ -108,6 +110,7 @@ function jumpToEnd(): void {
 	frametracker.onVisualChange();
 	movesequence.viewFront(gamefile, mesh);
 	selection.unselectPiece();
+	animation.clearAnimations();
 }
 
 /** Throttled rewind, for the hold-to-repeat previous button. */
@@ -344,6 +347,7 @@ function navigateToPly(index: number): void {
 	frametracker.onVisualChange();
 	movesequence.viewIndex(gamefile, mesh, index); // Dispatches 'view-move' → re-highlights the current ply.
 	selection.unselectPiece();
+	animation.clearAnimations();
 }
 
 // Keep the table in sync: fill it from the freshly-loaded game (moves baked into the

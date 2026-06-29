@@ -177,7 +177,7 @@
 				</div>
 
 				{# Moves list + game-over result. Managed by guimoveslist.ts #}
-				<div class="moves">
+				<div class="moves unselectable">
 					<div class="moves-nav">
 						<button class="btn-bare move-btn" id="btn-move-first" title="Rewind to start" disabled><svg class="move-icon"><use href="#svg-move-first"/></svg></button>
 						<button class="btn-bare move-btn" id="btn-move-prev" title="Previous move" disabled><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
@@ -199,7 +199,7 @@
 				   during live play, else actions-over once concluded. The client toggles `.hidden` among
 				   them as state changes — including hiding actions-live and revealing actions-over on live
 				   end. #}
-				<div class="game-actions">
+				<div class="game-actions unselectable">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) — omitted entirely
 					   once the game is over, since neither can occur in a concluded game (a game can't
 					   return to live), so they won't be found on a game that loaded concluded. #}
