@@ -38,6 +38,9 @@ function onLobbyMessage(contents: LobbyMessage): void {
 		case 'viewercount':
 			lobby.onViewerCountUpdate(contents.value);
 			break;
+		case 'gamestart':
+			void lobby.onGameStart(contents.value);
+			break;
 		default:
 			// @ts-ignore
 			console.error(`Unknown lobby action: ${contents.action}`);

@@ -180,6 +180,17 @@ function onViewerCountUpdate(count: number): void {
 	element_lobbyViewerCount.textContent = String(count - 1);
 }
 
+/**
+ * Called when our game has started (our seek was accepted, or we accepted one).
+ * Hard-navigates to the game page, where the client re-subscribes to the live game.
+ *
+ * Async so a future notify-sound await can precede the navigation without a call-site change.
+ * @param id - The numeric game id (encoded into the base62 URL).
+ */
+async function onGameStart(id: number): Promise<void> {
+	window.location.href = `/game/${uuid.base10ToBase62(id)}`;
+}
+
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
 function outSeekToLobbySeek(seek: OutSeek): LobbySeek {
 	const isOurs = isSeekOurs(seek);
@@ -460,6 +471,7 @@ export default {
 	clearSeekList,
 	onSeekListUpdate,
 	onViewerCountUpdate,
+	onGameStart,
 	createSeek,
 	subscribe,
 	unsubscribe,

@@ -100,8 +100,13 @@ function createGame(
 	);
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
-		if (socket) gameutility.subscribeClientToGame(servergame, socket, player);
-		else startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
+		if (socket) {
+			gameutility.subscribeClientToGame(servergame, socket, player);
+			// Tell the player's lobby client to navigate to the game page. They
+			// re-subscribe to the live game there; the navigation closes this socket
+			// starting the silent disconnect cushion that their re-subscribe cancels.
+			sendSocketMessage(socket, 'lobby', 'gamestart', servergame.match.id);
+		} else startDisconnectTimer(servergame, player, false, onPlayerLostByDisconnect);
 	}
 
 	for (const data of Object.values(match.playerData)) {

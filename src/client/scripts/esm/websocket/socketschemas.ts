@@ -92,6 +92,7 @@ const LobbySchema = z.discriminatedUnion('action', [
 		}),
 	}),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
+	z.strictObject({ action: z.literal('gamestart'), value: GameIDSchema }),
 ]);
 
 // Game Schema ---------------------------------------------------------------
