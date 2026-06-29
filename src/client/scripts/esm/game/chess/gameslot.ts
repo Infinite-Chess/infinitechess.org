@@ -190,6 +190,8 @@ async function loadGraphical(): Promise<void> {
 	guipromotion.initUI(loadedGamefile!.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
+	if (!moveutil.areWeViewingLatestMove(loadedGamefile!))
+		throw new Error("Don't let the user navigate away from front before loadGraphical() rewinds the last move to reanimate it."); // prettier-ignore
 	const lastmove = moveutil.getLastMove(loadedGamefile!.moves);
 	if (lastmove !== undefined) movepiece.applyMove(loadedGamefile!, lastmove, false); // Rewind one move
 

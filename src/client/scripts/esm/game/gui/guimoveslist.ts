@@ -20,6 +20,7 @@ import premoves from '../chess/premoves.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import holdrepeat from '../../util/holdrepeat.js';
+import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
@@ -333,6 +334,8 @@ function scrollMovesTableToBottom(): void {
 
 /** Navigates the game to view the move at `index`, mirroring the nav buttons' behavior. */
 function navigateToPly(index: number): void {
+	if (gamesession.isLoading()) return;
+
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
