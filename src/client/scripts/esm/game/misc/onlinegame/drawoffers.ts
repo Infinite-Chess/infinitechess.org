@@ -41,7 +41,8 @@ let isAcceptingDraw: boolean = false;
  * Returns true if us extending a draw offer to our opponent is legal.
  */
 function isOfferingDrawLegal(): boolean {
-	const gamefile = gameslot.getGamefile()!;
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return false; // Game not loaded yet
 	if (!moveutil.isGameResignable(gamefile)) return false; // Not at least 2+ moves
 	if (isTooSoonToOfferDraw()) return false; // It's been too soon since our last offer
 	return true; // Is legal to EXTEND
@@ -87,6 +88,7 @@ function extendOffer(): void {
 	socketmessages.send('game', 'offerdraw');
 	const gamefile = gameslot.getGamefile()!;
 	plyOfLastOfferedDraw = gamefile.moves.length;
+	gameactions.updateOfferDrawButton(); // It's now too soon to offer again — disable the button.
 	toast.show(`Waiting for opponent to accept...`); // TODO: Needs to be localized for the user's language.
 }
 
@@ -132,6 +134,7 @@ function closeDraw(): void {
  */
 function set(drawOffer: DrawOfferInfo): void {
 	plyOfLastOfferedDraw = drawOffer.lastOfferPly;
+	gameactions.updateOfferDrawButton(); // Restored ply may make it too soon to offer.
 	if (!drawOffer.unconfirmed) return; // No open draw offer
 	// Open draw offer!!
 	onOpponentExtendedOffer();

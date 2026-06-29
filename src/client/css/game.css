@@ -468,9 +468,14 @@
 	background: transparent;
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
 	color: var(--c-text-emphasis);
 	background: var(--c-hover-overlay);
+}
+
+/* Disabled action buttons (e.g. offer-draw when offering is illegal): no not-allowed cursor. */
+.action-btn:disabled {
+	cursor: default;
 }
 
 /* Live actions: fixed-size buttons (not full-width). */

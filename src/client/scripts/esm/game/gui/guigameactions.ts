@@ -34,7 +34,7 @@ const element_ActionsDrawOffer = document.querySelector('.actions-draw-offer');
 const element_ActionsOver = document.querySelector('.actions-over')!;
 
 // Live actions (present only alongside `.actions-live`).
-const element_OfferDraw = document.getElementById('btn-offer-draw');
+const element_OfferDraw = document.getElementById('btn-offer-draw') as HTMLButtonElement | null;
 const element_Abort = document.getElementById('btn-abort');
 const element_Resign = document.getElementById('btn-resign');
 
@@ -53,7 +53,10 @@ GameBus.addEventListener('game-loaded', () => {
 	updateResignAbortButtons();
 	refresh();
 });
-GameBus.addEventListener('moves-changed', () => updateResignAbortButtons());
+GameBus.addEventListener('moves-changed', () => {
+	updateResignAbortButtons();
+	updateOfferDrawButton();
+});
 GameBus.addEventListener('game-concluded', () => refresh());
 
 // Block visibility ---------------------------------------------------------------------------
@@ -76,6 +79,12 @@ function showOnly(target: Element | null): void {
 	for (const block of [element_ActionsLive, element_ActionsDrawOffer, element_ActionsOver]) {
 		block?.classList.toggle('hidden', block !== target);
 	}
+}
+
+/** Disables the offer-draw button whenever extending a draw offer would be illegal. */
+function updateOfferDrawButton(): void {
+	if (!element_OfferDraw) return; // Concluded game: live block absent.
+	element_OfferDraw.disabled = !drawoffers.isOfferingDrawLegal();
 }
 
 /** Shows resign once the game is resignable (2+ plies), abort before then. */
@@ -140,4 +149,5 @@ initListeners();
 
 export default {
 	refresh,
+	updateOfferDrawButton,
 };
