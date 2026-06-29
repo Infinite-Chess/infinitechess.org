@@ -88,6 +88,7 @@ gamesound.preload('marimba_c2');
 gamesound.preload('marimba_c2_soft');
 gamesound.preload('base_staccato_c2');
 gamesound.preload('viola_staccato_c3');
+gamesound.preload('notify');
 
 // Functions ------------------------------------------
 

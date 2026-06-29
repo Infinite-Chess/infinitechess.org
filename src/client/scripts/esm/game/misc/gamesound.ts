@@ -15,7 +15,7 @@ import AudioManager from '../../audio/AudioManager.js';
 type SoundName =
 	| 'move' | 'capture' | 'bell' | 'ripple_a3'
 	| 'viola_staccato_c3' | 'marimba_c2' | 'marimba_c2_soft' | 'base_staccato_c2'
-	| 'low_time'
+	| 'notify' | 'low_time'
 	| 'glass_crack_1' | 'glass_crack_2' | 'glass_crack_3' | 'glass_crack_4' | 'glass_crack_5'; // prettier-ignore
 
 // Cache --------------------------------------------------------------------------
@@ -59,8 +59,10 @@ async function playSoundEffect(
 	options: {
 		volume?: number;
 		delay?: number;
-		reverbWetLevel?: number;
+		/** Reverb duration in seconds. */
 		reverbDuration?: number;
+		/** The strength of the reverb level. */
+		reverbWetLevel?: number;
 		playbackRate?: number;
 		bypassDownsampler?: boolean;
 	} = {},
@@ -103,6 +105,10 @@ function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
 	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
 }
 
+function playNotify(): void {
+	playSoundEffect('notify', { reverbDuration: 1.0, reverbWetLevel: 1.0 });
+}
+
 function playLowtime(): void {
 	playSoundEffect('low_time');
 }
@@ -137,6 +143,7 @@ export default {
 	playViola_c3,
 	playMarimba,
 	playBase,
+	playNotify,
 	playLowtime,
 	playGlassCrack,
 };
