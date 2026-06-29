@@ -7,7 +7,6 @@
 import webgl from '../../game/rendering/webgl.js';
 import camera from '../../game/rendering/camera.js';
 import gamecore from '../../game/chess/gamecore.js';
-import socketman from '../../websocket/socketman.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import socketsubs from '../../websocket/socketsubs.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
@@ -44,9 +43,6 @@ function start(): void {
 
 function initListeners(): void {
 	window.addEventListener('beforeunload', () => {
-		// Control the close reason ("1000 Closed by client" instead of "1001 Endpoint left").
-		socketman.closeSocket();
-
 		LocalStorage.eraseExpiredItems();
 		IndexedDB.eraseExpiredItems();
 	});
