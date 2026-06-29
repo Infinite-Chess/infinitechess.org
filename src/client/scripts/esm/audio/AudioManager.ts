@@ -281,10 +281,7 @@ function scheduleDisconnection(
 	const maxTailSecs = effects.reduce((max, effect) => {
 		if (effect.type === 'reverb') return Math.max(max, effect.durationSecs);
 		// Future effects with tails (e.g., delay) could be accounted for here.
-		else
-			throw Error(
-				`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`,
-			);
+		else throw Error(`Sound effect type "${effect.type}" not accounted for in tail duration calculation.`); // prettier-ignore
 	}, 0);
 
 	const totalLifetimeMillis = (sourceDurationSecs + maxTailSecs + delay) * 1000;

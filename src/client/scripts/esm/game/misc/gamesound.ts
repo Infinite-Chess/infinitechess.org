@@ -105,8 +105,9 @@ function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
 	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
 }
 
-function playNotify(): void {
-	playSoundEffect('notify', { reverbDuration: 1.0, reverbWetLevel: 1.0 });
+function playNotify(includeReverb: boolean): Promise<SoundObject | undefined> {
+	const options = includeReverb ? { reverbDuration: 1.5, reverbWetLevel: 0.7 } : {};
+	return playSoundEffect('notify', options);
 }
 
 function playLowtime(): void {

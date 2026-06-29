@@ -37,12 +37,7 @@ close code entirely.
 Play a notify sound on `gamestart` and **await it before the hard-navigate** so the navigation
 doesn't cut it off, capped at 1.5s.
 
-- **Pick the sound.** Candidate: `'bell'` (already a `SoundName` in
-  [gamesound.ts](../../../../src/client/scripts/esm/game/misc/gamesound.ts)) with a touch of reverb
-  (`reverbWetLevel` / `reverbDuration`, as `playGlassCrack` does). No dedicated notify sound exists
-  yet — `'bell'` + reverb is the candidate to confirm/tune by ear. **Consult before finalizing.**
-- **Preload it** in the lobby's existing `gamesound.preload(...)` block (top of
-  [lobby.ts](../../../../src/client/scripts/esm/views/index/lobby.ts)) so there's no first-play fetch delay.
+- **Sound chosen**: 'notify'. Reverb is already automatically applied to each call. It is already preloaded in lobby.ts.
 - **Play + await** in `onGameStart`: `playSoundEffect` returns a `SoundObject` whose `whenEnded` is a
   `Promise<void>`. Await `Promise.race([sound.whenEnded, <1.5s timeout>])`, then set
   `window.location.href`. Guard the `undefined` return (sound failed to load → navigate immediately).

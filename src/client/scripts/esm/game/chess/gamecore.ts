@@ -114,6 +114,7 @@ function preloadSounds(): void {
 	gamesound.preload('bell');
 	gamesound.preload('ripple_a3');
 	gamesound.preload('base_staccato_c2');
+	gamesound.preload('notify');
 	gamesound.preload('low_time');
 }
 

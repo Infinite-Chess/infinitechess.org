@@ -29,6 +29,7 @@ import guiclock from '../gui/guiclock.js';
 import drawrays from '../rendering/highlights/annotations/drawrays.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
+import gamesound from '../misc/gamesound.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import piecemodels from '../rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
@@ -141,7 +142,8 @@ function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<vo
 	return loadLogical(loadOptions).then(() => {
 		// console.log('LOGICAL loaded.');
 
-		console.warn('Game start sound has not been added yet.');
+		// This is where we used to play the game start sound, but now we
+		// play it in lobby.ts before the hard navigation to the game page.
 
 		// Start GRAPHICAL loading immediately and hand its promise to the caller.
 		return { graphical: loadGraphical() };
@@ -250,7 +252,7 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	console.warn('Game conclude sound has not been added yet.');
+	gamesound.playNotify(true);
 }
 
 export default {

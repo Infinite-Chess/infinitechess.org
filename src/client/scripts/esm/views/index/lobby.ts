@@ -183,12 +183,15 @@ function onViewerCountUpdate(count: number): void {
 
 /**
  * Called when our game has started (our seek was accepted, or we accepted one).
+ * Plays the notify sound and awaits it so the navigation doesn't cut it off.
  * Hard-navigates to the game page, where the client re-subscribes to the live game.
  *
- * Async so a future notify-sound await can precede the navigation without a call-site change.
  * @param id - The numeric game id (encoded into the base62 URL).
  */
 async function onGameStart(id: number): Promise<void> {
+	// No reverb added here, it makes it play too long, we want to navigate quickly.
+	const sound = await gamesound.playNotify(false);
+	if (sound) await sound.whenEnded;
 	window.location.href = `/game/${uuid.base10ToBase62(id)}`;
 }
 
