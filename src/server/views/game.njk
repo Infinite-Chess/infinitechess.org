@@ -196,7 +196,7 @@
 				{# Game actions — only one is visible at a time. Managed by guigameactions.ts #}
 				<div class="game-actions unselectable">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) #}
-					{% if not meta.result %}
+					{% if not meta.result and gamePageData.youAreColor is defined %}
 					{# Default live-game actions: offer draw + resign/abort. Visible during live play. #}
 					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
 						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw"{% if not meta.resignable %} disabled{% endif %}>
@@ -223,7 +223,7 @@
 					{% endif %}
 					{# Post-game actions: rematch + analysis. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
-						<button class="action-btn" id="btn-rematch">Rematch</button>
+						<button class="action-btn{{ '' if gamePageData.youAreColor is defined else ' hidden' }}" id="btn-rematch">Rematch</button>
 						<button class="action-btn" id="btn-analysis">Analysis</button>
 					</div>
 				</div>
@@ -263,7 +263,8 @@
 
 		</div>{# .play-group #}
 
-		{# Chat window #}
+		{# Chat window — participant-only #}
+		{% if gamePageData.youAreColor is defined %}
 		<div class="chat panel">
 			{# The client toggles `.collapsed` on the .chat panel. #}
 			<div class="chat-bar">
@@ -284,6 +285,7 @@
 			{# Chat input — the client disables/hides it for guests in non-friend games. #}
 			<input class="chat-input" type="text" placeholder="Please be nice!" id="chat-input" />
 		</div>
+		{% endif %}
 
 	</aside>
 

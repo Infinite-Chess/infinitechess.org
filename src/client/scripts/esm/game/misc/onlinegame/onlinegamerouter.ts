@@ -5,6 +5,7 @@ import type { GameMessage } from '../../../websocket/socketschemas.js';
 import type {
 	ClockValues,
 	FullGameState,
+	GameConclusionMessage,
 	ParticipantState,
 } from '../../../../../../shared/types.js';
 
@@ -60,6 +61,9 @@ function routeMessage(contents: GameMessage): void {
 			break;
 		case 'gameupdate':
 			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
+			break;
+		case 'gameconclusion':
+			handleGameConclusion(gamefile, contents.value);
 			break;
 		case 'gameratingchange':
 			// TODO: surface rating changes in the new game page's side bar.
@@ -154,6 +158,18 @@ function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void 
 	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
 	guiclock.edit(gamefile);
+}
+
+/**
+ * Concludes the game from a non-move-triggered conclusion (resignation, timeout, draw
+ * agreement, etc.) sent to spectators. They can't desync while subscribed, so the server
+ * sends only the conclusion + frozen clocks rather than a full resync.
+ * (Move-triggered conclusions reach spectators via the `'move'` message instead.)
+ */
+function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage): void {
+	gamefile.gameConclusion = message.gameConclusion; // Must be set before editing the clocks.
+	movesendreceive.applyClockValues(gamefile, message.clockValues);
+	gameslot.concludeGame();
 }
 
 /**

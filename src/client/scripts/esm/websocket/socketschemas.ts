@@ -15,6 +15,7 @@ import typeschemas from '../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
+	GameConclusionMessageSchema,
 	GameUpdateMessageSchema,
 	MetaDataSchema,
 	OpponentsMoveMessageSchema,
@@ -115,6 +116,10 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({
 		action: z.literal('gameupdate'),
 		value: GameUpdateMessageSchema,
+	}),
+	z.strictObject({
+		action: z.literal('gameconclusion'),
+		value: GameConclusionMessageSchema,
 	}),
 	z.strictObject({
 		action: z.literal('gameratingchange'),

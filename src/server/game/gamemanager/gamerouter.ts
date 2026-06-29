@@ -60,6 +60,7 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 		// Benign: the game was torn down between the client sending this and the
 		// server receiving it (it just concluded, or a timer-driven AFK ping fired
 		// at a dead game). The message is simply stale — drop it.
+		// OR, a spectator is sending a message to a game they are spectating, which is not allowed.
 		return;
 	}
 

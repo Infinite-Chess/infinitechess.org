@@ -8,8 +8,10 @@
  * - `.actions-draw-offer` (accept / reject) while an incoming draw offer is open;
  * - `.actions-live` (offer-draw / resign-abort) otherwise during live play.
  *
- * A concluded game can never return to live, so SSR omits the two live-only
- * blocks once it loads concluded — they're absent from the DOM here.
+ * SSR omits both live-only blocks (`.actions-live`, `.actions-draw-offer`) when
+ * they can't apply — once a game loads concluded (it can't return to live), or
+ * for spectators (never participants) — so they're absent from the DOM here.
+ * Spectators also get `#btn-rematch` SSR-hidden, leaving only Analysis once over.
  *
  * It also wires every action button. Within `.actions-live`, resign and abort
  * share one slot: abort shows before the game is resignable (0–1 plies), resign
@@ -28,7 +30,7 @@ import socketmessages from '../../websocket/socketmessages.js';
 
 // Elements ----------------------------------------------------------------------------------
 
-// Action blocks. The live-only blocks are absent from the DOM when the game loaded concluded.
+// Action blocks. The live-only blocks are absent from the DOM when the game loaded concluded, or for spectators.
 const element_ActionsLive = document.querySelector('.actions-live');
 const element_ActionsDrawOffer = document.querySelector('.actions-draw-offer');
 const element_ActionsOver = document.querySelector('.actions-over')!;
