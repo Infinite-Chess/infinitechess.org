@@ -72,6 +72,11 @@ const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 /** The ID of our current seek, if we have one. */
 let ourSeekId: string | undefined;
+/**
+ * Whether we've accepted a seek this page-session and are expecting a game to start.
+ * Lets {@link onInGame} auto-navigate the accepter (who owns no seek of their own).
+ */
+let weAcceptedSeek = false;
 /** Live map of all current seeks by id, for fast click-handler lookup. */
 const seekMap = new Map<string, OutSeek>();
 
@@ -160,6 +165,10 @@ const trackNewSeeks = (() => {
 
 /** Called when we receive a fresh seek list from the server. Updates state, map, and renders. */
 function onSeekListUpdate(seeks: OutSeek[]): void {
+	// Reset the flag in case the seek was cancelled immediately before.
+	// The server sends the 'ingame' action before the new seek list, so this is safe.
+	weAcceptedSeek = false;
+
 	seekMap.clear();
 	for (const seek of seeks) seekMap.set(seek.id, seek);
 	seekPreviewCache.evictRemovedSeeks(new Set(seekMap.keys()));
@@ -182,17 +191,25 @@ function onViewerCountUpdate(count: number): void {
 }
 
 /**
- * Called when our game has started (our seek was accepted, or we accepted one).
- * Plays the notify sound and awaits it so the navigation doesn't cut it off.
- * Hard-navigates to the game page, where the client re-subscribes to the live game.
- *
+ * Called when the server reports we're in game `id` (on seek acceptance, or on lobby resub
+ * while already in one). Auto-navigates only if WE initiated it — we own the accepted seek
+ * (`ourSeekId`, which survives an in-page reconnect) or accepted one (`weAcceptedSeek`); a
+ * fresh page-load mid-game has neither and stays put.
  * @param id - The numeric game id (encoded into the base62 URL).
  */
-async function onGameStart(id: number): Promise<void> {
-	// No reverb added here, it makes it play too long, we want to navigate quickly.
-	const sound = await gamesound.playNotify(false);
-	if (sound) await sound.whenEnded;
-	window.location.href = `/game/${uuid.base10ToBase62(id)}`;
+async function onInGame(id: number): Promise<void> {
+	// These are only cleared on receiving a new seek list, but since the server
+	// sends the 'ingame' action before then, these should still be accurate.
+	if (ourSeekId !== undefined || weAcceptedSeek) {
+		// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
+		// No reverb added here, it makes us wait too long.
+		const sound = await gamesound.playNotify(false);
+		if (sound) await sound.whenEnded;
+		window.location.href = `/game/${uuid.base10ToBase62(id)}`;
+	} else {
+		// TODO: surface a "You're in a game — rejoin / resign" banner instead of just logging.
+		console.warn(`In game ${id} but didn't initiate it here; staying on the lobby.`);
+	}
 }
 
 /** Converts a server OutSeek into a client LobbySeek with rendering metadata. */
@@ -230,6 +247,7 @@ function cancel(seekId: string): void {
 
 /** Sends an acceptseek message for an opponent's seek. */
 function accept(seekId: string): void {
+	weAcceptedSeek = true;
 	socketmessages.send('lobby', 'acceptseek', seekId, true);
 }
 
@@ -475,7 +493,7 @@ export default {
 	clearSeekList,
 	onSeekListUpdate,
 	onViewerCountUpdate,
-	onGameStart,
+	onInGame,
 	createSeek,
 	subscribe,
 	unsubscribe,

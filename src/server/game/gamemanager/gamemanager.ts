@@ -113,10 +113,11 @@ function createGame(
 	for (const [strcolor, { socket }] of Object.entries(assignments)) {
 		const player = Number(strcolor) as Player;
 		if (socket) {
-			// Tell the player's lobby client to navigate to the game page, where they re-subscribe
-			// to the live game. Arm the silent disconnect cushion up front: the re-subscribe
-			// cancels it, while a no-show (e.g. tab close) auto-resigns after the cushion.
-			sendSocketMessage(socket, 'lobby', 'gamestart', servergame.match.id);
+			// Tell the player's lobby client they're now in a game; it navigates to
+			// the game page, where they re-subscribe to the live game. Arm the silent
+			// disconnect cushion up front: the re-subscribe cancels it, while a no-show
+			// (e.g. tab close) auto-resigns after the cushion.
+			sendSocketMessage(socket, 'lobby', 'ingame', servergame.match.id);
 		}
 		startDisconnectCushionTimerAndPersist(servergame, player);
 	}

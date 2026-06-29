@@ -14,6 +14,7 @@ import { IDLengthOfSeeks } from '../../../shared/types.js';
 
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { getIDOfGamePlayerIsIn } from '../gamemanager/activeplayers.js';
 import { safelyCopySeek, AuthSeek } from './seekutility.js';
 import {
 	getLobbySubscribers,
@@ -195,6 +196,13 @@ function subToLobby(ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.lobby) return; // Already subscribed. Happens occasionally
 
 	addSocketToLobbySubs(ws);
+
+	// If they're already in a game (e.g. their seek was accepted during a disconnect cushion,
+	// so they never got the in-game push), tell them BEFORE the seek snapshot below — the
+	// client reads its surviving `ourSeekId` belief synchronously, before the snapshot clears it.
+	const gameID = getIDOfGamePlayerIsIn(ws.metadata.memberInfo);
+	if (gameID !== undefined) sendSocketMessage(ws, 'lobby', 'ingame', gameID);
+
 	sendClientLobbySnapshot(ws, getSeeksListSafe());
 	broadcastViewerCount(ws); // Notify all existing subscribers of the incremented count
 	cancelTimerToDeleteUsersSeeksFromNetworkInterruption(ws);

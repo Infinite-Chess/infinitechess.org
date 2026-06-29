@@ -38,8 +38,8 @@ function onLobbyMessage(contents: LobbyMessage): void {
 		case 'viewercount':
 			lobby.onViewerCountUpdate(contents.value);
 			break;
-		case 'gamestart':
-			void lobby.onGameStart(contents.value);
+		case 'ingame':
+			void lobby.onInGame(contents.value);
 			break;
 		default:
 			// @ts-ignore
