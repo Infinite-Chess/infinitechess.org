@@ -39,12 +39,12 @@ const element_Abort = document.getElementById('btn-abort');
 const element_Resign = document.getElementById('btn-resign');
 
 // Incoming draw-offer accept/reject (present only alongside `.actions-draw-offer`).
-const element_AcceptDraw = document.getElementById('btn-accept-draw');
-const element_RejectDraw = document.getElementById('btn-reject-draw');
+const element_AcceptDraw = document.getElementById('btn-accept-draw') as HTMLButtonElement | null;
+const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLButtonElement | null;
 
 // Post-game actions (always present).
-const element_Rematch = document.getElementById('btn-rematch')!;
-const element_Analysis = document.getElementById('btn-analysis')!;
+const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement;
+const element_Analysis = document.getElementById('btn-analysis') as HTMLButtonElement;
 
 // Events ------------------------------------------------------------------------------------
 
@@ -77,7 +77,11 @@ function refresh(): void {
 /** Reveals `target`, hiding the other action blocks. Blocks absent from the DOM are skipped. */
 function showOnly(target: Element | null): void {
 	for (const block of [element_ActionsLive, element_ActionsDrawOffer, element_ActionsOver]) {
+		const wasHidden = block?.classList.contains('hidden');
 		block?.classList.toggle('hidden', block !== target);
+		// Block just revealed: briefly disable its buttons so a click landing
+		// the same split-second it appears can't accidentally fire an action.
+		if (block && block === target && wasHidden) armGracePeriod(block);
 	}
 }
 
@@ -95,6 +99,37 @@ function updateResignAbortButtons(): void {
 	const resignable = moveutil.isGameResignable(gamefile);
 	element_Resign.classList.toggle('hidden', !resignable);
 	element_Abort.classList.toggle('hidden', resignable);
+}
+
+// Appearance grace period --------------------------------------------------------------------
+
+/**
+ * How long a freshly-revealed block's buttons stay disabled, so
+ * a click landing the instant it appears can't accidentally fire.
+ */
+const GRACE_MILLIS = 667;
+
+/** Buttons to briefly disable when their action block first appears. */
+const graceButtons = new Map<Element, HTMLButtonElement[]>();
+if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
+	graceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
+graceButtons.set(element_ActionsOver, [element_Rematch, element_Analysis]);
+
+/** Blocks mid-grace, mapped to their pending re-enable timer. */
+const graceTimers = new Map<Element, number>();
+
+/** Disables `block`'s {@link graceButtons} for {@link GRACE_MILLIS}, then re-enables them. */
+function armGracePeriod(block: Element): void {
+	const buttons = graceButtons.get(block);
+	if (!buttons) return; // Block has no grace-disabled buttons (e.g. actions-live).
+	for (const button of buttons) button.disabled = true;
+	clearTimeout(graceTimers.get(block));
+	graceTimers.set(
+		block,
+		window.setTimeout(() => {
+			for (const button of buttons) button.disabled = false;
+		}, GRACE_MILLIS),
+	);
 }
 
 // Two-click confirmation ---------------------------------------------------------------------
