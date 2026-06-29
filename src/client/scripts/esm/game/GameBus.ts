@@ -7,6 +7,7 @@ import { EventBus } from '../../../../shared/util/EventBus';
 
 interface GameBusEvents {
 	// =========== Logical Events ============
+	/** Dispatched when the LOGICAL part of a game is finished loading (not GRAPHICAL). */
 	'game-loaded': void;
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */

@@ -7,7 +7,6 @@
 import type { ServerGameInfo } from '../../../websocket/socketschemas.js';
 import type { ClockValues, ParticipantState } from '../../../../../../shared/types.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
 import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
 
@@ -169,13 +168,6 @@ function reportOpponentsMove(reason: string): void {
 	socketmessages.send('game', 'report', message);
 }
 
-/**  Called when the player presses the "Abort / Resign" button for the first time in an onlinegame. */
-function onAbortOrResignButtonPress(): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (moveutil.isGameResignable(gamefile)) socketmessages.send('game', 'resign');
-	else socketmessages.send('game', 'abort');
-}
-
 /**
  * Lets the server know we have seen the game conclusion, and would
  * like to be allowed to join a new game if we leave quickly.
@@ -234,7 +226,6 @@ export default {
 	set_DrawOffers_DisconnectInfo,
 	areInSync,
 	resyncToGame,
-	onAbortOrResignButtonPress,
 	reportOpponentsMove,
 	onMovePlayed,
 	adjustClockValuesForPing,

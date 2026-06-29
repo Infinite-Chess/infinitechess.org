@@ -15,7 +15,7 @@ import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
-import guidrawoffer from '../../gui/guidrawoffer.js';
+import gameactions from '../../gui/guigameactions.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
@@ -69,8 +69,8 @@ function areWeAcceptingDraw(): boolean {
 
 /** Is called when we receive a draw offer from our opponent */
 function onOpponentExtendedOffer(): void {
-	isAcceptingDraw = true; // Needs to be set FIRST, because guidrawoffer.open() relies on it.
-	guidrawoffer.open();
+	isAcceptingDraw = true; // Needs to be set FIRST, because gameactions.refresh() reads it.
+	gameactions.refresh();
 	gamesound.playBase();
 }
 
@@ -97,7 +97,7 @@ function extendOffer(): void {
 function callback_AcceptDraw(): void {
 	isAcceptingDraw = false;
 	socketmessages.send('game', 'acceptdraw');
-	guidrawoffer.close();
+	gameactions.refresh();
 }
 
 /**
@@ -122,8 +122,8 @@ function callback_declineDraw(): void {
  */
 function closeDraw(): void {
 	if (!isAcceptingDraw) return; // No open draw offer from our opponent
-	guidrawoffer.close();
 	isAcceptingDraw = false;
+	gameactions.refresh();
 }
 
 /**
@@ -151,7 +151,7 @@ function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
 function onGameClose(): void {
 	plyOfLastOfferedDraw = undefined;
 	isAcceptingDraw = false;
-	guidrawoffer.close();
+	gameactions.refresh();
 }
 
 export default {
