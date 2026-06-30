@@ -85,7 +85,7 @@ One row per player per live game.
 | `time_remaining_ms`           | INTEGER          | Milliseconds remaining at time of snapshot. NULL if untimed.                                                                                |
 | `disconnect_cushion_end_time` | INTEGER          | Epoch ms when the 5-second reconnection cushion expires. NULL if no cushion is active.                                                      |
 | `disconnect_resign_time`      | INTEGER          | Epoch ms when the auto-resign fires. NULL if no active disconnect timer.                                                                    |
-| `disconnect_by_choice`        | BOOLEAN          | 1 = intentional disconnect (20s timer), 0 = network drop (60s timer). NULL if player was connected. CHECK (disconnect_by_choice IN (0, 1)). |
+| `disconnect_by_choice`        | BOOLEAN          | 1 = intentional disconnect (10s timer), 0 = network drop (60s timer). NULL if player was connected. CHECK (disconnect_by_choice IN (0, 1)). |
 
 **Three-case disconnect restoration:**
 
