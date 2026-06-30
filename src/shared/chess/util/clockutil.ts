@@ -50,7 +50,7 @@ function isTimedControlValid(time: TimeControl): boolean {
 }
 
 function getTextContentFromTimeRemain(time: number): string {
-	let seconds = Math.ceil(time / 1000);
+	let seconds = Math.floor(time / 1000);
 	let minutes = 0;
 	while (seconds >= 60) {
 		seconds -= 60;
