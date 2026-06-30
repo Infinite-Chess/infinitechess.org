@@ -153,12 +153,7 @@ function loadGameFromState(
  * Called when we received the updated clock values from the server after submitting our move.
  */
 function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void {
-	if (gamefile.untimed) throw Error('Received clock values for untimed game??');
-
-	// Adjust the timer whos turn it is depending on ping.
-	onlinegame.adjustClockValuesForPing(clockValues);
-	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
-	guiclock.edit(gamefile);
+	movesendreceive.applyClockValues(gamefile, clockValues);
 
 	// 'clock' only arrives right after WE move, so the last move is ours, and our now-frozen
 	// time (untouched by ping, which only adjusts the opponent's ticking clock) is its stamp.

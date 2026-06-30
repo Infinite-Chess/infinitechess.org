@@ -72,6 +72,9 @@
 - Lichess style. Make, undo, change move history to perform analysis on positions.
 - Turn on the engine to display the top move, and the score.
 
+For games on the analysis board page: When the game is over, and we rewind moves via the moves table (manager is guimoveslist.ts) the clock values should be updated according to the move we are viewing. When viewing a move, the players clock belonging to whoever played that move should be updated to the move's clockStamp property. The move's clockStamp properties you can expect to always be defined when the game is timed. When viewing the start of the game (no move attacehd to to that position), both clocks should show the players original time. When we're viewing the last move, set both clocks to the final clock values, as sometimes the game can end by a non-move such as resignation which doesn't have a move object to attach the clockStamp to. When the game is live, the clocks should continue reflecting their true time (no change there). This does not apply to games on the game page, only the analysis board.
+Relevant files: guimoveslist.ts, guiclock.ts
+
 ## Board Editor
 - Share games via url. Next to the link to copy notation. Maximum piece count / icn length prevents dirty images.
 - Create an invite from the position. Maximum piece count / icn length prevents dirty images. Same model popup as creating an invite from the lobby.
