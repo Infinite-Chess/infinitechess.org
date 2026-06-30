@@ -84,7 +84,7 @@ declare global {
 		/** Best-effort liveness hint at SSR time; may be stale by render, so the client re-confirms. */
 		isLive: boolean;
 		/** The viewer's color, SSR-resolved from their cookie identity. Undefined for spectators. */
-		youAreColor?: Player;
+		role?: Player;
 	};
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */

@@ -2,7 +2,7 @@
 
 /**
  * Builds the SSR render state for the `/game/:id` page: the client `gamePageData`
- * channel ({ id, isLive, youAreColor }) and a display-ready view-model of the static
+ * channel ({ id, isLive, role }) and a display-ready view-model of the static
  * game-meta info, so the side bar paints many game info on first request without a
  * socket/HTTP round-trip.
  */
@@ -56,7 +56,7 @@ interface GameMetaViewModel {
 
 /** The full render context for `game.njk`. */
 interface GamePageState {
-	gamePageData: { id: number; isLive: boolean; youAreColor?: Player };
+	gamePageData: { id: number; isLive: boolean; role?: Player };
 	meta: GameMetaViewModel;
 }
 
@@ -75,31 +75,31 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	const memberInfo = req.memberInfo!;
-	let youAreColor: Player | undefined;
+	let role: Player | undefined;
 	let resignable: boolean = false;
 	if (game) {
 		for (const [strColor, { identifier }] of Object.entries(game.match.playerData)) {
 			if (memberInfoEqPartial(identifier, memberInfo)) {
-				youAreColor = Number(strColor) as Player;
+				role = Number(strColor) as Player;
 				break;
 			}
 		}
 		resignable = moveutil.isGameResignable(game);
 	} else if (memberInfo.signedIn) {
 		// Dead games match members only (dead guests aren't identifiable).
-		youAreColor = resolveDeadParticipantColor(id, memberInfo.user_id);
+		role = resolveDeadParticipantColor(id, memberInfo.user_id);
 	}
 
 	return {
-		gamePageData: { id, isLive: !!game, youAreColor },
-		meta: buildGameMetaViewModel(state, youAreColor, resignable, req),
+		gamePageData: { id, isLive: !!game, role },
+		meta: buildGameMetaViewModel(state, role, resignable, req),
 	};
 }
 
 /** Derives the display-ready {@link GameMetaViewModel} from a {@link StaticGameState}. */
 function buildGameMetaViewModel(
 	state: StaticGameState,
-	youAreColor: Player | undefined,
+	role: Player | undefined,
 	resignable: boolean,
 	req: Request,
 ): GameMetaViewModel {
@@ -119,14 +119,14 @@ function buildGameMetaViewModel(
 		const color = Number(strColor) as Player;
 		// A guest who is the viewer shows "(You)"; every other name is the container's own
 		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
-		const isYouGuest = container.type === 'guest' && color === youAreColor;
+		const isYouGuest = container.type === 'guest' && color === role;
 		players[color] = {
 			name: isYouGuest ? req.t.shared.user_status.you_indicator : container.username,
 			...(container.rating && { elo: metadatautil.getFormattedElo(container.rating) }),
 		};
 	}
 
-	const bottom = youAreColor ?? p.WHITE;
+	const bottom = role ?? p.WHITE;
 	const top = bottom === p.WHITE ? p.BLACK : p.WHITE;
 
 	const locale = tconfig.getDateLocale(req.lang);

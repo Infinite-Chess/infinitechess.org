@@ -42,7 +42,7 @@ function routeMessage(contents: GameMessage): void {
 	if (contents.action === 'gamestate')
 		return loadGameFromState(
 			contents.value,
-			window.gamePageData.youAreColor,
+			window.gamePageData.role,
 			contents.value.participantState,
 		);
 
