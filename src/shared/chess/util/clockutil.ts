@@ -50,15 +50,20 @@ function isTimedControlValid(time: TimeControl): boolean {
 }
 
 function getTextContentFromTimeRemain(time: number): string {
-	let seconds = Math.floor(time / 1000);
-	let minutes = 0;
-	while (seconds >= 60) {
-		seconds -= 60;
-		minutes++;
-	}
-	if (seconds < 0) seconds = 0;
+	const clampedTime = Math.max(0, time);
 
-	return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+	const totalSeconds = Math.floor(clampedTime / 1000);
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+
+	const ss = seconds.toString().padStart(2, '0');
+	// An hour or more shows H:MM:SS, otherwise MM:SS.
+	if (hours > 0) return `${hours}:${minutes.toString().padStart(2, '0')}:${ss}`;
+
+	// Under 10 seconds, also show tenths (rounded down) for precision in time scrambles.
+	if (clampedTime < 10000) return `${minutes}:${ss}:${Math.floor((clampedTime % 1000) / 100)}`;
+	return `${minutes.toString().padStart(2, '0')}:${ss}`;
 }
 
 /**
