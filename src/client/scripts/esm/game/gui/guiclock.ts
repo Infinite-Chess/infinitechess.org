@@ -43,6 +43,12 @@ GameBus.addEventListener('game-unloaded', () => {
 	stopClocks();
 });
 
+// Re-highlight whoever's turn it is on every committed move.
+GameBus.addEventListener('moves-changed', () => {
+	const basegame = gameslot.getGamefile()!;
+	updateTempo(basegame);
+});
+
 // Functions -----------------------------------------------------------------------
 
 /** Hides both clock elements from view. */
@@ -83,24 +89,11 @@ function update(basegame: GameFile): void {
 function edit(basegame: GameFile): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
-
-	for (const playerStr of Object.keys(element_timers)) {
-		const player = Number(playerStr) as Player;
-		if (player === basegame.clocks.colorTicking) continue;
-	}
-
-	updateTempo(basegame.clocks);
 	rescheduleLowtime(basegame.clocks);
 }
 
-/** Called when a move is pushed; removes the border from the clock that just stopped ticking and reschedules the low-time sound. */
+/** Called when a move is pushed in a timed engine game; reschedules the low-time sound. */
 function push(clocks: ClockData): void {
-	for (const playerStr of Object.keys(element_timers)) {
-		const player = Number(playerStr) as Player;
-		if (player === clocks.colorTicking) continue;
-	}
-
-	updateTempo(clocks);
 	rescheduleLowtime(clocks);
 }
 
@@ -111,17 +104,17 @@ function set(basegame: GameFile): void {
 	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
 	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
+	updateTempo(basegame); // Highlight whoever's turn it is, even in untimed games.
 	if (basegame.untimed) return hideClocks();
 	showClocks();
 	updateTextContent(basegame.clocks);
-	updateTempo(basegame.clocks);
 }
 
-/** Highlights the bar of the player whose clock is currently ticking via `.tempo`. */
-function updateTempo(clocks: ClockData): void {
+/** Highlights the bar of the player whose turn it is via `.tempo`. */
+function updateTempo(basegame: GameFile): void {
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
-		clockElements.bar.classList.toggle('tempo', player === clocks.colorTicking);
+		clockElements.bar.classList.toggle('tempo', player === basegame.whosTurn);
 	}
 }
 
