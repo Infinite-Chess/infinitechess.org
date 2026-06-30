@@ -119,8 +119,8 @@ function updateTempo(basegame: GameFile): void {
 }
 
 /**
- * Schedules the low-time sound to play exactly when our clock hits 10 seconds.
- * Plays immediately if we're already under 10 seconds. No-ops if already played this game.
+ * Schedules the low-time sound to play exactly when our clock first hits 1/8th of our starting time.
+ * Plays immediately if we're already below that. No-ops if already played this game.
  */
 function rescheduleLowtime(clocks: ClockData): void {
 	clearTimeout(lowtimeTimeoutID);
@@ -132,7 +132,7 @@ function rescheduleLowtime(clocks: ClockData): void {
 	const timeRemaining = clock.getColorTickingTrueTimeRemaining(clocks);
 	if (timeRemaining === null || timeRemaining === undefined) return;
 
-	const timeUntilLowtime = timeRemaining - 10000;
+	const timeUntilLowtime = timeRemaining - clocks.startTime.millis / 8;
 	if (timeUntilLowtime <= 0) playLowtimeSound();
 	else lowtimeTimeoutID = window.setTimeout(playLowtimeSound, timeUntilLowtime);
 }
