@@ -70,7 +70,11 @@ GameBus.addEventListener('game-concluded', () => refresh());
 function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 
-	if (gamefile && gamefileutility.isGameOver(gamefile)) showOnly(element_ActionsOver);
+	if (gamefile && gamefileutility.isGameOver(gamefile)) {
+		// Hide Analysis button if zero moves were played (nothing to analyze).
+		element_Analysis.classList.toggle('hidden', gamefile.moves.length === 0);
+		showOnly(element_ActionsOver);
+	}
 	// Live game: an incoming draw offer trumps the default live actions.
 	else if (drawoffers.areWeAcceptingDraw()) showOnly(element_ActionsDrawOffer);
 	else showOnly(element_ActionsLive);
