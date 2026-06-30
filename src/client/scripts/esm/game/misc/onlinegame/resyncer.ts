@@ -181,6 +181,7 @@ function synchronizeMovesList(
 
 			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
 				doGameOverChecks: isLastMove,
+				clockStamp: thisShortmove.clockStamp,
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
 			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });

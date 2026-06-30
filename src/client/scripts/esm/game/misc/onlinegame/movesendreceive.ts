@@ -109,7 +109,9 @@ function handleOpponentsMove(
 		// Go to latest move before making a new move
 		movesequence.viewFront(gamefile, mesh);
 
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged);
+		movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
+			clockStamp: message.move.clockStamp,
+		});
 
 		// Edit the clocks
 

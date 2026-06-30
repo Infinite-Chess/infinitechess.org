@@ -10,6 +10,7 @@ import type {
 } from '../../../../../../shared/types.js';
 
 import clock from '../../../../../../shared/chess/logic/clock.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
@@ -158,6 +159,13 @@ function handleUpdatedClock(gamefile: GameFile, clockValues: ClockValues): void 
 	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues); // Edit the clocks
 	guiclock.edit(gamefile);
+
+	// 'clock' only arrives right after WE move, so the last move is ours, and our now-frozen
+	// time (untouched by ping, which only adjusts the opponent's ticking clock) is its stamp.
+	// The opponent gets this stamp on their 'move' message; we must derive it since we don't.
+	const ourColor = gamesession.getRole()!;
+	const ourMove = moveutil.getLastMove(gamefile.moves)!;
+	ourMove.clockStamp = clockValues.clocks[ourColor]!;
 }
 
 /**

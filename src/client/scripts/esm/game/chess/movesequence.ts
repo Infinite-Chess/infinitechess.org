@@ -40,7 +40,10 @@ function makeMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	{ doGameOverChecks = true } = {},
+	{
+		doGameOverChecks = true,
+		clockStamp,
+	}: { doGameOverChecks?: boolean; clockStamp?: number } = {},
 ): MoveFull {
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
@@ -54,13 +57,15 @@ function makeMove(
 	// has to enqueue before 'game-concluded's scroll-to-bottom, so the final ply exists when we scroll.
 	GameBus.dispatch('moves-changed');
 
-	// Push the clocks locally if we're in an engine game.
-	// The server handles clocks for online games.
+	// Stamp the move with how much time the player had left after playing it.
 	if (!gamefile.untimed && gamesession.getGameType() === 'engine') {
-		const clockStamp = clock.push(gamefile);
+		// Engine games: push the clocks locally and record the resulting stamp.
+		const stamp = clock.push(gamefile);
 		guiclock.push(gamefile.clocks!);
-		// Add the clock stamp to the move
-		if (clockStamp !== undefined) move.clockStamp = clockStamp;
+		if (stamp !== undefined) move.clockStamp = stamp;
+	} else if (clockStamp !== undefined) {
+		// Online games: the server is boss of the clocks, so record the stamp it reported.
+		move.clockStamp = clockStamp;
 	}
 
 	if (doGameOverChecks) {
@@ -80,9 +85,9 @@ function makeMoveAndAnimate(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
-	{ doGameOverChecks = true } = {},
+	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
 ): MoveFull {
-	const move = makeMove(gamefile, mesh, moveTagged, { doGameOverChecks });
+	const move = makeMove(gamefile, mesh, moveTagged, options);
 	if (mesh) animateMove(move.changes, true);
 	return move;
 }
