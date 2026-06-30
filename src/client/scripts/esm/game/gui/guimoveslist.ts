@@ -9,7 +9,9 @@
  */
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
+import bounds from '../../../../../shared/util/math/bounds.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -21,6 +23,7 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
 import animation from '../rendering/animation.js';
 import holdrepeat from '../../util/holdrepeat.js';
+import Transition from '../rendering/transitions/Transition.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
@@ -251,10 +254,17 @@ async function appendPly(move: MoveFull, index: number): Promise<void> {
 			: shortform;
 	ply.append(silhouette, coord);
 	ply.addEventListener('click', () => {
-		navigateToPly(index);
 		// Drop focus so the next keypress (which controls the board) doesn't reveal the
 		// button's :focus-visible outline — the .current highlight already marks it.
 		ply.blur();
+
+		if (gamesession.isLoading()) return;
+
+		const gamefile = gameslot.getGamefile()!;
+		const wasAlreadySelected = gamefile.state.local.moveIndex === index;
+
+		navigateToPly(gamefile, index);
+		if (wasAlreadySelected) zoomToPlyDestination(gamefile, index);
 	});
 
 	if (index % 2 === 0) {
@@ -335,11 +345,15 @@ function scrollMovesTableToBottom(): void {
 	element_MovesTable.scrollTop = element_MovesTable.scrollHeight;
 }
 
-/** Navigates the game to view the move at `index`, mirroring the nav buttons' behavior. */
-function navigateToPly(index: number): void {
-	if (gamesession.isLoading()) return;
+/** Starts a zoom transition to the move's destination square. */
+function zoomToPlyDestination(gamefile: GameFile, index: number): void {
+	const move = gamefile.moves[index]!;
+	const coordsBox = bounds.getBoxFromCoordsList([move.endCoords]);
+	Transition.zoomToCoordsBox(coordsBox);
+}
 
-	const gamefile = gameslot.getGamefile()!;
+/** Navigates the game to view the move at `index`, mirroring the nav buttons' behavior. */
+function navigateToPly(gamefile: GameFile, index: number): void {
 	const mesh = gameslot.getMesh();
 
 	premoves.cancelPremoves(gamefile, mesh);
