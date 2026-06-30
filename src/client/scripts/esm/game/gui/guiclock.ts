@@ -144,12 +144,14 @@ function playLowtimeSound(): void {
 	gamesound.playLowtime();
 }
 
-/** Updates the displayed time for both clocks. */
+/** Updates the displayed time for both clocks, flagging any below the low-time threshold. */
 function updateTextContent(clocks: ClockData): void {
+	const lowtimeThreshold = clocks.startTime.millis / 8;
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
-		const text = clockutil.getTextContentFromTimeRemain(clocks.currentTime[player]!);
-		clockElements.timer.textContent = text;
+		const timeRemaining = clocks.currentTime[player]!;
+		clockElements.timer.textContent = clockutil.getTextContentFromTimeRemain(timeRemaining);
+		clockElements.bar.classList.toggle('lowtime', timeRemaining < lowtimeThreshold);
 	}
 }
 

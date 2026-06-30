@@ -309,6 +309,11 @@
 	background-color: #00677c;
 }
 
+/* Once below the low-time threshold, the highlight turns red to indicate urgency. */
+.player-bar.tempo.lowtime {
+	background-color: rgb(101 35 32);
+}
+
 .clock {
 	font-size: 1.4em;
 	font-weight: 700;
