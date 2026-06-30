@@ -76,9 +76,8 @@ function render(): void {
 
 	// Before the game is resignable there's no victory/draw to claim — just inform.
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return; // Game not loaded yet, skip this render
 
-	if (moveutil.isGameResignable(gamefile)) {
+	if (gamefile && moveutil.isGameResignable(gamefile)) {
 		const secsRemaining = Math.ceil((claimableAt - Date.now()) / 1000);
 		if (secsRemaining > 0) {
 			const unit = secsRemaining === 1 ? 'second' : 'seconds';
@@ -89,7 +88,7 @@ function render(): void {
 			element_DisconnectButtons?.classList.remove('hidden');
 		}
 	} else {
-		// Abortable, just inform.
+		// Abortable, just inform. (or game not loaded yet -> bug)
 		element_DisconnectText.textContent = lead;
 		element_DisconnectButtons?.classList.add('hidden');
 	}
