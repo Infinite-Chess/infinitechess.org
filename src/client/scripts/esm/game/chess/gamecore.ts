@@ -62,7 +62,7 @@ import {
 
 // Variables -------------------------------------------------------------------------------
 
-let element_overlay: HTMLCanvasElement;
+let element_canvas: HTMLCanvasElement;
 /** The input listener for the board canvas */
 let listener_canvas: InputListener;
 /** The input listener for the document element */
@@ -84,7 +84,7 @@ let effectZoneManager: EffectZoneManager | undefined;
 // Functions -------------------------------------------------------------------------------
 
 function init(canvas: HTMLCanvasElement): void {
-	element_overlay = canvas;
+	element_canvas = canvas;
 	programManager = new ProgramManager(gl);
 	Renderable.init(gl, programManager);
 	maskedDraw.init(programManager);
@@ -95,7 +95,7 @@ function init(canvas: HTMLCanvasElement): void {
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 
-	listener_canvas = CreateInputListener(element_overlay, { keyboard: false });
+	listener_canvas = CreateInputListener(element_canvas, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
 	// Update the pipeline on canvas resize
@@ -318,15 +318,15 @@ function getFurthestTileVisible(): bigint {
 }
 
 /** Returns the overlay element covering the entire canvas. */
-function getOverlay(): HTMLElement {
-	return element_overlay!;
+function getCanvas(): HTMLElement {
+	return element_canvas;
 }
 
 export default {
 	init,
 	update,
 	render,
-	getOverlay,
+	getCanvas,
 };
 
 export { listener_canvas, listener_document };

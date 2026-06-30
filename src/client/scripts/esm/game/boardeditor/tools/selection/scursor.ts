@@ -39,7 +39,7 @@ function removeCursor(cursor: Cursor): void {
 
 /** Updates the current cursor style, if needed, to the highest priority active style. */
 function updateCursor(): void {
-	const overlay = gamecore.getOverlay();
+	const overlay = gamecore.getCanvas();
 
 	// Set cursor to default if no cursor styles are active
 	if (current.size === 0) {

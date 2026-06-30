@@ -85,7 +85,7 @@ function setSessionGame(gameSession: GameSession): void {
 function markLoading(): void {
 	// console.log('START loading.');
 	loading = true;
-	gamecore.getOverlay().classList.add('visibility-hidden');
+	gamecore.getCanvas().classList.add('visibility-hidden');
 }
 
 /**
@@ -95,7 +95,7 @@ function markLoading(): void {
 function markLoadingDone(): void {
 	// console.log('Game fully loaded.');
 	loading = false;
-	gamecore.getOverlay().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
+	gamecore.getCanvas().classList.remove('visibility-hidden'); // Show the canvas now that the game is fully loaded.
 	centerView();
 }
 
