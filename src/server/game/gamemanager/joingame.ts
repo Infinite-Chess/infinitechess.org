@@ -24,9 +24,9 @@ function onJoinGame(ws: CustomWebSocket): void {
 	const servergame = getGameBySocket(ws);
 	if (!servergame) return; // They don't belong in a game, don't join them in one.
 
-	const colorPlayingAs = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
 	try {
-		gameutility.subscribeClientToGame(servergame, ws, colorPlayingAs);
+		gameutility.subscribeClientToGame(servergame, ws, ourRole);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(
@@ -38,7 +38,7 @@ function onJoinGame(ws: CustomWebSocket): void {
 		return;
 	}
 
-	runReconnectSideEffects(servergame, colorPlayingAs);
+	runReconnectSideEffects(servergame, ourRole);
 }
 
 /**

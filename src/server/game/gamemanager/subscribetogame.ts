@@ -26,7 +26,7 @@ function onSubscribeToGame(ws: CustomWebSocket, gameId: number): void {
 		return;
 	}
 
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws);
+	const color = gameutility.getSocketRoleInGame(servergame, ws);
 
 	if (color === undefined) {
 		// Spectator path (not a participant): send the role-agnostic

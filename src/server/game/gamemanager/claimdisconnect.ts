@@ -20,12 +20,6 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 //--------------------------------------------------------------------------------------------------------
 
-/** The color the socket is playing as in the game. */
-function getColorOfSocket(servergame: ServerGame, ws: CustomWebSocket): Player {
-	return (ws.metadata.subscriptions.game?.color ??
-		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!) as Player;
-}
-
 /**
  * Whether `ourColor` may currently claim victory / a draw against their opponent:
  * the game is resignable and ongoing, and the opponent's claim window has opened.
@@ -46,15 +40,15 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
  * @param servergame - The game they are in.
  */
 function claimVictory(ws: CustomWebSocket, servergame: ServerGame): void {
-	const ourColor = getColorOfSocket(servergame, ws);
-	if (!mayClaimAgainstOpponent(servergame, ourColor)) {
+	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
+	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
 			`Player tried to claim victory in game ${servergame.match.id} when they were not allowed to! Ignoring..`,
 			'hackLog',
 		);
 		return;
 	}
-	setGameConclusion(servergame, { victor: ourColor, condition: 'disconnect' });
+	setGameConclusion(servergame, { victor: ourRole, condition: 'disconnect' });
 }
 
 /**
@@ -63,8 +57,8 @@ function claimVictory(ws: CustomWebSocket, servergame: ServerGame): void {
  * @param servergame - The game they are in.
  */
 function claimDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	const ourColor = getColorOfSocket(servergame, ws);
-	if (!mayClaimAgainstOpponent(servergame, ourColor)) {
+	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
+	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
 			`Player tried to claim a draw in game ${servergame.match.id} when they were not allowed to! Ignoring..`,
 			'hackLog',

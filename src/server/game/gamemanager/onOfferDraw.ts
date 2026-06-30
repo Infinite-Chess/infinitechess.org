@@ -31,7 +31,7 @@ import {
 function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log('Client offers a draw.');
 	const match = servergame.match;
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(match, ws)!;
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client offered a draw when the game is already over. Ignoring.');
@@ -61,7 +61,7 @@ function offerDraw(ws: CustomWebSocket, servergame: ServerGame): void {
  */
 function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
 	// console.log('Client accepts a draw.');
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 
 	if (gameutility.isGameOver(servergame))
 		return console.error('Client accepted a draw when the game is already over. Ignoring.');
@@ -82,7 +82,7 @@ function acceptDraw(ws: CustomWebSocket, servergame: ServerGame): void {
  * @param servergame - The game they are in.
  */
 function declineDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
 
 	// Since this method is run every time a move is submitted, we have to early exit

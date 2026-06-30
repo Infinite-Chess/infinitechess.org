@@ -69,10 +69,8 @@ function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 	}
 
 	// Resign
-	const ourColor =
-		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
-	const opponentColor = typeutil.invertPlayer(ourColor);
+	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
+	const opponentColor = typeutil.invertPlayer(ourRole);
 	setGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 }
 

@@ -702,34 +702,19 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 }
 
 /**
- * Tests if the given socket belongs in the game. If so, it returns the color they are.
- * @param match - The game
- * @param ws - The websocket
- * @returns The color they are, if they belong, otherwise *undefined*.
+ * Resolves the color a websocket is playing as in a specific live game, if they are a participant.
+ * Uses game subscription metadata when valid, with identity fallback for resync/refresh cases.
+ * @returns The player's color if the socket belongs to the game, otherwise undefined.
  */
-function doesSocketBelongToGame_ReturnColor(
-	match: MatchInfo,
-	ws: CustomWebSocket,
-): Player | undefined {
+function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Player | undefined {
+	const match = servergame.match;
 	if (match.id === ws.metadata.subscriptions.game?.id)
-		return ws.metadata.subscriptions.game?.color;
-	// Color isn't provided in their subscriptions, perhaps this is a resync/refresh?
-	return doesPlayerBelongToGame_ReturnColor(match, ws.metadata.memberInfo);
-}
-
-/**
- * Tests if the given player belongs in the game. If so, it returns the color they are.
- * @param match - The game
- * @param player - The player object with one of 2 properties: `member` or `browser`, depending on if they are signed in.
- * @returns The color they are, if they belong, otherwise *false*.
- */
-function doesPlayerBelongToGame_ReturnColor(
-	match: MatchInfo,
-	player: AuthMemberInfo,
-): Player | undefined {
+		return ws.metadata.subscriptions.game.color;
+	// Color isn't provided in subscriptions (e.g. resync/refresh), resolve by identity.
+	const identity = ws.metadata.memberInfo;
 	for (const [splayer, data] of Object.entries(match.playerData)) {
 		const playercolor = Number(splayer) as Player;
-		if (memberInfoEq(player, data.identifier)) return playercolor;
+		if (memberInfoEq(identity, data.identifier)) return playercolor;
 	}
 	return undefined;
 }
@@ -1013,7 +998,7 @@ export default {
 	broadcastParticipantGameUpdate,
 	sendGameUpdateToColor,
 	sendRatingChangeToAllPlayers,
-	doesSocketBelongToGame_ReturnColor,
+	getSocketRoleInGame,
 	sendMessageToSocketOfColor,
 	printGame,
 	getSimplifiedGameString,

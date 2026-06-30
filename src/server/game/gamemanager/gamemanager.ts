@@ -215,7 +215,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 
 	if (gameutility.isGameOver(servergame)) return; // It's fine if players unsub/disconnect after the game has ended.
 
-	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)! as Player;
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
 		startDisconnectCushionTimerAndPersist(servergame, color);
@@ -313,9 +313,7 @@ function onRequestRemovalFromPlayersInActiveGames(
 	// and the game is scheduled to be deleted, just delete it now!
 
 	// Is the opponent still in the players in active games list? (has not seen the game results)
-	const color =
-		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 	const opponentColor = typeutil.invertPlayer(color);
 	if (!hasColorInGameSeenConclusion(servergame.match, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
 

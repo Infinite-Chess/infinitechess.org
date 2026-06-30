@@ -39,9 +39,7 @@ function onReport(
 	// { reason, opponentsMoveNumber }
 	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
-	const ourColor =
-		ws.metadata.subscriptions.game?.color ||
-		gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)!;
+	const ourColor = gameutility.getSocketRoleInGame(servergame, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.

@@ -52,16 +52,14 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 	}
 
 	// Verify
-	const colorPlayingAs =
-		ws.metadata.subscriptions.game?.color ??
-		gameutility.doesSocketBelongToGame_ReturnColor(game.match, ws);
-	if (!colorPlayingAs) {
+	const ourRole = gameutility.getSocketRoleInGame(game, ws);
+	if (!ourRole) {
 		sendSocketMessage(ws, 'game', 'login'); // Unable to verify their socket belongs to this game (probably logged out)
 		return;
 	}
 
 	try {
-		gameutility.resyncToGame(ws, game, colorPlayingAs, replyToMessageID);
+		gameutility.resyncToGame(ws, game, ourRole, replyToMessageID);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(
@@ -74,8 +72,8 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 		return;
 	}
 
-	cancelDisconnectTimer(game.match, colorPlayingAs);
-	liveGameValues.onPlayerReconnected(game, colorPlayingAs);
+	cancelDisconnectTimer(game.match, ourRole);
+	liveGameValues.onPlayerReconnected(game, ourRole);
 }
 
 /** Sends a client a game from the database. */
