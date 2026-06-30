@@ -141,13 +141,14 @@ koth = "reaching the center"
 # Win conditions — non move-triggered, can happen any time
 time = "time forfeit"
 resignation = "resignation"
-disconnect = "abandonment"
+disconnect = "abandonment" # Player chose to claim victory from their disconnected opponent.
 # Draw conditions
 stalemate = "stalemate"
 moverule = "the move rule"
 repetition = "repetition"
 insuffmat = "insufficient material"
 agreement = "agreement"
+abandonment = "abandonment" # Player chose to claim a draw from their disconnected opponent, or both players abandoned the game.
 
 [variant_preview]
 # Narrative phrasing for the variant preview tooltip's rules list.

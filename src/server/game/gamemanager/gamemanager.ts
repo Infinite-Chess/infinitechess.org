@@ -40,9 +40,10 @@ import {
 	hasColorInGameSeenConclusion,
 } from './activeplayers.js';
 import {
-	startDisconnectTimer,
+	setOpponentClaimWindow,
 	cancelDisconnectTimers,
-	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
+	timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
+	timeBeforeClaimableByDisconnectMillis_NotByChoice,
 } from './disconnect.js';
 
 // Constants ----------------------------------------------------------------------------------
@@ -118,7 +119,7 @@ function createGame(
 		// while any other open lobby tabs show the in-game banner.
 		broadcastMemberInGameStatus(identifier);
 		// Arm the silent disconnect cushion up front: the re-subscribe cancels it,
-		// while a no-show (e.g. tab close) auto-resigns after the cushion.
+		// while a no-show (e.g. tab close) opens the opponent's claim window after the cushion.
 		startDisconnectCushionTimerAndPersist(servergame, player);
 	}
 
@@ -161,28 +162,28 @@ function isMemberInSomeActiveGame(username: string): boolean {
 /**
  * Starts the 5-second cushion timer for a player who disconnected not by their own choice
  * (network interruption). After the cushion elapses, if they have not yet reconnected,
- * the full disconnect auto-resign timer is started.
+ * their opponent's claim window is opened.
  * Also persists the cushion state to the database.
  * @param servergame - The game
  * @param color - The player who disconnected
  */
 function startDisconnectCushionTimerAndPersist(servergame: ServerGame, color: Player): void {
 	servergame.match.playerData[color]!.disconnect.startID = setTimeout(
-		() => startDisconnectTimerAndPersist(servergame, color, true),
-		timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
+		() => setClaimWindowAndPersist(servergame, color, true),
+		timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
 	);
 	servergame.match.playerData[color]!.disconnect.startTime =
-		Date.now() + timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis;
+		Date.now() + timeToGiveDisconnectedBeforeOpeningClaimWindowMillis;
 	liveGameValues.onPlayerDisconnected(servergame, color);
 }
 
-/** Starts the auto-resign disconnect timer and immediately persists the new disconnect state to the database. */
-function startDisconnectTimerAndPersist(
+/** Records the opponent's claim window against a disconnected player and persists the new state. */
+function setClaimWindowAndPersist(
 	servergame: ServerGame,
 	color: Player,
 	closureNotByChoice: boolean,
 ): void {
-	startDisconnectTimer(servergame, color, closureNotByChoice, onPlayerLostByDisconnect);
+	setOpponentClaimWindow(servergame, color, closureNotByChoice);
 	liveGameValues.onPlayerDisconnected(servergame, color);
 }
 
@@ -216,13 +217,16 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 
 	const color = gameutility.doesSocketBelongToGame_ReturnColor(servergame.match, ws)! as Player;
 	if (unsubNotByChoice) {
-		// Internet interruption. Give them 5 seconds before starting auto-resign timer.
-		// console.log('Waiting 5 seconds before starting disconnection timer.');
+		// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
 		startDisconnectCushionTimerAndPersist(servergame, color);
 	} else {
-		// Closed tab manually. Immediately start auto-resign timer.
-		startDisconnectTimerAndPersist(servergame, color, unsubNotByChoice);
+		// Closed tab manually. Immediately open the opponent's claim window.
+		setClaimWindowAndPersist(servergame, color, unsubNotByChoice);
 	}
+
+	// If this leaves BOTH players disconnected, start the timer that concludes the
+	// game if neither returns (no one is present to claim victory/draw).
+	maybeStartBothDisconnectedTimer(servergame);
 }
 
 /**
@@ -465,22 +469,46 @@ function onPlayerLostOnTime(servergame: ServerGame): void {
 }
 
 /**
- * Called when a player in the game loses by disconnection.
- * Sets the gameConclusion, notifies the opponent.
- * @param servergame - The game
- * @param colorWon - The color that won by opponent disconnection
+ * Starts the both-disconnected timer if BOTH players are currently disconnected and it
+ * isn't already running. When it fires (neither having reconnected), the game concludes
+ * as a draw by abandonment, or is aborted if not yet resignable.
+ * @param explicitEndTime - On restart, the persisted deadline to revive exactly. Omit to start fresh.
  */
-function onPlayerLostByDisconnect(servergame: ServerGame, colorWon: Player): void {
-	if (gameutility.isGameOver(servergame))
-		return console.error(
-			'We should have cancelled the auto-loss-by-disconnection timer when the game ended!',
-		);
+function maybeStartBothDisconnectedTimer(servergame: ServerGame, explicitEndTime?: number): void {
+	const match = servergame.match;
+	if (match.bothDisconnectedTimeoutID !== undefined) return; // Already running.
+
+	const bothDisconnected = Object.keys(match.playerData).every((c) =>
+		gameutility.isColorDisconnected(match, Number(c) as Player),
+	);
+	if (!bothDisconnected) return;
+
+	const endTime =
+		explicitEndTime ?? Date.now() + timeBeforeClaimableByDisconnectMillis_NotByChoice;
+	const remaining = endTime - Date.now();
+	if (remaining <= 0) return onBothPlayersDisconnected(servergame); // Already elapsed (restart).
+
+	match.bothDisconnectedEndTime = endTime;
+	match.bothDisconnectedTimeoutID = setTimeout(
+		() => onBothPlayersDisconnected(servergame),
+		remaining,
+	);
+	liveGameValues.onBothDisconnectedTimerChanged(servergame);
+}
+
+/**
+ * Called when both players have been disconnected too long for either to claim.
+ * Concludes the game as a draw by abandonment, or aborts it if not yet resignable.
+ */
+function onBothPlayersDisconnected(servergame: ServerGame): void {
+	servergame.match.bothDisconnectedTimeoutID = undefined;
+	servergame.match.bothDisconnectedEndTime = undefined;
+
+	if (gameutility.isGameOver(servergame)) return;
 
 	if (gameutility.isGameResignable(servergame)) {
-		// console.log('Someone has lost by disconnection!');
-		setGameConclusion(servergame, { victor: colorWon, condition: 'disconnect' });
+		setGameConclusion(servergame, { victor: null, condition: 'abandonment' });
 	} else {
-		// console.log('Game aborted from disconnection.');
 		setGameConclusion(servergame, { condition: 'aborted' });
 	}
 }
@@ -630,42 +658,27 @@ function restoreLiveGames(): void {
 			);
 		}
 
-		// 3. Per-player disconnect timers
+		// 3. Per-player disconnect state (claim windows).
+		// An already-elapsed window simply restores as already-claimable.
 		for (const [playerStr, timerState] of Object.entries(pendingTimers.disconnectTimers)) {
 			const player = Number(playerStr) as Player;
-			const opponentColor = typeutil.invertPlayer(player);
 
 			if (timerState.type === 'timer') {
-				// Disconnect auto-resign timer was active
-				if (timerState.remainingMs <= 0) {
-					// Timer already expired, immediately resign
-					onPlayerLostByDisconnect(servergame, opponentColor);
-					break; // Game is over
-				}
-				// Revive the timer for the remaining duration exactly.
-				// No sockets are connected yet at startup, so skip the opponent notification.
+				// The opponent's claim window was already open. Restore the timestamp; nothing
+				// fires. If it's now in the past, the window is simply already claimable.
 				const playerdata = servergame.match.playerData[player]!;
 				playerdata.disconnect.startTime = undefined;
-				playerdata.disconnect.timeoutID = setTimeout(
-					() => onPlayerLostByDisconnect(servergame, opponentColor),
-					timerState.remainingMs,
-				);
-				playerdata.disconnect.timeToAutoLoss = Date.now() + timerState.remainingMs;
+				playerdata.disconnect.timeOpponentMayClaim = Date.now() + timerState.remainingMs;
 				playerdata.disconnect.wasByChoice = timerState.byChoice;
 			} else if (timerState.type === 'cushion') {
 				// Still in the 5-second cushion period
 				if (timerState.remainingMs <= 0) {
-					// Cushion has elapsed, start the disconnect timer immediately and persist that state.
-					startDisconnectTimerAndPersist(servergame, player, !timerState.byChoice);
+					// Cushion has elapsed, open the claim window immediately and persist that state.
+					setClaimWindowAndPersist(servergame, player, !timerState.byChoice);
 				} else {
 					// Revive the cushion timer for the remaining duration
 					servergame.match.playerData[player]!.disconnect.startID = setTimeout(
-						() =>
-							startDisconnectTimerAndPersist(
-								servergame,
-								player,
-								!timerState.byChoice,
-							),
+						() => setClaimWindowAndPersist(servergame, player, !timerState.byChoice),
 						timerState.remainingMs,
 					);
 					servergame.match.playerData[player]!.disconnect.startTime =
@@ -677,6 +690,11 @@ function restoreLiveGames(): void {
 				startDisconnectCushionTimerAndPersist(servergame, player);
 			}
 		}
+
+		// 4. Both-disconnected timer. If both players ended up disconnected, revive the
+		//    persisted deadline (fires immediately if elapsed), or start fresh if the
+		//    restart itself disconnected both (no deadline was persisted).
+		maybeStartBothDisconnectedTimer(servergame, pendingTimers.bothDisconnectedEndTime);
 	}
 }
 

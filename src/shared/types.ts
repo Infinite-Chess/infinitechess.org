@@ -91,12 +91,14 @@ export const DrawOfferInfoSchema = z.strictObject({
 });
 
 /** Contains information about an opponent's disconnection. */
+export type DisconnectInfo = z.infer<typeof DisconnectInfoSchema>;
 export const DisconnectInfoSchema = z.strictObject({
 	/**
-	 * How many milliseconds left until our opponent will be auto-resigned from disconnection,
-	 * at the time the server sent the message. Subtract half our ping to get the correct estimated value!
+	 * How many milliseconds remain, at the time the server sent the message, until we
+	 * may claim victory / a draw against our disconnected opponent. The client counts
+	 * down from this.
 	 */
-	millisUntilAutoDisconnectResign: z.number(),
+	millisUntilClaimable: z.number(),
 	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
 	wasByChoice: z.boolean(),
 });

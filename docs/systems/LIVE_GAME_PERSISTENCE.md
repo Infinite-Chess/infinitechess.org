@@ -51,17 +51,18 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 
 #### Group 5: Game Conclusion
 
-| Column                 | Type    | Notes                                                                                       |
-| ---------------------- | ------- | ------------------------------------------------------------------------------------------- |
-| `conclusion_condition` | TEXT    | e.g. `"checkmate"`, `"time"`, `"resignation"`, `"aborted"`, `"agreement"`. NULL if ongoing. |
-| `conclusion_victor`    | INTEGER | Winning player number. NULL for draw, ongoing, or aborted.                                  |
-| `time_ended`           | INTEGER | Epoch ms when game concluded. NULL if ongoing.                                              |
+| Column                 | Type    | Notes                                                                                                                                                               |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `conclusion_condition` | TEXT    | e.g. `"checkmate"`, `"time"`, `"resignation"`, `"aborted"`, `"agreement"`, `"disconnect"` (claimed win), `"abandonment"` (claimed/both-gone draw). NULL if ongoing. |
+| `conclusion_victor`    | INTEGER | Winning player number. NULL for draw, ongoing, or aborted.                                                                                                          |
+| `time_ended`           | INTEGER | Epoch ms when game concluded. NULL if ongoing.                                                                                                                      |
 
 #### Group 6: Timer State
 
-| Column        | Type    | Notes                                                                                                                                                                            |
-| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `delete_time` | INTEGER | Epoch ms when the concluded game is deleted and logged. NULL if ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis`. On restoration, if elapsed, immediately run logging. |
+| Column                       | Type    | Notes                                                                                                                                                                                                                          |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `delete_time`                | INTEGER | Epoch ms when the concluded game is deleted and logged. NULL if ongoing. Set to `timeEnded + timeBeforeGameDeletionMillis`. On restoration, if elapsed, immediately run logging.                                               |
+| `both_disconnected_end_time` | INTEGER | Epoch ms when the both-disconnected timer concludes the game (draw by abandonment, or abort) if neither player returns. NULL unless both players are currently disconnected. On restoration, if elapsed, conclude immediately. |
 
 #### Group 7: Flags
 
@@ -84,30 +85,34 @@ One row per player per live game.
 | `last_draw_offer_ply`         | INTEGER          | Ply (0-based) of the player's last draw offer. NULL if never offered.                                                                       |
 | `time_remaining_ms`           | INTEGER          | Milliseconds remaining at time of snapshot. NULL if untimed.                                                                                |
 | `disconnect_cushion_end_time` | INTEGER          | Epoch ms when the 5-second reconnection cushion expires. NULL if no cushion is active.                                                      |
-| `disconnect_resign_time`      | INTEGER          | Epoch ms when the auto-resign fires. NULL if no active disconnect timer.                                                                    |
+| `disconnect_claim_time`       | INTEGER          | Epoch ms from which the opponent may claim victory/a draw against this player. NULL if no claim window is set.                              |
 | `disconnect_by_choice`        | BOOLEAN          | 1 = intentional disconnect (10s timer), 0 = network drop (60s timer). NULL if player was connected. CHECK (disconnect_by_choice IN (0, 1)). |
 
 **Three-case disconnect restoration:**
 
-- `disconnect_resign_time` non-NULL → auto-resign timer was active; restore from that timestamp.
-- `disconnect_cushion_end_time` non-NULL, `disconnect_resign_time` NULL → still in the 5-second cushion; revive it (or start the auto-resign timer if elapsed).
-- All disconnect columns NULL → player was connected before the restart; start a fresh 60-second timer (server restart counts as not-by-choice).
+- `disconnect_claim_time` non-NULL → the opponent's claim window was set; restore the timestamp (if already past, the window is simply already claimable).
+- `disconnect_cushion_end_time` non-NULL, `disconnect_claim_time` NULL → still in the 5-second cushion; revive it (or open the claim window if elapsed).
+- All disconnect columns NULL → player was connected before the restart; start a fresh 5-second cushion (server restart counts as not-by-choice).
+
+After restoring per-player disconnect state, if **both** players are disconnected, `both_disconnected_end_time` is revived (or, if NULL because the restart itself disconnected both, started fresh at 60 seconds).
 
 ---
 
 ## Event Matrix: When Each Column Is Written
 
-| Event                   | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Game created**        | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, defaults)                                                       |
-| **Move submitted**      | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (both players)                                                                   |
-| **Draw offer extended** | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (offering player)                                                              |
-| **Draw offer declined** | `draw_offer_state` → NULL                                                                                        | —                                                                                                    |
-| **Draw accepted**       | `conclusion_condition`, `conclusion_victor`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                                                    |
-| **Resignation**         | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
-| **Abort**               | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                                                    |
-| **Time loss**           | `conclusion_condition`, `conclusion_victor`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                                                  |
-| **Disconnect loss**     | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                    |
-| **Player disconnects**  | —                                                                                                                | `disconnect_cushion_end_time`, `disconnect_resign_time`, `disconnect_by_choice`                      |
-| **Player reconnects**   | —                                                                                                                | `disconnect_cushion_end_time` → NULL, `disconnect_resign_time` → NULL, `disconnect_by_choice` → NULL |
-| **Game deleted/logged** | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                    |
+| Event                                                       | `live_games` Columns Updated                                                                                     | `live_player_games` Columns Updated                                                                 |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Game created**                                            | INSERT full row (all Group 1 columns, defaults for the rest)                                                     | INSERT one row per player (identity, defaults)                                                      |
+| **Move submitted**                                          | `moves`, `color_ticking`, `clock_snapshot_time`, `validate_moves`                                                | `time_remaining_ms` (both players)                                                                  |
+| **Draw offer extended**                                     | `draw_offer_state`                                                                                               | `last_draw_offer_ply` (offering player)                                                             |
+| **Draw offer declined**                                     | `draw_offer_state` → NULL                                                                                        | —                                                                                                   |
+| **Draw accepted**                                           | `conclusion_condition`, `conclusion_victor`, `time_ended`, `draw_offer_state`, `delete_time`                     | —                                                                                                   |
+| **Resignation**                                             | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`                                         | —                                                                                                   |
+| **Abort**                                                   | `conclusion_condition`, `time_ended`, `delete_time`                                                              | —                                                                                                   |
+| **Time loss**                                               | `conclusion_condition`, `conclusion_victor`, `time_ended`, `color_ticking`, `clock_snapshot_time`, `delete_time` | `time_remaining_ms`                                                                                 |
+| **Claim victory/draw**                                      | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`, `both_disconnected_end_time` → NULL    | —                                                                                                   |
+| **Player disconnects**                                      | —                                                                                                                | `disconnect_cushion_end_time`, `disconnect_claim_time`, `disconnect_by_choice`                      |
+| **Player reconnects**                                       | `both_disconnected_end_time` → NULL                                                                              | `disconnect_cushion_end_time` → NULL, `disconnect_claim_time` → NULL, `disconnect_by_choice` → NULL |
+| **Both-disconnected timer set/cleared**                     | `both_disconnected_end_time`                                                                                     | —                                                                                                   |
+| **Both-disconnected timeout** (draw by abandonment / abort) | `conclusion_condition`, `conclusion_victor`, `time_ended`, `delete_time`, `both_disconnected_end_time` → NULL    | —                                                                                                   |
+| **Game deleted/logged**                                     | DELETE row (cascades to `live_player_games`)                                                                     | —                                                                                                   |

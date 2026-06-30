@@ -42,6 +42,8 @@ export interface LiveGameData {
 	delete_time: number | null;
 	/** 0 = false, 1 = true */
 	validate_moves: 0 | 1;
+	/** Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected. */
+	both_disconnected_end_time: number | null;
 }
 
 // Methods --------------------------------------------------------------------------------------------
@@ -58,8 +60,8 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				moves, color_ticking, clock_snapshot_time,
 				draw_offer_state,
 				conclusion_condition, conclusion_victor, time_ended,
-				delete_time, validate_moves
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				delete_time, validate_moves, both_disconnected_end_time
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 	dbCall(
 		() =>
@@ -80,6 +82,7 @@ export function insertLiveGame(record: LiveGamesRecord): void {
 				record.time_ended,
 				record.delete_time,
 				record.validate_moves,
+				record.both_disconnected_end_time,
 			]),
 		`Error inserting live game ${record.game_id}`,
 	);

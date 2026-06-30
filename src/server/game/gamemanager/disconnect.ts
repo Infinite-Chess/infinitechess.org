@@ -1,8 +1,13 @@
 // src/server/game/gamemanager/disconnect.ts
 
 /**
- * The script handles the setting, resetting, and cancellation
- * of the disconnection timer when they leave the page / lose internet.
+ * This script handles opening, resetting, and cancelling a disconnected player's
+ * "claim window" — the point from which their opponent may claim victory or a draw
+ * — when they leave the page / lose internet.
+ *
+ * The claim window is just a timestamp, validated on-demand when a claim arrives.
+ * The opponent may sit and do nothing, and they lose the opportunity the moment
+ * the disconnected player reconnects.
  */
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
@@ -17,64 +22,60 @@ import gameutility from './gameutility.js';
 /**
  * The time to give players who disconnected not by choice
  * (network interruption) to reconnect to the game before
- * we tell their opponent they've disconnected, and start an auto-resign timer.
+ * we tell their opponent they've disconnected, and open the claim window.
  */
-const timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis = 5_000; // 5 seconds
+const timeToGiveDisconnectedBeforeOpeningClaimWindowMillis = 5_000; // 5 seconds
 
 /**
- * The duration of the auto-resign timer by disconnect
- * when the player has intentionally left the page.
+ * How long after disconnection, when the player intentionally left the page,
+ * before their opponent may claim victory / a draw against them.
  */
-const timeBeforeAutoResignByDisconnectMillis = 10_000; // 10 seconds
+const timeBeforeClaimableByDisconnectMillis = 10_000; // 10 seconds
 /**
- * The duration of the auto-resign timer by disconnect (more forgiving),
- * when the player's internet cuts out.
+ * How long after disconnection, when the player's internet cuts out (more forgiving),
+ * before their opponent may claim victory / a draw against them.
+ *
+ * Reused as the duration of the both-disconnected timer (see gamemanager): once BOTH
+ * players are disconnected, the game concludes after this long if neither reconnects.
  */
-const timeBeforeAutoResignByDisconnectMillis_NotByChoice = 60_000; // 60 seconds
+const timeBeforeClaimableByDisconnectMillis_NotByChoice = 60_000; // 60 seconds
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Starts a timer to auto-resign a player from disconnection.
+ * Records, for a disconnected player, the timestamp from which their opponent may claim
+ * victory / a draw, and tells the opponent the countdown. The claim window "opens" once
+ * that timestamp passes; the client reveals the claim buttons and the server validates
+ * any claim against the timestamp.
  * @param servergame - The game
- * @param color - The color to start the auto-resign timer for
+ * @param color - The color that disconnected
  * @param closureNotByChoice - True if the player didn't close the connection on purpose.
- * @param onAutoResignFunc - The function to call when the player should be auto resigned from disconnection. This should have 2 arguments: The game, and the color that won.
  */
-function startDisconnectTimer(
+function setOpponentClaimWindow(
 	servergame: ServerGame,
 	color: Player,
 	closureNotByChoice: boolean,
-	onAutoResignFunc: (_game: ServerGame, _winner: Player) => void,
 ): void {
-	// console.log(`Starting disconnect timer to auto resign player ${color}.`);
-
 	const now = Date.now();
 	const resignable = gameutility.isGameResignable(servergame);
 
-	const timeBeforeAutoResign =
+	const timeUntilClaimable =
 		closureNotByChoice && resignable
-			? timeBeforeAutoResignByDisconnectMillis_NotByChoice
-			: timeBeforeAutoResignByDisconnectMillis;
-	// console.log(`Time before auto resign: ${timeBeforeAutoResign}`)
-	const timeToAutoLoss = now + timeBeforeAutoResign;
+			? timeBeforeClaimableByDisconnectMillis_NotByChoice
+			: timeBeforeClaimableByDisconnectMillis;
 
 	const playerdata = servergame.match.playerData[color]!;
 	const opponentColor = typeutil.invertPlayer(color);
 
-	// Clear the cushion timer state since we're transitioning to the auto-resign timer.
+	// Clear the cushion state since we're transitioning to the open claim window.
 	playerdata.disconnect.startTime = undefined;
 
-	playerdata.disconnect.timeoutID = setTimeout(
-		() => onAutoResignFunc(servergame, opponentColor),
-		timeBeforeAutoResign,
-	);
-	playerdata.disconnect.timeToAutoLoss = timeToAutoLoss;
+	playerdata.disconnect.timeOpponentMayClaim = now + timeUntilClaimable;
 	playerdata.disconnect.wasByChoice = !closureNotByChoice;
 
-	// Alert their opponent the time their opponent will be auto-resigned by disconnection.
+	// Alert their opponent when they'll be able to claim victory by disconnection.
 	const value = {
-		millisUntilAutoDisconnectResign: timeBeforeAutoResign,
+		millisUntilClaimable: timeUntilClaimable,
 		wasByChoice: !closureNotByChoice,
 	};
 	gameutility.sendMessageToSocketOfColor(
@@ -87,7 +88,7 @@ function startDisconnectTimer(
 }
 
 /**
- * Cancels both players timers to auto-resign them from disconnection if they were disconnected.
+ * Cancels both players' claim windows if they were disconnected.
  * Typically called when a game ends.
  * @param match - The match
  */
@@ -98,39 +99,39 @@ function cancelDisconnectTimers(match: MatchInfo): void {
 }
 
 /**
- * Cancels the player's timer to auto-resign them from disconnection if they were disconnected.
- * This is called when they reconnect/refresh.
+ * Cancels the player's disconnect state (cushion + open claim window) if they were
+ * disconnected. Also cancels the game-level both-disconnected timer, since a reconnect
+ * means the two players are no longer both gone. Called when they reconnect/refresh.
  * @param match - The game
  * @param color - The color to cancel the timer for
+ * @param dontNotifyOpponent - When true, skip telling the opponent the player returned.
  */
 function cancelDisconnectTimer(
 	match: MatchInfo,
 	color: Player,
 	dontNotifyOpponent: boolean = false,
 ): void {
-	// console.log(`Canceling disconnect timer for player ${color}!`)
-
-	/** Whether the timer (not the cushion to start the timer) for auto-resigning is RUNNING! */
-	const autoResignTimerWasRunning = gameutility.isAutoResignDisconnectTimerActiveForColor(
-		match,
-		color,
-	);
+	/** Whether the opponent had been told they could claim (the claim window was set). */
+	const claimWindowWasSet = gameutility.isClaimWindowSetForColor(match, color);
 
 	const playerdata = match.playerData[color]!;
 
 	clearTimeout(playerdata.disconnect.startID);
-	clearTimeout(playerdata.disconnect.timeoutID);
 	playerdata.disconnect.startID = undefined;
 	playerdata.disconnect.startTime = undefined;
-	playerdata.disconnect.timeoutID = undefined;
-	playerdata.disconnect.timeToAutoLoss = undefined;
+	playerdata.disconnect.timeOpponentMayClaim = undefined;
 	playerdata.disconnect.wasByChoice = undefined;
+
+	// A reconnect (or game over) means the players are no longer both disconnected.
+	clearTimeout(match.bothDisconnectedTimeoutID);
+	match.bothDisconnectedTimeoutID = undefined;
+	match.bothDisconnectedEndTime = undefined;
 
 	if (dontNotifyOpponent) return;
 
 	// Alert their opponent we have returned
 
-	if (!autoResignTimerWasRunning) return; // Their timer wasn't running in the first place, skip.
+	if (!claimWindowWasSet) return; // The opponent was never told, skip.
 
 	const opponentColor = typeutil.invertPlayer(color);
 	gameutility.sendMessageToSocketOfColor(
@@ -144,8 +145,9 @@ function cancelDisconnectTimer(
 //--------------------------------------------------------------------------------------------------------
 
 export {
-	timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis,
-	startDisconnectTimer,
+	timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
+	timeBeforeClaimableByDisconnectMillis_NotByChoice,
+	setOpponentClaimWindow,
 	cancelDisconnectTimers,
 	cancelDisconnectTimer,
 };

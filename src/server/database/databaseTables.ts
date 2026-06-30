@@ -114,6 +114,7 @@ const allLiveGamesColumns: string[] = [
 	'time_ended',
 	'delete_time',
 	'validate_moves',
+	'both_disconnected_end_time',
 ];
 
 /** All columns of the live_player_games table. */
@@ -125,7 +126,7 @@ const allLivePlayerGamesColumns: string[] = [
 	'last_draw_offer_ply',
 	'time_remaining_ms',
 	'disconnect_cushion_end_time',
-	'disconnect_resign_time',
+	'disconnect_claim_time',
 	'disconnect_by_choice',
 ];
 
@@ -362,7 +363,8 @@ function generateTables(): void {
 			conclusion_victor     INTEGER,
 			time_ended            INTEGER,
 			delete_time           INTEGER,
-			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1))
+			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
+			both_disconnected_end_time INTEGER -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
 		);
 	`);
 
@@ -376,7 +378,7 @@ function generateTables(): void {
 			last_draw_offer_ply             INTEGER,
 			time_remaining_ms               INTEGER,
 			disconnect_cushion_end_time     INTEGER,
-			disconnect_resign_time          INTEGER,
+			disconnect_claim_time           INTEGER, -- Epoch ms from which the opponent may claim victory/draw. NULL if no claim window.
 			disconnect_by_choice            INTEGER CHECK (disconnect_by_choice IN (0, 1)),
 			PRIMARY KEY (game_id, player_number)
 		);
@@ -393,6 +395,8 @@ function initDatabase(): void {
 	clearSpamReportBlacklistEntries();
 	makeVariantColumnsNullableIfNeeded();
 	addPositionColumnToLiveGamesIfNeeded();
+	renameDisconnectResignTimeColumnIfNeeded();
+	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
@@ -527,6 +531,37 @@ function addPositionColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'position')) return; // Already present, nothing to do.
 	db.run('ALTER TABLE live_games ADD COLUMN position TEXT');
 	console.log('Temporary DB migration: added live_games.position column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Renames `live_player_games.disconnect_resign_time` → `disconnect_claim_time`. The column's
+ * meaning changed: it no longer auto-resigns the player, it now marks the epoch ms from which
+ * the opponent may claim victory/draw. The stored value (the same instant) carries over.
+ * Fresh DBs get the new name from `generateTables()`.
+ */
+function renameDisconnectResignTimeColumnIfNeeded(): void {
+	if (!db.columnExists('live_player_games', 'disconnect_resign_time')) return; // Already migrated.
+	db.run(
+		'ALTER TABLE live_player_games RENAME COLUMN disconnect_resign_time TO disconnect_claim_time',
+	);
+	console.log(
+		'Temporary DB migration: renamed live_player_games.disconnect_resign_time to disconnect_claim_time.',
+	);
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Adds the nullable `both_disconnected_end_time` column to `live_games` — the epoch ms the
+ * both-disconnected timer concludes the game (draw by abandonment, or abort) when neither
+ * player is present to claim. Fresh DBs get the column from `generateTables()`.
+ */
+function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
+	if (db.columnExists('live_games', 'both_disconnected_end_time')) return; // Already present.
+	db.run('ALTER TABLE live_games ADD COLUMN both_disconnected_end_time INTEGER');
+	console.log('Temporary DB migration: added live_games.both_disconnected_end_time column.');
 }
 
 /**

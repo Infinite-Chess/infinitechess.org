@@ -70,10 +70,10 @@ export const timeBeforeGameDeletionMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
 
-/** Contains information about this player's disconnection and auto resign timer. */
+/** Contains information about this player's disconnection and claim-window timer. */
 type PlayerDisconnect = {
 	/**
-	 * The timeout id of the timer that will START the auto disconnection timer
+	 * The timeout id of the timer that will OPEN the opponent's claim window.
 	 * This is triggered if their socket unexpectedly closes,
 	 * and lasts for 5 seconds to give them a chance to reconnect.
 	 */
@@ -87,15 +87,12 @@ type PlayerDisconnect = {
 } & (
 	| {
 			/**
-			 * The timeout id of the timer that will auto-resign the
-			 * player if they are disconnected for too long.
+			 * The epoch-ms timestamp from which the OPPONENT is allowed to claim
+			 * victory or a draw against this disconnected player. The claim is
+			 * validated on-demand against this timestamp when it arrives. Once
+			 * this is in the past, the opponent's claim window is open.
 			 */
-			timeoutID: NodeJS.Timeout;
-			/**
-			 * The estimated timestamp that the player will
-			 * be auto-resigned from being disconnected too long.
-			 */
-			timeToAutoLoss: number;
+			timeOpponentMayClaim: number;
 			/**
 			 * Whether the player was disconnected by choice or not.
 			 * If not, they are given extra time to reconnect.
@@ -103,8 +100,7 @@ type PlayerDisconnect = {
 			wasByChoice: boolean;
 	  }
 	| {
-			timeoutID: undefined;
-			timeToAutoLoss: undefined;
+			timeOpponentMayClaim: undefined;
 			wasByChoice: undefined;
 	  }
 );
@@ -159,6 +155,18 @@ interface MatchInfo {
 	/** The ID of the timer to delete the match after it has ended.
 	 * This can be used to cancel it in case a hacking was reported. */
 	deleteTimeoutID?: ReturnType<typeof setTimeout>;
+
+	/**
+	 * The ID of the timer that concludes the game once BOTH players have been
+	 * disconnected for too long (neither is present to claim victory/draw).
+	 * Started when the second player disconnects; cancelled if either reconnects.
+	 */
+	bothDisconnectedTimeoutID?: ReturnType<typeof setTimeout>;
+	/**
+	 * The epoch-ms timestamp the {@link bothDisconnectedTimeoutID} timer fires.
+	 * Persisted so the timer can be revived (or fired) on server restart.
+	 */
+	bothDisconnectedEndTime?: number;
 }
 
 /** The game stored in the server */
@@ -204,8 +212,7 @@ function initMatch(
 		playerData[Number(c) as Player] = {
 			identifier,
 			disconnect: {
-				timeoutID: undefined,
-				timeToAutoLoss: undefined,
+				timeOpponentMayClaim: undefined,
 				wasByChoice: undefined,
 			},
 		};
@@ -683,10 +690,10 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 
 	// Include other relevant stuff if defined...
 
-	// If their opponent has disconnected, send them that info too.
-	if (opponentData.disconnect.timeToAutoLoss !== undefined) {
+	// If their opponent has disconnected and the claim window is set, send them that info too.
+	if (opponentData.disconnect.timeOpponentMayClaim !== undefined) {
 		participantState.disconnect = {
-			millisUntilAutoDisconnectResign: opponentData.disconnect.timeToAutoLoss - now,
+			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
 			wasByChoice: opponentData.disconnect.wasByChoice,
 		};
 	}
@@ -811,14 +818,25 @@ function isGameOver(basegame: Game): boolean {
 }
 
 /**
- * Returns true if the provided color has an actively running auto-resign timer.
- * NOT whether the 5-second reconnection cushion window timer has started.
+ * Returns true if the provided color's opponent has been told they can claim
+ * victory/draw against them (i.e. the claim-window timestamp is set, whether or
+ * not it has elapsed yet). NOT whether the 5-second reconnection cushion has started.
  * @param match - The game they're in
  * @param color - The color they are in this game
  */
-function isAutoResignDisconnectTimerActiveForColor(match: MatchInfo, color: Player): boolean {
-	// If these are defined, then the timer is defined.
-	return match.playerData[color]!.disconnect.timeToAutoLoss !== undefined;
+function isClaimWindowSetForColor(match: MatchInfo, color: Player): boolean {
+	return match.playerData[color]!.disconnect.timeOpponentMayClaim !== undefined;
+}
+
+/**
+ * Returns true if the provided color is currently disconnected — either still in the
+ * reconnection cushion, or with their opponent's claim window set.
+ * @param match - The game they're in
+ * @param color - The color they are in this game
+ */
+function isColorDisconnected(match: MatchInfo, color: Player): boolean {
+	const { startTime, timeOpponentMayClaim } = match.playerData[color]!.disconnect;
+	return startTime !== undefined || timeOpponentMayClaim !== undefined;
 }
 
 /**
@@ -1000,7 +1018,8 @@ export default {
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,
-	isAutoResignDisconnectTimerActiveForColor,
+	isClaimWindowSetForColor,
+	isColorDisconnected,
 	getGameClockValues,
 	sendUpdatedClockToColor,
 	sendMoveToColor,

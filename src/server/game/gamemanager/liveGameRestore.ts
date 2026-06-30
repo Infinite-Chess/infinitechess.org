@@ -59,13 +59,21 @@ interface PendingTimers {
 	 * turn should fire after this many ms. 0 means immediately.
 	 */
 	autoTimeLossMs?: number;
+	/**
+	 * If defined, the epoch-ms deadline of the persisted both-disconnected timer to
+	 * revive exactly (fires immediately if already past). Undefined if none was persisted.
+	 */
+	bothDisconnectedEndTime?: number;
 }
 
-/** Represents the state of a player's disconnect timer that needs to be restored. */
+/** Represents the disconnect state of a player that needs to be restored. */
 interface DisconnectTimerState {
-	/** 'cushion' = still in 5s cushion, 'timer' = auto-resign timer active, 'fresh' = was connected before restart */
+	/** 'cushion' = still in 5s cushion, 'timer' = opponent's claim window was set, 'fresh' = was connected before restart */
 	type: 'cushion' | 'timer' | 'fresh';
-	/** Milliseconds remaining until the timer fires. 0 or negative means immediately. */
+	/**
+	 * For 'cushion', ms remaining until the claim window opens. For 'timer',
+	 * ms remaining until claimable (0 or negative = already claimable).
+	 */
 	remainingMs: number;
 	/** Whether the disconnect was by choice. */
 	byChoice: boolean;
@@ -309,8 +317,7 @@ function reconstructMatchInfo(
 			disconnect: {
 				startID: undefined,
 				startTime: row.disconnect_cushion_end_time ?? undefined,
-				timeoutID: undefined,
-				timeToAutoLoss: undefined,
+				timeOpponentMayClaim: undefined,
 				wasByChoice: undefined,
 			},
 		};
@@ -363,13 +370,18 @@ function computePendingTimers(
 		timers.autoTimeLossMs = Math.max(tickingTime, 0);
 	}
 
-	// Per-player disconnect timers
+	// Both-disconnected timer deadline (game-level), if one was persisted.
+	if (gameRow.both_disconnected_end_time !== null) {
+		timers.bothDisconnectedEndTime = gameRow.both_disconnected_end_time;
+	}
+
+	// Per-player disconnect state
 	for (const row of playerRows) {
 		const player = row.player_number as Player;
 
-		if (row.disconnect_resign_time !== null) {
-			// Case 1: Auto-resign timer was already active
-			const remaining = row.disconnect_resign_time - now;
+		if (row.disconnect_claim_time !== null) {
+			// Case 1: The opponent's claim window was already set
+			const remaining = row.disconnect_claim_time - now;
 			timers.disconnectTimers[player] = {
 				type: 'timer',
 				remainingMs: Math.max(remaining, 0),

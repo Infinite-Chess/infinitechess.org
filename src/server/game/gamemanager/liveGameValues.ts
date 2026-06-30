@@ -49,7 +49,7 @@ function getMovesString(servergame: ServerGame): string {
 function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDisconnectData {
 	return {
 		disconnect_cushion_end_time: disconnect.startTime ?? null,
-		disconnect_resign_time: disconnect.timeToAutoLoss ?? null,
+		disconnect_claim_time: disconnect.timeOpponentMayClaim ?? null,
 		disconnect_by_choice:
 			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
 	};
@@ -130,6 +130,7 @@ function onGameCreated(servergame: ServerGame): void {
 		time_ended: null,
 		delete_time: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
+		both_disconnected_end_time: null,
 	};
 
 	// Build one record per player (pure) before touching the database.
@@ -176,6 +177,7 @@ function onGameConcluded(servergame: ServerGame): void {
 		time_ended: servergame.match.timeEnded!,
 		delete_time: servergame.match.timeEnded! + timeBeforeGameDeletionMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
+		both_disconnected_end_time: null, // Any pending both-disconnected timer is moot now.
 	};
 
 	// Stop clock state
@@ -234,14 +236,28 @@ function onPlayerDisconnected(servergame: ServerGame, color: Player): void {
 }
 
 /**
- * Called when a player reconnects. Clears their disconnect state.
+ * Called when a player reconnects. Clears their disconnect state, and the game-level
+ * both-disconnected timer (a reconnect means the players are no longer both gone).
  */
 function onPlayerReconnected(servergame: ServerGame, color: Player): void {
-	persist(() =>
+	persist(() => {
 		updateLivePlayerGame(servergame.match.id, color, {
 			disconnect_cushion_end_time: null,
-			disconnect_resign_time: null,
+			disconnect_claim_time: null,
 			disconnect_by_choice: null,
+		});
+		updateLiveGame(servergame.match.id, { both_disconnected_end_time: null });
+	});
+}
+
+/**
+ * Called when the game-level both-disconnected timer is started or cleared.
+ * Persists its deadline so it can be revived (or fired) on server restart.
+ */
+function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
+	persist(() =>
+		updateLiveGame(servergame.match.id, {
+			both_disconnected_end_time: servergame.match.bothDisconnectedEndTime ?? null,
 		}),
 	);
 }
@@ -264,5 +280,6 @@ export default {
 	onDrawOfferDeclined,
 	onPlayerDisconnected,
 	onPlayerReconnected,
+	onBothDisconnectedTimerChanged,
 	onGameDeleted,
 };

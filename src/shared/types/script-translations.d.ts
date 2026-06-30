@@ -249,6 +249,7 @@ export interface ScriptTranslations {
 			repetition: string;
 			insuffmat: string;
 			agreement: string;
+			abandonment: string;
 		};
 		variant_preview: {
 			four_d_movement: string;

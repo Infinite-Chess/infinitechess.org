@@ -12,12 +12,12 @@ import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
-import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
 import gamesession from '../../chess/gamesession.js';
 import tabnameflash from './tabnameflash.js';
+import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
@@ -87,10 +87,10 @@ function set_DrawOffers_DisconnectInfo(participantState?: ParticipantState): voi
 
 	drawoffers.set(participantState.drawOffer);
 
-	// If opponent is currently disconnected, display that countdown
+	// If opponent is currently disconnected, display that status
 	if (participantState.disconnect)
-		disconnect.startOpponentDisconnectCountdown(participantState.disconnect);
-	else disconnect.stopOpponentDisconnectCountdown();
+		guidisconnect.onOpponentDisconnect(participantState.disconnect);
+	else guidisconnect.onOpponentReturn();
 }
 
 function initEventListeners(): void {

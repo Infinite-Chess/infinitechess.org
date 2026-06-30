@@ -14,6 +14,7 @@ import { resyncToGame } from './resync.js';
 import { onSubscribeToGame } from './subscribetogame.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
+import { claimVictory, claimDraw } from './claimdisconnect.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
@@ -27,6 +28,8 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('joingame') }),
 	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
+	z.strictObject({ action: z.literal('claimvictory') }),
+	z.strictObject({ action: z.literal('claimdraw') }),
 	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
 	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
@@ -77,6 +80,12 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 			break;
 		case 'resign':
 			resignGame(ws, servergame);
+			break;
+		case 'claimvictory':
+			claimVictory(ws, servergame);
+			break;
+		case 'claimdraw':
+			claimDraw(ws, servergame);
 			break;
 		case 'offerdraw':
 			offerDraw(ws, servergame);

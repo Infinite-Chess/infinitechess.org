@@ -29,8 +29,9 @@ export interface LivePlayerData extends LivePlayerDisconnectData {
 /** Disconnect-state columns shared by live_player_games rows. */
 export interface LivePlayerDisconnectData {
 	disconnect_cushion_end_time: number | null;
-	disconnect_resign_time: number | null;
-	/** 0 = network interruption (60s), 1 = intentional (20s). NULL if connected. */
+	/** Epoch ms from which the opponent may claim victory/draw against this player. NULL if no claim window. */
+	disconnect_claim_time: number | null;
+	/** 0 = network interruption (60s), 1 = intentional (10s). NULL if connected. */
 	disconnect_by_choice: 0 | 1 | null;
 }
 
@@ -46,7 +47,7 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 		INSERT INTO live_player_games (
 			game_id, player_number, user_id, browser_id,
 			last_draw_offer_ply, time_remaining_ms,
-			disconnect_cushion_end_time, disconnect_resign_time, disconnect_by_choice
+			disconnect_cushion_end_time, disconnect_claim_time, disconnect_by_choice
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	dbCall(
@@ -59,7 +60,7 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 				record.last_draw_offer_ply,
 				record.time_remaining_ms,
 				record.disconnect_cushion_end_time,
-				record.disconnect_resign_time,
+				record.disconnect_claim_time,
 				record.disconnect_by_choice,
 			]),
 		`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number})`,

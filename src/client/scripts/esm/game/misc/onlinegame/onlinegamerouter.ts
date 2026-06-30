@@ -18,11 +18,11 @@ import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
-import disconnect from './disconnect.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import gamesession from '../../chess/gamesession.js';
+import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
 
@@ -85,10 +85,10 @@ function routeMessage(contents: GameMessage): void {
 			handleLeaveGame();
 			break;
 		case 'opponentdisconnect':
-			disconnect.startOpponentDisconnectCountdown(contents.value);
+			guidisconnect.onOpponentDisconnect(contents.value);
 			break;
 		case 'opponentdisconnectreturn':
-			disconnect.stopOpponentDisconnectCountdown();
+			guidisconnect.onOpponentReturn();
 			break;
 		case 'drawoffer':
 			drawoffers.onOpponentExtendedOffer();

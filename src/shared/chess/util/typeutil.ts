@@ -192,6 +192,7 @@ function invertType(type: number): number {
 /**
  * Inverts the player id.
  * Neutral gets inverted to neutral.
+ * @throws If any 4 Player color is provided.
  */
 function invertPlayer(player: Player): Player {
 	// prettier-ignore

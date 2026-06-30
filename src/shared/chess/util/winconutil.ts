@@ -33,6 +33,7 @@ const GAMERULE_WIN_CONDITIONS = [
 /**
  * Conditions where one player wins (victor is a Player).
  * Covers both move-triggered wins and action-based wins.
+ * `disconnect` = a player abandoned the game (disconnected) and their opponent claimed victory.
  */
 const WIN_CONDITIONS = [...GAMERULE_WIN_CONDITIONS, 'time', 'resignation', 'disconnect'] as const;
 
@@ -44,8 +45,13 @@ const MOVE_TRIGGERED_DRAW_CONDITIONS = [
 	'insuffmat', // Insufficient material
 ] as const;
 
-/** Conditions that result in a draw (victor is null). */
-const DRAW_CONDITIONS = [...MOVE_TRIGGERED_DRAW_CONDITIONS, 'agreement'] as const;
+/**
+ * Conditions that result in a draw (victor is null).
+ * `agreement` = both players agreed.
+ * `abandonment` = a player abandoned the game (disconnected) and their opponent
+ *     took a draw instead of claiming the win, or both players abandoned it.
+ */
+const DRAW_CONDITIONS = [...MOVE_TRIGGERED_DRAW_CONDITIONS, 'agreement', 'abandonment'] as const;
 
 /**
  * List of all conclusions that are triggered by a move being made.
@@ -122,6 +128,7 @@ const TERMINATION_IN_ENGLISH = {
 	time: 'Time forfeit',
 	aborted: 'Aborted',
 	disconnect: 'Abandoned',
+	abandonment: 'Abandoned',
 } as const;
 
 // Functions --------------------------------------------------------------------------
