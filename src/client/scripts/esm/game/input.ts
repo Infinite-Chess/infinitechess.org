@@ -729,8 +729,9 @@ function CreateInputListener(
 
 			// Suppress the browser's default action for any bare key (no Ctrl/Meta/Alt), so keys
 			// like Space and the arrows control the board instead of scrolling the page/sidebar
-			// Modifier combos (clipboard, undo/redo, browser shortcuts) are left untouched.
-			if (!(e.ctrlKey || e.metaKey || e.altKey)) e.preventDefault();
+			// Modifier combos (clipboard, undo/redo, browser shortcuts, and Fn keys) are left untouched.
+			if (!(e.ctrlKey || e.metaKey || e.altKey) && !/^F\d{1,2}$/.test(e.code))
+				e.preventDefault();
 
 			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
