@@ -43,10 +43,15 @@ import {
 	setOpponentClaimWindow,
 	cancelDisconnectTimers,
 	timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
-	timeBeforeClaimableByDisconnectMillis_NotByChoice,
 } from './disconnect.js';
 
 // Constants ----------------------------------------------------------------------------------
+
+/**
+ * How long to keep a game alive when BOTH players are disconnected
+ * before auto-concluding by abandonment/abort if neither reconnects.
+ */
+const timeBeforeBothDisconnectedAutoConclusionMillis = 1000 * 60 * 5; // 5 minutes
 
 /** Whether to log all new and ending games to the console. */
 const PRINT_GAMES = true;
@@ -481,8 +486,7 @@ function maybeStartBothDisconnectedTimer(servergame: ServerGame, explicitEndTime
 	);
 	if (!bothDisconnected) return;
 
-	const endTime =
-		explicitEndTime ?? Date.now() + timeBeforeClaimableByDisconnectMillis_NotByChoice;
+	const endTime = explicitEndTime ?? Date.now() + timeBeforeBothDisconnectedAutoConclusionMillis;
 	const remaining = endTime - Date.now();
 	if (remaining <= 0) return onBothPlayersDisconnected(servergame); // Already elapsed (restart).
 
