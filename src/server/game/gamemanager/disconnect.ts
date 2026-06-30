@@ -22,10 +22,10 @@ import gameutility from './gameutility.js';
 const timeToGiveDisconnectedBeforeStartingAutoResignTimerMillis = 5_000; // 5 seconds
 
 /**
- * The duration of the auto-resign timer by disconnect, when the player
- * has intentionally left the page.
+ * The duration of the auto-resign timer by disconnect
+ * when the player has intentionally left the page.
  */
-const timeBeforeAutoResignByDisconnectMillis = 20_000; // 20 seconds
+const timeBeforeAutoResignByDisconnectMillis = 10_000; // 10 seconds
 /**
  * The duration of the auto-resign timer by disconnect (more forgiving),
  * when the player's internet cuts out.
