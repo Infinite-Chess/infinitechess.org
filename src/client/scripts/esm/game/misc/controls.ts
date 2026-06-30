@@ -31,7 +31,7 @@ import guipromotion from '../gui/guipromotion.js';
 import guimoveslist from '../gui/guimoveslist.js';
 import guiboardcontrols from '../gui/guiboardcontrols.js';
 import specialrighthighlights from '../rendering/highlights/specialrighthighlights.js';
-import { listener_document, listener_overlay } from '../chess/gamecore.js';
+import { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -90,12 +90,12 @@ function updatePerspectiveRotation(): void {
 		// Check if needs to relock
 		if (
 			selection.getSquarePawnIsCurrentlyPromotingOn() === undefined &&
-			listener_overlay.isMouseClicked(Mouse.LEFT)
+			listener_canvas.isMouseClicked(Mouse.LEFT)
 		) {
-			listener_overlay.claimMouseClick(Mouse.LEFT);
+			listener_canvas.claimMouseClick(Mouse.LEFT);
 			perspective.relockMouse();
-		} else if (listener_overlay.isMouseDown(Mouse.LEFT)) {
-			listener_overlay.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
+		} else if (listener_canvas.isMouseDown(Mouse.LEFT)) {
+			listener_canvas.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
 		}
 	} else {
 		const mouseChange = listener_document.getPhysicalPointerDelta('mouse');

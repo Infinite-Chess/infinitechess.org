@@ -35,7 +35,7 @@ import texturecache from '../../../chess/rendering/texturecache.js';
 import frametracker from '../frametracker.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../instancedshapes.js';
-import { listener_overlay } from '../../chess/gamecore.js';
+import { listener_canvas } from '../../chess/gamecore.js';
 import { createRenderable, createRenderable_Instanced } from '../../../webgl/Renderable.js';
 
 // Variables --------------------------------------------------------------------------------------
@@ -258,7 +258,7 @@ function renderPieceModel(): void {
 	if (typeutil.SVGLESS_TYPES.has(typeutil.getRawType(pieceType!))) return; // No SVG/texture for this piece (void), can't render it.
 
 	const perspectiveEnabled = perspective.getEnabled();
-	const touchscreenUsed = listener_overlay.isPointerTouch(pointerId!);
+	const touchscreenUsed = listener_canvas.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = camera.getIsViewingBlackPerspective() ? -1 : 1;
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
@@ -307,7 +307,7 @@ function renderPieceModel(): void {
  */
 // prettier-ignore
 function renderOutline(): void {
-	const pointerIsTouch = listener_overlay.isPointerTouch(pointerId!);
+	const pointerIsTouch = listener_canvas.isPointerTouch(pointerId!);
 	// The coordinates of the edges of the square
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();

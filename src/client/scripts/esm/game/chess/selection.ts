@@ -46,7 +46,7 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
-import { listener_overlay } from './gamecore.js';
+import { listener_canvas } from './gamecore.js';
 
 // Types -----------------------------------------------------------------------------
 
@@ -572,7 +572,7 @@ function renderGhostPiece(): void {
 		!hoverSquare ||
 		!hoverSquareLegal ||
 		draganimation.areDraggingPiece() ||
-		listener_overlay.isMouseTouch(mouseKeybind) ||
+		listener_canvas.isMouseTouch(mouseKeybind) ||
 		config.VIDEO_MODE
 	)
 		return;

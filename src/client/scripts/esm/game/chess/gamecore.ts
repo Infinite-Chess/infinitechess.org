@@ -64,7 +64,7 @@ import {
 
 let element_overlay: HTMLCanvasElement;
 /** The input listener for the board canvas */
-let listener_overlay: InputListener;
+let listener_canvas: InputListener;
 /** The input listener for the document element */
 let listener_document: InputListener;
 
@@ -95,7 +95,7 @@ function init(canvas: HTMLCanvasElement): void {
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
 	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 
-	listener_overlay = CreateInputListener(element_overlay, { keyboard: false });
+	listener_canvas = CreateInputListener(element_overlay, { keyboard: false });
 	listener_document = CreateInputListener(document);
 
 	// Update the pipeline on canvas resize
@@ -125,7 +125,7 @@ function update(): void {
 	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
 
 	// Any input should trigger the next frame to render.
-	if (listener_document.atleastOneInput() || listener_overlay.atleastOneInput())
+	if (listener_document.atleastOneInput() || listener_canvas.atleastOneInput())
 		frametracker.onVisualChange();
 
 	const gamefile = gameslot.getGamefile()!;
@@ -329,4 +329,4 @@ export default {
 	getOverlay,
 };
 
-export { listener_overlay, listener_document };
+export { listener_canvas, listener_document };

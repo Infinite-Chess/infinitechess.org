@@ -11,7 +11,7 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/chess/ut
 import space from '../game/misc/space.js';
 import camera from '../game/rendering/camera.js';
 import perspective from '../game/rendering/perspective.js';
-import { listener_document, listener_overlay } from '../game/chess/gamecore.js';
+import { listener_document, listener_canvas } from '../game/chess/gamecore.js';
 import input, { InputListener, Mouse, MouseButton } from '../game/input.js';
 
 /**
@@ -31,9 +31,9 @@ function getPhysicalPointerPosition_Offscreen(physicalPointerId: string): Double
 		const mousePos = listener_document.getPhysicalPointerPos(physicalPointerId);
 		if (!mousePos) return undefined;
 		// Make the coordinates relative to the element instead of the document.
-		return input.getRelativeMousePosition(mousePos, listener_overlay.element);
+		return input.getRelativeMousePosition(mousePos, listener_canvas.element);
 	} else {
-		return listener_overlay.getPhysicalPointerPos(physicalPointerId);
+		return listener_canvas.getPhysicalPointerPos(physicalPointerId);
 	}
 }
 
@@ -45,15 +45,15 @@ function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefin
 	if (!perspective.getEnabled()) {
 		// Before the first click there may be no button-associated pointer yet,
 		// but the physical 'mouse' pointer still tracks hover movement.
-		const physicalPointerId = listener_overlay.getMousePhysicalId(button) ?? 'mouse';
+		const physicalPointerId = listener_canvas.getMousePhysicalId(button) ?? 'mouse';
 		let mousePos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!mousePos) {
 			// Pointer likely doesn't exist anymore (touch event lifted).
 			// This will return its last known position.
-			mousePos = listener_overlay.getMousePosition(button);
+			mousePos = listener_canvas.getMousePosition(button);
 		}
 		if (!mousePos) return undefined;
-		return convertMousePositionToWorldSpace(mousePos, listener_overlay.element);
+		return convertMousePositionToWorldSpace(mousePos, listener_canvas.element);
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
@@ -63,11 +63,11 @@ function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefin
  */
 function getPointerWorld(pointerId: string): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
-		const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
+		const physicalPointerId = listener_canvas.getPhysicalPointerIdOfPointer(pointerId);
 		if (!physicalPointerId) return undefined;
 		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!pointerPos) return undefined;
-		return convertMousePositionToWorldSpace(pointerPos, listener_overlay.element);
+		return convertMousePositionToWorldSpace(pointerPos, listener_canvas.element);
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
@@ -79,7 +79,7 @@ function getPhysicalPointerWorld(physicalPointerId: string): DoubleCoords | unde
 	if (!perspective.getEnabled()) {
 		const pointerPos = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 		if (!pointerPos) return undefined;
-		return convertMousePositionToWorldSpace(pointerPos, listener_overlay.element);
+		return convertMousePositionToWorldSpace(pointerPos, listener_canvas.element);
 	} else return getCrossHairWorld(); // Mouse is locked, we must be in perspective mode. Calculate the mouse world according to the crosshair location instead.
 }
 
@@ -143,13 +143,13 @@ function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | un
 
 /** Returns the floating point tile the given LOGICAL pointer is over. */
 function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
-	const physicalPointerId = listener_overlay.getPhysicalPointerIdOfPointer(pointerId);
+	const physicalPointerId = listener_canvas.getPhysicalPointerIdOfPointer(pointerId);
 	if (!physicalPointerId) return;
-	// const pointerCoords = listener_overlay.getPointerPos(pointerId)!;
+	// const pointerCoords = listener_canvas.getPointerPos(pointerId)!;
 	const pointerCoords = getPhysicalPointerPosition_Offscreen(physicalPointerId);
 	if (!pointerCoords) return undefined;
 
-	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_overlay.element);
+	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords, listener_canvas.element);
 	return space.convertWorldSpaceToCoords(pointerWorld);
 }
 
@@ -166,7 +166,7 @@ function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
  */
 function isMouseDown(button: MouseButton): boolean {
 	if (perspective.isMouseLocked()) return listener_document.isMouseDown(button);
-	else return listener_overlay.isMouseDown(button);
+	else return listener_canvas.isMouseDown(button);
 }
 
 /**
@@ -175,7 +175,7 @@ function isMouseDown(button: MouseButton): boolean {
  */
 function isMouseHeld(button: MouseButton): boolean {
 	if (perspective.isMouseLocked()) return listener_document.isMouseHeld(button);
-	else return listener_overlay.isMouseHeld(button);
+	else return listener_canvas.isMouseHeld(button);
 }
 
 /**
@@ -184,7 +184,7 @@ function isMouseHeld(button: MouseButton): boolean {
  */
 function isMouseClicked(button: MouseButton): boolean {
 	if (perspective.isMouseLocked()) return listener_document.isMouseClicked(button);
-	else return listener_overlay.isMouseClicked(button);
+	else return listener_canvas.isMouseClicked(button);
 }
 
 /**
@@ -193,7 +193,7 @@ function isMouseClicked(button: MouseButton): boolean {
  */
 function isMouseDoubleClickDragged(button: MouseButton): boolean {
 	if (perspective.isMouseLocked()) return listener_document.isMouseDoubleClickDragged(button);
-	else return listener_overlay.isMouseDoubleClickDragged(button);
+	else return listener_canvas.isMouseDoubleClickDragged(button);
 }
 
 // /**
@@ -203,7 +203,7 @@ function isMouseDoubleClickDragged(button: MouseButton): boolean {
 //  */
 // function isMouseTouch(button: MouseButton): boolean {
 // 	if (perspective.isMouseLocked()) return listener_document.isMouseTouch(button);
-// 	else return listener_overlay.isMouseTouch(button);
+// 	else return listener_canvas.isMouseTouch(button);
 // }
 
 /**
@@ -212,7 +212,7 @@ function isMouseDoubleClickDragged(button: MouseButton): boolean {
  */
 function getWheelDelta(): number {
 	if (perspective.isMouseLocked()) return listener_document.getWheelDelta();
-	else return listener_overlay.getWheelDelta();
+	else return listener_canvas.getWheelDelta();
 }
 
 /**
@@ -221,7 +221,7 @@ function getWheelDelta(): number {
  */
 function claimMouseDown(button: MouseButton): void {
 	if (perspective.isMouseLocked()) listener_document.claimMouseDown(button);
-	else listener_overlay.claimMouseDown(button);
+	else listener_canvas.claimMouseDown(button);
 }
 
 /**
@@ -230,7 +230,7 @@ function claimMouseDown(button: MouseButton): void {
  */
 function claimMouseClick(button: MouseButton): void {
 	if (perspective.isMouseLocked()) listener_document.claimMouseClick(button);
-	else listener_overlay.claimMouseClick(button);
+	else listener_canvas.claimMouseClick(button);
 }
 
 /**
@@ -239,7 +239,7 @@ function claimMouseClick(button: MouseButton): void {
  */
 function cancelMouseClick(button: MouseButton): void {
 	if (perspective.isMouseLocked()) listener_document.cancelMouseClick(button);
-	else listener_overlay.cancelMouseClick(button);
+	else listener_canvas.cancelMouseClick(button);
 }
 
 /**
@@ -248,7 +248,7 @@ function cancelMouseClick(button: MouseButton): void {
  */
 function getMouseId(button: MouseButton): string | undefined {
 	if (perspective.isMouseLocked()) return listener_document.getMouseId(button);
-	else return listener_overlay.getMouseId(button);
+	else return listener_canvas.getMouseId(button);
 }
 
 /**
@@ -257,7 +257,7 @@ function getMouseId(button: MouseButton): string | undefined {
  */
 function getRelevantListener(): InputListener {
 	if (perspective.getEnabled()) return listener_document;
-	else return listener_overlay;
+	else return listener_canvas;
 }
 
 /**

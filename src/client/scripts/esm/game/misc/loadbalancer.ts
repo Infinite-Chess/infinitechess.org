@@ -9,7 +9,7 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 import config from '../config.js';
 import deltatime from './deltatime.js';
 import tabnameflash from './onlinegame/tabnameflash.js';
-import { listener_document, listener_overlay } from '../chess/gamecore.js';
+import { listener_document, listener_canvas } from '../chess/gamecore.js';
 
 // Variables -------------------------------------------------------------
 
@@ -85,8 +85,7 @@ function updateMonitorRefreshRate(): void {
 }
 
 function updateAFK(): void {
-	if (listener_overlay.atleastOneInput() || listener_document.atleastOneInput())
-		onReturnFromAFK();
+	if (listener_canvas.atleastOneInput() || listener_document.atleastOneInput()) onReturnFromAFK();
 }
 
 function onReturnFromAFK(): void {

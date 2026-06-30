@@ -49,7 +49,7 @@ import movehints from '../highlights/movehints.js';
 import boardtiles from '../boardtiles.js';
 import Transition from '../transitions/Transition.js';
 import perspective from '../perspective.js';
-import { listener_overlay } from '../../chess/gamecore.js';
+import { listener_canvas } from '../../chess/gamecore.js';
 import { InputListener, Mouse, MouseButton } from '../../input.js';
 
 // Types -------------------------------------------------------------------------------
@@ -683,11 +683,11 @@ function transitionTowardTargetIfClicked(
 	}
 	// Finger simulating right mouse down (annotations mode ON)
 	else if (
-		listener_overlay.isMouseClicked(Mouse.RIGHT) &&
-		listener_overlay.isMouseTouch(Mouse.RIGHT)
+		listener_canvas.isMouseClicked(Mouse.RIGHT) &&
+		listener_canvas.isMouseTouch(Mouse.RIGHT)
 	) {
 		button = Mouse.RIGHT;
-		listener = listener_overlay;
+		listener = listener_canvas;
 	} else return; // No recognized click
 
 	const clickWorld = mouse.getMouseWorld(button);

@@ -27,7 +27,7 @@ import etoolmanager from '../etoolmanager';
 import stoolgraphics from './stoolgraphics';
 import stransformations from './stransformations';
 import guipositionheader from '../../../gui/boardeditor/guipositionheader';
-import { listener_document, listener_overlay } from '../../../chess/gamecore';
+import { listener_document, listener_canvas } from '../../../chess/gamecore';
 
 // State ----------------------------------------------
 
@@ -159,7 +159,7 @@ function render(): void {
 		}
 	} else {
 		// No selection, and not currently making one
-		if (listener_overlay.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
+		if (listener_canvas.getAllPhysicalPointers().length > 1) return; // Don't render if multiple fingers down
 		// Outline the rank and file of the square hovered over
 		stoolgraphics.outlineRankAndFile();
 	}

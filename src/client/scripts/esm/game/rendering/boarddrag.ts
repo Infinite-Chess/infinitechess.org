@@ -20,7 +20,7 @@ import Transition from './transitions/Transition.js';
 import perspective from './perspective.js';
 import { GameBus } from '../GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
-import { listener_overlay } from '../chess/gamecore.js';
+import { listener_canvas } from '../chess/gamecore.js';
 
 // Types -------------------------------------------------------------
 
@@ -82,8 +82,8 @@ function getBoardDraggablePointersDown(): string[] {
 	// Prevent duplicates by using a Set
 	return [
 		...new Set([
-			...listener_overlay.getPointersDown(mouseKeybind),
-			...listener_overlay.getTouchPointersDown(),
+			...listener_canvas.getPointersDown(mouseKeybind),
+			...listener_canvas.getTouchPointersDown(),
 		]),
 	];
 }
@@ -99,8 +99,8 @@ function getBoardDraggablePointers(): string[] {
 	// Prevent duplicates by using a Set
 	return [
 		...new Set([
-			...listener_overlay.getAllPointers(mouseKeybind),
-			...listener_overlay.getAllTouchPointers(),
+			...listener_canvas.getAllPointers(mouseKeybind),
+			...listener_canvas.getAllTouchPointers(),
 		]),
 	];
 }
@@ -144,10 +144,10 @@ function checkIfBoardPinched(): void {
 	// For every new pointer touched down / created this frame...
 	for (const pointerId of allPointersDown) {
 		if (!boardIsGrabbed) {
-			listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
+			listener_canvas.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
 			initSinglePointerDrag(pointerId);
 		} else if (pointer2Id === undefined) {
-			listener_overlay.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
+			listener_canvas.claimPointerDown(pointerId); // Remove the pointer down so other scripts don't use it
 			initDoublePointerDrag(pointerId);
 		}
 	}
@@ -164,7 +164,7 @@ function checkIfBoardSingleGrabbed(): void {
 	const allPointersDown = getBoardDraggablePointersDown();
 	if (allPointersDown.length === 0) return; // No pointers down
 
-	listener_overlay.claimPointerDown(allPointersDown[0]!); // Remove the pointer down so other scripts don't use it
+	listener_canvas.claimPointerDown(allPointersDown[0]!); // Remove the pointer down so other scripts don't use it
 	initSinglePointerDrag(allPointersDown[0]!); // If multiple pointers down, just use the first one.
 }
 
@@ -189,8 +189,8 @@ function initDoublePointerDrag(pointerId: string): void {
 	if (pointer1Id === pointerId) return;
 
 	// Pixel distance
-	const p1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
-	const p2Pos = listener_overlay.getPointerPos(pointerId)!;
+	const p1Pos = listener_canvas.getPointerPos(pointer1Id!)!;
+	const p2Pos = listener_canvas.getPointerPos(pointerId)!;
 	const dist = vectors.euclideanDistanceDoubles(p1Pos, p2Pos);
 	if (dist === 0) {
 		// Error gracefully. Allows a rare bug where some users mouse
@@ -348,15 +348,15 @@ function dragBoard(): void {
 	} else {
 		// 2 Fingers grab/pinch   (center the board position, & calculate scale)
 
-		const pointer1Pos = listener_overlay.getPointerPos(pointer1Id!)!;
-		const pointer2Pos = listener_overlay.getPointerPos(pointer2Id!)!;
+		const pointer1Pos = listener_canvas.getPointerPos(pointer1Id!)!;
+		const pointer2Pos = listener_canvas.getPointerPos(pointer2Id!)!;
 		const pointer1World = mouse.convertMousePositionToWorldSpace(
 			pointer1Pos,
-			listener_overlay.element,
+			listener_canvas.element,
 		);
 		const pointer2World = mouse.convertMousePositionToWorldSpace(
 			pointer2Pos,
-			listener_overlay.element,
+			listener_canvas.element,
 		);
 
 		// Calculate the new scale by comparing the touches current distance in pixels to their distance when they first started pinching
