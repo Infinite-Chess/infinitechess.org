@@ -103,7 +103,7 @@ export const DisconnectInfoSchema = z.strictObject({
 	wasByChoice: z.boolean(),
 });
 
-/** The state of the game unique to participants, while the game is ongoing — not for spectators, and not when the game is over. */
+/** The state of the game unique to participants (not spectators): draw/disconnect while live, and rematch once over. */
 export type ParticipantState = z.infer<typeof ParticipantStateSchema>;
 export const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,

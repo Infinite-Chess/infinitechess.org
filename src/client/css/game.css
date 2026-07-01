@@ -530,24 +530,49 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	animation: draw-offer-attention 1.8s ease-in-out infinite;
-}
-
-@keyframes draw-offer-attention {
-	0%,
-	100% {
-		background-color: color-mix(in srgb, var(--c-text-emphasis) 3%, transparent);
-		box-shadow: inset 0 0 5px 1px color-mix(in srgb, var(--c-text-emphasis) 6%, transparent);
-	}
-	50% {
-		background-color: color-mix(in srgb, var(--c-text-emphasis) 8%, transparent);
-		box-shadow: inset 0 0 12px 2px color-mix(in srgb, var(--c-text-emphasis) 16%, transparent);
-	}
+	animation: attention-pulse 1.8s ease-in-out infinite;
 }
 
 .draw-offer-label {
 	font-size: 0.9em;
 	color: var(--c-text-emphasis);
+}
+
+/* The rematch button glows while our opponent has extended a rematch offer to us. */
+#btn-rematch.rematch-offered {
+	animation: attention-pulse 1.8s ease-in-out infinite;
+}
+
+/* Brighten the pulse on hover. */
+#btn-rematch.rematch-offered:hover {
+	--pulse-bg-min: 6%;
+	--pulse-bg-max: 13%;
+	--pulse-glow-min: 11%;
+	--pulse-glow-max: 24%;
+}
+
+/* Intensity is driven by custom properties (with the default values as fallbacks) so a
+   consumer can brighten the pulse — e.g. the rematch button on hover — without a 2nd animation. */
+@keyframes attention-pulse {
+	0%,
+	100% {
+		background-color: color-mix(
+			in srgb,
+			var(--c-text-emphasis) var(--pulse-bg-min, 3%),
+			transparent
+		);
+		box-shadow: inset 0 0 5px 1px
+			color-mix(in srgb, var(--c-text-emphasis) var(--pulse-glow-min, 6%), transparent);
+	}
+	50% {
+		background-color: color-mix(
+			in srgb,
+			var(--c-text-emphasis) var(--pulse-bg-max, 8%),
+			transparent
+		);
+		box-shadow: inset 0 0 12px 2px
+			color-mix(in srgb, var(--c-text-emphasis) var(--pulse-glow-max, 16%), transparent);
+	}
 }
 
 /* =================================
