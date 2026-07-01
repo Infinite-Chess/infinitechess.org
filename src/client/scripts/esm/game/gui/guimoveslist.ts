@@ -29,6 +29,7 @@ import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
+import { createRenderQueue } from '../../util/renderqueue.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -187,14 +188,7 @@ const renderedMoves: MoveFull[] = [];
  * Serializes all moves-table DOM mutations & scrolls into dispatch order. Required because
  * appending a ply awaits an async silhouette fetch, so overlapping updates would race.
  */
-let renderChain: Promise<void> = Promise.resolve();
-
-/** Queues a moves-table operation, preserving order across async silhouette fetches. */
-function enqueueRender(task: () => void | Promise<void>): void {
-	renderChain = renderChain
-		.then(task)
-		.catch((e) => console.error('Moves table render error:', e));
-}
+const enqueueRender = createRenderQueue('Moves table render error');
 
 /**
  * Brings the rendered plies in line with `gamefile.moves`: finds the first index that

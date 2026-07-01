@@ -5,6 +5,7 @@
  */
 
 import '../../game/gui/guigamemeta.js';
+import '../../game/gui/guimaterial.js';
 import '../../game/gui/guimoveslist.js';
 import '../../game/gui/guigameactions.js';
 import '../../game/gui/guiboardcontrols.js';
