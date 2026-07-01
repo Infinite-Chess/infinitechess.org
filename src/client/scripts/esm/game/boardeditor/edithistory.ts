@@ -94,6 +94,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	// Run logical changes
 	movepiece.applyEdit(gamefile, edit, forward, true);
 	GameBus.dispatch('physical-move');
+	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	// Run graphical changes
 	movesequence.runMeshChanges(gamefile, mesh, edit, forward);

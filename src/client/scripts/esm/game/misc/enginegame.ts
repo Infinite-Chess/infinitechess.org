@@ -130,8 +130,6 @@ function onMovePlayed(): void {
 	checkmatepractice.registerHumanMove(); // inform the checkmatepractice script that the human player has made a move
 	if (gamefile.gameConclusion) return; // Don't do anything if the game is over
 
-	requestMovesForCurrentPosition(); // Request generated moves for debugging FIRST
-
 	// Request the engine to perform a best move calculation...
 
 	const longformIn = gamecompressor.compressGamefile(gamefile); // Compress the gamefile to send to the engine in a simpler json format
@@ -241,9 +239,6 @@ function makeEngineMove(tokenMove: unknown): void {
 		movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged);
 
 		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
-
-		// If the debug mode is on, request the generated moves for the new position after playing the engine's move
-		requestMovesForCurrentPosition();
 
 		return true; // Good to physically play next premove
 	});

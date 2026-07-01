@@ -76,6 +76,7 @@ function makeMove(
 	}
 
 	GameBus.dispatch('physical-move');
+	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	return move;
 }

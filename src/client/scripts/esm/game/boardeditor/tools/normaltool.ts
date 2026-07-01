@@ -33,6 +33,7 @@ function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: Mo
 
 	movepiece.applyEdit(gamefile, edit, true, true); // forward & global are always true
 	GameBus.dispatch('physical-move');
+	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	if (mesh) movesequence.runMeshChanges(gamefile, mesh, edit, true);
 

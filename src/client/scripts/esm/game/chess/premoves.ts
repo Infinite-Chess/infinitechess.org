@@ -123,6 +123,7 @@ function addPremove(gamefile: GameFile, mesh: Mesh | undefined, moveTagged: Move
 	// console.log(premoves);
 
 	GameBus.dispatch('physical-move');
+	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	return premove;
 }
@@ -266,6 +267,7 @@ function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	applied = true;
 
 	GameBus.dispatch('physical-move');
+	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 }
 
 /**

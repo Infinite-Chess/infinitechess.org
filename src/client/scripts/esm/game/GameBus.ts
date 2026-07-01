@@ -32,7 +32,10 @@ interface GameBusEvents {
 	 * moves were rewound (takeback / resync). Does not fire for premoves.
 	 */
 	'moves-changed': void;
-	/** Dispatched when a move is locally viewed (navigated to), forward or backward, without changing game state. */
+	/**
+	 * Dispatched whenever the locally-viewed position changes: navigating history forward/backward
+	 * (no game state change), or alongside 'physical-move' when an actual move changes it too.
+	 */
 	'view-move': void;
 	/**
 	 * Dispatched when the board is about to be pinched. Tells any
