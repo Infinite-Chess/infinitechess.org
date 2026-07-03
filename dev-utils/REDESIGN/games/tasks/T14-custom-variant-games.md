@@ -41,7 +41,7 @@ positions is the consumer (T9/T10), not part of this task.
 
 ## Notes
 
-- Independent of the T9–T13 client/protocol chain (those already work for preset games); orderable
+- Independent of the T9–T12 client/protocol chain (those already work for preset games); orderable
   whenever custom games become a priority. Gated only on the schema work above, which is landed.
 - Once this ships, the temporary `is_custom`/nullability migrations are irrelevant to the feature — they
   just prepared the columns.

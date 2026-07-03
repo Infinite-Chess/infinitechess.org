@@ -50,8 +50,8 @@ interface RestoredGame {
 
 /** Timers that may need to be started for a restored game, based on its state at the time of server shutdown. */
 interface PendingTimers {
-	/** If defined, the delete game timer should fire after this many ms. 0 means immediately. */
-	deleteTimerMs?: number;
+	/** If defined, the log/lock-in timer should fire after this many ms. 0 (or negative) means immediately. */
+	finalizeTimerMs?: number;
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;
 	/**
@@ -333,6 +333,8 @@ function reconstructMatchInfo(
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
+		finalized: false, // A finalized game's row is removed when it's logged, so any restored game is not-yet-finalized.
+		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.
 	};
 }
 
@@ -358,10 +360,9 @@ function computePendingTimers(
 		disconnectTimers: {},
 	};
 
-	// Delete timer for concluded games
-	if (gameRow.delete_time !== null) {
-		const remaining = gameRow.delete_time - now;
-		timers.deleteTimerMs = Math.max(remaining, 0);
+	// Finalize deadline for a concluded, not-yet-finalized game.
+	if (gameRow.log_time !== null) {
+		timers.finalizeTimerMs = Math.max(gameRow.log_time - now, 0);
 	}
 
 	// Auto time loss timer for timed, ongoing games

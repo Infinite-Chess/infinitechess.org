@@ -18,7 +18,7 @@ import type {
 
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 
-import { timeBeforeGameDeletionMillis } from './gameutility.js';
+import { timeBeforeFinalizeMillis } from './gameutility.js';
 import { insertLiveGame, updateLiveGame, deleteLiveGame } from '../../database/liveGamesManager.js';
 import {
 	insertLivePlayerGame,
@@ -128,7 +128,7 @@ function onGameCreated(servergame: ServerGame): void {
 		conclusion_condition: null,
 		conclusion_victor: null,
 		time_ended: null,
-		delete_time: null,
+		log_time: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 		both_disconnected_end_time: null,
 	};
@@ -175,7 +175,7 @@ function onGameConcluded(servergame: ServerGame): void {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
 		time_ended: servergame.match.timeEnded!,
-		delete_time: servergame.match.timeEnded! + timeBeforeGameDeletionMillis,
+		log_time: servergame.match.timeEnded! + timeBeforeFinalizeMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
 		both_disconnected_end_time: null, // Any pending both-disconnected timer is moot now.
 	};
@@ -263,10 +263,12 @@ function onBothDisconnectedTimerChanged(servergame: ServerGame): void {
 }
 
 /**
- * Called when a game is fully deleted/logged. Removes the live game from the database.
+ * Called when a game is finalized (its result locked in and logged permanently). Removes the row:
+ * the result now lives in the permanent tables, so there's nothing left to restore across a restart.
+ * The game may keep lingering in memory for the rematch handshake, but that state is never persisted.
  */
-function onGameDeleted(game_id: number): void {
-	persist(() => deleteLiveGame(game_id));
+function onGameFinalized(servergame: ServerGame): void {
+	persist(() => deleteLiveGame(servergame.match.id));
 }
 
 // Exports --------------------------------------------------------------------------------------------
@@ -281,5 +283,5 @@ export default {
 	onPlayerDisconnected,
 	onPlayerReconnected,
 	onBothDisconnectedTimerChanged,
-	onGameDeleted,
+	onGameFinalized,
 };

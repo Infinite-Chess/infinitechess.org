@@ -56,14 +56,10 @@ function doesVariantSupportServerValidation(variant: LoadedVariant | undefined):
 /**
  * DELETE UNNECESSARY WRAPPER once the `private` game flag has been unused for a while.
  *
- * Returns `true` if the game is deleted instantly on conclusion — meaning the server
- * either validated every move (cheating is impossible) or it's a private game (cheat
- * reports are not allowed). In both cases:
- * - The server removes players from the active-games list immediately.
- * - Clients do not need to send `removefromplayersinactivegames`.
- * - Clients should not send cheat reports.
+ * Returns `true` if the game's result is locked in the instant it concludes — meaning the
+ * server validated every move (cheating is impossible), so clients should not send cheat
+ * reports (the server would reject them anyway).
  * @param variant - The loaded variant, if available.
- * @param isPrivate - Whether the game is a private match.
  */
 function isGameInstantlyDeleted(variant: LoadedVariant | undefined): boolean {
 	return doesVariantSupportServerValidation(variant);

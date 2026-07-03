@@ -9,15 +9,15 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { onJoinGame } from './joingame.js';
 import { resyncToGame } from './resync.js';
+import { offerRematch } from './onRematch.js';
+import { getGameBySocket } from './gamemanager.js';
 import { onSubscribeToGame } from './subscribetogame.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
-import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
@@ -25,12 +25,11 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
-	z.strictObject({ action: z.literal('joingame') }),
+	z.strictObject({ action: z.literal('offerrematch') }),
 	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
-	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
 	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
 ]);
@@ -39,7 +38,7 @@ type GameMessage = z.infer<typeof GameSchema>;
 
 /**
  * Handles all incoming websocket messages related to active games.
- * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync/paste...
+ * Possible actions: submitmove/offerdraw/abort/resign/resync/subscribe/paste...
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
@@ -49,9 +48,6 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	switch (contents.action) {
 		case 'resync':
 			resyncToGame(ws, contents.value, id);
-			return;
-		case 'joingame':
-			onJoinGame(ws);
 			return;
 		case 'subscribe':
 			onSubscribeToGame(ws, contents.value);
@@ -71,9 +67,6 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	switch (contents.action) {
 		case 'submitmove':
 			submitMove(ws, servergame, contents.value);
-			break;
-		case 'removefromplayersinactivegames':
-			onRequestRemovalFromPlayersInActiveGames(ws, servergame);
 			break;
 		case 'abort':
 			abortGame(ws, servergame);
@@ -95,6 +88,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 			break;
 		case 'declinedraw':
 			declineDraw(ws, servergame);
+			break;
+		case 'offerrematch':
+			offerRematch(ws, servergame);
 			break;
 		case 'report':
 			onReport(ws, servergame, contents.value);

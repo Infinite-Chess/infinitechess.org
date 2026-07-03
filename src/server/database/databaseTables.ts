@@ -112,7 +112,7 @@ const allLiveGamesColumns: string[] = [
 	'conclusion_condition',
 	'conclusion_victor',
 	'time_ended',
-	'delete_time',
+	'log_time',
 	'validate_moves',
 	'both_disconnected_end_time',
 ];
@@ -362,7 +362,7 @@ function generateTables(): void {
 			conclusion_condition  TEXT,
 			conclusion_victor     INTEGER,
 			time_ended            INTEGER,
-			delete_time           INTEGER,
+			log_time              INTEGER, -- Epoch ms deadline to permanently log (lock in) a concluded game. NULL while ongoing.
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
 			both_disconnected_end_time INTEGER -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
 		);
@@ -397,6 +397,7 @@ function initDatabase(): void {
 	addPositionColumnToLiveGamesIfNeeded();
 	renameDisconnectResignTimeColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
+	renameLiveGamesDeleteTimeColumnIfNeeded();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
@@ -562,6 +563,19 @@ function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'both_disconnected_end_time')) return; // Already present.
 	db.run('ALTER TABLE live_games ADD COLUMN both_disconnected_end_time INTEGER');
 	console.log('Temporary DB migration: added live_games.both_disconnected_end_time column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Renames `live_games.delete_time` to `log_time` — the column's meaning is now the deadline
+ * to permanently LOG (lock in) a concluded game, after which the game only lingers in memory
+ * for the rematch handshake rather than being deleted. Fresh DBs get the new name directly.
+ */
+function renameLiveGamesDeleteTimeColumnIfNeeded(): void {
+	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated (or fresh DB).
+	db.run('ALTER TABLE live_games RENAME COLUMN delete_time TO log_time');
+	console.log('Temporary DB migration: renamed live_games.delete_time to log_time.');
 }
 
 /**

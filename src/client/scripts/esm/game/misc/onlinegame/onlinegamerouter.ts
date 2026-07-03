@@ -9,6 +9,7 @@ import type {
 	ParticipantState,
 } from '../../../../../../shared/types.js';
 
+import uuid from '../../../../../../shared/util/uuid.js';
 import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
@@ -18,9 +19,11 @@ import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
 import guiclock from '../../gui/guiclock.js';
 import selection from '../../chess/selection.js';
+import gamesound from '../gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
 import socketsubs from '../../../websocket/socketsubs.js';
+import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
@@ -96,6 +99,18 @@ function routeMessage(contents: GameMessage): void {
 		case 'declinedraw':
 			drawoffers.onOpponentDeclinedOffer();
 			break;
+		case 'rematchoffer':
+			gameactions.onOpponentRematchOffer();
+			break;
+		case 'opponentleft':
+			gameactions.onOpponentLeft();
+			break;
+		case 'opponentreturn':
+			gameactions.onOpponentReturn();
+			break;
+		case 'ingame':
+			handleInGame(contents.value);
+			break;
 		default:
 			toast.show(
 				// @ts-ignore
@@ -137,7 +152,7 @@ function loadGameFromState(
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
 			onlinegame.initOnlineGame({
-				gameInfo: { id: state.id, rated: state.rated },
+				id: state.id,
 				participantState,
 			});
 
@@ -231,6 +246,19 @@ function handleLeaveGame(): void {
 	toast.show('Another window has connected.');
 	socketsubs.deleteSub('game');
 	gamesession.unloadGame();
+}
+
+/**
+ * Called when the server reports both players agreed to a rematch.
+ * Play the notify sound and navigate to the new game.
+ * @param id - The numeric game id (encoded into the base62 URL).
+ */
+async function handleInGame(id: number): Promise<void> {
+	// Plays the notify sound and awaits it so the hard-navigate doesn't cut it off.
+	// No reverb added here, it makes us wait too long.
+	const sound = await gamesound.playNotify(false);
+	if (sound) await sound.whenEnded;
+	window.location.href = `/game/${uuid.base10ToBase62(id)}`;
 }
 
 export default {

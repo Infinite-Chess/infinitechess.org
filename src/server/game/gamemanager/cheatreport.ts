@@ -42,6 +42,18 @@ function onReport(
 	const ourColor = gameutility.getSocketRoleInGame(servergame, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourColor);
 
+	// Once the game is finalized its result is locked in and can no longer be overturned.
+	if (servergame.match.finalized) {
+		gameutility.sendMessageToSocketOfColor(
+			servergame.match,
+			ourColor,
+			'general',
+			'printerror',
+			'Cannot report opponent: this game has already been finalized.',
+		);
+		return;
+	}
+
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
 	if (servergame.validateMoves) {

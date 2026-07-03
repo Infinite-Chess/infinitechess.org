@@ -103,12 +103,23 @@ export const DisconnectInfoSchema = z.strictObject({
 	wasByChoice: z.boolean(),
 });
 
+/** The state of a post-game rematch offer, from the perspective of one participant. */
+export type RematchOfferInfo = z.infer<typeof RematchOfferInfoSchema>;
+export const RematchOfferInfoSchema = z.strictObject({
+	/** True if our opponent has an outstanding rematch offer (drives the button's glow). */
+	offered: z.boolean(),
+	/** True if our opponent is currently connected (otherwise the rematch button is disabled). */
+	present: z.boolean(),
+});
+
 /** The state of the game unique to participants (not spectators): draw/disconnect while live, and rematch once over. */
 export type ParticipantState = z.infer<typeof ParticipantStateSchema>;
 export const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect: DisconnectInfoSchema.optional(),
+	/** Present only once the game is over and lingering for the rematch handshake. */
+	rematch: RematchOfferInfoSchema.optional(),
 });
 
 /** The agnostic core of a `'gameupdate'` message — identical for every recipient (no per-player overlay). */
@@ -213,10 +224,6 @@ export const GameStateVariantSchema = z.discriminatedUnion('kind', [
  * and dead `DeadGameState` shapes.
  * This is all the properties that are unchanging since the
  * game's inception, live or dead, EXCEPT for the gameConclusion.
- *
- * Note: this overlaps the client's `ServerGameInfo`/`JoinGameMessage`
- * (`src/client/scripts/esm/websocket/socketschemas.ts`); that de-dup is
- * deferred to a later task that reshapes the live socket protocol.
  */
 export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
 export const StaticGameStateSchema = z.strictObject({

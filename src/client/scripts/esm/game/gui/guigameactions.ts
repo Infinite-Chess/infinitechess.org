@@ -18,11 +18,12 @@
  * after. Rematch is a placeholder until the server supports it.
  */
 
+import type { RematchOfferInfo } from '../../../../../shared/types.js';
+
 import uuid from '../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
-import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import { GameBus } from '../GameBus.js';
@@ -44,8 +45,9 @@ const element_Resign = document.getElementById('btn-resign');
 const element_AcceptDraw = document.getElementById('btn-accept-draw') as HTMLButtonElement | null;
 const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLButtonElement | null;
 
-// Post-game actions (always present).
-const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement;
+// Post-game actions. Analysis is always present; Rematch is SSR'd only for a participant
+// of a still-live game (absent for spectators, and for a game that loaded already dead).
+const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement | null;
 const element_Analysis = document.getElementById('btn-analysis') as HTMLButtonElement;
 
 // Events ------------------------------------------------------------------------------------
@@ -119,7 +121,10 @@ const GRACE_MILLIS = 667;
 const graceButtons = new Map<Element, HTMLButtonElement[]>();
 if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
 	graceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
-graceButtons.set(element_ActionsOver, [element_Rematch, element_Analysis]);
+graceButtons.set(
+	element_ActionsOver,
+	element_Rematch ? [element_Rematch, element_Analysis] : [element_Analysis],
+);
 
 /** Blocks mid-grace, mapped to their pending re-enable timer. */
 const graceTimers = new Map<Element, number>();
@@ -133,7 +138,10 @@ function armGracePeriod(block: Element): void {
 	graceTimers.set(
 		block,
 		window.setTimeout(() => {
+			graceTimers.delete(block);
 			for (const button of buttons) button.disabled = false;
+			// The rematch button's enabled state depends on live rematch state, not just the grace.
+			updateRematchButton();
 		}, GRACE_MILLIS),
 	);
 }
@@ -203,9 +211,64 @@ function callback_Analysis(): void {
 	window.location.href = `/analysis/${uuid.base10ToBase62(window.gamePageData.id)}`;
 }
 
-/** Placeholder until the server supports rematches. */
+// Rematch ------------------------------------------------------------------------------------
+
+/** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
+let weOfferedRematch = false;
+/** Whether our OPPONENT has an outstanding rematch offer (button glows). */
+let opponentOfferedRematch = false;
+/** Whether our opponent is currently connected (button disabled while they're gone). */
+let opponentPresentPostGame = true;
+
+/**
+ * Repaints the rematch button: glows while the opponent has an offer out (and we haven't
+ * yet responded), and is disabled once we've offered or while the opponent is away.
+ * Leaves the button alone during its appearance grace period (see {@link armGracePeriod}).
+ */
+function updateRematchButton(): void {
+	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
+	element_Rematch.classList.toggle(
+		'rematch-offered',
+		opponentOfferedRematch && !weOfferedRematch,
+	);
+	if (graceTimers.has(element_ActionsOver)) return; // Mid-appearance grace — leave disabled state to it.
+	element_Rematch.disabled = weOfferedRematch || !opponentPresentPostGame;
+}
+
+/** Extends a rematch offer to our opponent. Clicking while they're offering accepts theirs. */
 function callback_Rematch(): void {
-	toast.show('Rematch is not yet supported by the server.', { error: true });
+	if (weOfferedRematch) return; // Already offered.
+	socketmessages.send('game', 'offerrematch');
+	weOfferedRematch = true;
+	updateRematchButton();
+}
+
+/** Restores the rematch button's state from the server on load/resync. */
+function setRematchState(rematch: RematchOfferInfo): void {
+	// A page load/resync resets our own pending offer (not restored — see the server protocol).
+	weOfferedRematch = false;
+	opponentOfferedRematch = rematch.offered;
+	opponentPresentPostGame = rematch.present;
+	updateRematchButton();
+}
+
+/** Our opponent extended a rematch offer — glow the button to invite us to accept. */
+function onOpponentRematchOffer(): void {
+	opponentOfferedRematch = true;
+	updateRematchButton();
+}
+
+/** Our opponent left the post-game — disable the button (and stop any glow). */
+function onOpponentLeft(): void {
+	opponentPresentPostGame = false;
+	opponentOfferedRematch = false;
+	updateRematchButton();
+}
+
+/** Our opponent returned to the post-game — re-enable the button. */
+function onOpponentReturn(): void {
+	opponentPresentPostGame = true;
+	updateRematchButton();
 }
 
 // =================================================================================
@@ -221,7 +284,7 @@ function initListeners(): void {
 	element_AcceptDraw?.addEventListener('click', drawoffers.callback_AcceptDraw);
 	element_RejectDraw?.addEventListener('click', drawoffers.callback_declineDraw);
 
-	element_Rematch.addEventListener('click', callback_Rematch);
+	element_Rematch?.addEventListener('click', callback_Rematch);
 	element_Analysis.addEventListener('click', callback_Analysis);
 }
 
@@ -230,4 +293,8 @@ initListeners();
 export default {
 	refresh,
 	updateOfferDrawButton,
+	setRematchState,
+	onOpponentRematchOffer,
+	onOpponentLeft,
+	onOpponentReturn,
 };

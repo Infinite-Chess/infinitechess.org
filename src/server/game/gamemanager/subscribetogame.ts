@@ -10,7 +10,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
-import { runReconnectSideEffects } from './joingame.js';
+import { runReconnectSideEffects } from './resync.js';
 
 /**
  * Fires when a client sends the 'subscribe' action with a game id,
@@ -46,8 +46,8 @@ function onSubscribeToGame(ws: CustomWebSocket, gameId: number): void {
 			);
 		}
 	} else {
-		// Participant path: attach without the old joingame payload, then send the new state.
-		gameutility.subscribeClientToGame(servergame, ws, color, { sendGameInfo: false });
+		// Participant path: attach, then send the new state.
+		gameutility.subscribeClientToGame(servergame, ws, color);
 		try {
 			gameutility.sendParticipantGameState(servergame, ws, color);
 		} catch {

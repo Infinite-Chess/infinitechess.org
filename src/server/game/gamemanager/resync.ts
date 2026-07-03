@@ -12,8 +12,11 @@
  * both gamemanager and movesubmission depend on this, so we avoid circular dependancy.
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+
+import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
@@ -45,9 +48,9 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 	// 1. Check if the game is still live => Resync them
 	const game: ServerGame | undefined = getGameByID(gameID);
 
-	// 2. Not live => Send game results from database
+	// 2. Not live (evicted from memory) => tell the client how to move on
 	if (!game) {
-		sendClientLoggedGame(ws, gameID);
+		handleResyncToDeadGame(ws, gameID);
 		return;
 	}
 
@@ -72,25 +75,39 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 		return;
 	}
 
-	cancelDisconnectTimer(game.match, ourRole);
-	liveGameValues.onPlayerReconnected(game, ourRole);
+	runReconnectSideEffects(game, ourRole);
 }
 
-/** Sends a client a game from the database. */
-function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
+/**
+ * Runs the side-effects of a player (re)attaching their socket to a game. While live: clears
+ * any disconnect/claim timer and notifies live-game tracking they reconnected. Post-conclusion
+ * (game lingering for a rematch): clears the reconnection cushion and tells the opponent we're
+ * back so their rematch button re-enables.
+ */
+function runReconnectSideEffects(servergame: ServerGame, color: Player): void {
+	cancelDisconnectTimer(servergame.match, color);
+	if (gameutility.isGameOver(servergame)) {
+		const opponentColor = typeutil.invertPlayer(color);
+		gameutility.sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentreturn'); // prettier-ignore
+	} else {
+		liveGameValues.onPlayerReconnected(servergame, color);
+	}
+}
+
+/**
+ * Handles a resync to a game no longer in server memory. Dead-game state is now served over HTTP
+ * (`GET /api/game/:id`), so the socket no longer ships it: a logged game (in the DB) concluded, so
+ * we tell the client to unsub — it keeps the finished result it's already showing. A game absent
+ * from the DB was aborted before any move (never logged), so we tell the client there's no game.
+ *
+ * TODO (T10): a client resyncing a game it believed *live* but that has since concluded may not
+ * have seen the conclusion; that case needs the dead state (or a redirect to the HTTP dead-game
+ * route) rather than a bare `unsub`.
+ */
+function handleResyncToDeadGame(ws: CustomWebSocket, gameID: number): void {
+	let loggedInDb: boolean;
 	try {
-		const logged_game_info = getGameData(gameID, ['game_id', 'rated', 'termination', 'icn']);
-		if (!logged_game_info) {
-			// This happens if the user requests a game that was aborted before
-			// any moves were made, as those games are not stored in the database.
-			sendSocketMessage(ws, 'game', 'nogame'); // IN THE FUTURE: The client could show a "Game not found" page
-			return;
-		}
-
-		// They should automatically know to unsub on their end, because of this message.
-
-		// Send them the actual game info.
-		sendSocketMessage(ws, 'game', 'logged-game-info', logged_game_info);
+		loggedInDb = !!getGameData(gameID, ['game_id']);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(
@@ -102,7 +119,7 @@ function sendClientLoggedGame(ws: CustomWebSocket, gameID: number): void {
 		return;
 	}
 
-	console.log(`Sent client game from the database of id (${gameID})!`);
+	sendSocketMessage(ws, 'game', loggedInDb ? 'unsub' : 'nogame');
 }
 
-export { resyncToGame };
+export { resyncToGame, runReconnectSideEffects };

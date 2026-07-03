@@ -4,17 +4,16 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { ServerGameInfo } from '../../../websocket/socketschemas.js';
 import type { ClockValues, ParticipantState } from '../../../../../../shared/types.js';
 
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
-import { isGameInstantlyDeleted } from '../../../../../../shared/chess/variants/servervalidation.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import { GameBus } from '../../GameBus.js';
+import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import tabnameflash from './tabnameflash.js';
 import guidisconnect from '../../gui/guidisconnect.js';
@@ -45,7 +44,7 @@ SocketBus.addEventListener('reconnected', () => {
 GameBus.addEventListener('game-concluded', () => {
 	tabnameflash.onGameClose();
 	drawoffers.onGameClose();
-	requestRemovalFromPlayersInActiveGames();
+	// The server frees us from the active-games list itself once the result is locked in.
 });
 
 // Getters ------------------------------------------------------------
@@ -65,14 +64,15 @@ function setInSyncFalse(): void {
 // Functions --------------------------------------------------
 
 function initOnlineGame(options: {
-	gameInfo: ServerGameInfo;
+	/** The numeric id of the online game. */
+	id: number;
 	/** Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over! */
 	participantState?: ParticipantState;
 }): void {
 	inSync = true;
 
 	// Set static game properties that never change
-	id = options.gameInfo.id;
+	id = options.id;
 
 	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer.
 	set_DrawOffers_DisconnectInfo(options.participantState);
@@ -91,6 +91,9 @@ function set_DrawOffers_DisconnectInfo(participantState?: ParticipantState): voi
 	if (participantState.disconnect)
 		guidisconnect.onOpponentDisconnect(participantState.disconnect);
 	else guidisconnect.onOpponentReturn();
+
+	// Restore the rematch button's state (present only once the game is over).
+	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
 }
 
 function initEventListeners(): void {
@@ -166,27 +169,6 @@ function reportOpponentsMove(reason: string): void {
 	};
 
 	socketmessages.send('game', 'report', message);
-}
-
-/**
- * Lets the server know we have seen the game conclusion, and would
- * like to be allowed to join a new game if we leave quickly.
- *
- * THIS SHOULD ALSO be the point when the server knows we agree
- * with the resulting game conclusion (no cheating detected),
- * and the server may change the players elos!
- */
-function requestRemovalFromPlayersInActiveGames(): void {
-	if (!socketsubs.areSubbedToSub('game')) {
-		// THE SERVER has deleted the game. Already removed from players in active games list!
-		// console.log("Not sending request to remove from players in active games, because we are not subbed to the game.");
-		return;
-	}
-
-	// Don't send this request if the server will have deleted this game instantly.
-	const gamefile = gameslot.getGamefile()!;
-	if (isGameInstantlyDeleted(gamefile.variant)) return;
-	socketmessages.send('game', 'removefromplayersinactivegames');
 }
 
 /** Modifies the clock values to account for ping. */

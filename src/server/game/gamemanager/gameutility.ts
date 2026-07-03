@@ -17,6 +17,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Game, LoadedVariant } from '../../../shared/chess/logic/gamefile.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
+	AuthSeekVariant,
 	ClockValues,
 	FullGameState,
 	StaticGameState,
@@ -54,7 +55,7 @@ import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
-import { AuthSeek, buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
+import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
 import { sendNotify, sendNotifyError, sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
 
@@ -66,7 +67,7 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
  * This gives them a little bit of time to reconnect and submit a cheat report,
  * which is only useful in variants where we're not doing server-side move validation.
  */
-export const timeBeforeGameDeletionMillis = 1000 * 8;
+export const timeBeforeFinalizeMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
 
@@ -152,9 +153,26 @@ interface MatchInfo {
 	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise null. */
 	drawOfferState?: Player;
 
-	/** The ID of the timer to delete the match after it has ended.
-	 * This can be used to cancel it in case a hacking was reported. */
-	deleteTimeoutID?: ReturnType<typeof setTimeout>;
+	/**
+	 * Whether the game is finalized: its result is permanent and locked in — logged to the
+	 * database, ratings applied, cheat reports no longer accepted, and it can never change.
+	 * A finalized game may still linger in memory to host the post-game rematch handshake
+	 * until both players leave (after which it is evicted).
+	 */
+	finalized: boolean;
+
+	/**
+	 * The colors that have an outstanding rematch offer post-conclusion. When both are
+	 * present, a rematch game is created. Ephemeral — never persisted (lost on restart).
+	 */
+	rematchOffers: Set<Player>;
+
+	/**
+	 * The ID of the timer that finalizes (locks in + logs) the game's result after it ends.
+	 * Only used by games without server-side validation, to give a cushion for cheat reports
+	 * to overturn the result first. Can be cancelled if the game is finalized/evicted early.
+	 */
+	finalizeTimeoutID?: ReturnType<typeof setTimeout>;
 
 	/**
 	 * The ID of the timer that concludes the game once BOTH players have been
@@ -199,10 +217,20 @@ type ValidationDependant =
 // Functions --------------------------------------------------------------------------------------
 
 /**
- * Construct the match object based on the seek options and how players have been assigned
+ * The properties needed to start a game, distilled from either an accepted seek or an
+ * existing game being rematched. Kept minimal so both paths can share {@link initMatch}.
+ */
+interface GameSetup {
+	variant: AuthSeekVariant;
+	time: TimeControl;
+	rated: boolean;
+}
+
+/**
+ * Construct the match object based on the game setup and how players have been assigned
  */
 function initMatch(
-	seek: AuthSeek,
+	setup: GameSetup,
 	id: number,
 	assignedPlayers: PlayerGroup<{ identifier: AuthMemberInfo }>,
 ): MatchInfo {
@@ -218,16 +246,18 @@ function initMatch(
 		};
 	}
 
-	if (seek.variant.kind !== 'preset')
+	if (setup.variant.kind !== 'preset')
 		throw new Error('Custom variant game starting is not yet implemented.');
 
 	return {
 		id,
-		variant: seek.variant.code,
+		variant: setup.variant.code,
 		playerData,
 		timeCreated: Date.now(),
-		rated: seek.mode === 'rated',
-		clock: seek.time,
+		rated: setup.rated,
+		clock: setup.time,
+		finalized: false,
+		rematchOffers: new Set(),
 	};
 }
 
@@ -302,19 +332,15 @@ function assignWhiteBlackPlayersFromSeek(
 }
 
 /**
- * Links their socket to this game, modifies their metadata.subscriptions, and sends them the game info.
+ * Links their socket to this game and modifies their metadata.subscriptions.
  * @param servergame - The game they are a part of.
  * @param playerSocket - Their websocket.
- * @param playerColor - What color they are playing in this game. p.NEU
- * @param options - An object that may contain the option `sendGameInfo`, that when *true* won't send the game information over. Default: *true*
- * @param options.sendGameInfo
- * @throws If a database error occurs (from {@link sendGameInfoToPlayer}).
+ * @param playerColor - What color they are playing in this game.
  */
 function subscribeClientToGame(
 	servergame: ServerGame,
 	playerSocket: CustomWebSocket,
 	playerColor: Player,
-	{ sendGameInfo = true }: { sendGameInfo?: boolean } = {},
 ): void {
 	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
@@ -335,10 +361,6 @@ function subscribeClientToGame(
 		id: match.id,
 		color: playerColor,
 	};
-
-	// 3. Send the game information, unless this is a reconnection,
-	// at which point we verify if they are in sync
-	if (sendGameInfo) sendGameInfoToPlayer(servergame, playerSocket, playerColor);
 }
 
 /**
@@ -355,41 +377,6 @@ function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
 
 	// 2. Remove the game key-value pair from the sockets metadata subscription list.
 	delete ws.metadata.subscriptions.game;
-}
-
-/**
- * Sends the game info to the player, the info they need to load the online game.
- *
- * Makes sure not to send sensitive info, such as player's browser-id cookies.
- * @param servergame - The game they're in.
- * @param playerSocket - Their websocket
- * @param playerColor - The color they are.
- * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
- */
-function sendGameInfoToPlayer(
-	servergame: ServerGame,
-	playerSocket: CustomWebSocket,
-	playerColor: Player,
-): void {
-	const ratings = getRatingDataForGamePlayers(
-		servergame.match.playerData,
-		servergame.match.variant,
-	);
-
-	const gameUpdateContents = getGameUpdateMessageContents(servergame, playerColor, false);
-
-	const messageContents = {
-		gameInfo: {
-			id: servergame.match.id,
-			rated: servergame.match.rated,
-			playerRatings: ratings,
-		},
-		metadata: buildMetadataOfGame(servergame),
-		youAreColor: playerColor,
-		...gameUpdateContents,
-	};
-
-	sendSocketMessage(playerSocket, 'game', 'joingame', messageContents);
 }
 
 /**
@@ -563,7 +550,6 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
  * @param servergame - The game
  * @param colorPlayingAs - Their color
  * @param [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
- * @throws If a database error occurs (from {@link subscribeClientToGame}).
  */
 function resyncToGame(
 	ws: CustomWebSocket,
@@ -572,8 +558,7 @@ function resyncToGame(
 	replyToMessageID?: number,
 ): void {
 	// If their socket isn't subscribed, connect them to the game!
-	if (!ws.metadata.subscriptions.game)
-		subscribeClientToGame(servergame, ws, colorPlayingAs, { sendGameInfo: false });
+	if (!ws.metadata.subscriptions.game) subscribeClientToGame(servergame, ws, colorPlayingAs);
 
 	// This function ALREADY sends all the information the client needs to resync!
 	sendGameUpdateToColor(servergame, colorPlayingAs, false, { replyTo: replyToMessageID });
@@ -695,6 +680,15 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 		participantState.disconnect = {
 			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
 			wasByChoice: opponentData.disconnect.wasByChoice,
+		};
+	}
+
+	// Once the game is over it lingers for the rematch handshake — send enough to
+	// restore the rematch button's state (glow / disabled) on a page refresh.
+	if (isGameOver(servergame)) {
+		participantState.rematch = {
+			offered: match.rematchOffers.has(opponentColor), // Opponent has an outstanding offer -> glow.
+			present: opponentData.socket !== undefined, // Opponent connected -> button enabled.
 		};
 	}
 
@@ -946,10 +940,10 @@ function simplifyMove(move: MoveRecord): MovePacket {
 }
 
 /**
- * Cancel the timer to delete a game after it has ended if it is currently running.
+ * Cancel the timer that finalizes a concluded game, if it is currently running.
  */
-function cancelDeleteGameTimer(match: MatchInfo): void {
-	clearTimeout(match.deleteTimeoutID);
+function cancelFinalizeTimer(match: MatchInfo): void {
+	clearTimeout(match.finalizeTimeoutID);
 }
 
 /**
@@ -982,7 +976,7 @@ function getColorThatPlayedMoveIndex(servergame: ServerGame, i: number): Player 
 	return turnOrder[i % turnOrder.length]!;
 }
 
-export type { ServerGame, MatchInfo, PlayerData, PlayerDisconnect };
+export type { ServerGame, MatchInfo, PlayerData, PlayerDisconnect, GameSetup };
 
 export default {
 	initMatch,
@@ -1010,7 +1004,7 @@ export default {
 	sendMoveToColor,
 	buildMoveMessage,
 	broadcastToSpectators,
-	cancelDeleteGameTimer,
+	cancelFinalizeTimer,
 	isGameResignable,
 	isGameBorderlineResignable,
 	getColorThatPlayedMoveIndex,

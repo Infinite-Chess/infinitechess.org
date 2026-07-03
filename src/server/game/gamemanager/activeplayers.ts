@@ -4,8 +4,6 @@
  * This script keeps track of the ID's of games members and browsers are currently in.
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { MatchInfo } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
@@ -15,7 +13,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
  * Contains what members are currently in a game: `{ member: gameID }`
  * Users that are present in this list are not allowed to join another game until they're
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()},
- * even though the game may not be deleted/logged yet.
+ * even though the game may not be finalized or evicted yet.
  */
 const membersInActiveGames: Record<number, number> = {};
 
@@ -23,7 +21,7 @@ const membersInActiveGames: Record<number, number> = {};
  * Contains what browsers are currently in a game: `{ browser: gameID }`
  * Users that are present in this list are not allowed to join another game until they're
  * deleted from here. As soon as a game is over, we can {@link removeUserFromActiveGame()}
- * even though the game may not be deleted/logged yet.
+ * even though the game may not be finalized or evicted yet.
  */
 const browsersInActiveGames: Record<string, number> = {};
 
@@ -82,22 +80,6 @@ function isSocketInAnActiveGame(ws: CustomWebSocket): boolean {
 }
 
 /**
- * Returns true if the player behind the socket is not in an active game
- * of the provided ID (has seen the game conclusion).
- * @param match
- * @param color
- */
-function hasColorInGameSeenConclusion(match: MatchInfo, color: Player): boolean {
-	const player = match.playerData[color];
-	if (!player)
-		throw new Error(
-			`Invalid color "${color}" when checking if color in game has seen game conclusion!`,
-		);
-
-	return getIDOfGamePlayerIsIn(player.identifier) !== match.id;
-}
-
-/**
  * Gets a game by player.
  * @param player - The player object containing all the memberinfo
  * @returns The game they are in, if they belong in one, otherwise undefined.
@@ -113,6 +95,5 @@ export {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
 	isSocketInAnActiveGame,
-	hasColorInGameSeenConclusion,
 	getIDOfGamePlayerIsIn,
 };

@@ -4,12 +4,11 @@
  * The script keeps track of all our active online games.
  */
 
-import type { AuthSeek } from '../seeksmanager/seekutility.js';
-import type { ServerGame } from './gameutility.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { GameSetup, ServerGame } from './gameutility.js';
 import type { GameConclusionMessage, StaticGameState } from '../../../shared/types.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
@@ -24,20 +23,20 @@ import gamelogger from './gamelogger.js';
 import gameutility from './gameutility.js';
 import ratingabuse from './ratingabuse.js';
 import liveGameValues from './liveGameValues.js';
+import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { executeSafely } from '../../utility/errorGuard.js';
 import { closeDrawOffer } from './drawoffers.js';
 import { genUniqueGameID } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { restoreAllLiveGames } from './liveGameRestore.js';
+import { timeBeforeFinalizeMillis } from './gameutility.js';
 import { produceDeadStaticGameState } from './deadgamestate.js';
 import { broadcastMemberInGameStatus } from '../seeksmanager/lobbymanager.js';
-import { timeBeforeGameDeletionMillis } from './gameutility.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
 	getIDOfGamePlayerIsIn,
-	hasColorInGameSeenConclusion,
 } from './activeplayers.js';
 import {
 	setOpponentClaimWindow,
@@ -60,7 +59,7 @@ const PRINT_GAMES = true;
 
 /**
  * The object containing all currently active games. Each game's id is the key: `{ id: Game }`
- * This may temporarily include games that are over, but not yet deleted/logged.
+ * This may temporarily include games that are over, but not yet finalized or evicted.
  *
  * The game's ids are the same id they will receive in the database! For this reason they must
  * be unique across the games table, and all other live games.
@@ -73,21 +72,25 @@ const activeGames: Record<number, ServerGame> = {};
  * Creates and persists the `ServerGame`, then signals each connected player's lobby
  * client to navigate to the game page (where they re-subscribe to the live game),
  * arming a silent disconnect cushion in the meantime.
- * @param seek - The seek with the properties `id`, `owner`, `variant`, `clock`, `color`, `rated`.
- * @param assignments - The color each player has
+ * @param setup - The variant, time control, and rated flag of the game to start.
+ * @param assignments - The color each player has, and their socket if connected.
+ * @returns The id of the newly created game.
  * @throws If a database error occurs (from {@link liveGameValues.onGameCreated}).
  */
 function createGame(
-	seek: AuthSeek,
+	setup: GameSetup,
 	assignments: PlayerGroup<{ identifier: AuthMemberInfo; socket?: CustomWebSocket }>,
-): void {
-	if (seek.variant.kind !== 'preset') {
+): number {
+	if (setup.variant.kind !== 'preset') {
 		const errText = 'Custom variant game starting is not yet implemented.';
 		console.error(errText);
 		throw new Error(errText);
 	}
 
-	const variantCode = seek.variant.code;
+	const variantCode = setup.variant.code;
+
+	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
+	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
 	const gameID = issueUniqueGameId();
 	const dateTimestamp = Date.now();
@@ -96,8 +99,8 @@ function createGame(
 		mod: variantcache.getModule(variantCode),
 		dateTimestamp,
 	};
-	const gameWithRules = gamefile.initGame(seek.time, dateTimestamp, variant);
-	const match = gameutility.initMatch(seek, gameID, assignments);
+	const gameWithRules = gamefile.initGame(setup.time, dateTimestamp, variant);
+	const match = gameutility.initMatch(setup, gameID, assignments);
 	const validateMoves = doesVariantSupportServerValidation(variant);
 
 	const servergame: ServerGame = gameutility.initServerGame(
@@ -132,6 +135,8 @@ function createGame(
 		console.log('Starting new game:');
 		gameutility.printGame(servergame);
 	}
+
+	return gameID;
 }
 
 /**
@@ -214,13 +219,17 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 
 	const servergame = getGameByID(gameID)!;
 
+	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 	gameutility.unsubClientFromGame(servergame.match, ws); // Don't tell the client to unsub because their socket is CLOSING
+
+	// Post-conclusion the game only lingers for the rematch handshake — no claim window applies.
+	if (gameutility.isGameOver(servergame)) {
+		onPostGameLeave(servergame, color, !unsubNotByChoice);
+		return;
+	}
 
 	// Let their OPPONENT know they've disconnected though...
 
-	if (gameutility.isGameOver(servergame)) return; // It's fine if players unsub/disconnect after the game has ended.
-
-	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
 	if (unsubNotByChoice) {
 		// Internet interruption. Give them 5 seconds before opening the opponent's claim window.
 		startDisconnectCushionTimerAndPersist(servergame, color);
@@ -292,42 +301,6 @@ function getGameBySocket(ws: CustomWebSocket): ServerGame | undefined {
 	// Is the client in a game? What's their username/browser-id?
 	const player = ws.metadata.memberInfo;
 	return getGameByPlayer(player);
-}
-
-/**
- * Called when the client sees the game conclusion. Tries to remove them from the players
- * in active games list, which then allows them to join a new game.
- *
- * THIS SHOULD ALSO be the point when the server knows this player
- * agrees with the resulting game conclusion (no cheating detected),
- * and the server may change the players elos once both players send this.
- * @param ws - Their websocket
- * @param servergame - The game they are in.
- */
-function onRequestRemovalFromPlayersInActiveGames(
-	ws: CustomWebSocket,
-	servergame: ServerGame,
-): void {
-	if (!gameutility.isGameOver(servergame)) return; // Game is still going, can't let them join a new game.
-
-	const user = ws.metadata.memberInfo;
-	removeUserFromActiveGame(user, servergame.match.id);
-	broadcastMemberInGameStatus(user); // Their clients may now hide their lobby in-game banner, if shown
-
-	// If both players have requested this (i.e. have seen the game conclusion),
-	// and the game is scheduled to be deleted, just delete it now!
-
-	// Is the opponent still in the players in active games list? (has not seen the game results)
-	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
-	const opponentColor = typeutil.invertPlayer(color);
-	if (!hasColorInGameSeenConclusion(servergame.match, opponentColor)) return; // They are still in the active games list because they have not seen the game conclusion yet.
-
-	// console.log("Deleting game immediately, instead of waiting 15 seconds, because both players have seen the game conclusion and requested to be removed from the players in active games list.")
-
-	// Both players have seen the game conclusion and requested to be removed
-	// from the players in active games list, just delete the game now!
-	gameutility.cancelDeleteGameTimer(servergame.match);
-	deleteGame(servergame);
 }
 
 /**
@@ -414,14 +387,25 @@ function finalizeConclusion(servergame: ServerGame, conclusion: GameConclusion |
 }
 
 /**
- * Executes game teardown: broadcasts the final game state to
- * clients if the conclusion was not move-triggered, then either
- * deletes the game immediately or schedules deletion after a short cushion.
+ * Executes game teardown: broadcasts the final game state to clients if the conclusion
+ * was not move-triggered, then locks in (permanently logs) the result — immediately for
+ * server-validated games, or after a cheat-report cushion otherwise. The game then LINGERS
+ * in memory to host the rematch handshake until both players leave (see {@link evictGame}).
  * Must be called after {@link finalizeConclusion}.
  * @param servergame - The game (basegame.gameConclusion must already be set)
  */
 function teardownGame(servergame: ServerGame): void {
 	const conclusion = servergame.gameConclusion!;
+	console.log('Tear down');
+
+	// The game is over — free both players to join a new game (even in another tab), even
+	// though it may still linger in memory for the rematch handshake (and, for non-validated
+	// games, hasn't been finalized yet). Reconnecting to this game is done by id via 'subscribe',
+	// so it doesn't rely on this list.
+	for (const data of Object.values(servergame.match.playerData)) {
+		removeUserFromActiveGame(data.identifier, servergame.match.id);
+		broadcastMemberInGameStatus(data.identifier); // Their clients may now hide their lobby in-game banner, if shown
+	}
 
 	// Move-triggered conclusions already send the gameConclusion in the move response.
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition)) {
@@ -435,19 +419,21 @@ function teardownGame(servergame: ServerGame): void {
 		gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
 	}
 
-	gameutility.cancelDeleteGameTimer(servergame.match); // Cancel first, in case a hacking report just occurred.
+	gameutility.cancelFinalizeTimer(servergame.match); // Cancel first, in case a hacking report just re-concluded.
 	if (servergame.validateMoves) {
-		// Server validated every move — cheating is impossible.
-		// We can log and unsubscribe clients immediately.
-		deleteGame(servergame);
+		// Server validated every move — cheating is impossible. Lock in the result now.
+		finalizeGame(servergame);
 	} else {
 		// No server-side validation (e.g. large variant, or pasted position).
-		// Give the opponent time to oppose the conclusion.
-		servergame.match.deleteTimeoutID = setTimeout(
-			() => deleteGame(servergame),
-			timeBeforeGameDeletionMillis,
-		);
+		// Give the opponent time to oppose the conclusion with a cheat report first.
+		servergame.match.finalizeTimeoutID = setTimeout(() => {
+			finalizeGame(servergame);
+			evictIfBothLeft(servergame);
+		}, timeBeforeFinalizeMillis);
 	}
+
+	// If both players were already gone at conclusion (e.g. abandonment), evict right away.
+	evictIfBothLeft(servergame);
 }
 
 /**
@@ -516,19 +502,19 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 }
 
 /**
- * Deletes the game. Prints the active game count.
- * This should not be called until after both clients have had a chance
- * to see the game result, or after 15 seconds after the game ends
- * to give players time to cheat report.
- * @param servergame
+ * Finalizes a concluded game: locks in its result permanently by logging it to the database
+ * (computing + committing rating changes) and recording suspicion levels. Idempotent —
+ * subsequent calls no-op once {@link MatchInfo.finalized} is set.
+ *
+ * After this, the game state can no longer change (cheat reports are rejected), but the
+ * game may still LINGER in memory to host the rematch handshake until both players leave.
+ * Note: players are freed to join a new game at conclusion ({@link teardownGame}), not here —
+ * for non-validated games this runs a cheat-report cushion later.
+ * @param servergame - The concluded game
  */
-function deleteGame(servergame: ServerGame): void {
-	// Delete is BEFORE logging, since the user may still send us game actions like "removefromplayersinactivegames"
-	// and because of async stuff below, the game isn't actually deleted yet, which may trigger a second deleteGame() call.
-	delete activeGames[servergame.match.id]; // Delete the game from the activeGames list
-
-	// Remove the live game from the persistence database.
-	liveGameValues.onGameDeleted(servergame.match.id);
+function finalizeGame(servergame: ServerGame): void {
+	if (servergame.match.finalized) return; // Already finalized.
+	servergame.match.finalized = true;
 
 	// Mostly deprecated:
 	// The statlogger logs games with at least 2 moves played (resignable) into /database/stats.json for stat collection
@@ -559,31 +545,159 @@ function deleteGame(servergame: ServerGame): void {
 		}
 	}
 
-	// Unsubscribe both players' sockets from the game if they still are connected.
-	// If the socket is undefined, they will have already been auto-unsubscribed.
-	// And remove them from the list of users in active games to allow them to join a new game.
+	// Monitor suspicion levels for all players who participated in the game
+	// Doesn't have to be in the same transaction as the game logging,
+	// as the rating abuse table's data does not reference other tables.
+	ratingabuse.measureRatingAbuseAfterGame(servergame);
+
+	// The result now lives in the permanent tables — drop the live game row so a restart
+	// doesn't restore (and re-log) it. The in-memory game may still linger for the rematch.
+	liveGameValues.onGameFinalized(servergame);
+
+	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
+}
+
+/**
+ * Evicts a concluded, lingering game from memory once both players have left. Finalizes the
+ * result first (in case both left before it was finalized) — which also removes it from the
+ * persistence database — then removes it from the active games list. Idempotent against a
+ * double eviction.
+ * @param servergame - The game to evict
+ */
+function evictGame(servergame: ServerGame): void {
+	if (activeGames[servergame.match.id] === undefined) return; // Already evicted.
+
+	finalizeGame(servergame); // Finalizes the result (if both left before it was finalized) and removes the persisted row.
+
+	gameutility.cancelFinalizeTimer(servergame.match);
+	delete activeGames[servergame.match.id];
+
+	// Both players have already left, but a spectator (or a stray old-tab socket) may still
+	// be attached — tell any remaining socket to unsubscribe.
 	for (const data of Object.values(servergame.match.playerData)) {
-		removeUserFromActiveGame(data.identifier, servergame.match.id);
-		broadcastMemberInGameStatus(data.identifier); // Their clients may now hide their lobby in-game banner, if shown
-		if (!data.socket) continue; // They don't have a socket connected.
-		// We inform their opponent they have disconnected inside js when we call this method.
-		// Tell the client to unsub on their end
+		if (!data.socket) continue;
 		sendSocketMessage(data.socket, 'game', 'unsub');
 		gameutility.unsubClientFromGame(servergame.match, data.socket);
 	}
-	// Unsubscribe all spectators too.
 	for (const ws of servergame.spectators) {
 		sendSocketMessage(ws, 'game', 'unsub');
 		delete ws.metadata.subscriptions.spectating;
 	}
 	servergame.spectators.clear();
 
-	// Monitor suspicion levels for all players who participated in the game
-	// Doesn't have to be in the same transaction as the game logging,
-	// as the rating abuse table's data does not reference other tables.
-	ratingabuse.measureRatingAbuseAfterGame(servergame);
+	if (PRINT_GAMES) console.log(`Evicted game ${servergame.match.id}.`);
+}
 
-	if (PRINT_GAMES) console.log(`Deleted game ${servergame.match.id}.`);
+/**
+ * Returns true if a player has left a concluded game's rematch window: their socket is
+ * detached and they aren't within the reconnection cushion (so they can't return).
+ */
+function hasPlayerLeftPostGame(servergame: ServerGame, color: Player): boolean {
+	const data = servergame.match.playerData[color]!;
+	if (data.socket !== undefined) return false; // Still connected.
+	if (data.disconnect.startID !== undefined) return false; // In the reconnection cushion.
+	return true;
+}
+
+/** Evicts a concluded lingering game if BOTH players have now left its rematch window. */
+function evictIfBothLeft(servergame: ServerGame): void {
+	if (!gameutility.isGameOver(servergame)) return; // Live game — the abandonment path handles it.
+	const bothLeft = Object.keys(servergame.match.playerData).every((c) =>
+		hasPlayerLeftPostGame(servergame, Number(c) as Player),
+	);
+	if (bothLeft) evictGame(servergame);
+}
+
+/**
+ * Handles a player leaving a concluded game's rematch window (socket close, or joining
+ * another game). Withdraws their rematch offer and tells the opponent, then either evicts
+ * the game (both now gone) or, for a network interruption, waits out the reconnection
+ * cushion first so a brief blip doesn't end the window.
+ * @param byChoice - True if they left deliberately (tab close / joined elsewhere); false for a network drop.
+ */
+function onPostGameLeave(servergame: ServerGame, color: Player, byChoice: boolean): void {
+	const match = servergame.match;
+
+	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
+	match.rematchOffers.delete(color);
+	gameutility.sendMessageToSocketOfColor(match, typeutil.invertPlayer(color), 'game', 'opponentleft'); // prettier-ignore
+
+	const playerdata = match.playerData[color]!;
+	clearTimeout(playerdata.disconnect.startID);
+
+	if (byChoice) {
+		// Gone immediately.
+		playerdata.disconnect.startID = undefined;
+		playerdata.disconnect.startTime = undefined;
+		evictIfBothLeft(servergame);
+	} else {
+		// Network drop — give them the reconnection cushion before considering them gone.
+		playerdata.disconnect.startID = setTimeout(() => {
+			playerdata.disconnect.startID = undefined;
+			playerdata.disconnect.startTime = undefined;
+			evictIfBothLeft(servergame);
+		}, timeToGiveDisconnectedBeforeOpeningClaimWindowMillis);
+		playerdata.disconnect.startTime =
+			Date.now() + timeToGiveDisconnectedBeforeOpeningClaimWindowMillis;
+	}
+}
+
+/**
+ * Creates a rematch of a concluded game: same variant/time/rated, players swapped to the
+ * opposite colors. Tears down the old game, starts the fresh one, and navigates both still-
+ * connected players to it. Silently aborts if either player is already in another game.
+ * @param oldGame - The concluded game both players have offered a rematch of.
+ */
+function createRematchGame(oldGame: ServerGame): void {
+	const oldMatch = oldGame.match;
+
+	// A rematch can't start if either player has meanwhile joined a DIFFERENT game. A concluded
+	// game frees its players from the active-players list, so a lingering participant reads as
+	// `undefined` here; only a genuine new game they've joined (a different id) blocks the rematch.
+	for (const data of Object.values(oldMatch.playerData)) {
+		const inGameID = getIDOfGamePlayerIsIn(data.identifier);
+		if (inGameID !== undefined && inGameID !== oldMatch.id) return; // Buttons just stay disabled.
+	}
+
+	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
+	const swapped: PlayerGroup<{ identifier: AuthMemberInfo }> = {};
+	const socketsToNavigate: CustomWebSocket[] = [];
+	for (const [c, data] of Object.entries(oldMatch.playerData)) {
+		swapped[typeutil.invertPlayer(Number(c) as Player)] = { identifier: data.identifier };
+		if (data.socket) socketsToNavigate.push(data.socket);
+	}
+
+	const setup: GameSetup = {
+		variant: { kind: 'preset', code: oldMatch.variant },
+		time: oldMatch.clock,
+		rated: oldMatch.rated,
+	};
+
+	evictGame(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
+	const newGameID = createGame(setup, swapped);
+
+	// Navigate both still-connected players to the new game (client converts the id to its URL).
+	for (const socket of socketsToNavigate) sendSocketMessage(socket, 'game', 'ingame', newGameID);
+}
+
+/**
+ * When a player joins a new game, force them to leave any concluded game still lingering
+ * for a rematch (a player can only be in one game). Detaches their old-tab socket and runs
+ * the standard post-game leave, so their old opponent's rematch option is withdrawn.
+ */
+function forceLeaveLingeringGame(identifier: AuthMemberInfo): void {
+	for (const servergame of Object.values(activeGames)) {
+		if (!gameutility.isGameOver(servergame)) continue; // Only concluded games linger for a rematch.
+		for (const [c, data] of Object.entries(servergame.match.playerData)) {
+			if (!memberInfoEq(data.identifier, identifier)) continue;
+			if (data.socket) {
+				sendSocketMessage(data.socket, 'game', 'leavegame'); // Unload the old game on their old tab.
+				gameutility.unsubClientFromGame(servergame.match, data.socket);
+			}
+			onPostGameLeave(servergame, Number(c) as Player, true);
+			return; // A player can only be a participant of one lingering game.
+		}
+	}
 }
 
 // Shutdown Preparation & Startup Restoration ------------------------------------------------
@@ -601,7 +715,7 @@ function prepGamesForShutdown(): void {
 		// Cancel all runtime timers
 		clearTimeout(servergame.match.autoTimeLossTimeoutID);
 		cancelDisconnectTimers(servergame.match);
-		gameutility.cancelDeleteGameTimer(servergame.match);
+		gameutility.cancelFinalizeTimer(servergame.match);
 
 		// Unsubscribe all sockets (we will resub them when they reconnect)
 		for (const data of Object.values(servergame.match.playerData)) {
@@ -624,28 +738,31 @@ function restoreLiveGames(): void {
 		// Add the game to the active games list
 		activeGames[servergame.match.id] = servergame;
 
-		// Register players in the active players list
+		// Start timers
+
+		// 1. Concluded games are always not-yet-finalized here (a finalized game's row is removed
+		//    when it's logged, so it's never restored). Resume the finalize deadline. They are NOT
+		//    registered in the active-players list — a concluded game no longer occupies its
+		//    players (they reconnect by id via 'subscribe' regardless).
+		if (gameutility.isGameOver(servergame)) {
+			if (pendingTimers.finalizeTimerMs !== undefined && pendingTimers.finalizeTimerMs > 0) {
+				servergame.match.finalizeTimeoutID = setTimeout(() => {
+					finalizeGame(servergame);
+					evictIfBothLeft(servergame);
+				}, pendingTimers.finalizeTimerMs);
+			} else {
+				// Deadline already elapsed (or none persisted): finalize now, evicting if both are gone.
+				finalizeGame(servergame);
+				evictIfBothLeft(servergame);
+			}
+			continue; // Skip the live-game timers below.
+		}
+
+		// Ongoing game: register its players in the active-players list (blocks them from
+		// joining a second game, and shows their lobby in-game banner).
 		for (const data of Object.values(servergame.match.playerData)) {
 			addUserToActiveGames(data.identifier, servergame.match.id);
 		}
-
-		// Start timers
-
-		// 1. Delete timer (for concluded games)
-		if (pendingTimers.deleteTimerMs !== undefined) {
-			if (pendingTimers.deleteTimerMs <= 0) {
-				// Timer already expired, delete immediately
-				deleteGame(servergame);
-				continue; // Skip to next game since this one is being deleted
-			}
-			servergame.match.deleteTimeoutID = setTimeout(
-				() => deleteGame(servergame),
-				pendingTimers.deleteTimerMs,
-			);
-		}
-
-		// Skip remaining timers for concluded games
-		if (gameutility.isGameOver(servergame)) continue;
 
 		// 2. Auto time loss timer (for timed games)
 		if (pendingTimers.autoTimeLossMs !== undefined) {
@@ -709,7 +826,7 @@ export {
 	unsubClientFromGameBySocket,
 	unsubSpectatorFromGameBySocket,
 	getGameBySocket,
-	onRequestRemovalFromPlayersInActiveGames,
+	createRematchGame,
 	setGameConclusion,
 	finalizeConclusion,
 	teardownGame,
