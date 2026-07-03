@@ -19,6 +19,7 @@ import {
 	OpponentsMoveMessageSchema,
 	OutSeekSchema,
 	PlayerRatingChangeInfoSchema,
+	RematchOfferInfoSchema,
 	SubscribedGameStateSchema,
 } from '../../../../shared/types.js';
 
@@ -100,6 +101,8 @@ const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('drawoffer') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
 	z.strictObject({ action: z.literal('rematchoffer') }),
+	z.strictObject({ action: z.literal('rematchstate'), value: RematchOfferInfoSchema }),
+	z.strictObject({ action: z.literal('finalized') }),
 	z.strictObject({ action: z.literal('opponentleft') }),
 	z.strictObject({ action: z.literal('opponentreturn') }),
 	z.strictObject({ action: z.literal('ingame'), value: GameIDSchema }),

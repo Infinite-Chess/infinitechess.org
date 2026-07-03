@@ -27,6 +27,7 @@ import type {
 	MovePacket,
 	OpponentsMoveMessage,
 	ParticipantState,
+	RematchOfferInfo,
 	PlayerRatingChangeInfo,
 	Rating,
 	ServerUsernameContainer,
@@ -609,6 +610,7 @@ function sendGameUpdateToColor(
 function buildGameUpdateBase(servergame: ServerGame, forceSync: boolean): GameUpdateBase {
 	const base: GameUpdateBase = {
 		gameConclusion: servergame.gameConclusion,
+		finalized: servergame.match.finalized,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 		forceSync,
 	};
@@ -685,14 +687,24 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 
 	// Once the game is over it lingers for the rematch handshake — send enough to
 	// restore the rematch button's state (glow / disabled) on a page refresh.
-	if (isGameOver(servergame)) {
-		participantState.rematch = {
-			offered: match.rematchOffers.has(opponentColor), // Opponent has an outstanding offer -> glow.
-			present: opponentData.socket !== undefined, // Opponent connected -> button enabled.
-		};
-	}
+	const rematch = getRematchOfferInfo(servergame, color);
+	if (rematch !== undefined) participantState.rematch = rematch;
 
 	return participantState;
+}
+
+/**
+ * The rematch overlay for a color once the game is over: whether the opponent has an outstanding
+ * offer (glow) and whether they're connected (button enabled). Undefined while the game is live.
+ */
+function getRematchOfferInfo(servergame: ServerGame, color: Player): RematchOfferInfo | undefined {
+	if (!isGameOver(servergame)) return undefined;
+	const opponentColor = typeutil.invertPlayer(color);
+	const opponentData = servergame.match.playerData[opponentColor]!;
+	return {
+		offered: servergame.match.rematchOffers.has(opponentColor), // Opponent has an outstanding offer -> glow.
+		present: opponentData.socket !== undefined, // Opponent connected -> button enabled.
+	};
 }
 
 /**
@@ -994,6 +1006,8 @@ export default {
 	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
 	sendMessageToSocketOfColor,
+	broadcastToParticipants,
+	getRematchOfferInfo,
 	printGame,
 	getSimplifiedGameString,
 	isGameOver,

@@ -33,7 +33,6 @@ function offerRematch(ws: CustomWebSocket, servergame: ServerGame): void {
 
 	if (match.rematchOffers.has(color)) return; // Duplicate offer (e.g. after a refresh) — ignore.
 	match.rematchOffers.add(color);
-	console.log('test');
 
 	// If the opponent is gone, we can't inform them. This can happen
 	// if they disconnect at the same time as the rematch offer is sent.

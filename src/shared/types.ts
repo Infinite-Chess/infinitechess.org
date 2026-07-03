@@ -126,6 +126,12 @@ export const ParticipantStateSchema = z.strictObject({
 export type GameUpdateBase = z.infer<typeof GameUpdateBaseSchema>;
 export const GameUpdateBaseSchema = z.strictObject({
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	/**
+	 * Whether the game is finalized (result locked in permanently). Once true, nothing but rematch
+	 * offers can change, so the client reconnects with `resyncrematch` instead of a full `resync`.
+	 * Carried on the snapshot so a resync catches a client fully up in one message.
+	 */
+	finalized: z.boolean(),
 	/** Existing moves, if any, to forward to the front of the game. */
 	moves: z.array(MovePacketSchema),
 	clockValues: ClockValuesSchema.optional(),

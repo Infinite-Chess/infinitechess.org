@@ -554,6 +554,10 @@ function finalizeGame(servergame: ServerGame): void {
 	// doesn't restore (and re-log) it. The in-memory game may still linger for the rematch.
 	liveGameValues.onGameFinalized(servergame);
 
+	// Tell any connected participants the result is now locked in, so their client knows it can
+	// never change — future reconnects fetch only rematch state (`resyncrematch`), not a full resync.
+	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
+
 	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
 }
 

@@ -79,6 +79,35 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 }
 
 /**
+ * A lean reconnect for a game the client already knows is finalized: its result is locked in, so
+ * only rematch-offer state can still change. We send just that (`rematchstate`) instead of a full
+ * resync, then run the standard reconnect side-effects (clear the cushion, tell the opponent we're
+ * back). Games no longer in memory (evicted) have no rematch — reply with an empty overlay so the
+ * client's button disables while it keeps the finished result it's already showing.
+ * @param ws - Their websocket
+ * @param gameID - The game id they requested
+ * @param replyToMessageID - The id of the incoming socket message this is a reply to
+ */
+function resyncRematch(ws: CustomWebSocket, gameID: number, replyToMessageID?: number): void {
+	const game = getGameByID(gameID);
+	if (!game) {
+		sendSocketMessage(ws, 'game', 'rematchstate', { offered: false, present: false }, replyToMessageID); // prettier-ignore
+		return;
+	}
+
+	const ourRole = gameutility.getSocketRoleInGame(game, ws);
+	if (!ourRole) {
+		sendSocketMessage(ws, 'game', 'login'); // Couldn't verify their socket belongs (probably logged out)
+		return;
+	}
+
+	const rematch = gameutility.getRematchOfferInfo(game, ourRole) ?? { offered: false, present: false }; // prettier-ignore
+	sendSocketMessage(ws, 'game', 'rematchstate', rematch, replyToMessageID);
+
+	runReconnectSideEffects(game, ourRole);
+}
+
+/**
  * Runs the side-effects of a player (re)attaching their socket to a game. While live: clears
  * any disconnect/claim timer and notifies live-game tracking they reconnected. Post-conclusion
  * (game lingering for a rematch): clears the reconnection cushion and tells the opponent we're
@@ -122,4 +151,4 @@ function handleResyncToDeadGame(ws: CustomWebSocket, gameID: number): void {
 	sendSocketMessage(ws, 'game', loggedInDb ? 'unsub' : 'nogame');
 }
 
-export { resyncToGame, runReconnectSideEffects };
+export { resyncToGame, resyncRematch, runReconnectSideEffects };

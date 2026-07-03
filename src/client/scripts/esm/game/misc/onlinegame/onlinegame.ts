@@ -35,6 +35,13 @@ let id: number | undefined;
  */
 let inSync: boolean | undefined;
 
+/**
+ * Whether the game's result is finalized (locked in permanently on the server). Once true, nothing
+ * but rematch-offer state can change, so a reconnect fetches only that (`resyncrematch`) rather than
+ * a full resync. Set from the `finalized` flag on any game snapshot, or the `finalized` message.
+ */
+let finalized: boolean = false;
+
 // Events -------------------------------------------------
 
 SocketBus.addEventListener('reconnected', () => {
@@ -147,9 +154,20 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 function resyncToGame(): void {
 	if (id === undefined) return console.error('Cannot resync to game, game id is undefined.');
 
-	inSync = false;
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	socketmessages.send('game', 'resync', id);
+	if (finalized) {
+		// The result is locked in — nothing but rematch offers can change, so we can't desync.
+		inSync = true;
+		socketmessages.send('game', 'resyncrematch', id);
+	} else {
+		inSync = false;
+		socketmessages.send('game', 'resync', id);
+	}
+}
+
+/** Records whether the game's result is finalized. See {@link finalized}. */
+function setFinalized(value: boolean): void {
+	finalized = value;
 }
 
 function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
@@ -204,6 +222,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 
 export default {
 	setInSyncTrue,
+	setFinalized,
 	initOnlineGame,
 	set_DrawOffers_DisconnectInfo,
 	areInSync,

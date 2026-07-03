@@ -102,6 +102,14 @@ function routeMessage(contents: GameMessage): void {
 		case 'rematchoffer':
 			gameactions.onOpponentRematchOffer();
 			break;
+		case 'rematchstate':
+			// Reply to our `resyncrematch`: restore the rematch button from the server's current state.
+			gameactions.setRematchState(contents.value);
+			break;
+		case 'finalized':
+			// The result is now locked in permanently — reconnects fetch only rematch state hereafter.
+			onlinegame.setFinalized(true);
+			break;
 		case 'opponentleft':
 			gameactions.onOpponentLeft();
 			break;

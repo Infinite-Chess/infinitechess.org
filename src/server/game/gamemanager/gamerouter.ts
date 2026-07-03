@@ -9,19 +9,20 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { resyncToGame } from './resync.js';
 import { offerRematch } from './onRematch.js';
 import { getGameBySocket } from './gamemanager.js';
 import { onSubscribeToGame } from './subscribetogame.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
+import { resyncToGame, resyncRematch } from './resync.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
 	z.strictObject({ action: z.literal('resync'), value: z.int() }),
+	z.strictObject({ action: z.literal('resyncrematch'), value: z.int() }),
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
@@ -48,6 +49,9 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 	switch (contents.action) {
 		case 'resync':
 			resyncToGame(ws, contents.value, id);
+			return;
+		case 'resyncrematch':
+			resyncRematch(ws, contents.value, id);
 			return;
 		case 'subscribe':
 			onSubscribeToGame(ws, contents.value);
