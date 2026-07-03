@@ -97,7 +97,7 @@ Other shaders can allow for more unique properties for each instance, such as `'
 
 ## Integrating Into the Render Loop
 
-The render loop lives in `game.ts`. The `renderScene()` function renders all items in the order:
+The render loop lives in `gamecore.ts`. The `renderScene()` function renders all items in the order:
 
 1. **Background** — Starfield / void rendering (uses masking)
 2. **Board** — Infinite tile grid, promotion lines
