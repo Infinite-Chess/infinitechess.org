@@ -45,8 +45,8 @@ const element_Resign = document.getElementById('btn-resign');
 const element_AcceptDraw = document.getElementById('btn-accept-draw') as HTMLButtonElement | null;
 const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLButtonElement | null;
 
-// Post-game actions. Analysis is always present; Rematch is SSR'd only for a participant
-// of a still-live game (absent for spectators, and for a game that loaded already dead).
+// Post-game actions. Analysis is always present; Rematch is SSR'd only for
+// a participant (not spectator) of an unevicted (live, in-memory) game.
 const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement | null;
 const element_Analysis = document.getElementById('btn-analysis') as HTMLButtonElement;
 
@@ -217,6 +217,7 @@ function callback_Analysis(): void {
 let weOfferedRematch = false;
 /** Whether our OPPONENT has an outstanding rematch offer (button glows). */
 let opponentOfferedRematch = false;
+
 /** Whether our opponent is currently connected (button disabled while they're gone). */
 let opponentPresentPostGame = true;
 
@@ -226,6 +227,7 @@ let opponentPresentPostGame = true;
  * Leaves the button alone during its appearance grace period (see {@link armGracePeriod}).
  */
 function updateRematchButton(): void {
+	'';
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
 	element_Rematch.classList.toggle(
 		'rematch-offered',
