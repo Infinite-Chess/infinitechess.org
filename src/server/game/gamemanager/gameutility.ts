@@ -20,6 +20,7 @@ import type {
 	AuthSeekVariant,
 	ClockValues,
 	FullGameState,
+	GameStateCore,
 	StaticGameState,
 	GameUpdateBase,
 	GameUpdateMessage,
@@ -424,9 +425,23 @@ function getRatingDataForGamePlayers(
 }
 
 /**
- * Assembles the role-agnostic {@link StaticGameState} of a live game.
- * This is all the properties that are unchanging since the
- * game's inception, live or dead, EXCEPT for the gameConclusion.
+ * Assembles the {@link GameStateCore} of a live game: the game-setup fields
+ * (variant, clock settings, creation time) plus the current conclusion.
+ */
+function buildGameStateCore(servergame: ServerGame): GameStateCore {
+	const match = servergame.match;
+	const state: GameStateCore = {
+		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
+		variant: { kind: 'preset', code: match.variant },
+		timeControl: match.clock,
+		timeCreated: match.timeCreated,
+	};
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+	return state;
+}
+
+/**
+ * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar info).
  * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
 function buildStaticGameState(servergame: ServerGame): StaticGameState {
@@ -439,30 +454,22 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
 
-	const state: StaticGameState = {
+	return {
+		...buildGameStateCore(servergame),
 		id: match.id,
 		rated: match.rated,
-		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
-		variant: { kind: 'preset', code: match.variant },
-		timeControl: match.clock,
-		timeCreated: match.timeCreated,
 		players,
 	};
-
-	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-
-	return state;
 }
 
 /**
- * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent
- * to clients on subscribe. The per-viewer `participantState` overlay is layered on
- * separately at delivery time, not here.
- * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
+ * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent to clients
+ * on subscribe. The per-viewer `participantState` overlay is layered on separately at
+ * delivery time, not here.
  */
 function produceFullGameState(servergame: ServerGame): FullGameState {
 	const state: FullGameState = {
-		...buildStaticGameState(servergame),
+		...buildGameStateCore(servergame),
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
 
