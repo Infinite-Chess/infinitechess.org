@@ -6,7 +6,9 @@
  *
  * Each bar shows only its side's *surplus* silhouettes after canceling like piece
  * types against the other side, plus a `+X` estimated point lead on the side that's
- * net ahead. Recomputed on every `view-move` so rewinding reflects the material at
+ * net ahead.
+ *
+ * Recomputed on every `view-move` so rewinding reflects the material at
  * that point in time. Disabled entirely for games whose starting position is
  * unbalanced (either side starts with an unequal count of any piece type).
  */
@@ -46,7 +48,7 @@ const RAW_PIECE_VALUES: Partial<Record<RawType, number>> = {
 	[rawTypes.HAWK]: 6,
 	[rawTypes.CENTAUR]: 6,
 	[rawTypes.ROYALCENTAUR]: 6,
-	[rawTypes.HUYGEN]: 4,
+	[rawTypes.HUYGEN]: 5,
 	[rawTypes.KNIGHTRIDER]: 7,
 	[rawTypes.ROSE]: 7,
 	[rawTypes.AMAZON]: 16,

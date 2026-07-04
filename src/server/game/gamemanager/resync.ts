@@ -22,7 +22,6 @@ import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
 import { getGameByID } from './gamemanager.js';
 import { getGameData } from '../../database/gamesManager.js';
-import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import { cancelDisconnectTimer } from './disconnect.js';
 
@@ -32,19 +31,8 @@ import { cancelDisconnectTimer } from './disconnect.js';
  * them the current move list, player timers, and game conclusion.
  * @param ws - Their websocket
  * @param gameID - The game id they requested to sync to
- * @param replyToMessageID - If specified, the id of the incoming socket message this resync will be the reply to
  */
-function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: number): void {
-	// Make sure their pre-subbed game and game they requested to resync to match.
-	const preSubbedGameId = ws.metadata.subscriptions.game?.id;
-	if (preSubbedGameId !== undefined && preSubbedGameId !== gameID) {
-		logEventsAndPrint(
-			`Client tried to resync to game of id (${gameID}) when they are actually subbed to game of id (${preSubbedGameId})!!`,
-			'errLog',
-		);
-		return;
-	}
-
+function resyncToGame(ws: CustomWebSocket, gameID: number): void {
 	// 1. Check if the game is still live => Resync them
 	const game: ServerGame | undefined = getGameByID(gameID);
 
@@ -62,7 +50,7 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 	}
 
 	try {
-		gameutility.resyncToGame(ws, game, ourRole, replyToMessageID);
+		gameutility.resyncToGame(ws, game, ourRole);
 	} catch {
 		// DB error (already logged)
 		sendSocketMessage(
@@ -70,7 +58,6 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 			'game',
 			'notifyerror',
 			"Couldn't resync to the game. A server error occurred. Please refresh.",
-			replyToMessageID,
 		);
 		return;
 	}
@@ -79,19 +66,15 @@ function resyncToGame(ws: CustomWebSocket, gameID: number, replyToMessageID?: nu
 }
 
 /**
- * A lean reconnect for a game the client already knows is finalized: its result is locked in, so
- * only rematch-offer state can still change. We send just that (`rematchstate`) instead of a full
- * resync, then run the standard reconnect side-effects (clear the cushion, tell the opponent we're
- * back). Games no longer in memory (evicted) have no rematch — reply with an empty overlay so the
- * client's button disables while it keeps the finished result it's already showing.
+ * A lean reconnect for a game the client already knows is finalized:
+ * its result is locked in, so only rematch-offer state can still change.
  * @param ws - Their websocket
  * @param gameID - The game id they requested
- * @param replyToMessageID - The id of the incoming socket message this is a reply to
  */
-function resyncRematch(ws: CustomWebSocket, gameID: number, replyToMessageID?: number): void {
+function resyncRematch(ws: CustomWebSocket, gameID: number): void {
 	const game = getGameByID(gameID);
 	if (!game) {
-		sendSocketMessage(ws, 'game', 'rematchstate', { offered: false, present: false }, replyToMessageID); // prettier-ignore
+		sendSocketMessage(ws, 'game', 'rematchstate', { offered: false, present: false }); // prettier-ignore
 		return;
 	}
 
@@ -102,7 +85,7 @@ function resyncRematch(ws: CustomWebSocket, gameID: number, replyToMessageID?: n
 	}
 
 	const rematch = gameutility.getRematchOfferInfo(game, ourRole) ?? { offered: false, present: false }; // prettier-ignore
-	sendSocketMessage(ws, 'game', 'rematchstate', rematch, replyToMessageID);
+	sendSocketMessage(ws, 'game', 'rematchstate', rematch);
 
 	runReconnectSideEffects(game, ourRole);
 }

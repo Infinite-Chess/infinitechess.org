@@ -26,7 +26,7 @@ function routeIncomingSocketMessage(ws: CustomWebSocket, message: WebsocketInMes
 			routeLobbyMessage(ws, message.contents);
 			break;
 		case 'game':
-			routeGameMessage(ws, message.contents, message.id);
+			routeGameMessage(ws, message.contents);
 			break;
 		default:
 			// @ts-ignore

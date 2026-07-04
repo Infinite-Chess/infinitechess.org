@@ -45,25 +45,24 @@ type GameMessage = z.infer<typeof GameSchema>;
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number): void {
+function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
-		case 'resync':
-			resyncToGame(ws, contents.value, id);
-			return;
-		case 'resyncrematch':
-			resyncRematch(ws, contents.value, id);
-			return;
 		case 'subscribe':
 			onSubscribeToGame(ws, contents.value);
+			return;
+		case 'resync':
+			resyncToGame(ws, contents.value);
+			return;
+		case 'resyncrematch':
+			resyncRematch(ws, contents.value);
 			return;
 	}
 
 	const servergame = getGameBySocket(ws); // The game they belong in, if they belong in one.
 	if (!servergame) {
 		// Benign: the game was torn down between the client sending this and the
-		// server receiving it (it just concluded, or a timer-driven AFK ping fired
-		// at a dead game). The message is simply stale — drop it.
+		// server receiving it (it just concluded). The message is simply stale — drop it.
 		// OR, a spectator is sending a message to a game they are spectating, which is not allowed.
 		return;
 	}
