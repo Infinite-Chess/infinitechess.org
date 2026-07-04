@@ -159,10 +159,7 @@ function loadGameFromState(
 		})
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
-			onlinegame.initOnlineGame({
-				id: state.id,
-				participantState,
-			});
+			onlinegame.initOnlineGame(state.id, participantState);
 
 			gamesession.concludeGameIfOver();
 

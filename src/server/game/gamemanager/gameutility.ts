@@ -121,7 +121,7 @@ interface PlayerData {
 	socket?: CustomWebSocket;
 	/** The last move ply this player extended a draw offer, if they have. 0-based, where 0 is the start of the game. */
 	lastOfferPly?: number;
-	/** Contains information about this players disconnection and auto resign timer. */
+	/** Contains information about this players disconnection and opponent ability to claim victory. */
 	disconnect: PlayerDisconnect;
 }
 

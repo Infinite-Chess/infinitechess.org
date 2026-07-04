@@ -28,6 +28,7 @@ import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import gamesession from '../../chess/gamesession.js';
+import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 
@@ -62,7 +63,7 @@ function handleServerGameUpdate(
 	); // { opponentPlayedIllegalMove }
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo(message.participantState);
+	onlinegame.setParticipantState(message.participantState);
 
 	// Must be set before editing the clocks.
 	gamefile.gameConclusion = claimedGameConclusion;
@@ -185,7 +186,9 @@ function synchronizeMovesList(
 				clockStamp: thisShortmove.clockStamp,
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
-			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
+			// Our own moves aren't dispatched here: 'user-move-played' would
+			// wrongly re-trigger sendMove (we're already back in sync).
+			if (isOpponentMove) GameBus.dispatch('opponent-move-played');
 
 			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;

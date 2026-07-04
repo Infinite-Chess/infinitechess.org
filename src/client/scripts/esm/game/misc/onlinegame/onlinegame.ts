@@ -12,13 +12,11 @@ import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
-import { GameBus } from '../../GameBus.js';
 import gameactions from '../../gui/guigameactions.js';
-import gamesession from '../../chess/gamesession.js';
-import tabnameflash from './tabnameflash.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
+import './tabnameflash.js'; // Side-effect only: registers the "YOUR MOVE" tab-flash listeners.
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -44,15 +42,9 @@ let finalized: boolean = false;
 
 // Events -------------------------------------------------
 
-SocketBus.addEventListener('reconnected', () => {
-	resyncToGame();
-});
-
-GameBus.addEventListener('game-concluded', () => {
-	tabnameflash.onGameClose();
-	drawoffers.onGameClose();
-	// The server frees us from the active-games list itself once the result is locked in.
-});
+SocketBus.addEventListener('connection-lost', () => setInSyncFalse());
+SocketBus.addEventListener('closed', () => setInSyncFalse());
+SocketBus.addEventListener('reconnected', () => resyncToGame());
 
 // Getters ------------------------------------------------------------
 
@@ -70,26 +62,23 @@ function setInSyncFalse(): void {
 
 // Functions --------------------------------------------------
 
-function initOnlineGame(options: {
-	/** The numeric id of the online game. */
-	id: number;
-	/** Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over! */
-	participantState?: ParticipantState;
-}): void {
+/**
+ * Initializes the online game session.
+ * @param id - The numeric id of the online game.
+ * @param participantState - Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over!
+ */
+function initOnlineGame(game_id: number, participantState?: ParticipantState): void {
 	inSync = true;
 
-	// Set static game properties that never change
-	id = options.id;
+	id = game_id;
 
-	// If we are a participator, set the draw offers, disconnect timer, afk auto resign timer.
-	set_DrawOffers_DisconnectInfo(options.participantState);
-
-	tabnameflash.onGameStart({ isOurMove: gamesession.isItOurTurn() });
+	// If we are a participator, set the draw offers, disconnect timer, rematch state.
+	setParticipantState(participantState);
 
 	initEventListeners();
 }
 
-function set_DrawOffers_DisconnectInfo(participantState?: ParticipantState): void {
+function setParticipantState(participantState?: ParticipantState): void {
 	if (!participantState) return;
 
 	drawoffers.set(participantState.drawOffer);
@@ -104,11 +93,6 @@ function set_DrawOffers_DisconnectInfo(participantState?: ParticipantState): voi
 }
 
 function initEventListeners(): void {
-	// Add the event listeners for when we lose connection or the socket closes,
-	// to set our inSync variable to false
-	SocketBus.addEventListener('connection-lost', setInSyncFalse);
-	SocketBus.addEventListener('closed', setInSyncFalse);
-
 	/**
 	 * Leave-game warning popups on every hyperlink.
 	 *
@@ -170,13 +154,6 @@ function setFinalized(value: boolean): void {
 	finalized = value;
 }
 
-function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
-	// Inform all the scripts that rely on online game
-	// logic that a move occurred, so they can update accordingly
-	tabnameflash.onMovePlayed({ isOpponents });
-	drawoffers.onMovePlayed({ isOpponents });
-}
-
 function reportOpponentsMove(reason: string): void {
 	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
 	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
@@ -224,10 +201,9 @@ export default {
 	setInSyncTrue,
 	setFinalized,
 	initOnlineGame,
-	set_DrawOffers_DisconnectInfo,
+	setParticipantState,
 	areInSync,
 	resyncToGame,
 	reportOpponentsMove,
-	onMovePlayed,
 	adjustClockValuesForPing,
 };

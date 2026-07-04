@@ -55,8 +55,6 @@ function sendMove(): void {
 	};
 
 	socketmessages.send('game', 'submitmove', data, true);
-
-	onlinegame.onMovePlayed({ isOpponents: false });
 }
 
 /**
@@ -121,7 +119,7 @@ function handleOpponentsMove(
 		// For online games, the server is boss, so if they say the game is over, conclude it here.
 		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
-		onlinegame.onMovePlayed({ isOpponents: true });
+		GameBus.dispatch('opponent-move-played');
 
 		return true; // Good to physically play next premove
 	});
