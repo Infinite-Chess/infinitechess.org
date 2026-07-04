@@ -138,8 +138,7 @@ function resyncToGame(): void {
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	if (!finalized) {
 		// Game either hasn't concluded yet, or the conclusion
-		// may still change
-		// (non-server-validated game)
+		// may still change (non-server-validated game)
 		inSync = false;
 		socketmessages.send('game', 'resync', id);
 	} else {
