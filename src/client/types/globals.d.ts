@@ -1,6 +1,7 @@
 // src/client/types/globals.d.ts
 
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { StaticGameSetup } from '../../shared/types.js';
 import type { TranslationsObject } from '../../types/translations.js';
 import type { ScriptTranslations } from '../../shared/types/script-translations.js';
 
@@ -77,7 +78,10 @@ declare global {
 	 */
 	var $downsamplerProcessorUrl: string;
 
-	/** SSR→client data for the game page (/game/:id), injected by game.njk. */
+	/**
+	 * SSR→client data for the game page (/game/:id), injected by game.njk.
+	 * Includes all static information about a game.
+	 */
 	var gamePageData: {
 		/** The numeric game id, decoded from the base62 URL segment. */
 		id: number;
@@ -85,7 +89,7 @@ declare global {
 		isLive: boolean;
 		/** The viewer's color, SSR-resolved from their cookie identity. Undefined for spectators. */
 		role?: Player;
-	};
+	} & StaticGameSetup;
 
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;

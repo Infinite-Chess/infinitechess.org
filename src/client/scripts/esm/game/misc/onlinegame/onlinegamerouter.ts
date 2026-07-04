@@ -143,11 +143,14 @@ function loadGameFromState(
 	// If the clock values are present, adjust the ticking timer for ping.
 	if (state.clockValues) onlinegame.adjustClockValuesForPing(state.clockValues);
 
+	// The static setup (variant/time control/creation time) is SSR'd
+	const { variant, timeControl, timeCreated } = window.gamePageData;
+
 	gameslot
 		.loadGamefile({
-			timeControl: state.timeControl,
-			variant: state.variant.kind === 'preset' ? state.variant.code : undefined,
-			dateTimestamp: state.timeCreated,
+			timeControl,
+			variant: variant.kind === 'preset' ? variant.code : undefined,
+			dateTimestamp: timeCreated,
 			// Spectators (no role) view white's side.
 			viewWhitePerspective: youAreColor === p.WHITE || youAreColor === undefined,
 			additional: {

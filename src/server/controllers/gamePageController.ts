@@ -9,8 +9,8 @@
 
 import type { Request } from 'express';
 import type { SpeedCategory } from '../../shared/chess/util/clockutil.js';
-import type { StaticGameState } from '../../shared/types.js';
 import type { Player, PlayerGroup } from '../../shared/chess/util/typeutil.js';
+import type { StaticGameSetup, StaticGameState } from '../../shared/types.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 import moveutil from '../../shared/chess/util/moveutil.js';
@@ -56,7 +56,8 @@ interface GameMetaViewModel {
 
 /** The full render context for `game.njk`. */
 interface GamePageState {
-	gamePageData: { id: number; isLive: boolean; role?: Player };
+	/** Includes all static info about the game. */
+	gamePageData: { id: number; isLive: boolean; role?: Player } & StaticGameSetup;
 	meta: GameMetaViewModel;
 }
 
@@ -91,7 +92,14 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 	}
 
 	return {
-		gamePageData: { id, isLive: !!game, role },
+		gamePageData: {
+			id,
+			isLive: !!game,
+			role,
+			variant: state.variant,
+			timeControl: state.timeControl,
+			timeCreated: state.timeCreated,
+		},
 		meta: buildGameMetaViewModel(state, role, resignable, req),
 	};
 }

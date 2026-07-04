@@ -28,11 +28,14 @@ positions is the consumer (T9/T10), not part of this task.
    the discriminator: `variant` non-null → preset (current path); `variant` null → rebuild from
    `position`. This retires the latent `null as VariantCode` casts.
 
-4. **Wire the live position.** A live `FullGameState` has no ICN, so the custom position must reach the
-   client some other way for the loader to build the board (the dead path gets it from `DeadGameState.icn`;
-   `GameStateVariant`'s custom arm deliberately carries no payload). Add a **live-only** field to
-   `FullGameState` (parallel to dead's `icn`), populated for custom games and fed to T9's loader. Settle
-   the exact field with whoever owns T9.
+4. **Wire the live position.** The custom position is *static setup*, so it rides in the SSR'd
+   `gamePageData` alongside `variant`/`timeControl`/`timeCreated` — NOT on the subscribe socket. (The
+   subscribe `FullGameState` now carries only live deltas; all static setup was moved into `gamePageData`
+   via the shared `StaticGameSetup` type — server `gamePageController`, client `globals.d.ts`.) For a
+   custom game, populate the position into that SSR channel and feed it to T9's loader; the dead path
+   still gets it from `DeadGameState.icn`. Settle the exact field shape with whoever owns T9 — either a
+   sibling `position` field on `StaticGameSetup`, or give `GameStateVariant`'s custom arm a payload
+   (today it deliberately carries none).
 
 5. **Un-stale the docs.** Update `docs/systems/LIVE_GAME_PERSISTENCE.md` — it still lists `variant` as
    `TEXT NOT NULL` and omits `position`. Fix Group 1 (variant now nullable; add the `position` row) and

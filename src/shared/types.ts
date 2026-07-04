@@ -225,41 +225,44 @@ export const GameStateVariantSchema = z.discriminatedUnion('kind', [
 ]);
 
 /**
- * The core game setup every live-game consumer needs to build the board:
- * variant, clock settings, creation time, and the conclusion.
- * Everything here is static & unchanging since the game's inception EXCEPT the gameConclusion.
- *
- * {@link StaticGameState} layers a game's identity + display fields on top (SSR side bar + dead-game HTTP);
- * {@link FullGameState} layers the live move/clock delta on top (subscribe socket).
+ * The static setup of a game: how it was configured at creation — variant, clock settings, and
+ * creation time. Unchanging for the game's whole life. SSR'd into `gamePageData` (and embedded in
+ * {@link StaticGameState} for the side bar / dead-game HTTP), so it is never sent over the subscribe
+ * socket — the client already has it by game-load time.
  */
-export type GameStateCore = z.infer<typeof GameStateCoreSchema>;
-export const GameStateCoreSchema = z.strictObject({
+export type StaticGameSetup = z.infer<typeof StaticGameSetupSchema>;
+export const StaticGameSetupSchema = z.strictObject({
 	variant: GameStateVariantSchema,
 	timeControl: TimeControlSchema,
 	/** Epoch milliseconds the game was created. */
 	timeCreated: z.number(),
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
 });
 
 /**
- * A game's {@link GameStateCore} plus its identity + display fields (id,
- * rated, players). Used by the SSR side bar and the dead-game HTTP path.
+ * A game's {@link StaticGameSetup} plus its identity + display fields (id, rated, players) and current
+ * conclusion. Used by the SSR side bar and the dead-game HTTP path. Everything here is static &
+ * unchanging since the game's inception EXCEPT the gameConclusion.
  */
 export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
-export const StaticGameStateSchema = GameStateCoreSchema.extend({
+export const StaticGameStateSchema = StaticGameSetupSchema.extend({
 	id: z.int().nonnegative(),
 	rated: z.boolean(),
 	/** Per-color username container, with rating embedded per player. */
 	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
+	gameConclusion: winconutil.gameConclusionSchema.optional(),
 });
 
-/** The live state of a game, sent over the WebSocket on subscribe. Role-agnostic. */
+/**
+ * The live, dynamic state of a game, sent over the WebSocket on subscribe. Carries only what
+ * changes over the game's life (moves, clocks, conclusion), no static info.
+ */
 export type FullGameState = z.infer<typeof FullGameStateSchema>;
-export const FullGameStateSchema = GameStateCoreSchema.extend({
+export const FullGameStateSchema = z.strictObject({
 	/** Each move carries its optional `clockStamp` (per-move clock history for rewind). */
 	moves: z.array(MovePacketSchema),
 	/** The live ticking clocks. Absent for untimed games. */
 	clockValues: ClockValuesSchema.optional(),
+	gameConclusion: winconutil.gameConclusionSchema.optional(),
 });
 
 /**

@@ -20,7 +20,7 @@ import type {
 	AuthSeekVariant,
 	ClockValues,
 	FullGameState,
-	GameStateCore,
+	StaticGameSetup,
 	StaticGameState,
 	GameUpdateBase,
 	GameUpdateMessage,
@@ -425,23 +425,21 @@ function getRatingDataForGamePlayers(
 }
 
 /**
- * Assembles the {@link GameStateCore} of a live game: the game-setup fields
- * (variant, clock settings, creation time) plus the current conclusion.
+ * Assembles the {@link StaticGameSetup} of a live game: how it was configured — variant,
+ * clock settings, and creation time. SSR'd into `gamePageData`.
  */
-function buildGameStateCore(servergame: ServerGame): GameStateCore {
+function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
 	const match = servergame.match;
-	const state: GameStateCore = {
+	return {
 		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
 		variant: { kind: 'preset', code: match.variant },
 		timeControl: match.clock,
 		timeCreated: match.timeCreated,
 	};
-	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-	return state;
 }
 
 /**
- * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar info).
+ * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info).
  * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
 function buildStaticGameState(servergame: ServerGame): StaticGameState {
@@ -454,25 +452,27 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 		players[color] = buildServerUsernameContainer(data.identifier, ratings[color]);
 	}
 
-	return {
-		...buildGameStateCore(servergame),
+	const state: StaticGameState = {
+		...buildStaticGameSetup(servergame),
 		id: match.id,
 		rated: match.rated,
 		players,
 	};
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+	return state;
 }
 
 /**
  * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent to clients
- * on subscribe. The per-viewer `participantState` overlay is layered on separately at
- * delivery time, not here.
+ * on subscribe: only the live/dynamic state (moves, clocks, conclusion), no static state.
+ * The per-viewer `participantState` overlay is layered on separately at delivery time, not here.
  */
 function produceFullGameState(servergame: ServerGame): FullGameState {
 	const state: FullGameState = {
-		...buildGameStateCore(servergame),
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
 
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
 	if (!servergame.untimed) state.clockValues = getGameClockValues(servergame);
 
 	return state;
