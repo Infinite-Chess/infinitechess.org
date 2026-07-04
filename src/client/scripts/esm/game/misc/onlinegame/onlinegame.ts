@@ -16,6 +16,7 @@ import gameactions from '../../gui/guigameactions.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
+
 import './tabnameflash.js'; // Side-effect only: registers the "YOUR MOVE" tab-flash listeners.
 
 // Variables ------------------------------------------------------------------------------------------------------
