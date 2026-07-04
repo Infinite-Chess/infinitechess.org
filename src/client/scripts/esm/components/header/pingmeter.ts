@@ -24,8 +24,10 @@ const loadingAnim = document.querySelector('.ping-meter .svg-pawn')!; // Spinnin
 function initEventListeners(): void {
 	SocketBus.addEventListener('ping', updatePing);
 	SocketBus.addEventListener('opening', openMeterAndDisplayLoading);
+	SocketBus.addEventListener('closed', closeMeter);
+	// Fires right after `closed` on an unintentional close, overriding closeMeter()
+	// above so a reconnecting socket shows the loading animation instead.
 	SocketBus.addEventListener('connection-lost', openMeterAndDisplayLoading);
-	SocketBus.addEventListener('closed', socketClosed);
 }
 
 function updatePing(event: CustomEvent): void {
@@ -78,19 +80,6 @@ function openMeterAndDisplayLoading(): void {
 	loadingAnim.classList.remove('hidden');
 	pingBars.classList.add('hidden');
 	pingValue.textContent = 'ω';
-}
-
-/**
- * A callback function that is executed when we receive the custom socket closed event.
- * 1. If the soccer was close by choice, we close the ping meter.
- * 2. If the socket was closed by bad network, we display the loading animation
- */
-function socketClosed(event: CustomEvent<boolean>): void {
-	const notByChoice = event.detail; // true if the user didn't intend to close, e.g. bad network.
-
-	if (notByChoice)
-		openMeterAndDisplayLoading(); // Hide the green bars, show the spinning-pawn loading animation
-	else closeMeter(); // By choice. Just close the ping meter, we are no longer connected
 }
 
 /** Hides the ping meter from the settings dropdown document element */

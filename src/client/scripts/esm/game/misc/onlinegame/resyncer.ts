@@ -47,7 +47,7 @@ function handleServerGameUpdate(
 
 	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
 	onlinegame.setInSyncTrue();
-	onlinegame.setFinalized(message.finalized);
+	if (message.finalized) onlinegame.onFinalized();
 
 	/**
 	 * Make sure we are in sync with the final move list.

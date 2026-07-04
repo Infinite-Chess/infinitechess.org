@@ -128,7 +128,7 @@ function onGameCreated(servergame: ServerGame): void {
 		conclusion_condition: null,
 		conclusion_victor: null,
 		time_ended: null,
-		log_time: null,
+		finalize_time: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 		both_disconnected_end_time: null,
 	};
@@ -175,7 +175,7 @@ function onGameConcluded(servergame: ServerGame): void {
 		conclusion_condition: conclusion.condition,
 		conclusion_victor: conclusion.victor ?? null,
 		time_ended: servergame.match.timeEnded!,
-		log_time: servergame.match.timeEnded! + timeBeforeFinalizeMillis,
+		finalize_time: servergame.match.timeEnded! + timeBeforeFinalizeMillis,
 		draw_offer_state: null, // Draw offers are closed on conclusion
 		both_disconnected_end_time: null, // Any pending both-disconnected timer is moot now.
 	};

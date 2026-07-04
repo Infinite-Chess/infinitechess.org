@@ -214,7 +214,7 @@ async function onInGame(id: number): Promise<void> {
 		// No reverb added here, it makes us wait too long.
 		const sound = await gamesound.playNotify(false);
 		if (sound) await sound.whenEnded;
-		window.location.href = `/game/${uuid.base10ToBase62(id)}`;
+		window.location.assign(`/game/${uuid.base10ToBase62(id)}`);
 	} else {
 		// A fresh page-load while already in a game: stay on the lobby but show a banner
 		// letting them rejoin. The server pushes 'outgame' once we leave (see onOutGame).

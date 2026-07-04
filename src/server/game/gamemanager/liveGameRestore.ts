@@ -361,8 +361,8 @@ function computePendingTimers(
 	};
 
 	// Finalize deadline for a concluded, not-yet-finalized game.
-	if (gameRow.log_time !== null) {
-		timers.finalizeTimerMs = Math.max(gameRow.log_time - now, 0);
+	if (gameRow.finalize_time !== null) {
+		timers.finalizeTimerMs = Math.max(gameRow.finalize_time - now, 0);
 	}
 
 	// Auto time loss timer for timed, ongoing games

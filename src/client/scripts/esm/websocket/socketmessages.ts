@@ -88,7 +88,6 @@ function onEchoTimeout(messageID: MessageID): void {
 	console.log(
 		`Renewing connection after we haven't received an echo for ${wsutil.ECHO_TIMEOUT} milliseconds...`,
 	);
-	socketman.dispatchLostConnectionCustomEvent();
 	socket.close(1000, 'Connection closed by client. Renew.');
 }
 
@@ -170,7 +169,7 @@ function cancelHeartbeatTimer(): void {
 
 /**
  * Called when no message has been received within the expected time frame.
- * Closes the socket and dispatches a lost connection event.
+ * Closes the socket.
  */
 function onHeartbeatTimeout(): void {
 	heartbeatTimerID = undefined;
@@ -179,7 +178,6 @@ function onHeartbeatTimeout(): void {
 	console.log(
 		`No message received for ${wsutil.heartbeatIntervalMillis + wsutil.ECHO_TIMEOUT}ms. Assuming connection lost.`,
 	);
-	socketman.dispatchLostConnectionCustomEvent();
 	socket.close(1000, 'Connection closed by client. Renew.');
 }
 

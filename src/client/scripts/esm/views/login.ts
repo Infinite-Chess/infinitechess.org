@@ -56,7 +56,7 @@ async function submitLogin(): Promise<void> {
 
 		// Success — the session cookie is now set; navigate away.
 		const redirectTo = docutil.getQueryParam('redirectTo');
-		window.location.href = redirectTo ?? '/';
+		window.location.assign(redirectTo ?? '/');
 	} catch (e: unknown) {
 		console.error('Login request failed:', e);
 		setError(t.shared.errors.network);

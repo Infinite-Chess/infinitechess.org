@@ -51,17 +51,17 @@ function onclose(event: CloseEvent): void {
 	const trimmedReason = event.reason.trim();
 	const notByChoice = wsutil.wasSocketClosureNotByTheirChoice(event.code, trimmedReason);
 
-	/**
-	 * True if we want to show the loading animation.
-	 * If closed not by our choice, but with no subscriptions, close the ping meter anyway.
-	 */
+	SocketBus.dispatch('closed');
+	// An unintentional close (with subs to reconnect for) means we lost the connection and
+	// will retry. Dispatched after `closed` so its handlers — e.g. the ping meter's loading
+	// state — override the generic close behavior.
 	const unIntentional = notByChoice && !socketsubs.zeroSubs();
-	SocketBus.dispatch('closed', unIntentional);
+	if (unIntentional) SocketBus.dispatch('connection-lost');
 
 	// The server drops all subscriptions on close. Reconnect handlers should re-subscribe.
 	socketsubs.clearAllSubs();
 
-	// Connection closed unexpectedly (network interrupted) or server is down.
+	// Connection closed unexpectedly (network interrupted) or server is down/restarting.
 	// Schedule a reconnect — delay and resubAll() are handled inside scheduleReconnect().
 	if (event.code === 1006) {
 		socketman.scheduleReconnect();
@@ -109,7 +109,6 @@ function onclose(event: CloseEvent): void {
 			enterTimeout(timeToResubAfterTooManyRequestsMillis);
 			break;
 		case 'No echo heard':
-			socketman.dispatchLostConnectionCustomEvent();
 			socketman.resubAll();
 			break;
 		default:

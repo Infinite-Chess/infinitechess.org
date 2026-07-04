@@ -38,12 +38,12 @@ let inSync: boolean | undefined;
  * Whether the game's result is finalized (locked in permanently on the server). Once true, nothing
  * but rematch-offer state can change, so a reconnect fetches only that (`resyncrematch`) rather than
  * a full resync. Set from the `finalized` flag on any game snapshot, or the `finalized` message.
+ * Concluded non-server-validated games have a short window where the conclusion can be contested.
  */
 let finalized: boolean = false;
 
 // Events -------------------------------------------------
 
-SocketBus.addEventListener('connection-lost', () => setInSyncFalse());
 SocketBus.addEventListener('closed', () => setInSyncFalse());
 SocketBus.addEventListener('reconnected', () => resyncToGame());
 
@@ -148,9 +148,9 @@ function resyncToGame(): void {
 	}
 }
 
-/** Records whether the game's result is finalized. See {@link finalized}. */
-function setFinalized(value: boolean): void {
-	finalized = value;
+/** Records the game's result as finalized. See {@link finalized}. */
+function onFinalized(): void {
+	finalized = true;
 }
 
 function reportOpponentsMove(reason: string): void {
@@ -198,7 +198,7 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 
 export default {
 	setInSyncTrue,
-	setFinalized,
+	onFinalized,
 	initOnlineGame,
 	setParticipantState,
 	areInSync,

@@ -27,6 +27,7 @@ import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js
 import gameslot from '../chess/gameslot.js';
 import drawoffers from '../misc/onlinegame/drawoffers.js';
 import { GameBus } from '../GameBus.js';
+import { SocketBus } from '../../websocket/SocketBus.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
 // Elements ----------------------------------------------------------------------------------
@@ -62,6 +63,12 @@ GameBus.addEventListener('moves-changed', () => {
 	updateOfferDrawButton();
 });
 GameBus.addEventListener('game-concluded', () => refresh());
+// A lost connection disables the rematch button until we resync. A reconnect
+// restores its true state via setRematchState() (called after resyncrematch).
+SocketBus.addEventListener('connection-lost', () => {
+	connectionLost = true;
+	updateRematchButton();
+});
 
 // Block visibility ---------------------------------------------------------------------------
 
@@ -208,7 +215,7 @@ function callback_Abort(): void {
 
 /** Navigates to the post-game analysis board. */
 function callback_Analysis(): void {
-	window.location.href = `/analysis/${uuid.base10ToBase62(window.gamePageData.id)}`;
+	window.location.assign(`/analysis/${uuid.base10ToBase62(window.gamePageData.id)}`);
 }
 
 // Rematch ------------------------------------------------------------------------------------
@@ -221,20 +228,35 @@ let opponentOfferedRematch = false;
 /** Whether our opponent is currently connected (button disabled while they're gone). */
 let opponentPresentPostGame = true;
 
+/** Whether our connection to the server has dropped (button disabled until we resync). */
+let connectionLost = false;
+
 /**
  * Repaints the rematch button: glows while the opponent has an offer out (and we haven't
  * yet responded), and is disabled once we've offered or while the opponent is away.
  * Leaves the button alone during its appearance grace period (see {@link armGracePeriod}).
  */
 function updateRematchButton(): void {
-	'';
 	if (!element_Rematch) return; // Absent (spectator, or game loaded dead).
 	element_Rematch.classList.toggle(
 		'rematch-offered',
 		opponentOfferedRematch && !weOfferedRematch,
 	);
 	if (graceTimers.has(element_ActionsOver)) return; // Mid-appearance grace — leave disabled state to it.
-	element_Rematch.disabled = weOfferedRematch || !opponentPresentPostGame;
+	element_Rematch.disabled = weOfferedRematch || !opponentPresentPostGame || connectionLost;
+}
+
+/**
+ * Receives the full rematch state from the server, after a
+ * page load or resyncrematch. Updates the rematch button.
+ */
+function setRematchState(rematch: RematchOfferInfo): void {
+	// A page load/resync resets our own pending offer (not restored — see the server protocol).
+	weOfferedRematch = false;
+	opponentOfferedRematch = rematch.offered;
+	opponentPresentPostGame = rematch.present;
+	connectionLost = false; // We just heard from the server — connection is alive.
+	updateRematchButton();
 }
 
 /** Extends a rematch offer to our opponent. Clicking while they're offering accepts theirs. */
@@ -245,29 +267,20 @@ function callback_Rematch(): void {
 	updateRematchButton();
 }
 
-/** Restores the rematch button's state from the server on load/resync. */
-function setRematchState(rematch: RematchOfferInfo): void {
-	// A page load/resync resets our own pending offer (not restored — see the server protocol).
-	weOfferedRematch = false;
-	opponentOfferedRematch = rematch.offered;
-	opponentPresentPostGame = rematch.present;
-	updateRematchButton();
-}
-
 /** Our opponent extended a rematch offer — glow the button to invite us to accept. */
 function onOpponentRematchOffer(): void {
 	opponentOfferedRematch = true;
 	updateRematchButton();
 }
 
-/** Our opponent left the post-game — disable the button (and stop any glow). */
+/** Our opponent left the post-game — disable the rematch button (and stop any glow). */
 function onOpponentLeft(): void {
 	opponentPresentPostGame = false;
 	opponentOfferedRematch = false;
 	updateRematchButton();
 }
 
-/** Our opponent returned to the post-game — re-enable the button. */
+/** Our opponent returned to the post-game — re-enable the rematch button. */
 function onOpponentReturn(): void {
 	opponentPresentPostGame = true;
 	updateRematchButton();
