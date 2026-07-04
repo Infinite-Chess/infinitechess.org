@@ -254,7 +254,7 @@ function renderScene(): void {
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
 		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
-		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
+		// () => colorFlowRenderer.render(frameprofiler.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles

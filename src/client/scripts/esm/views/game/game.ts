@@ -13,7 +13,7 @@ import maskedDraw from '../../webgl/maskedDraw.js';
 import gamesession from '../../game/chess/gamesession.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
-import loadbalancer from '../../game/misc/loadbalancer.js';
+import frameprofiler from '../../game/misc/frameprofiler.js';
 import socketmessages from '../../websocket/socketmessages.js';
 
 import '../../game/gui/guisidebar.js';
@@ -50,7 +50,7 @@ function initListeners(): void {
 
 /** The main game loop. Called every frame. */
 export function gameLoop(runtime: number): void {
-	loadbalancer.update(runtime); // Updates fps, delta time, etc..
+	frameprofiler.update(runtime); // Updates delta time & fps.
 
 	gamecore.update(); // Always update the game, far cheaper than rendering.
 

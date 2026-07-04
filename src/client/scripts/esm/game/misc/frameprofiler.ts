@@ -1,7 +1,7 @@
-// src/client/scripts/esm/game/misc/loadbalancer.ts
+// src/client/scripts/esm/game/misc/frameprofiler.ts
 
 /**
- * This script keeps track of our deltaTime, FPS, AFK status, and hibernation status.
+ * This script keeps track of our runTime, deltaTime, FPS, and estimated monitor refresh rate.
  */
 
 import jsutil from '../../../../../shared/util/jsutil.js';
