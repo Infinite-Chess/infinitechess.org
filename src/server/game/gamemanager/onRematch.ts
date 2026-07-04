@@ -7,8 +7,8 @@
  * created (same variant/time/rated, colors swapped).
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
@@ -20,23 +20,22 @@ import { createRematchGame } from './gamemanager.js';
 /**
  * Called when a client offers a rematch of a concluded game. Relays the offer to the
  * opponent, or — if the opponent has already offered — creates the rematch game.
- * @param ws - The socket
  * @param servergame - The game they are in.
+ * @param ourRole - The color the socket is playing as.
  */
-function offerRematch(ws: CustomWebSocket, servergame: ServerGame): void {
+function offerRematch(servergame: ServerGame, ourRole: Player): void {
 	if (!gameutility.isGameOver(servergame))
 		return console.error('Client offered a rematch when the game is not over. Ignoring.');
 
 	const match = servergame.match;
-	const color = gameutility.getSocketRoleInGame(servergame, ws)!;
-	const opponentColor = typeutil.invertPlayer(color);
+	const opponentColor = typeutil.invertPlayer(ourRole);
 
-	if (match.rematchOffers.has(color)) return; // Duplicate offer (e.g. after a refresh) — ignore.
-	match.rematchOffers.add(color);
+	if (match.rematchOffers.has(ourRole)) return; // Duplicate offer (e.g. after a refresh) — ignore.
+	match.rematchOffers.add(ourRole);
 
 	// If the opponent is gone, we can't inform them. This can happen
 	// if they disconnect at the same time as the rematch offer is sent.
-	if (match.playerData[opponentColor]?.socket === undefined) return;
+	if (match.playerData[opponentColor]!.socket === undefined) return;
 
 	if (match.rematchOffers.has(opponentColor)) {
 		// Both players have offered — start the rematch!

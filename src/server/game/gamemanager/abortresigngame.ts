@@ -4,8 +4,8 @@
  * This script handles the abortings and resignations of online games
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
@@ -16,10 +16,9 @@ import { setGameConclusion } from './gamemanager.js';
 
 /**
  * Called when a client tries to abort a game.
- * @param ws - The websocket
  * @param servergame - The game they are in..
  */
-function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
+function abortGame(servergame: ServerGame): void {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(servergame)) {
@@ -48,10 +47,10 @@ function abortGame(_ws: CustomWebSocket, servergame: ServerGame): void {
 
 /**
  * Called when a client tries to resign a game.
- * @param ws - The websocket
  * @param servergame - The game they are in.
+ * @param ourRole - The color the socket is playing as.
  */
-function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
+function resignGame(servergame: ServerGame, ourRole: Player): void {
 	// Is it legal?...
 
 	if (gameutility.isGameOver(servergame)) {
@@ -69,7 +68,6 @@ function resignGame(ws: CustomWebSocket, servergame: ServerGame): void {
 	}
 
 	// Resign
-	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
 	const opponentColor = typeutil.invertPlayer(ourRole);
 	setGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 }

@@ -10,7 +10,6 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
@@ -36,11 +35,10 @@ function mayClaimAgainstOpponent(servergame: ServerGame, ourColor: Player): bool
 
 /**
  * Called when a client tries to claim victory against their disconnected opponent.
- * @param ws - The websocket
  * @param servergame - The game they are in.
+ * @param ourRole - The color the socket is playing as.
  */
-function claimVictory(ws: CustomWebSocket, servergame: ServerGame): void {
-	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
+function claimVictory(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
 			`Player tried to claim victory in game ${servergame.match.id} when they were not allowed to! Ignoring..`,
@@ -53,11 +51,10 @@ function claimVictory(ws: CustomWebSocket, servergame: ServerGame): void {
 
 /**
  * Called when a client tries to claim a draw against their disconnected opponent.
- * @param ws - The websocket
  * @param servergame - The game they are in.
+ * @param ourRole - The color the socket is playing as.
  */
-function claimDraw(ws: CustomWebSocket, servergame: ServerGame): void {
-	const ourRole = gameutility.getSocketRoleInGame(servergame, ws)!;
+function claimDraw(servergame: ServerGame, ourRole: Player): void {
 	if (!mayClaimAgainstOpponent(servergame, ourRole)) {
 		logEventsAndPrint(
 			`Player tried to claim a draw in game ${servergame.match.id} when they were not allowed to! Ignoring..`,

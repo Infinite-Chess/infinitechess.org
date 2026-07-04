@@ -9,6 +9,7 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
+import gameutility from './gameutility.js';
 import { offerRematch } from './onRematch.js';
 import { getGameBySocket } from './gamemanager.js';
 import { onSubscribeToGame } from './subscribetogame.js';
@@ -67,37 +68,42 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number
 		return;
 	}
 
+	// The socket's color in this game. Guaranteed defined since getGameBySocket resolved the game
+	// for this same socket; treat undefined as a guard against the (impossible) non-participant case.
+	const color = gameutility.getSocketRoleInGame(servergame, ws);
+	if (color === undefined) return;
+
 	// All remaining actions requiring the game they're in
 	switch (contents.action) {
 		case 'submitmove':
 			submitMove(ws, servergame, contents.value);
 			break;
 		case 'abort':
-			abortGame(ws, servergame);
+			abortGame(servergame);
 			break;
 		case 'resign':
-			resignGame(ws, servergame);
+			resignGame(servergame, color);
 			break;
 		case 'claimvictory':
-			claimVictory(ws, servergame);
+			claimVictory(servergame, color);
 			break;
 		case 'claimdraw':
-			claimDraw(ws, servergame);
+			claimDraw(servergame, color);
 			break;
 		case 'offerdraw':
-			offerDraw(ws, servergame);
+			offerDraw(servergame, color);
 			break;
 		case 'acceptdraw':
-			acceptDraw(ws, servergame);
+			acceptDraw(servergame, color);
 			break;
 		case 'declinedraw':
-			declineDraw(ws, servergame);
+			declineDraw(servergame, color);
 			break;
 		case 'offerrematch':
-			offerRematch(ws, servergame);
+			offerRematch(servergame, color);
 			break;
 		case 'report':
-			onReport(ws, servergame, contents.value);
+			onReport(servergame, color, contents.value);
 			break;
 		default:
 			// @ts-ignore

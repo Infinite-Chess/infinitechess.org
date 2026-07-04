@@ -6,7 +6,6 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
-import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
@@ -27,26 +26,21 @@ type ReportMessage = z.infer<typeof reportschem>;
 
 /**
  *
- * @param ws - The socket
  * @param servergame - The game they belong in.
+ * @param ourRole - The color the socket is playing as.
  * @param messageContents - The contents of the socket report message
  */
-function onReport(
-	ws: CustomWebSocket,
-	servergame: ServerGame,
-	messageContents: ReportMessage,
-): void {
+function onReport(servergame: ServerGame, ourRole: Player, messageContents: ReportMessage): void {
 	// { reason, opponentsMoveNumber }
 	console.log('Received cheat report! - Check hackLog.txt for more details.');
 
-	const ourColor = gameutility.getSocketRoleInGame(servergame, ws)!;
-	const opponentColor = typeutil.invertPlayer(ourColor);
+	const opponentColor = typeutil.invertPlayer(ourRole);
 
 	// Once the game is finalized its result is locked in and can no longer be overturned.
 	if (servergame.match.finalized) {
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
-			ourColor,
+			ourRole,
 			'general',
 			'printerror',
 			'Cannot report opponent: this game has already been finalized.',
@@ -57,11 +51,11 @@ function onReport(
 	// Cheat reports are only valid in games that are not instantly deleted on conclusion.
 	// (i.e. games without server-side move validation AND are public)
 	if (servergame.validateMoves) {
-		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}. Game ID: ${servergame.match.id}`;
+		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
-			ourColor,
+			ourRole,
 			'general',
 			'printerror',
 			'Cannot report opponent in this game.',
@@ -74,12 +68,12 @@ function onReport(
 		servergame,
 		perpetratingMoveIndex,
 	);
-	if (colorThatPlayedPerpetratingMove === ourColor) {
-		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
+	if (colorThatPlayedPerpetratingMove === ourRole) {
+		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEvents(errString, 'hackLog');
 		gameutility.sendMessageToSocketOfColor(
 			servergame.match,
-			ourColor,
+			ourRole,
 			'general',
 			'printerror',
 			"Silly goose. You can't report yourself for cheating! You played that move!",
@@ -92,7 +86,7 @@ function onReport(
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourColor}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
+	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 	console.error(errText);
 	logEvents(errText, 'hackLog');
 

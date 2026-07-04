@@ -50,7 +50,7 @@ interface RestoredGame {
 
 /** Timers that may need to be started for a restored game, based on its state at the time of server shutdown. */
 interface PendingTimers {
-	/** If defined, the log/lock-in timer should fire after this many ms. 0 (or negative) means immediately. */
+	/** If defined, the log/lock-in timer should fire after this many ms. 0 means immediately. */
 	finalizeTimerMs?: number;
 	/** Per-player disconnect state to restore. */
 	disconnectTimers: PlayerGroup<DisconnectTimerState>;

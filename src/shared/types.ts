@@ -118,7 +118,7 @@ export const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect: DisconnectInfoSchema.optional(),
-	/** Present only once the game is over and lingering for the rematch handshake. */
+	/** Present only once the game is concluded and not memory-evicted yet for the rematch handshake. */
 	rematch: RematchOfferInfoSchema.optional(),
 });
 
@@ -129,7 +129,6 @@ export const GameUpdateBaseSchema = z.strictObject({
 	/**
 	 * Whether the game is finalized (result locked in permanently). Once true, nothing but rematch
 	 * offers can change, so the client reconnects with `resyncrematch` instead of a full `resync`.
-	 * Carried on the snapshot so a resync catches a client fully up in one message.
 	 */
 	finalized: z.boolean(),
 	/** Existing moves, if any, to forward to the front of the game. */
