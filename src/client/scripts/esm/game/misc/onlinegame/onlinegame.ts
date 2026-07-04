@@ -17,7 +17,7 @@ import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
-import './tabnameflash.js'; // Side-effect only: registers the "YOUR MOVE" tab-flash listeners.
+import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 
 // Variables ------------------------------------------------------------------------------------------------------
 
@@ -76,7 +76,15 @@ function initOnlineGame(game_id: number, participantState?: ParticipantState): v
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
 	setParticipantState(participantState);
 
-	initEventListeners();
+	/**
+	 * Leave-game warning popups on every hyperlink.
+	 *
+	 * Add an listener for every single hyperlink on the page that will
+	 * confirm to us if we actually want to leave if we are in an online game.
+	 */
+	document.querySelectorAll('a').forEach((link) => {
+		link.addEventListener('click', confirmNavigationAwayFromGame);
+	});
 }
 
 function setParticipantState(participantState?: ParticipantState): void {
@@ -91,18 +99,6 @@ function setParticipantState(participantState?: ParticipantState): void {
 
 	// Restore the rematch button's state (present only once the game is over).
 	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
-}
-
-function initEventListeners(): void {
-	/**
-	 * Leave-game warning popups on every hyperlink.
-	 *
-	 * Add an listener for every single hyperlink on the page that will
-	 * confirm to us if we actually want to leave if we are in an online game.
-	 */
-	document.querySelectorAll('a').forEach((link) => {
-		link.addEventListener('click', confirmNavigationAwayFromGame);
-	});
 }
 
 /**
@@ -140,13 +136,16 @@ function resyncToGame(): void {
 	if (id === undefined) return console.error('Cannot resync to game, game id is undefined.');
 
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
-	if (finalized) {
+	if (!finalized) {
+		// Game either hasn't concluded yet, or the conclusion
+		// may still change
+		// (non-server-validated game)
+		inSync = false;
+		socketmessages.send('game', 'resync', id);
+	} else {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
 		inSync = true;
 		socketmessages.send('game', 'resyncrematch', id);
-	} else {
-		inSync = false;
-		socketmessages.send('game', 'resync', id);
 	}
 }
 
