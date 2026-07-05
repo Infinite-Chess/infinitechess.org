@@ -4,9 +4,8 @@ import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js'
 import type { GameMessage } from '../../../websocket/socketschemas.js';
 import type {
 	ClockValues,
-	FullGameState,
 	GameConclusionMessage,
-	ParticipantState,
+	GameStateMessage,
 } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
@@ -59,13 +58,10 @@ function routeMessage(contents: GameMessage): void {
 
 	switch (contents.action) {
 		case 'move':
-			movesendreceive.handleOpponentsMove(gamefile, mesh, contents.value);
+			movesendreceive.handleMove(gamefile, mesh, contents.value);
 			break;
 		case 'clock':
 			handleUpdatedClock(gamefile, contents.value);
-			break;
-		case 'gameupdate':
-			resyncer.handleServerGameUpdate(gamefile, mesh, contents.value);
 			break;
 		case 'gameconclusion':
 			handleGameConclusion(gamefile, contents.value);
@@ -129,16 +125,12 @@ function routeMessage(contents: GameMessage): void {
 }
 
 /**
- * Loads a game onto the board from its full typed state and sets up the online-game session.
- * @param youAreColor - The viewer's color, if they're a participant; undefined => spectator (white POV).
- * @param participantState - Participant-only ongoing-game properties, if we're a live participant.
+ * A fresh page load (not a reconnect): Loads a game onto the board from
+ * a fresh `gamestate` message and sets up the online-game session.
+ * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
  */
-function loadGameFromState(
-	state: FullGameState,
-	youAreColor?: Player,
-	participantState?: ParticipantState,
-): void {
-	gamesession.setSessionGame({ type: 'online', role: youAreColor });
+function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
+	gamesession.setSessionGame({ type: 'online', role: ourRole });
 
 	// If the clock values are present, adjust the ticking timer for ping.
 	if (state.clockValues) onlinegame.adjustClockValuesForPing(state.clockValues);
@@ -152,7 +144,7 @@ function loadGameFromState(
 			variant: variant.kind === 'preset' ? variant.code : undefined,
 			dateTimestamp: timeCreated,
 			// Spectators (no role) view white's side.
-			viewWhitePerspective: youAreColor === p.WHITE || youAreColor === undefined,
+			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
 			additional: {
 				moves: state.moves,
 				gameConclusion: state.gameConclusion,
@@ -161,7 +153,11 @@ function loadGameFromState(
 		})
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
-			onlinegame.initOnlineGame(window.gamePageData.id, participantState);
+			onlinegame.initOnlineGame(
+				window.gamePageData.id,
+				state.finalized,
+				state.participantState,
+			);
 
 			gamesession.concludeGameIfOver();
 

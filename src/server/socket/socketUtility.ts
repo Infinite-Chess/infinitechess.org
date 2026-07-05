@@ -17,7 +17,10 @@ export interface CustomWebSocket extends WebSocket {
 	t: ScriptTranslations;
 	/** Our custom-entered information about this websocket. */
 	metadata: {
-		/** What subscription lists they are subscribed to. Possible: "lobby" / "game" */
+		/**
+		 * What subscription lists they are subscribed to. (e.g. 'lobby', 'game', 'spectating').
+		 * Let's unsubSocketFromAllSubs() know which detach handlers to call on socket close.
+		 */
 		subscriptions: {
 			/** Whether they are subscribed to the lobby (seeks/spectating) list. */
 			lobby?: boolean;

@@ -64,7 +64,7 @@ GameBus.addEventListener('moves-changed', () => {
 });
 GameBus.addEventListener('game-concluded', () => refresh());
 // A lost connection disables the rematch button until we resync. A reconnect
-// restores its true state via setRematchState() (called after resyncrematch).
+// restores its true state via setRematchState() (called after 'subscriberematch').
 SocketBus.addEventListener('connection-lost', () => {
 	connectionLost = true;
 	updateRematchButton();
@@ -248,7 +248,7 @@ function updateRematchButton(): void {
 
 /**
  * Receives the full rematch state from the server, after a
- * page load or resyncrematch. Updates the rematch button.
+ * page load or 'subscriberematch'. Updates the rematch button.
  */
 function setRematchState(rematch: RematchOfferInfo): void {
 	// A page load/resync resets our own pending offer (not restored — see the server protocol).

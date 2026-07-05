@@ -25,6 +25,7 @@ import selection from '../../chess/selection.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
+import gamesession from '../../chess/gamesession.js';
 import movesequence from '../../chess/movesequence.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
@@ -62,7 +63,7 @@ function sendMove(): void {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(
+function handleMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	message: OpponentsMoveMessage,
@@ -74,7 +75,9 @@ function handleOpponentsMove(
 		console.error(
 			`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
 		);
-		return onlinegame.resyncToGame();
+		onlinegame.setInSync(false);
+		onlinegame.subscribeToGame(); // Naturally requests the full game state and resyncs
+		return;
 	}
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON.
@@ -104,12 +107,17 @@ function handleOpponentsMove(
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
-		// Go to latest move before making a new move
-		movesequence.viewFront(gamefile, mesh);
-
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
-			clockStamp: message.move.clockStamp,
-		});
+		if (moveutil.areWeViewingLatestMove(gamefile)) {
+			// Normal case: play and animate the move.
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
+				clockStamp: message.move.clockStamp,
+			});
+		} else {
+			// We're reviewing a past move. Silently append it, staying on our current view.
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveTagged, {
+				clockStamp: message.move.clockStamp,
+			});
+		}
 
 		// Edit the clocks
 
@@ -142,16 +150,21 @@ function checkAndReportIllegalOpponentMove(
 ): boolean {
 	if (moveValidationResult.valid) return false;
 
-	console.log(
-		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
-	);
+	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
-	if (!isGameInstantlyDeleted(gamefile.variant)) {
-		onlinegame.reportOpponentsMove(moveValidationResult.reason);
-		return true;
-	}
+	if (gamesession.getRole() === undefined) return false; // Spectators never report
+	if (isGameInstantlyDeleted(gamefile.variant)) return false; // Server-validated game
 
-	return false; // Private or server-validated game — allow through without reporting
+	reportOpponentsMove(moveValidationResult.reason);
+	return true; // Reported
+}
+
+/** The move was confirmed illegal, and reportable: Report it. */
+function reportOpponentsMove(reason: string): void {
+	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
+	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
+	const message = { reason, opponentsMoveNumber };
+	socketmessages.send('game', 'report', message);
 }
 
 /** Adjusts received clock values for ping and applies them to the game, if provided. */
@@ -170,7 +183,7 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 
 export default {
 	sendMove,
-	handleOpponentsMove,
+	handleMove,
 	checkAndReportIllegalOpponentMove,
 	applyClockValues,
 };

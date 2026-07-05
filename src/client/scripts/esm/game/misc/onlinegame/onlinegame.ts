@@ -13,6 +13,7 @@ import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import pingManager from '../../../util/pingManager.js';
 import gameactions from '../../gui/guigameactions.js';
+import gamesession from '../../chess/gamesession.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
@@ -22,30 +23,30 @@ import './tabnameflash.js'; // Registers the "YOUR MOVE" tab-flash listeners.
 // Variables ------------------------------------------------------------------------------------------------------
 
 /** The id of the online game we are in. */
-let id: number | undefined;
+let id: number;
 
 /**
- * Whether we are in sync with the game on the server.
- * If false, we do not submit our move. (move will be auto-submitted upon resyncing)
- * Set to false whenever we lose connection, or the socket closes.
- * Set to true whenever we join game, or successfully resync.
- *
- * If we aren't subbed to a game, then it's automatically assumed we are out of sync.
+ * Whetherwe are in sync with the server game, and the game isn't finalized yet (excludes rematch state).
+ * If false, we do not submit our moves (instead auto-submitted upon re-subscribing).
+ * Set to false whenever we lose connection, or detect a desync.
+ * Set to true whenever we receive a fresh full game state.
  */
-let inSync: boolean | undefined;
+let inSync: boolean = false;
 
 /**
  * Whether the game's result is finalized (locked in permanently on the server). Once true, nothing
- * but rematch-offer state can change, so a reconnect fetches only that (`resyncrematch`) rather than
- * a full resync. Set from the `finalized` flag on any game snapshot, or the `finalized` message.
+ * but rematch-offer state can change, so a reconnect fetches only that (`subscriberematch`) rather than
+ * re-subscribing. Set from the `finalized` flag on any game snapshot, or the `finalized` message.
  * Concluded non-server-validated games have a short window where the conclusion can be contested.
  */
 let finalized: boolean = false;
 
 // Events -------------------------------------------------
 
-SocketBus.addEventListener('closed', () => setInSyncFalse());
-SocketBus.addEventListener('reconnected', () => resyncToGame());
+SocketBus.addEventListener('closed', () => {
+	if (!finalized) inSync = false;
+});
+SocketBus.addEventListener('reconnected', () => subscribeToGame());
 
 // Getters ------------------------------------------------------------
 
@@ -53,12 +54,8 @@ function areInSync(): boolean {
 	return inSync!;
 }
 
-function setInSyncTrue(): void {
-	inSync = true;
-}
-
-function setInSyncFalse(): void {
-	inSync = false;
+function setInSync(value: boolean): void {
+	inSync = value;
 }
 
 // Functions --------------------------------------------------
@@ -66,12 +63,19 @@ function setInSyncFalse(): void {
 /**
  * Initializes the online game session.
  * @param id - The numeric id of the online game.
- * @param participantState - Only provide if we're a participant of an ongoing game, not a spectator, or when the game is over!
+ * @param isFinalized - Whether the game's result is already finalized (locked in, db logged) on the server.
+ * @param participantState - Only provide if we're a participant of an ongoing game,
+ *   not a spectator or when the game is memory-evicted.
  */
-function initOnlineGame(game_id: number, participantState?: ParticipantState): void {
+function initOnlineGame(
+	game_id: number,
+	isFinalized: boolean,
+	participantState?: ParticipantState,
+): void {
 	inSync = true;
 
 	id = game_id;
+	finalized = isFinalized;
 
 	// If we are a participator, set the draw offers, disconnect timer, rematch state.
 	setParticipantState(participantState);
@@ -112,6 +116,7 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	// Check if Command (Meta) or Ctrl key is held down
 	if (event.metaKey || event.ctrlKey) return; // Allow opening in a new tab without confirmation
 	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) return;
+	if (gamesession.getRole() === undefined) return; // Spectator
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?');
 	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
@@ -130,39 +135,20 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 }
 
 /**
- * Requests a game update from the server, since we are out of sync.
+ * Requests to subscribe to the server game, and expects to receive a full game state.
+ * A finalized game (`subscriberematch`) instead expects to receive only rematch-offer state.
  */
-function resyncToGame(): void {
-	if (id === undefined) return console.error('Cannot resync to game, game id is undefined.');
+function subscribeToGame(game_id: number = id): void {
+	if (game_id === undefined) throw Error('Cannot subscribe to game: need a game id.');
 
 	socketsubs.addSub('game'); // subs were cleared when the socket closed.
 	if (!finalized) {
-		// Game either hasn't concluded yet, or the conclusion
-		// may still change (non-server-validated game)
-		inSync = false;
-		socketmessages.send('game', 'resync', id);
+		// Game either hasn't concluded yet, or the conclusion may still change (non-server-validated game)
+		socketmessages.send('game', 'subscribe', game_id);
 	} else {
 		// The result is locked in — nothing but rematch offers can change, so we can't desync.
-		inSync = true;
-		socketmessages.send('game', 'resyncrematch', id);
+		socketmessages.send('game', 'subscriberematch', game_id);
 	}
-}
-
-/** Records the game's result as finalized. See {@link finalized}. */
-function onFinalized(): void {
-	finalized = true;
-}
-
-function reportOpponentsMove(reason: string): void {
-	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
-	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
-
-	const message = {
-		reason,
-		opponentsMoveNumber,
-	};
-
-	socketmessages.send('game', 'report', message);
 }
 
 /** Modifies the clock values to account for ping. */
@@ -194,15 +180,19 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 	return;
 }
 
+/** Records the game's result as finalized. See {@link finalized}. */
+function onFinalized(): void {
+	finalized = true;
+}
+
 // Exports -------------------------------------------------------------------------
 
 export default {
-	setInSyncTrue,
-	onFinalized,
+	areInSync,
+	setInSync,
 	initOnlineGame,
 	setParticipantState,
-	areInSync,
-	resyncToGame,
-	reportOpponentsMove,
+	subscribeToGame,
 	adjustClockValuesForPing,
+	onFinalized,
 };

@@ -122,13 +122,13 @@ function preloadSounds(): void {
 function update(): void {
 	screenshake.update();
 	controls.testOutGameToggles();
-	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
 
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_canvas.atleastOneInput())
 		frametracker.onVisualChange();
 
-	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 
 	starfield.update(); // Update the star field animation, if needed.
