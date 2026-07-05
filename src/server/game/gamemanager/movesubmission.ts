@@ -24,7 +24,6 @@ import movevalidation from '../../../shared/chess/logic/movevalidation.js';
 
 import liveGameValues from './liveGameValues.js';
 import { declineDraw } from './onOfferDraw.js';
-import { resyncToGame } from './resync.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import gameutility, { ServerGame } from './gameutility.js';
@@ -81,19 +80,19 @@ function submitMove(
 
 	// Make sure it's their turn
 	if (servergame.whosTurn !== color) {
-		// Can occasionally happen if they in rapid succession send a resync request and
-		// a move submission, then when their client resyncs they submit their move again.
-		// Just discard this submission and resync just in case they are actually out of sync.
-		resyncToGame(ws, servergame.match.id);
+		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
+		// submit a move, then when they receive 'gamestate' their client re-submits their move.
+		// Discard this submission and push them the current state just in case they're desynced.
+		gameutility.sendGameStateToColor(servergame, color, false);
 		return;
 	}
 
-	// Make sure the move number matches up. If not, they're out of sync, resync them!
+	// Make sure the move number matches up. If not, they've desynced, send them the current state.
 	const expectedMoveNumber = servergame.moves.length + 1;
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		resyncToGame(ws, servergame.match.id);
+		gameutility.sendGameStateToColor(servergame, color, false);
 		return;
 	}
 
@@ -141,8 +140,8 @@ function submitMove(
 		// If the game ended, finalize state before sending: stops the clock and persists to DB.
 		// This ensures both clients receive the same frozen clock values that are in the DB.
 		finalizeConclusion(servergame, servergame.gameConclusion);
-		// Send a whole gameupdate to the move-submitter
-		gameutility.sendGameUpdateToColor(servergame, color, false);
+		// Send the full game state to the move-submitter
+		gameutility.sendGameStateToColor(servergame, color, false);
 	} else {
 		// Just send updated clocks to the move-submitter
 		gameutility.sendUpdatedClockToColor(servergame, color);
@@ -153,7 +152,7 @@ function submitMove(
 	gameutility.sendMoveToColor(servergame, opponentColor, moveMessage);
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
-	// Tear down the game after sends. teardownGame skips broadcastParticipantGameUpdate
+	// Tear down the game after sends. teardownGame skips broadcastParticipantGameState
 	// for move-triggered conclusions since clients were already notified individually above.
 	if (gameIsOver) teardownGame(servergame);
 }
@@ -173,8 +172,8 @@ function applyServerValidatedMove(
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		// Send the sender a gameupdate to correct their board if a bug somehow caused this
-		gameutility.sendGameUpdateToColor(servergame, color, true); // forceSync true to force their move list to match ours
+		// Send the sender the current game state to correct their board if a bug somehow caused this
+		gameutility.sendGameStateToColor(servergame, color, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,

@@ -29,6 +29,7 @@ import { GameBus } from '../../GameBus.js';
 import pingManager from '../../../util/pingManager.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
+import guigameactions from '../../gui/guigameactions.js';
 import movesendreceive from './movesendreceive.js';
 
 // State ------------------------------------------------------------
@@ -84,6 +85,12 @@ function routeMessage(contents: GameMessage): void {
 		case 'gamestate':
 			resyncer.handleGameState(gamefile, mesh, contents.value);
 			break;
+		case 'nogame':
+			// The server reported the game isn't live, nor exists in the DB.
+			// Only cause: It was live when SSR'd but was memory-evicted before we sent 'subscribe'.
+			// Reload to get the correct SSR'd 404 page.
+			window.location.reload();
+			break;
 		case 'move':
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
 			break;
@@ -104,9 +111,6 @@ function routeMessage(contents: GameMessage): void {
 			break;
 		case 'login':
 			handleLogin(gamefile);
-			break;
-		case 'nogame':
-			handleNoGame(gamefile);
 			break;
 		case 'leavegame':
 			handleLeaveGame();
@@ -272,6 +276,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
  */
 function handleUnsubbing(): void {
 	socketsubs.deleteSub('game');
+	guigameactions.onUnsub();
 }
 
 /**
@@ -291,22 +296,6 @@ function handleLogin(gamefile: GameFile): void {
 }
 
 /**
- * The server has reported the game no longer exists,
- * there will be nore more updates for it.
- *
- * Visually, abort the game.
- *
- * This can happen when either:
- * * Your page tries to resync to the game after it's long over.
- * * The server restarts mid-game.
- */
-function handleNoGame(gamefile: GameFile): void {
-	socketsubs.deleteSub('game');
-	gamefile.gameConclusion = { condition: 'aborted' };
-	gameslot.concludeGame();
-}
-
-/**
  * You have connected to the same game from another window/device.
  * This tab navigates home and displays a toast.
  */
@@ -318,6 +307,7 @@ function handleLeaveGame(): void {
 /**
  * Called when the server reports both players agreed to a rematch.
  * Play the notify sound and navigate to the new game.
+ * Agnostic of whether we are a participant or spectator.
  * TODO: Remove redundancy with this and the lobby.onInGame()'s logic.
  * @param id - The numeric game id (encoded into the base62 URL).
  */

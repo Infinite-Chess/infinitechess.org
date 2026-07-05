@@ -12,18 +12,17 @@ import * as z from 'zod';
 import gameutility from './gameutility.js';
 import { offerRematch } from './onRematch.js';
 import { getGameBySocket } from './gamemanager.js';
-import { onSubscribeToGame } from './subscribetogame.js';
+import { onSubscribeToGame } from './onSubscribe.js';
+import { onSubscribeToRematch } from './onSubscribeRematch.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
-import { resyncToGame, resyncRematch } from './resync.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('resync'), value: z.int() }),
-	z.strictObject({ action: z.literal('resyncrematch'), value: z.int() }),
+	z.strictObject({ action: z.literal('subscriberematch'), value: z.int() }),
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
@@ -40,7 +39,7 @@ type GameMessage = z.infer<typeof GameSchema>;
 
 /**
  * Handles all incoming websocket messages related to active games.
- * Possible actions: submitmove/offerdraw/abort/resign/resync/subscribe/paste...
+ * Possible actions: submitmove/offerdraw/abort/resign/subscribe/subscriberematch/paste...
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
@@ -51,11 +50,8 @@ function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 		case 'subscribe':
 			onSubscribeToGame(ws, contents.value);
 			return;
-		case 'resync':
-			resyncToGame(ws, contents.value);
-			return;
-		case 'resyncrematch':
-			resyncRematch(ws, contents.value);
+		case 'subscriberematch':
+			onSubscribeToRematch(ws, contents.value);
 			return;
 	}
 

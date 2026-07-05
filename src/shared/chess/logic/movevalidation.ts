@@ -31,32 +31,6 @@ type ConclusionValidityResult = { valid: true } | { valid: false; reason: string
 // Functions -------------------------------------------------------------------
 
 /**
- * UTILITY: Runs a specific validation action while the game is temporarily
- * fast-forwarded to the latest move. Afterwards restoring the game to its original state.
- * @param boardsim - The boardsim
- * @param action - The action to run while at the front of the game
- * @returns The result of the action
- */
-function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
-	const originalMoveIndex = boardsim.state.local.moveIndex;
-
-	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
-	movepiece.goToMove(boardsim, boardsim.moves.length - 1, (move) =>
-		movepiece.applyMove(boardsim, move, true),
-	);
-
-	// Run the specific logic (move validation, conclusion check, etc)
-	const result = action();
-
-	// Rewind to original state
-	movepiece.goToMove(boardsim, originalMoveIndex, (move) =>
-		movepiece.applyMove(boardsim, move, false),
-	);
-
-	return result;
-}
-
-/**
  * Tests if the provided move is legal to play in this game,
  * including whether the claimed game conclusion is correct.
  * Also attaches and special move tags to the move coords.
@@ -73,7 +47,7 @@ function isOpponentsMoveLegal(
 	claimedGameConclusion: GameConclusion | undefined,
 ): MoveValidationResult {
 	// We run both move and conclusion checks when at the front of the game
-	return runActionAtGameFront(boardsim, () => {
+	return movepiece.runActionAtGameFront(boardsim, () => {
 		// 1. Check Move Legality
 		const moveResult = validateMove(boardsim, moveCoords);
 		if (!moveResult.valid) return moveResult;
@@ -114,7 +88,7 @@ function isTokenMoveLegal(boardsim: Board, tokenMove: unknown): MoveValidationRe
 		return { valid: false, reason: 'Incorrect format.' };
 	}
 
-	return runActionAtGameFront(boardsim, () => {
+	return movepiece.runActionAtGameFront(boardsim, () => {
 		return validateMove(boardsim, moveCoords);
 	});
 }

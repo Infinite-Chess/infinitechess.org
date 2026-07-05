@@ -250,8 +250,7 @@ function unsubClientFromGameBySocket(ws: CustomWebSocket, { unsubNotByChoice = t
 function unsubSpectatorFromGameBySocket(ws: CustomWebSocket): void {
 	const gameID = ws.metadata.subscriptions.spectating?.id;
 	if (gameID === undefined) return; // Not spectating any game
-	delete ws.metadata.subscriptions.spectating;
-	getGameByID(gameID)!.spectators.delete(ws);
+	gameutility.unsubSpectatorFromGame(getGameByID(gameID)!, ws);
 }
 
 /** Returns the live game with the specified id, if it exists. */
@@ -409,7 +408,7 @@ function teardownGame(servergame: ServerGame): void {
 
 	// Move-triggered conclusions already send the gameConclusion in the move response.
 	if (!winconutil.isConclusionMoveTriggered(conclusion.condition)) {
-		gameutility.broadcastParticipantGameUpdate(servergame);
+		gameutility.broadcastParticipantGameState(servergame);
 		// Spectators are read-only and can't desync (except for hard socket close), so they
 		// only need the conclusion plus the frozen final clocks — not a full-state re-send.
 		const conclusionMessage: GameConclusionMessage = { gameConclusion: conclusion };
@@ -555,7 +554,7 @@ function finalizeGame(servergame: ServerGame): void {
 	liveGameValues.onGameFinalized(servergame);
 
 	// Tell any connected participants the result is now locked in, so their client knows it can
-	// never change — future reconnects fetch only rematch state (`resyncrematch`), not a full resync.
+	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
 	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
 
 	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
@@ -670,6 +669,8 @@ function createRematchGame(oldGame: ServerGame): void {
 		swapped[typeutil.invertPlayer(Number(c) as Player)] = { identifier: data.identifier };
 		if (data.socket) socketsToNavigate.push(data.socket);
 	}
+	// Also notify spectators of the rematch
+	socketsToNavigate.push(...oldGame.spectators);
 
 	const setup: GameSetup = {
 		variant: { kind: 'preset', code: oldMatch.variant },

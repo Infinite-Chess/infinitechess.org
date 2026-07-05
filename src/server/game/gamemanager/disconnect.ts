@@ -94,7 +94,7 @@ function setOpponentClaimWindow(
  */
 function cancelDisconnectTimers(match: MatchInfo): void {
 	for (const color of Object.keys(match.playerData)) {
-		cancelDisconnectTimer(match, Number(color) as Player, true);
+		cancelDisconnectTimer(match, Number(color) as Player);
 	}
 }
 
@@ -102,44 +102,20 @@ function cancelDisconnectTimers(match: MatchInfo): void {
  * Cancels the player's disconnect state (cushion + open claim window) if they were
  * disconnected. Also cancels the game-level both-disconnected timer, since a reconnect
  * means the two players are no longer both gone. Called when they reconnect/refresh.
- * @param match - The game
- * @param color - The color to cancel the timer for
- * @param dontNotifyOpponent - When true, skip telling the opponent the player returned.
  */
-function cancelDisconnectTimer(
-	match: MatchInfo,
-	color: Player,
-	dontNotifyOpponent: boolean = false,
-): void {
-	/** Whether the opponent had been told they could claim (the claim window was set). */
-	const claimWindowWasSet = gameutility.isClaimWindowSetForColor(match, color);
-
-	const playerdata = match.playerData[color]!;
+function cancelDisconnectTimer(match: MatchInfo, ourRole: Player): void {
+	const playerdata = match.playerData[ourRole]!;
 
 	clearTimeout(playerdata.disconnect.startID);
-	playerdata.disconnect.startID = undefined;
-	playerdata.disconnect.startTime = undefined;
-	playerdata.disconnect.timeOpponentMayClaim = undefined;
-	playerdata.disconnect.wasByChoice = undefined;
+	delete playerdata.disconnect.startID;
+	delete playerdata.disconnect.startTime;
+	delete playerdata.disconnect.timeOpponentMayClaim;
+	delete playerdata.disconnect.wasByChoice;
 
 	// A reconnect (or game over) means the players are no longer both disconnected.
 	clearTimeout(match.bothDisconnectedTimeoutID);
-	match.bothDisconnectedTimeoutID = undefined;
-	match.bothDisconnectedEndTime = undefined;
-
-	if (dontNotifyOpponent) return;
-
-	// Alert their opponent we have returned
-
-	if (!claimWindowWasSet) return; // The opponent was never told, skip.
-
-	const opponentColor = typeutil.invertPlayer(color);
-	gameutility.sendMessageToSocketOfColor(
-		match,
-		opponentColor,
-		'game',
-		'opponentdisconnectreturn',
-	);
+	delete match.bothDisconnectedTimeoutID;
+	delete match.bothDisconnectedEndTime;
 }
 
 //--------------------------------------------------------------------------------------------------------

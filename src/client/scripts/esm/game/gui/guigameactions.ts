@@ -286,6 +286,14 @@ function onOpponentReturn(): void {
 	updateRematchButton();
 }
 
+/** Unsubscribed from the game — clear all rematch offer state and disable the button. */
+function onUnsub(): void {
+	weOfferedRematch = false;
+	opponentOfferedRematch = false;
+	opponentPresentPostGame = false;
+	updateRematchButton();
+}
+
 // =================================================================================
 
 /** Wires the click listeners for every `.game-actions` button present in the DOM. */
@@ -296,8 +304,8 @@ function initListeners(): void {
 	if (element_Resign)
 		element_Resign.addEventListener('click', withConfirmation(element_Resign, callback_Resign)); // prettier-ignore
 
-	element_AcceptDraw?.addEventListener('click', drawoffers.callback_AcceptDraw);
-	element_RejectDraw?.addEventListener('click', drawoffers.callback_declineDraw);
+	element_AcceptDraw?.addEventListener('click', () => drawoffers.callback_AcceptDraw());
+	element_RejectDraw?.addEventListener('click', () => drawoffers.callback_declineDraw());
 
 	element_Rematch?.addEventListener('click', callback_Rematch);
 	element_Analysis.addEventListener('click', callback_Analysis);
@@ -312,4 +320,5 @@ export default {
 	onOpponentRematchOffer,
 	onOpponentLeft,
 	onOpponentReturn,
+	onUnsub,
 };

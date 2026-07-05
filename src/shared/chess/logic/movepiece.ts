@@ -530,6 +530,26 @@ function moveTowards(s: number, e: number, progress: number): number {
 	return s + Math.sign(e - s) * Math.min(Math.abs(e - s), progress);
 }
 
+/**
+ * UTILITY: Runs a specific action while the game is temporarily fast-forwarded
+ * to the latest move. Afterwards restoring the game to its original state.
+ * @returns The result of the action
+ */
+function runActionAtGameFront<T>(boardsim: Board, action: () => T): T {
+	const originalMoveIndex = boardsim.state.local.moveIndex;
+
+	// Fast Forward to the latest move (graphical updates skipped since we will return afterwards)
+	goToMove(boardsim, boardsim.moves.length - 1, (move) => applyMove(boardsim, move, true));
+
+	// Run the specific logic (move validation, conclusion check, etc)
+	const result = action();
+
+	// Rewind to original state
+	goToMove(boardsim, originalMoveIndex, (move) => applyMove(boardsim, move, false));
+
+	return result;
+}
+
 // Move Wrappers ----------------------------------------------------------------------------------------------------
 
 /**
@@ -571,6 +591,7 @@ export default {
 	generateAndMakeMove,
 	updateTurn,
 	goToMove,
+	runActionAtGameFront,
 	makeAllMovesInGame,
 	applyMove,
 	applyEdit,

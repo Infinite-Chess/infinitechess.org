@@ -19,11 +19,10 @@ import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js
 import type {
 	AuthSeekVariant,
 	ClockValues,
-	FullGameState,
 	StaticGameSetup,
 	StaticGameState,
-	GameUpdateBase,
-	GameUpdateMessage,
+	GameStateBase,
+	GameStateMessage,
 	MetaData,
 	MovePacket,
 	OpponentsMoveMessage,
@@ -32,7 +31,6 @@ import type {
 	PlayerRatingChangeInfo,
 	Rating,
 	ServerUsernameContainer,
-	SubscribedGameState,
 	TimeControl,
 } from '../../../shared/types.js';
 
@@ -52,9 +50,11 @@ import {
 } from '../../../shared/chess/variants/validleaderboard.js';
 
 import tconfig from '../../config/translationconfig.js';
+import liveGameValues from './liveGameValues.js';
 import { memberInfoEq } from '../../utility/memberInfoUtil.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { getScriptTranslations } from '../../config/componentTranslationLoader.js';
+import { cancelDisconnectTimer } from './disconnect.js';
 import { UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import { getEloOfPlayerInLeaderboard } from '../../database/leaderboardsManager.js';
 import { buildServerUsernameContainer } from '../seeksmanager/seekutility.js';
@@ -334,35 +334,57 @@ function assignWhiteBlackPlayersFromSeek(
 }
 
 /**
- * Links their socket to this game and modifies their metadata.subscriptions.
- * @param servergame - The game they are a part of.
- * @param playerSocket - Their websocket.
- * @param playerColor - What color they are playing in this game.
+ * Links their socket to this game and runs reconnect
+ * side-effects (cancels disconnect/claim timer).
  */
-function subscribeClientToGame(
-	servergame: ServerGame,
-	playerSocket: CustomWebSocket,
-	playerColor: Player,
-): void {
+function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourRole: Player): void {
 	const match = servergame.match;
 	// 1. Attach their socket to the game for receiving updates
-	const playerData = match.playerData[playerColor];
+	const playerData = match.playerData[ourRole];
 	if (playerData === undefined)
 		return console.error(
-			`Cannot subscribe client to game when game does not expect color ${playerColor} to be present`,
+			`Cannot subscribe client to game when game does not expect color ${ourRole} to be present`,
 		);
 	if (playerData.socket) {
 		sendSocketMessage(playerData.socket, 'game', 'leavegame');
 		unsubClientFromGame(match, playerData.socket);
 	}
-	playerData.socket = playerSocket;
+	playerData.socket = ws;
 
 	// 2. Modify their socket metadata to add the 'game', subscription,
 	// and indicate what game the belong in and what color they are!
-	playerSocket.metadata.subscriptions.game = {
+	ws.metadata.subscriptions.game = {
 		id: match.id,
-		color: playerColor,
+		color: ourRole,
 	};
+
+	runReconnectSideEffects(servergame, ourRole);
+}
+
+/** Attaches a spectator's socket to a game, marking its subscription metadata. */
+function subscribeSpectatorToGame(servergame: ServerGame, ws: CustomWebSocket): void {
+	servergame.spectators.add(ws);
+	ws.metadata.subscriptions.spectating = { id: servergame.match.id };
+}
+
+/**
+ * Runs the side-effects of a player (re)attaching their socket to a game.
+ * While live: clears any disconnect/claim timer and notifies live-game tracking they reconnected.
+ * Post-conclusion (game lingering for a rematch): clears the reconnection cushion and tells the
+ * opponent we're back so their rematch button re-enables.
+ */
+function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void {
+	cancelDisconnectTimer(servergame.match, ourRole);
+
+	const opponentColor = typeutil.invertPlayer(ourRole);
+	if (!isGameOver(servergame)) {
+		// Alert their opponent we have returned
+		console.log('Alerting opponent that player has reconnected');
+		sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentdisconnectreturn'); // prettier-ignore
+		liveGameValues.onPlayerReconnected(servergame, ourRole);
+	} else {
+		sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentreturn');
+	}
 }
 
 /**
@@ -374,31 +396,42 @@ function subscribeClientToGame(
 function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
 	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
 
-	// 1. Detach their socket from the game so we no longer send updates
+	// Detach their socket from the game so we no longer send updates
 	delete match.playerData[ws.metadata.subscriptions.game.color]?.socket;
-
-	// 2. Remove the game key-value pair from the sockets metadata subscription list.
+	// Remove the game key-value pair from the sockets metadata subscription list.
 	delete ws.metadata.subscriptions.game;
 }
 
-/**
- * Sends a participant the `gamestate` message: the role-agnostic
- * {@link FullGameState} plus their per-player overlay.
- * @param servergame - The game they're in.
- * @param ws - Their websocket.
- * @param color - The color they are.
- * @throws If a database error occurs (from {@link produceFullGameState}).
- */
+/** Detaches a spectator's socket from the game, clearing its subscription metadata. */
+function unsubSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): void {
+	servergame.spectators.delete(ws);
+	delete ws.metadata.subscriptions.spectating;
+}
+
+/** Sends a participant the `gamestate` message: the agnostic {@link GameStateBase} plus their per-player overlay. */
 function sendParticipantGameState(
 	servergame: ServerGame,
 	ws: CustomWebSocket,
 	color: Player,
 ): void {
-	const value: SubscribedGameState = {
-		...produceFullGameState(servergame),
-		participantState: getParticipantState(servergame, color),
-	};
+	const value = getGameStateMessageContents(servergame, color);
 	sendSocketMessage(ws, 'game', 'gamestate', value);
+}
+
+/** Sends a spectator the `gamestate` message: the agnostic {@link GameStateBase}, no per-player overlay. */
+function sendSpectatorGameState(servergame: ServerGame, ws: CustomWebSocket): void {
+	const value = buildGameStateBase(servergame);
+	sendSocketMessage(ws, 'game', 'gamestate', value);
+}
+
+/** Sends a participant the `rematchstate` message: their post-conclusion rematch overlay (opponent's offer + presence). */
+function sendParticipantRematchState(
+	servergame: ServerGame,
+	ws: CustomWebSocket,
+	color: Player,
+): void {
+	const value = getRematchOfferInfo(servergame, color) ?? { offered: false, present: false };
+	sendSocketMessage(ws, 'game', 'rematchstate', value);
 }
 
 /**
@@ -459,22 +492,6 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 		players,
 	};
 	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-	return state;
-}
-
-/**
- * Produces the canonical role-agnostic {@link FullGameState} for a live game, sent to clients
- * on subscribe: only the live/dynamic state (moves, clocks, conclusion), no static state.
- * The per-viewer `participantState` overlay is layered on separately at delivery time, not here.
- */
-function produceFullGameState(servergame: ServerGame): FullGameState {
-	const state: FullGameState = {
-		moves: servergame.moves.map((m) => simplifyMove(m)),
-	};
-
-	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-	if (!servergame.untimed) state.clockValues = getGameClockValues(servergame);
-
 	return state;
 }
 
@@ -551,92 +568,70 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 }
 
 /**
- * Resyncs a client's websocket to a game. The client already
- * knows the game id and much other information. We only need to send
- * them the current move list, player timers, and game conclusion.
- * @param ws - Their websocket
- * @param servergame - The game
- * @param colorPlayingAs - Their color
- * @param [replyToMessageID] - If specified, the id of the incoming socket message this update will be the reply to
- */
-function resyncToGame(
-	ws: CustomWebSocket,
-	servergame: ServerGame,
-	colorPlayingAs: Player,
-	replyToMessageID?: number,
-): void {
-	// If their socket isn't subscribed, connect them to the game!
-	if (!ws.metadata.subscriptions.game) subscribeClientToGame(servergame, ws, colorPlayingAs);
-
-	// This function ALREADY sends all the information the client needs to resync!
-	sendGameUpdateToColor(servergame, colorPlayingAs, false, { replyTo: replyToMessageID });
-}
-
-/**
- * Alerts both participants (not spectators) of the game conclusion if it has ended,
- * and the current moves list and timers. Each gets a per-player participant overlay.
- * Participants-only because it carries the move list for desync resync (a participant's
- * in-flight move can race a conclusion); spectators are read-only and can't desync.
+ * Pushes the current game state (`gamestate`) to both participants (not spectators): the move list,
+ * timers, conclusion, and finalized flag, each with their per-player participant overlay. Sent when
+ * live state changes (e.g. the game concludes). Participants-only because it carries the move list
+ * for desync reconciliation (a participant's in-flight move can race a conclusion); spectators are
+ * read-only and can't desync.
  * @param servergame - The game
  */
-function broadcastParticipantGameUpdate(servergame: ServerGame): void {
+function broadcastParticipantGameState(servergame: ServerGame): void {
 	// Build the agnostic core once; only the per-player participant overlay differs.
-	const base = buildGameUpdateBase(servergame, false);
+	const base = buildGameStateBase(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
 		if (data.socket === undefined) continue; // Not connected, can't send message
-		const message: GameUpdateMessage = {
+		const message: GameStateMessage = {
 			...base,
 			participantState: getParticipantState(servergame, Number(color) as Player),
 		};
-		sendSocketMessage(data.socket, 'game', 'gameupdate', message);
+		sendSocketMessage(data.socket, 'game', 'gamestate', message);
 	}
 }
 
 /**
- * Alerts the player of the specified color of the game conclusion if it has ended,
- * and the current moves list and timers.
+ * Sends the current game state (`gamestate`) to the player of the specified color: the move list,
+ * timers, conclusion, and finalized flag, with their participant overlay.
  * @param servergame - The game
  * @param color - The color of the player
- * @param forceSync - If true, the client will force its move list to exactly match the server's (not re-submitting any extra move)
- * @param [options.replyTo] - If specified, the id of the incoming socket message this update will be the reply to
+ * @param forceSync - If true, the client forces its move list to exactly match the server's (not
+ *   re-submitting any extra move). Set only when the server rejected their last move.
  */
-function sendGameUpdateToColor(
-	servergame: ServerGame,
-	color: Player,
-	forceSync: boolean,
-	{ replyTo }: { replyTo?: number } = {},
-): void {
+function sendGameStateToColor(servergame: ServerGame, color: Player, forceSync: boolean): void {
 	const playerdata = servergame.match.playerData[color];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
-	const messageContents = getGameUpdateMessageContents(servergame, color, forceSync);
-	sendSocketMessage(playerdata.socket, 'game', 'gameupdate', messageContents, replyTo);
+	const messageContents = getGameStateMessageContents(servergame, color, forceSync);
+	sendSocketMessage(playerdata.socket, 'game', 'gamestate', messageContents);
 }
 
-/** Builds the agnostic core of a gameupdate, identical for every recipient. */
-function buildGameUpdateBase(servergame: ServerGame, forceSync: boolean): GameUpdateBase {
-	const base: GameUpdateBase = {
-		gameConclusion: servergame.gameConclusion,
+/**
+ * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
+ * finalized flag. The core of every `gamestate` message — the `subscribe` reply and live pushes.
+ * @param forceSync - Set true ONLY when the server rejected the client's last move, to force their
+ *   move list to match exactly. Omitted from the message when false.
+ */
+function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStateBase {
+	const base: GameStateBase = {
 		finalized: servergame.match.finalized,
 		moves: servergame.moves.map((m) => simplifyMove(m)),
-		forceSync,
 	};
+	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;
 	if (!servergame.untimed) base.clockValues = getGameClockValues(servergame);
+	if (forceSync) base.forceSync = true;
 	return base;
 }
 
 /**
- * Constructs a gameupdate message UNIQUE to the player!
- * Unique because only one person receives the millisUntilAutoAFKResign
- * property - the opposite player of the one who has gone AFK.
+ * Builds a full {@link GameStateMessage} for one participant: the agnostic base plus their
+ * participant overlay. Used for every participant `gamestate` message (subscribe reply and pushes).
  */
-function getGameUpdateMessageContents(
+function getGameStateMessageContents(
 	servergame: ServerGame,
 	color: Player,
-	forceSync: boolean,
-): GameUpdateMessage {
+	forceSync: boolean = false,
+): GameStateMessage {
 	return {
-		...buildGameUpdateBase(servergame, forceSync),
+		...buildGameStateBase(servergame, forceSync),
 		participantState: getParticipantState(servergame, color),
 	};
 }
@@ -1001,15 +996,18 @@ export default {
 	initMatch,
 	initServerGame,
 	subscribeClientToGame,
+	subscribeSpectatorToGame,
 	unsubClientFromGame,
-	resyncToGame,
+	unsubSpectatorFromGame,
 	sendParticipantGameState,
+	sendSpectatorGameState,
+	sendParticipantRematchState,
 	assignWhiteBlackPlayersFromSeek,
 	buildStaticGameState,
-	produceFullGameState,
+	buildGameStateBase,
 	buildMetadataOfGame,
-	broadcastParticipantGameUpdate,
-	sendGameUpdateToColor,
+	broadcastParticipantGameState,
+	sendGameStateToColor,
 	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
 	sendMessageToSocketOfColor,
