@@ -25,38 +25,65 @@ import socketsubs from '../../../websocket/socketsubs.js';
 import flashToast from '../../../util/flashToast.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
+import { GameBus } from '../../GameBus.js';
+import pingManager from '../../../util/pingManager.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import movesendreceive from './movesendreceive.js';
 
-// Routers --------------------------------------------------------------------------------------
+// State ------------------------------------------------------------
+
+/** Messages received while the game's logical part is still loading, replayed once it's ready. */
+const messageQueue: GameMessage[] = [];
+
+// Routing ----------------------------------------------------------
 
 // Listen for incoming messages for the 'game' subscription
-SocketBus.addEventListener('game', (e) => routeMessage(e.detail));
+SocketBus.addEventListener('game', (e) => receiveMessage(e.detail));
+// Replay any messages buffered during logical loading.
+GameBus.addEventListener('game-loaded', () => flushQueue());
 
 /**
- * Routes a server websocket message with subscription marked `game`.
- * This handles all messages related to the active game we're in.
+ * Entry point for every `game`-route message: stamps clock timing at receipt, then buffers it
+ * during load, bootstraps the game on the first `gamestate`, or hands it off to be routed.
+ * @param contents - The contents of the incoming server websocket message
+ */
+function receiveMessage(contents: GameMessage): void {
+	// Adjust the received clock values for ping up front, so the ticking clock's loss
+	// deadline is stamped at receipt time — accurate even if the message's handling is deferred.
+	const clockValues = getClockValues(contents);
+	if (clockValues) adjustClockValuesForPing(clockValues);
+
+	// The gamefile's logical part must be loaded before we can act on any message.
+	if (gameslot.getGamefile() === undefined) {
+		if (gamesession.isLoading()) {
+			// A (logical) load is currently underway: buffer the message and replay it the
+			// instant logical loading finishes, so no delta is lost or applied too early.
+			messageQueue.push(contents);
+		} else if (contents.action === 'gamestate') {
+			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
+			loadGameFromState(contents.value, window.gamePageData.role);
+		} else {
+			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
+		}
+	} else {
+		// gamefile is loaded: route the message to its handler immediately.
+		routeMessage(contents);
+	}
+}
+
+/**
+ * Routes a game message to its handler. The gamefile's logical part MUST be loaded.
  * @param contents - The contents of the incoming server websocket message
  */
 function routeMessage(contents: GameMessage): void {
-	// console.log(`Received ${contents.action} from server! Message contents:`)
-	// console.log(contents.value)
-	if (contents.action === 'gamestate')
-		return loadGameFromState(
-			contents.value,
-			window.gamePageData.role,
-			contents.value.participantState,
-		);
-
 	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh();
 
-	// TODO: If the gamefile isn't defined yet (LOGICAL isn't finished loading),
-	// queue the message to be processed after the gamefile is loaded.
-	// HOWEVER, any message with clock values need to be adjusted for ping immediately.
-
 	switch (contents.action) {
+		case 'gamestate':
+			resyncer.handleGameState(gamefile, mesh, contents.value);
+			break;
 		case 'move':
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
 			break;
@@ -124,6 +151,49 @@ function routeMessage(contents: GameMessage): void {
 	}
 }
 
+/** Returns the clock values embedded in a game message, if it carries any. */
+function getClockValues(contents: GameMessage): ClockValues | undefined {
+	switch (contents.action) {
+		case 'gamestate':
+		case 'move':
+		case 'gameconclusion':
+			return contents.value.clockValues;
+		case 'clock':
+			return contents.value;
+		default:
+			return undefined;
+	}
+}
+
+/** Modifies the clock values to account for ping. */
+function adjustClockValuesForPing(clockValues: ClockValues): void {
+	if (!clockValues.colorTicking) return; // No clock is ticking (< 2 moves, or game is over), don't adjust for ping
+
+	// console.log(`Adjusting clock values for ping. Ping is ${pingManager.getPing()}.`);
+
+	// Ping is round-trip time (RTT), So divided by two to get the approximate
+	// time that has elapsed since the server sent us the correct clock values
+	const halfPing = pingManager.getHalfPing();
+	if (halfPing > 2500)
+		console.error(
+			'Ping is above 5000 milliseconds!!! This is a lot to adjust the clock values!',
+		);
+	// console.log(`Ping is ${halfPing * 2}. Subtracted ${halfPing} millis from ${clockValues.colorTicking}'s clock.`);
+
+	if (clockValues.clocks[clockValues.colorTicking] === undefined)
+		throw Error(
+			`Invalid color "${clockValues.colorTicking}" to modify clock value to account for ping.`,
+		);
+	clockValues.clocks[clockValues.colorTicking]! -= halfPing;
+
+	// Flag what time the player who's clock is ticking will lose on time.
+	// Do this because while while the gamefile is being constructed, the time left may become innacurate.
+	clockValues.timeColorTickingLosesAt =
+		Date.now() + clockValues.clocks[clockValues.colorTicking]!;
+
+	return;
+}
+
 /**
  * A fresh page load (not a reconnect): Loads a game onto the board from
  * a fresh `gamestate` message and sets up the online-game session.
@@ -131,9 +201,6 @@ function routeMessage(contents: GameMessage): void {
  */
 function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 	gamesession.setSessionGame({ type: 'online', role: ourRole });
-
-	// If the clock values are present, adjust the ticking timer for ping.
-	if (state.clockValues) onlinegame.adjustClockValuesForPing(state.clockValues);
 
 	// The static setup (variant/time control/creation time) is SSR'd
 	const { variant, timeControl, timeCreated } = window.gamePageData;
@@ -153,11 +220,7 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 		})
 		.then(({ graphical }) => {
 			// Logical loaded, return graphical promise
-			onlinegame.initOnlineGame(
-				window.gamePageData.id,
-				state.finalized,
-				state.participantState,
-			);
+			onlinegame.initOnlineGame(state.finalized, state.participantState);
 
 			gamesession.concludeGameIfOver();
 
@@ -165,6 +228,12 @@ function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
 		})
 		.then(() => gamesession.markLoadingDone()) // Graphical loaded
 		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+}
+
+/** Replays the messages buffered during loading, in arrival order. */
+function flushQueue(): void {
+	messageQueue.forEach(routeMessage);
+	messageQueue.length = 0;
 }
 
 /**
@@ -261,5 +330,5 @@ async function handleInGame(id: number): Promise<void> {
 }
 
 export default {
-	routeMessage,
+	receiveMessage,
 };

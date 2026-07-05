@@ -167,14 +167,16 @@ function reportOpponentsMove(reason: string): void {
 	socketmessages.send('game', 'report', message);
 }
 
-/** Adjusts received clock values for ping and applies them to the game, if provided. */
+/**
+ * Applies received clock values to the game, if provided.
+ * MUST ALREADY be ping-adjusted from inside onlinegamerouter.receiveMessage()!
+ */
 function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefined): void {
 	if (!clockValues) return;
 	if (gamefile.untimed) {
 		console.warn('Received clock values for untimed game??');
 		return;
 	}
-	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues);
 	guiclock.edit(gamefile);
 }

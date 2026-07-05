@@ -211,9 +211,12 @@ async function loadGraphical(): Promise<void> {
 	if (lastmove !== undefined)
 		animateLastMoveTimeoutID = setTimeout(() => {
 			// A small delay to animate the most recently played move.
-			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the lastest move
-			movesequence.viewFront(loadedGamefile!, mesh!); // Updates to front even when they view different moves
-			animateMove(lastmove.changes, true);
+			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the latest move
+			// Re-fetch the current last move rather than animating the one captured above, which
+			// may be stale if a move was applied during loading.
+			const latestMove = moveutil.getLastMove(loadedGamefile!.moves)!;
+			movesequence.viewFront(loadedGamefile!, mesh!); // Ensure we are viewing the front, regardless where they navigated
+			animateMove(latestMove.changes, true);
 		}, delayOfLatestMoveAnimationOnRejoinMillis);
 
 	// Init the star field void animation

@@ -15,12 +15,11 @@ import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
 	GameConclusionMessageSchema,
-	GameUpdateMessageSchema,
+	GameStateMessageSchema,
 	OpponentsMoveMessageSchema,
 	OutSeekSchema,
 	PlayerRatingChangeInfoSchema,
 	RematchOfferInfoSchema,
-	SubscribedGameStateSchema,
 } from '../../../../shared/types.js';
 
 // Seek Helper Schemas ---------------------------------------------------------------
@@ -74,13 +73,9 @@ const LobbySchema = z.discriminatedUnion('action', [
 /** All possible types an incoming 'game' route websocket message contents could be. */
 export type GameMessage = z.infer<typeof GameSchema>;
 const GameSchema = z.discriminatedUnion('action', [
-	z.strictObject({ action: z.literal('gamestate'), value: SubscribedGameStateSchema }),
+	z.strictObject({ action: z.literal('gamestate'), value: GameStateMessageSchema }),
 	z.strictObject({ action: z.literal('move'), value: OpponentsMoveMessageSchema }),
 	z.strictObject({ action: z.literal('clock'), value: ClockValuesSchema }),
-	z.strictObject({
-		action: z.literal('gameupdate'),
-		value: GameUpdateMessageSchema,
-	}),
 	z.strictObject({
 		action: z.literal('gameconclusion'),
 		value: GameConclusionMessageSchema,
