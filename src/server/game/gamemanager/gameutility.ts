@@ -374,14 +374,18 @@ function subscribeSpectatorToGame(servergame: ServerGame, ws: CustomWebSocket): 
  * opponent we're back so their rematch button re-enables.
  */
 function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void {
+	/** Whether the opponent had been told they could claim (the claim window was set). */
+	const claimWindowWasSet = isClaimWindowSetForColor(servergame.match, ourRole);
+
 	cancelDisconnectTimer(servergame.match, ourRole);
 
 	const opponentColor = typeutil.invertPlayer(ourRole);
 	if (!isGameOver(servergame)) {
-		// Alert their opponent we have returned
-		console.log('Alerting opponent that player has reconnected');
-		sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentdisconnectreturn'); // prettier-ignore
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
+		// Alert their opponent we have returned, if they were informed of the disconnect
+		if (claimWindowWasSet) {
+			sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentdisconnectreturn'); // prettier-ignore
+		}
 	} else {
 		sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentreturn');
 	}
