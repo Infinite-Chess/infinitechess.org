@@ -93,28 +93,20 @@ function handleMove(
 			message.gameConclusion,
 		);
 
-		// Only report cheating when the server won't delete the game instantly.
-		if (
-			checkAndReportIllegalOpponentMove(
-				gamefile,
-				moveValidationResult,
-				message.move.token,
-				message.moveNumber,
-			)
-		) {
-			return false; // Don't physically play next premove
-		}
+		// Report cheating if the server allows us
+		checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, message.move.token, message.moveNumber); // prettier-ignore
+		if (!moveValidationResult.valid) return false; // Don't physically play next premove
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
 		if (moveutil.areWeViewingLatestMove(gamefile)) {
 			// Normal case: play and animate the move.
-			movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged, {
 				clockStamp: message.move.clockStamp,
 			});
 		} else {
 			// We're reviewing a past move. Silently append it, staying on our current view.
-			movesequence.makeMoveKeepingView(gamefile, mesh, moveTagged, {
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, {
 				clockStamp: message.move.clockStamp,
 			});
 		}
@@ -140,23 +132,21 @@ function handleMove(
  * @param moveValidationResult - The result of move validation (may be valid or invalid).
  * @param tokenMove - The move in compact string format, used for logging.
  * @param moveNumber - The move number, used for logging.
- * @returns Whether the move was illegal and was reported.
  */
 function checkAndReportIllegalOpponentMove(
 	gamefile: GameFile,
 	moveValidationResult: MoveValidationResult,
 	tokenMove: string,
 	moveNumber: number,
-): boolean {
-	if (moveValidationResult.valid) return false;
+): void {
+	if (moveValidationResult.valid) return;
 
 	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
-	if (gamesession.getRole() === undefined) return false; // Spectators never report
-	if (isGameInstantlyDeleted(gamefile.variant)) return false; // Server-validated game
+	if (gamesession.getRole() === undefined) return; // Spectators never report
+	if (isGameInstantlyDeleted(gamefile.variant)) return; // Server-validated game
 
 	reportOpponentsMove(moveValidationResult.reason);
-	return true; // Reported
 }
 
 /** The move was confirmed illegal, and reportable: Report it. */
