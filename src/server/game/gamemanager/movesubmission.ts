@@ -74,7 +74,6 @@ function submitMove(
 
 	// Their subscription info should tell us what game they're in, including the color they are.
 	const color = ws.metadata.subscriptions.game.color;
-	const opponentColor = typeutil.invertPlayer(color);
 
 	// If the game is already over, don't accept it.
 	if (gameutility.isGameOver(servergame)) return;
@@ -135,6 +134,16 @@ function submitMove(
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
 
+	broadcastMove(servergame, moveRecord, color);
+}
+
+/**
+ * Broadcasts a freshly accepted move to all clients, and concludes the game if the move ended it.
+ * The submitter gets the full game state if it concluded (to reconcile the frozen clocks/result),
+ * otherwise just updated clocks; the opponent and spectators get the move, which carries any
+ * move-triggered conclusion. Frees the game if it concluded.
+ */
+function broadcastMove(servergame: ServerGame, moveRecord: MoveRecord, color: Player): void {
 	if (servergame.gameConclusion !== undefined) {
 		// If the game ended, finalize state before sending: stops the clock and persists to DB.
 		// This ensures both clients receive the same frozen clock values that are in the DB.
@@ -148,7 +157,7 @@ function submitMove(
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = buildMoveMessage(servergame, moveRecord);
-	gameutility.sendMessageToColor(servergame, opponentColor, 'move', moveMessage);
+	gameutility.sendMessageToColor(servergame, typeutil.invertPlayer(color), 'move', moveMessage);
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.

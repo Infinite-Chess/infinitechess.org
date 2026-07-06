@@ -905,6 +905,7 @@ export default {
 	buildStaticGameState,
 	buildGameStateBase,
 	getGameStateMessageContents,
+	getParticipantState,
 	buildMetadataOfGame,
 	sendGameStateToColor,
 	sendRatingChangeToAllPlayers,

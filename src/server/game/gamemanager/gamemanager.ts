@@ -343,7 +343,10 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 	return data;
 }
 
-/** Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game. */
+/**
+ * Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game.
+ * Typically called for non-move-triggered conclusions (e.g. resignation, time loss...).
+ */
 function onGameConclusion(servergame: ServerGame, conclusion: GameConclusion): void {
 	applyConclusion(servergame, conclusion);
 

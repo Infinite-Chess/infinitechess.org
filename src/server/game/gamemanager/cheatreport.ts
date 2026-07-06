@@ -6,6 +6,8 @@
 
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
+import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
+import type { GameConclusionMessage, GameStateMessage } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -13,7 +15,8 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { onGameConclusion } from './gamemanager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { applyConclusion, freeGame } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({
@@ -84,6 +87,8 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	const perpetratingMove = servergame.moves.pop();
 	if (!perpetratingMove) return;
 
+	// Cheating report was valid, terminate the game..
+
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
 	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${messageContents.reason} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
@@ -111,9 +116,35 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 			);
 		}
 	}
-	// Cheating report was valid, terminate the game..
 
-	onGameConclusion(servergame, { condition: 'aborted' });
+	concludeReportedGame(servergame, { condition: 'aborted' });
+}
+
+/**
+ * Concludes a game after a valid cheat report. The full game state is sent to all participants,
+ * but not spectators, this is because illegal moves are not forwarded in the game. However, the
+ * cheater and whosTurn may be desynced, so they need the full state.
+ */
+function concludeReportedGame(servergame: ServerGame, conclusion: GameConclusion): void {
+	applyConclusion(servergame, conclusion);
+
+	// Send participants the full state
+	const base = gameutility.buildGameStateBase(servergame);
+	for (const [color, data] of Object.entries(servergame.match.playerData)) {
+		if (data.socket === undefined) continue; // Not connected, can't send message
+		const message: GameStateMessage = {
+			...base,
+			participantState: gameutility.getParticipantState(servergame, Number(color) as Player),
+		};
+		sendSocketMessage(data.socket, 'game', 'gamestate', message);
+	}
+
+	// Send spectators the conclusion message
+	const conclusionMessage: GameConclusionMessage = { gameConclusion: conclusion };
+	if (!servergame.untimed) conclusionMessage.clockValues = gameutility.getGameClockValues(servergame); // prettier-ignore
+	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
+
+	freeGame(servergame);
 }
 
 export { onReport, reportschem };
