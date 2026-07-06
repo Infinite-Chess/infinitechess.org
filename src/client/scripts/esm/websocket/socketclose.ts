@@ -51,7 +51,7 @@ function onclose(event: CloseEvent): void {
 	const trimmedReason = event.reason.trim();
 	const involuntary = wsutil.wasSocketClosureInvoluntary(event.code, trimmedReason);
 
-	SocketBus.dispatch('closed');
+	SocketBus.dispatch('closed', { involuntary });
 	// An unintentional close (with subs to reconnect for) means we lost the connection and
 	// will retry. Dispatched after `closed` so its handlers — e.g. the ping meter's loading
 	// state — override the generic close behavior.
