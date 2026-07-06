@@ -50,13 +50,7 @@ function handleGameState(
 	 * We need to do this because sometimes the game can end before the
 	 * server sees our move, but on our screen we have still played it.
 	 */
-	const result = synchronizeMovesList(
-		gamefile,
-		mesh,
-		message.moves,
-		claimedGameConclusion,
-		message.forceSync ?? false,
-	); // { opponentPlayedIllegalMove }
+	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion, message.forceSync ?? false); // prettier-ignore
 	if (result.opponentPlayedIllegalMove) return;
 
 	onlinegame.setParticipantState(message.participantState);
@@ -156,20 +150,10 @@ function synchronizeMovesList(
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-					gamefile,
-					moveTagged,
-					claimedGameConclusion,
-				);
-				// Only report cheating in games where the server won't delete the game instantly when it ends
-				if (
-					movesendreceive.checkAndReportIllegalOpponentMove(
-						gamefile,
-						moveValidationResult,
-						thisShortmove.token,
-						i + 1,
-					)
-				) {
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, claimedGameConclusion); // prettier-ignore
+				// Report cheating if the server allows us
+				movesendreceive.checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, thisShortmove.token, i + 1); // prettier-ignore
+				if (!moveValidationResult.valid) {
 					opponentPlayedIllegalMove = true;
 					return false; // Don't physically play next premove
 				}

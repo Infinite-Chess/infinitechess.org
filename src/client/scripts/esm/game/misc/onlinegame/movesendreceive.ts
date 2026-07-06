@@ -87,11 +87,7 @@ function handleMove(
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-			gamefile,
-			moveTagged,
-			message.gameConclusion,
-		);
+		const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, message.gameConclusion); // prettier-ignore
 
 		// Report cheating if the server allows us
 		checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, message.move.token, message.moveNumber); // prettier-ignore
