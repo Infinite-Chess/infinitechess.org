@@ -150,7 +150,7 @@ interface MatchInfo {
 
 	/** The ID of the timeout which will auto-lose the player
 	 * whos turn it currently is when they run out of time. */
-	autoTimeLossTimeoutID?: ReturnType<typeof setTimeout>;
+	autoTimeLossTimeoutID?: NodeJS.Timeout;
 
 	/** Whether a current draw offer is extended. If so, this is the color who extended it, otherwise null. */
 	drawOfferState?: Player;
@@ -178,14 +178,14 @@ interface MatchInfo {
 	 * Only used by games without server-side validation, to give a cushion for cheat reports
 	 * to overturn the result first. Can be cancelled if the game is finalized/evicted early.
 	 */
-	finalizeTimeoutID?: ReturnType<typeof setTimeout>;
+	finalizeTimeoutID?: NodeJS.Timeout;
 
 	/**
 	 * The ID of the timer that concludes the game once BOTH players have been
 	 * disconnected for too long (neither is present to claim victory/draw).
 	 * Started when the second player disconnects; cancelled if either reconnects.
 	 */
-	bothDisconnectedTimeoutID?: ReturnType<typeof setTimeout>;
+	bothDisconnectedTimeoutID?: NodeJS.Timeout;
 	/**
 	 * The epoch-ms timestamp the {@link bothDisconnectedTimeoutID} timer fires.
 	 * Persisted so the timer can be revived (or fired) on server restart.
@@ -220,8 +220,6 @@ type ValidationDependant =
 			moves: MoveRecord[];
 	  };
 
-// Functions --------------------------------------------------------------------------------------
-
 /**
  * The properties needed to start a game, distilled from either an accepted seek or an
  * existing game being rematched. Kept minimal so both paths can share {@link initMatch}.
@@ -231,6 +229,8 @@ interface GameSetup {
 	time: TimeControl;
 	rated: boolean;
 }
+
+// Functions --------------------------------------------------------------------------------------
 
 /**
  * Construct the match object based on the game setup and how players have been assigned
@@ -434,20 +434,6 @@ function getRatingDataForGamePlayers(
 }
 
 /**
- * Assembles the {@link StaticGameSetup} of a live game: how it was configured — variant,
- * clock settings, and creation time. SSR'd into `gamePageData`.
- */
-function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
-	const match = servergame.match;
-	return {
-		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
-		variant: { kind: 'preset', code: match.variant },
-		timeControl: match.clock,
-		timeCreated: match.timeCreated,
-	};
-}
-
-/**
  * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info).
  * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
  */
@@ -469,6 +455,20 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 	};
 	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
 	return state;
+}
+
+/**
+ * Assembles the {@link StaticGameSetup} of a live game: how it was configured
+ * — variant, clock settings, and creation time. SSR'd into `gamePageData`.
+ */
+function buildStaticGameSetup(servergame: ServerGame): StaticGameSetup {
+	const match = servergame.match;
+	return {
+		// initMatch rejects non-preset seeks, so a live game's variant is always a preset code right now.
+		variant: { kind: 'preset', code: match.variant },
+		timeControl: match.clock,
+		timeCreated: match.timeCreated,
+	};
 }
 
 /**
@@ -544,12 +544,10 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 }
 
 /**
- * Sends the current game state (`gamestate`) to the player of the specified color: the move list,
- * timers, conclusion, and finalized flag, with their participant overlay.
- * @param servergame - The game
- * @param role - The color of the player
- * @param forceSync - If true, the client forces its move list to exactly match the server's (not
- *   re-submitting any extra move). Set only when the server rejected their last move.
+ * Sends the current game state (`gamestate`) to the player of the specified color: the
+ * move list, timers, conclusion, and finalized flag, with their participant overlay.
+ * @param forceSync - If true, the client forces its move list to exactly match the server's
+ * (not re-submitting any extra move). Set only when the server rejected their last move.
  */
 function sendGameStateToColor(servergame: ServerGame, role: Player, forceSync: boolean): void {
 	const playerdata = servergame.match.playerData[role];
@@ -562,8 +560,8 @@ function sendGameStateToColor(servergame: ServerGame, role: Player, forceSync: b
 /**
  * Builds the recipient-agnostic {@link GameStateBase} — the live move list, clocks, conclusion, and
  * finalized flag. The core of every `gamestate` message — the `subscribe` reply and live pushes.
- * @param forceSync - Set true ONLY when the server rejected the client's last move, to force their
- *   move list to match exactly. Omitted from the message when false.
+ * @param forceSync - Set true ONLY when the server rejected the client's last move,
+ * to force their move list to match exactly. Omitted from the message when false.
  */
 function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStateBase {
 	const base: GameStateBase = {
@@ -716,6 +714,18 @@ function sendMessageToSocketOfColor(
 	sendSocketMessage(ws, sub, action, value); // Value doesn't need translating, send normally.
 }
 
+/** Sends a message to the participant color. */
+function sendMessageToColor(
+	servergame: ServerGame,
+	role: Player,
+	action: string,
+	value: any,
+): void {
+	const ws = servergame.match.playerData[role]!.socket;
+	if (!ws) return; // Not connected, can't send
+	sendSocketMessage(ws, 'game', action, value);
+}
+
 /**
  * Safely prints a game to the console. Temporarily stringifies the
  * player sockets to remove self-referencing, and removes Node timers.
@@ -827,18 +837,6 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 	}
 	playerdata[servergame.whosTurn] = newTime;
 	return;
-}
-
-/** Sends a message to the participant color. */
-function sendMessageToColor(
-	servergame: ServerGame,
-	role: Player,
-	action: string,
-	value: any,
-): void {
-	const ws = servergame.match.playerData[role]!.socket;
-	if (!ws) return; // Not connected, can't send
-	sendSocketMessage(ws, 'game', action, value);
 }
 
 /** Broadcasts a game-route message to every connected participant of the game. */
