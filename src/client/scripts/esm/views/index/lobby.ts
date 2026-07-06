@@ -173,8 +173,12 @@ const trackNewSeeks = (() => {
 	};
 })();
 
-/** Called when we receive a fresh seek list from the server. Updates state, map, and renders. */
-function onSeekListUpdate(seeks: OutSeek[]): void {
+/**
+ * Called when we receive a fresh seek list from the server. Updates state, map, and renders.
+ * @param preserveNewSeekTracker - Skips the new-seek tracker so its memory survives the update,
+ * so seeks returning after a reconnect aren't treated as new and replay arrival sounds.
+ */
+function onSeekListUpdate(seeks: OutSeek[], preserveNewSeekTracker = false): void {
 	// Reset the flag in case the seek was cancelled immediately before.
 	// The server sends the 'ingame' action before the new seek list, so this is safe.
 	weAcceptedSeek = false;
@@ -186,7 +190,7 @@ function onSeekListUpdate(seeks: OutSeek[]): void {
 	const ourSeek = seeks.find((s) => isSeekOurs(s));
 	ourSeekId = ourSeek?.id;
 
-	const newSeekIds = trackNewSeeks(seeks);
+	const newSeekIds = preserveNewSeekTracker ? new Set<string>() : trackNewSeeks(seeks);
 	if (ourSeekId !== undefined && newSeekIds.has(ourSeekId)) gamesound.playMarimba();
 
 	renderSeekList(
@@ -351,11 +355,11 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<string>()): voi
 }
 
 /**
- * Clears the seek list display upon a socket closure
- * and resets all tracked seek state and viewer count.
+ * Clears the seek display, tracked state, and viewer count on a socket close,
+ * but preserves the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
-	onSeekListUpdate([]);
+	onSeekListUpdate([], true); // Don't clear seek tracker memory
 	element_lobbyViewerCount.textContent = '0';
 }
 
@@ -531,6 +535,5 @@ export default {
 	onOutGame,
 	createSeek,
 	subscribe,
-	unsubscribe,
 	exitIdle,
 };
