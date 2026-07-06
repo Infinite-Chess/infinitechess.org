@@ -77,6 +77,13 @@ const VOLUME_DANGER_THRESHOLD = 4;
 
 /** This context plays all our sounds. */
 const audioContext: AudioContext = new AudioContext();
+// Chrome auto-suspends the context after a period of inactivity. Resume it whenever
+// that happens so sounds don't delay starting, and then their tail cut off.
+audioContext.addEventListener('statechange', () => {
+	if (audioContext.state !== 'suspended') return;
+	console.log('Audio context suspended, resuming...');
+	audioContext.resume();
+});
 
 /** An input bus for all sound chains before they reach the master gain. Allows for global effects. */
 const effectsBus = audioContext.createGain();
