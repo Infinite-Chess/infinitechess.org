@@ -21,6 +21,7 @@ import type {
 	ClockValues,
 	StaticGameSetup,
 	StaticGameState,
+	GameConclusionMessage,
 	GameStateBase,
 	GameStateMessage,
 	MetaData,
@@ -590,6 +591,16 @@ function getGameStateMessageContents(
 	};
 }
 
+/**
+ * Builds the `gameconclusion` message: the result plus the game's clock values.
+ * MUST set servergame.gameConclusion first!
+ */
+function buildGameConclusionMessage(servergame: ServerGame): GameConclusionMessage {
+	const message: GameConclusionMessage = { gameConclusion: servergame.gameConclusion! };
+	if (!servergame.untimed) message.clockValues = getGameClockValues(servergame);
+	return message;
+}
+
 /** Alerts all players and spectators in the game of the rating changes of the game. */
 function sendRatingChangeToAllPlayers(servergame: ServerGame, ratingdata: RatingData): void {
 	const messageContents = getRatingChangeMessageContents(ratingdata);
@@ -906,6 +917,7 @@ export default {
 	buildGameStateBase,
 	getGameStateMessageContents,
 	getParticipantState,
+	buildGameConclusionMessage,
 	buildMetadataOfGame,
 	sendGameStateToColor,
 	sendRatingChangeToAllPlayers,

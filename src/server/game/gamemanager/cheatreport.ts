@@ -7,7 +7,7 @@
 import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from './gameutility.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
-import type { GameConclusionMessage, GameStateMessage } from '../../../shared/types.js';
+import type { GameStateMessage } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -132,8 +132,7 @@ function concludeReportedGame(servergame: ServerGame, conclusion: GameConclusion
 	}
 
 	// Send spectators the conclusion message
-	const conclusionMessage: GameConclusionMessage = { gameConclusion: conclusion };
-	if (!servergame.untimed) conclusionMessage.clockValues = gameutility.getGameClockValues(servergame); // prettier-ignore
+	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
 
 	freeGame(servergame);

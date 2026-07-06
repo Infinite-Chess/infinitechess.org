@@ -10,7 +10,7 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { GameConclusionMessage, OpponentsMoveMessage } from '../../../shared/types.js';
+import type { OpponentsMoveMessage } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -149,10 +149,7 @@ function broadcastMove(servergame: ServerGame, moveRecord: MoveRecord, color: Pl
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		applyConclusion(servergame, servergame.gameConclusion);
-		const conclusionMessage: GameConclusionMessage = {
-			gameConclusion: servergame.gameConclusion,
-		};
-		if (!servergame.untimed) conclusionMessage.clockValues = gameutility.getGameClockValues(servergame); // prettier-ignore
+		const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 		gameutility.sendMessageToColor(servergame, color, 'gameconclusion', conclusionMessage);
 	}
 
