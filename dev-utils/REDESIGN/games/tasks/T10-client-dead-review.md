@@ -38,10 +38,7 @@ Call `loadGameFromState(fullGameState, gamePageData.role)` (T9). The conclusion 
 
 The base name + rating in each `.username-embed` is **SSR'd by T8.5**; only the rating **delta** is a client concern here. If `deadState.ratingChanges` is present, inject the per-player `.eloChange` into the SSR'd `.username-embed`s (present in both `.player-bar` and `.meta-players`) — **not** via the old `guigameinfo.addRatingChangeToExistingUsernameContainers`, which targets the old DOM. Display only — no logic.
 
-## Out of scope / deferred
-
-- Spectator live view (T11), gamestart (T12).
-- Analysis-board / share buttons, full review controls polish — later.
+Also at this stage, we need to decide with the user whether to do away with the 'nogame' action or keep it.
 
 ### Follow-up: resync landing on a dead game
 
