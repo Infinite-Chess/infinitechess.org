@@ -54,10 +54,10 @@ const element_CoordsY = document.getElementById('coord-y') as HTMLInputElement;
 
 // Tooltip shown on the arrows button for each mode, indexed by {@link arrows.getMode}. */
 const ARROW_TOOLTIPS: { [mode in 0 | 1 | 2 | 3]: string } = {
-	0: 'Arrow indicators: Off',
-	1: 'Arrow indicators: Defense',
-	2: 'Arrow indicators: All',
-	3: 'Arrow indicators: All + Hippogonals',
+	0: 'Arrow indicators: Off (tab)',
+	1: 'Arrow indicators: Defense (tab)',
+	2: 'Arrow indicators: All (tab)',
+	3: 'Arrow indicators: All + Hippogonals (tab)',
 };
 
 // Variables ---------------------------------------------------------------------------------
