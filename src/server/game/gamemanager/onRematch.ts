@@ -7,13 +7,17 @@
  * created (same variant/time/rated, colors swapped).
  */
 
-import type { Player } from '../../../shared/chess/util/typeutil.js';
-import type { ServerGame } from './gameutility.js';
+import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { GameSetup, ServerGame } from './gameutility.js';
 
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
-import { createRematchGame } from './gamemanager.js';
+import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
+import { createGame, evictGame } from './gamemanager.js';
+import { getIDOfGamePlayerIsIn } from './activeplayers.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -44,6 +48,46 @@ function offerRematch(servergame: ServerGame, ourRole: Player): void {
 		// Relay the offer to the opponent (their rematch button starts glowing).
 		gameutility.sendMessageToSocketOfColor(match, opponentColor, 'game', 'rematchoffer');
 	}
+}
+
+/**
+ * Creates a rematch of a concluded game: same variant/time/rated, players swapped to the
+ * opposite colors. Tears down the old game, starts the fresh one, and navigates both still-
+ * connected players to it. Silently aborts if either player is already in another game.
+ * @param oldGame - The concluded game both players have offered a rematch of.
+ */
+function createRematchGame(oldGame: ServerGame): void {
+	const oldMatch = oldGame.match;
+
+	// A rematch can't start if either player has meanwhile joined a DIFFERENT game. A concluded
+	// game frees its players from the active-players list, so a lingering participant reads as
+	// `undefined` here; only a genuine new game they've joined (a different id) blocks the rematch.
+	for (const data of Object.values(oldMatch.playerData)) {
+		const inGameID = getIDOfGamePlayerIsIn(data.identifier);
+		if (inGameID !== undefined && inGameID !== oldMatch.id) return; // Buttons just stay disabled.
+	}
+
+	// Capture identities (swapped colors) and connected sockets before tearing down the old game.
+	const swapped: PlayerGroup<{ identifier: AuthMemberInfo }> = {};
+	const socketsToNavigate: CustomWebSocket[] = [];
+	for (const [c, data] of Object.entries(oldMatch.playerData)) {
+		swapped[typeutil.invertPlayer(Number(c) as Player)] = { identifier: data.identifier };
+		if (data.socket) socketsToNavigate.push(data.socket);
+	}
+	// Also notify spectators of the rematch
+	socketsToNavigate.push(...oldGame.spectators);
+
+	const setup: GameSetup = {
+		variant: { kind: 'preset', code: oldMatch.variant },
+		time: oldMatch.clock,
+		rated: oldMatch.rated,
+	};
+
+	evictGame(oldGame); // Removes the old game from memory (and unsubscribes its sockets).
+	const newGameID = createGame(setup, swapped);
+
+	// Alert all connected players of the new game (they auto navigate)
+	for (const socket of socketsToNavigate) sendSocketMessage(socket, 'game', 'ingame', newGameID);
 }
 
 //--------------------------------------------------------------------------------------------------------

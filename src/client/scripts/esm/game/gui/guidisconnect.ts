@@ -36,7 +36,7 @@ const element_ClaimDraw = document.getElementById('btn-claim-draw') as HTMLButto
 /** The epoch-ms timestamp from which we may claim victory/draw. Undefined when the opponent is connected. */
 let claimableAt: number | undefined;
 /** Whether the opponent disconnected by choice (vs. lost connection). */
-let wasByChoice: boolean = false;
+let voluntary: boolean = false;
 /** The 1-second render loop's interval id, while the opponent is disconnected. */
 let renderIntervalID: number | undefined;
 
@@ -50,7 +50,7 @@ GameBus.addEventListener('game-concluded', () => onOpponentReturn());
 function onOpponentDisconnect(info: DisconnectInfo): void {
 	if (!element_DisconnectStatus) return; // Concluded game: block absent.
 	claimableAt = Date.now() + info.millisUntilClaimable;
-	wasByChoice = info.wasByChoice;
+	voluntary = info.voluntary;
 	element_DisconnectStatus.classList.remove('hidden');
 	render();
 	// Keep re-rendering every second so the countdown stays accurate and the buttons
@@ -72,7 +72,7 @@ function onOpponentReturn(): void {
 function render(): void {
 	if (!element_DisconnectText || claimableAt === undefined) return;
 
-	const lead = wasByChoice ? 'Opponent disconnected.' : 'Opponent lost connection.';
+	const lead = voluntary ? 'Opponent disconnected.' : 'Opponent lost connection.';
 
 	// Before the game is resignable there's no victory/draw to claim — just inform.
 	const gamefile = gameslot.getGamefile();

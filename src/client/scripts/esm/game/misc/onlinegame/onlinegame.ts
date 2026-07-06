@@ -108,7 +108,7 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	if (gamesession.getRole() === undefined) return; // Spectator
 
 	const userConfirmed = confirm('Are you sure you want to leave the game?');
-	if (userConfirmed) return; // Follow link like normal. Server then starts a 20-second auto-resign timer for disconnecting on purpose.
+	if (userConfirmed) return; // Follow link like normal. Server then starts a 10-second disconnect claim timer for disconnecting on purpose.
 	// Cancel the following of the link.
 	event.preventDefault();
 
@@ -117,7 +117,7 @@ function confirmNavigationAwayFromGame(event: MouseEvent): void {
 	 * JavaScript is frozen in that timeframe, which means as
 	 * far as the server can tell we're not communicating anymore,
 	 * so it automatically closes our websocket connection,
-	 * thinking we've disconnected, and starts a 60-second auto-resign timer.
+	 * thinking we've disconnected, and starts a 60-second disconnect claim timer.
 	 *
 	 * As soon as we hit cancel, we are communicating again.
 	 */

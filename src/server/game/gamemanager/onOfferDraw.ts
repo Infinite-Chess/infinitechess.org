@@ -12,7 +12,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import liveGameValues from './liveGameValues.js';
-import { setGameConclusion } from './gamemanager.js';
+import { onGameConclusion } from './gamemanager.js';
 import {
 	isDrawOfferOpen,
 	hasColorOfferedDrawTooFast,
@@ -71,7 +71,7 @@ function acceptDraw(servergame: ServerGame, ourRole: Player): void {
 	// Accept draw offer!
 
 	closeDrawOffer(servergame.match);
-	setGameConclusion(servergame, { victor: null, condition: 'agreement' });
+	onGameConclusion(servergame, { victor: null, condition: 'agreement' });
 }
 
 /**

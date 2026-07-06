@@ -21,11 +21,17 @@ function onSubscribeToRematch(ws: CustomWebSocket, game_id: number): void {
 
 	if (game !== undefined) {
 		// Live game
+		if (!gameutility.isGameOver(game)) {
+			// Only concluded games have a rematch state
+			console.error(`Client requested a rematch subscription for a game that is not over (game_id ${game_id}).`); // prettier-ignore
+			return;
+		}
 		const ourRole = gameutility.getSocketRoleInGame(game, ws);
 		if (ourRole !== undefined) {
 			// Participant path: attach, then send the current rematch state.
 			gameutility.subscribeClientToGame(game, ws, ourRole);
-			gameutility.sendParticipantRematchState(game, ws, ourRole);
+			const value = gameutility.getRematchOfferInfo(game, ourRole)!; // Guaranteed because above we confirm the game is over
+			sendSocketMessage(ws, 'game', 'rematchstate', value);
 		} else {
 			// Spectator path: attach, but send no rematch state (they only
 			// stay connected for the 'ingame' message when a rematch is agreed).

@@ -76,7 +76,7 @@ interface DisconnectTimerState {
 	 */
 	remainingMs: number;
 	/** Whether the disconnect was by choice. */
-	byChoice: boolean;
+	voluntary: boolean;
 }
 
 // Restoration ------------------------------------------------------------------------------------
@@ -318,7 +318,7 @@ function reconstructMatchInfo(
 				startID: undefined,
 				startTime: row.disconnect_cushion_end_time ?? undefined,
 				timeOpponentMayClaim: undefined,
-				wasByChoice: undefined,
+				voluntary: undefined,
 			},
 		};
 	}
@@ -333,6 +333,7 @@ function reconstructMatchInfo(
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
+		freed: gameRow.conclusion_condition !== null, // A game is freed if it has concluded
 		finalized: false, // A finalized game's row is removed when it's logged, so any restored game is not-yet-finalized.
 		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.
 	};
@@ -386,7 +387,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'timer',
 				remainingMs: Math.max(remaining, 0),
-				byChoice: row.disconnect_by_choice === 1,
+				voluntary: row.disconnect_voluntary === 1,
 			};
 		} else if (row.disconnect_cushion_end_time !== null) {
 			// Case 2: Still in the 5-second cushion period
@@ -394,7 +395,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'cushion',
 				remainingMs: Math.max(remaining, 0),
-				byChoice: row.disconnect_by_choice === 1,
+				voluntary: row.disconnect_voluntary === 1,
 			};
 		} else {
 			// Case 3: Was connected before restart. Give them a fresh disconnect timer
@@ -402,7 +403,7 @@ function computePendingTimers(
 			timers.disconnectTimers[player] = {
 				type: 'fresh',
 				remainingMs: -1, // Signal that a fresh timer should be started
-				byChoice: false,
+				voluntary: false,
 			};
 		}
 	}

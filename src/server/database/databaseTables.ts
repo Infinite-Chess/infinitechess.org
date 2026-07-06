@@ -127,7 +127,7 @@ const allLivePlayerGamesColumns: string[] = [
 	'time_remaining_ms',
 	'disconnect_cushion_end_time',
 	'disconnect_claim_time',
-	'disconnect_by_choice',
+	'disconnect_voluntary',
 ];
 
 // Functions -----------------------------------------------------------------------------------
@@ -379,7 +379,7 @@ function generateTables(): void {
 			time_remaining_ms               INTEGER,
 			disconnect_cushion_end_time     INTEGER,
 			disconnect_claim_time           INTEGER, -- Epoch ms from which the opponent may claim victory/draw. NULL if no claim window.
-			disconnect_by_choice            INTEGER CHECK (disconnect_by_choice IN (0, 1)),
+			disconnect_voluntary            INTEGER CHECK (disconnect_voluntary IN (0, 1)),
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);
@@ -396,6 +396,7 @@ function initDatabase(): void {
 	makeVariantColumnsNullableIfNeeded();
 	addPositionColumnToLiveGamesIfNeeded();
 	renameDisconnectResignTimeColumnIfNeeded();
+	renameDisconnectByChoiceColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
 	renameLiveGamesDeleteTimeColumnIfNeeded();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
@@ -549,6 +550,23 @@ function renameDisconnectResignTimeColumnIfNeeded(): void {
 	);
 	console.log(
 		'Temporary DB migration: renamed live_player_games.disconnect_resign_time to disconnect_claim_time.',
+	);
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Renames `live_player_games.disconnect_by_choice` → `disconnect_voluntary`. The column's
+ * name was made more semantically clear. The stored value carries over unchanged.
+ * Fresh DBs get the new name from `generateTables()`.
+ */
+function renameDisconnectByChoiceColumnIfNeeded(): void {
+	if (!db.columnExists('live_player_games', 'disconnect_by_choice')) return; // Already migrated.
+	db.run(
+		'ALTER TABLE live_player_games RENAME COLUMN disconnect_by_choice TO disconnect_voluntary',
+	);
+	console.log(
+		'Temporary DB migration: renamed live_player_games.disconnect_by_choice to disconnect_voluntary.',
 	);
 }
 

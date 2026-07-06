@@ -9,15 +9,12 @@ import type {
 } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
-import clock from '../../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
 import gameslot from '../../chess/gameslot.js';
-import guiclock from '../../gui/guiclock.js';
-import selection from '../../chess/selection.js';
 import gamesound from '../gamesound.js';
 import drawoffers from './drawoffers.js';
 import onlinegame from './onlinegame.js';
@@ -86,7 +83,7 @@ function routeMessage(contents: GameMessage): void {
 			resyncer.handleGameState(gamefile, mesh, contents.value);
 			break;
 		case 'nogame':
-			// The server reported the game isn't live, nor exists in the DB.
+			// The server reported the game isn't live, nor exists in the DB (aborted at 0 moves played).
 			// Only cause: It was live when SSR'd but was memory-evicted before we sent 'subscribe'.
 			// Reload to get the correct SSR'd 404 page.
 			window.location.reload();
@@ -108,9 +105,6 @@ function routeMessage(contents: GameMessage): void {
 			break;
 		case 'unsub':
 			handleUnsubbing();
-			break;
-		case 'login':
-			handleLogin(gamefile);
 			break;
 		case 'leavegame':
 			handleLeaveGame();
@@ -277,22 +271,6 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
 function handleUnsubbing(): void {
 	socketsubs.deleteSub('game');
 	guigameactions.onUnsub();
-}
-
-/**
- * The server has unsubscribed us from receiving updates from the game
- * and from submitting actions as ourselves,
- * due to the reason we are no longer logged in.
- */
-function handleLogin(gamefile: GameFile): void {
-	toast.show('You are not logged in. Please login to reconnect to this game.', {
-		error: true,
-		durationMultiplier: 100,
-	});
-	socketsubs.deleteSub('game');
-	clock.endGame(gamefile);
-	guiclock.stopClocks(gamefile);
-	selection.unselectPiece();
 }
 
 /**

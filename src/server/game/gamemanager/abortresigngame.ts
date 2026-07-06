@@ -10,7 +10,7 @@ import type { ServerGame } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
-import { setGameConclusion } from './gamemanager.js';
+import { onGameConclusion } from './gamemanager.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ function abortGame(servergame: ServerGame): void {
 	}
 
 	// Abort
-	setGameConclusion(servergame, { condition: 'aborted' });
+	onGameConclusion(servergame, { condition: 'aborted' });
 }
 
 /**
@@ -69,7 +69,7 @@ function resignGame(servergame: ServerGame, ourRole: Player): void {
 
 	// Resign
 	const opponentColor = typeutil.invertPlayer(ourRole);
-	setGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
+	onGameConclusion(servergame, { victor: opponentColor, condition: 'resignation' });
 }
 
 export { abortGame, resignGame };

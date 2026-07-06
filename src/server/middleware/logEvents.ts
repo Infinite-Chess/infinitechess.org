@@ -11,8 +11,8 @@
  * shares its ID. The trigger's own entry is in reqLog/ (R) or wsInLog/ (W).
  *
  * A line timestamped well after its trigger is a DEFERRED effect, fired by a
- * timer the trigger scheduled (e.g. an AFK auto-resign). An all-dashes ID means
- * no request caused the line: startup, scheduled tasks, network-initiated closes.
+ * timer the trigger scheduled. An all-dashes ID means no request caused the
+ * line: startup, scheduled tasks, network-initiated closes.
  *
  * Don't confuse correlation IDs with socket IDs (`of ID "..."`), which tie a
  * CONNECTION's messages together rather than one trigger's effects.

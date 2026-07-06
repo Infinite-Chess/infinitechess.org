@@ -10,8 +10,8 @@ import * as z from 'zod';
 
 import { subToLobby, unsubFromLobby } from '../game/seeksmanager/lobbymanager.js';
 import {
-	unsubClientFromGameBySocket,
-	unsubSpectatorFromGameBySocket,
+	unsubSocketParticipantFromGame,
+	unsubSocketSpectatorFromGame,
 } from '../game/gamemanager/gamemanager.js';
 
 /**
@@ -40,7 +40,7 @@ function routeGeneralMessage(ws: CustomWebSocket, message: GeneralMessage): void
 			handleSubbing(ws, message.value);
 			break;
 		case 'unsub':
-			handleUnsubbing(ws, message.value);
+			handleUnsubbing(ws, message.value, false);
 			break;
 		default:
 			console.error(
@@ -63,21 +63,24 @@ function handleSubbing(ws: CustomWebSocket, value: 'lobby'): void {
 	}
 }
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, closureNotByChoice?: boolean): void {
+// Set involuntary to true if you don't immediately want to disconnect them, but say after 5 seconds
+
+/**
+ * Unsubscribes a socket from a subscription list.
+ * Entry points: Socket closure, or the client explicitly requested to unsub.
+ */
+function handleUnsubbing(ws: CustomWebSocket, key: ValidUnsub, involuntary: boolean): void {
 	// What are they wanting to unsubscribe from updates from?
 	switch (key) {
 		case 'lobby':
-			unsubFromLobby(ws, closureNotByChoice);
+			unsubFromLobby(ws, involuntary);
 			break;
 		case 'game':
-			// If the unsub is not by choice (network interruption instead of closing tab), then we give them
-			// a 5 second cushion before starting an auto-resignation timer
-			unsubClientFromGameBySocket(ws, { unsubNotByChoice: closureNotByChoice });
+			unsubSocketParticipantFromGame(ws, involuntary);
 			break;
 		case 'spectating':
 			// Read-only spectator: no cushion/auto-resign, just detach.
-			unsubSpectatorFromGameBySocket(ws);
+			unsubSocketSpectatorFromGame(ws);
 			break;
 		default:
 			console.error(`UNKNOWN subscription list to unsubscribe client from! "${key}"`);

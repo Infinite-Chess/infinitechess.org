@@ -49,14 +49,13 @@ function onclose(event: CloseEvent): void {
 	socketmessages.resetOnreplyFuncs();
 
 	const trimmedReason = event.reason.trim();
-	const notByChoice = wsutil.wasSocketClosureNotByTheirChoice(event.code, trimmedReason);
+	const involuntary = wsutil.wasSocketClosureInvoluntary(event.code, trimmedReason);
 
 	SocketBus.dispatch('closed');
 	// An unintentional close (with subs to reconnect for) means we lost the connection and
 	// will retry. Dispatched after `closed` so its handlers — e.g. the ping meter's loading
 	// state — override the generic close behavior.
-	const unIntentional = notByChoice && !socketsubs.zeroSubs();
-	if (unIntentional) SocketBus.dispatch('connection-lost');
+	if (involuntary && !socketsubs.zeroSubs()) SocketBus.dispatch('connection-lost');
 
 	// The server drops all subscriptions on close. Reconnect handlers should re-subscribe.
 	socketsubs.clearAllSubs();

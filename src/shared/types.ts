@@ -100,7 +100,7 @@ export const DisconnectInfoSchema = z.strictObject({
 	 */
 	millisUntilClaimable: z.number(),
 	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
-	wasByChoice: z.boolean(),
+	voluntary: z.boolean(),
 });
 
 /** The state of a post-game rematch offer, from the perspective of one participant. */

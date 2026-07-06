@@ -14,7 +14,7 @@ import type { ServerGame } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
-import { setGameConclusion } from './gamemanager.js';
+import { onGameConclusion } from './gamemanager.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 
 //--------------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ function claimVictory(servergame: ServerGame, ourRole: Player): void {
 		);
 		return;
 	}
-	setGameConclusion(servergame, { victor: ourRole, condition: 'disconnect' });
+	onGameConclusion(servergame, { victor: ourRole, condition: 'disconnect' });
 }
 
 /**
@@ -62,7 +62,7 @@ function claimDraw(servergame: ServerGame, ourRole: Player): void {
 		);
 		return;
 	}
-	setGameConclusion(servergame, { victor: null, condition: 'abandonment' });
+	onGameConclusion(servergame, { victor: null, condition: 'abandonment' });
 }
 
 //--------------------------------------------------------------------------------------------------------

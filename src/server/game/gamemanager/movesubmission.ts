@@ -10,6 +10,7 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
+import type { OpponentsMoveMessage } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -27,7 +28,7 @@ import { declineDraw } from './onOfferDraw.js';
 import { logEventsAndPrint } from '../../middleware/logEvents.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 import gameutility, { ServerGame } from './gameutility.js';
-import { pushGameClock, finalizeConclusion, teardownGame } from './gamemanager.js';
+import { pushGameClock, applyConclusion, freeGame } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the submitmove message. */
 const submitmoveschem = z.strictObject({
@@ -134,12 +135,10 @@ function submitMove(
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
 
-	const gameIsOver = gameutility.isGameOver(servergame);
-
-	if (gameIsOver) {
+	if (servergame.gameConclusion !== undefined) {
 		// If the game ended, finalize state before sending: stops the clock and persists to DB.
 		// This ensures both clients receive the same frozen clock values that are in the DB.
-		finalizeConclusion(servergame, servergame.gameConclusion);
+		applyConclusion(servergame, servergame.gameConclusion);
 		// Send the full game state to the move-submitter
 		gameutility.sendGameStateToColor(servergame, color, false);
 	} else {
@@ -148,13 +147,12 @@ function submitMove(
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
-	const moveMessage = gameutility.buildMoveMessage(servergame, moveRecord);
-	gameutility.sendMoveToColor(servergame, opponentColor, moveMessage);
+	const moveMessage = buildMoveMessage(servergame, moveRecord);
+	gameutility.sendMessageToColor(servergame, opponentColor, 'move', moveMessage);
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
-	// Tear down the game after sends. teardownGame skips broadcastParticipantGameState
-	// for move-triggered conclusions since clients were already notified individually above.
-	if (gameIsOver) teardownGame(servergame);
+	// Free, finalize, and evict the game if it's concluded.
+	if (servergame.gameConclusion !== undefined) freeGame(servergame);
 }
 
 /**
@@ -307,6 +305,20 @@ function doesGameConclusionCheckOut(
 	// We can't submit a move where our opponent wins
 	const oppositeColor = typeutil.invertPlayer(color);
 	return victor !== oppositeColor;
+}
+
+/**
+ * Builds the move message for the latest move, which also
+ * includes the game conclusion, move number, and clocks.
+ */
+function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMoveMessage {
+	const message: OpponentsMoveMessage = {
+		move: gameutility.simplifyMove(move),
+		gameConclusion: servergame.gameConclusion,
+		moveNumber: servergame.moves.length,
+	};
+	if (!servergame.untimed) message.clockValues = gameutility.getGameClockValues(servergame);
+	return message;
 }
 
 export { submitMove, submitmoveschem };

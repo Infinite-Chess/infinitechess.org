@@ -201,13 +201,12 @@ function doesSessionHaveMaxSocketCount(jwt: string): boolean {
 
 // Unsubbing ---------------------------------------------------------------------------
 
-// Set closureNotByChoice to true if you don't immediately want to disconnect them, but say after 5 seconds
-function unsubSocketFromAllSubs(ws: CustomWebSocket, closureNotByChoice: boolean): void {
-	if (!ws.metadata.subscriptions) return; // No subscriptions
-
-	const subscriptions = ws.metadata.subscriptions;
-	const subscriptionsKeys = Object.keys(subscriptions) as Array<keyof typeof subscriptions>;
-	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, closureNotByChoice);
+/** The socket is closing: Unsubscribe them from all subscriptions they are in. */
+function unsubSocketFromAllSubs(ws: CustomWebSocket, involuntary: boolean): void {
+	const subscriptionsKeys = Object.keys(ws.metadata.subscriptions) as Array<
+		keyof typeof ws.metadata.subscriptions
+	>;
+	for (const key of subscriptionsKeys) handleUnsubbing(ws, key, involuntary);
 }
 
 // Miscellaneous ---------------------------------------------------------------------------

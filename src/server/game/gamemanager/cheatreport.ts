@@ -13,7 +13,7 @@ import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
 import { logEvents } from '../../middleware/logEvents.js';
-import { setGameConclusion } from './gamemanager.js';
+import { onGameConclusion } from './gamemanager.js';
 
 /** The zod schema for validating the contents of the cheatreport message. */
 const reportschem = z.strictObject({
@@ -113,7 +113,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	}
 	// Cheating report was valid, terminate the game..
 
-	setGameConclusion(servergame, { condition: 'aborted' });
+	onGameConclusion(servergame, { condition: 'aborted' });
 }
 
 export { onReport, reportschem };

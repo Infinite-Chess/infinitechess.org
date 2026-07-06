@@ -165,7 +165,7 @@ function sendNotifyError(ws: CustomWebSocket, translationCode: TranslationKeys):
 function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 	cancelHeartbeatTimer(ws);
 	ws.metadata.heartbeatTimerID = setTimeout(
-		() => sendHeartbeatPing(ws),
+		() => sendSocketMessage(ws, 'general', 'ping'),
 		wsutil.heartbeatIntervalMillis,
 	);
 }
@@ -173,14 +173,6 @@ function rescheduleHeartbeatTimer(ws: CustomWebSocket): void {
 function cancelHeartbeatTimer(ws: CustomWebSocket): void {
 	clearTimeout(ws.metadata.heartbeatTimerID);
 	ws.metadata.heartbeatTimerID = undefined;
-}
-
-/**
- * Send an empty message to the client, expecting an echo
- * within five seconds to make sure they are still connected.
- */
-function sendHeartbeatPing(ws: CustomWebSocket): void {
-	sendSocketMessage(ws, 'general', 'ping');
 }
 
 export {

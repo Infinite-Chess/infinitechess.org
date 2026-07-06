@@ -50,8 +50,8 @@ function getDisconnectColumnData(disconnect: PlayerDisconnect): LivePlayerDiscon
 	return {
 		disconnect_cushion_end_time: disconnect.startTime ?? null,
 		disconnect_claim_time: disconnect.timeOpponentMayClaim ?? null,
-		disconnect_by_choice:
-			disconnect.wasByChoice !== undefined ? (disconnect.wasByChoice ? 1 : 0) : null,
+		disconnect_voluntary:
+			disconnect.voluntary !== undefined ? (disconnect.voluntary ? 1 : 0) : null,
 	};
 }
 
@@ -244,7 +244,7 @@ function onPlayerReconnected(servergame: ServerGame, color: Player): void {
 		updateLivePlayerGame(servergame.match.id, color, {
 			disconnect_cushion_end_time: null,
 			disconnect_claim_time: null,
-			disconnect_by_choice: null,
+			disconnect_voluntary: null,
 		});
 		updateLiveGame(servergame.match.id, { both_disconnected_end_time: null });
 	});

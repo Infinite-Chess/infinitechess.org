@@ -25,7 +25,6 @@ import type {
 	GameStateMessage,
 	MetaData,
 	MovePacket,
-	OpponentsMoveMessage,
 	ParticipantState,
 	RematchOfferInfo,
 	PlayerRatingChangeInfo,
@@ -97,14 +96,14 @@ type PlayerDisconnect = {
 			 */
 			timeOpponentMayClaim: number;
 			/**
-			 * Whether the player was disconnected by choice or not.
+			 * Whether the player disconnected voluntarily.
 			 * If not, they are given extra time to reconnect.
 			 */
-			wasByChoice: boolean;
+			voluntary: boolean;
 	  }
 	| {
 			timeOpponentMayClaim: undefined;
-			wasByChoice: undefined;
+			voluntary: undefined;
 	  }
 );
 
@@ -156,10 +155,14 @@ interface MatchInfo {
 	drawOfferState?: Player;
 
 	/**
+	 * Whether or not the game has concluded at all, which then
+	 * frees players to join a new game. Freed !== finalized.
+	 */
+	freed: boolean;
+	/**
 	 * Whether the game is finalized: its result is permanent and locked in — logged to the
 	 * database, ratings applied, cheat reports no longer accepted, and it can never change.
-	 * A finalized game may still linger in memory to host the post-game rematch handshake
-	 * until both players leave (after which it is evicted).
+	 * Finalized !== evicted: it may linger in memory to host rematch handshake.
 	 */
 	finalized: boolean;
 
@@ -243,7 +246,7 @@ function initMatch(
 			identifier,
 			disconnect: {
 				timeOpponentMayClaim: undefined,
-				wasByChoice: undefined,
+				voluntary: undefined,
 			},
 		};
 	}
@@ -258,6 +261,7 @@ function initMatch(
 		timeCreated: Date.now(),
 		rated: setup.rated,
 		clock: setup.time,
+		freed: false,
 		finalized: false,
 		rematchOffers: new Set(),
 	};
@@ -347,7 +351,7 @@ function subscribeClientToGame(servergame: ServerGame, ws: CustomWebSocket, ourR
 		);
 	if (playerData.socket) {
 		sendSocketMessage(playerData.socket, 'game', 'leavegame');
-		unsubClientFromGame(match, playerData.socket);
+		detatchSocketFromGame(match, playerData.socket);
 	}
 	playerData.socket = ws;
 
@@ -379,63 +383,30 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 
 	cancelDisconnectTimer(servergame.match, ourRole);
 
-	const opponentColor = typeutil.invertPlayer(ourRole);
+	const opponentRole = typeutil.invertPlayer(ourRole);
 	if (!isGameOver(servergame)) {
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
-			sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentdisconnectreturn'); // prettier-ignore
+			sendMessageToSocketOfColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn'); // prettier-ignore
 		}
 	} else {
-		sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'opponentreturn');
+		sendMessageToSocketOfColor(servergame.match, opponentRole, 'game', 'opponentreturn');
 	}
 }
 
-/**
- * Detaches the websocket from the game.
- * Updates the socket's subscriptions.
- * @param match
- * @param ws - Their websocket.
- */
-function unsubClientFromGame(match: MatchInfo, ws: CustomWebSocket): void {
-	if (ws.metadata.subscriptions.game === undefined) return; // Already unsubbed (they aborted)
+/** Detaches the socket from the game and clears its subscription metadata. */
+function detatchSocketFromGame(match: MatchInfo, ws: CustomWebSocket): void {
+	if (ws.metadata.subscriptions.game === undefined) return; // Already detached
 
-	// Detach their socket from the game so we no longer send updates
-	delete match.playerData[ws.metadata.subscriptions.game.color]?.socket;
-	// Remove the game key-value pair from the sockets metadata subscription list.
+	delete match.playerData[ws.metadata.subscriptions.game.color]!.socket; // Ceases regular updates
 	delete ws.metadata.subscriptions.game;
 }
 
 /** Detaches a spectator's socket from the game, clearing its subscription metadata. */
-function unsubSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): void {
+function detachSpectatorFromGame(servergame: ServerGame, ws: CustomWebSocket): void {
 	servergame.spectators.delete(ws);
 	delete ws.metadata.subscriptions.spectating;
-}
-
-/** Sends a participant the `gamestate` message: the agnostic {@link GameStateBase} plus their per-player overlay. */
-function sendParticipantGameState(
-	servergame: ServerGame,
-	ws: CustomWebSocket,
-	color: Player,
-): void {
-	const value = getGameStateMessageContents(servergame, color);
-	sendSocketMessage(ws, 'game', 'gamestate', value);
-}
-
-/** Sends a spectator the `gamestate` message: the agnostic {@link GameStateBase}, no per-player overlay. */
-function sendSpectatorGameState(servergame: ServerGame, ws: CustomWebSocket): void {
-	const value = buildGameStateBase(servergame);
-	sendSocketMessage(ws, 'game', 'gamestate', value);
-}
-
-/** Sends a participant the `rematchstate` message: their post-conclusion rematch overlay (opponent's offer + presence). */
-function sendParticipantRematchState(
-	servergame: ServerGame,
-	ws: CustomWebSocket,
-	color: Player,
-): void {
-	const value = getRematchOfferInfo(servergame, color) ?? { offered: false, present: false };
-	sendSocketMessage(ws, 'game', 'rematchstate', value);
 }
 
 /**
@@ -572,39 +543,18 @@ function buildMetadataOfGame(servergame: ServerGame, ratingData?: RatingData): M
 }
 
 /**
- * Pushes the current game state (`gamestate`) to both participants (not spectators): the move list,
- * timers, conclusion, and finalized flag, each with their per-player participant overlay. Sent when
- * live state changes (e.g. the game concludes). Participants-only because it carries the move list
- * for desync reconciliation (a participant's in-flight move can race a conclusion); spectators are
- * read-only and can't desync.
- * @param servergame - The game
- */
-function broadcastParticipantGameState(servergame: ServerGame): void {
-	// Build the agnostic core once; only the per-player participant overlay differs.
-	const base = buildGameStateBase(servergame);
-	for (const [color, data] of Object.entries(servergame.match.playerData)) {
-		if (data.socket === undefined) continue; // Not connected, can't send message
-		const message: GameStateMessage = {
-			...base,
-			participantState: getParticipantState(servergame, Number(color) as Player),
-		};
-		sendSocketMessage(data.socket, 'game', 'gamestate', message);
-	}
-}
-
-/**
  * Sends the current game state (`gamestate`) to the player of the specified color: the move list,
  * timers, conclusion, and finalized flag, with their participant overlay.
  * @param servergame - The game
- * @param color - The color of the player
+ * @param role - The color of the player
  * @param forceSync - If true, the client forces its move list to exactly match the server's (not
  *   re-submitting any extra move). Set only when the server rejected their last move.
  */
-function sendGameStateToColor(servergame: ServerGame, color: Player, forceSync: boolean): void {
-	const playerdata = servergame.match.playerData[color];
+function sendGameStateToColor(servergame: ServerGame, role: Player, forceSync: boolean): void {
+	const playerdata = servergame.match.playerData[role];
 	if (playerdata?.socket === undefined) return; // Not connected, can't send message
 
-	const messageContents = getGameStateMessageContents(servergame, color, forceSync);
+	const messageContents = getGameStateMessageContents(servergame, role, forceSync);
 	sendSocketMessage(playerdata.socket, 'game', 'gamestate', messageContents);
 }
 
@@ -631,12 +581,12 @@ function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStat
  */
 function getGameStateMessageContents(
 	servergame: ServerGame,
-	color: Player,
-	forceSync: boolean = false,
+	role: Player,
+	forceSync: boolean,
 ): GameStateMessage {
 	return {
 		...buildGameStateBase(servergame, forceSync),
-		participantState: getParticipantState(servergame, color),
+		participantState: getParticipantState(servergame, role),
 	};
 }
 
@@ -668,16 +618,16 @@ function getRatingChangeMessageContents(
 	return messageContents;
 }
 
-function getParticipantState(servergame: ServerGame, color: Player): ParticipantState {
-	const opponentColor = typeutil.invertPlayer(color);
+function getParticipantState(servergame: ServerGame, role: Player): ParticipantState {
+	const opponentRole = typeutil.invertPlayer(role);
 	const now = Date.now();
 	const match = servergame.match;
-	const opponentData = match.playerData[opponentColor]!;
+	const opponentData = match.playerData[opponentRole]!;
 
 	const participantState: ParticipantState = {
 		drawOffer: {
-			unconfirmed: doesColorHaveExtendedDrawOffer(match, opponentColor), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
-			lastOfferPly: getLastDrawOfferPlyOfColor(match, color), // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
+			unconfirmed: doesColorHaveExtendedDrawOffer(match, opponentRole), // True if our opponent has extended a draw offer we haven't yet confirmed/denied
+			lastOfferPly: getLastDrawOfferPlyOfColor(match, role), // The move ply WE HAVE last offered a draw, if we have, otherwise undefined.
 		},
 	};
 
@@ -687,13 +637,13 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
 	if (opponentData.disconnect.timeOpponentMayClaim !== undefined) {
 		participantState.disconnect = {
 			millisUntilClaimable: opponentData.disconnect.timeOpponentMayClaim - now,
-			wasByChoice: opponentData.disconnect.wasByChoice,
+			voluntary: opponentData.disconnect.voluntary,
 		};
 	}
 
 	// Once the game is over it lingers for the rematch handshake — send enough to
 	// restore the rematch button's state (glow / disabled) on a page refresh.
-	const rematch = getRematchOfferInfo(servergame, color);
+	const rematch = getRematchOfferInfo(servergame, role);
 	if (rematch !== undefined) participantState.rematch = rematch;
 
 	return participantState;
@@ -703,12 +653,12 @@ function getParticipantState(servergame: ServerGame, color: Player): Participant
  * The rematch overlay for a color once the game is over: whether the opponent has an outstanding
  * offer (glow) and whether they're connected (button enabled). Undefined while the game is live.
  */
-function getRematchOfferInfo(servergame: ServerGame, color: Player): RematchOfferInfo | undefined {
+function getRematchOfferInfo(servergame: ServerGame, role: Player): RematchOfferInfo | undefined {
 	if (!isGameOver(servergame)) return undefined;
-	const opponentColor = typeutil.invertPlayer(color);
-	const opponentData = servergame.match.playerData[opponentColor]!;
+	const opponentRole = typeutil.invertPlayer(role);
+	const opponentData = servergame.match.playerData[opponentRole]!;
 	return {
-		offered: servergame.match.rematchOffers.has(opponentColor), // Opponent has an outstanding offer -> glow.
+		offered: servergame.match.rematchOffers.has(opponentRole), // Opponent has an outstanding offer -> glow.
 		present: opponentData.socket !== undefined, // Opponent connected -> button enabled.
 	};
 }
@@ -734,27 +684,19 @@ function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Playe
 /**
  * Sends a websocket message to the specified color in the game.
  * @param match - The game
- * @param color - The color of the player in this game to send the message to
+ * @param role - The color of the player in this game to send the message to
  * @param sub - Where this message should be routed to, client side.
  * @param action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
  * @param value - The value to send to the client.
  */
 function sendMessageToSocketOfColor(
 	match: MatchInfo,
-	color: Player,
+	role: Player,
 	sub: string,
 	action: string,
 	value?: any,
 ): void {
-	const data = match.playerData[color];
-	if (data === undefined) {
-		logEventsAndPrint(
-			`Tried to send a message to player ${color} when there isn't one in game!`,
-			'errLog',
-		);
-		return;
-	}
-	const ws = data.socket;
+	const ws = match.playerData[role]!.socket;
 	if (!ws) return; // They are not connected, can't send message
 	if (sub === 'general') {
 		if (action === 'notify') return sendNotify(ws, value); // The value needs translating
@@ -807,8 +749,6 @@ function getSimplifiedGameString(servergame: ServerGame): string {
  * Returns *true* if the provided game has ended (gameConclusion truthy).
  * Games that are over are retained for a short period of time
  * to allow disconnected players to reconnect to see the results.
- * @param basegame - The game
- * @returns true if the game is over (gameConclusion truthy)
  */
 function isGameOver(basegame: Game): boolean {
 	return basegame.gameConclusion !== undefined;
@@ -818,40 +758,26 @@ function isGameOver(basegame: Game): boolean {
  * Returns true if the provided color's opponent has been told they can claim
  * victory/draw against them (i.e. the claim-window timestamp is set, whether or
  * not it has elapsed yet). NOT whether the 5-second reconnection cushion has started.
- * @param match - The game they're in
- * @param color - The color they are in this game
  */
-function isClaimWindowSetForColor(match: MatchInfo, color: Player): boolean {
-	return match.playerData[color]!.disconnect.timeOpponentMayClaim !== undefined;
+function isClaimWindowSetForColor(match: MatchInfo, role: Player): boolean {
+	return match.playerData[role]!.disconnect.timeOpponentMayClaim !== undefined;
 }
 
 /**
  * Returns true if the provided color is currently disconnected — either still in the
  * reconnection cushion, or with their opponent's claim window set.
- * @param match - The game they're in
- * @param color - The color they are in this game
  */
-function isColorDisconnected(match: MatchInfo, color: Player): boolean {
-	const { startTime, timeOpponentMayClaim } = match.playerData[color]!.disconnect;
+function isColorDisconnected(match: MatchInfo, role: Player): boolean {
+	const { startTime, timeOpponentMayClaim } = match.playerData[role]!.disconnect;
 	return startTime !== undefined || timeOpponentMayClaim !== undefined;
 }
 
-/**
- * Sends the current clock values to the player who just moved.
- * @param servergame - The game
- */
-function sendUpdatedClockToColor(servergame: ServerGame, color: Player): void {
-	if (color !== p.BLACK && color !== p.WHITE) {
-		logEventsAndPrint(
-			`Color must be white or black when sending clock to color! Got: ${color}`,
-			'errLog',
-		);
-		return;
-	}
+/** Sends the current clock values to the player who just moved. */
+function sendUpdatedClockToColor(servergame: ServerGame, role: Player): void {
 	if (servergame.untimed) return; // Don't send clock values in an untimed game
 
 	const message = getGameClockValues(servergame);
-	const playerSocket = servergame.match.playerData[color]!.socket;
+	const playerSocket = servergame.match.playerData[role]!.socket;
 	if (!playerSocket) return; // They are not connected, can't send message
 	sendSocketMessage(playerSocket, 'game', 'clock', message);
 }
@@ -892,44 +818,16 @@ function updateClockValues(servergame: ServerGame & { untimed: false }): undefin
 	return;
 }
 
-/**
- * Sends a move to the player provided
- * @param servergame - The game
- * @param color - The color of the player to send the latest move to
- * @param message - The move message to send (from {@link buildMoveMessage})
- */
-function sendMoveToColor(
+/** Sends a message to the participant color. */
+function sendMessageToColor(
 	servergame: ServerGame,
-	color: Player,
-	message: OpponentsMoveMessage,
+	role: Player,
+	action: string,
+	value: any,
 ): void {
-	const match = servergame.match;
-	if (!(color in match.playerData)) {
-		logEventsAndPrint(
-			`Color to send move to must be one that is in the game (white or black)! ${color}`,
-			'errLog',
-		);
-		return;
-	}
-
-	const sendToWS = match.playerData[color]!.socket;
-	if (!sendToWS) return; // They are not connected, can't send message
-
-	sendSocketMessage(sendToWS, 'game', 'move', message);
-}
-
-/**
- * Builds the role-agnostic {@link OpponentsMoveMessage} for
- * the latest move, sent to both player and spectator sends.
- */
-function buildMoveMessage(servergame: ServerGame, move: MoveRecord): OpponentsMoveMessage {
-	const message: OpponentsMoveMessage = {
-		move: simplifyMove(move),
-		gameConclusion: servergame.gameConclusion,
-		moveNumber: servergame.moves.length,
-	};
-	if (!servergame.untimed) message.clockValues = getGameClockValues(servergame);
-	return message;
+	const ws = servergame.match.playerData[role]!.socket;
+	if (!ws) return; // Not connected, can't send
+	sendSocketMessage(ws, 'game', action, value);
 }
 
 /** Broadcasts a game-route message to every connected participant of the game. */
@@ -1001,20 +899,21 @@ export default {
 	initServerGame,
 	subscribeClientToGame,
 	subscribeSpectatorToGame,
-	unsubClientFromGame,
-	unsubSpectatorFromGame,
-	sendParticipantGameState,
-	sendSpectatorGameState,
-	sendParticipantRematchState,
+	detatchSocketFromGame,
+	detachSpectatorFromGame,
 	assignWhiteBlackPlayersFromSeek,
 	buildStaticGameState,
 	buildGameStateBase,
+	getGameStateMessageContents,
 	buildMetadataOfGame,
-	broadcastParticipantGameState,
 	sendGameStateToColor,
 	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
 	sendMessageToSocketOfColor,
+	sendUpdatedClockToColor,
+	sendMessageToColor,
+	broadcastToSpectators,
+	simplifyMove,
 	broadcastToParticipants,
 	getRematchOfferInfo,
 	printGame,
@@ -1023,10 +922,6 @@ export default {
 	isClaimWindowSetForColor,
 	isColorDisconnected,
 	getGameClockValues,
-	sendUpdatedClockToColor,
-	sendMoveToColor,
-	buildMoveMessage,
-	broadcastToSpectators,
 	cancelFinalizeTimer,
 	isGameResignable,
 	isGameBorderlineResignable,
