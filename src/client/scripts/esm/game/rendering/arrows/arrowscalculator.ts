@@ -509,20 +509,24 @@ export function isAnimatedArrowUnnecessary(
 }
 
 /**
- * IF we're in mode 2, this returns an array of all orthogonal and diagonal vectors.
- * We don't return anything if it's mode 3, since EVERYTHING is an exception anyway.
- * If it's mode 1, we don't return anything either, because it depends on whether
- * the piece can slide into the direction of the vector, and onto our screen.
+ * Returns the slide directions that should be retained regardless of
+ * whether the piece can actually slide onto our screen in that direction.
+ *
+ * Mode 3 returns EVERY slide direction (all are exceptions).
+ * Mode 2 returns all orthogonal and diagonal vectors.
+ * Modes 0 & 1 return nothing, because retention depends on whether the
+ * piece can slide into the direction of the vector, and onto our screen.
  */
 export function getSlideExceptions(mode: 0 | 1 | 2 | 3): Vec2Key[] {
 	const gamefile = gameslot.getGamefile()!;
-	let slideExceptions: Vec2Key[] = [];
-	// If we're in mode 2, retain all orthogonals and diagonals, EVEN if they can't slide in that direction.
+	// Mode 3 retains every slide direction, whether orthogonal, diagonal, or hippogonal+.
+	if (mode === 3) return gamefile.pieces.slides.map((v) => vectors.getKeyFromVec2(v));
+	// Mode 2 retains all orthogonals and diagonals, EVEN if they can't slide in that direction.
 	if (mode === 2)
-		slideExceptions = gamefile.pieces.slides
+		return gamefile.pieces.slides
 			.filter((slideDir: Vec2) => vectors.chebyshevDistance([0n, 0n], slideDir) === 1n) // Filter out all hippogonal and greater vectors
 			.map((v) => vectors.getKeyFromVec2(v));
-	return slideExceptions;
+	return [];
 }
 
 export function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft): void {

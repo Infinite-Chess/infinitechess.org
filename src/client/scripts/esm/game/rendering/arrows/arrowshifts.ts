@@ -150,6 +150,8 @@ function overwriteArrows(start: Coords): void {
 
 /** Execute any pending arrow shift modifications. */
 export function executeArrowShifts(): void {
+	if (shifts.length === 0) return;
+
 	const slideArrows = arrows.getSlideArrows();
 	const animatedArrows = arrows.getAnimatedArrows();
 	const mode = arrows.getMode();
