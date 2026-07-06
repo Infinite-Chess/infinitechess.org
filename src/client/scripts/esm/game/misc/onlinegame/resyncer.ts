@@ -1,22 +1,18 @@
 // src/client/scripts/esm/game/misc/onlinegame/resyncer.ts
 
 /**
- * This script handles game updates and recyning an online game,
- * when for one reason or another we become out of sync.
+ * Reconciles our board against the server's authoritative state — rewinding/forwarding moves until
+ * they match, re-submitting an in-flight move if the server never saw it, and applying the conclusion.
  *
- * Game updates also count as resyncs, because that's what the server
- * sends anyway when we request a resync.
- *
- * This could be because we sent a move at the exact same time
- * the opponent resigned,
- * or it could be because the socket closed...
+ * Runs for every `gamestate` message that arrives while a board is loaded: the `subscribe` reply on a
+ * live reconnect (socket reopened), or a live push (e.g. the game concluded the instant we moved).
  */
 
 import type { Mesh } from '../../rendering/piecemodels.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/winconutil.js';
 import type { MoveRecord, MoveTagged } from '../../../../../../shared/chess/logic/movepiece.js';
-import type { GameUpdateMessage, MovePacket } from '../../../../../../shared/types.js';
+import type { GameStateMessage, MovePacket } from '../../../../../../shared/types.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
@@ -28,40 +24,36 @@ import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import gamesession from '../../chess/gamesession.js';
+import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
 
 // Functions -----------------------------------------------------------------------------
 
 /**
- * Called when the server sends us the conclusion of the game when it ends,
- * OR we just need to resync! The game may not always be over.
+ * Reconciles our board against a `gamestate` message — a live reconnect reply, or a push (e.g. the
+ * game concluded the instant we moved). The game may not always be over.
  */
-function handleServerGameUpdate(
+function handleGameState(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
-	message: GameUpdateMessage,
+	message: GameStateMessage,
 ): void {
 	const claimedGameConclusion = message.gameConclusion;
 
 	// This needs to be BEFORE synchronizeMovesList(), otherwise it won't resend our move since it thinks we're not in sync
-	onlinegame.setInSyncTrue();
+	onlinegame.setInSync(true);
+	if (message.finalized) onlinegame.onFinalized();
 
 	/**
 	 * Make sure we are in sync with the final move list.
 	 * We need to do this because sometimes the game can end before the
 	 * server sees our move, but on our screen we have still played it.
 	 */
-	const result = synchronizeMovesList(
-		gamefile,
-		mesh,
-		message.moves,
-		claimedGameConclusion,
-		message.forceSync,
-	); // { opponentPlayedIllegalMove }
+	const result = synchronizeMovesList(gamefile, mesh, message.moves, claimedGameConclusion, message.forceSync ?? false); // prettier-ignore
 	if (result.opponentPlayedIllegalMove) return;
 
-	onlinegame.set_DrawOffers_DisconnectInfo(message.participantState);
+	onlinegame.setParticipantState(message.participantState);
 
 	// Must be set before editing the clocks.
 	gamefile.gameConclusion = claimedGameConclusion;
@@ -158,20 +150,10 @@ function synchronizeMovesList(
 			if (isOpponentMove) {
 				// Perform legality checks
 				// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-				const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-					gamefile,
-					moveTagged,
-					claimedGameConclusion,
-				);
-				// Only report cheating in games where the server won't delete the game instantly when it ends
-				if (
-					movesendreceive.checkAndReportIllegalOpponentMove(
-						gamefile,
-						moveValidationResult,
-						thisShortmove.token,
-						i + 1,
-					)
-				) {
+				const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, claimedGameConclusion); // prettier-ignore
+				// Report cheating if the server allows us
+				movesendreceive.checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, thisShortmove.token, i + 1); // prettier-ignore
+				if (!moveValidationResult.valid) {
 					opponentPlayedIllegalMove = true;
 					return false; // Don't physically play next premove
 				}
@@ -184,7 +166,9 @@ function synchronizeMovesList(
 				clockStamp: thisShortmove.clockStamp,
 			}); // Automatically cancels animations of forwarded moves in previous loops
 
-			onlinegame.onMovePlayed({ isOpponents: isOpponentMove });
+			// Our own moves aren't dispatched here: 'user-move-played' would
+			// wrongly re-trigger sendMove (we're already back in sync).
+			if (isOpponentMove) GameBus.dispatch('opponent-move-played');
 
 			console.log('Forwarded one move while resyncing to online game.');
 			aChangeWasMade = true;
@@ -227,5 +211,5 @@ function findLastestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MoveP
 // Exports -------------------------------------------------------------------
 
 export default {
-	handleServerGameUpdate,
+	handleGameState,
 };

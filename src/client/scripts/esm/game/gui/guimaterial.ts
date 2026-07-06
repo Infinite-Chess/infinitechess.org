@@ -6,7 +6,9 @@
  *
  * Each bar shows only its side's *surplus* silhouettes after canceling like piece
  * types against the other side, plus a `+X` estimated point lead on the side that's
- * net ahead. Recomputed on every `view-move` so rewinding reflects the material at
+ * net ahead.
+ *
+ * Recomputed on every `view-move` so rewinding reflects the material at
  * that point in time. Disabled entirely for games whose starting position is
  * unbalanced (either side starts with an unequal count of any piece type).
  */
@@ -31,25 +33,25 @@ import { createRenderQueue } from '../../util/renderqueue.js';
 const RAW_PIECE_VALUES: Partial<Record<RawType, number>> = {
 	[rawTypes.PAWN]: 1,
 	[rawTypes.KNIGHT]: 3,
-	[rawTypes.GUARD]: 3,
-	[rawTypes.KING]: 3,
-	[rawTypes.BISHOP]: 5,
-	[rawTypes.ROOK]: 7,
+	[rawTypes.GUARD]: 2,
+	[rawTypes.KING]: 2,
+	[rawTypes.BISHOP]: 4,
+	[rawTypes.ROOK]: 6,
 	[rawTypes.ARCHBISHOP]: 9,
-	[rawTypes.CHANCELLOR]: 11,
-	[rawTypes.QUEEN]: 15,
-	[rawTypes.ROYALQUEEN]: 15,
+	[rawTypes.CHANCELLOR]: 10,
+	[rawTypes.QUEEN]: 13,
+	[rawTypes.ROYALQUEEN]: 13,
 	// Fairy pieces
-	[rawTypes.CAMEL]: 4,
-	[rawTypes.ZEBRA]: 4,
-	[rawTypes.GIRAFFE]: 4,
-	[rawTypes.HAWK]: 7,
-	[rawTypes.CENTAUR]: 7,
-	[rawTypes.ROYALCENTAUR]: 7,
-	[rawTypes.HUYGEN]: 7,
-	[rawTypes.KNIGHTRIDER]: 9,
-	[rawTypes.ROSE]: 9,
-	[rawTypes.AMAZON]: 19,
+	[rawTypes.CAMEL]: 3,
+	[rawTypes.ZEBRA]: 3,
+	[rawTypes.GIRAFFE]: 3,
+	[rawTypes.HAWK]: 6,
+	[rawTypes.CENTAUR]: 6,
+	[rawTypes.ROYALCENTAUR]: 6,
+	[rawTypes.HUYGEN]: 5,
+	[rawTypes.KNIGHTRIDER]: 7,
+	[rawTypes.ROSE]: 7,
+	[rawTypes.AMAZON]: 16,
 };
 
 // Elements ------------------------------------------------------------------------------------

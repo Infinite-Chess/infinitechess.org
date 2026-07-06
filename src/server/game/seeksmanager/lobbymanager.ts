@@ -222,15 +222,15 @@ function subToLobby(ws: CustomWebSocket): void {
 	cancelTimerToDeleteUsersSeeksFromNetworkInterruption(ws);
 }
 
-// Set closureNotByChoice to true if you don't immediately want to delete their seek, but say after 5 seconds.
-function unsubFromLobby(ws: CustomWebSocket, closureNotByChoice?: boolean): void {
+// Set involuntary to true if you don't immediately want to delete their seek, but say after 5 seconds.
+function unsubFromLobby(ws: CustomWebSocket, involuntary?: boolean): void {
 	// data: { route, action, value, id }
 	removeSocketFromLobbySubs(ws);
 	broadcastViewerCount(); // Notify remaining subscribers of the decremented count
 
 	const owner = ws.metadata.memberInfo;
 
-	if (!closureNotByChoice) return deleteUserSeeksIfNotConnected(owner); // Delete their existing seeks
+	if (!involuntary) return deleteUserSeeksIfNotConnected(owner); // Delete their existing seeks
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their seek!
 	// console.log("Setting a 5-second timer to delete a user's seek!");

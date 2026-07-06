@@ -482,6 +482,7 @@ export type TranslationKeys =
 	| 'server.javascript.ws-already_in_game'
 	| 'server.javascript.ws-you_cheated'
 	| 'server.javascript.ws-opponent_cheated'
+	| 'server.javascript.ws-cheat_detected'
 	| 'server.javascript.ws-cannot_resign_finished_game'
 	| 'server.javascript.ws-invalid_code'
 	| 'server.javascript.ws-game_aborted';
@@ -1043,6 +1044,7 @@ export interface TranslationsObject {
 			'ws-already_in_game': string;
 			'ws-you_cheated': string;
 			'ws-opponent_cheated': string;
+			'ws-cheat_detected': string;
 			'ws-cannot_resign_finished_game': string;
 			'ws-invalid_code': string;
 			'ws-game_aborted': string;

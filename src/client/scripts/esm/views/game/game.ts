@@ -7,14 +7,14 @@
 import webgl from '../../game/rendering/webgl.js';
 import camera from '../../game/rendering/camera.js';
 import gamecore from '../../game/chess/gamecore.js';
+import gameslot from '../../game/chess/gameslot.js';
 import IndexedDB from '../../util/IndexedDB.js';
-import socketsubs from '../../websocket/socketsubs.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
+import onlinegame from '../../game/misc/onlinegame/onlinegame.js';
 import gamesession from '../../game/chess/gamesession.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
-import loadbalancer from '../../game/misc/loadbalancer.js';
-import socketmessages from '../../websocket/socketmessages.js';
+import frameprofiler from '../../game/misc/frameprofiler.js';
 
 import '../../game/gui/guisidebar.js';
 import '../../game/misc/onlinegame/onlinegamerouter.js';
@@ -30,10 +30,8 @@ function start(): void {
 
 	initListeners();
 
-	const { id, isLive } = window.gamePageData;
-	if (isLive) {
-		socketsubs.addSub('game'); // Make sure the send guard passes
-		socketmessages.send('game', 'subscribe', id); // Server replies with the 'gamestate' full state.
+	if (window.gamePageData.isLive) {
+		onlinegame.subscribeToGame(); // Naturally requests the full game state bootstraps the game
 	}
 	// Dead (!isLive): out of scope here — wired in T10.
 
@@ -50,7 +48,7 @@ function initListeners(): void {
 
 /** The main game loop. Called every frame. */
 export function gameLoop(runtime: number): void {
-	loadbalancer.update(runtime); // Updates fps, delta time, etc..
+	frameprofiler.update(runtime); // Updates delta time & fps.
 
 	gamecore.update(); // Always update the game, far cheaper than rendering.
 
@@ -66,7 +64,7 @@ function render(): void {
 	if (!frametracker.doWeRenderNextFrame()) return; // Only render if something visual changed (saves cpu).
 	// Don't render until the game is fully loaded.
 	// Separately, the canvas remains visibility-hidden until fully loaded.
-	if (gamesession.isLoading()) return;
+	if (!gameslot.getGamefile() || gamesession.isLoading()) return;
 
 	// console.log('Rendering frame');
 

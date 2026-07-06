@@ -39,8 +39,8 @@ type GameSession =
 
 let session: GameSession;
 
-/** True while the gamefile's graphical (images) or engine resources are still loading. */
-let loading: boolean = true;
+/** True while the gamefile's logical, graphical (images), or engine resources are currently loading. */
+let loading: boolean = false;
 
 // Getters / Setters ------------------------------------------------------------
 

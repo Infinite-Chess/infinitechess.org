@@ -16,6 +16,7 @@ import toast from '../../../components/toast.js';
 import gameslot from '../../chess/gameslot.js';
 import gamesound from '../gamesound.js';
 import gameactions from '../../gui/guigameactions.js';
+import { GameBus } from '../../GameBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
 // Variables ---------------------------------------------------
@@ -36,6 +37,16 @@ let plyOfLastOfferedDraw: number | undefined;
 let isAcceptingDraw: boolean = false;
 
 // Functions ---------------------------------------------------
+
+GameBus.addEventListener('game-concluded', () => {
+	// Close any open draw offer and resets all draw for values for future games.
+	plyOfLastOfferedDraw = undefined;
+	isAcceptingDraw = false;
+	gameactions.refresh();
+});
+// When WE play a move, decline any open draw offer from our opponent. We don't need
+// to inform the server because it knows to auto decline when we submit our move.
+GameBus.addEventListener('user-move-played', () => closeDraw());
 
 /**
  * Returns true if us extending a draw offer to our opponent is legal.
@@ -143,23 +154,6 @@ function set(drawOffer: DrawOfferInfo): void {
 	onOpponentExtendedOffer();
 }
 
-/** Called whenever a move is played in an online game */
-function onMovePlayed({ isOpponents }: { isOpponents: boolean }): void {
-	// Declines any open draw offer from our opponent. We don't need to inform
-	// the server because the server knows to auto decline when we submit our move.
-	if (!isOpponents) closeDraw();
-}
-
-/**
- * Called when an online game concludes or is closed. Closes any open draw
- * offer and resets all draw for values for future games.
- */
-function onGameClose(): void {
-	plyOfLastOfferedDraw = undefined;
-	isAcceptingDraw = false;
-	gameactions.refresh();
-}
-
 export default {
 	isOfferingDrawLegal,
 	areWeAcceptingDraw,
@@ -169,6 +163,4 @@ export default {
 	onOpponentDeclinedOffer,
 	extendOffer,
 	set,
-	onMovePlayed,
-	onGameClose,
 };

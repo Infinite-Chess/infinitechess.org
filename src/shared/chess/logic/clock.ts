@@ -157,17 +157,15 @@ function push(gamefile: {
 	return clocks.currentTime[prevcolor];
 }
 
+/** Stops the game's clocks, updates the current player's remaining time. Idempotent. */
 function stop(basegame: ClockDependant): void {
 	if (basegame.untimed) return;
 	const clocks = basegame.clocks;
 
 	if (clocks.colorTicking === undefined) return; // Clocks already stopped
 
-	const timeSpent = Date.now() - clocks.timeAtTurnStart!;
-	let newTime = clocks.timeRemainAtTurnStart! - timeSpent;
-	if (newTime < 0) newTime = 0;
-
-	clocks.currentTime[clocks.colorTicking]! = newTime;
+	const timeSpent = Date.now() - clocks.timeAtTurnStart;
+	clocks.currentTime[clocks.colorTicking] = Math.max(clocks.timeRemainAtTurnStart - timeSpent, 0);
 
 	endGame(basegame);
 }

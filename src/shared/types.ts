@@ -100,7 +100,16 @@ export const DisconnectInfoSchema = z.strictObject({
 	 */
 	millisUntilClaimable: z.number(),
 	/** Whether the opponent disconnected by choice, or if it was non-intentional (lost network). */
-	wasByChoice: z.boolean(),
+	voluntary: z.boolean(),
+});
+
+/** The state of a post-game rematch offer, from the perspective of one participant. */
+export type RematchOfferInfo = z.infer<typeof RematchOfferInfoSchema>;
+export const RematchOfferInfoSchema = z.strictObject({
+	/** True if our opponent has an outstanding rematch offer (drives the button's glow). */
+	offered: z.boolean(),
+	/** True if our opponent is currently connected (otherwise the rematch button is disabled). */
+	present: z.boolean(),
 });
 
 /** The state of the game unique to participants (not spectators): draw/disconnect while live, and rematch once over. */
@@ -109,27 +118,43 @@ export const ParticipantStateSchema = z.strictObject({
 	drawOffer: DrawOfferInfoSchema,
 	/** If our opponent has disconnected, this will be present. */
 	disconnect: DisconnectInfoSchema.optional(),
+	/** Present only once the game is concluded and not memory-evicted yet for the rematch handshake. */
+	rematch: RematchOfferInfoSchema.optional(),
 });
 
-/** The agnostic core of a `'gameupdate'` message — identical for every recipient (no per-player overlay). */
-export type GameUpdateBase = z.infer<typeof GameUpdateBaseSchema>;
-export const GameUpdateBaseSchema = z.strictObject({
-	gameConclusion: winconutil.gameConclusionSchema.optional(),
-	/** Existing moves, if any, to forward to the front of the game. */
+/**
+ * The recipient-agnostic core of a live game-state message (no per-player overlay). Carries the
+ * live move list, clocks, conclusion, and finalized flag. The core of every `gamestate` message —
+ * the `subscribe` reply (fresh load or live reconnect).
+ */
+export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
+export const GameStateBaseSchema = z.strictObject({
+	/** The full move list (reconciled against on reconnect). */
 	moves: z.array(MovePacketSchema),
+	/** The live ticking clocks. Absent for untimed games. */
 	clockValues: ClockValuesSchema.optional(),
+	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	/**
-	 * When true, the client's resync logic should force its move list to exactly match
-	 * the server's, even if the client has one extra move at the end that is "ours".
-	 * The client must revert it rather than re-submitting it.
+	 * Whether the game is finalized (result locked in permanently). Once true, nothing but rematch
+	 * offers can change, so the client reconnects with `subscriberematch` instead of a full `subscribe`.
 	 */
-	forceSync: z.boolean(),
+	finalized: z.boolean(),
+	/**
+	 * When true, the client must force its move list to exactly match the server's — reverting any
+	 * extra unconfirmed move at the end rather than re-submitting it. Set only when the server
+	 * rejected the client's last move; absent (⇒ false) on a normal subscribe / live reconnect.
+	 */
+	forceSync: z.boolean().optional(),
 });
 
-/** The message contents of a server websocket `'gameupdate'` message: the agnostic core plus the recipient's participant overlay. */
-export type GameUpdateMessage = z.infer<typeof GameUpdateMessageSchema>;
-export const GameUpdateMessageSchema = GameUpdateBaseSchema.extend({
-	participantState: ParticipantStateSchema,
+/**
+ * A live game-state message: the {@link GameStateBase} plus the recipient's participant overlay.
+ * The payload of every `gamestate` message — the `subscribe` reply.
+ * `participantState` is present for participants of an ongoing game, absent for spectators.
+ */
+export type GameStateMessage = z.infer<typeof GameStateMessageSchema>;
+export const GameStateMessageSchema = GameStateBaseSchema.extend({
+	participantState: ParticipantStateSchema.optional(),
 });
 
 /**
@@ -209,49 +234,31 @@ export const GameStateVariantSchema = z.discriminatedUnion('kind', [
 ]);
 
 /**
- * The role-agnostic typed core of a game, shared by live {@link FullGameState}
- * and dead `DeadGameState` shapes.
- * This is all the properties that are unchanging since the
- * game's inception, live or dead, EXCEPT for the gameConclusion.
- *
- * Note: this overlaps the client's `ServerGameInfo`/`JoinGameMessage`
- * (`src/client/scripts/esm/websocket/socketschemas.ts`); that de-dup is
- * deferred to a later task that reshapes the live socket protocol.
+ * The static setup of a game: how it was configured at creation — variant, clock settings, and
+ * creation time. Unchanging for the game's whole life. SSR'd into `gamePageData` (and embedded in
+ * {@link StaticGameState} for the side bar / dead-game HTTP), so it is never sent over the subscribe
+ * socket — the client already has it by game-load time.
  */
-export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
-export const StaticGameStateSchema = z.strictObject({
-	id: z.int().nonnegative(),
-	rated: z.boolean(),
+export type StaticGameSetup = z.infer<typeof StaticGameSetupSchema>;
+export const StaticGameSetupSchema = z.strictObject({
 	variant: GameStateVariantSchema,
 	timeControl: TimeControlSchema,
 	/** Epoch milliseconds the game was created. */
 	timeCreated: z.number(),
+});
+
+/**
+ * A game's {@link StaticGameSetup} plus its identity + display fields (id, rated, players) and current
+ * conclusion. Used by the SSR side bar and the dead-game HTTP path. Everything here is static &
+ * unchanging since the game's inception EXCEPT the gameConclusion.
+ */
+export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
+export const StaticGameStateSchema = StaticGameSetupSchema.extend({
+	id: z.int().nonnegative(),
+	rated: z.boolean(),
 	/** Per-color username container, with rating embedded per player. */
 	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
-});
-
-/**
- * The full state of a LIVE game, sent over the WebSocket on subscribe.
- * Does not include role information.
- */
-export type FullGameState = z.infer<typeof FullGameStateSchema>;
-export const FullGameStateSchema = StaticGameStateSchema.extend({
-	/** Each move carries its optional `clockStamp` (per-move clock history for rewind). */
-	moves: z.array(MovePacketSchema),
-	/** The live ticking clocks. Absent for untimed games. */
-	clockValues: ClockValuesSchema.optional(),
-});
-
-/**
- * A {@link FullGameState} with the per-subscriber overlay sent on `subscribe`.
- * participantState is present if the subscriber is a participant of an ongoing
- * game; spectators (and concluded games) omit it.
- */
-export type SubscribedGameState = z.infer<typeof SubscribedGameStateSchema>;
-export const SubscribedGameStateSchema = FullGameStateSchema.extend({
-	/** Participant-only ongoing-game state. Present if they are a participant. */
-	participantState: ParticipantStateSchema.optional(),
 });
 
 /**

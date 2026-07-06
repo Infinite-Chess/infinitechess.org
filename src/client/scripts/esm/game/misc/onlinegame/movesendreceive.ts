@@ -25,6 +25,7 @@ import selection from '../../chess/selection.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../GameBus.js';
+import gamesession from '../../chess/gamesession.js';
 import movesequence from '../../chess/movesequence.js';
 import socketmessages from '../../../websocket/socketmessages.js';
 
@@ -55,8 +56,6 @@ function sendMove(): void {
 	};
 
 	socketmessages.send('game', 'submitmove', data, true);
-
-	onlinegame.onMovePlayed({ isOpponents: false });
 }
 
 /**
@@ -64,7 +63,7 @@ function sendMove(): void {
  * and claimed game conclusion is legal. If it isn't, it reports them and doesn't forward their move.
  * If it is legal, it forwards the game to the front, then forwards their move.
  */
-function handleOpponentsMove(
+function handleMove(
 	gamefile: GameFile,
 	mesh: Mesh | undefined,
 	message: OpponentsMoveMessage,
@@ -76,7 +75,9 @@ function handleOpponentsMove(
 		console.error(
 			`We have desynced from the game. Resyncing. Expected opponent's move number: ${expectedMoveNumber}. Actual: ${message.moveNumber}. Opponent's move: ${JSON.stringify(message.move)}. Move number: ${message.moveNumber}`,
 		);
-		return onlinegame.resyncToGame();
+		onlinegame.setInSync(false);
+		onlinegame.subscribeToGame(); // Naturally requests the full game state and resyncs
+		return;
 	}
 
 	// Convert the move from compact short format "x,y>x,y=N" to JSON.
@@ -86,32 +87,25 @@ function handleOpponentsMove(
 	premoves.performWithUnapplied(gamefile, mesh, () => {
 		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
-		const moveValidationResult = movevalidation.isOpponentsMoveLegal(
-			gamefile,
-			moveTagged,
-			message.gameConclusion,
-		);
+		const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, message.gameConclusion); // prettier-ignore
 
-		// Only report cheating when the server won't delete the game instantly.
-		if (
-			checkAndReportIllegalOpponentMove(
-				gamefile,
-				moveValidationResult,
-				message.move.token,
-				message.moveNumber,
-			)
-		) {
-			return false; // Don't physically play next premove
-		}
+		// Report cheating if the server allows us
+		checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, message.move.token, message.moveNumber); // prettier-ignore
+		if (!moveValidationResult.valid) return false; // Don't physically play next premove
 
 		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
 
-		// Go to latest move before making a new move
-		movesequence.viewFront(gamefile, mesh);
-
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveTagged, {
-			clockStamp: message.move.clockStamp,
-		});
+		if (moveutil.areWeViewingLatestMove(gamefile)) {
+			// Normal case: play and animate the move.
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResult.tagged, {
+				clockStamp: message.move.clockStamp,
+			});
+		} else {
+			// We're reviewing a past move. Silently append it, staying on our current view.
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, {
+				clockStamp: message.move.clockStamp,
+			});
+		}
 
 		// Edit the clocks
 
@@ -121,7 +115,7 @@ function handleOpponentsMove(
 		// For online games, the server is boss, so if they say the game is over, conclude it here.
 		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
 
-		onlinegame.onMovePlayed({ isOpponents: true });
+		GameBus.dispatch('opponent-move-played');
 
 		return true; // Good to physically play next premove
 	});
@@ -134,36 +128,41 @@ function handleOpponentsMove(
  * @param moveValidationResult - The result of move validation (may be valid or invalid).
  * @param tokenMove - The move in compact string format, used for logging.
  * @param moveNumber - The move number, used for logging.
- * @returns Whether the move was illegal and was reported.
  */
 function checkAndReportIllegalOpponentMove(
 	gamefile: GameFile,
 	moveValidationResult: MoveValidationResult,
 	tokenMove: string,
 	moveNumber: number,
-): boolean {
-	if (moveValidationResult.valid) return false;
+): void {
+	if (moveValidationResult.valid) return;
 
-	console.log(
-		`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`,
-	);
+	console.log(`Buddy made an illegal play: "${tokenMove}". Reason: ${moveValidationResult.reason} Move number: ${moveNumber}`); // prettier-ignore
 
-	if (!isGameInstantlyDeleted(gamefile.variant)) {
-		onlinegame.reportOpponentsMove(moveValidationResult.reason);
-		return true;
-	}
+	if (gamesession.getRole() === undefined) return; // Spectators never report
+	if (isGameInstantlyDeleted(gamefile.variant)) return; // Server-validated game
 
-	return false; // Private or server-validated game — allow through without reporting
+	reportOpponentsMove(moveValidationResult.reason);
 }
 
-/** Adjusts received clock values for ping and applies them to the game, if provided. */
+/** The move was confirmed illegal, and reportable: Report it. */
+function reportOpponentsMove(reason: string): void {
+	// Send the move number of the opponents move so that there's no mixup of which move we claim is illegal.
+	const opponentsMoveNumber = gameslot.getGamefile()!.moves.length + 1;
+	const message = { reason, opponentsMoveNumber };
+	socketmessages.send('game', 'report', message);
+}
+
+/**
+ * Applies received clock values to the game, if provided.
+ * MUST ALREADY be ping-adjusted from inside onlinegamerouter.receiveMessage()!
+ */
 function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefined): void {
 	if (!clockValues) return;
 	if (gamefile.untimed) {
 		console.warn('Received clock values for untimed game??');
 		return;
 	}
-	onlinegame.adjustClockValuesForPing(clockValues);
 	clock.edit(gamefile.clocks, clockValues);
 	guiclock.edit(gamefile);
 }
@@ -172,7 +171,7 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 
 export default {
 	sendMove,
-	handleOpponentsMove,
+	handleMove,
 	checkAndReportIllegalOpponentMove,
 	applyClockValues,
 };

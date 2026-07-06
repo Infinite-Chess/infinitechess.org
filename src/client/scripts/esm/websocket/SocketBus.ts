@@ -12,10 +12,11 @@ import { EventBus } from '../../../../shared/util/EventBus.js';
 
 interface SocketBusEvents {
 	// --- Socket lifecycle ---
-	'connection-lost': void;
 	opening: void;
-	/** Whether the closure was unintentional. */
-	closed: boolean;
+	/** The socket closed, for any reason. */
+	closed: void;
+	/** The socket closed unintentionally and we'll attempt to reconnect. Always dispatched right after `closed`. */
+	'connection-lost': void;
 	/** RRT (Round Trip Time) ping value in milliseconds. */
 	ping: number;
 	reconnected: void;

@@ -620,6 +620,7 @@ ws-forbidden = "Forbidden."
 ws-already_in_game = "You are already in a game."
 ws-you_cheated = "Oops! You played something illegal. Game has been aborted. If this was a mistake, please report this bug!"
 ws-opponent_cheated = "We caught your opponent playing something illegal. Game has been aborted."
+ws-cheat_detected = "An illegal move was detected. Game has been aborted." # Sent to spectators
 ws-cannot_resign_finished_game = "Can't resign game, it's already over."
 ws-invalid_code = "Invalid code!" # Invite code doesn't match any existing invites
 ws-game_aborted = "Game aborted." # Invite was cancelled as you clicked on it

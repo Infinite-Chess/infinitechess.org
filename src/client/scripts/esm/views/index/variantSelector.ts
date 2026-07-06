@@ -306,7 +306,7 @@ function createCustomContentVNode(
 
 /** Navigates to the board editor page. */
 function goToEditor(): void {
-	window.location.href = '/editor';
+	window.location.assign('/editor');
 }
 
 /** Shows the ICN input section and updates the selector to the From-ICN button's display name. */

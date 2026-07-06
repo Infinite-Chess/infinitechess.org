@@ -76,13 +76,6 @@ function getSocket(): WebSocket | undefined {
 	return socket;
 }
 
-// Connection Events -----------------------------------------------------------
-
-/** Dispatches a custom event indicating that websocket connection was lost. */
-function dispatchLostConnectionCustomEvent(): void {
-	SocketBus.dispatch('connection-lost');
-}
-
 // Socket Lifecycle ------------------------------------------------------------
 
 /**
@@ -197,5 +190,4 @@ export default {
 	resubAll,
 	toggleDebug,
 	isDebugEnabled,
-	dispatchLostConnectionCustomEvent,
 };

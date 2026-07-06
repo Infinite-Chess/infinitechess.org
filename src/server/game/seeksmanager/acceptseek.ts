@@ -103,7 +103,10 @@ function acceptSeek(ws: CustomWebSocket, messageContents: AcceptSeekMessage): vo
 		throw Error("Seek accepter doesn't exist on accepted 2 player seek");
 
 	try {
-		createGame(seek, assignments);
+		createGame(
+			{ variant: seek.variant, time: seek.time, rated: seek.mode === 'rated' },
+			assignments,
+		);
 	} catch {
 		// DB error (already logged)
 		// Notify both parties a server error occurred

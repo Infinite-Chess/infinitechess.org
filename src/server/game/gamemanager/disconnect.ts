@@ -16,6 +16,7 @@ import type { MatchInfo, ServerGame } from './gameutility.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 
 import gameutility from './gameutility.js';
+import liveGameValues from './liveGameValues.js';
 
 //--------------------------------------------------------------------------------------------------------
 
@@ -38,53 +39,59 @@ const timeBeforeClaimableByDisconnectMillis = 10_000; // 10 seconds
  * Reused as the duration of the both-disconnected timer (see gamemanager): once BOTH
  * players are disconnected, the game concludes after this long if neither reconnects.
  */
-const timeBeforeClaimableByDisconnectMillis_NotByChoice = 60_000; // 60 seconds
+const timeBeforeClaimableByDisconnectMillis_Involuntary = 60_000; // 60 seconds
 
 //--------------------------------------------------------------------------------------------------------
 
 /**
- * Records, for a disconnected player, the timestamp from which their opponent may claim
- * victory / a draw, and tells the opponent the countdown. The claim window "opens" once
- * that timestamp passes; the client reveals the claim buttons and the server validates
- * any claim against the timestamp.
- * @param servergame - The game
- * @param color - The color that disconnected
- * @param closureNotByChoice - True if the player didn't close the connection on purpose.
+ * Starts the 5-second cushion timer for a player who disconnected involuntarily
+ * (network interruption). After the cushion elapses, if they have not yet reconnected,
+ * their disconnect claim timer is started and opponent notified.
  */
-function setOpponentClaimWindow(
+function startDisconnectCushionTimer(servergame: ServerGame, role: Player): void {
+	servergame.match.playerData[role]!.disconnect.startID = setTimeout(
+		() => startDisconnectClaimTimer(servergame, role, true),
+		timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
+	);
+	servergame.match.playerData[role]!.disconnect.startTime =
+		Date.now() + timeToGiveDisconnectedBeforeOpeningClaimWindowMillis;
+	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
+}
+
+/**
+ * Confirmed disconnected player: Informs the opponent how long until they may
+ * claim victory against this player.
+ */
+function startDisconnectClaimTimer(
 	servergame: ServerGame,
-	color: Player,
-	closureNotByChoice: boolean,
+	role: Player,
+	involuntary: boolean,
 ): void {
 	const now = Date.now();
 	const resignable = gameutility.isGameResignable(servergame);
 
 	const timeUntilClaimable =
-		closureNotByChoice && resignable
-			? timeBeforeClaimableByDisconnectMillis_NotByChoice
+		involuntary && resignable
+			? timeBeforeClaimableByDisconnectMillis_Involuntary
 			: timeBeforeClaimableByDisconnectMillis;
 
-	const playerdata = servergame.match.playerData[color]!;
-	const opponentColor = typeutil.invertPlayer(color);
+	const playerdata = servergame.match.playerData[role]!;
+	const opponentRole = typeutil.invertPlayer(role);
 
 	// Clear the cushion state since we're transitioning to the open claim window.
-	playerdata.disconnect.startTime = undefined;
+	delete playerdata.disconnect.startTime;
 
 	playerdata.disconnect.timeOpponentMayClaim = now + timeUntilClaimable;
-	playerdata.disconnect.wasByChoice = !closureNotByChoice;
+	playerdata.disconnect.voluntary = !involuntary;
 
 	// Alert their opponent when they'll be able to claim victory by disconnection.
 	const value = {
 		millisUntilClaimable: timeUntilClaimable,
-		wasByChoice: !closureNotByChoice,
+		voluntary: !involuntary,
 	};
-	gameutility.sendMessageToSocketOfColor(
-		servergame.match,
-		opponentColor,
-		'game',
-		'opponentdisconnect',
-		value,
-	);
+	gameutility.sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+
+	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }
 
 /**
@@ -94,7 +101,7 @@ function setOpponentClaimWindow(
  */
 function cancelDisconnectTimers(match: MatchInfo): void {
 	for (const color of Object.keys(match.playerData)) {
-		cancelDisconnectTimer(match, Number(color) as Player, true);
+		cancelDisconnectTimer(match, Number(color) as Player);
 	}
 }
 
@@ -102,52 +109,29 @@ function cancelDisconnectTimers(match: MatchInfo): void {
  * Cancels the player's disconnect state (cushion + open claim window) if they were
  * disconnected. Also cancels the game-level both-disconnected timer, since a reconnect
  * means the two players are no longer both gone. Called when they reconnect/refresh.
- * @param match - The game
- * @param color - The color to cancel the timer for
- * @param dontNotifyOpponent - When true, skip telling the opponent the player returned.
  */
-function cancelDisconnectTimer(
-	match: MatchInfo,
-	color: Player,
-	dontNotifyOpponent: boolean = false,
-): void {
-	/** Whether the opponent had been told they could claim (the claim window was set). */
-	const claimWindowWasSet = gameutility.isClaimWindowSetForColor(match, color);
-
-	const playerdata = match.playerData[color]!;
+function cancelDisconnectTimer(match: MatchInfo, ourRole: Player): void {
+	const playerdata = match.playerData[ourRole]!;
 
 	clearTimeout(playerdata.disconnect.startID);
-	playerdata.disconnect.startID = undefined;
-	playerdata.disconnect.startTime = undefined;
-	playerdata.disconnect.timeOpponentMayClaim = undefined;
-	playerdata.disconnect.wasByChoice = undefined;
+	delete playerdata.disconnect.startID;
+	delete playerdata.disconnect.startTime;
+	delete playerdata.disconnect.timeOpponentMayClaim;
+	delete playerdata.disconnect.voluntary;
 
 	// A reconnect (or game over) means the players are no longer both disconnected.
 	clearTimeout(match.bothDisconnectedTimeoutID);
-	match.bothDisconnectedTimeoutID = undefined;
-	match.bothDisconnectedEndTime = undefined;
-
-	if (dontNotifyOpponent) return;
-
-	// Alert their opponent we have returned
-
-	if (!claimWindowWasSet) return; // The opponent was never told, skip.
-
-	const opponentColor = typeutil.invertPlayer(color);
-	gameutility.sendMessageToSocketOfColor(
-		match,
-		opponentColor,
-		'game',
-		'opponentdisconnectreturn',
-	);
+	delete match.bothDisconnectedTimeoutID;
+	delete match.bothDisconnectedEndTime;
 }
 
 //--------------------------------------------------------------------------------------------------------
 
 export {
 	timeToGiveDisconnectedBeforeOpeningClaimWindowMillis,
-	timeBeforeClaimableByDisconnectMillis_NotByChoice,
-	setOpponentClaimWindow,
+	timeBeforeClaimableByDisconnectMillis_Involuntary,
+	startDisconnectCushionTimer,
+	startDisconnectClaimTimer,
 	cancelDisconnectTimers,
 	cancelDisconnectTimer,
 };

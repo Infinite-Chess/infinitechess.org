@@ -41,8 +41,20 @@ The base name + rating in each `.username-embed` is **SSR'd by T8.5**; only the 
 ## Out of scope / deferred
 
 - Spectator live view (T11), gamestart (T12).
-- The dormant `'logged-game-info'` socket path stays as-is (retired later).
 - Analysis-board / share buttons, full review controls polish — later.
+
+### Follow-up: resync landing on a dead game
+
+The old `'logged-game-info'` socket path is retired — dead-game state is served over HTTP, and a
+resync to a game no longer in memory now just gets `unsub` (it was logged/concluded → client keeps
+the result it's showing) or `nogame` (never logged → aborted before any move). See `resync.ts`
+`handleResyncToDeadGame`.
+
+Gap to close here: a client that resyncs a game it believed **live** but which has since concluded
++ been evicted may **not** have seen the conclusion — a bare `unsub` leaves it stuck on a stale
+live-looking board. It should instead receive the dead state (or be redirected to `GET /api/game/:id`).
+This couples with the finalization work (clients that know a game is finalized stop full-resyncing
+it and ask only for rematch state), so decide the two together.
 
 ## Constraints
 

@@ -112,7 +112,7 @@ const allLiveGamesColumns: string[] = [
 	'conclusion_condition',
 	'conclusion_victor',
 	'time_ended',
-	'delete_time',
+	'finalize_time',
 	'validate_moves',
 	'both_disconnected_end_time',
 ];
@@ -127,7 +127,7 @@ const allLivePlayerGamesColumns: string[] = [
 	'time_remaining_ms',
 	'disconnect_cushion_end_time',
 	'disconnect_claim_time',
-	'disconnect_by_choice',
+	'disconnect_voluntary',
 ];
 
 // Functions -----------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ function generateTables(): void {
 			conclusion_condition  TEXT,
 			conclusion_victor     INTEGER,
 			time_ended            INTEGER,
-			delete_time           INTEGER,
+			finalize_time         INTEGER, -- Epoch ms deadline to finalize (lock in + log) a concluded game. NULL while ongoing.
 			validate_moves        BOOLEAN NOT NULL DEFAULT 1 CHECK (validate_moves IN (0, 1)),
 			both_disconnected_end_time INTEGER -- Epoch ms the both-disconnected timer concludes the game. NULL unless both players are disconnected.
 		);
@@ -379,7 +379,7 @@ function generateTables(): void {
 			time_remaining_ms               INTEGER,
 			disconnect_cushion_end_time     INTEGER,
 			disconnect_claim_time           INTEGER, -- Epoch ms from which the opponent may claim victory/draw. NULL if no claim window.
-			disconnect_by_choice            INTEGER CHECK (disconnect_by_choice IN (0, 1)),
+			disconnect_voluntary            INTEGER CHECK (disconnect_voluntary IN (0, 1)),
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);
@@ -396,7 +396,9 @@ function initDatabase(): void {
 	makeVariantColumnsNullableIfNeeded();
 	addPositionColumnToLiveGamesIfNeeded();
 	renameDisconnectResignTimeColumnIfNeeded();
+	renameDisconnectByChoiceColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
+	renameLiveGamesDeleteTimeColumnIfNeeded();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
 	startPeriodicLeaderboardRatingDeviationUpdate();
@@ -554,6 +556,23 @@ function renameDisconnectResignTimeColumnIfNeeded(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
  *
+ * Renames `live_player_games.disconnect_by_choice` → `disconnect_voluntary`. The column's
+ * name was made more semantically clear. The stored value carries over unchanged.
+ * Fresh DBs get the new name from `generateTables()`.
+ */
+function renameDisconnectByChoiceColumnIfNeeded(): void {
+	if (!db.columnExists('live_player_games', 'disconnect_by_choice')) return; // Already migrated.
+	db.run(
+		'ALTER TABLE live_player_games RENAME COLUMN disconnect_by_choice TO disconnect_voluntary',
+	);
+	console.log(
+		'Temporary DB migration: renamed live_player_games.disconnect_by_choice to disconnect_voluntary.',
+	);
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
  * Adds the nullable `both_disconnected_end_time` column to `live_games` — the epoch ms the
  * both-disconnected timer concludes the game (draw by abandonment, or abort) when neither
  * player is present to claim. Fresh DBs get the column from `generateTables()`.
@@ -562,6 +581,19 @@ function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
 	if (db.columnExists('live_games', 'both_disconnected_end_time')) return; // Already present.
 	db.run('ALTER TABLE live_games ADD COLUMN both_disconnected_end_time INTEGER');
 	console.log('Temporary DB migration: added live_games.both_disconnected_end_time column.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
+ *
+ * Renames `live_games.delete_time` to `finalize_time` — the column's meaning is now the deadline
+ * to finalize (lock in + log) a concluded game, after which the game only lingers in memory
+ * for the rematch handshake rather than being deleted. Fresh DBs get the new name directly.
+ */
+function renameLiveGamesDeleteTimeColumnIfNeeded(): void {
+	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated (or fresh DB).
+	db.run('ALTER TABLE live_games RENAME COLUMN delete_time TO finalize_time');
+	console.log('Temporary DB migration: renamed live_games.delete_time to finalize_time.');
 }
 
 /**

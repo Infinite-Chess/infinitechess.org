@@ -2,7 +2,7 @@
 
 /**
  * Owns frame delta-time calculation and storage.
- * Called each frame by loadbalancer.ts with the current timestamp.
+ * Called each frame by frameprofiler.ts with the current timestamp.
  */
 
 let lastFrameTime: number = 0;
@@ -16,7 +16,7 @@ function get(): number {
 }
 
 /**
- * Called by loadbalancer.ts each frame with the current timestamp (in ms).
+ * Called by frameprofiler.ts each frame with the current timestamp (in ms).
  * Computes and stores the new delta time.
  */
 function update(timestamp: number): void {

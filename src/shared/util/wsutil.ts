@@ -71,8 +71,8 @@ const ECHO_TIMEOUT = 5000;
 // We will also give them 5 seconds to reconnect before we tell their opponent they have disconnected.
 // If the closure code is NOT one of the ones below, it means they purposefully closed the socket (like closed the tab),
 // so IMMEDIATELY tell their opponent they disconnected!
-const closureCodesNotByChoice: number[] = [1006];
-const closureReasonsNotByChoice: string[] = [
+const involuntaryClosureCodes: number[] = [1006];
+const involuntaryClosureReasons: string[] = [
 	'Connection expired',
 	'Message Too Big',
 	'Too Many Sockets',
@@ -89,9 +89,9 @@ const closureReasonsNotByChoice: string[] = [
  * @param reason - The reason provided for the WebSocket closure.
  * @returns `true` if the closure was not initiated by the client, otherwise `false`.
  */
-function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean {
+function wasSocketClosureInvoluntary(code: number, reason: string): boolean {
 	return (
-		closureCodesNotByChoice.includes(code) || closureReasonsNotByChoice.includes(reason.trim())
+		involuntaryClosureCodes.includes(code) || involuntaryClosureReasons.includes(reason.trim())
 	);
 }
 
@@ -100,5 +100,5 @@ function wasSocketClosureNotByTheirChoice(code: number, reason: string): boolean
 export default {
 	heartbeatIntervalMillis,
 	ECHO_TIMEOUT,
-	wasSocketClosureNotByTheirChoice,
+	wasSocketClosureInvoluntary,
 };

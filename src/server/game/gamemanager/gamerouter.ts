@@ -9,28 +9,28 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import * as z from 'zod';
 
-import { onJoinGame } from './joingame.js';
-import { resyncToGame } from './resync.js';
-import { onSubscribeToGame } from './subscribetogame.js';
+import gameutility from './gameutility.js';
+import { offerRematch } from './onRematch.js';
+import { getGameBySocket } from './gamemanager.js';
+import { onSubscribeToGame } from './onSubscribe.js';
+import { onSubscribeToRematch } from './onSubscribeRematch.js';
 import { abortGame, resignGame } from './abortresigngame.js';
 import { onReport, reportschem } from './cheatreport.js';
 import { claimVictory, claimDraw } from './claimdisconnect.js';
 import { submitMove, submitmoveschem } from './movesubmission.js';
 import { offerDraw, acceptDraw, declineDraw } from './onOfferDraw.js';
-import { getGameBySocket, onRequestRemovalFromPlayersInActiveGames } from './gamemanager.js';
 
 const GameSchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('abort') }),
-	z.strictObject({ action: z.literal('resync'), value: z.int() }),
+	z.strictObject({ action: z.literal('subscriberematch'), value: z.int() }),
 	z.strictObject({ action: z.literal('offerdraw') }),
 	z.strictObject({ action: z.literal('acceptdraw') }),
 	z.strictObject({ action: z.literal('declinedraw') }),
-	z.strictObject({ action: z.literal('joingame') }),
+	z.strictObject({ action: z.literal('offerrematch') }),
 	z.strictObject({ action: z.literal('subscribe'), value: z.number().int().nonnegative() }),
 	z.strictObject({ action: z.literal('resign') }),
 	z.strictObject({ action: z.literal('claimvictory') }),
 	z.strictObject({ action: z.literal('claimdraw') }),
-	z.strictObject({ action: z.literal('removefromplayersinactivegames') }),
 	z.strictObject({ action: z.literal('report'), value: reportschem }),
 	z.strictObject({ action: z.literal('submitmove'), value: submitmoveschem }),
 ]);
@@ -39,65 +39,66 @@ type GameMessage = z.infer<typeof GameSchema>;
 
 /**
  * Handles all incoming websocket messages related to active games.
- * Possible actions: submitmove/offerdraw/abort/resign/joingame/resync/paste...
+ * Possible actions: submitmove/offerdraw/abort/resign/subscribe/subscriberematch/paste...
  * @param ws - The socket
  * @param contents - The incoming websocket message, with the properties `route`, `action`, `value`, `id`.
  * @param id - The id of the incoming message. This should be included in our response as the `replyto` property.
  */
-function routeGameMessage(ws: CustomWebSocket, contents: GameMessage, id: number): void {
+function routeGameMessage(ws: CustomWebSocket, contents: GameMessage): void {
 	// All actions that don't require a game
 	switch (contents.action) {
-		case 'resync':
-			resyncToGame(ws, contents.value, id);
-			return;
-		case 'joingame':
-			onJoinGame(ws);
-			return;
 		case 'subscribe':
 			onSubscribeToGame(ws, contents.value);
+			return;
+		case 'subscriberematch':
+			onSubscribeToRematch(ws, contents.value);
 			return;
 	}
 
 	const servergame = getGameBySocket(ws); // The game they belong in, if they belong in one.
 	if (!servergame) {
 		// Benign: the game was torn down between the client sending this and the
-		// server receiving it (it just concluded, or a timer-driven AFK ping fired
-		// at a dead game). The message is simply stale — drop it.
+		// server receiving it (it just concluded). The message is simply stale — drop it.
 		// OR, a spectator is sending a message to a game they are spectating, which is not allowed.
 		return;
 	}
+
+	// The socket's color in this game. Guaranteed defined since getGameBySocket resolved the game
+	// for this same socket; treat undefined as a guard against the (impossible) non-participant case.
+	const color = gameutility.getSocketRoleInGame(servergame, ws);
+	if (color === undefined) return;
 
 	// All remaining actions requiring the game they're in
 	switch (contents.action) {
 		case 'submitmove':
 			submitMove(ws, servergame, contents.value);
 			break;
-		case 'removefromplayersinactivegames':
-			onRequestRemovalFromPlayersInActiveGames(ws, servergame);
-			break;
 		case 'abort':
-			abortGame(ws, servergame);
+			abortGame(servergame);
 			break;
 		case 'resign':
-			resignGame(ws, servergame);
+			resignGame(servergame, color);
 			break;
 		case 'claimvictory':
-			claimVictory(ws, servergame);
+			claimVictory(servergame, color);
 			break;
 		case 'claimdraw':
-			claimDraw(ws, servergame);
+			claimDraw(servergame, color);
 			break;
 		case 'offerdraw':
-			offerDraw(ws, servergame);
+			offerDraw(servergame, color);
 			break;
 		case 'acceptdraw':
-			acceptDraw(ws, servergame);
+			acceptDraw(servergame, color);
 			break;
 		case 'declinedraw':
-			declineDraw(ws, servergame);
+			declineDraw(servergame, color);
+			break;
+		case 'offerrematch':
+			offerRematch(servergame, color);
 			break;
 		case 'report':
-			onReport(ws, servergame, contents.value);
+			onReport(servergame, color, contents.value);
 			break;
 		default:
 			// @ts-ignore

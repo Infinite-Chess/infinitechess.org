@@ -32,13 +32,11 @@ import { animateMove, meshChanges } from './graphicalchanges.js';
 // Global Moving ----------------------------------------------------------------------------------------------------------
 
 /**
- * Makes a global forward move in the game.
- *
- * This returns the constructed MoveFull object so that we have the option to animate it if we so choose.
+ * Commits a global forward move to the game: all logical, game-state,
+ * clock, and move-list GUI changes — but NO piece-mesh update.
  */
-function makeMove(
+function commitMove(
 	gamefile: GameFile,
-	mesh: Mesh | undefined,
 	moveTagged: MoveTagged,
 	{
 		doGameOverChecks = true,
@@ -48,8 +46,6 @@ function makeMove(
 	const move = movepiece.generateMove(gamefile, moveTagged);
 
 	movepiece.makeMove(gamefile, move); // Logical changes
-
-	if (mesh) runMeshChanges(gamefile, mesh, move, true);
 
 	// GUI changes
 	guimoveslist.updateNavButtons();
@@ -78,6 +74,39 @@ function makeMove(
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
+	return move;
+}
+
+/** Makes a global forward move in the game and syncs the mesh to it. Does not animate. */
+function makeMove(
+	gamefile: GameFile,
+	mesh: Mesh | undefined,
+	moveTagged: MoveTagged,
+	options: { doGameOverChecks?: boolean; clockStamp?: number } = {},
+): MoveFull {
+	const move = commitMove(gamefile, moveTagged, options);
+	if (mesh) runMeshChanges(gamefile, mesh, move, true);
+	return move;
+}
+
+/**
+ * Makes a global forward move WITHOUT changing which move we're viewing, and without animating.
+ * The logical board is temporarily fast-forwarded to the front to append the move (updating
+ * game state, clocks, and the move-list GUI), then rewound to the move we're viewing.
+ */
+function makeMoveKeepingView(
+	gamefile: GameFile,
+	mesh: Mesh | undefined,
+	moveTagged: MoveTagged,
+	options: { clockStamp?: number } = {},
+): MoveFull {
+	const move = movepiece.runActionAtGameFront(gamefile, () =>
+		// Doesn't touch the mesh
+		commitMove(gamefile, moveTagged, options),
+	);
+	// Appending the move may have reallocated the piece arrays; if so, rebuild the
+	// mesh (now back on the viewed position) to match. REQUIRED.
+	if (mesh && gamefile.pieces.newlyRegenerated) piecemodels.regenAll(gamefile, mesh);
 	return move;
 }
 
@@ -110,9 +139,7 @@ function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boo
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
-/**
- * Makes a global backward move in the game.
- */
+/** Makes a global backward move in the game. */
 function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// Terminate all current animations to avoid a crash when undoing moves
 	animation.clearAnimations();
@@ -204,13 +231,14 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 // --------------------------------------------------------------------------------------------------------------------------
 
 export default {
-	navigateMove,
 	makeMove,
+	makeMoveKeepingView,
 	makeMoveAndAnimate,
+	runMeshChanges,
 	rewindMove,
 	viewMove,
+	viewIndex,
 	viewStart,
 	viewFront,
-	viewIndex,
-	runMeshChanges,
+	navigateMove,
 };

@@ -5,6 +5,7 @@
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import coordutil, { Coords, CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
@@ -233,10 +234,13 @@ function makeEngineMove(tokenMove: unknown): void {
 			return false; // Don't physically play next premove
 		}
 
-		// Go to latest move before making a new move
-		movesequence.viewFront(gamefile, mesh);
-
-		movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged);
+		if (moveutil.areWeViewingLatestMove(gamefile)) {
+			// Normal case: play and animate the move.
+			movesequence.makeMoveAndAnimate(gamefile, mesh, moveValidationResults.tagged);
+		} else {
+			// We're reviewing a past move. Silently append it, staying on our current view.
+			movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResults.tagged);
+		}
 
 		checkmatepractice.registerEngineMove(); // inform the checkmatepractice script that the engine has made a move
 

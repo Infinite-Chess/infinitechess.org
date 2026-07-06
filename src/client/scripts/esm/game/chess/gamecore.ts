@@ -122,13 +122,13 @@ function preloadSounds(): void {
 function update(): void {
 	screenshake.update();
 	controls.testOutGameToggles();
-	if (gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
 
 	// Any input should trigger the next frame to render.
 	if (listener_document.atleastOneInput() || listener_canvas.atleastOneInput())
 		frametracker.onVisualChange();
 
-	const gamefile = gameslot.getGamefile()!;
 	const mesh = gameslot.getMesh()!;
 
 	starfield.update(); // Update the star field animation, if needed.
@@ -254,7 +254,7 @@ function renderScene(): void {
 		() => piecemodels.renderVoids(mesh), // INCLUSION MASK is our voids
 		() => border.drawPlayableRegionMask(gamefile.gameRules.worldBorder), // EXCLUSION MASK is our playable region
 		() => starfield.render(), // MAIN SCENE
-		// () => colorFlowRenderer.render(loadbalancer.getDeltaTime()), // Replaces starfield with a gradient color flow
+		// () => colorFlowRenderer.render(frameprofiler.getDeltaTime()), // Replaces starfield with a gradient color flow
 		'or', // Intersection Mode: Draw in both the inclusion and inversion of exclusion regions.
 	);
 	// Board Tiles & Voids: Mask the playable region so the tiles

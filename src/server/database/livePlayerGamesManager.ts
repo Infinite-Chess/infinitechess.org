@@ -32,7 +32,7 @@ export interface LivePlayerDisconnectData {
 	/** Epoch ms from which the opponent may claim victory/draw against this player. NULL if no claim window. */
 	disconnect_claim_time: number | null;
 	/** 0 = network interruption (60s), 1 = intentional (10s). NULL if connected. */
-	disconnect_by_choice: 0 | 1 | null;
+	disconnect_voluntary: 0 | 1 | null;
 }
 
 // Methods --------------------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 		INSERT INTO live_player_games (
 			game_id, player_number, user_id, browser_id,
 			last_draw_offer_ply, time_remaining_ms,
-			disconnect_cushion_end_time, disconnect_claim_time, disconnect_by_choice
+			disconnect_cushion_end_time, disconnect_claim_time, disconnect_voluntary
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	dbCall(
@@ -61,7 +61,7 @@ export function insertLivePlayerGame(record: LivePlayerGamesRecord): void {
 				record.time_remaining_ms,
 				record.disconnect_cushion_end_time,
 				record.disconnect_claim_time,
-				record.disconnect_by_choice,
+				record.disconnect_voluntary,
 			]),
 		`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number})`,
 	);

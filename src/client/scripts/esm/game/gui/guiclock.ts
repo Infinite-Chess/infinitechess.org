@@ -90,6 +90,7 @@ function edit(basegame: GameFile): void {
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 	rescheduleLowtime(basegame.clocks);
+	updateTempo(basegame);
 }
 
 /** Called when a move is pushed in a timed engine game; reschedules the low-time sound. */
@@ -114,7 +115,10 @@ function set(basegame: GameFile): void {
 function updateTempo(basegame: GameFile): void {
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
-		clockElements.bar.classList.toggle('tempo', player === basegame.whosTurn);
+		clockElements.bar.classList.toggle(
+			'tempo',
+			player === (basegame.clocks?.colorTicking ?? basegame.whosTurn),
+		);
 	}
 }
 
