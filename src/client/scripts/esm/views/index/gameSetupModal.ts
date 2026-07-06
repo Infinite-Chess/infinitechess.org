@@ -99,12 +99,12 @@ function initModal(): void {
 	element_btnChallengeFriend.addEventListener('click', () => openModal('friend'));
 	element_btnPlayComputer.addEventListener('click', () => openModal('computer'));
 
-	element_modalClose.addEventListener('click', closeModal);
+	element_modalClose.addEventListener('click', close);
 	element_modalOverlay.addEventListener('pointerdown', (e) => {
-		if (e.target === e.currentTarget) closeModal();
+		if (e.target === e.currentTarget) close();
 	});
 	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape') closeModal();
+		if (e.key === 'Escape') close();
 	});
 
 	element_modalSubmit.addEventListener('click', () => {
@@ -165,7 +165,7 @@ function handleOnlineSeek(): void {
 	const modifiers = modifierSelector.getSeekModifiers();
 
 	lobby.createSeek({ variant, time, color, mode, modifiers });
-	closeModal();
+	close();
 }
 
 /** Opens the modal and adjusts mode-specific rows and submit labeling. */
@@ -184,8 +184,10 @@ function openModal(mode: ModalMode): void {
 }
 
 /** Hides the modal. */
-function closeModal(): void {
+function close(): void {
 	element_modalOverlay.classList.add('hidden');
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();
 }
+
+export default { close };

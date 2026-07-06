@@ -34,6 +34,7 @@ import socketsubs from '../../websocket/socketsubs.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import validatorama from '../../util/validatorama.js';
 import socketmessages from '../../websocket/socketmessages.js';
+import gameSetupModal from './gameSetupModal.js';
 import seekPreviewCache from './seekPreviewCache.js';
 import variantPreviewTooltip from '../../game/rendering/variantPreviewTooltip.js';
 
@@ -317,6 +318,7 @@ function onLobbyIdle(): void {
 	unsubscribe();
 	hideInGameBanner();
 	showIdleOverlay();
+	gameSetupModal.close();
 }
 
 /** Shows the pre-existing idle overlay element, wiring up pointer listeners to dismiss it. */
