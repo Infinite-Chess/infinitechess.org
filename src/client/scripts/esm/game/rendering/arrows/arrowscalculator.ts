@@ -496,9 +496,11 @@ export function isAnimatedArrowUnnecessary(
 	mode: 0 | 1 | 2 | 3,
 ): boolean {
 	if (mode === 3) return false; // Keep it, whether hippogonal orthogonal or diagonal
-	if (mode === 2) return vectors.chebyshevDistance([0n, 0n], direction) !== 1n; // Only keep orthogonals and diagonals, NO hippogonals.
+	// Mode 2 keeps all orthogonals and diagonals, regardless of whether the piece can slide there.
+	// Hippogonals (and greater) fall through to the mode 1 check, so mode 2 stays additive over mode 1.
+	if (mode === 2 && vectors.chebyshevDistance([0n, 0n], direction) === 1n) return false;
 
-	// mode must === 1, only keep it if it can slide in the direction, whether blocked or not
+	// mode 1 (or mode 2 hippogonals): only keep it if the piece can slide in the direction, whether blocked or not
 	const thisPieceMoveset = legalmoves.getPieceMoveset(boardsim, type); // Default piece moveset
 	if (!thisPieceMoveset.sliding) return true; // This piece can't slide at all
 	if (!thisPieceMoveset.sliding[dirKey]) return true; // This piece can't slide ALONG the provided line
