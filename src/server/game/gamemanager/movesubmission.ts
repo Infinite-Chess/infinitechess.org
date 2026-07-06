@@ -73,17 +73,17 @@ function submitMove(
 	}
 
 	// Their subscription info should tell us what game they're in, including the color they are.
-	const color = ws.metadata.subscriptions.game.color;
+	const role = ws.metadata.subscriptions.game.color;
 
 	// If the game is already over, don't accept it.
 	if (gameutility.isGameOver(servergame)) return;
 
 	// Make sure it's their turn
-	if (servergame.whosTurn !== color) {
+	if (servergame.whosTurn !== role) {
 		// Can occasionally happen if they in rapid succession reconnect ('subscribe') and
 		// submit a move, then when they receive 'gamestate' their client re-submits their move.
 		// Discard this submission and push them the current state just in case they're desynced.
-		gameutility.sendGameStateToColor(servergame, color, false);
+		gameutility.sendGameStateToColor(servergame, role, false);
 		return;
 	}
 
@@ -92,7 +92,7 @@ function submitMove(
 	if (messageContents.moveNumber !== expectedMoveNumber) {
 		const errString = `Client submitted a move with incorrect move number! Expected: ${expectedMoveNumber}   Message: ${JSON.stringify(messageContents)}. User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
-		gameutility.sendGameStateToColor(servergame, color, false);
+		gameutility.sendGameStateToColor(servergame, role, false);
 		return;
 	}
 
@@ -120,8 +120,8 @@ function submitMove(
 
 	// Use server-side validation if enabled, otherwise trust the client's reported conclusion.
 	const moveRecord = servergame.validateMoves
-		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, color)
-		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, color);
+		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, role)
+		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, role);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 
 	// console.log(`Accepted a move! Their websocket message data:`)
@@ -129,33 +129,42 @@ function submitMove(
 	// console.log("New move list:")
 	// console.log(game.moves);
 
-	declineDraw(servergame, color); // Auto-decline any open draw offer on move submissions
+	declineDraw(servergame, role); // Auto-decline any open draw offer on move submissions
 
 	// Persist the move and updated game state to the database.
 	liveGameValues.onMoveSubmitted(servergame);
 
-	broadcastMove(servergame, moveRecord, color);
+	broadcastMove(servergame, moveRecord, ws, role);
 }
 
 /**
- * Applies any move-triggered conclusion, and broadcasts
- * the move to all clients, then frees the game if it concluded.
+ * Applies any move-triggered conclusion, broadcasts the
+ * move to all clients, then frees the game if it concluded.
+ * Custom version of gamemanager.onGameConclusion()
  */
-function broadcastMove(servergame: ServerGame, moveRecord: MoveRecord, color: Player): void {
+function broadcastMove(
+	servergame: ServerGame,
+	moveRecord: MoveRecord,
+	ws: CustomWebSocket,
+	role: Player,
+): void {
 	if (servergame.gameConclusion === undefined) {
 		// Game not over: send the move-submitter only the updated clocks.
-		gameutility.sendUpdatedClockToColor(servergame, color);
+		if (!servergame.untimed) {
+			const message = gameutility.getGameClockValues(servergame);
+			sendSocketMessage(ws, 'game', 'clock', message);
+		}
 	} else {
 		// The game ended: apply the conclusion (stops the clocks),
 		// then send the submitter the conclusion message.
 		applyConclusion(servergame, servergame.gameConclusion);
 		const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
-		gameutility.sendMessageToColor(servergame.match, color, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
+		gameutility.sendMessageToColor(servergame.match, role, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = buildMoveMessage(servergame, moveRecord);
-	gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(color), 'game', 'move', moveMessage); // prettier-ignore
+	gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.
@@ -171,14 +180,14 @@ function applyServerValidatedMove(
 	servergame: ServerGame & { validateMoves: true },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
-	color: Player,
+	role: Player,
 ): MoveRecord | undefined {
 	const validationResult = movevalidation.validateMove(servergame, moveParsed);
 	if (!validationResult.valid) {
 		const errString = `Player sent an illegal move: "${messageContents.move}" Reason: ${validationResult.reason} User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
 		// Send the sender the current game state to correct their board if a bug somehow caused this
-		gameutility.sendGameStateToColor(servergame, color, true); // forceSync true to force their move list to match ours
+		gameutility.sendGameStateToColor(servergame, role, true); // forceSync true to force their move list to match ours
 		// Send notifyerror last to override any previous toasts
 		sendSocketMessage(
 			ws,
@@ -212,9 +221,9 @@ function applyClientReportedMove(
 	servergame: ServerGame & { validateMoves: false },
 	messageContents: SubmitMoveMessage,
 	moveParsed: MoveParsed,
-	color: Player,
+	role: Player,
 ): MoveRecord | undefined {
-	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, color)) {
+	if (!doesGameConclusionCheckOut(messageContents.gameConclusion, role)) {
 		const errString = `Player sent a conclusion that doesn't check out! Invalid. The message: "${JSON.stringify(messageContents)}" User: ${JSON.stringify(ws.metadata.memberInfo)}`;
 		logEventsAndPrint(errString, 'hackLog');
 		sendSocketMessage(ws, 'general', 'printerror', 'Invalid game conclusion.');
@@ -298,19 +307,19 @@ function doesMoveCheckOut(move: string): MoveParsed | false {
  * An example of a not reasonable one would be if they claimed they won by their opponent resigning.
  * This does not run the checkmate algorithm, so it's not foolproof.
  * @param gameConclusion - Their claimed game conclusion.
- * @param color - The color they are in the game.
+ * @param role - The color they are in the game.
  * @returns *true* if their claimed conclusion seems reasonable.
  */
 function doesGameConclusionCheckOut(
 	gameConclusion: GameConclusion | undefined,
-	color: Player,
+	role: Player,
 ): boolean {
 	if (gameConclusion === undefined) return true;
 
 	const { victor, condition } = gameConclusion;
 	if (!winconutil.isConclusionMoveTriggered(condition)) return false;
 	// We can't submit a move where our opponent wins
-	const oppositeColor = typeutil.invertPlayer(color);
+	const oppositeColor = typeutil.invertPlayer(role);
 	return victor !== oppositeColor;
 }
 

@@ -116,6 +116,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
  * Concludes a game after a valid cheat report. The full game state is sent to all participants,
  * but not spectators, this is because illegal moves are not forwarded in the game. However, the
  * cheater and whosTurn may be desynced, so they need the full state.
+ * Custom version of gamemanager.onGameConclusion
  */
 function concludeReportedGame(servergame: ServerGame, conclusion: GameConclusion): void {
 	applyConclusion(servergame, conclusion);

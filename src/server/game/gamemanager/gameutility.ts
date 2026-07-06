@@ -781,16 +781,6 @@ function isColorDisconnected(match: MatchInfo, role: Player): boolean {
 	return startTime !== undefined || timeOpponentMayClaim !== undefined;
 }
 
-/** Sends the current clock values to the player who just moved. */
-function sendUpdatedClockToColor(servergame: ServerGame, role: Player): void {
-	if (servergame.untimed) return; // Don't send clock values in an untimed game
-
-	const message = getGameClockValues(servergame);
-	const playerSocket = servergame.match.playerData[role]!.socket;
-	if (!playerSocket) return; // They are not connected, can't send message
-	sendSocketMessage(playerSocket, 'game', 'clock', message);
-}
-
 /**
  * Return the clock values of the servergame that can be sent to a client or logged.
  * It also includes who's clock is currently counting down, if one is.
@@ -909,7 +899,6 @@ export default {
 	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
 	sendMessageToColor,
-	sendUpdatedClockToColor,
 	broadcastToSpectators,
 	simplifyMove,
 	broadcastToParticipants,
