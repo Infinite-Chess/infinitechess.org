@@ -150,12 +150,12 @@ function broadcastMove(servergame: ServerGame, moveRecord: MoveRecord, color: Pl
 		// then send the submitter the conclusion message.
 		applyConclusion(servergame, servergame.gameConclusion);
 		const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
-		gameutility.sendMessageToColor(servergame, color, 'gameconclusion', conclusionMessage);
+		gameutility.sendMessageToColor(servergame.match, color, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
 	const moveMessage = buildMoveMessage(servergame, moveRecord);
-	gameutility.sendMessageToColor(servergame, typeutil.invertPlayer(color), 'move', moveMessage);
+	gameutility.sendMessageToColor(servergame.match, typeutil.invertPlayer(color), 'game', 'move', moveMessage); // prettier-ignore
 	gameutility.broadcastToSpectators(servergame, 'move', moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.

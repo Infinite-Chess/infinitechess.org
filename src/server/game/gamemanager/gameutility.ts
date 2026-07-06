@@ -389,10 +389,10 @@ function runReconnectSideEffects(servergame: ServerGame, ourRole: Player): void 
 		liveGameValues.onPlayerReconnected(servergame, ourRole);
 		// Alert their opponent we have returned, if they were informed of the disconnect
 		if (claimWindowWasSet) {
-			sendMessageToSocketOfColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn'); // prettier-ignore
+			sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnectreturn'); // prettier-ignore
 		}
 	} else {
-		sendMessageToSocketOfColor(servergame.match, opponentRole, 'game', 'opponentreturn');
+		sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentreturn');
 	}
 }
 
@@ -698,7 +698,7 @@ function getSocketRoleInGame(servergame: ServerGame, ws: CustomWebSocket): Playe
  * @param action - The action the client should perform. If sub is "general" and action is "notify" or "notifyerror", then this needs to be the key of the message in the TOML, and we will auto-translate it!
  * @param value - The value to send to the client.
  */
-function sendMessageToSocketOfColor(
+function sendMessageToColor(
 	match: MatchInfo,
 	role: Player,
 	sub: string,
@@ -712,18 +712,6 @@ function sendMessageToSocketOfColor(
 		if (action === 'notifyerror') return sendNotifyError(ws, value); // The value needs translating
 	}
 	sendSocketMessage(ws, sub, action, value); // Value doesn't need translating, send normally.
-}
-
-/** Sends a message to the participant color. */
-function sendMessageToColor(
-	servergame: ServerGame,
-	role: Player,
-	action: string,
-	value: any,
-): void {
-	const ws = servergame.match.playerData[role]!.socket;
-	if (!ws) return; // Not connected, can't send
-	sendSocketMessage(ws, 'game', action, value);
 }
 
 /**
@@ -920,9 +908,8 @@ export default {
 	sendGameStateToColor,
 	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
-	sendMessageToSocketOfColor,
-	sendUpdatedClockToColor,
 	sendMessageToColor,
+	sendUpdatedClockToColor,
 	broadcastToSpectators,
 	simplifyMove,
 	broadcastToParticipants,

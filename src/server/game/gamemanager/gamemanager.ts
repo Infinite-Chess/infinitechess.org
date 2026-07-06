@@ -231,7 +231,7 @@ function onPostGameLeave(servergame: ServerGame, role: Player, involuntary: bool
 
 	// Withdraw their rematch offer, if any, and tell the opponent they've left (disable + unglow).
 	match.rematchOffers.delete(role);
-	gameutility.sendMessageToSocketOfColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft'); // prettier-ignore
+	gameutility.sendMessageToColor(match, typeutil.invertPlayer(role), 'game', 'opponentleft'); // prettier-ignore
 
 	const playerdata = match.playerData[role]!;
 	clearTimeout(playerdata.disconnect.startID);
@@ -358,7 +358,7 @@ function onGameConclusion(servergame: ServerGame, conclusion: GameConclusion): v
 	// message and stopped clocks, as they can't desync.
 	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 	const opponentColor = typeutil.invertPlayer(servergame.whosTurn);
-	gameutility.sendMessageToColor(servergame, opponentColor, 'gameconclusion', conclusionMessage);
+	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'gameconclusion', conclusionMessage); // prettier-ignore
 	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
 
 	freeGame(servergame);

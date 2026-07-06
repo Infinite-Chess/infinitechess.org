@@ -50,7 +50,7 @@ function offerDraw(servergame: ServerGame, ourRole: Player): void {
 
 	// Alert their opponent
 	const opponentColor = typeutil.invertPlayer(ourRole);
-	gameutility.sendMessageToSocketOfColor(match, opponentColor, 'game', 'drawoffer');
+	gameutility.sendMessageToColor(match, opponentColor, 'game', 'drawoffer');
 }
 
 /**
@@ -96,7 +96,7 @@ function declineDraw(servergame: ServerGame, ourRole: Player): void {
 	closeDrawOffer(servergame.match);
 
 	// Alert their opponent
-	gameutility.sendMessageToSocketOfColor(servergame.match, opponentColor, 'game', 'declinedraw');
+	gameutility.sendMessageToColor(servergame.match, opponentColor, 'game', 'declinedraw');
 	liveGameValues.onDrawOfferDeclined(servergame);
 }
 

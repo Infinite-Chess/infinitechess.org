@@ -89,7 +89,7 @@ function startDisconnectClaimTimer(
 		millisUntilClaimable: timeUntilClaimable,
 		voluntary: !involuntary,
 	};
-	gameutility.sendMessageToSocketOfColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
+	gameutility.sendMessageToColor(servergame.match, opponentRole, 'game', 'opponentdisconnect', value); // prettier-ignore
 
 	liveGameValues.onPlayerDisconnected(servergame, role); // Persist the state to the db
 }

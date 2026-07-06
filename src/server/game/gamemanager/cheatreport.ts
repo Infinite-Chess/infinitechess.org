@@ -41,7 +41,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 
 	// Once the game is finalized its result is locked in and can no longer be overturned.
 	if (servergame.match.finalized) {
-		gameutility.sendMessageToSocketOfColor(
+		gameutility.sendMessageToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -56,7 +56,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	if (servergame.validateMoves) {
 		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${servergame.match.variant}. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
 		logEvents(errString, 'hackLog');
-		gameutility.sendMessageToSocketOfColor(
+		gameutility.sendMessageToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -74,7 +74,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	if (colorThatPlayedPerpetratingMove === ourRole) {
 		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${JSON.stringify(messageContents)}. Reporter color: ${ourRole}.\nThe game: ${gameutility.getSimplifiedGameString(servergame)}`;
 		logEvents(errString, 'hackLog');
-		gameutility.sendMessageToSocketOfColor(
+		gameutility.sendMessageToColor(
 			servergame.match,
 			ourRole,
 			'general',
@@ -100,9 +100,9 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 		const player: Player = Number(playerStr) as Player;
 		const isSuspectedCheater = player === opponentColor;
 		if (isSuspectedCheater) {
-			gameutility.sendMessageToSocketOfColor(servergame.match, player, 'general', 'notifyerror', 'server.javascript.ws-you_cheated'); // prettier-ignore
+			gameutility.sendMessageToColor(servergame.match, player, 'general', 'notifyerror', 'server.javascript.ws-you_cheated'); // prettier-ignore
 		} else {
-			gameutility.sendMessageToSocketOfColor(servergame.match, player, 'general', 'notify', 'server.javascript.ws-opponent_cheated'); // prettier-ignore
+			gameutility.sendMessageToColor(servergame.match, player, 'general', 'notify', 'server.javascript.ws-opponent_cheated'); // prettier-ignore
 		}
 	}
 	for (const ws of servergame.spectators) {
