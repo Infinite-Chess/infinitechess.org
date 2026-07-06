@@ -10,7 +10,7 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { MoveParsed } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
-import type { OpponentsMoveMessage } from '../../../shared/types.js';
+import type { GameConclusionMessage, OpponentsMoveMessage } from '../../../shared/types.js';
 
 import * as z from 'zod';
 
@@ -138,21 +138,22 @@ function submitMove(
 }
 
 /**
- * Broadcasts a freshly accepted move to all clients, and concludes the game if the move ended it.
- * The submitter gets the full game state if it concluded (to reconcile the frozen clocks/result),
- * otherwise just updated clocks; the opponent and spectators get the move, which carries any
- * move-triggered conclusion. Frees the game if it concluded.
+ * Applies any move-triggered conclusion, and broadcasts
+ * the move to all clients, then frees the game if it concluded.
  */
 function broadcastMove(servergame: ServerGame, moveRecord: MoveRecord, color: Player): void {
-	if (servergame.gameConclusion !== undefined) {
-		// If the game ended, finalize state before sending: stops the clock and persists to DB.
-		// This ensures both clients receive the same frozen clock values that are in the DB.
-		applyConclusion(servergame, servergame.gameConclusion);
-		// Send the full game state to the move-submitter
-		gameutility.sendGameStateToColor(servergame, color, false);
-	} else {
-		// Just send updated clocks to the move-submitter
+	if (servergame.gameConclusion === undefined) {
+		// Game not over: send the move-submitter only the updated clocks.
 		gameutility.sendUpdatedClockToColor(servergame, color);
+	} else {
+		// The game ended: apply the conclusion (stops the clocks),
+		// then send the submitter the conclusion message.
+		applyConclusion(servergame, servergame.gameConclusion);
+		const conclusionMessage: GameConclusionMessage = {
+			gameConclusion: servergame.gameConclusion,
+		};
+		if (!servergame.untimed) conclusionMessage.clockValues = gameutility.getGameClockValues(servergame); // prettier-ignore
+		gameutility.sendMessageToColor(servergame, color, 'gameconclusion', conclusionMessage);
 	}
 
 	// Send the move to the opponent and spectators (carries any move-triggered conclusion).
