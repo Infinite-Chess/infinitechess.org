@@ -303,7 +303,8 @@ async function pasteGame(options: {
 
 	if (gameslot.getGamefile()) gameslot.unloadGame();
 
-	gameslot
+	// Returned so callers can await the load (the gamefile only exists once it resolves).
+	return gameslot
 		.loadGamefile({
 			timeControl: options.metadata.TimeControl ?? '-',
 			variant: options.variant,

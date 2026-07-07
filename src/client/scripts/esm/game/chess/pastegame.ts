@@ -124,8 +124,10 @@ async function pasteGame(
 	if (viewWhitePerspective !== undefined) options.viewWhitePerspective = viewWhitePerspective;
 
 	gameloader.pasteGame(options).then(() => {
-		// This isn't accessible until gameloader.pasteGame() resolves its promise.
-		const gamefile = gameslot.getGamefile()!;
+		// Only accessible once gameloader.pasteGame() resolves its load; still guard in
+		// case the load errored (the gamefile would be absent).
+		const gamefile = gameslot.getGamefile();
+		if (!gamefile) return;
 
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);

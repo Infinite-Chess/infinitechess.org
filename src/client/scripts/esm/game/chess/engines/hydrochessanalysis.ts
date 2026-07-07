@@ -45,14 +45,14 @@ interface AnalysisInfo {
 /** Search limits/settings for a `go` command. */
 interface GoOptions {
 	multiPv: number;
-	/** Target depth to analyze to, then stop (engine max 50). */
+	/** Target depth to analyze to, then stop. */
 	maxDepth: number;
 }
 
 /** Messages accepted by this worker. */
 type AnalysisCommand =
 	| { cmd: 'init'; hashMb: number }
-	| { cmd: 'position'; icn: string; newGame?: boolean }
+	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }
 	| { cmd: 'stop' };
 
@@ -73,6 +73,16 @@ export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoO
 
 let engine: wasmBindings.Engine | undefined;
 let wasmReady = false;
+
+/**
+ * Wall-clock budget per engine call. The engine runs continuous iterative deepening
+ * (fast: each depth seeds the next), completing WHOLE depths and stopping once this
+ * budget elapses — never mid-depth, so results stay deterministic. Each completed depth
+ * is streamed to the UI as it finishes (even during the call). Between calls the loop
+ * yields, so a new position/settings/stop command is honored within ~one slice — this
+ * is what caps how long a superseded ("lingering") search keeps the engine busy.
+ */
+const SLICE_MS = 180;
 
 /** Bumped whenever the desired analysis (position/settings) changes; in-flight slice results with an older generation are dropped. */
 let generation = 0;
@@ -146,16 +156,17 @@ async function runLoop(): Promise<void> {
 			const gen = generation;
 			const opts = goOptions;
 
-			// The next depth to search, clamped down when the target was lowered
-			// (or when re-running the final depth after a settings change).
-			const depthToSearch = Math.min(reachedDepth + 1, opts.maxDepth);
+			// One time-sliced call: resume at the next depth and search toward the target,
+			// completing as many whole depths as fit in SLICE_MS. Each depth streams via
+			// the callback as it finishes.
+			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
 
 			const summary: AnalysisInfo | null = engine!.analyse(
 				{
 					multi_pv: opts.multiPv,
-					max_depth: depthToSearch,
-					start_depth: depthToSearch,
-					// No slice_ms: unlimited, so the depth always completes (deterministic).
+					max_depth: opts.maxDepth,
+					start_depth: startDepth,
+					slice_ms: SLICE_MS,
 				},
 				(info: AnalysisInfo) => {
 					if (gen !== generation) return;
@@ -164,14 +175,14 @@ async function runLoop(): Promise<void> {
 			);
 
 			// Let queued messages (stop / position / go) process before deciding
-			// anything from this depth's result.
+			// anything from this slice's result.
 			await yieldToMessageQueue();
 
 			// Superseded (new position/settings/stop): just loop; the while-condition
 			// and syncPosition pick up the new desired state.
 			if (gen !== generation) continue;
 
-			reachedDepth = depthToSearch;
+			if (summary) reachedDepth = Math.max(reachedDepth, summary.depth);
 
 			// Decide whether the analysis of this position is finished.
 			let reason: Extract<AnalysisResponse, { type: 'done' }>['reason'] | undefined;
@@ -209,6 +220,10 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 		case 'position':
 			currentIcn = msg.icn;
 			generation++;
+			if (msg.resetSearch) {
+				appliedIcn = undefined;
+				reachedDepth = 0;
+			}
 			if (msg.newGame && wasmReady) {
 				// Brand-new game: drop the persistent searcher & TT so stale entries
 				// from an unrelated position can't pollute the analysis.

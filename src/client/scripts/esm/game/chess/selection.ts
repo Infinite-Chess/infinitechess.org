@@ -46,6 +46,7 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
+import analysismovetree from '../misc/analysis/movetree.js';
 import { listener_canvas } from './gamecore.js';
 
 // Types -----------------------------------------------------------------------------
@@ -335,6 +336,7 @@ function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefi
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
 
 	if (gamesession.getGameType() === 'analysis') {
+		analysismovetree.beginBranchFromViewedPosition(gamefile);
 		branchFromViewedPosition(gamefile, mesh);
 		return false; // State is now consistent at this ply; let the selection proceed.
 	}

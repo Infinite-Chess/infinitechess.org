@@ -67,17 +67,22 @@ interface CevalUpdate {
 /** Engine lifecycle status, for the UI status row. */
 type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed';
 
+interface RefreshAnalysisOptions {
+	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
+	restartSearch?: boolean;
+}
+
 // Constants ----------------------------------------------------------------------
 
 /** Target-depth choices for the settings dropdown. */
 const DEPTH_OPTIONS: number[] = [8, 10, 12, 13, 14, 16, 18, 20, 25, 30];
 /** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
-const MAX_DEPTH = 50;
+const MAX_DEPTH = 64;
 /** Hash size choices in MB (engine caps its TT at 64MB). */
 const HASH_OPTIONS: number[] = [16, 32, 64];
 const MAX_MULTI_PV = 5;
 /** UI update throttle. */
-const THROTTLE_MS = 120;
+const THROTTLE_MS = 60;
 
 const STORAGE_PREFIX = 'ceval.';
 const DEFAULT_SETTINGS: CevalSettings = {
@@ -107,9 +112,14 @@ let analyzed: { moveIndex: number; turn: number } | undefined;
 let goDeeperActive = false;
 /** The depth the in-flight analysis is running to. */
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
+/** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
+let allowDepthRegressionForCurrentSearch = false;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Per-page-session cache of every viewed position's deepest local analysis. */
+const positionCache = new Map<string, CevalUpdate>();
 
 const updateListeners = new Set<(update: CevalUpdate | undefined) => void>();
 const statusListeners = new Set<(status: CevalStatus) => void>();
@@ -244,7 +254,7 @@ function getViewedPositionIcn(gamefile: GameFile): string {
  *   MultiPV / search time, or toggling the engine off then on, resumes instantly rather
  *   than resetting the analysis.
  */
-function refreshAnalysis(force = false): void {
+function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): void {
 	if (!enabled || !worker || !workerReady) return;
 	// Note: only the logical gamefile is required — 'game-loaded' fires while
 	// graphics are still loading, and analysis shouldn't wait on textures.
@@ -256,26 +266,50 @@ function refreshAnalysis(force = false): void {
 	if (!force && !positionChanged) return;
 
 	if (positionChanged) {
-		goDeeperActive = false; // A new position invalidates "go deeper".
-		latestUpdate = undefined;
-		emitNow(); // Clear the previous position's eval immediately.
+		const cached = positionCache.get(icn);
+		// "Go deeper" is a one-shot for the position it was pressed on; any new position
+		// (cycling moves or making one) reverts to the default target depth.
+		goDeeperActive = false;
+		currentTargetDepth = settings.depth;
+		allowDepthRegressionForCurrentSearch = false;
+		latestUpdate = cached ? retargetCachedUpdate(cached) : undefined;
+		emitNow(); // Show cached eval immediately, or clear when this position is new.
 	}
 
 	const moveIndex = gamefile.state.local.moveIndex;
 	analyzed = { moveIndex, turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex) };
 	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
 
-	send({ cmd: 'position', icn, newGame: nextPositionIsNewGame });
+	send({
+		cmd: 'position',
+		icn,
+		newGame: nextPositionIsNewGame,
+		resetSearch: options.restartSearch,
+	});
 	send({ cmd: 'go', opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth } });
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
 }
 
+function retargetCachedUpdate(update: CevalUpdate): CevalUpdate {
+	const best = update.lines[0];
+	return {
+		...update,
+		targetDepth: currentTargetDepth,
+		done: update.terminal || update.depth >= currentTargetDepth || best?.mate !== undefined,
+	};
+}
+
 /** Stops the engine (keeps the worker warm). */
 function stopAnalysis(): void {
 	send({ cmd: 'stop' });
 	notifyStatus();
+}
+
+function restartWorkerForSearch(): void {
+	allowDepthRegressionForCurrentSearch = true;
+	spawnWorker();
 }
 
 // Normalization & emission ----------------------------------------------------------------
@@ -308,7 +342,7 @@ function receiveInfo(info: AnalysisInfo, done: boolean, terminal = false): void 
 		};
 	});
 
-	latestUpdate = {
+	const update: CevalUpdate = {
 		depth: info.depth,
 		seldepth: info.seldepth,
 		nodes: info.nodes,
@@ -321,8 +355,24 @@ function receiveInfo(info: AnalysisInfo, done: boolean, terminal = false): void 
 		terminal,
 	};
 
+	const cached = lastAnalyzedIcn ? positionCache.get(lastAnalyzedIcn) : undefined;
+	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) return;
+
+	latestUpdate = update;
+	if (lastAnalyzedIcn && shouldReplaceCachedUpdate(cached, update)) {
+		positionCache.set(lastAnalyzedIcn, update);
+		if (cached && update.depth >= cached.depth) allowDepthRegressionForCurrentSearch = false;
+	}
+
 	if (done) emitNow();
 	else scheduleEmit();
+}
+
+function shouldReplaceCachedUpdate(cached: CevalUpdate | undefined, update: CevalUpdate): boolean {
+	if (!cached) return true;
+	if (update.terminal || cached.terminal) return true;
+	if (update.depth !== cached.depth) return update.depth > cached.depth;
+	return update.lines.length >= cached.lines.length;
 }
 
 function scheduleEmit(): void {
@@ -420,9 +470,13 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 		// Reflect a MultiPV change on screen at once (trim/keep lines) before the engine
 		// re-runs, so it isn't stuck showing the old line count until the next update.
 		if (partial.multiPv !== undefined) reemitCurrent();
-		// Same position, new search params (MultiPV / depth): restart immediately,
-		// keeping the current eval on screen (refreshAnalysis won't blank it).
-		refreshAnalysis(true);
+		if (partial.multiPv !== undefined && settings.multiPv > previous.multiPv) {
+			restartWorkerForSearch();
+		} else {
+			// Same position, new search params: keep the current eval visible while the
+			// worker picks up the new target.
+			refreshAnalysis(true, { restartSearch: partial.multiPv !== undefined });
+		}
 	}
 }
 
@@ -430,6 +484,12 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 function goDeeper(): void {
 	goDeeperActive = true;
 	refreshAnalysis(true); // Same position, so the flag survives the position-change reset.
+	// Reflect the new (deeper) target on screen at once — don't wait for the engine's
+	// next info, otherwise the stats would keep showing the old "…/13" target.
+	if (latestUpdate) {
+		latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
+		emitNow();
+	}
 }
 
 /** The last normalized engine update for the current position, if any. */

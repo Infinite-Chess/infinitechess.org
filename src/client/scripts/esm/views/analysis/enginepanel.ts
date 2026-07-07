@@ -22,6 +22,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../game/GameBus.js';
 import enginearrows from '../../game/rendering/highlights/enginearrows.js';
 import movesequence from '../../game/chess/movesequence.js';
+import analysismovetree from '../../game/misc/analysis/movetree.js';
 import { isTypingTarget } from './analysis.js';
 
 // Elements -------------------------------------------------------------------------
@@ -32,6 +33,8 @@ const element_Stats = document.getElementById('engine-stats')!;
 const element_GoDeeper = document.getElementById('btn-go-deeper') as HTMLButtonElement;
 const element_SettingsBtn = document.getElementById('btn-engine-settings') as HTMLButtonElement;
 const element_Settings = document.getElementById('engine-settings')!;
+const element_Progress = document.getElementById('engine-progress')!;
+const element_ProgressFill = document.getElementById('engine-progress-fill')!;
 const element_Lines = document.getElementById('engine-lines')!;
 const element_Gauge = document.getElementById('eval-gauge')!;
 const element_GaugeBlack = document.getElementById('gauge-black')!;
@@ -77,6 +80,7 @@ function setEngineEnabled(value: boolean): void {
 		renderLines([]);
 		element_Eval.textContent = '-';
 		element_Stats.textContent = 'Local evaluation off';
+		updateProgress(undefined);
 	}
 }
 
@@ -96,9 +100,10 @@ function initSettingsUI(): void {
 function initListeners(): void {
 	element_Toggle.addEventListener('change', () => setEngineEnabled(element_Toggle.checked));
 
-	element_SettingsBtn.addEventListener('click', () =>
-		element_Settings.classList.toggle('hidden'),
-	);
+	element_SettingsBtn.addEventListener('click', () => {
+		const open = element_Settings.classList.toggle('hidden') === false;
+		element_SettingsBtn.classList.toggle('active', open);
+	});
 
 	element_MultiPv.addEventListener('input', () => {
 		element_MultiPvValue.textContent = element_MultiPv.value;
@@ -117,6 +122,8 @@ function initListeners(): void {
 
 	element_GoDeeper.addEventListener('click', () => {
 		element_GoDeeper.classList.add('hidden');
+		// ceval.goDeeper() re-emits immediately with the deeper target, which drives
+		// onEngineUpdate → the stats text and progress bar both update right away.
 		ceval.goDeeper();
 	});
 
@@ -131,11 +138,14 @@ function initListeners(): void {
 // Engine output rendering ------------------------------------------------------------
 
 function onEngineStatus(status: CevalStatus): void {
-	if (status === 'loading') element_Stats.textContent = 'Loading engine…';
-	else if (status === 'failed') {
+	if (status === 'loading') {
+		element_Stats.textContent = 'Loading engine…';
+		updateProgress(ceval.getLatestUpdate());
+	} else if (status === 'failed') {
 		element_Toggle.checked = false;
 		element_Gauge.classList.add('hidden');
 		element_Stats.textContent = 'Engine failed to load';
+		updateProgress(undefined);
 		toast.show('The analysis engine failed to load.', { error: true });
 	}
 }
@@ -146,10 +156,11 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	if (!update) {
 		// Position changed; awaiting the first info of the new search.
 		element_Eval.textContent = '…';
-		element_Stats.textContent = 'Thinking…';
+		element_Stats.textContent = 'Starting analysis';
 		element_GoDeeper.classList.add('hidden');
 		enginearrows.clearArrows();
 		renderLines([]);
+		updateProgress(undefined);
 		return;
 	}
 
@@ -159,6 +170,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 		enginearrows.clearArrows();
 		renderLines([]);
 		updateGauge(undefined);
+		updateProgress(update);
 		return;
 	}
 
@@ -170,6 +182,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
 	updateGauge(best);
+	updateProgress(update);
 	renderLines(update.lines);
 	updateArrows(update);
 }
@@ -182,16 +195,26 @@ function formatEval(line: CevalLine): string {
 }
 
 function formatStats(update: CevalUpdate): string {
-	// "Depth 12/12" while running to a target; "Depth 27" when going deeper toward the max.
-	const depth =
-		update.targetDepth >= ceval.MAX_DEPTH
-			? `Depth ${update.depth}`
-			: `Depth ${update.depth}/${update.targetDepth}`;
+	// Guard against a stale target briefly lagging the reached depth (e.g. right after
+	// "go deeper") — never show something like "15/13".
+	const depth = `Depth ${update.depth}/${Math.max(update.targetDepth, update.depth)}`;
 	const nps =
 		update.nps >= 1_000_000
 			? `${(update.nps / 1_000_000).toFixed(1)} Mn/s`
 			: `${Math.round(update.nps / 1000)} kn/s`;
 	return `${depth} · ${nps}`;
+}
+
+function updateProgress(update: CevalUpdate | undefined): void {
+	const active = ceval.isEnabled();
+	const computing = active && (!update || (!update.done && !update.terminal));
+	const targetDepth = update?.targetDepth ?? ceval.getSettings().depth;
+	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
+	// While computing, keep a small minimum so the animated bar is visible immediately
+	// (e.g. at depth 0 right after a move or on "go deeper"), not a zero-width sliver.
+	const width = computing ? Math.max(progress, 0.05) : progress;
+	element_ProgressFill.style.width = `${Math.round(width * 100)}%`;
+	element_Progress.classList.toggle('computing', computing);
 }
 
 /** Moves the eval gauge to the given best line's win probability (white POV). */
@@ -205,7 +228,6 @@ function updateGauge(best: CevalLine | undefined): void {
 
 function renderLines(lines: CevalLine[]): void {
 	element_Lines.replaceChildren();
-	const atFront = isAnalyzingFrontPosition();
 
 	for (const line of lines) {
 		const row = document.createElement('div');
@@ -219,12 +241,10 @@ function renderLines(lines: CevalLine[]): void {
 		movesSpan.className = 'line-moves';
 		line.moves.forEach((token, i) => {
 			const moveSpan = document.createElement('span');
-			moveSpan.className = 'line-move' + (atFront ? '' : ' unplayable');
+			moveSpan.className = 'line-move';
 			moveSpan.textContent = token;
-			moveSpan.title = atFront
-				? 'Play the line up to this move'
-				: 'Go to the latest move to play engine lines';
-			if (atFront) moveSpan.addEventListener('click', () => playLine(line.moves, i));
+			moveSpan.title = 'Play the line up to this move';
+			moveSpan.addEventListener('click', () => playLine(line.moves, i));
 			movesSpan.append(moveSpan);
 			if (i < line.moves.length - 1) movesSpan.append(' ');
 		});
@@ -234,21 +254,14 @@ function renderLines(lines: CevalLine[]): void {
 	}
 }
 
-/** Whether the position being analyzed is the game's front (moves can be played from it). */
-function isAnalyzingFrontPosition(): boolean {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return false;
-	return moveutil.areWeViewingLatestMove(gamefile);
-}
-
 /** Plays the PV's moves up to and including `untilIndex` onto the board. */
 function playLine(tokens: string[], untilIndex: number): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
-	if (!moveutil.areWeViewingLatestMove(gamefile)) return;
 	if (gamefile.gameConclusion) return;
 
 	const mesh = gameslot.getMesh();
+	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
 	for (let i = 0; i <= untilIndex; i++) {
 		const result = movevalidation.isTokenMoveLegal(gamefile, tokens[i]!);
 		if (!result.valid) {
@@ -260,6 +273,16 @@ function playLine(tokens: string[], untilIndex: number): void {
 		else movesequence.makeMove(gamefile, mesh, result.tagged);
 		if (gamefile.gameConclusion) break; // The line ended the game.
 	}
+}
+
+function branchFromViewedPosition(
+	gamefile: NonNullable<ReturnType<typeof gameslot.getGamefile>>,
+	mesh: ReturnType<typeof gameslot.getMesh>,
+): void {
+	const target = gamefile.state.local.moveIndex;
+	analysismovetree.beginBranchFromViewedPosition(gamefile);
+	movesequence.viewFront(gamefile, mesh);
+	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
 
 // Engine arrows -------------------------------------------------------------------------
