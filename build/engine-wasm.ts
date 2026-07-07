@@ -43,18 +43,19 @@ export async function setupEngineWasm(): Promise<void> {
 	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
 	const wasmFile = path.join(pkgDir, 'hydrochess_wasm_bg.wasm');
 	const jsFile = path.join(pkgDir, 'hydrochess_wasm.js');
+
+	// Dev-opt-in: A manually created `pkg/.local-build` file means there's a
+	// local build of the engine, do not replace it with a downloaded release.
+	if (fs.existsSync(path.join(pkgDir, '.local-build'))) {
+		console.log(`${label} Local engine build detected — skipping release download.`);
+		return;
+	}
+
 	// Note: If you are manually rebuilding the engine binaries on a separate
 	// vscode window with the hydrochess repo open, and have setup a symlink
 	// for this submodule to point to that project, then this file will be innacurate.
 	// But it works because the local build process thinks we're already on the latest version.
 	const versionFile = path.join(pkgDir, '.engine-version');
-
-	// A locally-built pkg (wasm-pack run by hand while developing the engine) must never
-	// be clobbered by an older GitHub release. Create `pkg/.local-build` to opt in.
-	if (fs.existsSync(path.join(pkgDir, '.local-build'))) {
-		console.log(`${label} Local engine build detected — skipping release download.`);
-		return;
-	}
 
 	// Download pre-built binary if new version available
 	let localVersion = '';
