@@ -10,7 +10,6 @@ import type {
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
@@ -69,7 +68,7 @@ function receiveMessage(contents: GameMessage): void {
 			messageQueue.push(contents);
 		} else if (contents.action === 'gamestate') {
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			loadGameFromState(contents.value, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, window.gamePageData.role);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -190,44 +189,6 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 		Date.now() + clockValues.clocks[clockValues.colorTicking]!;
 
 	return;
-}
-
-/**
- * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
- * board from a fresh `gamestate` message and sets up the online-game session.
- * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
- */
-export function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
-	gamesession.setSessionGame({ type: 'online', role: ourRole });
-
-	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated } = window.gamePageData;
-
-	gameslot
-		.loadGamefile({
-			timeControl,
-			variant: variant.kind === 'preset' ? variant.code : undefined,
-			dateTimestamp: timeCreated,
-			// Spectators (no role) view white's side.
-			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
-			additional: {
-				moves: state.moves,
-				gameConclusion: state.gameConclusion,
-				clockValues: state.clockValues,
-			},
-		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-			onlinegame.initOnlineGame(state.finalized, state.participantState);
-
-			gamesession.concludeGameIfOver();
-			// A finalized rated game carries its deltas in the state.
-			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
-
-			return graphical;
-		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
 }
 
 /** Replays the messages buffered during loading, in arrival order. */
