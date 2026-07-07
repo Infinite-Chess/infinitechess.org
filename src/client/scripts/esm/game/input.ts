@@ -719,11 +719,14 @@ function CreateInputListener(
 
 	if (keyboard) {
 		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
-			// Ignore typing in text fields, but let bare keys (Space, arrows…) still
-			// control the board when a checkbox is focused, rather than re-toggling it.
+			// Ignore typing in text fields (text inputs, textareas, contenteditable), but
+			// let bare keys (Space, arrows…) still control the board when a checkbox is
+			// focused, rather than re-toggling it.
+			const active = document.activeElement;
 			if (
-				document.activeElement instanceof HTMLInputElement &&
-				document.activeElement.type !== 'checkbox'
+				(active instanceof HTMLInputElement && active.type !== 'checkbox') ||
+				active instanceof HTMLTextAreaElement ||
+				(active instanceof HTMLElement && active.isContentEditable)
 			)
 				return;
 

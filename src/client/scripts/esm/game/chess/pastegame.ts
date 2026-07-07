@@ -64,9 +64,13 @@ async function callbackPaste(_event: Event): Promise<void> {
  * THIS FUNCTION AND gameforulator.formulateGame()!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
  * @param longformOut - The game in longformat, or primed for copying. This is NOT the gamefile, we'll need to use the gamefile constructor.
+ * @param viewWhitePerspective - Board orientation override (defaults to the current game's perspective).
  * @returns Whether the paste was successful
  */
-async function pasteGame(longformOut: LongFormatOut): Promise<void> {
+async function pasteGame(
+	longformOut: LongFormatOut,
+	viewWhitePerspective?: boolean,
+): Promise<void> {
 	console.log('Pasting game...');
 
 	// Create a new gamefile from the longformat...
@@ -97,6 +101,7 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		dateTimestamp: number;
 		additional: Additional;
 		presetAnnotes?: PresetAnnotes;
+		viewWhitePerspective?: boolean;
 	} = {
 		metadata: longformOut.metadata,
 		variant: resolvedVariantCode,
@@ -104,10 +109,13 @@ async function pasteGame(longformOut: LongFormatOut): Promise<void> {
 		additional,
 	};
 	if (longformOut.presetAnnotes) options.presetAnnotes = longformOut.presetAnnotes;
+	if (viewWhitePerspective !== undefined) options.viewWhitePerspective = viewWhitePerspective;
 
 	gameloader.pasteGame(options).then(() => {
-		// This isn't accessible until gameloader.pasteGame() resolves its promise.
-		const gamefile = gameslot.getGamefile()!;
+		// Only accessible once gameloader.pasteGame() resolves its load; still guard in
+		// case the load errored (the gamefile would be absent).
+		const gamefile = gameslot.getGamefile();
+		if (!gamefile) return;
 
 		// If there's too many pieces, notify them that the win condition has changed from checkmate to royalcapture.
 		const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
@@ -144,5 +152,6 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 
 export default {
 	callbackPaste,
+	pasteGame,
 	resolveAndNormalizeVariantFromMetadata,
 };

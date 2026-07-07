@@ -381,4 +381,5 @@ export default {
 	init,
 	update,
 	render,
+	terminate,
 };

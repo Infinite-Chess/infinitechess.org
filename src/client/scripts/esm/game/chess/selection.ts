@@ -46,6 +46,7 @@ import frametracker from '../rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { animateMove } from './graphicalchanges.js';
+import analysismovetree from '../misc/analysis/movetree.js';
 import { listener_canvas } from './gamecore.js';
 
 // Types -----------------------------------------------------------------------------
@@ -319,16 +320,44 @@ function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
 	mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 }
 
-/** Forwards to the front of the game if we're viewing history, and returns true if we did. */
+/**
+ * Handles selecting a piece while viewing an earlier move.
+ *
+ * In analysis, this branches from the viewed ply: the later moves are deleted so the
+ * game truly sits at this position (with consistent turn/rights state), and selection
+ * is allowed to proceed — so you can play a different continuation from here. Returns
+ * false in that case.
+ *
+ * In every other game type it forwards to the front instead and returns true, so the
+ * caller aborts the selection.
+ */
 function viewFrontIfNotViewingLatestMove(gamefile: GameFile, mesh: Mesh | undefined): boolean {
-	// If we're viewing history, return.
+	// If we're viewing the latest move, nothing to do.
 	if (moveutil.areWeViewingLatestMove(gamefile)) return false;
+
+	if (gamesession.getGameType() === 'analysis') {
+		analysismovetree.beginBranchFromViewedPosition(gamefile);
+		branchFromViewedPosition(gamefile, mesh);
+		return false; // State is now consistent at this ply; let the selection proceed.
+	}
 
 	movesequence.viewFront(gamefile, mesh);
 	// Also animate the last move
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	animateMove(lastMove.changes);
 	return true;
+}
+
+/**
+ * Truncates the game to the currently-viewed ply: fast-forwards the logical front to
+ * align with the board, then rewinds move-by-move (deleting each) back to the viewed
+ * index. Afterward the gamefile genuinely sits at that position — board, turn, and
+ * global state all consistent — so a new move can be played from it.
+ */
+function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): void {
+	const target = gamefile.state.local.moveIndex;
+	movesequence.viewFront(gamefile, mesh);
+	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
 
 // Can Select/Move/Drop Piece Type ---------------------------------------------------------------------------------

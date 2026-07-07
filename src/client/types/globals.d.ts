@@ -91,6 +91,16 @@ declare global {
 		role?: Player;
 	} & StaticGameSetup;
 
+	/**
+	 * SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk.
+	 */
+	var analysisPageData: {
+		/** Base62 id of a game to auto-load, or null for a fresh board. */
+		gameId: string | null;
+		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
+		workerUrl: string;
+	};
+
 	/** Cloudflare Turnstile's API, injected by their `api.js` script (see register.njk). */
 	var turnstile: Turnstile;
 	/** Called by Turnstile's `api.js` (`?onload=…`) once ready; register.ts assigns it to render the widget. */

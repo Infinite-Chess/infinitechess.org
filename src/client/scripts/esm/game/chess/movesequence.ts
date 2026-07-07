@@ -66,9 +66,16 @@ function commitMove(
 
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
-		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online')
+		if (gamesession.getGameType() === 'analysis') {
+			// Analysis never actually ends: keep the mate flag that doGameOverChecks just
+			// set on the move (so the move list still shows the trailing '#'), but clear
+			// the conclusion so there's no result banner, no game-over sound, and moves
+			// can still be made / taken back freely from a checkmated position.
+			gamefile.gameConclusion = undefined;
+		} else if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online') {
+			// Only conclude the game if it's not an online game (in that scenario, server is boss)
 			gameslot.concludeGame();
+		}
 	}
 
 	GameBus.dispatch('physical-move');
@@ -162,10 +169,15 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
  * Apply the move to the board state and the mesh, whether forward or backward,
  * as if we were wanting to *view* the move, instead of making it.
  *
- * This does not change the game state, for example, whos turn it is,
- * what square enpassant is legal on, or the running count of checks given.
+ * In most game types this changes only the LOCAL state (board + check), leaving the
+ * global game state (whose turn, en passant, special rights, move-rule counter) pinned
+ * at the front — the front is authoritative and history is view-only.
  *
- * But it does change the check state.
+ * In an ANALYSIS game there is no authoritative front: every ply is a real, editable
+ * position, so navigation also applies/reverts the GLOBAL state (and updates whose turn),
+ * keeping special rights / en passant / the move-rule counter correct at whatever ply is
+ * being viewed. This is what makes castling rights (etc.) recover when you delete moves
+ * or switch to a line that never lost them.
  */
 function viewMove(
 	gamefile: GameFile,
@@ -173,7 +185,10 @@ function viewMove(
 	move: MoveFull,
 	forward = true,
 ): void {
-	movepiece.applyMove(gamefile, move, forward); // Apply the logical changes.
+	const isAnalysis = gamesession.getGameType() === 'analysis';
+	movepiece.applyMove(gamefile, move, forward, { global: isAnalysis }); // Apply the logical changes.
+	if (isAnalysis)
+		gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex); // prettier-ignore
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.

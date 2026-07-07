@@ -49,6 +49,13 @@ export async function setupEngineWasm(): Promise<void> {
 	// But it works because the local build process thinks we're already on the latest version.
 	const versionFile = path.join(pkgDir, '.engine-version');
 
+	// A locally-built pkg (wasm-pack run by hand while developing the engine) must never
+	// be clobbered by an older GitHub release. Create `pkg/.local-build` to opt in.
+	if (fs.existsSync(path.join(pkgDir, '.local-build'))) {
+		console.log(`${label} Local engine build detected — skipping release download.`);
+		return;
+	}
+
 	// Download pre-built binary if new version available
 	let localVersion = '';
 	if (fs.existsSync(versionFile)) {
