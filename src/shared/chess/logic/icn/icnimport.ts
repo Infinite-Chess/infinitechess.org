@@ -7,8 +7,9 @@
  */
 
 import type { CoordsKey } from '../../util/coordutil.js';
+import type { MovePacket } from '../../../types.js';
 import type { VariantCode } from '../../variants/variantregistry.js';
-import type { LongFormatOut } from './icnconverter.js';
+import type { LongFormatOut, MoveParsed } from './icnconverter.js';
 import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
 import metadatautil from '../../util/metadatautil.js';
@@ -68,7 +69,20 @@ function variantOptionsFromLongFormat(
 	};
 }
 
+/**
+ * Maps parsed ICN moves to wire {@link MovePacket}s, keeping only the
+ * token + clock stamp (dropping parse-only extras like comments and coords).
+ */
+function movePacketsFromParsed(moves: MoveParsed[]): MovePacket[] {
+	return moves.map((m) => {
+		const move: MovePacket = { token: m.token };
+		if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
+		return move;
+	});
+}
+
 export default {
 	getPositionAndSpecialRightsFromLongFormat,
 	variantOptionsFromLongFormat,
+	movePacketsFromParsed,
 };

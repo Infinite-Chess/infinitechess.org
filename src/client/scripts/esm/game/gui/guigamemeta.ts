@@ -10,8 +10,13 @@
  * never touched here.
  */
 
+import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { PlayerRatingChangeInfo } from '../../../../../shared/types.js';
+
 import timeutil from '../../../../../shared/util/timeutil.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import gameresultutil from '../../../../../shared/chess/util/gameresultutil.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import { GameBus } from '../GameBus.js';
@@ -26,6 +31,9 @@ const element_SpectatorCount = element_Spectators.querySelector('.spectator-coun
 const element_ResultBanner = document.querySelector('.result-banner')!;
 const element_BannerScore = element_ResultBanner.querySelector('.result-score')!;
 const element_BannerText = element_ResultBanner.querySelector('.result-text')!;
+
+/** The participant `.username-embed`s, in SSR order: white first, then black. */
+const element_MetaPlayerEmbeds = document.querySelectorAll('.meta-players .meta-player .username-embed'); // prettier-ignore
 
 // =============================== Started X ago ===============================
 
@@ -72,8 +80,28 @@ function showResultBanner(): void {
 
 GameBus.addEventListener('game-concluded', showResultBanner);
 
+// =============================== Rating Changes ===============================
+
+/**
+ * Appends each player's rating-change delta (e.g. `+27`) beside
+ * their rating in the participant list, once a rated game is over.
+ * Entry points: the dead-game load and the live `gameratingchange` message.
+ */
+function showRatingChanges(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>): void {
+	for (const [strColor, info] of Object.entries(ratingChanges)) {
+		const player = Number(strColor) as Player;
+		const index = player === p.WHITE ? 0 : player === p.BLACK ? 1 : (() => { throw new Error(`Unexpected color ${player}`) })(); // prettier-ignore
+		const embed = element_MetaPlayerEmbeds[index]!;
+		const delta = document.createElement('span');
+		delta.classList.add('eloChange', info.change >= 0 ? 'positive' : 'negative');
+		delta.textContent = metadatautil.getWhiteBlackRatingDiff(info.change);
+		embed.appendChild(delta);
+	}
+}
+
 // ===========================================================================
 
 export default {
 	updateSpectatorCount,
+	showRatingChanges,
 };

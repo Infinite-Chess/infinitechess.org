@@ -30,20 +30,41 @@ positions is the consumer (T9/T10), not part of this task.
 
 4. **Wire the live position.** The custom position is *static setup*, so it rides in the SSR'd
    `gamePageData` alongside `variant`/`timeControl`/`timeCreated` — NOT on the subscribe socket. (The
-   subscribe `FullGameState` now carries only live deltas; all static setup was moved into `gamePageData`
+   subscribe `GameStateMessage` now carries only live deltas; all static setup was moved into `gamePageData`
    via the shared `StaticGameSetup` type — server `gamePageController`, client `globals.d.ts`.) For a
-   custom game, populate the position into that SSR channel and feed it to T9's loader; the dead path
-   still gets it from `DeadGameState.icn`. Settle the exact field shape with whoever owns T9 — either a
-   sibling `position` field on `StaticGameSetup`, or give `GameStateVariant`'s custom arm a payload
-   (today it deliberately carries none).
+   custom game, populate the position into that SSR channel and feed it to the loader. Settle the exact
+   field shape — either a sibling `position` field on `StaticGameSetup`, or give `GameStateVariant`'s
+   custom arm a payload (today it deliberately carries none).
 
-5. **Un-stale the docs.** Update `docs/systems/LIVE_GAME_PERSISTENCE.md` — it still lists `variant` as
+5. **Extend the client loader for custom positions (both live *and* dead).** `loadGameFromState`
+   ([onlinegamerouter.ts](../../../../src/client/scripts/esm/game/misc/onlinegame/onlinegamerouter.ts))
+   passes `variant: variant.code | undefined` to `gameslot.loadGamefile` but threads **no**
+   `variantOptions`, so a `variant.kind === 'custom'` game cannot build its position and won't load.
+   Extend the loader to accept/derive `variantOptions` (build them from the SSR'd position via
+   [icnimport.variantOptionsFromLongFormat](../../../../src/shared/chess/logic/icn/icnimport.ts)) and
+   pass them through `additional.variantOptions`. This is the single choke point both paths share:
+   - **Dead/review path:** the dead loader already parses the ICN
+     ([deadgameloader.ts](../../../../src/client/scripts/esm/game/misc/onlinegame/deadgameloader.ts)) but
+     **guards custom games out with a TODO pointing here** — the ICN's parsed position/gamerules are
+     right there in the `LongFormatOut`; remove the guard and pass `variantOptions` into the loader.
+   - **Live path:** feed the SSR'd position from step 4 through the same loader argument.
+
+6. **Un-stale the docs.** Update `docs/systems/LIVE_GAME_PERSISTENCE.md` — it still lists `variant` as
    `TEXT NOT NULL` and omits `position`. Fix Group 1 (variant now nullable; add the `position` row) and
    the "Game created" event row. Also revisit `requirements.md`'s custom-game notes if anything there
    now reads as stale.
 
 ## Notes
 
+- **The ICN is the source of truth for custom games' game rules.** A preset variant derives its
+  gamerules (incl. turn order), starting position, and win conditions from the registry code. A custom
+  game has no code, so the ICN itself is authoritative for **game rules, turn order, starting position,
+  moves, and clock stamps** — the client parses them out of it (`ShortToLong_Format` →
+  `gameRules`/`position`/`state_global`/`moves`). What the ICN is **NOT** the source of truth for is
+  anything in its metadata tags (variant name, players, elo, result, dates): those stay eyeball-only,
+  and the authoritative values come from the typed state (`gamePageData` / `DeadGameState`). This
+  matters wherever move→color mapping or clock fallback assumes a turn order — read it from the parsed
+  gamerules, never assume white/black alternation.
 - Independent of the T9–T12 client/protocol chain (those already work for preset games); orderable
   whenever custom games become a priority. Gated only on the schema work above, which is landed.
 - Once this ships, the temporary `is_custom`/nullability migrations are irrelevant to the feature — they

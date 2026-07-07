@@ -11,7 +11,6 @@ import type { CustomWebSocket } from '../../socket/socketUtility.js';
 
 import gameutility from './gameutility.js';
 import { getGameByID } from './gamemanager.js';
-import { getGameData } from '../../database/gamesManager.js';
 import { sendSocketMessage } from '../../socket/sendSocketMessage.js';
 
 /**
@@ -35,32 +34,11 @@ function onSubscribeToGame(ws: CustomWebSocket, game_id: number): void {
 			sendSocketMessage(ws, 'game', 'gamestate', gameStateBaseMessage);
 		}
 	} else {
-		// Dead game
-		/*
-		 * Handles a request to subscribe to a game, but its dead (not in server memory).
-		 * Tells the client to unsub or that there's no game.
-		 *
-		 * A game absent from the DB was aborted before any move (never logged), so we tell
-		 * the client to refresh (`nogame`).
-		 *
-		 * TODO (T10): If the game is present in the DB, decide whether to send the state
-		 * directly or tell it to use the HTTP endpoint.
-		 */
-		let loggedInDb: boolean;
-		try {
-			loggedInDb = !!getGameData(game_id, ['game_id']);
-		} catch {
-			// DB error (already logged)
-			sendSocketMessage(
-				ws,
-				'game',
-				'notifyerror',
-				'A server error occurred while connecting to the game. Please refresh.',
-			);
-			return;
-		}
-
-		sendSocketMessage(ws, 'game', loggedInDb ? 'unsub' : 'nogame');
+		// The game isn't live in server memory (concluded + evicted, or never existed). The client
+		// requested a full `subscribe`, so it may not yet have seen the conclusion — tell it to reload
+		// (`notlive`). Fresh SSR then serves the dead review page (if logged) or the 404 page, and a
+		// review client fetches the dead state over HTTP.
+		sendSocketMessage(ws, 'game', 'notlive');
 	}
 }
 

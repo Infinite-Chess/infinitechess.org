@@ -122,6 +122,13 @@ export const ParticipantStateSchema = z.strictObject({
 	rematch: RematchOfferInfoSchema.optional(),
 });
 
+/** A single player's rating change from a completed rated game. */
+export type PlayerRatingChangeInfo = z.infer<typeof PlayerRatingChangeInfoSchema>;
+export const PlayerRatingChangeInfoSchema = z.strictObject({
+	newRating: RatingSchema,
+	change: z.number(),
+});
+
 /**
  * The recipient-agnostic core of a live game-state message (no per-player overlay). Carries the
  * live move list, clocks, conclusion, and finalized flag. The core of every `gamestate` message —
@@ -215,13 +222,6 @@ export const MetaDataSchema = z.strictObject({
 	Result: z.string().optional(),
 	/** What caused the game to end, in spoken language. E.g. "Time forfeit". */
 	Termination: z.string().optional(),
-});
-
-/** A single player's rating change from a completed rated game. */
-export type PlayerRatingChangeInfo = z.infer<typeof PlayerRatingChangeInfoSchema>;
-export const PlayerRatingChangeInfoSchema = z.strictObject({
-	newRating: RatingSchema,
-	change: z.number(),
 });
 
 // Game State Schemas ---------------------------------------------------------------

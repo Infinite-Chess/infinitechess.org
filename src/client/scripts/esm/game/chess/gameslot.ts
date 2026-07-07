@@ -244,8 +244,10 @@ function unloadGame(): void {
 /**
  * Ends the game. Call this when the game is over by the used win condition.
  * Stops the clocks, darkens the board, displays who won, plays a sound effect.
+ * @param playSound - Whether to play the game-over sound. Pass false when the game
+ *   loaded already-concluded (a fresh load, not a live conclusion).
  */
-function concludeGame(): void {
+function concludeGame(playSound = true): void {
 	if (!loadedGamefile) throw Error("Cannot conclude game when there isn't one loaded");
 	if (loadedGamefile.gameConclusion === undefined)
 		throw Error("Cannot conclude game when the game hasn't ended.");
@@ -255,7 +257,7 @@ function concludeGame(): void {
 
 	GameBus.dispatch('game-concluded');
 
-	gamesound.playNotify(true);
+	if (playSound) gamesound.playNotify(true);
 }
 
 export default {

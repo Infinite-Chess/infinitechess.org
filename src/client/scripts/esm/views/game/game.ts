@@ -15,6 +15,7 @@ import gamesession from '../../game/chess/gamesession.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
+import deadgameloader from '../../game/misc/onlinegame/deadgameloader.js';
 
 import '../../game/gui/guisidebar.js';
 import '../../game/misc/onlinegame/onlinegamerouter.js';
@@ -31,9 +32,11 @@ function start(): void {
 	initListeners();
 
 	if (window.gamePageData.isLive) {
-		onlinegame.subscribeToGame(); // Naturally requests the full game state bootstraps the game
+		onlinegame.subscribeToGame(); // Naturally requests the full game state which bootstraps the game
+	} else {
+		// Dead (memory-evicted) game: fetch its state over HTTP and render it — no socket opened.
+		deadgameloader.loadDeadGame();
 	}
-	// Dead (!isLive): out of scope here — wired in T10.
 
 	// Update & draw the scene repeatedly
 	requestAnimationFrame(gameLoop);
