@@ -30,10 +30,13 @@ const element_VariantSelect = document.getElementById('variant-select') as HTMLS
 
 /** Initializes the ICN panel. Called once by the page entry. */
 function init(): void {
-	// Keep the textarea mirroring the game. The ICN is always the full game — it
-	// naturally includes the move list only when moves have been played.
-	GameBus.addEventListener('game-loaded', () => refresh());
-	GameBus.addEventListener('moves-changed', () => refresh());
+	// The textarea is freely editable — we never overwrite what the user types on
+	// their own. It's only rewritten from the game on a deliberate board action: a
+	// move made, a move cycled through (nav), or a game loaded. Validation happens
+	// only on Import.
+	GameBus.addEventListener('game-loaded', refresh);
+	GameBus.addEventListener('moves-changed', refresh);
+	GameBus.addEventListener('view-move', refresh);
 	GameBus.addEventListener('game-unloaded', () => (element_Textarea.value = ''));
 
 	element_Copy.addEventListener('click', async () => {
@@ -46,19 +49,21 @@ function init(): void {
 	});
 
 	element_Import.addEventListener('click', importFromTextarea);
-
-	// The textarea stops mirroring while the user is editing; blurring without
-	// importing resumes mirroring.
-	element_Textarea.addEventListener('blur', () => refresh());
 }
 
 /**
- * Serializes the full game (position + move list) to canonical compact ICN — the
- * same `compressGamefile` + `LongToShort_Format` form the engine worker uses, so the
- * exported string round-trips cleanly through the import field.
+ * Serializes the game (position + move list) to canonical compact ICN — the same
+ * `compressGamefile` + `LongToShort_Format` form the engine worker uses, so the
+ * exported string round-trips cleanly through the import field. Moves are truncated
+ * to the currently-viewed ply, so the box mirrors the position on the board as you
+ * cycle through moves.
  */
 function getGameICN(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile);
+	const viewedPlyCount = gamefile.state.local.moveIndex + 1;
+	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
+		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
+	}
 	return icnconverter.LongToShort_Format(longformIn, {
 		skipPosition: false,
 		compact: true,
@@ -69,9 +74,8 @@ function getGameICN(gamefile: GameFile): string {
 	});
 }
 
-/** Rewrites the textarea from the current game (skipped while the user is editing it). */
-function refresh(force = false): void {
-	if (!force && document.activeElement === element_Textarea) return;
+/** Rewrites the textarea from the current game. Called only on move / game load. */
+function refresh(): void {
 	// Only the logical gamefile is needed — 'game-loaded' fires before graphics finish.
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;

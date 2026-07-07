@@ -117,7 +117,16 @@ function onCatchLoadingError(err: Error): void {
 
 /** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
 function concludeGameIfOver(): void {
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
+	const gamefile = gameslot.getGamefile()!;
+	if (!gamefileutility.isGameOver(gamefile)) return;
+	if (session.type === 'analysis') {
+		// Analysis never concludes: keep the last move's mate flag (loaded via
+		// doGameOverChecks, so the move list still shows the trailing '#') but drop the
+		// conclusion so there's no result banner/sound and play stays unblocked.
+		gamefile.gameConclusion = undefined;
+		return;
+	}
+	gameslot.concludeGame();
 }
 
 function unloadLogicalAndRendering(): void {

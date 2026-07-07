@@ -66,9 +66,16 @@ function commitMove(
 
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
-		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online')
+		if (gamesession.getGameType() === 'analysis') {
+			// Analysis never actually ends: keep the mate flag that doGameOverChecks just
+			// set on the move (so the move list still shows the trailing '#'), but clear
+			// the conclusion so there's no result banner, no game-over sound, and moves
+			// can still be made / taken back freely from a checkmated position.
+			gamefile.gameConclusion = undefined;
+		} else if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online') {
+			// Only conclude the game if it's not an online game (in that scenario, server is boss)
 			gameslot.concludeGame();
+		}
 	}
 
 	GameBus.dispatch('physical-move');
