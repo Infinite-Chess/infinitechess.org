@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/analysis/enginepanel.ts
+// src/client/scripts/esm/views/analysis/gui/guienginepanel.ts
 
 /**
  * The analysis page's engine panel: the local-evaluation toggle, eval readout,
@@ -7,23 +7,23 @@
  * the board, and the engine's best-move arrows drawn on the board.
  */
 
-import type { Coords } from '../../../../../shared/chess/util/coordutil.js';
-import type { EngineArrow } from '../../game/rendering/highlights/enginearrows.js';
-import type { CevalLine, CevalStatus, CevalUpdate } from '../../game/misc/analysis/ceval.js';
+import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { EngineArrow } from '../enginearrows.js';
+import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
-import moveutil from '../../../../../shared/chess/util/moveutil.js';
-import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
+import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
-import ceval from '../../game/misc/analysis/ceval.js';
-import toast from '../../components/toast.js';
-import gameslot from '../../game/chess/gameslot.js';
-import gamesession from '../../game/chess/gamesession.js';
-import { GameBus } from '../../game/GameBus.js';
-import enginearrows from '../../game/rendering/highlights/enginearrows.js';
-import movesequence from '../../game/chess/movesequence.js';
-import analysismovetree from '../../game/misc/analysis/movetree.js';
-import { isTypingTarget } from './analysis.js';
+import ceval from '../ceval.js';
+import toast from '../../../components/toast.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import gamesession from '../../../game/chess/gamesession.js';
+import { GameBus } from '../../../game/GameBus.js';
+import enginearrows from '../enginearrows.js';
+import movesequence from '../../../game/chess/movesequence.js';
+import analysismovetree from '../movetree.js';
+import { isTypingTarget } from '../analysis.js';
 
 // Elements -------------------------------------------------------------------------
 

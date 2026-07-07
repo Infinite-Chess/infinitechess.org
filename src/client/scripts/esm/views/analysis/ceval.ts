@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/analysis/ceval.ts
+// src/client/scripts/esm/views/analysis/ceval.ts
 
 /**
  * Client-side engine evaluation controller for the analysis board (lichess "ceval"
@@ -7,20 +7,20 @@
  * updates to UI subscribers, throttled for rendering.
  */
 
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	AnalysisCommand,
 	AnalysisInfo,
 	AnalysisResponse,
-} from '../../chess/engines/hydrochessanalysis.js';
+} from './hydrochessanalysis.worker.js';
 
-import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
-import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
+import moveutil from '../../../../../shared/chess/util/moveutil.js';
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import gameslot from '../../chess/gameslot.js';
-import { GameBus } from '../../GameBus.js';
-import gamecompressor from '../../chess/gamecompressor.js';
+import gameslot from '../../game/chess/gameslot.js';
+import { GameBus } from '../../game/GameBus.js';
+import gamecompressor from '../../game/chess/gamecompressor.js';
 
 // Types ------------------------------------------------------------------------
 

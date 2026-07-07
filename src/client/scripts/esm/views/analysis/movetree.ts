@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/misc/analysis/movetree.ts
+// src/client/scripts/esm/views/analysis/movetree.ts
 
 /**
  * Analysis-only move tree. The core board engine still consumes a flat
@@ -6,8 +6,8 @@
  * chosen branch as that flat active line.
  */
 
-import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
-import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 
 interface AnalysisMoveNode {
 	id: number;

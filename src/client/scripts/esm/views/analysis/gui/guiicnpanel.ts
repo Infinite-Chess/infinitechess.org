@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/analysis/icnpanel.ts
+// src/client/scripts/esm/views/analysis/gui/guiicnpanel.ts
 
 /**
  * The analysis page's ICN panel (the analysis equivalent of lichess' PGN/FEN box):
@@ -6,17 +6,17 @@
  * plus copy-to-clipboard and import-from-text actions.
  */
 
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
-import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
+import variantregistry from '../../../../../../shared/chess/variants/variantregistry.js';
 
-import toast from '../../components/toast.js';
-import gameslot from '../../game/chess/gameslot.js';
-import pastegame from '../../game/chess/pastegame.js';
-import gamesession from '../../game/chess/gamesession.js';
-import { GameBus } from '../../game/GameBus.js';
-import gamecompressor from '../../game/chess/gamecompressor.js';
+import toast from '../../../components/toast.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import pastegame from '../../../game/chess/pastegame.js';
+import gamesession from '../../../game/chess/gamesession.js';
+import { GameBus } from '../../../game/GameBus.js';
+import gamecompressor from '../../../game/chess/gamecompressor.js';
 
 // Elements ------------------------------------------------------------------------
 
