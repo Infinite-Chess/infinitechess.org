@@ -117,7 +117,8 @@ function onCatchLoadingError(err: Error): void {
 
 /** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
 function concludeGameIfOver(): void {
-	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame();
+	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);
 }
 
 function unloadLogicalAndRendering(): void {

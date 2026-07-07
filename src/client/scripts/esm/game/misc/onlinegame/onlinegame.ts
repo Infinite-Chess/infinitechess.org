@@ -4,15 +4,17 @@
  * This module keeps trap of the data of the onlinegame we are currently in.
  */
 
-import type { ParticipantState } from '../../../../../../shared/types.js';
+import type { GameStateMessage, ParticipantState } from '../../../../../../shared/types.js';
 
 import gamefileutility from '../../../../../../shared/chess/util/gamefileutility.js';
+import { players as p, Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../chess/gameslot.js';
 import socketsubs from '../../../websocket/socketsubs.js';
 import drawoffers from './drawoffers.js';
 import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
+import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import socketmessages from '../../../websocket/socketmessages.js';
@@ -55,6 +57,44 @@ function setInSync(value: boolean): void {
 }
 
 // Functions --------------------------------------------------
+
+/**
+ * A fresh page load (not a reconnect, game live OR dead): Loads a game onto the
+ * board from a fresh `gamestate` message and sets up the online-game session.
+ * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
+ */
+function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
+	gamesession.setSessionGame({ type: 'online', role: ourRole });
+
+	// The static setup (variant/time control/creation time) is SSR'd
+	const { variant, timeControl, timeCreated } = window.gamePageData;
+
+	gameslot
+		.loadGamefile({
+			timeControl,
+			variant: variant.kind === 'preset' ? variant.code : undefined,
+			dateTimestamp: timeCreated,
+			// Spectators (no role) view white's side.
+			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
+			additional: {
+				moves: state.moves,
+				gameConclusion: state.gameConclusion,
+				clockValues: state.clockValues,
+			},
+		})
+		.then(({ graphical }) => {
+			// Logical loaded, return graphical promise
+			initOnlineGame(state.finalized, state.participantState);
+
+			gamesession.concludeGameIfOver();
+			// A finalized rated game carries its deltas in the state.
+			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
+
+			return graphical;
+		})
+		.then(() => gamesession.markLoadingDone()) // Graphical loaded
+		.catch((err: Error) => gamesession.onCatchLoadingError(err));
+}
 
 /**
  * Initializes the online game session.
@@ -150,6 +190,7 @@ function onFinalized(): void {
 export default {
 	areInSync,
 	setInSync,
+	loadGameFromState,
 	initOnlineGame,
 	setParticipantState,
 	subscribeToGame,

@@ -44,7 +44,15 @@ interface GameMetaViewModel {
 	/** Present only if the game has concluded: the result banner's score + sentence. */
 	result?: { score: string; text: string };
 	/** Name + formatted elo per color (fixed white/black order; bars orient by {@link bars}). */
-	players: PlayerGroup<{ name: string; elo?: string }>;
+	players: PlayerGroup<{
+		name: string;
+		elo?: string;
+		/**
+		 * Present only for a finalized rated game — the delta shown
+		 * beside the rating in the participant list (not the player bars).
+		 */
+		eloDiff?: { text: string; positive: boolean };
+	}>;
 	/** Player-bar orientation from the viewer's role; bottom = you (or white for spectators). */
 	bars: { top: Player; bottom: Player };
 	/**
@@ -72,7 +80,7 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 
 	const resolved = produceStaticGameState(id);
 	if (resolved === undefined) return undefined; // Game doesn't exist
-	const { state, game } = resolved; // game is defined if live
+	const { state, game, ratingChanges } = resolved; // game is defined if live
 
 	// Resolve the viewer's color (board orientation + role); undefined => spectator (white POV).
 	const memberInfo = req.memberInfo!;
@@ -100,13 +108,14 @@ export function getGamePageState(req: Request): GamePageState | undefined {
 			timeControl: state.timeControl,
 			timeCreated: state.timeCreated,
 		},
-		meta: buildGameMetaViewModel(state, role, resignable, req),
+		meta: buildGameMetaViewModel(state, ratingChanges, role, resignable, req),
 	};
 }
 
 /** Derives the display-ready {@link GameMetaViewModel} from a {@link StaticGameState}. */
 function buildGameMetaViewModel(
 	state: StaticGameState,
+	ratingChanges: PlayerGroup<number> | undefined,
 	role: Player | undefined,
 	resignable: boolean,
 	req: Request,
@@ -128,9 +137,16 @@ function buildGameMetaViewModel(
 		// A guest who is the viewer shows "(You)"; every other name is the container's own
 		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
 		const isYouGuest = container.type === 'guest' && color === role;
+		const change = ratingChanges?.[color];
 		players[color] = {
 			name: isYouGuest ? req.t.shared.user_status.you_indicator : container.username,
 			...(container.rating && { elo: metadatautil.getFormattedElo(container.rating) }),
+			...(change !== undefined && {
+				eloDiff: {
+					text: metadatautil.getWhiteBlackRatingDiff(change),
+					positive: change >= 0,
+				},
+			}),
 		};
 	}
 

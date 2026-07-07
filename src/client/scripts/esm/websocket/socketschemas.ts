@@ -11,6 +11,7 @@
 
 import * as z from 'zod';
 
+import typeschemas from '../../../../shared/chess/util/typeschemas.js';
 import {
 	ClockValuesSchema,
 	DisconnectInfoSchema,
@@ -18,7 +19,6 @@ import {
 	GameStateMessageSchema,
 	OpponentsMoveMessageSchema,
 	OutSeekSchema,
-	PlayerRatingChangeInfoSchema,
 	RematchOfferInfoSchema,
 } from '../../../../shared/types.js';
 
@@ -82,11 +82,11 @@ const GameSchema = z.discriminatedUnion('action', [
 	}),
 	z.strictObject({
 		action: z.literal('gameratingchange'),
-		value: z.record(z.string(), PlayerRatingChangeInfoSchema),
+		value: typeschemas.GenPlayerGroupSchema(z.number()),
 	}),
 	z.strictObject({ action: z.literal('unsub') }),
 	z.strictObject({ action: z.literal('login') }),
-	z.strictObject({ action: z.literal('nogame') }),
+	z.strictObject({ action: z.literal('notlive') }),
 	z.strictObject({ action: z.literal('leavegame') }),
 	z.strictObject({
 		action: z.literal('opponentdisconnect'),

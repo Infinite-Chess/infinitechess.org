@@ -134,7 +134,7 @@
 				{% set player = meta.players[color] %}
 				<div class="meta-player">
 					<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ 'White' if color == p.WHITE else 'Black' }}"></span>
-					{{ usernameEmbed(player.name, player.elo) }}
+					{{ usernameEmbed(player.name, player.elo, player.eloDiff) }}
 				</div>
 				{% endfor %}
 			</div>

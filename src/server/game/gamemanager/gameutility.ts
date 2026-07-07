@@ -28,7 +28,6 @@ import type {
 	MovePacket,
 	ParticipantState,
 	RematchOfferInfo,
-	PlayerRatingChangeInfo,
 	Rating,
 	ServerUsernameContainer,
 	TimeControl,
@@ -72,6 +71,13 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 export const timeBeforeFinalizeMillis = 1000 * 8;
 
 // Types ----------------------------------------------------------------------------------------
+
+/**
+ * Per-player rating outcome of a finalized rated game: the rating going in (at-game) + the delta.
+ * Server-internal — the at-game rating feeds the SSR side bar ({@link buildStaticGameState}); only
+ * the delta is sent to clients (the base rating is always SSR'd, never needed on the wire).
+ */
+export type PlayerRatingResult = { ratingAtGame: Rating; change: number };
 
 /** Contains information about this player's disconnection and claim-window timer. */
 type PlayerDisconnect = {
@@ -202,6 +208,12 @@ type ServerGame = Game & {
 	whosTurn: Player;
 	/** Sockets spectating this game (non-participants). */
 	spectators: Set<CustomWebSocket>;
+	/**
+	 * Per-player rating results (at-game rating + delta), retained once a rated game finalizes so
+	 * late resyncers get the deltas AND the finalized side bar displays the at-game rating (the
+	 * leaderboard is already post-calc by then).
+	 */
+	ratingResults?: PlayerGroup<PlayerRatingResult>;
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */
@@ -439,7 +451,18 @@ function getRatingDataForGamePlayers(
  */
 function buildStaticGameState(servergame: ServerGame): StaticGameState {
 	const match = servergame.match;
-	const ratings = getRatingDataForGamePlayers(match.playerData, match.variant);
+
+	// Resolve each player's display rating: once a rated game is finalized the leaderboard
+	// is already post-calc, so use the retained at-game snapshot. In-progress (and casual)
+	// games read live — there the leaderboard rating equals the at-game rating.
+	const ratings: PlayerGroup<Rating> = {};
+	if (!servergame.ratingResults) {
+		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
+	} else {
+		for (const [color, result] of Object.entries(servergame.ratingResults)) {
+			ratings[Number(color) as Player] = result.ratingAtGame;
+		}
+	}
 
 	const players: PlayerGroup<ServerUsernameContainer> = {};
 	for (const [p, data] of Object.entries(match.playerData)) {
@@ -449,7 +472,6 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 
 	const state: StaticGameState = {
 		...buildStaticGameSetup(servergame),
-		id: match.id,
 		rated: match.rated,
 		players,
 	};
@@ -569,7 +591,8 @@ function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStat
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
 	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;
-	if (!servergame.untimed) base.clockValues = getGameClockValues(servergame);
+	const ratingChanges = getRatingChanges(servergame);
+	if (ratingChanges) base.ratingChanges = ratingChanges;
 	if (forceSync) base.forceSync = true;
 	return base;
 }
@@ -599,32 +622,17 @@ function buildGameConclusionMessage(servergame: ServerGame): GameConclusionMessa
 	return message;
 }
 
-/** Alerts all players and spectators in the game of the rating changes of the game. */
-function sendRatingChangeToAllPlayers(servergame: ServerGame, ratingdata: RatingData): void {
-	const messageContents = getRatingChangeMessageContents(ratingdata);
-	broadcastToParticipants(servergame, 'gameratingchange', messageContents);
-	broadcastToSpectators(servergame, 'gameratingchange', messageContents);
-}
-
 /**
- * Calculates the json object we send to the client's containing the
- * rating changes from the results of the rated game.
+ * The per-player rating deltas for client display,
+ * or undefined if the game isn't a finalized rated one.
  */
-function getRatingChangeMessageContents(
-	ratingdata: RatingData,
-): PlayerGroup<PlayerRatingChangeInfo> {
-	const messageContents: PlayerGroup<PlayerRatingChangeInfo> = {};
-	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
-		messageContents[Number(playerStr) as Player] = {
-			newRating: {
-				value: playerRating.elo_after_game!,
-				confident: playerRating.rating_deviation_after_game! <= UNCERTAIN_LEADERBOARD_RD,
-			},
-			change: playerRating.elo_change_from_game!,
-		};
+function getRatingChanges(servergame: ServerGame): PlayerGroup<number> | undefined {
+	if (!servergame.ratingResults) return undefined;
+	const ratingChanges: PlayerGroup<number> = {};
+	for (const [color, result] of Object.entries(servergame.ratingResults)) {
+		ratingChanges[Number(color) as Player] = result.change;
 	}
-
-	return messageContents;
+	return ratingChanges;
 }
 
 function getParticipantState(servergame: ServerGame, role: Player): ParticipantState {
@@ -894,9 +902,9 @@ export default {
 	getGameStateMessageContents,
 	getParticipantState,
 	buildGameConclusionMessage,
+	getRatingChanges,
 	buildMetadataOfGame,
 	sendGameStateToColor,
-	sendRatingChangeToAllPlayers,
 	getSocketRoleInGame,
 	sendMessageToColor,
 	broadcastToSpectators,
