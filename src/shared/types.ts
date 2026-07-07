@@ -131,8 +131,6 @@ export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 export const GameStateBaseSchema = z.strictObject({
 	/** The full move list (reconciled against on reconnect). */
 	moves: z.array(MovePacketSchema),
-	/** The live ticking clocks. Absent for untimed games. */
-	clockValues: ClockValuesSchema.optional(),
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
 	/**
 	 * Per-player rating deltas. A finalized-result fact carried as state so a late
@@ -159,6 +157,8 @@ export const GameStateBaseSchema = z.strictObject({
  */
 export type GameStateMessage = z.infer<typeof GameStateMessageSchema>;
 export const GameStateMessageSchema = GameStateBaseSchema.extend({
+	/** The live ticking clocks. Absent for untimed games. */
+	clockValues: ClockValuesSchema.optional(),
 	participantState: ParticipantStateSchema.optional(),
 });
 

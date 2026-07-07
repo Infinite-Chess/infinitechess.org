@@ -591,7 +591,6 @@ function buildGameStateBase(servergame: ServerGame, forceSync = false): GameStat
 		moves: servergame.moves.map((m) => simplifyMove(m)),
 	};
 	if (servergame.gameConclusion !== undefined) base.gameConclusion = servergame.gameConclusion;
-	if (!servergame.untimed) base.clockValues = getGameClockValues(servergame);
 	const ratingChanges = getRatingChanges(servergame);
 	if (ratingChanges) base.ratingChanges = ratingChanges;
 	if (forceSync) base.forceSync = true;
