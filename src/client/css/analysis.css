@@ -1,0 +1,364 @@
+/* src/client/css/analysis.css */
+
+/* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
+   board layout, plus the engine evaluation panel, the eval gauge beside the board,
+   the variant picker, and the ICN import/export panel that replaces chat. */
+
+/* ============================
+   Analysis setup — variant + flip
+   ============================ */
+
+.analysis-setup {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+}
+
+.analysis-setup .meta-icon {
+	width: 22px;
+	height: 22px;
+	color: var(--c-text-muted);
+	flex: 0 0 auto;
+}
+
+.variant-select {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 6px 8px;
+	border-radius: 5px;
+	border: 1px solid var(--c-border-muted);
+	background: var(--c-surface-2);
+	color: var(--c-text-emphasis);
+	font: inherit;
+	font-size: 0.92em;
+	cursor: pointer;
+}
+
+.variant-select:focus {
+	outline: none;
+	border-color: var(--c-border-2);
+}
+
+/* ============================
+   Engine panel
+   ============================ */
+
+.engine-panel {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+}
+
+.engine-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+}
+
+/* Big eval number (or #N / mate text) */
+.engine-eval {
+	min-width: 3.2em;
+	font-size: 1.35em;
+	font-weight: 700;
+	text-align: center;
+	color: var(--c-text-emphasis);
+	font-variant-numeric: tabular-nums;
+}
+
+.engine-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.engine-name {
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--c-text-emphasis);
+}
+
+.engine-stats {
+	font-size: 0.78em;
+	color: var(--c-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* On/off switch */
+.engine-switch {
+	position: relative;
+	flex: 0 0 auto;
+	width: 40px;
+	height: 22px;
+	cursor: pointer;
+}
+
+.engine-switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.engine-slider {
+	position: absolute;
+	inset: 0;
+	border-radius: 11px;
+	background: var(--c-surface-2);
+	border: 1px solid var(--c-border-muted);
+	transition: background 0.15s ease;
+}
+
+.engine-slider::before {
+	content: '';
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	left: 2px;
+	top: 2px;
+	border-radius: 50%;
+	background: var(--c-text-muted);
+	transition:
+		transform 0.15s ease,
+		background 0.15s ease;
+}
+
+.engine-switch input:checked + .engine-slider {
+	background: color-mix(in srgb, var(--c-accent, #3b82f6) 45%, var(--c-surface-2));
+}
+
+.engine-switch input:checked + .engine-slider::before {
+	transform: translateX(18px);
+	background: var(--c-text-emphasis);
+}
+
+/* Settings drawer */
+.engine-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 12px;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.setting-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 0.85em;
+}
+
+.setting-row label {
+	flex: 0 0 90px;
+	color: var(--c-text-muted);
+}
+
+.setting-row input[type='range'] {
+	flex: 1 1 auto;
+	min-width: 0;
+	accent-color: var(--c-accent, #3b82f6);
+}
+
+.setting-row select {
+	flex: 1 1 auto;
+	padding: 4px 6px;
+	border-radius: 4px;
+	border: 1px solid var(--c-border-muted);
+	background: var(--c-surface-2);
+	color: var(--c-text-emphasis);
+	font: inherit;
+	font-size: 0.95em;
+}
+
+.setting-value {
+	flex: 0 0 2em;
+	text-align: right;
+	color: var(--c-text-emphasis);
+	font-variant-numeric: tabular-nums;
+}
+
+.setting-note {
+	margin: 0;
+	font-size: 0.78em;
+	color: var(--c-text-muted);
+	font-style: italic;
+}
+
+/* MultiPV lines */
+.engine-lines {
+	display: flex;
+	flex-direction: column;
+}
+
+.engine-lines:not(:empty) {
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.engine-line {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 5px 10px;
+	font-size: 0.85em;
+	border-bottom: 1px solid color-mix(in srgb, var(--c-border-muted) 50%, transparent);
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.engine-line:last-child {
+	border-bottom: none;
+}
+
+.line-eval {
+	flex: 0 0 3.4em;
+	font-weight: 700;
+	color: var(--c-text-emphasis);
+	font-variant-numeric: tabular-nums;
+}
+
+.line-moves {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: var(--c-text-muted);
+}
+
+.line-move {
+	cursor: pointer;
+	padding: 1px 2px;
+	border-radius: 3px;
+}
+
+.line-move:hover {
+	background: var(--c-hover-overlay, rgba(255, 255, 255, 0.08));
+	color: var(--c-text-emphasis);
+}
+
+.line-move.unplayable {
+	cursor: default;
+}
+
+.line-move.unplayable:hover {
+	background: none;
+	color: var(--c-text-muted);
+}
+
+/* ============================
+   Eval gauge
+   ============================ */
+
+.eval-gauge {
+	position: relative;
+	flex: 0 0 12px;
+	background: #ddd;
+	overflow: hidden;
+}
+
+.gauge-black {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 50%;
+	background: #333;
+	transition: height 0.4s ease;
+}
+
+.gauge-tick {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: rgba(120, 120, 120, 0.4);
+}
+
+.gauge-zero {
+	height: 2px;
+	background: color-mix(in srgb, var(--c-accent, #d64f00) 85%, transparent);
+}
+
+/* Flipped board: white on top */
+.eval-gauge.flipped {
+	transform: rotate(180deg);
+}
+
+/* ============================
+   ICN panel (replaces chat)
+   ============================ */
+
+.icn-panel {
+	flex: 1 1 auto;
+	min-height: 180px;
+	display: flex;
+	flex-direction: column;
+}
+
+.icn-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px 4px 12px;
+	border-bottom: 1px solid var(--c-border-muted);
+}
+
+.icn-title {
+	flex: 1;
+	font-size: 0.85em;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	color: var(--c-text-muted);
+}
+
+.icn-textarea {
+	flex: 1 1 auto;
+	min-height: 0;
+	resize: none;
+	padding: 8px 12px;
+	background: var(--c-surface-2);
+	border: none;
+	color: var(--c-text-emphasis);
+	font-family: monospace;
+	font-size: 12px;
+	line-height: 1.4;
+	word-break: break-all;
+}
+
+.icn-textarea:focus {
+	outline: none;
+}
+
+.icn-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	border-top: 1px solid var(--c-border-muted);
+}
+
+.icn-error {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: 0.78em;
+	color: var(--c-error, #e5534b);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.icn-actions .action-btn {
+	flex: 0 0 auto;
+	padding: 5px 14px;
+	border-radius: 5px;
+	border: 1px solid var(--c-border);
+	background: linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
+}
+
+.icn-actions .action-btn:hover {
+	border-color: var(--c-border-2);
+}

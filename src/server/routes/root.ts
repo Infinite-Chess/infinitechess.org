@@ -10,6 +10,7 @@ import { getGamePageState } from '../controllers/gamePageController.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
 import { getRandomSplashText } from './splashTexts.js';
+import { getAnalysisPageState } from '../controllers/analysisPageController.js';
 import { getAwaitingPageState } from '../controllers/registerController.js';
 import { getBaseRenderContext } from '../utility/renderContext.js';
 import { getResetPasswordPageState } from '../controllers/passwordResetController.js';
@@ -81,7 +82,11 @@ page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk')
 page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
 page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
-page('/analysis(.html)?', (_req: Request, res: Response) => res.render('analysis.njk'));
+page('/analysis(.html)?/:id?', (req: Request, res: Response) => {
+	const state = getAnalysisPageState(req);
+	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
+	res.render('analysis.njk', state);
+});
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 
