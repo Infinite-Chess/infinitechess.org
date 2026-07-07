@@ -2,15 +2,10 @@
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameMessage } from '../../../websocket/socketschemas.js';
-import type {
-	ClockValues,
-	GameConclusionMessage,
-	GameStateMessage,
-} from '../../../../../../shared/types.js';
+import type { ClockValues, GameConclusionMessage } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import { players as p, type Player } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
 import resyncer from './resyncer.js';
@@ -24,6 +19,7 @@ import gameactions from '../../gui/guigameactions.js';
 import gamesession from '../../chess/gamesession.js';
 import { GameBus } from '../../GameBus.js';
 import pingManager from '../../../util/pingManager.js';
+import guigamemeta from '../../gui/guigamemeta.js';
 import guidisconnect from '../../gui/guidisconnect.js';
 import { SocketBus } from '../../../websocket/SocketBus.js';
 import guigameactions from '../../gui/guigameactions.js';
@@ -47,6 +43,14 @@ GameBus.addEventListener('game-loaded', () => flushQueue());
  * @param contents - The contents of the incoming server websocket message
  */
 function receiveMessage(contents: GameMessage): void {
+	// The subscribed game isn't live in server memory (concluded + evicted, or never existed).
+	// Reload regardless of our load state; fresh SSR then serves the correct page — the dead
+	// review page (which fetches the state over HTTP) or the 404 page.
+	if (contents.action === 'notlive') {
+		window.location.reload();
+		return;
+	}
+
 	// Adjust the received clock values for ping up front, so the ticking clock's loss
 	// deadline is stamped at receipt time — accurate even if the message's handling is deferred.
 	const clockValues = getClockValues(contents);
@@ -60,7 +64,7 @@ function receiveMessage(contents: GameMessage): void {
 			messageQueue.push(contents);
 		} else if (contents.action === 'gamestate') {
 			// Nothing loaded/loading yet: the first `gamestate` bootstraps the game.
-			loadGameFromState(contents.value, window.gamePageData.role);
+			onlinegame.loadGameFromState(contents.value, window.gamePageData.role);
 		} else {
 			console.error(`Received game message before receiving gamestate: ${JSON.stringify(contents)}`); // prettier-ignore
 		}
@@ -82,12 +86,6 @@ function routeMessage(contents: GameMessage): void {
 		case 'gamestate':
 			resyncer.handleGameState(gamefile, mesh, contents.value);
 			break;
-		case 'nogame':
-			// The server reported the game isn't live, nor exists in the DB (aborted at 0 moves played).
-			// Only cause: It was live when SSR'd but was memory-evicted before we sent 'subscribe'.
-			// Reload to get the correct SSR'd 404 page.
-			window.location.reload();
-			break;
 		case 'move':
 			movesendreceive.handleMove(gamefile, mesh, contents.value);
 			break;
@@ -98,10 +96,7 @@ function routeMessage(contents: GameMessage): void {
 			handleGameConclusion(gamefile, contents.value);
 			break;
 		case 'gameratingchange':
-			// TODO: surface rating changes in the new game page's side bar.
-			console.error(
-				`Received 'gameratingchange' message from server, but this is not yet implemented in the new game page. Message: ${JSON.stringify(contents)}`,
-			);
+			guigamemeta.showRatingChanges(contents.value);
 			break;
 		case 'unsub':
 			handleUnsubbing();
@@ -192,45 +187,9 @@ function adjustClockValuesForPing(clockValues: ClockValues): void {
 	return;
 }
 
-/**
- * A fresh page load (not a reconnect): Loads a game onto the board from
- * a fresh `gamestate` message and sets up the online-game session.
- * @param ourRole - The viewer's color, if they're a participant; undefined => spectator (white POV).
- */
-function loadGameFromState(state: GameStateMessage, ourRole?: Player): void {
-	gamesession.setSessionGame({ type: 'online', role: ourRole });
-
-	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated } = window.gamePageData;
-
-	gameslot
-		.loadGamefile({
-			timeControl,
-			variant: variant.kind === 'preset' ? variant.code : undefined,
-			dateTimestamp: timeCreated,
-			// Spectators (no role) view white's side.
-			viewWhitePerspective: ourRole === p.WHITE || ourRole === undefined,
-			additional: {
-				moves: state.moves,
-				gameConclusion: state.gameConclusion,
-				clockValues: state.clockValues,
-			},
-		})
-		.then(({ graphical }) => {
-			// Logical loaded, return graphical promise
-			onlinegame.initOnlineGame(state.finalized, state.participantState);
-
-			gamesession.concludeGameIfOver();
-
-			return graphical;
-		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
-}
-
 /** Replays the messages buffered during loading, in arrival order. */
 function flushQueue(): void {
-	messageQueue.forEach(routeMessage);
+	messageQueue.forEach((m) => routeMessage(m));
 	messageQueue.length = 0;
 }
 

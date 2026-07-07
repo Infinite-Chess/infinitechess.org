@@ -131,9 +131,12 @@ export type GameStateBase = z.infer<typeof GameStateBaseSchema>;
 export const GameStateBaseSchema = z.strictObject({
 	/** The full move list (reconciled against on reconnect). */
 	moves: z.array(MovePacketSchema),
-	/** The live ticking clocks. Absent for untimed games. */
-	clockValues: ClockValuesSchema.optional(),
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	/**
+	 * Per-player rating deltas. A finalized-result fact carried as state so a late
+	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
+	 */
+	ratingChanges: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 	/**
 	 * Whether the game is finalized (result locked in permanently). Once true, nothing but rematch
 	 * offers can change, so the client reconnects with `subscriberematch` instead of a full `subscribe`.
@@ -154,6 +157,8 @@ export const GameStateBaseSchema = z.strictObject({
  */
 export type GameStateMessage = z.infer<typeof GameStateMessageSchema>;
 export const GameStateMessageSchema = GameStateBaseSchema.extend({
+	/** The live ticking clocks. Absent for untimed games. */
+	clockValues: ClockValuesSchema.optional(),
 	participantState: ParticipantStateSchema.optional(),
 });
 
@@ -217,13 +222,6 @@ export const MetaDataSchema = z.strictObject({
 	Termination: z.string().optional(),
 });
 
-/** A single player's rating change from a completed rated game. */
-export type PlayerRatingChangeInfo = z.infer<typeof PlayerRatingChangeInfoSchema>;
-export const PlayerRatingChangeInfoSchema = z.strictObject({
-	newRating: RatingSchema,
-	change: z.number(),
-});
-
 // Game State Schemas ---------------------------------------------------------------
 
 /** A game's variant: a preset `code`, or a `custom` game (position sourced from the ICN / live state). */
@@ -254,7 +252,6 @@ export const StaticGameSetupSchema = z.strictObject({
  */
 export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
 export const StaticGameStateSchema = StaticGameSetupSchema.extend({
-	id: z.int().nonnegative(),
 	rated: z.boolean(),
 	/** Per-color username container, with rating embedded per player. */
 	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
@@ -272,8 +269,6 @@ export const DeadGameStateSchema = StaticGameStateSchema.extend({
 	 * only for custom-position games); the client parses it.
 	 */
 	icn: z.string(),
-	/** Per signed-in player rating change. Rated games only; omitted otherwise. */
-	ratingChanges: typeschemas.GenPlayerGroupSchema(PlayerRatingChangeInfoSchema).optional(),
 	/** Ms remaining per color at game end. Timed games only; a guest color may be absent. */
 	finalClocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 });

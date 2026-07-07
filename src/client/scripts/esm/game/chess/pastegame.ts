@@ -5,7 +5,6 @@
  */
 
 import type { MetaData } from '../../../../../shared/types.js';
-import type { MovePacket } from '../../../../../shared/types.js';
 import type { Additional } from '../../../../../shared/chess/logic/gamefile.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 
@@ -13,11 +12,8 @@ import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
+import icnconverter, { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
-import icnconverter, {
-	MoveParsed,
-	LongFormatOut,
-} from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import toast from '../../components/toast.js';
 import gameloader from './gameloader.js';
@@ -96,16 +92,8 @@ async function pasteGame(
 	});
 
 	const additional: Additional = { variantOptions };
-	if (longformOut.moves) {
-		// Trim the excess properties from the MoveParsed type, including the comment.
-		additional.moves = longformOut.moves.map((m: MoveParsed) => {
-			const move: MovePacket = { token: m.token };
-			if (m.clockStamp !== undefined) move.clockStamp = m.clockStamp;
-			// Potentially also transfer the pasted comments into the gamefile here in the future!
-			// ...
-			return move;
-		});
-	}
+	// FUTURE: transfer the pasted move comments into the gamefile here too.
+	if (longformOut.moves) additional.moves = icnimport.movePacketsFromParsed(longformOut.moves);
 
 	const options: {
 		metadata: MetaData;

@@ -9,7 +9,7 @@ import type { GameConclusion } from '../../../shared/chess/util/winconutil.js';
 import type { CustomWebSocket } from '../../socket/socketUtility.js';
 import type { StaticGameState } from '../../../shared/types.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { GameSetup, ServerGame } from './gameutility.js';
+import type { GameSetup, PlayerRatingResult, ServerGame } from './gameutility.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
@@ -31,6 +31,7 @@ import { restoreAllLiveGames } from './liveGameRestore.js';
 import { timeBeforeFinalizeMillis } from './gameutility.js';
 import { produceDeadStaticGameState } from './deadgamestate.js';
 import { broadcastMemberInGameStatus } from '../seeksmanager/lobbymanager.js';
+import { RatingData, UNCERTAIN_LEADERBOARD_RD } from './ratingcalculation.js';
 import {
 	addUserToActiveGames,
 	removeUserFromActiveGame,
@@ -275,13 +276,18 @@ function getGameByID(id: number): ServerGame | undefined {
  */
 function produceStaticGameState(
 	id: number,
-): { state: StaticGameState; game?: ServerGame } | undefined {
+): { state: StaticGameState; game?: ServerGame; ratingChanges?: PlayerGroup<number> } | undefined {
 	const game = getGameByID(id); // Defined if live
-	if (game !== undefined) return { game, state: gameutility.buildStaticGameState(game) };
+	if (game !== undefined)
+		return {
+			game,
+			state: gameutility.buildStaticGameState(game),
+			ratingChanges: gameutility.getRatingChanges(game),
+		};
 
-	const deadState = produceDeadStaticGameState(id);
-	if (deadState === undefined) return undefined; // Game doesn't exist
-	return { state: deadState };
+	const dead = produceDeadStaticGameState(id);
+	if (dead === undefined) return undefined; // Game doesn't exist
+	return { state: dead.state, ratingChanges: dead.ratingChanges };
 }
 
 /**
@@ -500,9 +506,15 @@ function finalizeGame(servergame: ServerGame): void {
 	try {
 		const ratingdata = gamelogger.logGame(servergame);
 
-		// Send rating changes to all players of game, if relevant
-		if (ratingdata !== undefined)
-			gameutility.sendRatingChangeToAllPlayers(servergame, ratingdata);
+		if (ratingdata !== undefined) {
+			// Retain the rating results on the game so a client that resyncs after this (but
+			// before the game is memory-evicted) still gets the deltas via its `gamestate`.
+			servergame.ratingResults = buildRatingResults(ratingdata);
+			// Broadcast the deltas to everyone currently connected.
+			const ratingChanges = gameutility.getRatingChanges(servergame)!;
+			gameutility.broadcastToParticipants(servergame, 'gameratingchange', ratingChanges);
+			gameutility.broadcastToSpectators(servergame, 'gameratingchange', ratingChanges);
+		}
 	} catch {
 		// log failure already logged
 		// Notify both players
@@ -531,6 +543,22 @@ function finalizeGame(servergame: ServerGame): void {
 	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
 
 	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
+}
+
+/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
+function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
+	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
+	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
+		ratingResults[Number(playerStr) as Player] = {
+			ratingAtGame: {
+				value: playerRating.elo_at_game,
+				confident: playerRating.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
+			},
+			change: playerRating.elo_change_from_game!,
+		};
+	}
+
+	return ratingResults;
 }
 
 /**
