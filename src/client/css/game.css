@@ -27,6 +27,7 @@
 	background: var(--c-surface);
 	border: 1px solid var(--c-border-muted);
 	border-radius: 6px;
+	overflow: hidden;
 }
 
 .btn-bare {
