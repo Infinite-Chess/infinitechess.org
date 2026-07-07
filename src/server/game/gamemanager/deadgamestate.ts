@@ -63,7 +63,7 @@ export function produceDeadStaticGameState(
 	if (game === undefined) return undefined;
 	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
 
-	const state = assembleStaticGameState(game_id, game, playerRows);
+	const state = assembleStaticGameState(game, playerRows);
 
 	/** Per signed-in player rating delta; populated only for rated games. */
 	const ratingChanges: PlayerGroup<number> = {};
@@ -96,7 +96,7 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	}
 
 	const state: DeadGameState = {
-		...assembleStaticGameState(game_id, game, playerRows),
+		...assembleStaticGameState(game, playerRows),
 		icn: game.icn,
 	};
 
@@ -110,7 +110,6 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
  * beyond the per-player username lookup), so both readers below share one field mapping.
  */
 function assembleStaticGameState(
-	game_id: number,
 	game: Pick<GamesRecord, (typeof STATIC_GAME_COLUMNS)[number]>,
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
 ): StaticGameState {
@@ -147,7 +146,6 @@ function assembleStaticGameState(
 	} as GameConclusion;
 
 	return {
-		id: game_id,
 		rated: Boolean(game.rated),
 		// A null `variant` column marks a custom game; its position comes from the ICN (parsed client-side), never here.
 		variant:

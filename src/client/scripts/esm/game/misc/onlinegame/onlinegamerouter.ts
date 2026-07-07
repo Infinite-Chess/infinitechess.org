@@ -2,11 +2,7 @@
 
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { GameMessage } from '../../../websocket/socketschemas.js';
-import type {
-	ClockValues,
-	GameConclusionMessage,
-	GameStateMessage,
-} from '../../../../../../shared/types.js';
+import type { ClockValues, GameConclusionMessage } from '../../../../../../shared/types.js';
 
 import uuid from '../../../../../../shared/util/uuid.js';
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';

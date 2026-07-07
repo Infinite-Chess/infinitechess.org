@@ -472,7 +472,6 @@ function buildStaticGameState(servergame: ServerGame): StaticGameState {
 
 	const state: StaticGameState = {
 		...buildStaticGameSetup(servergame),
-		id: match.id,
 		rated: match.rated,
 		players,
 	};

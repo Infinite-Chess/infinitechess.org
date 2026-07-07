@@ -252,7 +252,6 @@ export const StaticGameSetupSchema = z.strictObject({
  */
 export type StaticGameState = z.infer<typeof StaticGameStateSchema>;
 export const StaticGameStateSchema = StaticGameSetupSchema.extend({
-	id: z.int().nonnegative(),
 	rated: z.boolean(),
 	/** Per-color username container, with rating embedded per player. */
 	players: typeschemas.GenPlayerGroupSchema(ServerUsernameContainerSchema),
