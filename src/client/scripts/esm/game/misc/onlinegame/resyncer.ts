@@ -24,6 +24,7 @@ import premoves from '../../chess/premoves.js';
 import selection from '../../chess/selection.js';
 import onlinegame from './onlinegame.js';
 import gamesession from '../../chess/gamesession.js';
+import guigamemeta from '../../gui/guigamemeta.js';
 import { GameBus } from '../../GameBus.js';
 import movesequence from '../../chess/movesequence.js';
 import movesendreceive from './movesendreceive.js';
@@ -63,6 +64,9 @@ function handleGameState(
 
 	// For online games, the server is boss, so if they say the game is over, conclude it here.
 	if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
+
+	// A finalized rated game carries its deltas — show them.
+	if (message.ratingChanges) guigamemeta.showRatingChanges(message.ratingChanges);
 }
 
 /**

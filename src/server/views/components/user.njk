@@ -1,5 +1,4 @@
 {# Shared user-identity building blocks used across pages (game, …) #}
 
-{# Renders a player's username + rating inline.
-   The client appends the `.eloChange` delta into this embed on game end. #}
-{% macro usernameEmbed(name, elo) %}<span class="username-embed"><span class="username">{{ name }}</span>{% if elo %}<span class="elo">{{ elo }}</span>{% endif %}</span>{% endmacro %}
+{# Renders a player's username + rating inline, optionally with the game's rating delta. #}
+{% macro usernameEmbed(name, elo, eloDiff) %}<span class="username-embed"><span class="username">{{ name }}</span>{% if elo %}<span class="elo">{{ elo }}</span>{% endif %}{% if eloDiff %}<span class="eloChange {{ 'positive' if eloDiff.positive else 'negative' }}">{{ eloDiff.text }}</span>{% endif %}</span>{% endmacro %}

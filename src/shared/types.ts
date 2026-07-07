@@ -122,13 +122,6 @@ export const ParticipantStateSchema = z.strictObject({
 	rematch: RematchOfferInfoSchema.optional(),
 });
 
-/** A single player's rating change from a completed rated game. */
-export type PlayerRatingChangeInfo = z.infer<typeof PlayerRatingChangeInfoSchema>;
-export const PlayerRatingChangeInfoSchema = z.strictObject({
-	newRating: RatingSchema,
-	change: z.number(),
-});
-
 /**
  * The recipient-agnostic core of a live game-state message (no per-player overlay). Carries the
  * live move list, clocks, conclusion, and finalized flag. The core of every `gamestate` message —
@@ -141,6 +134,11 @@ export const GameStateBaseSchema = z.strictObject({
 	/** The live ticking clocks. Absent for untimed games. */
 	clockValues: ClockValuesSchema.optional(),
 	gameConclusion: winconutil.gameConclusionSchema.optional(),
+	/**
+	 * Per-player rating deltas. A finalized-result fact carried as state so a late
+	 * resyncer gets it. Present only once a rated game is finalized; absent otherwise.
+	 */
+	ratingChanges: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 	/**
 	 * Whether the game is finalized (result locked in permanently). Once true, nothing but rematch
 	 * offers can change, so the client reconnects with `subscriberematch` instead of a full `subscribe`.
@@ -272,8 +270,6 @@ export const DeadGameStateSchema = StaticGameStateSchema.extend({
 	 * only for custom-position games); the client parses it.
 	 */
 	icn: z.string(),
-	/** Per signed-in player rating change. Rated games only; omitted otherwise. */
-	ratingChanges: typeschemas.GenPlayerGroupSchema(PlayerRatingChangeInfoSchema).optional(),
 	/** Ms remaining per color at game end. Timed games only; a guest color may be absent. */
 	finalClocks: typeschemas.GenPlayerGroupSchema(z.number()).optional(),
 });

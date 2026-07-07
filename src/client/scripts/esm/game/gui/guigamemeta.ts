@@ -11,7 +11,6 @@
  */
 
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type { PlayerRatingChangeInfo } from '../../../../../shared/types.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
@@ -83,18 +82,19 @@ GameBus.addEventListener('game-concluded', showResultBanner);
 // =============================== Rating Changes ===============================
 
 /**
- * Appends each player's rating-change delta (e.g. `+27`) beside
- * their rating in the participant list, once a rated game is over.
- * Entry points: the dead-game load and the live `gameratingchange` message.
+ * Appends each player's rating-change delta (e.g. `+27`) beside their rating in the
+ * participant list when a rated game finalizes *live*. An already-finalized game is
+ * SSR'd with the delta.
  */
-function showRatingChanges(ratingChanges: PlayerGroup<PlayerRatingChangeInfo>): void {
-	for (const [strColor, info] of Object.entries(ratingChanges)) {
+function showRatingChanges(ratingChanges: PlayerGroup<number>): void {
+	for (const [strColor, change] of Object.entries(ratingChanges)) {
 		const player = Number(strColor) as Player;
 		const index = player === p.WHITE ? 0 : player === p.BLACK ? 1 : (() => { throw new Error(`Unexpected color ${player}`) })(); // prettier-ignore
 		const embed = element_MetaPlayerEmbeds[index]!;
+		if (embed.querySelector('.eloChange')) continue; // Already painted (SSR)
 		const delta = document.createElement('span');
-		delta.classList.add('eloChange', info.change >= 0 ? 'positive' : 'negative');
-		delta.textContent = metadatautil.getWhiteBlackRatingDiff(info.change);
+		delta.classList.add('eloChange', change >= 0 ? 'positive' : 'negative');
+		delta.textContent = metadatautil.getWhiteBlackRatingDiff(change);
 		embed.appendChild(delta);
 	}
 }

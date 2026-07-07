@@ -14,7 +14,6 @@ import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
 	DeadGameState,
-	PlayerRatingChangeInfo,
 	ServerUsernameContainer,
 	StaticGameState,
 } from '../../../shared/types.js';
@@ -52,20 +51,34 @@ export function resolveDeadParticipantColor(game_id: number, user_id: number): P
 }
 
 /**
- * Builds just the {@link StaticGameState} of a concluded game — the static side bar info.
- * @returns The state, or `undefined` if no such game row exists.
+ * Builds the {@link StaticGameState} of a concluded game — the
+ * static side bar info — plus its per-player rating deltas.
+ * @returns The state (+ deltas), or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
-export function produceDeadStaticGameState(game_id: number): StaticGameState | undefined {
+export function produceDeadStaticGameState(
+	game_id: number,
+): { state: StaticGameState; ratingChanges?: PlayerGroup<number> } | undefined {
 	const game = getGameData(game_id, [...STATIC_GAME_COLUMNS]);
 	if (game === undefined) return undefined;
-	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS]);
-	return assembleStaticGameState(game_id, game, playerRows);
+	const playerRows = getPlayerGamesOfGame(game_id, [...STATIC_PLAYER_COLUMNS, 'elo_change_from_game']); // prettier-ignore
+
+	const state = assembleStaticGameState(game_id, game, playerRows);
+
+	/** Per signed-in player rating delta; populated only for rated games. */
+	const ratingChanges: PlayerGroup<number> = {};
+	for (const row of playerRows) {
+		if (row.elo_change_from_game !== null)
+			ratingChanges[row.player_number] = row.elo_change_from_game;
+	}
+
+	return Object.keys(ratingChanges).length > 0 ? { state, ratingChanges } : { state };
 }
 
 /**
- * Builds the full {@link DeadGameState} for a concluded game from the database —
- * the static base plus the `icn`, rating changes, and final clocks.
+ * Builds the full {@link DeadGameState} for a concluded game from the database — the static base
+ * plus the `icn` and final clocks. Rating deltas are NOT included: the client displays them from
+ * SSR (see {@link produceDeadStaticGameState}), never from this HTTP payload.
  * @returns The state, or `undefined` if no such game row exists.
  * @throws If a database error occurs.
  */
@@ -73,27 +86,13 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 	const game = getGameData(game_id, ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'icn']); // prettier-ignore
 	if (game === undefined) return undefined;
 
-	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'elo_change_from_game', 'clock_at_end_millis', 'rating_deviation_at_game', 'rating_deviation_after_game']); // prettier-ignore
+	const playerRows = getPlayerGamesOfGame(game_id, ['player_number', 'user_id', 'elo_at_game', 'clock_at_end_millis', 'rating_deviation_at_game']); // prettier-ignore
 
-	/** Per signed-in player rating change; populated only for rated games. */
-	const ratingChanges: PlayerGroup<PlayerRatingChangeInfo> = {};
 	/** Per-color ms remaining at game end; populated only for timed games. */
 	const finalClocks: PlayerGroup<number> = {};
-
-	for (const color of [players.WHITE, players.BLACK]) {
-		const row = playerRows.find((r) => r.player_number === color);
-		if (row === undefined) continue; // Guest color -> no rating change / clock row.
-
-		if (row.elo_at_game !== null && row.elo_change_from_game !== null) {
-			ratingChanges[color] = {
-				newRating: {
-					value: row.elo_at_game + row.elo_change_from_game,
-					confident: isRatingConfident(row.rating_deviation_after_game),
-				},
-				change: row.elo_change_from_game,
-			};
-		}
-		if (row.clock_at_end_millis !== null) finalClocks[color] = row.clock_at_end_millis;
+	for (const row of playerRows) {
+		if (row.clock_at_end_millis !== null)
+			finalClocks[row.player_number] = row.clock_at_end_millis;
 	}
 
 	const state: DeadGameState = {
@@ -101,7 +100,6 @@ export function produceDeadGameState(game_id: number): DeadGameState | undefined
 		icn: game.icn,
 	};
 
-	if (Object.keys(ratingChanges).length > 0) state.ratingChanges = ratingChanges;
 	if (Object.keys(finalClocks).length > 0) state.finalClocks = finalClocks;
 
 	return state;

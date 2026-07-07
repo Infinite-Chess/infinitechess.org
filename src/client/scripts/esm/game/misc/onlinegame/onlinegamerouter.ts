@@ -221,6 +221,8 @@ export function loadGameFromState(state: GameStateMessage, ourRole?: Player): vo
 			onlinegame.initOnlineGame(state.finalized, state.participantState);
 
 			gamesession.concludeGameIfOver();
+			// A finalized rated game carries its deltas in the state.
+			if (state.ratingChanges) guigamemeta.showRatingChanges(state.ratingChanges);
 
 			return graphical;
 		})

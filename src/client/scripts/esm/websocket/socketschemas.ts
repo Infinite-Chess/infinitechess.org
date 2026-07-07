@@ -19,7 +19,6 @@ import {
 	GameStateMessageSchema,
 	OpponentsMoveMessageSchema,
 	OutSeekSchema,
-	PlayerRatingChangeInfoSchema,
 	RematchOfferInfoSchema,
 } from '../../../../shared/types.js';
 
@@ -83,7 +82,7 @@ const GameSchema = z.discriminatedUnion('action', [
 	}),
 	z.strictObject({
 		action: z.literal('gameratingchange'),
-		value: typeschemas.GenPlayerGroupSchema(PlayerRatingChangeInfoSchema),
+		value: typeschemas.GenPlayerGroupSchema(z.number()),
 	}),
 	z.strictObject({ action: z.literal('unsub') }),
 	z.strictObject({ action: z.literal('login') }),
