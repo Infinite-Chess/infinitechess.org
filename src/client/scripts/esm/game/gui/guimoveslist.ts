@@ -369,15 +369,10 @@ async function appendAnalysisMainline(
 	from: AnalysisMoveNode,
 ): Promise<void> {
 	let node = getMainlineChild(from);
-	if (!node) {
-		// No mainline moves (e.g. the first move was forced into a variation) — render the
-		// root's variations on their own, since there's no move row to hang them beneath.
-		await appendVariationGroup(container, getVariationChildren(from), 1);
-		return;
-	}
 	// Whether the white move just placed has variations rendered beneath it — its black
 	// reply must then start a fresh row so the variations stay ordered below their branch move.
 	let whiteHadVariations = false;
+	let last = from;
 	while (node) {
 		// The variations that branch off as alternatives to THIS move; they render
 		// directly below the move so a variation never appears above the move it replaces.
@@ -385,8 +380,14 @@ async function appendAnalysisMainline(
 		await appendAnalysisMainlinePly(container, node, node.ply % 2 === 1 && whiteHadVariations);
 		whiteHadVariations = node.ply % 2 === 0 && variations.length > 0;
 		await appendVariationGroup(container, variations, 1);
+		last = node;
 		node = getMainlineChild(node);
 	}
+
+	// The last node's own variation children — including any forced move that truncated the
+	// walk — branch from it with no move row above, so render them beneath it. (When the whole
+	// mainline is forced away, last is the root.)
+	await appendVariationGroup(container, getVariationChildren(last), 1);
 }
 
 async function appendAnalysisMainlinePly(
