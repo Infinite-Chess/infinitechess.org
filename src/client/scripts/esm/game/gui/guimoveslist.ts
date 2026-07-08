@@ -349,8 +349,9 @@ async function reconcileAnalysisMovesTable(): Promise<void> {
 	tree.className = 'analysis-move-tree';
 	const root = analysismovetree.getRoot()!;
 
+	// The mainline walk renders every mainline move's alternatives below it — including the
+	// first move's, which branch from the root — so no separate root-variation pass is needed.
 	await appendAnalysisMainline(tree, root);
-	await appendVariationGroup(tree, getVariationChildren(root), 0);
 
 	element_MovesTable.insertBefore(tree, element_GameResult);
 	updateCurrentPly();
@@ -368,9 +369,22 @@ async function appendAnalysisMainline(
 	from: AnalysisMoveNode,
 ): Promise<void> {
 	let node = getMainlineChild(from);
+	if (!node) {
+		// No mainline moves (e.g. the first move was forced into a variation) — render the
+		// root's variations on their own, since there's no move row to hang them beneath.
+		await appendVariationGroup(container, getVariationChildren(from), 1);
+		return;
+	}
+	// Whether the white move just placed has variations rendered beneath it — its black
+	// reply must then start a fresh row so the variations stay ordered below their branch move.
+	let whiteHadVariations = false;
 	while (node) {
-		await appendAnalysisMainlinePly(container, node);
-		await appendVariationGroup(container, getVariationChildren(node), 1);
+		// The variations that branch off as alternatives to THIS move; they render
+		// directly below the move so a variation never appears above the move it replaces.
+		const variations = getVariationChildren(node.parent!);
+		await appendAnalysisMainlinePly(container, node, node.ply % 2 === 1 && whiteHadVariations);
+		whiteHadVariations = node.ply % 2 === 0 && variations.length > 0;
+		await appendVariationGroup(container, variations, 1);
 		node = getMainlineChild(node);
 	}
 }
@@ -378,22 +392,28 @@ async function appendAnalysisMainline(
 async function appendAnalysisMainlinePly(
 	container: HTMLElement,
 	node: AnalysisMoveNode,
+	blackStartsNewRow: boolean,
 ): Promise<void> {
 	const ply = await createVariationPlyButton(node, false);
 
-	if (node.ply % 2 === 0) {
-		const row = document.createElement('div');
-		row.className = 'move-row analysis-mainline-row';
-		const num = document.createElement('span');
-		num.className = 'move-num';
-		num.textContent = String(node.ply / 2 + 1);
-		row.append(num, ply);
-		container.append(row);
-	} else {
+	if (node.ply % 2 === 1 && !blackStartsNewRow) {
+		// Black reply — join the current white move's row.
 		const rows = container.querySelectorAll('.analysis-mainline-row');
-		const row = rows[rows.length - 1];
-		row?.append(ply);
+		rows[rows.length - 1]?.append(ply);
+		return;
 	}
+
+	// Begin a new mainline row. White always does; a black reply does too when its white
+	// move carries variations, splitting the pair so the reply sits below them.
+	const row = document.createElement('div');
+	row.className = 'move-row analysis-mainline-row';
+	const num = document.createElement('span');
+	num.className = 'move-num';
+	num.textContent = node.ply % 2 === 0 ? String(node.ply / 2 + 1) : formatMoveIndex(node.ply);
+	row.append(num);
+	if (node.ply % 2 === 1) row.append(document.createElement('span')); // Empty white cell.
+	row.append(ply);
+	container.append(row);
 }
 
 async function appendVariationGroup(
