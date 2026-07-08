@@ -174,7 +174,6 @@ function viewMove(
 	// Even viewing a move should apply global state and update turn.
 	const isAnalysis = gamesession.getGameType() === 'analysis';
 	movepiece.applyMove(gamefile, move, forward, { global: isAnalysis }); // Apply the logical changes.
-	if (isAnalysis) movepiece.updateTurn(gamefile);
 
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
