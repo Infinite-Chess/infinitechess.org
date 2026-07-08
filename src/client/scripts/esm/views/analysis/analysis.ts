@@ -98,9 +98,8 @@ function syncVariantSelect(variantMetadata: string | undefined): void {
 
 /** Flips the board orientation in place — a pure view change; the game and engine analysis are untouched. */
 function flipBoard(): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile || gamesession.isLoading()) return;
-	gameslot.flipPerspective();
+	if (gamesession.isLoading()) return;
+	gameslot.flipView();
 	document.getElementById('eval-gauge')!.classList.toggle('flipped', !gameslot.areViewingWhite());
 }
 

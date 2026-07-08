@@ -20,7 +20,7 @@ import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import arrows from '../rendering/arrows/arrows.js';
 import { gl } from '../rendering/webgl.js';
@@ -34,7 +34,7 @@ import imagecache from '../../chess/rendering/imagecache.js';
 import piecemodels from '../rendering/piecemodels.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../GameBus.js';
-import frametracker from '../rendering/frametracker.js';
+import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
@@ -123,15 +123,10 @@ function areViewingWhite(): boolean {
 	return viewColor === p.WHITE;
 }
 
-/**
- * Flips the board orientation in place (white ⇄ black perspective) without reloading
- * the game — a pure view change. The engine analysis, move history, and TT are untouched.
- */
-function flipPerspective(): void {
-	if (!loadedGamefile) return;
-	viewColor = viewColor === p.WHITE ? p.BLACK : p.WHITE;
-	camera.setPerspectiveRotation(0, areViewingWhite() ? 0 : 180);
-	frametracker.onVisualChange();
+/** Flips the board orientation in place (white ⇄ black perspective). */
+function flipView(): void {
+	viewColor = typeutil.invertPlayer(viewColor);
+	if (!perspective.getEnabled()) camera.setPerspectiveRotation(0, areViewingWhite() ? 0 : 180);
 }
 
 /**
@@ -250,8 +245,6 @@ function unloadGame(): void {
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
-	// Symmetric with loadGraphical()'s starfield.init(), so a later reload
-	// (e.g. analysis paste / flip board) can re-initialize it cleanly.
 	starfield.terminate();
 
 	GameBus.dispatch('game-unloaded');
@@ -281,7 +274,7 @@ export default {
 	getMesh,
 	areInGame,
 	areViewingWhite,
-	flipPerspective,
+	flipView,
 	loadGamefile,
 	unloadGame,
 	concludeGame,

@@ -69,7 +69,7 @@ function isItOurTurn(): boolean {
 	}
 }
 
-/** True while the gamefile's graphical (images) or engine resources are still loading. */
+/** True while the gamefile's logical, graphical (images), or engine resources are still loading. */
 function isLoading(): boolean {
 	return loading;
 }
