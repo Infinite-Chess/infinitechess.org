@@ -230,16 +230,25 @@ function terminateWorker(): void {
 
 // Spare worker (instant position-switch) -------------------------------------------------
 
-/** Warms a spare worker so a future position switch can promote it with zero init latency. No-op if one already exists or analysis is off. */
+/** Warms an idle spare worker for an instant position switch and legal-moves queries. */
 function ensureSpare(): void {
-	if (spareWorker || !config || !enabled) return;
+	if (spareWorker || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
 	spareReady = false;
-	// The spare only warms up — it's never sent a position, so it only needs to reach 'ready'.
 	w.onmessage = (e: MessageEvent<AnalysisResponse>) => {
 		if (spareWorker !== w) return; // Superseded; ignore late messages.
-		if (e.data.type === 'ready') spareReady = true;
-		else if (e.data.type === 'initerror') terminateSpare();
+		switch (e.data.type) {
+			case 'ready':
+				spareReady = true;
+				flushQueuedLegalMovesRequests();
+				break;
+			case 'initerror':
+				terminateSpare();
+				break;
+			case 'legalmoves':
+				receiveLegalMoves(e.data);
+				break;
+		}
 	};
 	w.onerror = () => {
 		if (spareWorker === w) terminateSpare();
@@ -254,13 +263,7 @@ function terminateSpare(): void {
 	spareReady = false;
 }
 
-/**
- * Replaces the active worker with a fresh one for an instant position switch: kills the
- * (possibly search-blocked) active worker and promotes the pre-warmed spare, then warms the
- * next spare. Falls back to a plain respawn if no spare is ready yet (one-time init latency,
- * still no multi-second hang). After this the caller must (re)issue the search — either
- * directly if {@link workerReady}, or via the promoted worker's 'ready' handler if not.
- */
+/** Kills the (possibly blocked) active worker and promotes the warm spare, for an instant position switch. */
 function swapToFreshWorker(): void {
 	searchInFlight = false;
 	if (!spareWorker) {
@@ -279,13 +282,7 @@ function swapToFreshWorker(): void {
 
 // Fault recovery -------------------------------------------------------------------------
 
-/**
- * Recovers from a crashed worker by respawning it fresh (a wasm panic poisons the module,
- * so only a new Worker gets a clean wasm instance). The respawn's 'ready' re-sends the
- * current position. Gives up after {@link MAX_ENGINE_RESTARTS} consecutive faults with no
- * successful search between, to avoid an endless respawn loop on a position that reliably
- * crashes the engine.
- */
+/** Respawns the worker fresh after a crash; gives up after {@link MAX_ENGINE_RESTARTS} in a row. */
 function recoverFromEngineFault(): void {
 	if (++engineRestartCount > MAX_ENGINE_RESTARTS) {
 		console.error('[ceval] Analysis engine faulted repeatedly; giving up.');
@@ -320,11 +317,15 @@ function send(command: AnalysisCommand): void {
 	worker?.postMessage(command);
 }
 
-/** Sends any legal-move requests that were queued while the worker was still spinning up. */
+/** Sends any legal-move requests that were queued while the spare was still spinning up. */
 function flushQueuedLegalMovesRequests(): void {
-	if (!workerReady) return;
+	if (!spareReady || !spareWorker) return;
 	for (const request of queuedLegalMovesRequests.splice(0)) {
-		send({ cmd: 'legalmoves', requestId: request.requestId, icn: request.icn });
+		spareWorker.postMessage({
+			cmd: 'legalmoves',
+			requestId: request.requestId,
+			icn: request.icn,
+		} satisfies AnalysisCommand);
 	}
 }
 
@@ -340,20 +341,15 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
-			flushQueuedLegalMovesRequests();
-			// Flush the desired position now that the engine is up. This is always a brand-new
-			// wasm module, so even a same-position resend restarts iterative deepening from depth 1.
-			refreshAnalysis(true);
-			ensureSpare(); // Warm a spare so the next position switch is instant.
+			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
+			ensureSpare();
 			notifyStatus();
 			break;
 		case 'initerror':
 			handleWorkerFailure();
 			break;
 		case 'info':
-			// The worker has proven it's alive and searching this position: give it a
-			// fresh fault-retry budget.
-			engineRestartCount = 0;
+			engineRestartCount = 0; // Proven alive — fresh fault-retry budget.
 			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
@@ -401,11 +397,7 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	});
 }
 
-/**
- * Coalesces a burst of synchronous 'view-move' events into a single refresh that reads
- * the final resting position, so intermediate positions (e.g. those a branch passes
- * through) never trigger their own search restart.
- */
+/** Coalesces a burst of synchronous 'view-move' events into one refresh of the final position. */
 function scheduleRefresh(): void {
 	if (refreshQueued) return;
 	refreshQueued = true;
@@ -458,11 +450,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		emitNow(); // Show cached eval immediately, or clear when this position is new.
 	}
 
-	// If the active worker is mid-search on the previous position it may be blocked in an
-	// uninterruptible deep depth (single-threaded wasm). Rather than wait for it to unwind,
-	// swap to a pre-warmed spare so the new position starts instantly. Only when the position
-	// actually changed AND a search is in flight — a same-position resume ("go deeper") or an
-	// already-idle worker keeps its worker (and transposition table).
+	// A new position while the worker may be mid-search: swap to a warm spare instead of waiting.
 	if (positionChanged && searchInFlight) {
 		swapToFreshWorker();
 		if (!workerReady) return; // Spare still warming; its 'ready' handler re-issues this refresh.
@@ -624,15 +612,15 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
-/** Requests the legal moves for {@link icn}, spawning/queuing if the worker isn't ready yet. */
+/** Requests the legal moves for {@link icn} from the spare (idle, unlike a search-busy active worker). */
 function requestLegalMoves(requestId: number, icn: string): void {
 	if (blockedByEngineWorldBorder) return;
-	if (!worker) spawnWorker();
-	if (!workerReady) {
+	ensureSpare();
+	if (!spareReady || !spareWorker) {
 		queuedLegalMovesRequests.push({ requestId, icn });
 		return;
 	}
-	send({ cmd: 'legalmoves', requestId, icn });
+	spareWorker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
 }
 
 /** Fans a legal-moves response from the worker out to all subscribers. */
