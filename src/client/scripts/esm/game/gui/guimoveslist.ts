@@ -445,10 +445,14 @@ async function appendVariationLine(
 		segment.line.append(await createVariationPlyButton(node, showIndex || node.ply % 2 === 0));
 		showIndex = false;
 
-		// Alternatives to THIS move. The head's alternatives are its fork-siblings, already
-		// rendered by the enclosing group, so they're skipped here.
-		const alternatives = node === head ? [] : getVariationChildren(node.parent!);
+		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
+		// already rendered by the enclosing group, so they're skipped here.
+		const siblingAlts = node === head ? [] : getVariationChildren(node.parent!);
 		const next = getMainlineChild(node);
+		// When this move's continuation was forced into a variation it has no mainline child;
+		// its own variation children then branch from it with no row of their own above.
+		const forcedContinuation = next ? [] : getVariationChildren(node);
+		const alternatives = [...siblingAlts, ...forcedContinuation];
 
 		if (alternatives.length > 0) {
 			container.append(segment.variation); // Flush the segment ending at this move.
