@@ -203,7 +203,9 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	element_Eval.textContent = best ? formatEval(best) : '…';
 	element_Stats.textContent = formatStats(update);
 	// Offer "go deeper" once the target depth is reached and there's still room to go.
-	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && best?.mate === undefined;
+	// Show if at least one PV line is non-terminal (not mate/game end).
+	const hasNonTerminalLine = update.lines.some((line) => line.mate === undefined);
+	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && hasNonTerminalLine;
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
 	updateGauge(best);
