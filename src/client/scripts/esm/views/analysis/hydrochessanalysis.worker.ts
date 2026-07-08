@@ -47,6 +47,8 @@ interface GoOptions {
 	multiPv: number;
 	/** Target depth to analyze to, then stop. */
 	maxDepth: number;
+	/** Main-thread analysis request id. Echoed on all search responses. */
+	requestId: number;
 }
 
 /** Messages accepted by this worker. */
@@ -54,15 +56,18 @@ type AnalysisCommand =
 	| { cmd: 'init'; hashMb: number }
 	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }
+	| { cmd: 'legalmoves'; requestId: number; icn: string }
 	| { cmd: 'stop' };
 
 /** Messages posted back to the main thread. */
 type AnalysisResponse =
 	| { type: 'ready' }
 	| { type: 'initerror'; message: string }
-	| { type: 'info'; info: AnalysisInfo }
+	| { type: 'info'; requestId: number; info: AnalysisInfo }
+	| { type: 'legalmoves'; requestId: number; moves: string[] }
 	| {
 			type: 'done';
+			requestId: number;
 			reason: 'depth' | 'mate' | 'terminal';
 			info: AnalysisInfo;
 	  };
@@ -94,7 +99,7 @@ let loopRunning = false;
 let currentIcn: string | undefined;
 /** The ICN the engine was last given. */
 let appliedIcn: string | undefined;
-let goOptions: GoOptions = { multiPv: 1, maxDepth: 13 };
+let goOptions: GoOptions = { multiPv: 1, maxDepth: 13, requestId: 0 };
 /**
  * Deepest iterative-deepening depth completed for the CURRENT position (reset when the
  * position changes). Each slice resumes at `reachedDepth + 1`, so the search keeps
@@ -138,6 +143,24 @@ function syncPosition(): void {
 	reachedDepth = 0; // New position: iterative deepening restarts from depth 1.
 }
 
+function postLegalMoves(requestId: number, icn: string): void {
+	if (!wasmReady) {
+		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
+		return;
+	}
+
+	const legalMoveEngine = wasmBindings.Engine.from_icn(icn, {});
+	const legalMoves: { from: string; to: string; promotion?: string | null }[] =
+		legalMoveEngine.get_legal_moves_js();
+	const moves = legalMoves.map((move) => {
+		let token = `${move.from}>${move.to}`;
+		if (move.promotion) token += `=${move.promotion}`;
+		return token;
+	});
+	legalMoveEngine.free();
+	postMessage({ type: 'legalmoves', requestId, moves } satisfies AnalysisResponse);
+}
+
 /**
  * The ongoing analysis loop. Each engine call searches EXACTLY ONE iterative-deepening
  * depth to completion, with no time limit — the search never aborts mid-depth, so
@@ -155,6 +178,7 @@ async function runLoop(): Promise<void> {
 			syncPosition();
 			const gen = generation;
 			const opts = goOptions;
+			const requestId = opts.requestId;
 
 			// One time-sliced call: resume at the next depth and search toward the target,
 			// completing as many whole depths as fit in SLICE_MS. Each depth streams via
@@ -170,7 +194,7 @@ async function runLoop(): Promise<void> {
 				},
 				(info: AnalysisInfo) => {
 					if (gen !== generation) return;
-					postMessage({ type: 'info', info } satisfies AnalysisResponse);
+					postMessage({ type: 'info', requestId, info } satisfies AnalysisResponse);
 				},
 			);
 
@@ -195,6 +219,7 @@ async function runLoop(): Promise<void> {
 				analysing = false;
 				postMessage({
 					type: 'done',
+					requestId,
 					reason,
 					info: summary ?? { depth: 0, seldepth: 0, nodes: 0, nps: 0, timeMs: 0, hashfull: 0, lines: [] }, // prettier-ignore
 				} satisfies AnalysisResponse);
@@ -238,6 +263,9 @@ self.onmessage = (e: MessageEvent<AnalysisCommand>): void => {
 			generation++;
 			analysing = true;
 			void runLoop();
+			break;
+		case 'legalmoves':
+			postLegalMoves(msg.requestId, msg.icn);
 			break;
 		case 'stop':
 			generation++;

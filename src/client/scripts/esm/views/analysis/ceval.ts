@@ -67,6 +67,11 @@ interface CevalUpdate {
 /** Engine lifecycle status, for the UI status row. */
 type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed';
 
+interface CevalLegalMovesUpdate {
+	requestId: number;
+	moves: string[];
+}
+
 interface RefreshAnalysisOptions {
 	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
 	restartSearch?: boolean;
@@ -107,7 +112,8 @@ let lastAnalyzedIcn: string | undefined;
 /** Whether the next position command should reset the engine's search state. */
 let nextPositionIsNewGame = true;
 /** Snapshot of the analyzed position (for POV + staleness checks). */
-let analyzed: { moveIndex: number; turn: number } | undefined;
+let analyzed: { requestId: number; icn: string; moveIndex: number; turn: number } | undefined;
+let activeRequestId = 0;
 /** Whether "go deeper" is active for the current position (search to {@link MAX_DEPTH}). */
 let goDeeperActive = false;
 /** The depth the in-flight analysis is running to. */
@@ -123,6 +129,8 @@ const positionCache = new Map<string, CevalUpdate>();
 
 const updateListeners = new Set<(update: CevalUpdate | undefined) => void>();
 const statusListeners = new Set<(status: CevalStatus) => void>();
+const legalMovesListeners = new Set<(update: CevalLegalMovesUpdate) => void>();
+const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
 
 // Settings persistence ----------------------------------------------------------------
 
@@ -194,9 +202,17 @@ function send(command: AnalysisCommand): void {
 	worker?.postMessage(command);
 }
 
+function flushQueuedLegalMovesRequests(): void {
+	if (!workerReady) return;
+	for (const request of queuedLegalMovesRequests.splice(0)) {
+		send({ cmd: 'legalmoves', requestId: request.requestId, icn: request.icn });
+	}
+}
+
 function handleWorkerFailure(): void {
 	terminateWorker();
 	enabled = false;
+	queuedLegalMovesRequests.length = 0;
 	notifyStatus('failed');
 }
 
@@ -204,6 +220,7 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
+			flushQueuedLegalMovesRequests();
 			refreshAnalysis(true); // Flush the desired position now that the engine is up.
 			notifyStatus();
 			break;
@@ -211,11 +228,14 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			handleWorkerFailure();
 			break;
 		case 'info':
-			receiveInfo(msg.info, false);
+			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
-			receiveInfo(msg.info, true, msg.reason === 'terminal');
+			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
+			break;
+		case 'legalmoves':
+			receiveLegalMoves(msg);
 			break;
 	}
 }
@@ -277,7 +297,13 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	}
 
 	const moveIndex = gamefile.state.local.moveIndex;
-	analyzed = { moveIndex, turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex) };
+	const requestId = ++activeRequestId;
+	analyzed = {
+		requestId,
+		icn,
+		moveIndex,
+		turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex),
+	};
 	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
 
 	send({
@@ -286,7 +312,10 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		newGame: nextPositionIsNewGame,
 		resetSearch: options.restartSearch,
 	});
-	send({ cmd: 'go', opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth } });
+	send({
+		cmd: 'go',
+		opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth, requestId },
+	});
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
@@ -314,8 +343,9 @@ function restartWorkerForSearch(): void {
 
 // Normalization & emission ----------------------------------------------------------------
 
-function receiveInfo(info: AnalysisInfo, done: boolean, terminal = false): void {
+function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, terminal = false): void {
 	if (!analyzed) return;
+	if (requestId !== activeRequestId || requestId !== analyzed.requestId) return;
 	const blackPov = analyzed.turn === p.BLACK;
 
 	// Drop lines that repeat an earlier line's first move. The engine's lines arrive
@@ -355,12 +385,12 @@ function receiveInfo(info: AnalysisInfo, done: boolean, terminal = false): void 
 		terminal,
 	};
 
-	const cached = lastAnalyzedIcn ? positionCache.get(lastAnalyzedIcn) : undefined;
+	const cached = positionCache.get(analyzed.icn);
 	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) return;
 
 	latestUpdate = update;
-	if (lastAnalyzedIcn && shouldReplaceCachedUpdate(cached, update)) {
-		positionCache.set(lastAnalyzedIcn, update);
+	if (shouldReplaceCachedUpdate(cached, update)) {
+		positionCache.set(analyzed.icn, update);
 		if (cached && update.depth >= cached.depth) allowDepthRegressionForCurrentSearch = false;
 	}
 
@@ -401,6 +431,19 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
+function requestLegalMoves(requestId: number, icn: string): void {
+	if (!worker) spawnWorker();
+	if (!workerReady) {
+		queuedLegalMovesRequests.push({ requestId, icn });
+		return;
+	}
+	send({ cmd: 'legalmoves', requestId, icn });
+}
+
+function receiveLegalMoves(update: CevalLegalMovesUpdate): void {
+	for (const listener of legalMovesListeners) listener(update);
+}
+
 function notifyStatus(override?: CevalStatus): void {
 	const status = override ?? getStatus();
 	for (const listener of statusListeners) listener(status);
@@ -422,7 +465,9 @@ function init(options: { workerUrl: string }): void {
 	GameBus.addEventListener('game-unloaded', () => {
 		latestUpdate = undefined;
 		analyzed = undefined;
+		activeRequestId++;
 		lastAnalyzedIcn = undefined;
+		queuedLegalMovesRequests.length = 0;
 		if (enabled) stopAnalysis();
 	});
 }
@@ -514,6 +559,10 @@ function onStatus(listener: (status: CevalStatus) => void): void {
 	statusListeners.add(listener);
 }
 
+function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
+	legalMovesListeners.add(listener);
+}
+
 export default {
 	init,
 	isEnabled,
@@ -523,12 +572,14 @@ export default {
 	goDeeper,
 	getLatestUpdate,
 	getStatus,
+	requestLegalMoves,
 	onUpdate,
 	onStatus,
+	onLegalMoves,
 	DEPTH_OPTIONS,
 	MAX_DEPTH,
 	HASH_OPTIONS,
 	MAX_MULTI_PV,
 };
 
-export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus };
+export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus, CevalLegalMovesUpdate };

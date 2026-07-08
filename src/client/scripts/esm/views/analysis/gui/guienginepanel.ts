@@ -24,6 +24,7 @@ import enginearrows from '../enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
 import analysismovetree from '../movetree.js';
 import { isTypingTarget } from '../analysis.js';
+import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
 // Elements -------------------------------------------------------------------------
 
@@ -53,12 +54,19 @@ const ENABLED_STORAGE_KEY = 'ceval.enabled';
 /** Initializes the engine panel. Called once by the page entry. */
 function init(): void {
 	ceval.init({ workerUrl: window.analysisPageData.workerUrl });
+	enginelegalmovesdebug.init({
+		canRequest: () => true,
+		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
+	});
 
 	initSettingsUI();
 	initListeners();
 
 	ceval.onUpdate(onEngineUpdate);
 	ceval.onStatus(onEngineStatus);
+	ceval.onLegalMoves(({ requestId, moves }) =>
+		enginelegalmovesdebug.receiveMoves(requestId, moves),
+	);
 
 	// Draw engine arrows on top of the pieces each frame.
 	GameBus.addEventListener('render-above-pieces', () => enginearrows.render());
