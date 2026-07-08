@@ -161,18 +161,8 @@ function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 // Local Moving ----------------------------------------------------------------------------------------------------------
 
 /**
- * Apply the move to the board state and the mesh, whether forward or backward,
- * as if we were wanting to *view* the move, instead of making it.
- *
- * In most game types this changes only the LOCAL state (board + check), leaving the
- * global game state (whose turn, en passant, special rights, move-rule counter) pinned
- * at the front — the front is authoritative and history is view-only.
- *
- * In an ANALYSIS game there is no authoritative front: every ply is a real, editable
- * position, so navigation also applies/reverts the GLOBAL state (and updates whose turn),
- * keeping special rights / en passant / the move-rule counter correct at whatever ply is
- * being viewed. This is what makes castling rights (etc.) recover when you delete moves
- * or switch to a line that never lost them.
+ * Apply the move to the board state and the mesh, whether forward or
+ * backward, as if we were wanting to *view* the move, instead of making it.
  */
 function viewMove(
 	gamefile: GameFile,
@@ -180,10 +170,12 @@ function viewMove(
 	move: MoveFull,
 	forward = true,
 ): void {
+	// In analysis mode, every ply is a real, editable position.
+	// Even viewing a move should apply global state and update turn.
 	const isAnalysis = gamesession.getGameType() === 'analysis';
 	movepiece.applyMove(gamefile, move, forward, { global: isAnalysis }); // Apply the logical changes.
-	if (isAnalysis)
-		gamefile.whosTurn = moveutil.getWhosTurnAtMoveIndex(gamefile, gamefile.state.local.moveIndex); // prettier-ignore
+	if (isAnalysis) movepiece.updateTurn(gamefile);
+
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.

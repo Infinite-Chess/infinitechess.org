@@ -490,11 +490,10 @@ function rewindMove(boardsim: Board): void {
 	const move = moveutil.getMoveFromIndex(boardsim.moves, boardsim.state.local.moveIndex);
 
 	applyMove(boardsim, move, false, { global: true });
+	updateTurn(boardsim);
 
 	// Delete the move off the end of our moves list
 	boardsim.moves.pop();
-
-	updateTurn(boardsim);
 }
 
 // Dynamic -------------------------------------------------------------------------------------------------------
