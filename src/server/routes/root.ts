@@ -48,6 +48,11 @@ page('/game/:id', (req: Request, res: Response) => {
 	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 	res.render('game.njk', state);
 });
+page('/analysis(.html)?/:id?', (req: Request, res: Response) => {
+	const state = getAnalysisPageState(req);
+	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
+	res.render('analysis.njk', state);
+});
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));
@@ -82,11 +87,6 @@ page('/admin(.html)?', (_req: Request, res: Response) => res.render('admin.njk')
 page('/icnvalidator(.html)?', (_req: Request, res: Response) => res.render('icnvalidator.njk')); // prettier-ignore
 page('/tutorial(.html)?', (_req: Request, res: Response) => res.render('tutorial.njk'));
 page('/checkmatepractice(.html)?', (_req: Request, res: Response) => res.render('checkmatepractice.njk')); // prettier-ignore
-page('/analysis(.html)?/:id?', (req: Request, res: Response) => {
-	const state = getAnalysisPageState(req);
-	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
-	res.render('analysis.njk', state);
-});
 page('/editor(.html)?', (_req: Request, res: Response) => res.render('editor.njk'));
 page('/patron(.html)?', (_req: Request, res: Response) => res.render('patron.njk'));
 

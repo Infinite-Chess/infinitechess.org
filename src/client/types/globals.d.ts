@@ -91,9 +91,7 @@ declare global {
 		role?: Player;
 	} & StaticGameSetup;
 
-	/**
-	 * SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk.
-	 */
+	/** SSR→client data for the analysis page (/analysis/:id?), injected by analysis.njk. */
 	var analysisPageData: {
 		/** Base62 id of a game to auto-load, or null for a fresh board. */
 		gameId: string | null;

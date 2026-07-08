@@ -10,7 +10,6 @@
 
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { AnalysisMoveNode } from '../../views/analysis/movetree.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -29,9 +28,9 @@ import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
-import analysismovetree from '../../views/analysis/movetree.js';
 import { listener_document } from '../chess/gamecore.js';
 import { createRenderQueue } from '../../util/renderqueue.js';
+import analysismovetree, { AnalysisMoveNode } from '../../views/analysis/movetree.js';
 
 // Elements ----------------------------------------------------------------------------------
 
