@@ -266,8 +266,12 @@ function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.error("Setting applied to true.");
 	applied = true;
 
-	GameBus.dispatch('physical-move');
-	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
+	// Only broadcast a position change if we actually re-applied a premove. With zero
+	// premoves this is a no-op roundtrip.
+	if (premoves.length > 0) {
+		GameBus.dispatch('physical-move');
+		GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
+	}
 }
 
 /**

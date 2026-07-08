@@ -126,6 +126,8 @@ let blockedByEngineWorldBorder = false;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
+/** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
+let refreshQueued = false;
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -278,6 +280,9 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 	if (longformIn.moves && longformIn.moves.length > viewedPlyCount) {
 		longformIn.moves = longformIn.moves.slice(0, viewedPlyCount);
 	}
+	// Result/Termination are irrelevant to the engine
+	delete longformIn.metadata.Result;
+	delete longformIn.metadata.Termination;
 	return icnconverter.LongToShort_Format(longformIn, {
 		compact: true,
 		skipPosition: false,
@@ -296,6 +301,20 @@ function getViewedPositionIcn(gamefile: GameFile): string {
  *   MultiPV / search time, or toggling the engine off then on, resumes instantly rather
  *   than resetting the analysis.
  */
+/**
+ * Coalesces a burst of synchronous 'view-move' events into a single refresh that reads
+ * the final resting position, so intermediate positions (e.g. those a branch passes
+ * through) never trigger their own search restart.
+ */
+function scheduleRefresh(): void {
+	if (refreshQueued) return;
+	refreshQueued = true;
+	queueMicrotask(() => {
+		refreshQueued = false;
+		refreshAnalysis();
+	});
+}
+
 function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): void {
 	if (!enabled) return;
 	// Note: only the logical gamefile is required — 'game-loaded' fires while
@@ -511,8 +530,11 @@ function init(options: { workerUrl: string }): void {
 	config = options;
 
 	// Keep the engine pointed at the viewed position. 'view-move' fires on every
-	// board position change, including physical moves.
-	GameBus.addEventListener('view-move', () => refreshAnalysis());
+	// board position change, including physical moves. Coalesce them: an operation like
+	// branching (viewFront to the game's front, then rewinding back) fires several
+	// 'view-move's synchronously, but only the final resting position matters — refreshing
+	// per event would restart the search at each intermediate position it passes through.
+	GameBus.addEventListener('view-move', scheduleRefresh);
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
 		if (enabled && !worker) spawnWorker();
