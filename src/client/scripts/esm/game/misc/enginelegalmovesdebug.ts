@@ -10,6 +10,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import coordutil, { CoordsKey } from '../../../../../shared/chess/util/coordutil.js';
 
+import toast from '../../components/toast.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -56,6 +57,7 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 function toggle(): void {
 	enabled = !enabled;
 	console.log(`Toggled engine move gen highlights: ${enabled}`);
+	toast.show(`Engine legal moves debug ${enabled ? 'on' : 'off'}`);
 
 	if (!enabled) {
 		requestKeyById.clear();

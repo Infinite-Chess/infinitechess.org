@@ -31,6 +31,7 @@ export const ESMEntryPoints = [
 	'src/client/css/header.css',
 	'src/client/css/footer.css',
 	'src/client/css/toast.css',
+	'src/client/css/gameSetupModal.css',
 	'src/client/css/index.css',
 	'src/client/css/login.css',
 	'src/client/css/register-awaiting.css',

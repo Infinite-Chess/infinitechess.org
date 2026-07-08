@@ -368,12 +368,18 @@ function blockAnalysisForEngineWorldBorder(): void {
 }
 
 function retargetCachedUpdate(update: CevalUpdate): CevalUpdate {
-	const best = update.lines[0];
 	return {
 		...update,
 		targetDepth: currentTargetDepth,
-		done: update.terminal || update.depth >= currentTargetDepth || best?.mate !== undefined,
+		done:
+			update.terminal ||
+			update.depth >= currentTargetDepth ||
+			areAllLinesConclusive(update.lines),
 	};
+}
+
+function areAllLinesConclusive(lines: CevalLine[]): boolean {
+	return lines.length > 0 && lines.every((line) => line.mate !== undefined);
 }
 
 /** Stops the engine (keeps the worker warm). */

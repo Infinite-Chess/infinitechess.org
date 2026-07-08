@@ -7,11 +7,12 @@
  */
 
 import type { Request } from 'express';
+import type { GameMetaViewModel } from './gamePageController.js';
 
 import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import { decodeGameId } from '../database/gamesManager.js';
-import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
+import { getGamePageState } from './gamePageController.js';
 
 /** The full render context for `analysis.njk`. */
 interface AnalysisPageState {
@@ -19,6 +20,10 @@ interface AnalysisPageState {
 	gameId: string | null;
 	/** Variant dropdown contents, in display order. */
 	variantGroups: { name: string; variants: { code: string; name: string }[] }[];
+	/** Raw variant group data used by the shared game setup modal. */
+	modalVariantGroups: ReturnType<typeof variantregistry.getVariantGroupsWithVariants>;
+	/** Game metadata shown when analysis is opened for a saved/live game. */
+	meta?: GameMetaViewModel;
 }
 
 /**
@@ -29,11 +34,14 @@ interface AnalysisPageState {
 export function getAnalysisPageState(req: Request): AnalysisPageState | undefined {
 	let gameId: string | null = null;
 	const idParam = req.params['id'];
+	let meta: GameMetaViewModel | undefined;
 	if (idParam !== undefined) {
 		const id = decodeGameId(idParam);
 		if (id === undefined) return undefined; // Malformed id
-		if (produceStaticGameState(id) === undefined) return undefined; // Game doesn't exist
+		const gamePageState = getGamePageState(req);
+		if (gamePageState === undefined) return undefined; // Game doesn't exist
 		gameId = idParam;
+		meta = gamePageState.meta;
 	}
 
 	const variantGroups = variantregistry.getVariantGroupsWithVariants().map((g) => ({
@@ -44,5 +52,10 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 		})),
 	}));
 
-	return { gameId, variantGroups };
+	return {
+		gameId,
+		variantGroups,
+		modalVariantGroups: variantregistry.getVariantGroupsWithVariants(),
+		...(meta && { meta }),
+	};
 }

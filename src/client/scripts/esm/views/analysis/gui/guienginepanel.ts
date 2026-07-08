@@ -62,6 +62,7 @@ function init(): void {
 
 	initSettingsUI();
 	initListeners();
+	syncSettingsOverlayPosition();
 
 	ceval.onUpdate(onEngineUpdate);
 	ceval.onStatus(onEngineStatus);
@@ -111,8 +112,11 @@ function initListeners(): void {
 
 	element_SettingsBtn.addEventListener('click', () => {
 		const open = element_Settings.classList.toggle('hidden') === false;
+		if (open) syncSettingsOverlayPosition();
 		element_SettingsBtn.classList.toggle('active', open);
 	});
+
+	window.addEventListener('resize', syncSettingsOverlayPosition);
 
 	element_MultiPv.addEventListener('input', () => {
 		element_MultiPvValue.textContent = element_MultiPv.value;
@@ -142,6 +146,10 @@ function initListeners(): void {
 		if (e.key === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey)
 			setEngineEnabled(!element_Toggle.checked);
 	});
+}
+
+function syncSettingsOverlayPosition(): void {
+	element_Settings.style.setProperty('--engine-settings-top', `${element_Lines.offsetTop}px`);
 }
 
 // Engine output rendering ------------------------------------------------------------

@@ -8,6 +8,7 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
+import toast from '../../components/toast.js';
 import boardpos from '../../game/rendering/boardpos.js';
 import gameslot from '../../game/chess/gameslot.js';
 import boardtiles from '../../game/rendering/boardtiles.js';
@@ -29,6 +30,7 @@ function init(): void {
 function toggle(): void {
 	enabled = !enabled;
 	console.log(`Toggled analysis engine border: ${enabled}`);
+	toast.show(`Analysis engine border debug ${enabled ? 'on' : 'off'}`);
 	frametracker.onVisualChange();
 }
 

@@ -4,6 +4,7 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
+<link rel="stylesheet" href="{{ manifest['css/gameSetupModal.css'] }}" />
 <link rel="stylesheet" href="{{ manifest['css/analysis.css'] }}" />
 {% endblock %}
 
@@ -15,10 +16,16 @@
 	gameId: {{ gameId | json | safe }},
 	workerUrl: "{{ manifest['scripts/esm/views/analysis/hydrochessanalysis.worker.ts'] }}"
 };</script>
+<script>window.t = Object.assign(window.t || {}, { index: {{ scriptT('index') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
+{% from "components/user.njk" import usernameEmbed %}
+{% from "components/gameSetupModal.njk" import gameSetupModal %}
+{% set tIndex = templateT('index') %}
+{% set tsIndex = scriptT('index') %}
+{% set sShared = scriptT('shared') %}
 
 <main class="game analysis">
 
@@ -85,6 +92,42 @@
 		</div>
 
 		{# ── Analysis setup: variant picker + flip board ─────────────────── #}
+		{% if meta %}
+		<div class="game-meta panel analysis-game-meta">
+			<div class="meta-info">
+				<span class="meta-item">
+					<svg class="meta-icon {{ meta.variant.iconId }}"><use href="#{{ meta.variant.iconId }}"/></svg>
+					<span class="meta-variant">{{ meta.variant.name }}</span>
+				</span>
+				&bull;
+				<span class="meta-item" title="{{ meta.speed.category | capitalize }}">
+					<svg class="meta-icon {{ meta.speed.iconId }}"><use href="#{{ meta.speed.iconId }}"/></svg>
+					<span>{{ meta.timeControl }}</span>
+				</span>
+				&bull;
+				<span>{{ "Rated" if meta.rated else "Casual" }}</span>
+			</div>
+
+			<div class="meta-foot">
+				<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
+			</div>
+
+			<div class="meta-players">
+				{% for color in [p.WHITE, p.BLACK] %}
+				{% set player = meta.players[color] %}
+				<div class="meta-player">
+					<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ 'White' if color == p.WHITE else 'Black' }}"></span>
+					{{ usernameEmbed(player.name, player.elo, player.eloDiff) }}
+				</div>
+				{% endfor %}
+			</div>
+
+			<div class="result-banner{{ '' if meta.result else ' hidden' }}">
+				<span class="result-score">{{ meta.result.score if meta.result }}</span>
+				<span class="result-text">{{ meta.result.text if meta.result }}</span>
+			</div>
+		</div>
+		{% else %}
 		<div class="analysis-setup panel unselectable">
 			<svg class="meta-icon svg-pawn"><use href="#svg-pawn"/></svg>
 			<select id="variant-select" class="variant-select" title="Variant">
@@ -98,17 +141,18 @@
 				</optgroup>
 				{% endfor %}
 			</select>
-			<button class="btn-bare icon-btn tooltip-d" id="btn-flip" data-tooltip="Flip board (f)">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
-			</button>
 		</div>
+		{% endif %}
 
 		{# ── Engine panel — local evaluation ─────────────────────────────── #}
 		{# ── Match panel — moves list (player bars exist for guiclock.ts but stay hidden) ── #}
 		<div class="play-group">
 			<div class="match-panel panel">
-				<div class="player-bar hidden" id="player-bar-top">
-					<span class="clock hidden"></span>
+				<div class="player-bar{{ ' hidden' if not meta }}" id="player-bar-top">
+					{% if meta %}
+					{{ usernameEmbed(meta.players[meta.bars.top].name, meta.players[meta.bars.top].elo) }}
+					{% endif %}
+					<span class="clock{{ '' if meta and meta.timed else ' hidden' }}"></span>
 				</div>
 
 				{# Moves list. Managed by guimoveslist.ts #}
@@ -171,6 +215,25 @@
 						<button class="btn-bare move-btn" id="btn-move-prev" title="Previous move" disabled><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
 						<button class="btn-bare move-btn" id="btn-move-next" title="Next move" disabled><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
 						<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest" disabled><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
+						<div class="analysis-actions">
+							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="Analysis actions" aria-haspopup="menu" aria-expanded="false">
+								<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
+							</button>
+							<div class="analysis-actions-menu hidden" id="analysis-actions-menu" role="menu">
+								<button type="button" id="btn-flip" role="menuitem">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
+									<span>Flip board</span>
+								</button>
+								<button type="button" id="btn-edit-current" role="menuitem">
+									<svg><use href="#svg-pencil"/></svg>
+									<span>Board editor</span>
+								</button>
+								<button type="button" id="btn-continue-from-here" role="menuitem">
+									<svg><use href="#svg-swords"/></svg>
+									<span>Continue from here</span>
+								</button>
+							</div>
+						</div>
 					</div>
 					<div class="moves-table scrollbar-thin">
 						{# Game result — shown after last move #}
@@ -181,8 +244,11 @@
 					</div>
 				</div>
 
-				<div class="player-bar hidden" id="player-bar-bottom">
-					<span class="clock hidden"></span>
+				<div class="player-bar{{ ' hidden' if not meta }}" id="player-bar-bottom">
+					{% if meta %}
+					{{ usernameEmbed(meta.players[meta.bars.bottom].name, meta.players[meta.bars.bottom].elo) }}
+					{% endif %}
+					<span class="clock{{ '' if meta and meta.timed else ' hidden' }}"></span>
 				</div>
 			</div>
 		</div>
@@ -227,6 +293,20 @@
 		</div>
 	</div>
 </main>
+
+{{ gameSetupModal(tIndex, sShared, modalVariantGroups, "analysis-setup-modal") }}
+<div id="continue-choice-overlay" class="continue-choice-overlay hidden">
+	<div class="continue-choice-dialog" role="dialog" aria-label="Continue from here">
+		<button class="continue-choice-close" id="continue-choice-close" aria-label="Close">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+				<line x1="18" y1="6" x2="6" y2="18"/>
+				<line x1="6" y1="6" x2="18" y2="18"/>
+			</svg>
+		</button>
+		<button class="continue-choice-btn" id="continue-play-computer">{{ tsIndex.lobby_buttons.play_computer }}</button>
+		<button class="continue-choice-btn" id="continue-challenge-friend">{{ tsIndex.lobby_buttons.challenge_friend }}</button>
+	</div>
+</div>
 {% endblock %}
 
 {% block script %}

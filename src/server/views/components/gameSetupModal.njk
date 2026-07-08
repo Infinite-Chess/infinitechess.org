@@ -1,36 +1,3 @@
-{% extends "layout.njk" %}
-
-{% block bodyClass %}sticky-footer{% endblock %}
-
-{% block style %}
-<link rel="stylesheet" href="{{ manifest['css/index.css'] }}" />
-<link rel="stylesheet" href="{{ manifest['css/gameSetupModal.css'] }}" />
-{% endblock %}
-
-{% block head %}
-{# Reads the dismissed flag from localStorage and marks <html> so the CSS hides
-   the new-player prompt before first paint. #}
-<script>
-    if (localStorage.getItem('home-prompt-dismissed') === '1') {
-		// The 'home-prompt-dismissed' key MUST stay in sync with STORAGE_KEY in newPrompt.ts
-        document.documentElement.setAttribute('data-home-prompt', 'dismissed');
-    }
-</script>
-{# Ship the index [script] strings to the browser, preserving window.t from layout.njk. #}
-<script>window.t = Object.assign(window.t || {}, { index: {{ scriptT('index') | json | safe }} });</script>
-{% endblock %}
-
-{% block body %}
-
-{# Page-specific translations #}
-{% set t = templateT('index') %}
-{# Script-facing strings for the same component — also injected into window.t.index for JS. #}
-{% set ts = scriptT('index') %}
-{# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
-{% set s = scriptT('shared') %}
-{% from "components/gameSetupModal.njk" import gameSetupModal %}
-
-{# ── Macros ───────────────────────────────────────────────────────────────── #}
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
 
 {% macro variantGroupItem(group, iconId, name, description, arrow=true, id=none) %}
@@ -51,122 +18,9 @@
 </button>
 {% endmacro %}
 
-{% include "components/header/header.njk" %}
-
-<main class="bg-checkerboard-dimmed">
-	<div class="main-inner">
-
-		{# -- Hero title ---------------------------------------------------------- #}
-		<header class="home-hero">
-			<svg class="hero-glyph" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
-			<svg class="hero-glyph hero-glyph-aura" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
-			<h1 class="hero-title">Infinite Chess</h1>
-			<p class="hero-tagline">{{ splashText | safe }}</p>
-		</header>
-
-		{# -- New-player prompt --------------------------------------------------- #}
-		<section class="new-prompt" id="new-prompt">
-			<span class="new-prompt-label">{{ t.new_player_prompt.label }}</span>
-			<div class="new-prompt-actions">
-				<a class="new-prompt-btn primary" id="new-prompt-tutorial" href="/tutorial">{{ t.new_player_prompt.tutorial_button }}</a>
-				<button class="new-prompt-btn" id="new-prompt-dismiss">{{ t.new_player_prompt.dismiss_button }}</button>
-			</div>
-		</section>
-
-		{# -- Lobby home: buttons + open challenges ------------------------------- #}
-		<div class="lobby-home">
-			<div class="lobby-actions">
-				<button class="lobby-btn" id="btn-create-game">
-					<svg class="btn-icon svg-globe"><use href="#svg-globe"></use></svg>
-					{{ ts.lobby_buttons.create_online }}
-				</button>
-				<button class="lobby-btn" id="btn-challenge-friend">
-					<svg class="btn-icon"><use href="#svg-profile"></use></svg>
-					{{ ts.lobby_buttons.challenge_friend }}
-				</button>
-				<button class="lobby-btn" id="btn-play-ai">
-					<svg class="btn-icon svg-engine"><use href="#svg-engine"></use></svg>
-					{{ ts.lobby_buttons.play_computer }}
-				</button>
-			</div>
-
-			{# -- Open challenges (lobby) ----------------------------------------- #}
-			<section class="lobby">
-				<h2>
-					<span>{{ t.lobby.title }}</span>
-					<span class="lobby-viewers" title="{{ t.lobby.viewer_count }}">
-						<svg class="lobby-viewers-eye"><use href="#svg-eye"></use></svg>
-						<span id="lobby-viewer-count">0</span>
-					</span>
-				</h2>
-				<div class="lobby-wrap scrollbar-thin unselectable">
-					{# Idle overlay - shown after prolonged inactivity #}
-					<div id="lobby-overlay" class="lobby-overlay hidden">
-						<p>{{ t.lobby.idle_overlay }}</p>
-					</div>
-					{# In-game banner - shown when already in an active game #}
-					<div id="lobby-ingame-overlay" class="lobby-overlay hidden">
-						<div class="lobby-ingame-banner">
-							<p>{{ t.lobby.ingame_banner }}</p>
-							<a id="lobby-ingame-join" class="lobby-btn">{{ t.lobby.ingame_join }}</a>
-						</div>
-					</div>
-					{# Faint omega background - references symbol already defined in header.njk #}
-					<div class="omega-anchor">
-						<svg class="bg-omega" viewBox="0 0 1645 1618"><use href="#svg-omega"/></svg>
-					</div>
-					<div class="lobby-grid">
-						<div class="lobby-header">
-							<div>{{ t.lobby.table.player }}</div>
-							<div>{{ t.lobby.table.variant }}</div>
-							<div>{{ t.lobby.table.time }}</div>
-							<div>{{ t.lobby.table.mode }}</div>
-						</div>
-						{# Open seeks are listed in here #}
-						<div id="lobby-tbody">
-							{# Example lobby row #}
-							{# <div class="seek-row" title="Accept seek" data-seek-id="123">
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<span class="username-embed">
-											<span class="username">Naviary</span>
-											<span class="elo">1854</span>
-										</span>
-										<div class="side-dot black" title="Seek owner chooses to be black"></div>
-									</div>
-								</div>
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<svg class="cell-icon svg-pawn"><use href="#svg-pawn"></use></svg>
-										Classical
-									</div>
-								</div>
-								<div class="lobby-cell">
-									<div class="cell-flex">
-										<svg class="cell-icon svg-speed-rapid"><use href="#svg-speed-rapid"></use></svg>
-										10+4
-									</div>
-								</div>
-								<div class="lobby-cell">Rated</div>
-							</div> #}
-						</div>
-					</div>
-				</div>
-			</section>
-		</div>{# .lobby-home #}
-	</div>{# .main-inner #}
-</main>
-
-{% include "components/footer/footer.njk" %}
-
-{# ════════════════════════════════════════════════════════════════════════
-   Game Options Modal
-   ════════════════════════════════════════════════════════════════════════ #}
-{{ gameSetupModal(t, s, variantGroups) }}
-{% if false %}
-<div id="modal-overlay" class="modal-overlay hidden">
+{% macro gameSetupModal(t, s, variantGroups, overlayClass="") %}
+<div id="modal-overlay" class="modal-overlay {{ overlayClass }} hidden">
 	<div class="modal scrollbar-thin" role="dialog">
-
 		<div class="modal-header">
 			<div class="modal-header-gap"></div>
 			<h2 class="modal-title">{{ t.modal.title }}</h2>
@@ -177,11 +31,8 @@
 		</div>
 
 		<div class="modal-body">
-
-			{# ── Variant ─────────────────────────────────────────────────── #}
 			<div class="modal-row">
 				<span class="model-label">{{ t.modal.variant_selector.label }}</span>
-				{# Variant selector #}
 				<div class="variant-selector" id="variant-selector">
 					<button class="variant-display" id="variant-display">
 						<svg class="variant-group-icon" id="variant-group-icon"><use></use></svg>
@@ -221,7 +72,6 @@
 						</button>
 					</div>
 				</div>
-				{# Custom ICN - revealed when "From ICN" is selected in the Custom group #}
 				<div id="variant-custom-section" class="hidden">
 					<div class="icn-input-wrap">
 						<textarea class="icn-input" id="icn-input" spellcheck="false"
@@ -229,7 +79,6 @@
 					</div>
 				</div>
 				<p id="icn-error-text" class="icn-error-text"></p>
-				{# Modifiers - revealed when at least one modifier is selected #}
 				<div id="modifiers-section" class="hidden">
 					<div class="modifiers-row">
 						<span class="modifiers-label">{{ t.modal.modifiers_section.label }}</span>
@@ -243,7 +92,6 @@
 				</div>
 			</div>
 
-			{# ── Time control ─────────────────────────────────────────────── #}
 			<div>
 				<div class="modal-row">
 					<span class="model-label">{{ t.modal.time_control.label }}</span>
@@ -253,7 +101,6 @@
 					</div>
 				</div>
 
-				{# Time sliders - revealed when "Finite" is selected #}
 				<div class="collapsible" id="time-sliders">
 					<div class="time-sliders">
 						<div class="time-sliders-grid">
@@ -284,7 +131,6 @@
 				</div>
 			</div>
 
-			{# ── Game mode (hidden for "Play against computer") ──────────── #}
 			<div class="modal-row" id="row-game-mode">
 				<span class="model-label">{{ t.modal.game_mode.label }}</span>
 				<div class="option-group">
@@ -293,7 +139,6 @@
 				</div>
 			</div>
 
-			{# ── Side (hidden for "Create lobby game") ───────────────────── #}
 			<div class="modal-row">
 				<span class="model-label">{{ t.modal.side.label }}</span>
 				<div class="option-group icons">
@@ -303,7 +148,6 @@
 					</button>
 					<button class="option-btn active" data-side="random">
 						<svg class="side-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450"><defs><clipPath id="a"><path d="M0 0h225v450H0"/></clipPath><clipPath id="b"><path d="M225 0H450v450H225"/></clipPath></defs><g stroke-linejoin="round" stroke-width="15" clip-path="url(#a)"><g fill="#000" stroke="#000"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><g fill="none" stroke="#FFF" stroke-linecap="round"><path d="M225 200s32.5-30 20-55c0 0-5-15-20-15s-20 15-20 15c-12.5 25 20 55 20 55" stroke-linecap="square"/><path d="M320 295s85-40 60.3-96.5C341.5 140 250 180 225 245l.1 21-.1-21C200 180 99 140 70 198.5c-25 56.5 48.5 90 48.5 90"/><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0"/></g></g><g stroke="#000" stroke-width="15" clip-path="url(#b)"><g fill="#FFF" stroke-linejoin="round"><path d="M225 116.3V60M200 80h50" fill="none" stroke-linecap="round"/><path d="M225 250s45-75 30-105c0 0-10-25-30-25s-30 25-30 25c-15 30 30 105 30 105"/><path d="M115 370c55 35 155 35 210 0v-70s90-45 60-105c-40-65-135-35-160 40V270v-35c-35-75-130-105-160-40-30 60 50 100 50 100V370"/></g><path d="M115 300c55-30 155-30 210 0m-210 35c55-30 155-30 210 0m-210 35c55-30 155-30 210 0" fill="none" stroke-linecap="round"/></g></svg>
-
 						{{ s.sides.random }}
 					</button>
 					<button class="option-btn" data-side="black">
@@ -313,7 +157,6 @@
 				</div>
 			</div>
 
-			{# ── Strength (only for "Play against computer") ─────────────── #}
 			<div class="modal-row hidden" id="row-strength">
 				<span class="model-label">{{ t.modal.strength.label }}</span>
 				<div class="option-group">
@@ -327,20 +170,11 @@
 					<button class="option-btn" data-level="8">8</button>
 				</div>
 			</div>
-
-		</div>{# .modal-body #}
-
-		<div class="modal-footer">
-			{# Default label — JS overwrites this in openModal() based on the active modal mode. #}
-			<button class="btn-primary" id="modal-submit"></button>
 		</div>
 
-	</div>{# .modal #}
-</div>{# #modal-overlay #}
-{% endif %}
-
-{% endblock %}
-
-{% block script %}
-<script type="module" src="{{ manifest['scripts/esm/views/index/index.ts'] }}"></script>
-{% endblock %}
+		<div class="modal-footer">
+			<button class="btn-primary" id="modal-submit"></button>
+		</div>
+	</div>
+</div>
+{% endmacro %}

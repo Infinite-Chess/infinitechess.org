@@ -9,6 +9,8 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EditorAutosaveState } from '../../game/editorstores/estoretypes.js';
 
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
@@ -17,9 +19,11 @@ import webgl from '../../game/rendering/webgl.js';
 import camera from '../../game/rendering/camera.js';
 import gamecore from '../../game/chess/gamecore.js';
 import gameslot from '../../game/chess/gameslot.js';
+import guiclock from '../../game/gui/guiclock.js';
 import icnpanel from './gui/guiicnpanel.js';
 import IndexedDB from '../../util/IndexedDB.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
+import estoretypes from '../../game/editorstores/estoretypes.js';
 import enginepanel from './gui/guienginepanel.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../game/GameBus.js';
@@ -27,14 +31,40 @@ import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
 import analysisloader from './analysisloader.js';
+import gamecompressor from '../../game/chess/gamecompressor.js';
+import gameSetupModalUi from '../../components/gameSetupModal/gameSetupModalUi.js';
 import analysisworldborder from './analysisworldborder.js';
 
 // Elements ----------------------------------------------------------------------
 
 /** The analysis-page board canvas WebGL renders onto. */
 const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
-const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement;
+const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement | null;
+const element_ActionsButton = document.getElementById('btn-analysis-actions') as HTMLButtonElement;
+const element_ActionsMenu = document.getElementById('analysis-actions-menu')!;
 const element_Flip = document.getElementById('btn-flip') as HTMLButtonElement;
+const element_EditCurrent = document.getElementById('btn-edit-current') as HTMLButtonElement;
+const element_ContinueFromHere = document.getElementById(
+	'btn-continue-from-here',
+) as HTMLButtonElement;
+const element_ContinueChoiceModal = document.getElementById('continue-choice-overlay')!;
+const element_ContinueChoiceClose = document.getElementById(
+	'continue-choice-close',
+) as HTMLButtonElement;
+const element_ContinuePlayComputer = document.getElementById(
+	'continue-play-computer',
+) as HTMLButtonElement;
+const element_ContinueChallengeFriend = document.getElementById(
+	'continue-challenge-friend',
+) as HTMLButtonElement;
+
+// Types -------------------------------------------------------------------------
+
+type ContinueMode = 'computer' | 'friend';
+
+// Variables ----------------------------------------------------------------------
+
+let currentContinueMode: ContinueMode = 'computer';
 
 // Functions ----------------------------------------------------------------------
 
@@ -51,7 +81,8 @@ function start(): void {
 
 	// The hidden "Custom position" placeholder is the select's first option;
 	// a fresh board should start on Classical instead.
-	if (!element_VariantSelect.value) element_VariantSelect.value = 'Classical';
+	if (element_VariantSelect && !element_VariantSelect.value)
+		element_VariantSelect.value = 'Classical';
 
 	void loadInitialGame();
 
@@ -62,7 +93,7 @@ function start(): void {
 /** Loads the game named by the URL, falling back to a fresh board of the selected variant. */
 async function loadInitialGame(): Promise<void> {
 	const gameId = window.analysisPageData.gameId;
-	if (gameId === null) return loadVariant(element_VariantSelect.value as VariantCode);
+	if (gameId === null) return loadVariant(getSelectedVariant());
 
 	gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
 	try {
@@ -72,11 +103,16 @@ async function loadInitialGame(): Promise<void> {
 		const longformOut = icnconverter.ShortToLong_Format(state.icn);
 		syncVariantSelect(longformOut.metadata.Variant);
 		await analysisloader.pasteGame(longformOut, true);
+		syncClockDisplayToViewedMove(true);
 	} catch (e) {
 		console.error('Failed to load game for analysis:', e);
 		toast.show('Failed to load the game. Starting a fresh board.', { error: true });
-		loadVariant(element_VariantSelect.value as VariantCode);
+		loadVariant(getSelectedVariant());
 	}
+}
+
+function getSelectedVariant(): VariantCode {
+	return (element_VariantSelect?.value || 'Classical') as VariantCode;
 }
 
 /** Loads a fresh board of the given variant. */
@@ -90,6 +126,7 @@ function loadVariant(variant: VariantCode): void {
  * Unrecognized/custom variants select the hidden "Custom" option.
  */
 function syncVariantSelect(variantMetadata: string | undefined): void {
+	if (!element_VariantSelect) return;
 	if (!variantMetadata) return void (element_VariantSelect.value = '');
 	// Option values are variant codes; the metadata name may be a display name.
 	// Try the code directly first, then match by option label.
@@ -103,6 +140,127 @@ function flipBoard(): void {
 	if (gamesession.isLoading()) return;
 	gameslot.flipView();
 	document.getElementById('eval-gauge')!.classList.toggle('flipped', !gameslot.areViewingWhite());
+	swapPlayerBarNames();
+	syncClockDisplayToViewedMove(true);
+}
+
+function exportCurrentPosition():
+	| { icn: string; pieceCount: number; variantOptions: VariantOptions }
+	| undefined {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return undefined;
+
+	const position = gamecompressor.compressGamefile(gamefile, true);
+	if (!position.position) return undefined;
+
+	const variantOptions: VariantOptions = {
+		fullMove: position.fullMove,
+		gameRules: position.gameRules,
+		position: position.position,
+		state_global: {
+			specialRights: position.state_global.specialRights ?? new Set(),
+			...(position.state_global.enpassant !== undefined && {
+				enpassant: position.state_global.enpassant,
+			}),
+			...(position.state_global.moveRuleState !== undefined && {
+				moveRuleState: position.state_global.moveRuleState,
+			}),
+		},
+	};
+
+	const icn = icnconverter.LongToShort_Format(position, {
+		skipPosition: false,
+		compact: true,
+		spaces: false,
+		comments: false,
+		make_new_lines: false,
+		move_numbers: false,
+	});
+
+	return { icn, pieceCount: position.position.size, variantOptions };
+}
+
+async function openCurrentPositionInEditor(): Promise<void> {
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	const position = exportCurrentPosition();
+	if (!position) return toast.show('Could not export this position.', { error: true });
+
+	await IndexedDB.saveItem(estoretypes.EDITOR_AUTOSAVE_NAME, {
+		dirty: true,
+		timestamp: Date.now(),
+		piece_count: position.pieceCount,
+		variantOptions: position.variantOptions,
+	} satisfies EditorAutosaveState);
+	window.location.assign('/editor');
+}
+
+function openContinueFromHereChoice(): void {
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	const position = exportCurrentPosition();
+	if (!position) return toast.show('Could not export this position.', { error: true });
+
+	element_ContinueChoiceModal.classList.remove('hidden');
+	element_ContinueChoiceClose.focus();
+}
+
+function openContinueFromHereModal(mode: ContinueMode): void {
+	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	const position = exportCurrentPosition();
+	if (!position) return toast.show('Could not export this position.', { error: true });
+
+	currentContinueMode = mode;
+	gameSetupModalUi.setCustomIcn(position.icn);
+	closeContinueFromHereChoice();
+	gameSetupModalUi.open(mode);
+}
+
+function closeContinueFromHereChoice(): void {
+	element_ContinueChoiceModal.classList.add('hidden');
+}
+
+function closeActionsMenu(): void {
+	element_ActionsMenu.classList.add('hidden');
+	element_ActionsButton.classList.remove('active');
+	element_ActionsButton.setAttribute('aria-expanded', 'false');
+}
+
+function toggleActionsMenu(): void {
+	const shouldOpen = element_ActionsMenu.classList.contains('hidden');
+	element_ActionsMenu.classList.toggle('hidden', !shouldOpen);
+	element_ActionsButton.classList.toggle('active', shouldOpen);
+	element_ActionsButton.setAttribute('aria-expanded', String(shouldOpen));
+}
+
+function swapPlayerBarNames(): void {
+	const top = document.getElementById('player-bar-top');
+	const bottom = document.getElementById('player-bar-bottom');
+	if (!top || !bottom || top.classList.contains('hidden') || bottom.classList.contains('hidden'))
+		return;
+
+	const topNodes = detachPlayerBarNameNodes(top);
+	const bottomNodes = detachPlayerBarNameNodes(bottom);
+	insertPlayerBarNameNodes(top, bottomNodes);
+	insertPlayerBarNameNodes(bottom, topNodes);
+}
+
+function detachPlayerBarNameNodes(bar: HTMLElement): Node[] {
+	const nodes = [...bar.childNodes].filter((node) => {
+		return !(node instanceof HTMLElement && node.classList.contains('clock'));
+	});
+	nodes.forEach((node) => node.remove());
+	return nodes;
+}
+
+function insertPlayerBarNameNodes(bar: HTMLElement, nodes: Node[]): void {
+	const clock = bar.querySelector('.clock');
+	nodes.forEach((node) => bar.insertBefore(node, clock));
+}
+
+function syncClockDisplayToViewedMove(remapBars = false): void {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+	if (remapBars) guiclock.set(gamefile);
+	guiclock.showViewedMoveClockStamps(gamefile);
 }
 
 function initListeners(): void {
@@ -111,13 +269,15 @@ function initListeners(): void {
 		IndexedDB.eraseExpiredItems();
 	});
 
+	gameSetupModalUi.init();
+
 	// Prevent clicking buttons from focusing them, keyboard controls interacting with them.
 	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
 		btn.setAttribute('tabindex', '-1');
 		btn.addEventListener('click', () => btn.blur());
 	});
 
-	element_VariantSelect.addEventListener('change', () => {
+	element_VariantSelect?.addEventListener('change', () => {
 		const code = element_VariantSelect.value;
 		if (code === '') return; // The hidden "Custom" placeholder.
 		if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
@@ -125,10 +285,54 @@ function initListeners(): void {
 		element_VariantSelect.blur();
 	});
 
-	element_Flip.addEventListener('click', flipBoard);
+	element_ActionsButton.addEventListener('click', (e) => {
+		e.stopPropagation();
+		toggleActionsMenu();
+	});
+	document.addEventListener('pointerdown', (e) => {
+		if (!(e.target instanceof Node)) return;
+		if (element_ActionsButton.contains(e.target) || element_ActionsMenu.contains(e.target))
+			return;
+		closeActionsMenu();
+	});
+	element_Flip.addEventListener('click', () => {
+		flipBoard();
+		closeActionsMenu();
+	});
+	element_EditCurrent.addEventListener('click', () => {
+		closeActionsMenu();
+		void openCurrentPositionInEditor();
+	});
+	element_ContinueFromHere.addEventListener('click', () => {
+		closeActionsMenu();
+		openContinueFromHereChoice();
+	});
+	element_ContinueChoiceClose.addEventListener('click', closeContinueFromHereChoice);
+	element_ContinueChoiceModal.addEventListener('pointerdown', (e) => {
+		if (e.target === e.currentTarget) closeContinueFromHereChoice();
+	});
+	element_ContinuePlayComputer.addEventListener('click', () =>
+		openContinueFromHereModal('computer'),
+	);
+	element_ContinueChallengeFriend.addEventListener('click', () =>
+		openContinueFromHereModal('friend'),
+	);
+	gameSetupModalUi.getSubmitButton().addEventListener('click', () => {
+		if (!gameSetupModalUi.getPositionInput().value)
+			return toast.show('Could not export this position.', { error: true });
+		const label =
+			currentContinueMode === 'computer' ? 'Computer game flow' : 'Friend challenge flow';
+		toast.show(`${label} not implemented yet`, { error: true });
+	});
 
 	// Keyboard shortcut: f = flip board (ignored while typing).
 	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') {
+			closeActionsMenu();
+			closeContinueFromHereChoice();
+			gameSetupModalUi.close();
+			return;
+		}
 		if (isTypingTarget(e.target)) return;
 		if (e.key === 'f' && !e.ctrlKey && !e.metaKey && !e.altKey) flipBoard();
 	});
@@ -139,6 +343,7 @@ function initListeners(): void {
 			.getElementById('eval-gauge')!
 			.classList.toggle('flipped', !gameslot.areViewingWhite());
 	});
+	GameBus.addEventListener('view-move', () => syncClockDisplayToViewedMove());
 }
 
 /** Whether a keyboard event targets a text-entry element (shortcuts should be ignored). */

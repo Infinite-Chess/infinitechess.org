@@ -27,7 +27,7 @@ import { produceStaticGameState } from '../game/gamemanager/gamemanager.js';
 import { resolveDeadParticipantColor } from '../game/gamemanager/deadgamestate.js';
 
 /** Display-ready static game-meta fields, precomputed since Nunjucks can't call the shared utils. */
-interface GameMetaViewModel {
+export interface GameMetaViewModel {
 	/** Variant group icon id + display name (custom games fall back to a generic icon/name). */
 	variant: { iconId: string; name: string };
 	/** Speed category icon id + category, for the speed badge. */

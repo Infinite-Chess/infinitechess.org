@@ -5,6 +5,7 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { ModalMode } from '../../components/gameSetupModal/gameSetupModalUi.js';
 import type { GameMode, TimeControl } from '../../../../../shared/types.js';
 
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -12,45 +13,18 @@ import { isRatedAllowed } from '../../../../../shared/chess/variants/servervalid
 
 import lobby from './lobby.js';
 import toast from '../../components/toast.js';
-import timeControls from './timeControls.js';
+import timeControls from '../../components/gameSetupModal/timeControls.js';
 import variantSelector from './variantSelector.js';
 import modifierSelector from './modifierSelector.js';
-
-// Types ----------------------------------------------
-
-/** The active game creation flow: online seek, friend challenge, or computer game. */
-type ModalMode = 'online' | 'friend' | 'computer';
-
-/** The data-* attribute keys that each identify an exclusive-select toggle button group. */
-type ToggleGroupAttribute = 'data-time' | 'data-mode' | 'data-side' | 'data-level';
-
-// Constants ------------------------------------------
-
-/** Submit-button labels per active mode. */
-const SUBMIT_LABELS: Record<ModalMode, string> = {
-	online: t.index.lobby_buttons.create_online,
-	friend: t.index.lobby_buttons.challenge_friend,
-	computer: t.index.lobby_buttons.play_computer,
-};
+import gameSetupModalUi from '../../components/gameSetupModal/gameSetupModalUi.js';
 
 // Elements ----------------------------------------------
 
-const element_modalOverlay = document.getElementById('modal-overlay')!;
-const element_modalClose = document.getElementById('modal-close')!;
-const element_modalSubmit = document.getElementById('modal-submit')!;
 const element_btnCreateOnline = document.getElementById('btn-create-game')!;
 const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')!;
 const element_btnPlayComputer = document.getElementById('btn-play-ai')!;
-const element_rowGameMode = document.getElementById('row-game-mode')!;
 const element_ratedButton = document.querySelector<HTMLButtonElement>('[data-mode="rated"]')!;
 const element_casualButton = document.querySelector<HTMLButtonElement>('[data-mode="casual"]')!;
-const element_rowStrength = document.getElementById('row-strength')!;
-const element_buttonsByToggleGroup: Record<ToggleGroupAttribute, NodeListOf<HTMLElement>> = {
-	'data-time': document.querySelectorAll<HTMLElement>('[data-time]'),
-	'data-mode': document.querySelectorAll<HTMLElement>('[data-mode]'),
-	'data-side': document.querySelectorAll<HTMLElement>('[data-side]'),
-	'data-level': document.querySelectorAll<HTMLElement>('[data-level]'),
-};
 
 // Variables ------------------------------------------
 
@@ -63,51 +37,17 @@ initModal();
 
 // Functions ----------------------------------------------
 
-/** Initializes shared exclusive-selection behavior for all data-* toggle button groups. */
-function initToggleGroups(): void {
-	// Each [data-time], [data-mode], [data-side], [data-level] button is an exclusive-select group.
-	// Buttons sharing the same data-* attribute key form one group.
-	const groups: [ToggleGroupAttribute, (() => void)?][] = [
-		[
-			'data-time',
-			() => {
-				timeControls.onTimeToggle();
-				syncRatedButton();
-			},
-		],
-		['data-mode'],
-		['data-side', syncRatedButton],
-		['data-level'],
-	];
-	for (const [attr, callback] of groups) {
-		element_buttonsByToggleGroup[attr].forEach((btn) => {
-			btn.addEventListener('click', () => {
-				// Keep exactly one active option per group.
-				element_buttonsByToggleGroup[attr].forEach((groupButton) =>
-					groupButton.classList.remove('active'),
-				);
-				btn.classList.add('active');
-				callback?.();
-			});
-		});
-	}
-}
-
 /** Wires modal open/close controls and initializes all interactive sections. */
 function initModal(): void {
 	element_btnCreateOnline.addEventListener('click', () => openModal('online'));
 	element_btnChallengeFriend.addEventListener('click', () => openModal('friend'));
 	element_btnPlayComputer.addEventListener('click', () => openModal('computer'));
 
-	element_modalClose.addEventListener('click', close);
-	element_modalOverlay.addEventListener('pointerdown', (e) => {
-		if (e.target === e.currentTarget) close();
-	});
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') close();
 	});
 
-	element_modalSubmit.addEventListener('click', () => {
+	gameSetupModalUi.getSubmitButton().addEventListener('click', () => {
 		if (currentMode === 'online') handleOnlineSeek();
 		else if (currentMode === 'friend')
 			toast.show('Friend challenge flow not implemented yet', { error: true });
@@ -116,10 +56,10 @@ function initModal(): void {
 		else console.error('Invalid modal mode:', currentMode);
 	});
 
-	initToggleGroups();
-	timeControls.initModalSliders();
-	timeControls.onTimeToggle();
-	timeControls.initPresets();
+	gameSetupModalUi.init({
+		time: syncRatedButton,
+		side: syncRatedButton,
+	});
 	variantSelector.initVariantGroupDropdown();
 	variantSelector.initIcnValidation();
 	modifierSelector.initModifierSelector();
@@ -173,19 +113,12 @@ function openModal(mode: ModalMode): void {
 	lobby.exitIdle();
 
 	currentMode = mode;
-	element_modalSubmit.textContent = SUBMIT_LABELS[mode];
-
-	element_rowGameMode.classList.toggle('hidden', mode === 'computer');
-	element_rowStrength.classList.toggle('hidden', mode !== 'computer');
-
-	element_modalOverlay.classList.remove('hidden');
-
-	element_modalClose.focus();
+	gameSetupModalUi.open(mode);
 }
 
 /** Hides the modal. */
 function close(): void {
-	element_modalOverlay.classList.add('hidden');
+	gameSetupModalUi.close();
 	variantSelector.closeVariantDropdown();
 	modifierSelector.closeModifierDropdown();
 }

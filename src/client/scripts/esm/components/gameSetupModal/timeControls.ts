@@ -1,13 +1,12 @@
-// src/client/scripts/esm/views/index/timeControls.ts
+// src/client/scripts/esm/components/gameSetupModal/timeControls.ts
+
+/**
+ * Shared time-control behavior for the game setup modal.
+ */
 
 import type { TimeControl } from '../../../../../shared/types.js';
 
 import clockutil from '../../../../../shared/chess/util/clockutil';
-
-/**
- * This script manages the time control section of the game setup modal:
- * the timed/untimed toggle, base+increment sliders, and preset buttons.
- */
 
 // Constants ------------------------------------------
 
@@ -61,7 +60,6 @@ function initPresets(): void {
 
 /** Sets both sliders and their displays to the given preset button's values. */
 function applyPreset(btn: HTMLElement): void {
-	// Presets store literal minute/increment values, not slider indices.
 	const minutes = Number(btn.getAttribute('data-minutes'));
 	const increment = Number(btn.getAttribute('data-increment'));
 	element_sliderMinutes.value = String(TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes));
@@ -109,8 +107,6 @@ function getTimeControl(): TimeControl {
 		throw new Error(`Invalid time mode: ${timedVal}`);
 	}
 }
-
-// Exports ----------------------------------------------
 
 export default {
 	initModalSliders,

@@ -216,7 +216,7 @@ async function runLoop(): Promise<void> {
 			// Decide whether the analysis of this position is finished.
 			let reason: Extract<AnalysisResponse, { type: 'done' }>['reason'] | undefined;
 			if (!summary || summary.lines.length === 0) reason = 'terminal';
-			else if (summary.lines[0]!.mate !== undefined && summary.lines[0]!.mate !== null)
+			else if (summary.lines.every((line) => line.mate !== undefined && line.mate !== null))
 				reason = 'mate';
 			else if (reachedDepth >= opts.maxDepth) reason = 'depth';
 

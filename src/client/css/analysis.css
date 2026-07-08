@@ -41,6 +41,27 @@
 	border-color: var(--c-border-2);
 }
 
+.analysis-game-meta .meta-foot {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.analysis .play-group {
+	flex: 1 1 360px;
+	min-height: 260px;
+}
+
+.analysis .match-panel {
+	height: 100%;
+	min-height: 0;
+}
+
+.analysis .moves {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
 /* ============================
    Engine panel
    ============================ */
@@ -85,6 +106,7 @@
 }
 
 .analysis-ceval-panel {
+	position: relative;
 	order: 1;
 	border-bottom: 1px solid var(--c-border-muted);
 	background: color-mix(in srgb, var(--c-surface-2) 62%, transparent);
@@ -195,13 +217,67 @@
 }
 
 .analysis .moves-nav {
+	position: relative;
 	order: 3;
+	flex: 0 0 auto;
 	align-items: stretch;
-	background: color-mix(in srgb, var(--c-surface-2) 72%, transparent);
+	background: var(--c-surface-2);
 }
 
 .analysis .move-btn {
 	min-width: 0;
+}
+
+.analysis-actions {
+	position: relative;
+	flex: 1;
+	display: flex;
+	min-width: 0;
+}
+
+.analysis-actions-toggle[aria-expanded='true'] {
+	color: var(--c-text-emphasis);
+	background: var(--c-hover-overlay);
+}
+
+.analysis-actions-menu {
+	position: absolute;
+	right: 2px;
+	bottom: calc(100% + 5px);
+	z-index: 20;
+	width: 190px;
+	overflow: hidden;
+	border: 1px solid var(--c-border);
+	border-radius: 4px;
+	background: var(--c-surface);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+	color: var(--c-text);
+}
+
+.analysis-actions-menu button {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	width: 100%;
+	padding: 8px 10px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 0.9em;
+	text-align: left;
+	cursor: pointer;
+}
+
+.analysis-actions-menu button:hover {
+	background: color-mix(in srgb, var(--c-accent, #6aa331) 22%, transparent);
+	color: var(--c-text-emphasis);
+}
+
+.analysis-actions-menu svg {
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
 }
 
 /* Settings gear, active: tint only the icon green — no filled box behind it. */
@@ -229,8 +305,15 @@
 }
 
 .moves-engine-settings {
+	position: absolute;
+	top: var(--engine-settings-top, 48px);
+	left: 0;
+	right: 0;
+	z-index: 40;
 	border-bottom: 1px solid var(--c-border-muted);
-	background: color-mix(in srgb, var(--c-surface-2) 80%, transparent);
+	border-top: 1px solid var(--c-border-muted);
+	background: var(--c-surface);
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 .setting-row {
@@ -343,7 +426,9 @@
 
 .analysis .moves-table {
 	order: 2;
-	height: 150px;
+	flex: 1 1 auto;
+	height: auto;
+	min-height: 150px;
 	background:
 		linear-gradient(
 			180deg,
@@ -541,8 +626,9 @@
    ============================ */
 
 .icn-panel {
-	flex: 1 1 auto;
-	min-height: 180px;
+	flex: 0 1 190px;
+	min-height: 120px;
+	max-height: 240px;
 	display: flex;
 	flex-direction: column;
 }
@@ -609,4 +695,79 @@
 
 .icn-actions .action-btn:hover {
 	border-color: var(--c-border-2);
+}
+
+/* ============================
+   Continue from here chooser
+   ============================ */
+
+.continue-choice-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.continue-choice-overlay.hidden {
+	display: none;
+}
+
+.continue-choice-dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: min(258px, calc(100vw - 32px));
+	padding: 26px 28px 28px;
+	border-radius: 6px;
+	background: var(--c-surface);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.continue-choice-close {
+	position: absolute;
+	top: -15px;
+	right: -15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: var(--c-surface);
+	color: var(--c-text-muted);
+	cursor: pointer;
+}
+
+.continue-choice-close:hover {
+	color: var(--c-text-emphasis);
+}
+
+.continue-choice-close svg {
+	width: 17px;
+	height: 17px;
+}
+
+.continue-choice-btn {
+	width: 100%;
+	padding: 11px 14px;
+	border: 1px solid color-mix(in srgb, #fff 26%, #2196f3);
+	border-radius: 5px;
+	background: #2196f3;
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 28%),
+		0 1px 4px rgb(0 0 0 / 35%);
+	color: #fff;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 700;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.continue-choice-btn:hover {
+	background: #2fa0ff;
 }

@@ -79,6 +79,7 @@ function stopClocks(basegame?: GameFile): void {
 
 /** Updates clock text content each frame for timed, ongoing games. */
 function update(basegame: GameFile): void {
+	if (gamesession.getGameType() === 'analysis') return;
 	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
 	const clocks = basegame.clocks!;
 
@@ -109,6 +110,32 @@ function set(basegame: GameFile): void {
 	if (basegame.untimed) return hideClocks();
 	showClocks();
 	updateTextContent(basegame.clocks);
+}
+
+/** Shows the static clock values stored on moves for the currently viewed analysis position. */
+function showViewedMoveClockStamps(basegame: GameFile): void {
+	if (basegame.untimed) return hideClocks();
+
+	const currentTime: PlayerGroup<number> = {};
+	for (const player of basegame.gameRules.turnOrder) {
+		currentTime[player] = basegame.clocks.startTime.millis;
+	}
+
+	for (let i = 0; i <= basegame.state.local.moveIndex; i++) {
+		const move = basegame.moves[i];
+		if (move?.clockStamp === undefined) continue;
+		const player = moveutil.getColorThatPlayedMoveIndex(basegame, i);
+		currentTime[player] = move.clockStamp;
+	}
+
+	updateTextContent({
+		startTime: basegame.clocks.startTime,
+		currentTime,
+		colorTicking: undefined,
+		timeAtTurnStart: undefined,
+		timeRemainAtTurnStart: undefined,
+	});
+	updateTempo(basegame);
 }
 
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
@@ -167,4 +194,5 @@ export default {
 	edit,
 	push,
 	update,
+	showViewedMoveClockStamps,
 };
