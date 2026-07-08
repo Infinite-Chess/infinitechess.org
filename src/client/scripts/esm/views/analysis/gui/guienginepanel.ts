@@ -56,7 +56,7 @@ const ENABLED_STORAGE_KEY = 'ceval.enabled';
 function init(): void {
 	ceval.init({ workerUrl: window.analysisPageData.workerUrl });
 	enginelegalmovesdebug.init({
-		canRequest: () => true,
+		canRequest: () => !ceval.isBlockedByEngineWorldBorder(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),
 	});
 
@@ -156,6 +156,14 @@ function onEngineStatus(status: CevalStatus): void {
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
 		toast.show('The analysis engine failed to load.', { error: true });
+	} else if (status === 'blocked') {
+		element_Eval.textContent = '-';
+		element_Stats.textContent = 'Engine disabled: outside world border';
+		element_GoDeeper.classList.add('hidden');
+		enginearrows.clearArrows();
+		renderLines([]);
+		updateGauge(undefined);
+		updateProgress(undefined);
 	}
 }
 

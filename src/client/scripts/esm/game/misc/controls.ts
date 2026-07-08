@@ -239,6 +239,7 @@ function testOutGameToggles(): void {
 	if (listener_document.isKeyDown('Backquote')) camera.toggleDebug();
 	if (listener_document.isKeyDown('Digit3')) socketman.toggleDebug(); // Adds simulated websocket latency with high ping
 	if (listener_document.isKeyDown('Digit5')) GameBus.dispatch('engine-debug'); // Render engine generated legal moves
+	if (listener_document.isKeyDown('Digit6')) GameBus.dispatch('analysis-engine-border-debug');
 }
 
 /** Debug toggles that are only for in a game. */

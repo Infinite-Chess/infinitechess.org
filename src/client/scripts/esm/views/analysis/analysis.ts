@@ -27,6 +27,7 @@ import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
 import analysisloader from './analysisloader.js';
+import analysisworldborder from './analysisworldborder.js';
 
 // Elements ----------------------------------------------------------------------
 
@@ -44,6 +45,7 @@ function start(): void {
 	gamecore.init(canvas);
 
 	initListeners();
+	analysisworldborder.init();
 	enginepanel.init();
 	icnpanel.init();
 

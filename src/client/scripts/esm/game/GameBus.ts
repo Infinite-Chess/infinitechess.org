@@ -47,6 +47,8 @@ interface GameBusEvents {
 	'steal-pointer': { pointerId: string };
 	/** Fire when the keybind assigned to toggling the engine debug mode is pressed. */
 	'engine-debug': void;
+	/** Fire when the keybind assigned to toggling the analysis engine border is pressed. */
+	'analysis-engine-border-debug': void;
 	// =========== Graphical Events ===========
 	'render-below-pieces': void;
 	'render-above-pieces': void;

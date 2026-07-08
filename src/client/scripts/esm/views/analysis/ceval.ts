@@ -21,6 +21,7 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 import gameslot from '../../game/chess/gameslot.js';
 import { GameBus } from '../../game/GameBus.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
+import analysisenginebounds from './analysisenginebounds.js';
 
 // Types ------------------------------------------------------------------------
 
@@ -65,7 +66,7 @@ interface CevalUpdate {
 }
 
 /** Engine lifecycle status, for the UI status row. */
-type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed';
+type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'blocked';
 
 interface CevalLegalMovesUpdate {
 	requestId: number;
@@ -120,6 +121,8 @@ let goDeeperActive = false;
 let currentTargetDepth = DEFAULT_SETTINGS.depth;
 /** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
 let allowDepthRegressionForCurrentSearch = false;
+/** The viewed position has a piece outside HydroChess's safe coordinate range. */
+let blockedByEngineWorldBorder = false;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -196,6 +199,24 @@ function terminateWorker(): void {
 	workerReady = false;
 	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
 	// via a forced refresh, so the on-screen eval shouldn't blank.
+}
+
+/** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
+function resetEngineSession(): void {
+	terminateWorker();
+	latestUpdate = undefined;
+	analyzed = undefined;
+	activeRequestId++;
+	lastAnalyzedIcn = undefined;
+	nextPositionIsNewGame = true;
+	goDeeperActive = false;
+	currentTargetDepth = settings.depth;
+	allowDepthRegressionForCurrentSearch = false;
+	blockedByEngineWorldBorder = false;
+	positionCache.clear();
+	queuedLegalMovesRequests.length = 0;
+	emitNow();
+	notifyStatus();
 }
 
 function send(command: AnalysisCommand): void {
@@ -276,11 +297,23 @@ function getViewedPositionIcn(gamefile: GameFile): string {
  *   than resetting the analysis.
  */
 function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): void {
-	if (!enabled || !worker || !workerReady) return;
+	if (!enabled) return;
 	// Note: only the logical gamefile is required — 'game-loaded' fires while
 	// graphics are still loading, and analysis shouldn't wait on textures.
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
+
+	if (analysisenginebounds.findFirstPieceOutsideEngineWorld(gamefile)) {
+		blockAnalysisForEngineWorldBorder();
+		return;
+	}
+
+	if (blockedByEngineWorldBorder) {
+		blockedByEngineWorldBorder = false;
+		lastAnalyzedIcn = undefined;
+	}
+
+	if (!worker || !workerReady) return;
 
 	const icn = getViewedPositionIcn(gamefile);
 	const positionChanged = icn !== lastAnalyzedIcn;
@@ -319,6 +352,18 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	});
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
+	notifyStatus();
+}
+
+function blockAnalysisForEngineWorldBorder(): void {
+	send({ cmd: 'stop' });
+	blockedByEngineWorldBorder = true;
+	goDeeperActive = false;
+	analyzed = undefined;
+	activeRequestId++;
+	lastAnalyzedIcn = undefined;
+	latestUpdate = undefined;
+	emitNow();
 	notifyStatus();
 }
 
@@ -434,6 +479,7 @@ function reemitCurrent(): void {
 
 /** Requests the legal moves for {@link icn}, spawning/queuing if the worker isn't ready yet. */
 function requestLegalMoves(requestId: number, icn: string): void {
+	if (blockedByEngineWorldBorder) return;
 	if (!worker) spawnWorker();
 	if (!workerReady) {
 		queuedLegalMovesRequests.push({ requestId, icn });
@@ -463,20 +509,20 @@ function init(options: { workerUrl: string }): void {
 	GameBus.addEventListener('view-move', () => refreshAnalysis());
 	GameBus.addEventListener('game-loaded', () => {
 		nextPositionIsNewGame = true;
-		refreshAnalysis();
+		if (enabled && !worker) spawnWorker();
+		refreshAnalysis(true);
 	});
 	GameBus.addEventListener('game-unloaded', () => {
-		latestUpdate = undefined;
-		analyzed = undefined;
-		activeRequestId++;
-		lastAnalyzedIcn = undefined;
-		queuedLegalMovesRequests.length = 0;
-		if (enabled) stopAnalysis();
+		resetEngineSession();
 	});
 }
 
 function isEnabled(): boolean {
 	return enabled;
+}
+
+function isBlockedByEngineWorldBorder(): boolean {
+	return blockedByEngineWorldBorder;
 }
 
 function setEnabled(value: boolean): void {
@@ -547,6 +593,7 @@ function getLatestUpdate(): CevalUpdate | undefined {
 
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
+	if (blockedByEngineWorldBorder) return 'blocked';
 	if (!worker || !workerReady) return 'loading';
 	if (latestUpdate?.done) return 'idle';
 	return 'computing';
@@ -570,6 +617,7 @@ function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 export default {
 	init,
 	isEnabled,
+	isBlockedByEngineWorldBorder,
 	setEnabled,
 	getSettings,
 	updateSettings,
