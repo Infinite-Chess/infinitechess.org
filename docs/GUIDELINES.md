@@ -10,7 +10,11 @@ If your changes affect more than one feature, it **must** be refactored into mul
 
 Titles must be clear to understand.
 
-Description guidelines are in the automatic template when opening a new pull request.
+Descriptions must state what type of change it is (see below), and concicesly describe what it does. If the change required a moderate design decision to be made, please include the reasoning for it, unless you have previously spoken with me about the planned structure. Don't overcomplicate the description, it should be a summary of the changes, not longer than them, and 1-2 sentences minimum.
+
+Types of changes can be: new feature, quality of life, bug fix, refactor, tooling, chore, tests, translation, or documentation.
+
+If the change affects the styling of a page, include a screenshot of the after-result, unless you are an AI agent then you don't have to.
 
 ### Scopes you should NOT submit pull requests for:
 
@@ -81,11 +85,11 @@ Do not opt for "band-aid" patches for bugs that only patch symptoms. Bugs are a 
 
 Should have one single purpose. If it does multiple things, refactor it out into multiple functions, even if those functions are only called once. Aim for under 40 lines, but it is not mandatory.
 
-Require atleast one sentence of JSDoc. Do not make the documentation too verbose.
+Require at least one sentence of JSDoc. Do not make the documentation too verbose, it should be a summary of, and smaller than, the function contents, not overshadowing it.
 
 Arguments only need documentation if it is not common sense what they would be for, or what we should pass in for them (for example, `boardsim` is common sense and doesn't require documentation), or if they don't provide any additional information than what's already in the function description.
 
-Function bodies should also have comments for documentation, to help understand what it's doing and how it works. Don't be too verbose.
+Function bodies may also have sparse comments for documentation, to help understand what it's doing and how it works.
 
 ### Imports
 
