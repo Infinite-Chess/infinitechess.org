@@ -18,6 +18,7 @@ import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/w
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import gamesession from '../../game/chess/gamesession.js';
+import clientmetadatautil from '../../game/chess/clientmetadatautil.js';
 
 /** Starts a fresh local game of the given variant. */
 function startGame(options: { variant: VariantCode; timeControl: TimeControl }): void {
@@ -54,7 +55,7 @@ async function pasteGame(
 	// Build the gamefile options from the longformat...
 
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const variant = icnimport.resolveAndNormalizeVariantFromMetadata(longformOut.metadata);
+	const variant = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longformOut.metadata);
 	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longformOut.metadata.UTCDate, longformOut.metadata.UTCTime); // prettier-ignore
 	const { position, specialRights } = await icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, variant); // prettier-ignore
 

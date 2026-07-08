@@ -13,8 +13,10 @@ import * as z from 'zod';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import variantregistry, {
+	VariantCode,
+} from '../../../../../shared/chess/variants/variantregistry.js';
 
 // Functions -----------------------------------------------------------------------
 
@@ -85,10 +87,32 @@ function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
 	};
 }
 
+/**
+ * Resolves the variant from the metadata, normalizes the metadata's
+ * `Variant` property to the English display name (if recognized),
+ * or deletes it (if not recognized), then returns the resolved {@link VariantCode}.
+ * MUTATES the input metadata object.
+ */
+function resolveAndNormalizeVariantFromMetadata(metadata: {
+	Variant?: string;
+}): VariantCode | undefined {
+	if (!metadata.Variant) return undefined;
+	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
+	if (resolved !== undefined) {
+		// Normalize to English display name
+		metadata.Variant = variantregistry.getVariantName(resolved, t.shared);
+	} else {
+		// Unrecognized Variant: Treat as if no variant was specified
+		delete metadata.Variant;
+	}
+	return resolved;
+}
+
 // Exports -----------------------------------------------------------------------
 
 export default {
 	buildMetaDataFromGamefile,
 	getGameConclusionFromResultAndTermination,
 	getRatingFromWhiteBlackElo,
+	resolveAndNormalizeVariantFromMetadata,
 };

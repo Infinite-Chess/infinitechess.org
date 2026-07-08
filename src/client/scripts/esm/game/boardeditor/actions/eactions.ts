@@ -58,6 +58,7 @@ import validatorama from '../../../util/validatorama';
 import selectiontool from '../tools/selection/selectiontool';
 import hydrochess_card from '../../chess/engines/enginecards/hydrochess_card';
 import guiboardcontrols from '../../gui/guiboardcontrols';
+import clientmetadatautil from '../../chess/clientmetadatautil';
 import { engineDictionary } from '../../chess/engines/engine';
 import gamecompressor, { SimplifiedGameState } from '../../chess/gamecompressor';
 
@@ -366,7 +367,7 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
  */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
-	const resolvedVariantCode = icnimport.resolveAndNormalizeVariantFromMetadata(
+	const resolvedVariantCode = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(
 		longformOut.metadata,
 	);
 	const timestamp = metadatautil.resolveTimestampFromMetadata(

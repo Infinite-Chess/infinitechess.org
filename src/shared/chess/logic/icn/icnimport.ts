@@ -14,7 +14,6 @@ import type { LoadedVariant, VariantOptions } from '../gamefile.js';
 
 import metadatautil from '../../util/metadatautil.js';
 import variantcache from '../../variants/variantcache.js';
-import variantregistry from '../../variants/variantregistry.js';
 import variantpreviewer from '../../variants/variantpreviewer.js';
 
 /**
@@ -82,30 +81,8 @@ function movePacketsFromParsed(moves: MoveParsed[]): MovePacket[] {
 	});
 }
 
-/**
- * Resolves the variant from the metadata, normalizes the metadata's
- * `Variant` property to the English display name (if recognized),
- * or deletes it (if not recognized), then returns the resolved {@link VariantCode}.
- * MUTATES the input metadata object.
- */
-function resolveAndNormalizeVariantFromMetadata(metadata: {
-	Variant?: string;
-}): VariantCode | undefined {
-	if (!metadata.Variant) return undefined;
-	const resolved = variantregistry.resolveVariantCode(metadata.Variant);
-	if (resolved !== undefined) {
-		// Normalize to English display name
-		metadata.Variant = variantregistry.getVariantName(resolved, t.shared);
-	} else {
-		// Unrecognized Variant: Treat as if no variant was specified
-		delete metadata.Variant;
-	}
-	return resolved;
-}
-
 export default {
 	getPositionAndSpecialRightsFromLongFormat,
 	variantOptionsFromLongFormat,
 	movePacketsFromParsed,
-	resolveAndNormalizeVariantFromMetadata,
 };
