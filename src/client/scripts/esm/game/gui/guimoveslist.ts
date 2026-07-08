@@ -499,7 +499,14 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	menu.className = 'analysis-context-menu';
 	const title = document.createElement('div');
 	title.className = 'analysis-context-title';
-	title.textContent = formatMoveIndex(node.ply);
+	const moveIndex = formatMoveIndex(node.ply);
+	const moveText = icnconverter.getShortFormMoveFromMove(node.move!, {
+		compact: false,
+		spaces: false,
+		comments: false,
+		abbrev: false,
+	});
+	title.textContent = `${moveIndex} ${moveText}`;
 	menu.append(title);
 
 	const parent = node.parent;
