@@ -76,6 +76,10 @@ interface CevalLegalMovesUpdate {
 interface RefreshAnalysisOptions {
 	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
 	restartSearch?: boolean;
+	/** This refresh follows a freshly (re)spawned worker — a brand-new wasm engine, so
+	 *  iterative deepening restarts from depth 1 there even though the viewed position
+	 *  (and its cached depth) hasn't changed. */
+	freshWorker?: boolean;
 }
 
 // Constants ----------------------------------------------------------------------
@@ -89,6 +93,12 @@ const HASH_OPTIONS: number[] = [16, 32, 64];
 const MAX_MULTI_PV = 5;
 /** UI update throttle. */
 const THROTTLE_MS = 60;
+/**
+ * How long to wait for the FIRST depth result before assuming the worker is stuck.
+ */
+const FIRST_INFO_TIMEOUT_MS = 8000;
+/** Consecutive automatic worker respawns (with no successful search between) before giving up. */
+const MAX_ENGINE_RESTARTS = 3;
 
 const STORAGE_PREFIX = 'ceval.';
 const DEFAULT_SETTINGS: CevalSettings = {
@@ -128,6 +138,10 @@ let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
 /** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
 let refreshQueued = false;
+/** Fires if the worker never reports back the first depth of the current search (worker crashed or hung). */
+let watchdogTimer: ReturnType<typeof setTimeout> | undefined;
+/** Consecutive fault recoveries since the last successful search progress; caps runaway respawn loops. */
+let engineRestartCount = 0;
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -205,11 +219,57 @@ function spawnWorker(): void {
 }
 
 function terminateWorker(): void {
+	clearWatchdog();
 	worker?.terminate();
 	worker = undefined;
 	workerReady = false;
 	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
 	// via a forced refresh, so the on-screen eval shouldn't blank.
+}
+
+// Watchdog & fault recovery --------------------------------------------------------------
+
+/**
+ * Arms the "first depth" watchdog for a freshly issued 'go'. Only guards the gap before
+ * the FIRST 'info' of this search — once the worker has proven it's alive and searching
+ * this position, later depths are free to take arbitrarily long (see {@link FIRST_INFO_TIMEOUT_MS}).
+ */
+function armWatchdog(): void {
+	clearWatchdog();
+	watchdogTimer = setTimeout(onWatchdogTimeout, FIRST_INFO_TIMEOUT_MS);
+}
+
+function clearWatchdog(): void {
+	if (watchdogTimer === undefined) return;
+	clearTimeout(watchdogTimer);
+	watchdogTimer = undefined;
+}
+
+/** The worker never reported back the first depth of the current search — assume it's stuck. */
+function onWatchdogTimeout(): void {
+	watchdogTimer = undefined;
+	console.error(
+		`[ceval] Analysis worker reported nothing within ${FIRST_INFO_TIMEOUT_MS}ms of starting; assuming it hung.`,
+	);
+	recoverFromEngineFault();
+}
+
+/**
+ * Recovers from a crashed/hung worker by respawning it fresh (a wasm panic poisons the
+ * module, and a hang can't be interrupted in-thread — only a new Worker gets a clean wasm).
+ * The respawn's 'ready' re-sends the current position. Gives up after {@link MAX_ENGINE_RESTARTS}
+ * consecutive faults with no successful search between, to avoid an endless respawn loop on a
+ * position that reliably crashes the engine.
+ */
+function recoverFromEngineFault(): void {
+	clearWatchdog();
+	if (++engineRestartCount > MAX_ENGINE_RESTARTS) {
+		console.error('[ceval] Analysis engine faulted repeatedly; giving up.');
+		handleWorkerFailure();
+		return;
+	}
+	console.warn(`[ceval] Restarting analysis worker (attempt ${engineRestartCount}).`);
+	restartWorkerForSearch();
 }
 
 /** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
@@ -224,6 +284,7 @@ function resetEngineSession(): void {
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
 	blockedByEngineWorldBorder = false;
+	engineRestartCount = 0;
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -254,18 +315,31 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 		case 'ready':
 			workerReady = true;
 			flushQueuedLegalMovesRequests();
-			refreshAnalysis(true); // Flush the desired position now that the engine is up.
+			// Flush the desired position now that the engine is up. This is always a brand-new
+			// wasm module, so even a same-position resend restarts iterative deepening from depth 1.
+			refreshAnalysis(true, { freshWorker: true });
 			notifyStatus();
 			break;
 		case 'initerror':
 			handleWorkerFailure();
 			break;
 		case 'info':
+			// The worker has proven it's alive and searching this position: disarm the
+			// watchdog for good (later depths legitimately take longer and longer, so
+			// there's nothing further to time-bound) and give it a fresh fault-retry budget.
+			engineRestartCount = 0;
+			clearWatchdog();
 			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
+			engineRestartCount = 0;
+			clearWatchdog(); // Search finished; no further messages expected until the next 'go'.
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
+			break;
+		case 'searcherror':
+			console.error('[ceval] Analysis search crashed:', msg.message);
+			recoverFromEngineFault();
 			break;
 		case 'legalmoves':
 			receiveLegalMoves(msg);
@@ -349,6 +423,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 
 	if (positionChanged) {
 		const cached = positionCache.get(icn);
+		engineRestartCount = 0; // New position gets a fresh fault-retry budget (a same-position respawn is a forced, non-changed refresh, so it keeps accumulating).
 		// "Go deeper" is a one-shot for the position it was pressed on; any new position
 		// (cycling moves or making one) reverts to the default target depth.
 		goDeeperActive = false;
@@ -378,6 +453,9 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		cmd: 'go',
 		opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth, requestId },
 	});
+	// Only arm the watchdog when this 'go' actually restarts iterative deepening from depth 1.
+	if (positionChanged || options.restartSearch || options.freshWorker) armWatchdog();
+	else clearWatchdog();
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
@@ -385,6 +463,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 
 function blockAnalysisForEngineWorldBorder(): void {
 	send({ cmd: 'stop' });
+	clearWatchdog();
 	blockedByEngineWorldBorder = true;
 	goDeeperActive = false;
 	analyzed = undefined;
@@ -413,6 +492,7 @@ function areAllLinesConclusive(lines: CevalLine[]): boolean {
 /** Stops the engine (keeps the worker warm). */
 function stopAnalysis(): void {
 	send({ cmd: 'stop' });
+	clearWatchdog();
 	notifyStatus();
 }
 
@@ -566,6 +646,7 @@ function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
+		engineRestartCount = 0; // Fresh user intent to analyze — allow the full retry budget again.
 		if (!worker) spawnWorker();
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the

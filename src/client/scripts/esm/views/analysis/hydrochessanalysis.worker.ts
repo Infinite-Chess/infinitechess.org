@@ -70,7 +70,9 @@ type AnalysisResponse =
 			requestId: number;
 			reason: 'depth' | 'mate' | 'terminal';
 			info: AnalysisInfo;
-	  };
+	  }
+	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
+	| { type: 'searcherror'; message: string };
 
 export type { AnalysisCommand, AnalysisResponse, AnalysisInfo, AnalysisLine, GoOptions };
 
@@ -232,8 +234,16 @@ async function runLoop(): Promise<void> {
 			}
 		}
 	} catch (e) {
+		// A throw here is almost always a Rust/wasm panic, which leaves the wasm module
+		// in a poisoned state — every subsequent engine call would throw too. Tell the main
+		// thread so it can terminate & respawn this worker (fresh wasm) rather than hang
+		// forever waiting for an 'info'/'done' that will never come.
 		console.error('[Analysis Engine] Search loop crashed', e);
 		analysing = false;
+		postMessage({
+			type: 'searcherror',
+			message: e instanceof Error ? e.message : String(e),
+		} satisfies AnalysisResponse);
 	} finally {
 		loopRunning = false;
 	}
