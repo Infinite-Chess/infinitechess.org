@@ -162,7 +162,7 @@ function update(): void {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'analysis') return;
+	if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'analysis') return; // Can't select pieces after game is over
 	if (boardpos.areZoomedOut() || camera.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.

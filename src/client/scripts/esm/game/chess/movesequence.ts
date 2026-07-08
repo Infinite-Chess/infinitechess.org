@@ -172,8 +172,8 @@ function viewMove(
 ): void {
 	// In analysis mode, every ply is a real, editable position.
 	// Even viewing a move should apply global state and update turn.
-	const isAnalysis = gamesession.getGameType() === 'analysis';
-	movepiece.applyMove(gamefile, move, forward, { global: isAnalysis }); // Apply the logical changes.
+	const global = gamesession.getGameType() === 'analysis';
+	movepiece.applyMove(gamefile, move, forward, { global }); // Apply the logical changes.
 
 	if (mesh) {
 		boardchanges.runChanges(mesh, move.changes, meshChanges, forward); // Apply the graphical changes.
