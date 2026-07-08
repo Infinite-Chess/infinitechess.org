@@ -126,7 +126,7 @@ function concludeGameIfOver(): void {
 		gamefile.gameConclusion = undefined;
 		return;
 	}
-  // Suppresses the game-over sound — the game concluded before this load, not live in front of us.
+	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
 	gameslot.concludeGame(false);
 }
 
