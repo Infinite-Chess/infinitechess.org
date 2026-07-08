@@ -54,6 +54,12 @@ function init(): void {
 		element_Textarea.addEventListener(event, updateSelectionState);
 	document.addEventListener('selectionchange', updateSelectionState);
 	element_Textarea.addEventListener('blur', () => setTimeout(updateSelectionState, 0));
+	element_Textarea.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			importFromTextarea();
+		}
+	});
 
 	element_Copy.addEventListener('click', async () => {
 		try {
