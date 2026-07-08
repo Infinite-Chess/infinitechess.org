@@ -410,7 +410,6 @@
 	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	color: var(--c-text-muted);
 }
 
@@ -432,6 +431,15 @@
 .line-move.unplayable:hover {
 	background: none;
 	color: var(--c-text-muted);
+}
+
+.line-pager {
+	font-weight: 700;
+	color: var(--c-text-muted);
+}
+
+.line-pager:hover {
+	color: var(--c-text-emphasis);
 }
 
 /* ============================

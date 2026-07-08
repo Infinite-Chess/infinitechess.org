@@ -50,6 +50,15 @@ const element_Depth = document.getElementById('setting-depth') as HTMLSelectElem
 
 const ENABLED_STORAGE_KEY = 'ceval.enabled';
 
+// State ----------------------------------------------------------------------------
+
+/** Per-rank (PV line index) window offset into that line's moves, for the '…' pager. Cleared whenever the line set is cleared. */
+const lineWindowOffsets = new Map<number, number>();
+/** Per-rank snapshot of that line's moves as of the last render, to detect when a deeper search revises earlier moves out from under the page you're viewing. */
+const lastSeenLineMoves = new Map<number, string[]>();
+/** The moveIndex the above per-rank state belongs to. */
+let lineWindowStateMoveIndex: number | undefined;
+
 // Functions -----------------------------------------------------------------------
 
 /** Initializes the engine panel. Called once by the page entry. */
@@ -86,6 +95,7 @@ function setEngineEnabled(value: boolean): void {
 	ceval.setEnabled(value);
 	element_Gauge.classList.toggle('hidden', !value);
 	if (!value) {
+		resetLineWindowState();
 		enginearrows.clearArrows();
 		renderLines([]);
 		element_Eval.textContent = '-';
@@ -165,6 +175,7 @@ function onEngineStatus(status: CevalStatus): void {
 		updateProgress(undefined);
 		toast.show('The analysis engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
+		resetLineWindowState();
 		element_Eval.textContent = '-';
 		element_Stats.textContent = 'Engine disabled: outside world border';
 		element_GoDeeper.classList.add('hidden');
@@ -180,6 +191,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (!update) {
 		// Position changed; awaiting the first info of the new search.
+		resetLineWindowState();
 		element_Eval.textContent = '…';
 		element_Stats.textContent = 'Starting analysis';
 		element_GoDeeper.classList.add('hidden');
@@ -188,6 +200,11 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 		updateProgress(undefined);
 		return;
 	}
+
+	// A cached position renders its lines immediately (no intervening empty-lines update
+	// to clear the maps above), so detect the position change here too.
+	if (update.moveIndex !== lineWindowStateMoveIndex) resetLineWindowState();
+	lineWindowStateMoveIndex = update.moveIndex;
 
 	if (update.terminal) {
 		element_Eval.textContent = '-';
@@ -255,8 +272,13 @@ function updateGauge(best: CevalLine | undefined): void {
 
 function renderLines(lines: CevalLine[]): void {
 	element_Lines.replaceChildren();
+	if (lines.length === 0) resetLineWindowState();
 
-	for (const line of lines) {
+	const rerender = (): void => renderLines(lines);
+
+	lines.forEach((line, rank) => {
+		reconcileWindowOffsetForChange(rank, line.moves);
+
 		const row = document.createElement('div');
 		row.className = 'engine-line';
 
@@ -266,26 +288,180 @@ function renderLines(lines: CevalLine[]): void {
 
 		const movesSpan = document.createElement('span');
 		movesSpan.className = 'line-moves';
-		line.moves.forEach((token, i) => {
-			const moveSpan = document.createElement('span');
-			moveSpan.className = 'line-move';
-			moveSpan.textContent = token;
-			moveSpan.title = 'Play the line up to this move';
-			moveSpan.addEventListener('click', () => playLine(line.moves, i));
-			movesSpan.append(moveSpan);
-			if (i < line.moves.length - 1) movesSpan.append(' ');
-		});
 
 		row.append(evalSpan, movesSpan);
+		// Attach to the live DOM BEFORE fitting: fitLineMovesWindow measures real layout
+		// widths (scrollWidth/clientWidth), which are meaningless on a detached element.
 		element_Lines.append(row);
+
+		fitLineMovesWindow(movesSpan, line, rank, rerender);
+	});
+}
+
+/**
+ * A deeper search can revise a PV's earlier moves, not just extend its tail. If that
+ * revision lands strictly before the page you're currently viewing, snap the window
+ * back to exactly where it diverges (which may be the very start) so you're not left
+ * looking at moves that no longer belong to this line. A revision at or after your
+ * current page — including the line simply growing longer — leaves your view alone.
+ */
+function reconcileWindowOffsetForChange(rank: number, moves: string[]): void {
+	const previous = lastSeenLineMoves.get(rank);
+	lastSeenLineMoves.set(rank, moves.slice());
+	if (!previous) return; // First time seeing this rank; nothing to compare against.
+
+	const offset = lineWindowOffsets.get(rank) ?? 0;
+	if (offset === 0) return; // Already at the start.
+
+	const divergedAt = firstDivergingIndex(previous, moves);
+	if (divergedAt !== undefined && divergedAt < offset) lineWindowOffsets.set(rank, divergedAt);
+}
+
+/** The first index at which two move-token sequences differ, or undefined if one is a prefix of the other. */
+function firstDivergingIndex(a: string[], b: string[]): number | undefined {
+	const sharedLength = Math.min(a.length, b.length);
+	for (let i = 0; i < sharedLength; i++) {
+		if (a[i] !== b[i]) return i;
 	}
+	return undefined;
+}
+
+/**
+ * Clears all per-rank PV pagination/change-tracking state. Must run on every genuine
+ * position change — including one that renders a cached result immediately, which
+ * skips the empty-lines render that would otherwise catch it — so a rank's leftover
+ * page/snapshot from a completely unrelated position never gets reused for a new one.
+ */
+function resetLineWindowState(): void {
+	lineWindowOffsets.clear();
+	lastSeenLineMoves.clear();
+	lineWindowStateMoveIndex = undefined;
+}
+
+/**
+ * Renders one PV's moves starting at that line's current window offset, fitting as many
+ * as actually fit the line's rendered width — no fixed move count, exactly mirroring how
+ * plain CSS ellipsis truncation used to size the line. Once it overflows, shrinks by one
+ * move at a time (now reserving room for a '…' pager) until it fits. A '…' on the left
+ * once paged forward, and on the right as long as more moves remain, make the pager an
+ * actual "show next/previous set of moves" control instead of a dead-end truncation.
+ */
+function fitLineMovesWindow(
+	container: HTMLElement,
+	line: CevalLine,
+	rank: number,
+	rerender: () => void,
+): void {
+	const total = line.moves.length;
+	if (total === 0) return;
+	const offset = Math.min(lineWindowOffsets.get(rank) ?? 0, total - 1);
+	lineWindowOffsets.set(rank, offset);
+
+	const showLeftPager = offset > 0;
+	const goBack = (): void => {
+		lineWindowOffsets.set(rank, fitBackwardWindowStart(container, line, offset));
+		rerender();
+	};
+	const goForward = (shown: number): void => {
+		lineWindowOffsets.set(rank, offset + shown);
+		rerender();
+	};
+
+	// Try showing everything remaining first — if it fits, no right pager is needed at all.
+	let shown = total - offset;
+	renderMovesSlice(container, line, offset, shown, showLeftPager, false, goBack, () => {});
+	if (shown === 1 || fitsWithinWidth(container)) return;
+
+	// Doesn't all fit: shrink by one, now reserving room for a right pager, until it does.
+	shown--;
+	while (shown > 1) {
+		const forward = (): void => goForward(shown);
+		renderMovesSlice(container, line, offset, shown, showLeftPager, true, goBack, forward);
+		if (fitsWithinWidth(container)) return;
+		shown--;
+	}
+	renderMovesSlice(container, line, offset, 1, showLeftPager, offset + 1 < total, goBack, () =>
+		goForward(1),
+	);
+}
+
+/**
+ * Backward counterpart of the forward fit: finds the start index of the "previous page"
+ * — as many moves as fit ending right before `endExclusive` — for the left pager.
+ */
+function fitBackwardWindowStart(
+	container: HTMLElement,
+	line: CevalLine,
+	endExclusive: number,
+): number {
+	let count = endExclusive;
+	while (count > 1) {
+		const start = endExclusive - count;
+		renderMovesSlice(
+			container,
+			line,
+			start,
+			count,
+			start > 0,
+			true,
+			() => {},
+			() => {},
+		);
+		if (fitsWithinWidth(container)) return start;
+		count--;
+	}
+	return Math.max(0, endExclusive - 1);
+}
+
+function fitsWithinWidth(container: HTMLElement): boolean {
+	return container.scrollWidth <= container.clientWidth;
+}
+
+/** Renders a specific slice of a PV line's moves (with optional pagers) into `container`. */
+function renderMovesSlice(
+	container: HTMLElement,
+	line: CevalLine,
+	start: number,
+	count: number,
+	showLeftPager: boolean,
+	showRightPager: boolean,
+	onGoBack: () => void,
+	onGoForward: () => void,
+): void {
+	container.replaceChildren();
+	if (showLeftPager) {
+		container.append(createLinePagerButton('Show earlier moves in this line', onGoBack));
+		container.append(' ');
+	}
+	for (let k = 0; k < count; k++) {
+		const i = start + k;
+		const moveSpan = document.createElement('span');
+		moveSpan.className = 'line-move';
+		moveSpan.textContent = line.moves[i]!;
+		moveSpan.title = 'Play the line up to this move';
+		moveSpan.addEventListener('click', () => playLine(line.moves, i));
+		container.append(moveSpan);
+		if (k < count - 1) container.append(' ');
+	}
+	if (showRightPager) {
+		container.append(' ');
+		container.append(createLinePagerButton('Show more moves in this line', onGoForward));
+	}
+}
+
+function createLinePagerButton(title: string, onClick: () => void): HTMLSpanElement {
+	const pager = document.createElement('span');
+	pager.className = 'line-move line-pager';
+	pager.textContent = '…';
+	pager.title = title;
+	pager.addEventListener('click', onClick);
+	return pager;
 }
 
 /** Plays the PV's moves up to and including `untilIndex` onto the board. */
 function playLine(tokens: string[], untilIndex: number): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return;
-	if (gamefile.gameConclusion) return;
 
 	const mesh = gameslot.getMesh();
 	if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile, mesh);
