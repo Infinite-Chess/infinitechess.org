@@ -162,7 +162,8 @@ function update(): void {
 		if (promoteTo) makePromotionMove(gamefile, mesh);
 		return;
 	}
-	if (boardpos.areZoomedOut() || gamefileutility.isGameOver(gamefile) || camera.isLookingUp()) {
+	if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'analysis') return;
+	if (boardpos.areZoomedOut() || camera.isLookingUp()) {
 		// We might be zoomed way out.
 		// If we are still dragging a piece, we still want to be able to drop it.
 		if (draganimation.areDraggingPiece() && draganimation.hasPointerReleased())

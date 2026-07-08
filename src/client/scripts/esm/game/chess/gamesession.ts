@@ -110,7 +110,7 @@ function centerView(): void {
 	boardpos.setBoardScale(centerArea.scale);
 }
 
-/** Toasts a fatal error encountered while loading a game. */
+/** Displays an error toast saying the game failed to load. */
 function onCatchLoadingError(err: Error): void {
 	console.error('Error loading game: ', err);
 	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
@@ -118,17 +118,8 @@ function onCatchLoadingError(err: Error): void {
 
 /** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
 function concludeGameIfOver(): void {
-	const gamefile = gameslot.getGamefile()!;
-	if (!gamefileutility.isGameOver(gamefile)) return;
-	if (session.type === 'analysis') {
-		// Analysis never concludes: keep the last move's mate flag (loaded via
-		// doGameOverChecks, so the move list still shows the trailing '#') but drop the
-		// conclusion so there's no result banner/sound and play stays unblocked.
-		gamefile.gameConclusion = undefined;
-		return;
-	}
 	// Suppresses the game-over sound — the game concluded before this load, not live in front of us.
-	gameslot.concludeGame(false);
+	if (gamefileutility.isGameOver(gameslot.getGamefile()!)) gameslot.concludeGame(false);
 }
 
 function unloadLogicalAndRendering(): void {
