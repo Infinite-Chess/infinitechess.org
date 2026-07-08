@@ -162,18 +162,20 @@ function persistSettings(): void {
 
 // Capability queries ----------------------------------------------------------------
 
-// Winning chances (lichess formula) ----------------------------------------------------
+// Winning chances (adjusted for infinitechess players) ------------------------------------
 
 /** Maps a white-POV centipawn score to a win probability in [-1, 1]. */
 function cpWinningChances(cp: number): number {
-	const clamped = Math.min(Math.max(-1000, cp), 1000);
-	return 2 / (1 + Math.exp(-0.00368208 * clamped)) - 1;
+	// Shallower curve (0.003) assumes players convert advantages less efficiently
+	return 2 / (1 + Math.exp(-0.003 * cp)) - 1;
 }
 
 /** Maps a white-POV mate distance (full moves) to a win probability in [-1, 1]. */
 function mateWinningChances(mate: number): number {
-	const cp = (21 - Math.min(10, Math.abs(mate))) * 100 * Math.sign(mate);
-	return cpWinningChances(cp);
+	// Use cp equivalent for ~99% win chance at mate in 1
+	const cp = (25 - Math.min(10, Math.abs(mate))) * 75;
+	const signed = cp * (mate > 0 ? 1 : -1);
+	return cpWinningChances(signed);
 }
 
 // Worker lifecycle -----------------------------------------------------------------------
