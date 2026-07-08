@@ -50,7 +50,7 @@ export const ESMEntryPoints = [
 	'src/client/scripts/esm/views/analysis/analysis.ts',
 
 	// Workers
-	'src/client/scripts/esm/game/chess/engines/hydrochessanalysis.worker.ts',
+	'src/client/scripts/esm/views/analysis/hydrochessanalysis.worker.ts',
 
 	// Other
 	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',

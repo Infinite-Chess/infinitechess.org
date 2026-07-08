@@ -15,10 +15,9 @@
  */
 
 // @ts-ignore without this, the type check job fails
-import init, * as wasmBindings from '../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
-
+import wasmUrl from '../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
 // @ts-ignore without this, the type check job fails
-import wasmUrl from '../../../../../pkg/hydrochess/pkg/hydrochess_wasm_bg.wasm';
+import init, * as wasmBindings from '../../../../pkg/hydrochess/pkg/hydrochess_wasm.js';
 
 // Protocol types --------------------------------------------------------------
 
