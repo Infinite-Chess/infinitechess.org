@@ -24,7 +24,6 @@ const element_Textarea = document.getElementById('icn-textarea') as HTMLTextArea
 const element_Panel = document.querySelector('.icn-panel')!;
 const element_Copy = document.getElementById('btn-icn-copy') as HTMLButtonElement;
 const element_Import = document.getElementById('btn-icn-import') as HTMLButtonElement;
-const element_Error = document.getElementById('icn-error')!;
 const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement | null;
 
 // Functions ------------------------------------------------------------------------
@@ -102,7 +101,6 @@ function refresh(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	element_Error.textContent = '';
 	element_Textarea.value = getGameICN(gamefile);
 	updateSelectionState();
 }
@@ -113,13 +111,12 @@ function importFromTextarea(): void {
 	const text = element_Textarea.value.trim();
 	if (!text) return;
 
-	element_Error.textContent = '';
 	let longformOut;
 	try {
 		longformOut = icnconverter.ShortToLong_Format(text);
 	} catch (e) {
 		console.error(e);
-		element_Error.textContent = 'Invalid ICN notation.';
+		toast.show('Invalid ICN notation.', { error: true });
 		return;
 	}
 

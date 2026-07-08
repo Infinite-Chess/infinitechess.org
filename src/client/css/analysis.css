@@ -736,21 +736,6 @@
 		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
 }
 
-.icn-error {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	min-width: 0;
-	min-height: 1em;
-	padding: 2px 8px;
-	font-size: 0.78em;
-	color: var(--c-error, #e5534b);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 /* ============================
    Continue from here chooser
    ============================ */
