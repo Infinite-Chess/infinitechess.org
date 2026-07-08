@@ -21,10 +21,11 @@ import gamecompressor from '../../../game/chess/gamecompressor.js';
 // Elements ------------------------------------------------------------------------
 
 const element_Textarea = document.getElementById('icn-textarea') as HTMLTextAreaElement;
+const element_Panel = document.querySelector('.icn-panel')!;
 const element_Copy = document.getElementById('btn-icn-copy') as HTMLButtonElement;
 const element_Import = document.getElementById('btn-icn-import') as HTMLButtonElement;
 const element_Error = document.getElementById('icn-error')!;
-const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement;
+const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement | null;
 
 // Functions ------------------------------------------------------------------------
 
@@ -37,7 +38,23 @@ function init(): void {
 	GameBus.addEventListener('game-loaded', refresh);
 	GameBus.addEventListener('moves-changed', refresh);
 	GameBus.addEventListener('view-move', refresh);
-	GameBus.addEventListener('game-unloaded', () => (element_Textarea.value = ''));
+	GameBus.addEventListener('game-unloaded', () => {
+		element_Textarea.value = '';
+		updateSelectionState();
+	});
+
+	for (const event of [
+		'select',
+		'selectionchange',
+		'keyup',
+		'mouseup',
+		'pointermove',
+		'input',
+		'focus',
+	])
+		element_Textarea.addEventListener(event, updateSelectionState);
+	document.addEventListener('selectionchange', updateSelectionState);
+	element_Textarea.addEventListener('blur', () => setTimeout(updateSelectionState, 0));
 
 	element_Copy.addEventListener('click', async () => {
 		try {
@@ -48,7 +65,12 @@ function init(): void {
 		}
 	});
 
+	element_Import.addEventListener('mousedown', (e) => e.preventDefault());
 	element_Import.addEventListener('click', importFromTextarea);
+}
+
+function updateSelectionState(): void {
+	element_Panel.classList.toggle('text-selected', document.activeElement === element_Textarea);
 }
 
 /**
@@ -82,6 +104,7 @@ function refresh(): void {
 
 	element_Error.textContent = '';
 	element_Textarea.value = getGameICN(gamefile);
+	updateSelectionState();
 }
 
 /** Parses the textarea's ICN and loads it as the current game. */
@@ -104,7 +127,7 @@ function importFromTextarea(): void {
 	const resolved = longformOut.metadata.Variant
 		? variantregistry.resolveVariantCode(longformOut.metadata.Variant)
 		: undefined;
-	element_VariantSelect.value = resolved ?? '';
+	if (element_VariantSelect) element_VariantSelect.value = resolved ?? '';
 
 	element_Textarea.blur();
 	analysisloader.pasteGame(longformOut);
