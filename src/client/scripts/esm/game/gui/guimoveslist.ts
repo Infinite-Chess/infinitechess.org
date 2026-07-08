@@ -421,47 +421,63 @@ async function appendVariationGroup(
 	children: AnalysisMoveNode[],
 	depth: number,
 ): Promise<void> {
-	for (const child of children) {
-		const variation = document.createElement('div');
-		variation.className = 'analysis-variation';
-		variation.style.setProperty('--variation-depth', String(depth));
-
-		const rail = document.createElement('span');
-		rail.className = 'variation-rail';
-		const line = document.createElement('div');
-		line.className = 'variation-line';
-		variation.append(rail, line);
-
-		await appendVariationContinuation(line, child);
-		container.append(variation);
-		await appendNestedVariations(container, child, depth + 1);
-	}
+	for (const child of children) await appendVariationLine(container, child, depth);
 }
 
-async function appendVariationContinuation(
+/**
+ * Renders one variation branch as one or more `.variation-line` segments. Wherever a move
+ * along the branch has its own alternatives, the line is split: the segment so far is
+ * flushed, those alternatives nest below it at depth+1, then the branch resumes in a fresh
+ * continuation segment — so a sub-variation appears directly below the move it replaces,
+ * in reading order, instead of dumped after the whole line.
+ */
+async function appendVariationLine(
 	container: HTMLElement,
-	from: AnalysisMoveNode,
+	head: AnalysisMoveNode,
+	depth: number,
 ): Promise<void> {
-	let node: AnalysisMoveNode | undefined = from;
+	let node: AnalysisMoveNode | undefined = head;
+	let segment = createVariationSegment(depth, false);
 	let showIndex = true;
 
 	while (node) {
-		container.append(await createVariationPlyButton(node, showIndex || node.ply % 2 === 0));
+		segment.line.append(await createVariationPlyButton(node, showIndex || node.ply % 2 === 0));
 		showIndex = false;
-		node = getMainlineChild(node);
+
+		// Alternatives to THIS move. The head's alternatives are its fork-siblings, already
+		// rendered by the enclosing group, so they're skipped here.
+		const alternatives = node === head ? [] : getVariationChildren(node.parent!);
+		const next = getMainlineChild(node);
+
+		if (alternatives.length > 0) {
+			container.append(segment.variation); // Flush the segment ending at this move.
+			await appendVariationGroup(container, alternatives, depth + 1);
+			if (!next) return; // Nothing left to continue.
+			segment = createVariationSegment(depth, true);
+			showIndex = true;
+		}
+		node = next;
 	}
+	container.append(segment.variation);
 }
 
-async function appendNestedVariations(
-	container: HTMLElement,
-	from: AnalysisMoveNode,
+/** Builds an empty `.analysis-variation` block (rail + line) at the given depth. */
+function createVariationSegment(
 	depth: number,
-): Promise<void> {
-	let node: AnalysisMoveNode | undefined = from;
-	while (node) {
-		await appendVariationGroup(container, getVariationChildren(node), depth);
-		node = getMainlineChild(node);
-	}
+	isContinuation: boolean,
+): { variation: HTMLElement; line: HTMLElement } {
+	const variation = document.createElement('div');
+	variation.className = 'analysis-variation';
+	if (isContinuation) variation.classList.add('variation-continuation');
+	variation.style.setProperty('--variation-depth', String(depth));
+
+	const rail = document.createElement('span');
+	rail.className = 'variation-rail';
+	const line = document.createElement('div');
+	line.className = 'variation-line';
+	variation.append(rail, line);
+
+	return { variation, line };
 }
 
 function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {

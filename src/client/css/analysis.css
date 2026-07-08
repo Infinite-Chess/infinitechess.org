@@ -536,6 +536,12 @@
 	border-top: 2px solid color-mix(in srgb, var(--c-text-muted) 28%, transparent);
 }
 
+/* A resumed segment of the same variation (after a nested sub-variation): keep the vertical
+   spine but drop the elbow tick, so it reads as the line continuing, not a new branch. */
+.variation-continuation .variation-rail::after {
+	display: none;
+}
+
 .variation-line {
 	display: flex;
 	flex-wrap: wrap;
