@@ -26,6 +26,11 @@ const element_Copy = document.getElementById('btn-icn-copy') as HTMLButtonElemen
 const element_Import = document.getElementById('btn-icn-import') as HTMLButtonElement;
 const element_VariantSelect = document.getElementById('variant-select') as HTMLSelectElement | null;
 
+// Constants ------------------------------------------------------------------------
+
+/** sessionStorage key an ICN import redirect (see {@link importFromTextarea}) stashes its text under. */
+const PENDING_IMPORT_KEY = 'analysis.pendingImport';
+
 // Functions ------------------------------------------------------------------------
 
 /** Initializes the ICN panel. Called once by the page entry. */
@@ -117,13 +122,37 @@ function importFromTextarea(): void {
 	const text = element_Textarea.value.trim();
 	if (!text) return;
 
+	if (window.analysisPageData.gameId !== null) {
+		// A saved game's clocks/players/result banner no longer describe anything once
+		// you've replaced its position — those are baked in server-side per URL, not
+		// something this page can toggle off itself. Validate here (so a malformed ICN
+		// errors now, not after leaving the page), then hop to the plain analysis board
+		// (which renders none of that) and finish the import there.
+		try {
+			icnconverter.ShortToLong_Format(text);
+		} catch (e) {
+			console.error(e);
+			toast.show('Invalid ICN notation.', { error: true });
+			return;
+		}
+		sessionStorage.setItem(PENDING_IMPORT_KEY, text);
+		window.location.assign('/analysis');
+		return;
+	}
+
+	element_Textarea.blur();
+	importIcnText(text);
+}
+
+/** Parses an ICN and loads it as the current game, syncing the variant dropdown. Returns whether it was valid. */
+function importIcnText(text: string): boolean {
 	let longformOut;
 	try {
 		longformOut = icnconverter.ShortToLong_Format(text);
 	} catch (e) {
 		console.error(e);
 		toast.show('Invalid ICN notation.', { error: true });
-		return;
+		return false;
 	}
 
 	// Point the variant dropdown at the imported variant (or the "Custom" placeholder).
@@ -132,8 +161,18 @@ function importFromTextarea(): void {
 		: undefined;
 	if (element_VariantSelect) element_VariantSelect.value = resolved ?? '';
 
-	element_Textarea.blur();
 	analysisloader.pasteGame(longformOut);
+	return true;
 }
 
-export default { init, getGameICN };
+/**
+ * Consumes (and clears) an ICN import stashed by {@link importFromTextarea}'s redirect off
+ * a loaded game's page, or null if there isn't one. Called once on page load.
+ */
+function takePendingImport(): string | null {
+	const text = sessionStorage.getItem(PENDING_IMPORT_KEY);
+	if (text !== null) sessionStorage.removeItem(PENDING_IMPORT_KEY);
+	return text;
+}
+
+export default { init, getGameICN, importIcnText, takePendingImport };

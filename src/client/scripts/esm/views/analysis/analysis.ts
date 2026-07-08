@@ -92,6 +92,15 @@ function start(): void {
 
 /** Loads the game named by the URL, falling back to a fresh board of the selected variant. */
 async function loadInitialGame(): Promise<void> {
+	// An ICN import on a loaded game's page redirects here (this page renders no
+	// clocks/players/result banner to conflict with) with the text stashed for us.
+	const pendingImport = icnpanel.takePendingImport();
+	if (pendingImport !== null) {
+		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
+		icnpanel.importIcnText(pendingImport);
+		return;
+	}
+
 	const gameId = window.analysisPageData.gameId;
 	if (gameId === null) return loadVariant(getSelectedVariant());
 
