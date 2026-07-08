@@ -23,44 +23,12 @@ import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from './gameslot.js';
 import enginegame from '../misc/enginegame.js';
+import guipalette from '../gui/boardeditor/guipalette.js';
 import gamesession from './gamesession.js';
+import boardeditor from '../boardeditor/boardeditor.js';
 import { engineDictionary, ValidEngine } from './engines/engine.js';
 
-// The board-editor UI modules do eager DOM initialization at import time against
-// editor-page elements, so they're imported dynamically (only when an editor game
-// actually starts) to keep them out of the bundle graph of pages without that DOM
-// (e.g. the analysis page, which reuses this loader for its non-editor game types).
-
 // Start Game --------------------------------------------------------------------
-
-/** Starts a local game according to the options provided. */
-async function startLocalGame(options: {
-	variant: VariantCode;
-	timeControl: TimeControl;
-}): Promise<void> {
-	gamesession.setSessionGame({ type: 'analysis' });
-
-	const dateTimestamp = Date.now();
-
-	const viewWhitePerspective = true;
-
-	gameslot
-		.loadGamefile({
-			timeControl: options.timeControl,
-			variant: options.variant,
-			dateTimestamp,
-			viewWhitePerspective,
-		})
-		.then(({ graphical }) => {
-			// Logical loaded (gamefile now exists): conclude if it loaded already-over, then
-			// hand back the graphical promise. Must be inside the chain — the logical load is
-			// async, so the gamefile isn't available synchronously after loadGamefile().
-			gamesession.concludeGameIfOver();
-			return graphical;
-		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
-}
 
 /** Starts an engine game according to the options provided. */
 async function startEngineGame(options: {
@@ -104,7 +72,7 @@ async function startEngineGame(options: {
 			},
 		})
 		.then(async ({ graphical }) => {
-			// Logical loaded (gamefile now exists): conclude if already-over.
+			// Logical loaded, return graphical promise
 			gamesession.concludeGameIfOver();
 
 			/** A promise that resolves when the engine script has been fetched. */
@@ -118,11 +86,6 @@ async function startEngineGame(options: {
 
 /** Initializes the board editor. */
 async function startBoardEditor(): Promise<void> {
-	const [{ default: guipalette }, { default: boardeditor }] = await Promise.all([
-		import('../gui/boardeditor/guipalette.js'),
-		import('../boardeditor/boardeditor.js'),
-	]);
-
 	gamesession.setSessionGame({ type: 'editor' });
 
 	const dateTimestamp = Date.now();
@@ -176,7 +139,8 @@ async function startCustomLocalGame(options: {
 			viewWhitePerspective,
 		})
 		.then(({ graphical }) => {
-			gamesession.concludeGameIfOver(); // Logical loaded: conclude if already-over.
+			// Logical loaded, return graphical promise
+			gamesession.concludeGameIfOver();
 			return graphical;
 		})
 		.then(() => gamesession.markLoadingDone()) // Graphical loaded
@@ -215,7 +179,7 @@ async function startCustomEngineGame(options: {
 			},
 		})
 		.then(async ({ graphical }) => {
-			// Logical loaded (gamefile now exists): conclude if already-over.
+			// Logical loaded, return graphical promise
 			gamesession.concludeGameIfOver();
 
 			/** A promise that resolves when the engine script has been fetched. */
@@ -243,11 +207,6 @@ async function startBoardEditorFromCustomPosition(
 	/** Whether the castling flag should be set for the position in the editor game rules */
 	castling?: boolean,
 ): Promise<void> {
-	const [{ default: guipalette }, { default: boardeditor }] = await Promise.all([
-		import('../gui/boardeditor/guipalette.js'),
-		import('../boardeditor/boardeditor.js'),
-	]);
-
 	gamesession.setSessionGame({ type: 'editor' });
 
 	const dateTimestamp = Date.now();
@@ -278,57 +237,12 @@ async function startBoardEditorFromCustomPosition(
 	boardeditor.initBoardEditor(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 
-/**
- * Reloads the current local or online game from the provided metadata, existing moves, and variant options.
- */
-async function pasteGame(options: {
-	metadata: MetaData;
-	variant: VariantCode | undefined;
-	dateTimestamp: number;
-	additional: Additional;
-	presetAnnotes?: PresetAnnotes;
-	/** Board orientation override. Defaults to the current loaded game's perspective. */
-	viewWhitePerspective?: boolean;
-}): Promise<void> {
-	if (gamesession.getGameType() !== 'analysis')
-		throw Error("Can't paste a game when we're not in an analysis game.");
-
-	gamesession.markLoading();
-
-	// Retain the same perspective as the current loaded game, unless overridden (e.g. flip board).
-	// No game loaded yet (initial /analysis/:id load): default to white's perspective.
-	const viewWhitePerspective =
-		options.viewWhitePerspective ??
-		(gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
-
-	if (gameslot.getGamefile()) gameslot.unloadGame();
-
-	// Returned so callers can await the load (the gamefile only exists once it resolves).
-	return gameslot
-		.loadGamefile({
-			timeControl: options.metadata.TimeControl ?? '-',
-			variant: options.variant,
-			dateTimestamp: options.dateTimestamp,
-			viewWhitePerspective,
-			presetAnnotes: options.presetAnnotes,
-			additional: options.additional,
-		})
-		.then(({ graphical }) => {
-			gamesession.concludeGameIfOver(); // Logical loaded: conclude if already-over.
-			return graphical;
-		})
-		.then(() => gamesession.markLoadingDone()) // Graphical loaded
-		.catch((err: Error) => gamesession.onCatchLoadingError(err));
-}
-
 // Exports --------------------------------------------------------------------
 
 export default {
-	startLocalGame,
 	startEngineGame,
 	startBoardEditor,
 	startCustomLocalGame,
 	startCustomEngineGame,
 	startBoardEditorFromCustomPosition,
-	pasteGame,
 };
