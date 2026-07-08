@@ -19,15 +19,14 @@ import gamecore from '../../game/chess/gamecore.js';
 import gameslot from '../../game/chess/gameslot.js';
 import icnpanel from './gui/guiicnpanel.js';
 import IndexedDB from '../../util/IndexedDB.js';
-import pastegame from '../../game/chess/pastegame.js';
 import maskedDraw from '../../webgl/maskedDraw.js';
-import gameloader from '../../game/chess/gameloader.js';
 import enginepanel from './gui/guienginepanel.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../game/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
+import analysisloader from './analysisloader.js';
 
 // Elements ----------------------------------------------------------------------
 
@@ -70,7 +69,7 @@ async function loadInitialGame(): Promise<void> {
 		const state: { icn: string } = await response.json();
 		const longformOut = icnconverter.ShortToLong_Format(state.icn);
 		syncVariantSelect(longformOut.metadata.Variant);
-		await pastegame.pasteGame(longformOut, true);
+		await analysisloader.pasteGame(longformOut, true);
 	} catch (e) {
 		console.error('Failed to load game for analysis:', e);
 		toast.show('Failed to load the game. Starting a fresh board.', { error: true });
@@ -81,7 +80,7 @@ async function loadInitialGame(): Promise<void> {
 /** Loads a fresh board of the given variant. */
 function loadVariant(variant: VariantCode): void {
 	if (gameslot.getGamefile()) gamesession.unloadGame();
-	void gameloader.startLocalGame({ variant, timeControl: '-' });
+	analysisloader.startGame({ variant, timeControl: '-' });
 }
 
 /**

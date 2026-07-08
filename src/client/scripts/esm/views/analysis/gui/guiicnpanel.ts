@@ -13,9 +13,9 @@ import variantregistry from '../../../../../../shared/chess/variants/variantregi
 
 import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
-import pastegame from '../../../game/chess/pastegame.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
+import analysisloader from '../analysisloader.js';
 import gamecompressor from '../../../game/chess/gamecompressor.js';
 
 // Elements ------------------------------------------------------------------------
@@ -107,7 +107,7 @@ function importFromTextarea(): void {
 	element_VariantSelect.value = resolved ?? '';
 
 	element_Textarea.blur();
-	void pastegame.pasteGame(longformOut);
+	analysisloader.pasteGame(longformOut);
 }
 
 export default { init, getGameICN };

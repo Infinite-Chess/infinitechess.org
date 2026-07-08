@@ -10,6 +10,7 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import gamefileutility from '../../../../../shared/chess/util/gamefileutility.js';
 
 import area from '../rendering/area.js';
+import toast from '../../components/toast.js';
 import meshes from '../rendering/meshes.js';
 import gameslot from './gameslot.js';
 import boardpos from '../rendering/boardpos.js';
@@ -109,10 +110,10 @@ function centerView(): void {
 	boardpos.setBoardScale(centerArea.scale);
 }
 
-/** Logs a fatal error encountered while loading a game. */
+/** Toasts a fatal error encountered while loading a game. */
 function onCatchLoadingError(err: Error): void {
-	console.error(err);
-	// TODO: Implement user-facing error
+	console.error('Error loading game: ', err);
+	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
 }
 
 /** Concludes the game if it loaded already over. Call after the logical gamefile is fully loaded. */
