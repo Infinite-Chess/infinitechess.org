@@ -76,10 +76,6 @@ interface CevalLegalMovesUpdate {
 interface RefreshAnalysisOptions {
 	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
 	restartSearch?: boolean;
-	/** This refresh follows a freshly (re)spawned worker — a brand-new wasm engine, so
-	 *  iterative deepening restarts from depth 1 there even though the viewed position
-	 *  (and its cached depth) hasn't changed. */
-	freshWorker?: boolean;
 }
 
 // Constants ----------------------------------------------------------------------
@@ -93,10 +89,6 @@ const HASH_OPTIONS: number[] = [16, 32, 64];
 const MAX_MULTI_PV = 5;
 /** UI update throttle. */
 const THROTTLE_MS = 60;
-/**
- * How long to wait for the FIRST depth result before assuming the worker is stuck.
- */
-const FIRST_INFO_TIMEOUT_MS = 8000;
 /** Consecutive automatic worker respawns (with no successful search between) before giving up. */
 const MAX_ENGINE_RESTARTS = 3;
 
@@ -114,6 +106,11 @@ let config: { workerUrl: string } | undefined;
 
 let worker: Worker | undefined;
 let workerReady = false;
+/** A pre-warmed, already wasm-initialized worker sitting idle. */
+let spareWorker: Worker | undefined;
+let spareReady = false;
+/** Whether a search has been dispatched to the active worker and not yet finished ('done'). Drives the swap decision. */
+let searchInFlight = false;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
@@ -138,8 +135,6 @@ let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
 /** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
 let refreshQueued = false;
-/** Fires if the worker never reports back the first depth of the current search (worker crashed or hung). */
-let watchdogTimer: ReturnType<typeof setTimeout> | undefined;
 /** Consecutive fault recoveries since the last successful search progress; caps runaway respawn loops. */
 let engineRestartCount = 0;
 
@@ -201,25 +196,31 @@ function mateWinningChances(mate: number): number {
 
 // Worker lifecycle -----------------------------------------------------------------------
 
+/** Wires an active worker's responses into the main message + crash handlers. */
+function attachActiveWorkerHandlers(w: Worker): void {
+	w.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(e.data);
+	w.onerror = (e: ErrorEvent) => {
+		console.error('[ceval] Analysis worker crashed:', e.message);
+		handleWorkerFailure();
+	};
+}
+
 /** Spawns (or respawns) the analysis worker with the current settings. */
 function spawnWorker(): void {
 	if (!config) throw Error('ceval.init() must be called before enabling analysis.');
 	terminateWorker();
+	terminateSpare(); // A fresh active means fresh settings; any existing spare may be stale (e.g. old hash size).
 
 	workerReady = false;
 	notifyStatus();
 
 	worker = new Worker(config.workerUrl, { type: 'module' });
-	worker.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(e.data);
-	worker.onerror = (e: ErrorEvent) => {
-		console.error('[ceval] Analysis worker crashed:', e.message);
-		handleWorkerFailure();
-	};
+	attachActiveWorkerHandlers(worker);
 	send({ cmd: 'init', hashMb: settings.hashMb });
 }
 
 function terminateWorker(): void {
-	clearWatchdog();
+	searchInFlight = false;
 	worker?.terminate();
 	worker = undefined;
 	workerReady = false;
@@ -227,42 +228,65 @@ function terminateWorker(): void {
 	// via a forced refresh, so the on-screen eval shouldn't blank.
 }
 
-// Watchdog & fault recovery --------------------------------------------------------------
+// Spare worker (instant position-switch) -------------------------------------------------
+
+/** Warms a spare worker so a future position switch can promote it with zero init latency. No-op if one already exists or analysis is off. */
+function ensureSpare(): void {
+	if (spareWorker || !config || !enabled) return;
+	const w = new Worker(config.workerUrl, { type: 'module' });
+	spareReady = false;
+	// The spare only warms up — it's never sent a position, so it only needs to reach 'ready'.
+	w.onmessage = (e: MessageEvent<AnalysisResponse>) => {
+		if (spareWorker !== w) return; // Superseded; ignore late messages.
+		if (e.data.type === 'ready') spareReady = true;
+		else if (e.data.type === 'initerror') terminateSpare();
+	};
+	w.onerror = () => {
+		if (spareWorker === w) terminateSpare();
+	};
+	spareWorker = w;
+	w.postMessage({ cmd: 'init', hashMb: settings.hashMb } satisfies AnalysisCommand);
+}
+
+function terminateSpare(): void {
+	spareWorker?.terminate();
+	spareWorker = undefined;
+	spareReady = false;
+}
 
 /**
- * Arms the "first depth" watchdog for a freshly issued 'go'. Only guards the gap before
- * the FIRST 'info' of this search — once the worker has proven it's alive and searching
- * this position, later depths are free to take arbitrarily long (see {@link FIRST_INFO_TIMEOUT_MS}).
+ * Replaces the active worker with a fresh one for an instant position switch: kills the
+ * (possibly search-blocked) active worker and promotes the pre-warmed spare, then warms the
+ * next spare. Falls back to a plain respawn if no spare is ready yet (one-time init latency,
+ * still no multi-second hang). After this the caller must (re)issue the search — either
+ * directly if {@link workerReady}, or via the promoted worker's 'ready' handler if not.
  */
-function armWatchdog(): void {
-	clearWatchdog();
-	watchdogTimer = setTimeout(onWatchdogTimeout, FIRST_INFO_TIMEOUT_MS);
+function swapToFreshWorker(): void {
+	searchInFlight = false;
+	if (!spareWorker) {
+		spawnWorker(); // No warm spare available — fall back to a fresh spawn.
+		return;
+	}
+	worker?.terminate(); // Instantly kills the old (possibly blocked) search.
+	worker = spareWorker;
+	workerReady = spareReady;
+	spareWorker = undefined;
+	spareReady = false;
+	attachActiveWorkerHandlers(worker);
+	ensureSpare(); // Warm the next spare for the following switch.
+	notifyStatus();
 }
 
-function clearWatchdog(): void {
-	if (watchdogTimer === undefined) return;
-	clearTimeout(watchdogTimer);
-	watchdogTimer = undefined;
-}
-
-/** The worker never reported back the first depth of the current search — assume it's stuck. */
-function onWatchdogTimeout(): void {
-	watchdogTimer = undefined;
-	console.error(
-		`[ceval] Analysis worker reported nothing within ${FIRST_INFO_TIMEOUT_MS}ms of starting; assuming it hung.`,
-	);
-	recoverFromEngineFault();
-}
+// Fault recovery -------------------------------------------------------------------------
 
 /**
- * Recovers from a crashed/hung worker by respawning it fresh (a wasm panic poisons the
- * module, and a hang can't be interrupted in-thread — only a new Worker gets a clean wasm).
- * The respawn's 'ready' re-sends the current position. Gives up after {@link MAX_ENGINE_RESTARTS}
- * consecutive faults with no successful search between, to avoid an endless respawn loop on a
- * position that reliably crashes the engine.
+ * Recovers from a crashed worker by respawning it fresh (a wasm panic poisons the module,
+ * so only a new Worker gets a clean wasm instance). The respawn's 'ready' re-sends the
+ * current position. Gives up after {@link MAX_ENGINE_RESTARTS} consecutive faults with no
+ * successful search between, to avoid an endless respawn loop on a position that reliably
+ * crashes the engine.
  */
 function recoverFromEngineFault(): void {
-	clearWatchdog();
 	if (++engineRestartCount > MAX_ENGINE_RESTARTS) {
 		console.error('[ceval] Analysis engine faulted repeatedly; giving up.');
 		handleWorkerFailure();
@@ -275,6 +299,7 @@ function recoverFromEngineFault(): void {
 /** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
 function resetEngineSession(): void {
 	terminateWorker();
+	terminateSpare();
 	latestUpdate = undefined;
 	analyzed = undefined;
 	activeRequestId++;
@@ -305,6 +330,7 @@ function flushQueuedLegalMovesRequests(): void {
 
 function handleWorkerFailure(): void {
 	terminateWorker();
+	terminateSpare();
 	enabled = false;
 	queuedLegalMovesRequests.length = 0;
 	notifyStatus('failed');
@@ -317,23 +343,22 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			flushQueuedLegalMovesRequests();
 			// Flush the desired position now that the engine is up. This is always a brand-new
 			// wasm module, so even a same-position resend restarts iterative deepening from depth 1.
-			refreshAnalysis(true, { freshWorker: true });
+			refreshAnalysis(true);
+			ensureSpare(); // Warm a spare so the next position switch is instant.
 			notifyStatus();
 			break;
 		case 'initerror':
 			handleWorkerFailure();
 			break;
 		case 'info':
-			// The worker has proven it's alive and searching this position: disarm the
-			// watchdog for good (later depths legitimately take longer and longer, so
-			// there's nothing further to time-bound) and give it a fresh fault-retry budget.
+			// The worker has proven it's alive and searching this position: give it a
+			// fresh fault-retry budget.
 			engineRestartCount = 0;
-			clearWatchdog();
 			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
 			engineRestartCount = 0;
-			clearWatchdog(); // Search finished; no further messages expected until the next 'go'.
+			searchInFlight = false; // Worker is now idle (not blocked) — a new position can go straight to it.
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
 			break;
@@ -377,14 +402,6 @@ function getViewedPositionIcn(gamefile: GameFile): string {
 }
 
 /**
- * Re-points the engine at the currently viewed position and (re)starts the search.
- * @param force - Resend even if the position is unchanged (used for settings changes
- *   and toggling the engine on). A same-position resend keeps the currently-shown eval
- *   on screen (no blank) and preserves the engine's transposition table, so changing
- *   MultiPV / search time, or toggling the engine off then on, resumes instantly rather
- *   than resetting the analysis.
- */
-/**
  * Coalesces a burst of synchronous 'view-move' events into a single refresh that reads
  * the final resting position, so intermediate positions (e.g. those a branch passes
  * through) never trigger their own search restart.
@@ -398,6 +415,14 @@ function scheduleRefresh(): void {
 	});
 }
 
+/**
+ * Re-points the engine at the currently viewed position and (re)starts the search.
+ * @param force - Resend even if the position is unchanged (used for settings changes
+ *   and toggling the engine on). A same-position resend keeps the currently-shown eval
+ *   on screen (no blank) and preserves the engine's transposition table, so changing
+ *   MultiPV / search time, or toggling the engine off then on, resumes instantly rather
+ *   than resetting the analysis.
+ */
 function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): void {
 	if (!enabled) return;
 	// Note: only the logical gamefile is required — 'game-loaded' fires while
@@ -433,6 +458,16 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		emitNow(); // Show cached eval immediately, or clear when this position is new.
 	}
 
+	// If the active worker is mid-search on the previous position it may be blocked in an
+	// uninterruptible deep depth (single-threaded wasm). Rather than wait for it to unwind,
+	// swap to a pre-warmed spare so the new position starts instantly. Only when the position
+	// actually changed AND a search is in flight — a same-position resume ("go deeper") or an
+	// already-idle worker keeps its worker (and transposition table).
+	if (positionChanged && searchInFlight) {
+		swapToFreshWorker();
+		if (!workerReady) return; // Spare still warming; its 'ready' handler re-issues this refresh.
+	}
+
 	const moveIndex = gamefile.state.local.moveIndex;
 	const requestId = ++activeRequestId;
 	analyzed = {
@@ -453,9 +488,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		cmd: 'go',
 		opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth, requestId },
 	});
-	// Only arm the watchdog when this 'go' actually restarts iterative deepening from depth 1.
-	if (positionChanged || options.restartSearch || options.freshWorker) armWatchdog();
-	else clearWatchdog();
+	searchInFlight = true;
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
@@ -463,7 +496,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 
 function blockAnalysisForEngineWorldBorder(): void {
 	send({ cmd: 'stop' });
-	clearWatchdog();
+	searchInFlight = false;
 	blockedByEngineWorldBorder = true;
 	goDeeperActive = false;
 	analyzed = undefined;
@@ -492,7 +525,7 @@ function areAllLinesConclusive(lines: CevalLine[]): boolean {
 /** Stops the engine (keeps the worker warm). */
 function stopAnalysis(): void {
 	send({ cmd: 'stop' });
-	clearWatchdog();
+	searchInFlight = false;
 	notifyStatus();
 }
 
@@ -648,6 +681,7 @@ function setEnabled(value: boolean): void {
 	if (enabled) {
 		engineRestartCount = 0; // Fresh user intent to analyze — allow the full retry budget again.
 		if (!worker) spawnWorker();
+		else ensureSpare(); // Reusing a warm worker: no 'ready' will fire, so warm the spare here.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
