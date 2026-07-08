@@ -123,8 +123,8 @@ function concludeGameIfOver(): void {
 }
 
 function unloadLogicalAndRendering(): void {
-	gameslot.unloadGame();
 	perspective.disable();
+	gameslot.unloadGame();
 	boardpos.eraseMomentum();
 	Transition.terminate();
 }
