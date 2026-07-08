@@ -143,6 +143,11 @@ function syncPosition(): void {
 	reachedDepth = 0; // New position: iterative deepening restarts from depth 1.
 }
 
+/**
+ * Answers a one-shot `legalmoves` query: enumerates the legal moves for {@link icn}
+ * via a throwaway engine and posts them back as compact move tokens ("x,y>x,y").
+ * Independent of the ongoing search — used to drive the debug move overlay.
+ */
 function postLegalMoves(requestId: number, icn: string): void {
 	if (!wasmReady) {
 		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);

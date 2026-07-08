@@ -3,6 +3,7 @@
 // This module keeps track of the data of the engine game we are currently in.
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
@@ -237,9 +238,7 @@ function makeEngineMove(tokenMove: unknown): void {
 /**
  * Requests engine-generated legal moves for the currently viewed position.
  */
-function requestGeneratedMoves(
-	gamefile: NonNullable<ReturnType<typeof gameslot.getGamefile>>,
-): void {
+function requestGeneratedMoves(gamefile: GameFile): void {
 	// Compress the gamefile as a single position (not including future moves)
 	// This ensures the engine analyzes the currently viewed position
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);

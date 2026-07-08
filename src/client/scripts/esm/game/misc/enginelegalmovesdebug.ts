@@ -40,6 +40,7 @@ const legalMovesByPosition = new Map<string, string[]>();
 const requestKeyById = new Map<number, string>();
 const pendingRequestIds: number[] = [];
 
+/** Wires up the overlay's engine hooks and (once) its GameBus listeners. */
 function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	options = nextOptions;
 	if (initialized) return;
@@ -51,6 +52,7 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 	GameBus.addEventListener('game-unloaded', () => clear());
 }
 
+/** Toggles the overlay on/off, requesting moves when enabling and dropping pending requests when disabling. */
 function toggle(): void {
 	enabled = !enabled;
 	console.log(`Toggled engine move gen highlights: ${enabled}`);
@@ -64,6 +66,7 @@ function toggle(): void {
 	requestMovesForCurrentPosition();
 }
 
+/** Requests the engine's legal moves for the viewed position, skipping if already cached or in flight. */
 function requestMovesForCurrentPosition(): void {
 	if (!enabled || !options?.canRequest()) return;
 
@@ -84,6 +87,7 @@ function requestMovesForCurrentPosition(): void {
 	options.requestMoves(request);
 }
 
+/** Caches a request's returned moves against its position key and clears its pending state. */
 function receiveMoves(requestId: number, moves: string[]): void {
 	const key = requestKeyById.get(requestId);
 	if (!key) return;
@@ -93,17 +97,20 @@ function receiveMoves(requestId: number, moves: string[]): void {
 	frametracker.onVisualChange();
 }
 
+/** Assigns a response to the oldest outstanding request, for engines that reply in FIFO order without ids. */
 function receiveMovesForOldestRequest(moves: string[]): void {
 	const requestId = pendingRequestIds.shift();
 	if (requestId === undefined) return;
 	receiveMoves(requestId, moves);
 }
 
+/** Removes a request id from the pending queue. */
 function removePendingRequest(requestId: number): void {
 	const index = pendingRequestIds.indexOf(requestId);
 	if (index !== -1) pendingRequestIds.splice(index, 1);
 }
 
+/** Returns the compact ICN of the viewed position, used as the cache/request key. */
 function getPositionKey(gamefile: GameFile): string {
 	const longformIn = gamecompressor.compressGamefile(gamefile, true);
 	return icnconverter.LongToShort_Format(longformIn, {
@@ -116,6 +123,7 @@ function getPositionKey(gamefile: GameFile): string {
 	});
 }
 
+/** Renders the cached legal-move destinations for the viewed position as highlighted squares. */
 function render(): void {
 	if (!enabled) return;
 
@@ -139,6 +147,7 @@ function render(): void {
 	});
 }
 
+/** Parses the destination coords out of a compact move token ("from>to=promotion"), or undefined if malformed. */
 function getMoveDestination(move: string): Coords | undefined {
 	const to = move.split('>')[1]?.split('=')[0];
 	if (!to) return undefined;
@@ -149,6 +158,7 @@ function getMoveDestination(move: string): Coords | undefined {
 	}
 }
 
+/** Drops all cached moves and pending requests (on game unload). */
 function clear(): void {
 	legalMovesByPosition.clear();
 	requestKeyById.clear();

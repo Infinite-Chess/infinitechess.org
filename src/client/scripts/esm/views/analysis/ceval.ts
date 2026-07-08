@@ -202,6 +202,7 @@ function send(command: AnalysisCommand): void {
 	worker?.postMessage(command);
 }
 
+/** Sends any legal-move requests that were queued while the worker was still spinning up. */
 function flushQueuedLegalMovesRequests(): void {
 	if (!workerReady) return;
 	for (const request of queuedLegalMovesRequests.splice(0)) {
@@ -431,6 +432,7 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
+/** Requests the legal moves for {@link icn}, spawning/queuing if the worker isn't ready yet. */
 function requestLegalMoves(requestId: number, icn: string): void {
 	if (!worker) spawnWorker();
 	if (!workerReady) {
@@ -440,6 +442,7 @@ function requestLegalMoves(requestId: number, icn: string): void {
 	send({ cmd: 'legalmoves', requestId, icn });
 }
 
+/** Fans a legal-moves response from the worker out to all subscribers. */
 function receiveLegalMoves(update: CevalLegalMovesUpdate): void {
 	for (const listener of legalMovesListeners) listener(update);
 }
@@ -559,6 +562,7 @@ function onStatus(listener: (status: CevalStatus) => void): void {
 	statusListeners.add(listener);
 }
 
+/** Subscribes to legal-moves responses. */
 function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
 	legalMovesListeners.add(listener);
 }

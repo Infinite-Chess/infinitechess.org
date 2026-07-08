@@ -8,6 +8,7 @@
  */
 
 import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
@@ -284,7 +285,7 @@ function playLine(tokens: string[], untilIndex: number): void {
 }
 
 function branchFromViewedPosition(
-	gamefile: NonNullable<ReturnType<typeof gameslot.getGamefile>>,
+	gamefile: GameFile,
 	mesh: ReturnType<typeof gameslot.getMesh>,
 ): void {
 	const target = gamefile.state.local.moveIndex;
