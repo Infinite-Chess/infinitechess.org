@@ -175,9 +175,10 @@ function onEngineStatus(status: CevalStatus): void {
 		updateProgress(undefined);
 		toast.show('The analysis engine failed to load.', { error: true });
 	} else if (status === 'blocked') {
+		enginelegalmovesdebug.disable();
 		resetLineWindowState();
 		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Engine disabled: outside world border';
+		element_Stats.textContent = 'Outside world border';
 		element_GoDeeper.classList.add('hidden');
 		enginearrows.clearArrows();
 		renderLines([]);
@@ -250,7 +251,7 @@ function formatStats(update: CevalUpdate): string {
 }
 
 function updateProgress(update: CevalUpdate | undefined): void {
-	const active = ceval.isEnabled();
+	const active = ceval.isEnabled() && !ceval.isBlockedByEngineWorldBorder();
 	const computing = active && (!update || (!update.done && !update.terminal));
 	const targetDepth = update?.targetDepth ?? ceval.getSettings().depth;
 	const progress = update ? Math.min(update.depth / Math.max(targetDepth, 1), 1) : 0;
