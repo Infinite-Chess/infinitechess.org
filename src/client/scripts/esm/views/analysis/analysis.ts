@@ -202,6 +202,7 @@ function openContinueFromHereChoice(): void {
 	if (!position) return toast.show('Could not export this position.', { error: true });
 
 	element_ContinueChoiceMenu.classList.remove('hidden');
+	syncActionsToggle();
 }
 
 /**
@@ -220,19 +221,28 @@ async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
 
 function closeContinueFromHereChoice(): void {
 	element_ContinueChoiceMenu.classList.add('hidden');
+	syncActionsToggle();
 }
 
 function closeActionsMenu(): void {
 	element_ActionsMenu.classList.add('hidden');
-	element_ActionsButton.classList.remove('active');
-	element_ActionsButton.setAttribute('aria-expanded', 'false');
+	syncActionsToggle();
 }
 
 function toggleActionsMenu(): void {
 	const shouldOpen = element_ActionsMenu.classList.contains('hidden');
+	element_ContinueChoiceMenu.classList.add('hidden');
 	element_ActionsMenu.classList.toggle('hidden', !shouldOpen);
-	element_ActionsButton.classList.toggle('active', shouldOpen);
-	element_ActionsButton.setAttribute('aria-expanded', String(shouldOpen));
+	syncActionsToggle();
+}
+
+/** Keeps the toggle button's active state in sync with whether either menu is open. */
+function syncActionsToggle(): void {
+	const anyOpen =
+		!element_ActionsMenu.classList.contains('hidden') ||
+		!element_ContinueChoiceMenu.classList.contains('hidden');
+	element_ActionsButton.classList.toggle('active', anyOpen);
+	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
 }
 
 function swapPlayerBarNames(): void {
