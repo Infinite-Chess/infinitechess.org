@@ -308,6 +308,9 @@ function formatStats(update: CevalUpdate): string {
 	// Guard against a stale target briefly lagging the reached depth (e.g. right after
 	// "go deeper") — never show something like "15/13".
 	const depth = `Depth ${update.depth}/${Math.max(update.targetDepth, update.depth)}`;
+	// Only show speed while actually searching (like lichess): once finished nps is 0.
+	const searching = !update.done && !update.terminal;
+	if (!searching || update.nps <= 0) return depth;
 	const nps =
 		update.nps >= 1_000_000
 			? `${(update.nps / 1_000_000).toFixed(1)} Mn/s`
