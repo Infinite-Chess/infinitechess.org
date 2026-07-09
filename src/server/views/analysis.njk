@@ -214,7 +214,7 @@
 							<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="Analysis actions" aria-haspopup="menu" aria-expanded="false">
 								<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 							</button>
-							<div class="analysis-actions-menu hidden" id="analysis-actions-menu" role="menu">
+							<div class="analysis-menu hidden" id="analysis-actions-menu" role="menu">
 								<button type="button" id="btn-flip" role="menuitem">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
 									<span>Flip board</span>
@@ -226,6 +226,21 @@
 								<button type="button" id="btn-continue-from-here" role="menuitem">
 									<svg><use href="#svg-swords"/></svg>
 									<span>Continue from here</span>
+								</button>
+							</div>
+							{# Continue-from-here choice menu #}
+							<div class="analysis-menu hidden" id="continue-choice-menu" role="menu">
+								<button type="button" id="continue-public-seek" role="menuitem">
+									<svg><use href="#svg-globe"/></svg>
+									<span>{{ tsIndex.lobby_buttons.create_online }}</span>
+								</button>
+								<button type="button" id="continue-play-computer" role="menuitem">
+									<svg><use href="#svg-engine"/></svg>
+									<span>{{ tsIndex.lobby_buttons.play_computer }}</span>
+								</button>
+								<button type="button" id="continue-challenge-friend" role="menuitem">
+									<svg><use href="#svg-profile"/></svg>
+									<span>{{ tsIndex.lobby_buttons.challenge_friend }}</span>
 								</button>
 							</div>
 						</div>
@@ -285,20 +300,6 @@
 		</div>
 	</div>
 </main>
-
-<div id="continue-choice-overlay" class="continue-choice-overlay hidden">
-	<div class="continue-choice-dialog" role="dialog" aria-label="Continue from here">
-		<button class="continue-choice-close" id="continue-choice-close" aria-label="Close">
-			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-				<line x1="18" y1="6" x2="6" y2="18"/>
-				<line x1="6" y1="6" x2="18" y2="18"/>
-			</svg>
-		</button>
-		<button class="continue-choice-btn" id="continue-public-seek">{{ tsIndex.lobby_buttons.create_online }}</button>
-		<button class="continue-choice-btn" id="continue-play-computer">{{ tsIndex.lobby_buttons.play_computer }}</button>
-		<button class="continue-choice-btn" id="continue-challenge-friend">{{ tsIndex.lobby_buttons.challenge_friend }}</button>
-	</div>
-</div>
 {% endblock %}
 
 {% block script %}

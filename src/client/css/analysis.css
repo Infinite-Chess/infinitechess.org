@@ -254,12 +254,12 @@
 	background: var(--c-hover-overlay);
 }
 
-.analysis-actions-menu {
+.analysis-menu {
 	position: absolute;
 	right: 2px;
 	bottom: calc(100% + 5px);
 	z-index: 20;
-	width: 190px;
+	width: max-content;
 	overflow: hidden;
 	border: 1px solid var(--c-border);
 	border-radius: 4px;
@@ -268,7 +268,7 @@
 	color: var(--c-text);
 }
 
-.analysis-actions-menu button {
+.analysis-menu button {
 	display: flex;
 	align-items: center;
 	gap: 9px;
@@ -280,15 +280,16 @@
 	font: inherit;
 	font-size: 0.9em;
 	text-align: left;
+	white-space: nowrap;
 	cursor: pointer;
 }
 
-.analysis-actions-menu button:hover {
+.analysis-menu button:hover {
 	background: color-mix(in srgb, var(--c-accent, #6aa331) 22%, transparent);
 	color: var(--c-text-emphasis);
 }
 
-.analysis-actions-menu svg {
+.analysis-menu svg {
 	width: 18px;
 	height: 18px;
 	flex: 0 0 auto;
@@ -755,79 +756,4 @@
 	background:
 		linear-gradient(var(--c-hover-overlay), var(--c-hover-overlay)),
 		linear-gradient(180deg, var(--c-elev-face) 0%, var(--c-elev-face-2) 100%);
-}
-
-/* ============================
-   Continue from here chooser
-   ============================ */
-
-.continue-choice-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: 6;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgba(0, 0, 0, 0.5);
-}
-
-.continue-choice-overlay.hidden {
-	display: none;
-}
-
-.continue-choice-dialog {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	width: min(258px, calc(100vw - 32px));
-	padding: 26px 28px 28px;
-	border-radius: 6px;
-	background: var(--c-surface);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.continue-choice-close {
-	position: absolute;
-	top: -15px;
-	right: -15px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 30px;
-	height: 30px;
-	border-radius: 50%;
-	background: var(--c-surface);
-	color: var(--c-text-muted);
-	cursor: pointer;
-}
-
-.continue-choice-close:hover {
-	color: var(--c-text-emphasis);
-}
-
-.continue-choice-close svg {
-	width: 17px;
-	height: 17px;
-}
-
-.continue-choice-btn {
-	width: 100%;
-	padding: 11px 14px;
-	border: 1px solid color-mix(in srgb, #fff 26%, #2196f3);
-	border-radius: 5px;
-	background: #2196f3;
-	box-shadow:
-		inset 0 1px 0 rgb(255 255 255 / 28%),
-		0 1px 4px rgb(0 0 0 / 35%);
-	color: #fff;
-	font: inherit;
-	font-size: 14px;
-	font-weight: 700;
-	text-transform: uppercase;
-	cursor: pointer;
-}
-
-.continue-choice-btn:hover {
-	background: #2fa0ff;
 }

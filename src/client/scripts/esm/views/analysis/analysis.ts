@@ -48,10 +48,7 @@ const element_EditCurrent = document.getElementById('btn-edit-current') as HTMLB
 const element_ContinueFromHere = document.getElementById(
 	'btn-continue-from-here',
 ) as HTMLButtonElement;
-const element_ContinueChoiceModal = document.getElementById('continue-choice-overlay')!;
-const element_ContinueChoiceClose = document.getElementById(
-	'continue-choice-close',
-) as HTMLButtonElement;
+const element_ContinueChoiceMenu = document.getElementById('continue-choice-menu')!;
 const element_ContinuePublicSeek = document.getElementById(
 	'continue-public-seek',
 ) as HTMLButtonElement;
@@ -204,8 +201,7 @@ function openContinueFromHereChoice(): void {
 	const position = exportCurrentPosition();
 	if (!position) return toast.show('Could not export this position.', { error: true });
 
-	element_ContinueChoiceModal.classList.remove('hidden');
-	element_ContinueChoiceClose.focus();
+	element_ContinueChoiceMenu.classList.remove('hidden');
 }
 
 /**
@@ -223,7 +219,7 @@ async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
 }
 
 function closeContinueFromHereChoice(): void {
-	element_ContinueChoiceModal.classList.add('hidden');
+	element_ContinueChoiceMenu.classList.add('hidden');
 }
 
 function closeActionsMenu(): void {
@@ -297,9 +293,14 @@ function initListeners(): void {
 	});
 	document.addEventListener('pointerdown', (e) => {
 		if (!(e.target instanceof Node)) return;
-		if (element_ActionsButton.contains(e.target) || element_ActionsMenu.contains(e.target))
+		if (
+			element_ActionsButton.contains(e.target) ||
+			element_ActionsMenu.contains(e.target) ||
+			element_ContinueChoiceMenu.contains(e.target)
+		)
 			return;
 		closeActionsMenu();
+		closeContinueFromHereChoice();
 	});
 	element_Flip.addEventListener('click', () => {
 		flipBoard();
@@ -312,10 +313,6 @@ function initListeners(): void {
 	element_ContinueFromHere.addEventListener('click', () => {
 		closeActionsMenu();
 		openContinueFromHereChoice();
-	});
-	element_ContinueChoiceClose.addEventListener('click', closeContinueFromHereChoice);
-	element_ContinueChoiceModal.addEventListener('pointerdown', (e) => {
-		if (e.target === e.currentTarget) closeContinueFromHereChoice();
 	});
 	element_ContinuePublicSeek.addEventListener(
 		'click',
