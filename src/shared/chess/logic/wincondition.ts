@@ -13,7 +13,6 @@ import type { GameConclusion } from '../util/winconutil.js';
 
 import moveutil from '../util/moveutil.js';
 import boardutil from '../util/boardutil.js';
-import winconutil from '../util/winconutil.js';
 import boardchanges from './boardchanges.js';
 import gamefileutility from '../util/gamefileutility.js';
 import typeutil, { RawType } from '../util/typeutil.js';
@@ -34,8 +33,7 @@ const kothCenterSquares: Coords[] = [[4n, 4n], [5n, 4n], [4n, 5n], [5n, 5n]];
 function doGameOverChecks(gamefile: GameFile): void {
 	const conclusion = getGameConclusion(gamefile);
 	gamefile.gameConclusion = conclusion;
-	if (conclusion !== undefined && winconutil.isConclusionMoveTriggered(conclusion.condition))
-		moveutil.flagLastMoveAsMate(gamefile);
+	if (conclusion?.condition === 'checkmate') moveutil.flagLastMoveAsMate(gamefile);
 }
 
 /**
