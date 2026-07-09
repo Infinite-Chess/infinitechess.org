@@ -319,6 +319,15 @@ function openFromICN(): void {
 	element_icnInput.focus();
 }
 
+/** Programmatically selects Custom From-ICN, fills the input with the given ICN, and validates it. */
+function applyIcn(icn: string): void {
+	selection = { kind: 'icn' };
+	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
+	element_variantCustomSection.classList.remove('hidden');
+	element_icnInput.value = icn;
+	validateIcnInput();
+}
+
 // Variant selection ----------------------------------------------
 
 /** Updates the selected variant state and selector button, then closes all panels. */
@@ -561,4 +570,5 @@ export default {
 	initIcnValidation,
 	closeVariantDropdown,
 	getInviteVariant,
+	applyIcn,
 };

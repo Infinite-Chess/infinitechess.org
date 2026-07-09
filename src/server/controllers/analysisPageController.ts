@@ -20,8 +20,6 @@ interface AnalysisPageState {
 	gameId: string | null;
 	/** Variant dropdown contents, in display order. */
 	variantGroups: { name: string; variants: { code: string; name: string }[] }[];
-	/** Raw variant group data used by the shared game setup modal. */
-	modalVariantGroups: ReturnType<typeof variantregistry.getVariantGroupsWithVariants>;
 	/** Game metadata shown when analysis is opened for a saved/live game. */
 	meta?: GameMetaViewModel;
 }
@@ -55,7 +53,6 @@ export function getAnalysisPageState(req: Request): AnalysisPageState | undefine
 	return {
 		gameId,
 		variantGroups,
-		modalVariantGroups: variantregistry.getVariantGroupsWithVariants(),
 		...(meta && { meta }),
 	};
 }

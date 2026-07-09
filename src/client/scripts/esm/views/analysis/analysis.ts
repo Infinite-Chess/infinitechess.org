@@ -8,6 +8,7 @@
  * analysis-specific UI: variant picker, flip board, engine panel, and ICN panel.
  */
 
+import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EditorAutosaveState } from '../../game/editorstores/estoretypes.js';
@@ -32,8 +33,8 @@ import frametracker from '../../game/rendering/frametracker.js';
 import frameprofiler from '../../game/misc/frameprofiler.js';
 import analysisloader from './analysisloader.js';
 import gamecompressor from '../../game/chess/gamecompressor.js';
-import gameSetupModalUi from '../../components/gameSetupModal/gameSetupModalUi.js';
 import analysisworldborder from './analysisworldborder.js';
+import gameSetupModalHandoff from '../../components/gameSetupModalHandoff.js';
 
 // Elements ----------------------------------------------------------------------
 
@@ -51,20 +52,15 @@ const element_ContinueChoiceModal = document.getElementById('continue-choice-ove
 const element_ContinueChoiceClose = document.getElementById(
 	'continue-choice-close',
 ) as HTMLButtonElement;
+const element_ContinuePublicSeek = document.getElementById(
+	'continue-public-seek',
+) as HTMLButtonElement;
 const element_ContinuePlayComputer = document.getElementById(
 	'continue-play-computer',
 ) as HTMLButtonElement;
 const element_ContinueChallengeFriend = document.getElementById(
 	'continue-challenge-friend',
 ) as HTMLButtonElement;
-
-// Types -------------------------------------------------------------------------
-
-type ContinueMode = 'computer' | 'friend';
-
-// Variables ----------------------------------------------------------------------
-
-let currentContinueMode: ContinueMode = 'computer';
 
 // Functions ----------------------------------------------------------------------
 
@@ -212,15 +208,18 @@ function openContinueFromHereChoice(): void {
 	element_ContinueChoiceClose.focus();
 }
 
-function openContinueFromHereModal(mode: ContinueMode): void {
+/**
+ * Hands the current position off to the lobby's game setup modal and navigates there.
+ * The lobby auto-opens the modal in the given mode with the position pre-filled;
+ * any position errors surface there via the modal's own validation.
+ */
+async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
 	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
 	const position = exportCurrentPosition();
 	if (!position) return toast.show('Could not export this position.', { error: true });
 
-	currentContinueMode = mode;
-	gameSetupModalUi.setCustomIcn(position.icn);
-	closeContinueFromHereChoice();
-	gameSetupModalUi.open(mode);
+	await gameSetupModalHandoff.save({ icn: position.icn, mode });
+	window.location.assign('/');
 }
 
 function closeContinueFromHereChoice(): void {
@@ -278,8 +277,6 @@ function initListeners(): void {
 		IndexedDB.eraseExpiredItems();
 	});
 
-	gameSetupModalUi.init();
-
 	// Prevent clicking buttons from focusing them, keyboard controls interacting with them.
 	document.querySelectorAll<HTMLElement>('.btn-bare, .action-btn').forEach((btn) => {
 		btn.setAttribute('tabindex', '-1');
@@ -320,26 +317,24 @@ function initListeners(): void {
 	element_ContinueChoiceModal.addEventListener('pointerdown', (e) => {
 		if (e.target === e.currentTarget) closeContinueFromHereChoice();
 	});
-	element_ContinuePlayComputer.addEventListener('click', () =>
-		openContinueFromHereModal('computer'),
+	element_ContinuePublicSeek.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('online'),
 	);
-	element_ContinueChallengeFriend.addEventListener('click', () =>
-		openContinueFromHereModal('friend'),
+	element_ContinuePlayComputer.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('computer'),
 	);
-	gameSetupModalUi.getSubmitButton().addEventListener('click', () => {
-		if (!gameSetupModalUi.getPositionInput().value)
-			return toast.show('Could not export this position.', { error: true });
-		const label =
-			currentContinueMode === 'computer' ? 'Computer game flow' : 'Friend challenge flow';
-		toast.show(`${label} not implemented yet`, { error: true });
-	});
+	element_ContinueChallengeFriend.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('friend'),
+	);
 
 	// Keyboard shortcut: f = flip board (ignored while typing).
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') {
 			closeActionsMenu();
 			closeContinueFromHereChoice();
-			gameSetupModalUi.close();
 			return;
 		}
 		if (isTypingTarget(e.target)) return;

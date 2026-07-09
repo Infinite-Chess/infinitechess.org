@@ -4,7 +4,6 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
-<link rel="stylesheet" href="{{ manifest['css/gameSetupModal.css'] }}" />
 <link rel="stylesheet" href="{{ manifest['css/analysis.css'] }}" />
 {% endblock %}
 
@@ -16,16 +15,12 @@
 	gameId: {{ gameId | json | safe }},
 	workerUrl: "{{ manifest['scripts/esm/views/analysis/hydrochessanalysis.worker.ts'] }}"
 };</script>
-<script>window.t = Object.assign(window.t || {}, { index: {{ scriptT('index') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/user.njk" import usernameEmbed %}
-{% from "components/gameSetupModal.njk" import gameSetupModal %}
-{% set tIndex = templateT('index') %}
 {% set tsIndex = scriptT('index') %}
-{% set sShared = scriptT('shared') %}
 
 <main class="game analysis">
 
@@ -291,7 +286,6 @@
 	</div>
 </main>
 
-{{ gameSetupModal(tIndex, sShared, modalVariantGroups, "analysis-setup-modal") }}
 <div id="continue-choice-overlay" class="continue-choice-overlay hidden">
 	<div class="continue-choice-dialog" role="dialog" aria-label="Continue from here">
 		<button class="continue-choice-close" id="continue-choice-close" aria-label="Close">
@@ -300,6 +294,7 @@
 				<line x1="6" y1="6" x2="18" y2="18"/>
 			</svg>
 		</button>
+		<button class="continue-choice-btn" id="continue-public-seek">{{ tsIndex.lobby_buttons.create_online }}</button>
 		<button class="continue-choice-btn" id="continue-play-computer">{{ tsIndex.lobby_buttons.play_computer }}</button>
 		<button class="continue-choice-btn" id="continue-challenge-friend">{{ tsIndex.lobby_buttons.challenge_friend }}</button>
 	</div>

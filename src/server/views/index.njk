@@ -4,7 +4,6 @@
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/index.css'] }}" />
-<link rel="stylesheet" href="{{ manifest['css/gameSetupModal.css'] }}" />
 {% endblock %}
 
 {% block head %}
@@ -28,7 +27,6 @@
 {% set ts = scriptT('index') %}
 {# Shared codes-and-labels translations (variants, variant groups, speeds, etc.) #}
 {% set s = scriptT('shared') %}
-{% from "components/gameSetupModal.njk" import gameSetupModal %}
 
 {# ── Macros ───────────────────────────────────────────────────────────────── #}
 {% macro eyeIcon() %}<svg class="svg-eye preview"><use href="#svg-eye"></use></svg>{% endmacro %}
@@ -162,8 +160,6 @@
 {# ════════════════════════════════════════════════════════════════════════
    Game Options Modal
    ════════════════════════════════════════════════════════════════════════ #}
-{{ gameSetupModal(t, s, variantGroups) }}
-{% if false %}
 <div id="modal-overlay" class="modal-overlay hidden">
 	<div class="modal scrollbar-thin" role="dialog">
 
@@ -337,7 +333,6 @@
 
 	</div>{# .modal #}
 </div>{# #modal-overlay #}
-{% endif %}
 
 {% endblock %}
 
