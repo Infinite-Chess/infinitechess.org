@@ -6,6 +6,7 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
+import crossOriginIsolation from '../middleware/crossOriginIsolation.js';
 import { getGamePageState } from '../controllers/gamePageController.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
@@ -32,8 +33,8 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
  * context, before the route's own handler. Ensures auth doesn't run
  * on requests that merely pass through this catch-all ('/') mount.
  */
-function page(path: string, handler: RequestHandler): void {
-	router.get(path, resolveAuth, attachRenderContext, handler);
+function page(path: string, handler: RequestHandler, ...before: RequestHandler[]): void {
+	router.get(path, resolveAuth, attachRenderContext, ...before, handler);
 }
 
 /** Cache all variant groups and their variants. */
@@ -48,11 +49,15 @@ page('/game/:id', (req: Request, res: Response) => {
 	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
 	res.render('game.njk', state);
 });
-page('/analysis(.html)?/:id?', (req: Request, res: Response) => {
-	const state = getAnalysisPageState(req);
-	if (state === undefined) return send404(req, res); // Malformed or nonexistent id
-	res.render('analysis.njk', state);
-});
+page(
+	'/analysis(.html)?/:id?',
+	(req: Request, res: Response) => {
+		const state = getAnalysisPageState(req);
+		if (state === undefined) return send404(req, res); // Malformed or nonexistent id
+		res.render('analysis.njk', state);
+	},
+	crossOriginIsolation, // Cross-origin isolate so the multi-threaded engine's SharedArrayBuffer works.
+);
 page('/news(.html)?', (_req: Request, res: Response) => res.render('news.njk'));
 page('/leaderboard(.html)?', (_req: Request, res: Response) => res.render('leaderboard.njk'));
 page('/login(.html)?', (_req: Request, res: Response) => res.render('login.njk'));

@@ -43,8 +43,12 @@ const element_GaugeBlack = document.getElementById('gauge-black')!;
 
 const element_MultiPv = document.getElementById('setting-multipv') as HTMLInputElement;
 const element_MultiPvValue = document.getElementById('setting-multipv-value')!;
-const element_Hash = document.getElementById('setting-hash') as HTMLSelectElement;
-const element_Depth = document.getElementById('setting-depth') as HTMLSelectElement;
+const element_Threads = document.getElementById('setting-threads') as HTMLInputElement;
+const element_ThreadsValue = document.getElementById('setting-threads-value')!;
+const element_Hash = document.getElementById('setting-hash') as HTMLInputElement;
+const element_HashValue = document.getElementById('setting-hash-value')!;
+const element_Depth = document.getElementById('setting-depth') as HTMLInputElement;
+const element_DepthValue = document.getElementById('setting-depth-value')!;
 
 // Constants ----------------------------------------------------------------------
 
@@ -115,8 +119,38 @@ function initSettingsUI(): void {
 	element_MultiPv.value = String(settings.multiPv);
 	element_MultiPvValue.textContent = String(settings.multiPv);
 
-	element_Hash.value = String(settings.hashMb);
+	// Threads: 1..maxThreads, direct value.
+	element_Threads.value = String(settings.threads);
+	element_ThreadsValue.textContent = String(settings.threads);
+	applyThreadsCap();
+
+	// Hash: index slider over its option array (Memory doubles each step).
+	element_Hash.max = String(ceval.HASH_OPTIONS.length - 1);
+	element_Hash.value = String(Math.max(0, ceval.HASH_OPTIONS.indexOf(settings.hashMb)));
+	element_HashValue.textContent = `${settings.hashMb} MB`;
+
+	// Depth: direct value, step 1.
+	element_Depth.min = String(ceval.MIN_DEPTH);
+	element_Depth.max = String(ceval.MAX_DEPTH);
 	element_Depth.value = String(settings.depth);
+	element_DepthValue.textContent = String(settings.depth);
+}
+
+/** Enables the threads slider up to {@link ceval.maxThreads}, or locks it to 1 (disabled)
+ * when Lazy SMP is unavailable (non-isolated browser or single-threaded engine build). */
+function applyThreadsCap(): void {
+	const cap = ceval.maxThreads();
+	element_Threads.max = String(cap);
+	if (cap <= 1) {
+		element_Threads.value = '1';
+		element_Threads.disabled = true;
+		element_ThreadsValue.textContent = '1';
+		element_Threads.title =
+			'Multithreading unavailable (needs a cross-origin-isolated browser and a threaded engine build).';
+	} else {
+		element_Threads.disabled = false;
+		element_Threads.title = '';
+	}
 }
 
 function initListeners(): void {
@@ -130,6 +164,7 @@ function initListeners(): void {
 
 	window.addEventListener('resize', syncSettingsOverlayPosition);
 
+	// 'input' updates the live label as the slider drags; 'change' commits to the engine on release.
 	element_MultiPv.addEventListener('input', () => {
 		element_MultiPvValue.textContent = element_MultiPv.value;
 	});
@@ -137,10 +172,24 @@ function initListeners(): void {
 		ceval.updateSettings({ multiPv: Number(element_MultiPv.value) });
 	});
 
-	element_Hash.addEventListener('change', () => {
-		ceval.updateSettings({ hashMb: Number(element_Hash.value) });
+	element_Threads.addEventListener('input', () => {
+		element_ThreadsValue.textContent = element_Threads.value;
+	});
+	element_Threads.addEventListener('change', () => {
+		ceval.updateSettings({ threads: Number(element_Threads.value) });
 	});
 
+	const hashMbFor = (): number => ceval.HASH_OPTIONS[Number(element_Hash.value)]!;
+	element_Hash.addEventListener('input', () => {
+		element_HashValue.textContent = `${hashMbFor()} MB`;
+	});
+	element_Hash.addEventListener('change', () => {
+		ceval.updateSettings({ hashMb: hashMbFor() });
+	});
+
+	element_Depth.addEventListener('input', () => {
+		element_DepthValue.textContent = element_Depth.value;
+	});
 	element_Depth.addEventListener('change', () => {
 		ceval.updateSettings({ depth: Number(element_Depth.value) });
 	});
@@ -167,6 +216,7 @@ function syncSettingsOverlayPosition(): void {
 // Engine output rendering ------------------------------------------------------------
 
 function onEngineStatus(status: CevalStatus): void {
+	applyThreadsCap(); // Re-evaluate: the engine's threading capability arrives with its status.
 	if (status === 'loading') {
 		element_Stats.textContent = 'Loading engine…';
 		updateProgress(ceval.getLatestUpdate());

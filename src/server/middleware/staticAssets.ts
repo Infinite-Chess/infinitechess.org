@@ -17,6 +17,10 @@ const staticAssets = express.Router();
 staticAssets.use(
 	express.static(path.join(__dirname, '../../client'), {
 		setHeaders(res, filePath) {
+			// A worker created from the cross-origin-isolated analysis page (SharedArrayBuffer /
+			// multithreaded engine) only initializes if its script response carries a matching
+			// COEP header. Harmless on everything else, so set it on all assets, like lichess.
+			res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
 			if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
 				// All JS and CSS files are content-hashed by esbuild (e.g. index-D3TD6A64.js).
 				// The hash changes when content changes, so cached URLs never go stale.

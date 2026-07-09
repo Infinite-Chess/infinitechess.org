@@ -8,6 +8,9 @@ import helmet from 'helmet';
  * Its main job is mitigating XSS: an injected or inline script from a non-allowlisted source won't run.
  */
 const contentSecurityPolicy = helmet({
+	// Dev-only: no HSTS, or the browser pins localhost to https and breaks plain-http dev
+	// access (secureRedirect sends the production HSTS header with preload itself).
+	strictTransportSecurity: process.env['NODE_ENV'] === 'production',
 	contentSecurityPolicy: {
 		directives: {
 			defaultSrc: ["'self'"],
@@ -19,6 +22,9 @@ const contentSecurityPolicy = helmet({
 				'https://challenges.cloudflare.com', // Cloudflare Turnstile (register page human-check)
 			], // Allows inline scripts
 			scriptSrcAttr: ["'self'", "'unsafe-inline'"], // Allows inline event handlers
+			// blob: lets the multi-threaded analysis engine spawn its Lazy SMP sub-workers
+			// (wasm-bindgen-rayon self-spawns each thread from a blob of its own script).
+			workerSrc: ["'self'", 'blob:'],
 			objectSrc: ["'none'"],
 			frameSrc: ["'self'", 'https://www.youtube.com', 'https://challenges.cloudflare.com'],
 			imgSrc: ["'self'", 'data:', 'https://avatars.githubusercontent.com', 'blob:'],

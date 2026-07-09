@@ -32,7 +32,34 @@ const releaseDataSchema = z.object({
 	),
 });
 
+/** Web-served copy of the engine pkg (dist/client is the web root, so this serves at /engine/). */
+const ENGINE_DIST_DIR = path.join(process.cwd(), 'dist', 'client', 'engine');
+
 // Functions -------------------------------------------------------------------
+
+/**
+ * Copies the engine pkg (wasm-bindgen glue JS, the .wasm, and the wasm-bindgen-rayon
+ * `snippets/`) into dist/client/engine so the analysis worker can import the glue UNBUNDLED
+ * at runtime. That's required for the multithreaded build: the rayon helper resolves its
+ * sibling files and self-spawns threads via the glue's own `import.meta.url`, which only
+ * works when those files are actually served (bundling them into the worker breaks it).
+ */
+export function copyEngineToDist(): void {
+	const pkgDir = path.join(HYDROCHESS_WASM_DIR, 'pkg');
+	if (!fs.existsSync(path.join(pkgDir, 'hydrochess_wasm.js'))) {
+		console.warn('[hydrochess] Engine pkg not found; skipping dist/engine copy.');
+		return;
+	}
+	fs.mkdirSync(ENGINE_DIST_DIR, { recursive: true });
+	for (const file of ['hydrochess_wasm.js', 'hydrochess_wasm_bg.wasm']) {
+		fs.copyFileSync(path.join(pkgDir, file), path.join(ENGINE_DIST_DIR, file));
+	}
+	const snippets = path.join(pkgDir, 'snippets');
+	if (fs.existsSync(snippets)) {
+		fs.cpSync(snippets, path.join(ENGINE_DIST_DIR, 'snippets'), { recursive: true });
+	}
+	console.log('[hydrochess] Copied engine pkg to dist/client/engine.');
+}
 
 /**
  * Ensures the HydroChess WASM engine is available and up-to-date.

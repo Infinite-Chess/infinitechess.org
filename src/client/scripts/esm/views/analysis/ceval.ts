@@ -33,6 +33,8 @@ interface CevalSettings {
 	hashMb: number;
 	/** Target search depth; the analysis stops here until "go deeper" is pressed. */
 	depth: number;
+	/** Lazy SMP search threads (1 = single-threaded). */
+	threads: number;
 }
 
 /** A PV line normalized for the UI. */
@@ -82,10 +84,10 @@ interface RefreshAnalysisOptions {
 
 // Constants ----------------------------------------------------------------------
 
-/** Target-depth choices for the settings dropdown. */
-const DEPTH_OPTIONS: number[] = [8, 10, 12, 13, 14, 16, 18, 20, 25, 30];
 /** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
 const MAX_DEPTH = 64;
+/** Lowest selectable target depth. */
+const MIN_DEPTH = 1;
 /** Hash size choices in MB (engine caps its TT at 64MB). */
 const HASH_OPTIONS: number[] = [16, 32, 64];
 const MAX_MULTI_PV = 5;
@@ -93,12 +95,44 @@ const MAX_MULTI_PV = 5;
 const THROTTLE_MS = 60;
 /** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
 const CRASHES_BEFORE_GIVING_UP = 2;
+/** Hard cap on Lazy SMP threads: the engine's analysis path uses at most 4. */
+const THREAD_CAP = 4;
+
+/**
+ * Whether this browser can run WebAssembly threads: needs cross-origin isolation (COOP+COEP)
+ * for a shared-memory SharedArrayBuffer. Same feature detection Stockfish/lichess use.
+ */
+const BROWSER_SUPPORTS_THREADS: boolean = (() => {
+	try {
+		// crossOriginIsolated gates SharedArrayBuffer in every modern browser.
+		if (!globalThis.crossOriginIsolated) return false;
+		if (typeof SharedArrayBuffer !== 'function' || typeof Atomics !== 'object') return false;
+		if (typeof WebAssembly !== 'object') return false;
+		const mem = new WebAssembly.Memory({ shared: true, initial: 1, maximum: 2 });
+		return mem.buffer instanceof SharedArrayBuffer;
+	} catch {
+		return false;
+	}
+})();
+
+/** Whether the served engine build supports Lazy SMP (a single-threaded build exports no
+ * `initThreadPool`). The worker reports it on load; assume true until then. */
+let engineSupportsThreads = true;
+
+/** Most threads the user can pick: {@link THREAD_CAP} when threading is usable, else 1 (locked). */
+function maxThreads(): number {
+	if (!BROWSER_SUPPORTS_THREADS || !engineSupportsThreads) return 1;
+	return Math.min(THREAD_CAP, Math.max(1, navigator.hardwareConcurrency || 2));
+}
+
+const DEFAULT_THREADS = maxThreads();
 
 const STORAGE_PREFIX = 'ceval.';
 const DEFAULT_SETTINGS: CevalSettings = {
 	multiPv: 1,
 	hashMb: 16,
 	depth: 13,
+	threads: DEFAULT_THREADS,
 };
 
 // State ----------------------------------------------------------------------------
@@ -106,13 +140,18 @@ const DEFAULT_SETTINGS: CevalSettings = {
 /** Set once by {@link init} with the page-provided worker URL. */
 let config: { workerUrl: string } | undefined;
 
+/** The persistent search worker. Kept alive across position switches so its transposition table stays warm. */
 let worker: Worker | undefined;
 let workerReady = false;
-/** A pre-warmed, already wasm-initialized worker sitting idle. */
-let spareWorker: Worker | undefined;
-let spareReady = false;
-/** Whether a search has been dispatched to the active worker and not yet finished ('done'). Drives the swap decision. */
-let searchInFlight = false;
+/** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
+let legalWorker: Worker | undefined;
+let legalReady = false;
+/**
+ * View over the search worker's shared wasm memory + the byte offset of its stop flag. Writing
+ * a 1 there aborts the in-flight search within a node batch — instant position switch, warm hash.
+ */
+let stopFlags: Uint8Array | undefined;
+let stopFlagPtr = 0;
 
 let enabled = false;
 let settings: CevalSettings = loadSettings();
@@ -137,6 +176,8 @@ let blockedByEngineWorldBorder = false;
 
 let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
+/** When the last update was emitted (drives the leading-edge throttle in {@link scheduleEmit}). */
+let lastEmitMs = 0;
 /** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
 let refreshQueued = false;
 /** The ICN of the position the most recent crash happened on, and how many times it's crashed. */
@@ -168,7 +209,8 @@ function loadSettings(): CevalSettings {
 	// Sanitize against the allowed ranges.
 	loaded.multiPv = Math.min(Math.max(1, loaded.multiPv), MAX_MULTI_PV);
 	if (!HASH_OPTIONS.includes(loaded.hashMb)) loaded.hashMb = DEFAULT_SETTINGS.hashMb;
-	if (!DEPTH_OPTIONS.includes(loaded.depth)) loaded.depth = DEFAULT_SETTINGS.depth;
+	loaded.depth = Math.min(Math.max(MIN_DEPTH, Math.round(loaded.depth)), MAX_DEPTH);
+	loaded.threads = Math.min(Math.max(1, Math.round(loaded.threads)), maxThreads());
 	return loaded;
 }
 
@@ -209,50 +251,57 @@ function mateWinningChances(mate: number): number {
 function attachActiveWorkerHandlers(w: Worker): void {
 	w.onmessage = (e: MessageEvent<AnalysisResponse>) => handleWorkerMessage(e.data);
 	w.onerror = (e: ErrorEvent) => {
-		console.error('[ceval] Analysis worker crashed:', e.message);
+		console.error(
+			`[ceval] Analysis worker crashed: ${e.message || '(no message)'} @ ${e.filename}:${e.lineno}:${e.colno}`,
+			e.error,
+		);
 		handleWorkerFailure();
 	};
 }
 
-/** Spawns (or respawns) the analysis worker with the current settings. */
+/** Spawns (or respawns) the search worker with the current settings and Lazy SMP thread count. */
 function spawnWorker(): void {
 	if (!config) throw Error('ceval.init() must be called before enabling analysis.');
 	terminateWorker();
-	terminateSpare(); // A fresh active means fresh settings; any existing spare may be stale (e.g. old hash size).
 
 	workerReady = false;
 	notifyStatus();
 
 	worker = new Worker(config.workerUrl, { type: 'module' });
 	attachActiveWorkerHandlers(worker);
-	send({ cmd: 'init', hashMb: settings.hashMb });
+	send({ cmd: 'init', hashMb: settings.hashMb, threads: settings.threads });
 }
 
 function terminateWorker(): void {
-	searchInFlight = false;
 	worker?.terminate();
 	worker = undefined;
 	workerReady = false;
+	stopFlags = undefined; // Points into the terminated worker's memory; the respawn posts a fresh one.
 	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
 	// via a forced refresh, so the on-screen eval shouldn't blank.
 }
 
-// Spare worker (instant position-switch) -------------------------------------------------
+/** Aborts the search worker's in-flight slice instantly (the search polls this shared flag every node batch). */
+function interruptSearch(): void {
+	if (stopFlags) stopFlags[stopFlagPtr] = 1;
+}
 
-/** Warms an idle spare worker for an instant position switch and legal-moves queries. */
-function ensureSpare(): void {
-	if (spareWorker || !config) return;
+// Legal-moves helper worker --------------------------------------------------------------
+
+/** Warms the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
+function ensureLegalWorker(): void {
+	if (legalWorker || !config) return;
 	const w = new Worker(config.workerUrl, { type: 'module' });
-	spareReady = false;
+	legalReady = false;
 	w.onmessage = (e: MessageEvent<AnalysisResponse>) => {
-		if (spareWorker !== w) return; // Superseded; ignore late messages.
+		if (legalWorker !== w) return; // Superseded; ignore late messages.
 		switch (e.data.type) {
 			case 'ready':
-				spareReady = true;
+				legalReady = true;
 				flushQueuedLegalMovesRequests();
 				break;
 			case 'initerror':
-				terminateSpare();
+				terminateLegalWorker();
 				break;
 			case 'legalmoves':
 				receiveLegalMoves(e.data);
@@ -260,33 +309,16 @@ function ensureSpare(): void {
 		}
 	};
 	w.onerror = () => {
-		if (spareWorker === w) terminateSpare();
+		if (legalWorker === w) terminateLegalWorker();
 	};
-	spareWorker = w;
+	legalWorker = w;
 	w.postMessage({ cmd: 'init', hashMb: settings.hashMb } satisfies AnalysisCommand);
 }
 
-function terminateSpare(): void {
-	spareWorker?.terminate();
-	spareWorker = undefined;
-	spareReady = false;
-}
-
-/** Kills the (possibly blocked) active worker and promotes the warm spare, for an instant position switch. */
-function swapToFreshWorker(): void {
-	searchInFlight = false;
-	if (!spareWorker) {
-		spawnWorker(); // No warm spare available — fall back to a fresh spawn.
-		return;
-	}
-	worker?.terminate(); // Instantly kills the old (possibly blocked) search.
-	worker = spareWorker;
-	workerReady = spareReady;
-	spareWorker = undefined;
-	spareReady = false;
-	attachActiveWorkerHandlers(worker);
-	ensureSpare(); // Warm the next spare for the following switch.
-	notifyStatus();
+function terminateLegalWorker(): void {
+	legalWorker?.terminate();
+	legalWorker = undefined;
+	legalReady = false;
 }
 
 // Fault recovery -------------------------------------------------------------------------
@@ -319,7 +351,7 @@ function recoverFromEngineFault(): void {
 /** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
 function resetEngineSession(): void {
 	terminateWorker();
-	terminateSpare();
+	terminateLegalWorker();
 	latestUpdate = undefined;
 	analyzed = undefined;
 	activeRequestId++;
@@ -343,11 +375,11 @@ function send(command: AnalysisCommand): void {
 	worker?.postMessage(command);
 }
 
-/** Sends any legal-move requests that were queued while the spare was still spinning up. */
+/** Sends any legal-move requests that were queued while the helper worker was still spinning up. */
 function flushQueuedLegalMovesRequests(): void {
-	if (!spareReady || !spareWorker) return;
+	if (!legalReady || !legalWorker) return;
 	for (const request of queuedLegalMovesRequests.splice(0)) {
-		spareWorker.postMessage({
+		legalWorker.postMessage({
 			cmd: 'legalmoves',
 			requestId: request.requestId,
 			icn: request.icn,
@@ -357,7 +389,7 @@ function flushQueuedLegalMovesRequests(): void {
 
 function handleWorkerFailure(): void {
 	terminateWorker();
-	terminateSpare();
+	terminateLegalWorker();
 	enabled = false;
 	queuedLegalMovesRequests.length = 0;
 	notifyStatus('failed');
@@ -367,12 +399,24 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 	switch (msg.type) {
 		case 'ready':
 			workerReady = true;
+			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
+			if (!msg.mt && engineSupportsThreads) {
+				engineSupportsThreads = false;
+				if (settings.threads > 1) {
+					settings = { ...settings, threads: 1 };
+					persistSettings();
+				}
+			}
 			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
-			ensureSpare();
+			ensureLegalWorker();
 			notifyStatus();
 			break;
 		case 'initerror':
 			handleWorkerFailure();
+			break;
+		case 'sharedmem':
+			stopFlags = new Uint8Array(msg.buffer);
+			stopFlagPtr = msg.stopFlagPtr;
 			break;
 		case 'info':
 			// NOTE: deliberately does NOT reset the crash counter — a crash can arrive after
@@ -380,7 +424,6 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
-			searchInFlight = false; // Worker is now idle (not blocked) — a new position can go straight to it.
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
 			break;
@@ -465,7 +508,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	// This position crashed the engine twice — never send it again (that just re-crashes the worker).
 	onCrashedPosition = icn === crashedIcn;
 	if (onCrashedPosition) {
-		searchInFlight = false;
+		interruptSearch();
 		latestUpdate = undefined;
 		lastAnalyzedIcn = icn;
 		emitNow();
@@ -481,21 +524,44 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		// re-search fresh rather than showing a short list until the engine catches up.
 		if ((positionCache.get(icn)?.multiPv ?? Infinity) < settings.multiPv)
 			positionCache.delete(icn);
-		const cached = positionCache.get(icn);
 		// "Go deeper" is a one-shot for the position it was pressed on; any new position
 		// (cycling moves or making one) reverts to the default target depth.
 		goDeeperActive = false;
-		currentTargetDepth = settings.depth;
 		allowDepthRegressionForCurrentSearch = false;
+	}
+
+	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
+	const cached = positionCache.get(icn);
+
+	if (positionChanged) {
 		latestUpdate = cached ? retargetCachedUpdate(cached) : undefined;
 		emitNow(); // Show cached eval immediately, or clear when this position is new.
 	}
 
-	// A new position while the worker may be mid-search: swap to a warm spare instead of waiting.
-	if (positionChanged && searchInFlight) {
-		swapToFreshWorker();
-		if (!workerReady) return; // Spare still warming; its 'ready' handler re-issues this refresh.
+	// The cache already reached the current target depth (and has enough lines): show it and skip
+	// a fresh cold search entirely, like lichess's doStart early-return. Only "go deeper" (which
+	// raises the target to MAX_DEPTH) or a not-yet-finished cache falls through to a real search.
+	if (
+		cached &&
+		cached.multiPv >= settings.multiPv &&
+		(cached.terminal || cached.depth >= currentTargetDepth)
+	) {
+		interruptSearch(); // Abort any prior slice instantly; keep the worker (and its warm hash).
+		send({ cmd: 'stop' });
+		activeRequestId++; // Drop any tail info from that stopped search.
+		analyzed = undefined;
+		latestUpdate = retargetCachedUpdate(cached);
+		emitNow();
+		lastAnalyzedIcn = icn;
+		notifyStatus();
+		return;
 	}
+
+	// ALWAYS interrupt before sending: the worker's search call is unbounded (unsliced), so
+	// queued commands are only processed once the shared stop flag aborts the in-flight call
+	// (within a node batch). The worker keeps its warm transposition table either way, so
+	// re-reaching the prior depth after a position switch is near-instant.
+	interruptSearch();
 
 	const moveIndex = gamefile.state.local.moveIndex;
 	const requestId = ++activeRequestId;
@@ -506,7 +572,6 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex),
 		multiPv: settings.multiPv,
 	};
-	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
 
 	send({
 		cmd: 'position',
@@ -518,15 +583,14 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		cmd: 'go',
 		opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth, requestId },
 	});
-	searchInFlight = true;
 	lastAnalyzedIcn = icn;
 	nextPositionIsNewGame = false;
 	notifyStatus();
 }
 
 function blockAnalysisForEngineWorldBorder(): void {
+	interruptSearch();
 	send({ cmd: 'stop' });
-	searchInFlight = false;
 	blockedByEngineWorldBorder = true;
 	goDeeperActive = false;
 	analyzed = undefined;
@@ -554,8 +618,8 @@ function areAllLinesConclusive(lines: CevalLine[]): boolean {
 
 /** Stops the engine (keeps the worker warm). */
 function stopAnalysis(): void {
+	interruptSearch();
 	send({ cmd: 'stop' });
-	searchInFlight = false;
 	notifyStatus();
 }
 
@@ -629,9 +693,15 @@ function shouldReplaceCachedUpdate(cached: CevalUpdate | undefined, update: Ceva
 	return update.lines.length >= cached.lines.length;
 }
 
+/**
+ * Leading-edge throttle: emit immediately when the last emit is older than {@link THROTTLE_MS}
+ * (so the first depth of a new search shows instantly, and background tabs — where page timers
+ * are heavily throttled — still display progress), else trail with a timer.
+ */
 function scheduleEmit(): void {
-	if (throttleTimer !== undefined) return;
-	throttleTimer = setTimeout(emitNow, THROTTLE_MS);
+	const elapsed = Date.now() - lastEmitMs;
+	if (elapsed >= THROTTLE_MS) return emitNow();
+	if (throttleTimer === undefined) throttleTimer = setTimeout(emitNow, THROTTLE_MS - elapsed);
 }
 
 function emitNow(): void {
@@ -639,6 +709,7 @@ function emitNow(): void {
 		clearTimeout(throttleTimer);
 		throttleTimer = undefined;
 	}
+	lastEmitMs = Date.now();
 	for (const listener of updateListeners) listener(latestUpdate);
 }
 
@@ -655,15 +726,15 @@ function reemitCurrent(): void {
 	emitNow();
 }
 
-/** Requests the legal moves for {@link icn} from the spare (idle, unlike a search-busy active worker). */
+/** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
 function requestLegalMoves(requestId: number, icn: string): void {
 	if (blockedByEngineWorldBorder) return;
-	ensureSpare();
-	if (!spareReady || !spareWorker) {
+	ensureLegalWorker();
+	if (!legalReady || !legalWorker) {
 		queuedLegalMovesRequests.push({ requestId, icn });
 		return;
 	}
-	spareWorker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
+	legalWorker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
 }
 
 /** Fans a legal-moves response from the worker out to all subscribers. */
@@ -711,7 +782,7 @@ function setEnabled(value: boolean): void {
 	enabled = value;
 	if (enabled) {
 		if (!worker) spawnWorker();
-		else ensureSpare(); // Reusing a warm worker: no 'ready' will fire, so warm the spare here.
+		else ensureLegalWorker(); // Reusing a warm worker: no 'ready' will fire, so warm the helper here.
 		refreshAnalysis(true);
 		// Show the retained eval right away (refreshAnalysis only blanks it when the
 		// position changed while the engine was off) instead of a gap until the resume.
@@ -735,13 +806,14 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 	const previous = settings;
 	settings = { ...settings, ...partial };
 	settings.multiPv = Math.min(Math.max(1, settings.multiPv), MAX_MULTI_PV);
+	settings.threads = Math.min(Math.max(1, settings.threads), maxThreads());
 	persistSettings();
 
 	if (!enabled || !worker) return;
 	// Changing the target depth clears "go deeper" so the new depth setting takes over.
 	if (partial.depth !== undefined) goDeeperActive = false;
-	if (settings.hashMb !== previous.hashMb) {
-		spawnWorker(); // 'ready' handler re-issues the search with the new hash size.
+	if (settings.hashMb !== previous.hashMb || settings.threads !== previous.threads) {
+		spawnWorker(); // Hash size & thread pool are fixed per worker; 'ready' re-issues the search.
 	} else {
 		// Reflect a MultiPV change on screen at once (trim/keep lines) before the engine
 		// re-runs, so it isn't stuck showing the old line count until the next update.
@@ -811,10 +883,11 @@ export default {
 	onUpdate,
 	onStatus,
 	onLegalMoves,
-	DEPTH_OPTIONS,
 	MAX_DEPTH,
+	MIN_DEPTH,
 	HASH_OPTIONS,
 	MAX_MULTI_PV,
+	maxThreads,
 };
 
 export type { CevalSettings, CevalLine, CevalUpdate, CevalStatus, CevalLegalMovesUpdate };

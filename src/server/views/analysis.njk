@@ -174,33 +174,27 @@
 							</button>
 						</div>
 						<div class="engine-settings moves-engine-settings hidden" id="engine-settings">
+							{# All sliders. multipv/threads/depth are direct-value; hash is an index
+							   slider (JS maps the index to the real MB value). #}
 							<div class="setting-row">
 								<label for="setting-multipv">Multiple lines</label>
 								<input type="range" id="setting-multipv" min="1" max="5" step="1"/>
 								<span class="setting-value" id="setting-multipv-value">1</span>
 							</div>
 							<div class="setting-row">
+								<label for="setting-threads">Threads</label>
+								<input type="range" id="setting-threads" min="1" step="1"/>
+								<span class="setting-value" id="setting-threads-value">1</span>
+							</div>
+							<div class="setting-row">
 								<label for="setting-hash">Memory</label>
-								<select id="setting-hash">
-									<option value="16">16 MB</option>
-									<option value="32">32 MB</option>
-									<option value="64">64 MB</option>
-								</select>
+								<input type="range" id="setting-hash" min="0" step="1"/>
+								<span class="setting-value" id="setting-hash-value">16 MB</span>
 							</div>
 							<div class="setting-row">
 								<label for="setting-depth">Depth</label>
-								<select id="setting-depth">
-									<option value="8">8</option>
-									<option value="10">10</option>
-									<option value="12">12</option>
-									<option value="13">13</option>
-									<option value="14">14</option>
-									<option value="16">16</option>
-									<option value="18">18</option>
-									<option value="20">20</option>
-									<option value="25">25</option>
-									<option value="30">30</option>
-								</select>
+								<input type="range" id="setting-depth" min="1" max="64" step="1"/>
+								<span class="setting-value" id="setting-depth-value">13</span>
 							</div>
 						</div>
 						<div class="engine-lines" id="engine-lines"></div>

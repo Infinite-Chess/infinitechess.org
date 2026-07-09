@@ -11,7 +11,7 @@
 import { setupEnv } from './env';
 import { buildClient } from './client';
 import { buildServer } from './server';
-import { setupEngineWasm } from './engine-wasm';
+import { setupEngineWasm, copyEngineToDist } from './engine-wasm';
 
 import 'dotenv/config'; // Imports all properties of process.env, if it exists
 
@@ -34,5 +34,8 @@ await setupEngineWasm();
 // Build both client and server scripts
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
+
+// Serve the engine pkg unbundled (dist/client exists now) so the worker imports the glue at runtime.
+copyEngineToDist();
 
 // console.log('Build process finished.');
