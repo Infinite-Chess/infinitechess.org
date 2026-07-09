@@ -55,6 +55,8 @@ interface CevalUpdate {
 	nps: number;
 	hashfull: number;
 	lines: CevalLine[];
+	/** The MultiPV count this search was run at (lets a cache hit tell if it holds fewer lines than now wanted). */
+	multiPv: number;
 	/** The depth this analysis is running to (the setting, or {@link MAX_DEPTH} when going deeper). */
 	targetDepth: number;
 	/** The move index this analysis belongs to (gamefile.state.local.moveIndex). */
@@ -120,7 +122,9 @@ let lastAnalyzedIcn: string | undefined;
 /** Whether the next position command should reset the engine's search state. */
 let nextPositionIsNewGame = true;
 /** Snapshot of the analyzed position (for POV + staleness checks). */
-let analyzed: { requestId: number; icn: string; moveIndex: number; turn: number } | undefined;
+let analyzed:
+	| { requestId: number; icn: string; moveIndex: number; turn: number; multiPv: number }
+	| undefined;
 let activeRequestId = 0;
 /** Whether "go deeper" is active for the current position (search to {@link MAX_DEPTH}). */
 let goDeeperActive = false;
@@ -439,6 +443,10 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	if (!force && !positionChanged) return;
 
 	if (positionChanged) {
+		// A cache from a lower MultiPV has too few lines for the current setting — drop it and
+		// re-search fresh rather than showing a short list until the engine catches up.
+		if ((positionCache.get(icn)?.multiPv ?? Infinity) < settings.multiPv)
+			positionCache.delete(icn);
 		const cached = positionCache.get(icn);
 		engineRestartCount = 0; // New position gets a fresh fault-retry budget (a same-position respawn is a forced, non-changed refresh, so it keeps accumulating).
 		// "Go deeper" is a one-shot for the position it was pressed on; any new position
@@ -463,6 +471,7 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		icn,
 		moveIndex,
 		turn: moveutil.getWhosTurnAtMoveIndex(gamefile, moveIndex),
+		multiPv: settings.multiPv,
 	};
 	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
 
@@ -496,13 +505,13 @@ function blockAnalysisForEngineWorldBorder(): void {
 }
 
 function retargetCachedUpdate(update: CevalUpdate): CevalUpdate {
+	// Cache held more lines than now wanted (MultiPV was lowered): trim the extras off the end.
+	const lines = update.lines.slice(0, settings.multiPv);
 	return {
 		...update,
+		lines,
 		targetDepth: currentTargetDepth,
-		done:
-			update.terminal ||
-			update.depth >= currentTargetDepth ||
-			areAllLinesConclusive(update.lines),
+		done: update.terminal || update.depth >= currentTargetDepth || areAllLinesConclusive(lines),
 	};
 }
 
@@ -560,6 +569,7 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 		nps: info.nps,
 		hashfull: info.hashfull,
 		lines,
+		multiPv: analyzed.multiPv,
 		targetDepth: currentTargetDepth,
 		moveIndex: analyzed.moveIndex,
 		done,
