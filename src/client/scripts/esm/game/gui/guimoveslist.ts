@@ -543,7 +543,7 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 			}),
 		);
 	if (parent)
-		menu.append(createContextAction('Delete from here', () => deleteAnalysisNode(node), true));
+		menu.append(createContextAction('Delete from here', () => deleteAnalysisNode(node)));
 
 	document.body.append(menu);
 	contextMenu = menu;
@@ -555,14 +555,9 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	}, 0);
 }
 
-function createContextAction(
-	label: string,
-	onClick: () => void,
-	danger = false,
-): HTMLButtonElement {
+function createContextAction(label: string, onClick: () => void): HTMLButtonElement {
 	const button = document.createElement('button');
 	button.type = 'button';
-	button.className = danger ? 'danger' : '';
 	button.textContent = label;
 	button.addEventListener('click', (e) => {
 		e.stopPropagation();

@@ -614,12 +614,8 @@
 }
 
 .analysis-context-menu button:hover {
-	background: color-mix(in srgb, var(--c-accent, #3b82f6) 22%, transparent);
+	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
-}
-
-.analysis-context-menu button.danger:hover {
-	background: color-mix(in srgb, var(--c-error, #e5534b) 28%, transparent);
 }
 
 /* ============================
