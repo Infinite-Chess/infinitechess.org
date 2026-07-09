@@ -275,6 +275,13 @@ function renderLines(lines: CevalLine[]): void {
 	element_Lines.replaceChildren();
 	if (lines.length === 0) resetLineWindowState();
 
+	// Reserve the configured MultiPV row count (only while the engine is on) so the panel
+	// height doesn't change as the search collapses/expands lines — see the CSS.
+	element_Lines.style.setProperty(
+		'--pv-rows',
+		String(ceval.isEnabled() ? ceval.getSettings().multiPv : 0),
+	);
+
 	const rerender = (): void => renderLines(lines);
 
 	lines.forEach((line, rank) => {

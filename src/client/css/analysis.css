@@ -377,7 +377,10 @@
 .engine-lines {
 	display: flex;
 	flex-direction: column;
-	min-height: 0;
+	--engine-line-h: 26px;
+	/* Reserve --pv-rows (set by renderLines) rows so the panel height stays constant as the
+	   search collapses/expands lines — otherwise the flex-adjacent move list resizes & scroll-snaps. */
+	min-height: calc(var(--pv-rows, 0) * var(--engine-line-h));
 }
 
 .engine-lines:not(:empty) {
@@ -388,6 +391,7 @@
 	display: flex;
 	align-items: baseline;
 	gap: 8px;
+	height: var(--engine-line-h);
 	padding: 4px 8px;
 	font-size: 0.85em;
 	border-bottom: 1px solid color-mix(in srgb, var(--c-border-muted) 50%, transparent);
