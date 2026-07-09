@@ -58,6 +58,8 @@ const lineWindowOffsets = new Map<number, number>();
 const lastSeenLineMoves = new Map<number, string[]>();
 /** The moveIndex the above per-rank state belongs to. */
 let lineWindowStateMoveIndex: number | undefined;
+/** Whether the "report this bug" crash toast has already been shown this session (show it once). */
+let crashToastShown = false;
 
 // Functions -----------------------------------------------------------------------
 
@@ -184,6 +186,19 @@ function onEngineStatus(status: CevalStatus): void {
 		renderLines([]);
 		updateGauge(undefined);
 		updateProgress(undefined);
+	} else if (status === 'crashed') {
+		resetLineWindowState();
+		element_Eval.textContent = '-';
+		element_Stats.textContent = 'Analysis crashed';
+		element_GoDeeper.classList.add('hidden');
+		enginearrows.clearArrows();
+		renderLines([]);
+		updateGauge(undefined);
+		updateProgress(undefined);
+		if (!crashToastShown) {
+			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore
+			crashToastShown = true;
+		}
 	}
 }
 

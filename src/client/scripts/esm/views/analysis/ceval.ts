@@ -67,8 +67,8 @@ interface CevalUpdate {
 	terminal: boolean;
 }
 
-/** Engine lifecycle status, for the UI status row. */
-type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'blocked';
+/** Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the engine. */
+type CevalStatus = 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'blocked' | 'crashed';
 
 interface CevalLegalMovesUpdate {
 	requestId: number;
@@ -91,8 +91,8 @@ const HASH_OPTIONS: number[] = [16, 32, 64];
 const MAX_MULTI_PV = 5;
 /** UI update throttle. */
 const THROTTLE_MS = 60;
-/** Consecutive automatic worker respawns (with no successful search between) before giving up. */
-const MAX_ENGINE_RESTARTS = 3;
+/** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
+const CRASHES_BEFORE_GIVING_UP = 2;
 
 const STORAGE_PREFIX = 'ceval.';
 const DEFAULT_SETTINGS: CevalSettings = {
@@ -139,8 +139,13 @@ let latestUpdate: CevalUpdate | undefined;
 let throttleTimer: ReturnType<typeof setTimeout> | undefined;
 /** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
 let refreshQueued = false;
-/** Consecutive fault recoveries since the last successful search progress; caps runaway respawn loops. */
-let engineRestartCount = 0;
+/** The ICN of the position the most recent crash happened on, and how many times it's crashed. */
+let lastCrashIcn: string | undefined;
+let lastCrashCount = 0;
+/** A position (ICN) that has crashed the engine too many times — we stop feeding it to the worker entirely. */
+let crashedIcn: string | undefined;
+/** Whether the currently-viewed position is the crashed one (drives the 'crashed' status). */
+let onCrashedPosition = false;
 
 /** Per-page-session cache of every viewed position's deepest local analysis. */
 const positionCache = new Map<string, CevalUpdate>();
@@ -286,15 +291,29 @@ function swapToFreshWorker(): void {
 
 // Fault recovery -------------------------------------------------------------------------
 
-/** Respawns the worker fresh after a crash; gives up after {@link MAX_ENGINE_RESTARTS} in a row. */
+/**
+ * Handles a worker crash. Counts crashes per position by ICN — NOT reset by search progress,
+ * since a crash can arrive after several depths stream in. Once the same position has crashed
+ * {@link CRASHES_BEFORE_GIVING_UP} times, flags it un-analyzable so we stop feeding it in and
+ * looping. The respawn still happens so other positions keep working.
+ */
 function recoverFromEngineFault(): void {
-	if (++engineRestartCount > MAX_ENGINE_RESTARTS) {
-		console.error('[ceval] Analysis engine faulted repeatedly; giving up.');
-		handleWorkerFailure();
-		return;
+	const icn = analyzed?.icn ?? lastAnalyzedIcn;
+	if (icn !== undefined && icn === lastCrashIcn) lastCrashCount++;
+	else {
+		lastCrashIcn = icn;
+		lastCrashCount = 1;
 	}
-	console.warn(`[ceval] Restarting analysis worker (attempt ${engineRestartCount}).`);
-	restartWorkerForSearch();
+
+	if (lastCrashCount >= CRASHES_BEFORE_GIVING_UP) {
+		console.error(
+			'[ceval] Analysis engine crashed repeatedly on this position; giving up on it.',
+		);
+		crashedIcn = icn;
+	} else {
+		console.warn(`[ceval] Analysis worker crashed; restarting (crash ${lastCrashCount}).`);
+	}
+	restartWorkerForSearch(); // A fresh worker either retries (under the limit) or stays warm for OTHER positions.
 }
 
 /** Fully clears engine runtime state that cannot safely cross game/variant boundaries. */
@@ -310,7 +329,10 @@ function resetEngineSession(): void {
 	currentTargetDepth = settings.depth;
 	allowDepthRegressionForCurrentSearch = false;
 	blockedByEngineWorldBorder = false;
-	engineRestartCount = 0;
+	lastCrashIcn = undefined;
+	lastCrashCount = 0;
+	crashedIcn = undefined;
+	onCrashedPosition = false;
 	positionCache.clear();
 	queuedLegalMovesRequests.length = 0;
 	emitNow();
@@ -353,11 +375,11 @@ function handleWorkerMessage(msg: AnalysisResponse): void {
 			handleWorkerFailure();
 			break;
 		case 'info':
-			engineRestartCount = 0; // Proven alive — fresh fault-retry budget.
+			// NOTE: deliberately does NOT reset the crash counter — a crash can arrive after
+			// several depths stream in, so progress must not clear the per-position count.
 			receiveInfo(msg.requestId, msg.info, false);
 			break;
 		case 'done':
-			engineRestartCount = 0;
 			searchInFlight = false; // Worker is now idle (not blocked) — a new position can go straight to it.
 			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
 			notifyStatus();
@@ -439,6 +461,18 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 	if (!worker || !workerReady) return;
 
 	const icn = getViewedPositionIcn(gamefile);
+
+	// This position crashed the engine twice — never send it again (that just re-crashes the worker).
+	onCrashedPosition = icn === crashedIcn;
+	if (onCrashedPosition) {
+		searchInFlight = false;
+		latestUpdate = undefined;
+		lastAnalyzedIcn = icn;
+		emitNow();
+		notifyStatus();
+		return;
+	}
+
 	const positionChanged = icn !== lastAnalyzedIcn;
 	if (!force && !positionChanged) return;
 
@@ -448,7 +482,6 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 		if ((positionCache.get(icn)?.multiPv ?? Infinity) < settings.multiPv)
 			positionCache.delete(icn);
 		const cached = positionCache.get(icn);
-		engineRestartCount = 0; // New position gets a fresh fault-retry budget (a same-position respawn is a forced, non-changed refresh, so it keeps accumulating).
 		// "Go deeper" is a one-shot for the position it was pressed on; any new position
 		// (cycling moves or making one) reverts to the default target depth.
 		goDeeperActive = false;
@@ -677,7 +710,6 @@ function setEnabled(value: boolean): void {
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {
-		engineRestartCount = 0; // Fresh user intent to analyze — allow the full retry budget again.
 		if (!worker) spawnWorker();
 		else ensureSpare(); // Reusing a warm worker: no 'ready' will fire, so warm the spare here.
 		refreshAnalysis(true);
@@ -743,6 +775,7 @@ function getLatestUpdate(): CevalUpdate | undefined {
 
 function getStatus(): CevalStatus {
 	if (!enabled) return 'off';
+	if (onCrashedPosition) return 'crashed';
 	if (blockedByEngineWorldBorder) return 'blocked';
 	if (!worker || !workerReady) return 'loading';
 	if (latestUpdate?.done) return 'idle';
