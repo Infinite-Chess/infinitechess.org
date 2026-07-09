@@ -196,9 +196,10 @@ function postLegalMoves(requestId: number, icn: string): void {
 }
 
 /**
- * The ongoing analysis loop: each engine call searches for up to {@link SLICE_MS}, streaming
- * every completed depth, then yields so queued stop/position/go commands are honored. The
- * page's shared stop flag can also abort a slice mid-depth for an instant position switch.
+ * The ongoing analysis loop: each engine call runs unbounded ({@link SLICE_MS} = 0) toward the
+ * target depth, streaming every completed depth, and returns on completion or when the page
+ * writes the shared stop flag. The loop then yields so queued stop/position/go commands are
+ * honored before it finishes or re-searches the new desired position.
  */
 async function runLoop(): Promise<void> {
 	if (loopRunning) return;
@@ -210,9 +211,9 @@ async function runLoop(): Promise<void> {
 			const opts = goOptions;
 			const requestId = opts.requestId;
 
-			// One time-sliced call: resume at the next depth and search toward the target,
-			// completing as many whole depths as fit in SLICE_MS. Each depth streams via
-			// the callback as it finishes.
+			// One unbounded call: resume at the next depth and search toward the target,
+			// streaming each completed depth via the callback. It returns on completion or
+			// when the page writes the shared stop flag.
 			const startDepth = Math.min(reachedDepth + 1, opts.maxDepth);
 
 			const summary: AnalysisInfo | null = engine.analyse(
