@@ -146,18 +146,18 @@ function initVariantGroupDropdown(): void {
 
 /** Wires blur/focus/input/paste listeners to keep the ICN validation state in sync. */
 function initIcnValidation(): void {
-	element_icnInput.addEventListener('blur', validateIcnInput);
+	element_icnInput.addEventListener('blur', () => validateIcnInput(true));
 	element_icnInput.addEventListener('focus', () => {
 		element_icnInputWrap.classList.remove('invalid');
 		element_icnErrorText.textContent = '';
 	});
-	element_icnInput.addEventListener('input', () => {
-		setIcnResult(null);
-	});
-	// Instantly validate input when a code is pasted, don't wait for blur.
+	// Validate live so the submit button enables the moment the position is valid,
+	// but suppress error display until blur so we don't nag as the user types.
+	element_icnInput.addEventListener('input', () => validateIcnInput(false));
+	// Instantly reveal validity when a code is pasted, don't wait for blur.
 	element_icnInput.addEventListener('paste', () => {
 		// Pasted value isn't in the textarea until after the paste event, so defer by one tick.
-		setTimeout(() => validateIcnInput(), 0);
+		setTimeout(() => validateIcnInput(true), 0);
 	});
 }
 
@@ -325,7 +325,7 @@ function applyIcn(icn: string): void {
 	applyCustomToSelector(element_btnCustomFromICNName.textContent!);
 	element_variantCustomSection.classList.remove('hidden');
 	element_icnInput.value = icn;
-	validateIcnInput();
+	validateIcnInput(true);
 }
 
 // Variant selection ----------------------------------------------
@@ -445,8 +445,13 @@ function clearSavedPositionError(): void {
 	element_icnErrorText.textContent = '';
 }
 
-/** Validates the current ICN textarea value, updates the invalid style, and stores resolved VariantOptions. */
-function validateIcnInput(): void {
+/**
+ * Validates the current ICN textarea value and stores the resolved VariantOptions,
+ * syncing the submit button's enabled state.
+ * @param revealErrors - Whether to surface invalid styling/error text. False while typing
+ * (validity still updates the submit button); true on blur/paste so errors show once done.
+ */
+function validateIcnInput(revealErrors: boolean): void {
 	const value = element_icnInput.value;
 	if (value === '') {
 		element_icnInputWrap.classList.remove('invalid');
@@ -465,17 +470,21 @@ function validateIcnInput(): void {
 		});
 		const illegalReason = validatePosition(icnVariantOptions, value);
 		if (illegalReason !== null) {
-			element_icnInputWrap.classList.add('invalid');
-			element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+			if (revealErrors) {
+				element_icnInputWrap.classList.add('invalid');
+				element_icnErrorText.textContent = t.shared.position_errors[illegalReason];
+			}
 			setIcnResult({ options: icnVariantOptions, isValid: false });
 		} else {
 			element_icnErrorText.textContent = '';
 			setIcnResult({ options: icnVariantOptions, isValid: true });
 		}
 	} catch (e) {
-		element_icnInputWrap.classList.add('invalid');
-		element_icnErrorText.textContent = '';
-		console.error('Illegal position:', e instanceof Error ? e.message : e);
+		if (revealErrors) {
+			element_icnInputWrap.classList.add('invalid');
+			// Only log on reveal so we don't spam the console on every keystroke of an in-progress ICN.
+			console.error('Illegal position:', e instanceof Error ? e.message : e);
+		}
 		setIcnResult(null);
 	}
 }
@@ -491,7 +500,7 @@ async function handleDisplayPreviewHover(anchor: HTMLElement): Promise<void> {
 	} else if (selection.kind === 'local') {
 		handleSavePreview(anchor, selection.name, localPreviewCache, editorpositionsdb.readLocal);
 	} else if (selection.kind === 'icn') {
-		validateIcnInput();
+		validateIcnInput(true);
 		if (icnResult !== null)
 			variantPreviewTooltip.showForPosition(
 				anchor,
