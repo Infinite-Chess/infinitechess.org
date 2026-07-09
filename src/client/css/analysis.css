@@ -285,7 +285,7 @@
 }
 
 .analysis-menu button:hover {
-	background: color-mix(in srgb, var(--c-accent, #6aa331) 22%, transparent);
+	background: var(--c-hover-overlay);
 	color: var(--c-text-emphasis);
 }
 
