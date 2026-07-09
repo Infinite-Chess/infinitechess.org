@@ -19,7 +19,7 @@ import { rateLimit } from './rateLimit.js';
 import webhooksRouter from '../routes/webhooks.js';
 import requestParsers from './requestParsers.js';
 import { rootRouter } from '../routes/root.js';
-import noStoreRenderedHtml from './noStoreRenderedHtml.js';
+import htmlCacheControl from './htmlCacheControl.js';
 import { assignRequestID } from './requestContext.js';
 
 /**
@@ -33,8 +33,8 @@ export function configurePipeline(app: Express): void {
 	// Log all incoming requests
 	app.use(reqLogger);
 
-	// Ensure every HTML page rendered by SSR is not stored by browser caches.
-	app.use(noStoreRenderedHtml);
+	// Ensure every SSR HTML page is revalidated before reuse (never served stale).
+	app.use(htmlCacheControl);
 
 	// Rate limit all incoming requests
 	app.use(rateLimit);
