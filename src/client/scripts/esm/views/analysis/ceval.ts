@@ -824,6 +824,17 @@ function updateSettings(partial: Partial<CevalSettings>): void {
 			// Same position, new search params: keep the current eval visible while the
 			// worker picks up the new target.
 			refreshAnalysis(true, { restartSearch: partial.multiPv !== undefined });
+			// Raising the depth after the search already finished must visibly resume: reflect
+			// the new target and "searching" state now (refreshAnalysis has re-issued the 'go'),
+			// so the stats/progress leave "done" instead of waiting on the first deeper info.
+			if (
+				partial.depth !== undefined &&
+				latestUpdate?.done &&
+				latestUpdate.depth < currentTargetDepth
+			) {
+				latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
+				emitNow();
+			}
 		}
 	}
 }
