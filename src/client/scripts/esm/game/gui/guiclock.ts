@@ -97,7 +97,7 @@ function set(basegame: GameFile): void {
 	const topPlayer = bottomPlayer === p.WHITE ? p.BLACK : p.WHITE;
 	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
-	updateTempo(basegame); // Highlight whoever's turn it is, even in untimed games.
+	if (gamesession.getGameType() !== 'analysis') updateTempo(basegame); // Highlight whoever's turn it is, even in untimed games.
 	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 }
@@ -136,7 +136,6 @@ function showViewedMoveClockStamps(basegame: GameFile): void {
 	}
 
 	updateTextContent({ startTime: basegame.clocks.startTime, currentTime });
-	updateTempo(basegame);
 }
 
 /** Highlights the bar of the player whose turn it is via `.tempo`. */
