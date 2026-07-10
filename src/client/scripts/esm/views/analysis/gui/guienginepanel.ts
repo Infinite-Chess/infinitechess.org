@@ -277,7 +277,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (update.terminal) {
 		element_Eval.textContent = '-';
-		element_Stats.textContent = 'Game over at this position';
+		element_Stats.textContent = 'Game Over';
 		enginearrows.clearArrows();
 		renderLines([]);
 		updateGauge(undefined);

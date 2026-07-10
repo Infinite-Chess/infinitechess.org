@@ -67,9 +67,12 @@ function commitMove(
 	if (doGameOverChecks) {
 		wincondition.doGameOverChecks(gamefile);
 		// Only conclude the game if it's not an online game (in that scenario, server is boss)
-		if (gamefileutility.isGameOver(gamefile) && gamesession.getGameType() !== 'online') {
-			const playSound = gamesession.getGameType() !== 'analysis';
-			gameslot.concludeGame(playSound);
+		if (
+			gamefileutility.isGameOver(gamefile) &&
+			gamesession.getGameType() !== 'online' &&
+			gamesession.getGameType() !== 'analysis'
+		) {
+			gameslot.concludeGame();
 		}
 	}
 
