@@ -232,17 +232,12 @@ function cpWinningChances(cp: number): number {
 	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
 }
 
-/** Maps a white-POV centipawn score to a win probability in [-1, 1] without clamping. */
-function cpWinningChancesNoClamp(cp: number): number {
-	return 2 / (1 + Math.exp(-0.003 * cp)) - 1;
-}
-
-/** Maps a white-POV mate distance (full moves) to a win probability in [-1, 1]. */
+/**
+ * A white-POV forced mate maps to a full win probability (±1),
+ * filling the gauge completely with the winner's color.
+ */
 function mateWinningChances(mate: number): number {
-	// Use cp equivalent for ~99% win chance at mate in 1
-	const cp = (25 - Math.min(10, Math.abs(mate))) * 75;
-	const signed = cp * (mate > 0 ? 1 : -1);
-	return cpWinningChancesNoClamp(signed);
+	return mate > 0 ? 1 : -1;
 }
 
 // Worker lifecycle -----------------------------------------------------------------------
