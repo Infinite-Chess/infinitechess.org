@@ -30,7 +30,7 @@ import frametracker from '../rendering/frametracker.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../chess/gamecore.js';
 import { createRenderQueue } from '../../util/renderqueue.js';
-import analysismovetree, { AnalysisMoveNode } from '../../views/analysis/movetree.js';
+import movetree, { AnalysisMoveNode } from '../../views/analysis/movetree.js';
 
 // Elements ----------------------------------------------------------------------------------
 
@@ -324,7 +324,7 @@ async function createVariationPlyButton(
 		if (gamesession.isLoading()) return;
 
 		const gamefile = gameslot.getGamefile()!;
-		const wasAlreadySelected = analysismovetree.getCurrentNode(gamefile) === node;
+		const wasAlreadySelected = movetree.getCurrentNode(gamefile) === node;
 		navigateToAnalysisNode(gamefile, node);
 		if (wasAlreadySelected) zoomToPlyDestination(gamefile, node.ply);
 	});
@@ -340,14 +340,14 @@ function formatMoveIndex(index: number): string {
 
 async function reconcileAnalysisMovesTable(): Promise<void> {
 	const gamefile = gameslot.getGamefile()!;
-	if (!analysismovetree.isReady()) analysismovetree.initFromGame(gamefile);
-	analysismovetree.syncAfterMovesChanged(gamefile);
+	if (!movetree.isReady()) movetree.initFromGame(gamefile);
+	movetree.syncAfterMovesChanged(gamefile);
 
 	clearRenderedMoves();
 
 	const tree = document.createElement('div');
 	tree.className = 'analysis-move-tree';
-	const root = analysismovetree.getRoot()!;
+	const root = movetree.getRoot()!;
 
 	await appendAnalysisMainline(tree, root);
 
@@ -513,25 +513,25 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	menu.append(title);
 
 	const parent = node.parent;
-	const isMainline = analysismovetree.isMainLine(node);
+	const isMainline = movetree.isMainLine(node);
 	if (parent && parent.children[0] !== node)
 		menu.append(
 			createContextAction('Promote variation', () => {
-				analysismovetree.promoteAtFork(node);
+				movetree.promoteAtFork(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
 	if (!isMainline)
 		menu.append(
 			createContextAction('Make main line', () => {
-				analysismovetree.makeMainLine(node);
+				movetree.makeMainLine(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
 	if (parent && parent.children[0] === node && !node.forceVariation)
 		menu.append(
 			createContextAction('Force variation', () => {
-				analysismovetree.forceVariation(node);
+				movetree.forceVariation(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
@@ -578,10 +578,10 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 
-	const current = analysismovetree.getCurrentNode(gamefile);
-	const viewingDeleted = current !== undefined && analysismovetree.isInSubtree(node, current);
+	const current = movetree.getCurrentNode(gamefile);
+	const viewingDeleted = current !== undefined && movetree.isInSubtree(node, current);
 
-	const parent = analysismovetree.deleteNode(node);
+	const parent = movetree.deleteNode(node);
 	if (!parent) return; // Can't delete the root.
 
 	if (viewingDeleted) {
@@ -590,7 +590,7 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 		// Stay on the current move; just resync the flat list to the (possibly rerouted)
 		// active line and re-render the tree. The viewed position — and its analysis — is
 		// unchanged, so we leave the engine and board where they are.
-		gamefile.moves = analysismovetree.getMovesFromLine(analysismovetree.getActiveLine());
+		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
 		updateNavButtons();
 		enqueueRender(reconcileAnalysisMovesTable);
 	}
@@ -651,7 +651,7 @@ function updateCurrentPly(): void {
 
 	const gamefile = gameslot.getGamefile()!;
 	if (gamesession.getGameType() === 'analysis') {
-		const node = analysismovetree.getCurrentNode(gamefile);
+		const node = movetree.getCurrentNode(gamefile);
 		const current = node
 			? element_MovesTable.querySelector<HTMLElement>(`.ply[data-node-id="${node.id}"]`)
 			: undefined;
@@ -712,9 +712,9 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
-	const newLine = analysismovetree.getLineForNode(node);
-	const newMoves = analysismovetree.getMovesFromLine(newLine);
-	const targetIndex = analysismovetree.getNodeMoveIndex(node);
+	const newLine = movetree.getLineForNode(node);
+	const newMoves = movetree.getMovesFromLine(newLine);
+	const targetIndex = movetree.getNodeMoveIndex(node);
 
 	frametracker.onVisualChange();
 
@@ -725,7 +725,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	if (gamefile.state.local.moveIndex >= 0) movesequence.viewStart(gamefile, mesh);
 
 	// Swap the flat move list to the chosen branch, then replay forward to the node.
-	analysismovetree.setActiveLineToNode(node);
+	movetree.setActiveLineToNode(node);
 	gamefile.moves = newMoves;
 
 	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
@@ -740,18 +740,17 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 // gamefile bypass 'moves-changed'), reconcile on move-list changes & navigation, scroll
 // to the banner on conclusion. All queued so they apply in order despite async silhouette fetches.
 GameBus.addEventListener('game-loaded', () => {
-	if (gamesession.getGameType() === 'analysis')
-		analysismovetree.initFromGame(gameslot.getGamefile()!);
+	if (gamesession.getGameType() === 'analysis') movetree.initFromGame(gameslot.getGamefile()!);
 	enqueueRender(reconcileMovesTable);
 });
 GameBus.addEventListener('moves-changed', () => {
 	if (gamesession.getGameType() === 'analysis') {
-		analysismovetree.syncAfterMovesChanged(gameslot.getGamefile()!);
+		movetree.syncAfterMovesChanged(gameslot.getGamefile()!);
 	}
 	enqueueRender(reconcileMovesTable);
 });
 GameBus.addEventListener('view-move', () => enqueueRender(updateCurrentPly));
-GameBus.addEventListener('game-unloaded', () => analysismovetree.clear());
+GameBus.addEventListener('game-unloaded', () => movetree.clear());
 GameBus.addEventListener('game-concluded', () => enqueueRender(scrollMovesTableToBottom));
 
 // ===========================================================================

@@ -7,6 +7,7 @@
  * the board, and the engine's best-move arrows drawn on the board.
  */
 
+import type { Mesh } from '../../../game/rendering/piecemodels.js';
 import type { Coords } from '../../../../../../shared/chess/util/coordutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { EngineArrow } from '../enginearrows.js';
@@ -19,12 +20,12 @@ import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordu
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
+import movetree from '../movetree.js';
 import selection from '../../../game/chess/selection.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../enginearrows.js';
 import movesequence from '../../../game/chess/movesequence.js';
-import analysismovetree from '../movetree.js';
 import { isTypingTarget } from '../analysis.js';
 import enginelegalmovesdebug from '../../../game/misc/enginelegalmovesdebug.js';
 
@@ -569,12 +570,16 @@ function playLine(tokens: string[], untilIndex: number): void {
 	selection.reselectPiece();
 }
 
-function branchFromViewedPosition(
-	gamefile: GameFile,
-	mesh: ReturnType<typeof gameslot.getMesh>,
-): void {
+/**
+ * Branches the analysis game from the currently-viewed ply: truncates the move tree's
+ * active line, fast-forwards the logical front to align with the board, then rewinds
+ * move-by-move (deleting each) back to the viewed index. Afterward the gamefile genuinely
+ * sits at that position — board, turn, and global state all consistent — so a new move
+ * can be played from it.
+ */
+function branchFromViewedPosition(gamefile: GameFile, mesh: Mesh | undefined): void {
+	movetree.beginBranchFromViewedPosition(gamefile);
 	const target = gamefile.state.local.moveIndex;
-	analysismovetree.beginBranchFromViewedPosition(gamefile);
 	movesequence.viewFront(gamefile, mesh);
 	while (gamefile.state.local.moveIndex > target) movesequence.rewindMove(gamefile, mesh);
 }
@@ -613,4 +618,15 @@ function parseFirstMove(line: CevalLine): { start: Coords; end: Coords } | undef
 	}
 }
 
-export default { init };
+// Registration ---------------------------------------------------------------
+
+// Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
+// when a piece is selected mid-game, so a new continuation can be played from there.
+selection.setViewedPositionBrancher(branchFromViewedPosition);
+
+// Exports --------------------------------------------------------------------
+
+export default {
+	init,
+	branchFromViewedPosition,
+};
