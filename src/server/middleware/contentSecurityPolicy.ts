@@ -8,9 +8,6 @@ import helmet from 'helmet';
  * Its main job is mitigating XSS: an injected or inline script from a non-allowlisted source won't run.
  */
 const contentSecurityPolicy = helmet({
-	// Dev-only: no HSTS, or the browser pins localhost to https and breaks plain-http dev
-	// access (secureRedirect sends the production HSTS header with preload itself).
-	strictTransportSecurity: process.env['NODE_ENV'] === 'production',
 	contentSecurityPolicy: {
 		directives: {
 			defaultSrc: ["'self'"],
