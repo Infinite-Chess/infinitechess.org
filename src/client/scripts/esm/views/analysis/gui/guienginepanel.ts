@@ -19,6 +19,7 @@ import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordu
 import ceval from '../ceval.js';
 import toast from '../../../components/toast.js';
 import gameslot from '../../../game/chess/gameslot.js';
+import selection from '../../../game/chess/selection.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../game/GameBus.js';
 import enginearrows from '../enginearrows.js';
@@ -564,6 +565,8 @@ function playLine(tokens: string[], untilIndex: number): void {
 		else movesequence.makeMove(gamefile, mesh, result.tagged);
 		if (gamefile.gameConclusion) break; // The line ended the game.
 	}
+
+	selection.reselectPiece();
 }
 
 function branchFromViewedPosition(
