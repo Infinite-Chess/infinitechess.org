@@ -248,7 +248,7 @@ function onEngineStatus(status: CevalStatus): void {
 		element_GoDeeper.classList.add('hidden');
 		enginearrows.clearArrows();
 		renderLines([]);
-		updateGauge(undefined);
+		updateGauge(0);
 		updateProgress(undefined);
 	} else if (status === 'crashed') {
 		resetLineWindowState();
@@ -257,7 +257,7 @@ function onEngineStatus(status: CevalStatus): void {
 		element_GoDeeper.classList.add('hidden');
 		enginearrows.clearArrows();
 		renderLines([]);
-		updateGauge(undefined);
+		updateGauge(0);
 		updateProgress(undefined);
 		if (!crashToastShown) {
 			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore
@@ -291,7 +291,9 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 		element_Stats.textContent = 'Game Over';
 		enginearrows.clearArrows();
 		renderLines([]);
-		updateGauge(undefined);
+		// The engine reports the winner at a game-over position; fill the
+		// gauge fully for them, or leave it even on a draw (no victor).
+		updateGauge(update.victor === 'w' ? 1 : update.victor === 'b' ? -1 : 0);
 		updateProgress(update);
 		return;
 	}
@@ -305,7 +307,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 	const canDeepen = update.done && update.depth < ceval.MAX_DEPTH && hasNonTerminalLine;
 	element_GoDeeper.classList.toggle('hidden', !canDeepen);
 
-	updateGauge(best);
+	updateGauge(best?.winningChances ?? 0);
 	updateProgress(update);
 	renderLines(update.lines);
 	updateArrows(update);
@@ -344,9 +346,11 @@ function updateProgress(update: CevalUpdate | undefined): void {
 	element_Progress.classList.toggle('computing', computing);
 }
 
-/** Moves the eval gauge to the given best line's win probability (white POV). */
-function updateGauge(best: CevalLine | undefined): void {
-	const chances = best?.winningChances ?? 0;
+/**
+ * Positions the eval gauge for a white-POV win probability.
+ * @param chances - White's winning chances in [-1, 1] (+1 = white fully winning, -1 = black).
+ */
+function updateGauge(chances: number): void {
 	// chances=+1 (white winning) → black bar 0%; chances=-1 → 100%.
 	element_GaugeBlack.style.height = `${50 - chances * 50}%`;
 }
