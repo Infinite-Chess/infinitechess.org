@@ -7,6 +7,7 @@ import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeu
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/util/moveutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
@@ -51,20 +52,6 @@ GameBus.addEventListener('moves-changed', () => {
 
 // Functions -----------------------------------------------------------------------
 
-/** Hides both clock elements from view. */
-function hideClocks(): void {
-	for (const clockElements of Object.values(element_timers)) {
-		clockElements.timer.classList.add('hidden');
-	}
-}
-
-/** Shows both clock elements. */
-function showClocks(): void {
-	for (const clockElements of Object.values(element_timers)) {
-		clockElements.timer.classList.remove('hidden');
-	}
-}
-
 /** Stops clock sound and resets low-time state. */
 function stopClocks(basegame?: GameFile): void {
 	clearTimeout(lowtimeTimeoutID);
@@ -79,11 +66,15 @@ function stopClocks(basegame?: GameFile): void {
 
 /** Updates clock text content each frame for timed, ongoing games. */
 function update(basegame: GameFile): void {
-	if (gamesession.getGameType() === 'analysis') return;
-	if (basegame.untimed || basegame.gameConclusion || !moveutil.isGameResignable(basegame)) return;
-	const clocks = basegame.clocks!;
+	if (
+		basegame.untimed ||
+		basegame.gameConclusion ||
+		!moveutil.isGameResignable(basegame) ||
+		gamesession.getGameType() === 'analysis'
+	)
+		return;
 
-	updateTextContent(clocks);
+	updateTextContent(basegame.clocks);
 }
 
 /** Refreshes clock text and reschedules the low-time sound after a move is edited or navigated. */
@@ -107,34 +98,44 @@ function set(basegame: GameFile): void {
 	element_timers = { [bottomPlayer]: bars.bottom, [topPlayer]: bars.top };
 
 	updateTempo(basegame); // Highlight whoever's turn it is, even in untimed games.
-	if (basegame.untimed) return hideClocks();
-	showClocks();
+	if (basegame.untimed) return;
 	updateTextContent(basegame.clocks);
 }
 
 /** Shows the static clock values stored on moves for the currently viewed analysis position. */
 function showViewedMoveClockStamps(basegame: GameFile): void {
-	if (basegame.untimed) return hideClocks();
+	if (basegame.untimed) return;
 
+	// A time forfeit at the final position zeroes the flagged player (the one who was to move).
+	const viewingFinalForfeit =
+		basegame.gameConclusion?.condition === 'time' && moveutil.areWeViewingLatestMove(basegame);
+	const flaggedPlayer = viewingFinalForfeit
+		? moveutil.getWhosTurnAtMoveIndex(basegame, basegame.moves.length - 1)
+		: undefined;
+
+	// For each player, walk backwards from the viewed move to their most recent move.
+	const turnOrder = basegame.gameRules.turnOrder;
 	const currentTime: PlayerGroup<number> = {};
-	for (const player of basegame.gameRules.turnOrder) {
-		currentTime[player] = basegame.clocks.startTime.millis;
+	for (const player of gamerules.getUniquePlayersInTurnOrder(turnOrder)) {
+		if (currentTime[player] !== undefined) continue; // Already set (duplicate in turn order)
+		if (player === flaggedPlayer) {
+			// They lost on time, and we're viewing the final move
+			currentTime[player] = 0;
+			continue;
+		}
+		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
+		for (
+			let i = basegame.state.local.moveIndex, scanned = 0;
+			i >= 0 && scanned < turnOrder.length;
+			i--, scanned++
+		) {
+			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
+			currentTime[player] = basegame.moves[i]?.clockStamp ?? 0; // 0 means bug
+			break;
+		}
 	}
 
-	for (let i = 0; i <= basegame.state.local.moveIndex; i++) {
-		const move = basegame.moves[i];
-		if (move?.clockStamp === undefined) continue;
-		const player = moveutil.getColorThatPlayedMoveIndex(basegame, i);
-		currentTime[player] = move.clockStamp;
-	}
-
-	updateTextContent({
-		startTime: basegame.clocks.startTime,
-		currentTime,
-		colorTicking: undefined,
-		timeAtTurnStart: undefined,
-		timeRemainAtTurnStart: undefined,
-	});
+	updateTextContent({ startTime: basegame.clocks.startTime, currentTime });
 	updateTempo(basegame);
 }
 
@@ -176,7 +177,7 @@ function playLowtimeSound(): void {
 }
 
 /** Updates the displayed time for both clocks, flagging any below the low-time threshold. */
-function updateTextContent(clocks: ClockData): void {
+function updateTextContent(clocks: Pick<ClockData, 'startTime' | 'currentTime'>): void {
 	const lowtimeThreshold = clocks.startTime.millis / 8;
 	for (const [playerStr, clockElements] of Object.entries(element_timers)) {
 		const player = Number(playerStr) as Player;
@@ -187,8 +188,6 @@ function updateTextContent(clocks: ClockData): void {
 }
 
 export default {
-	hideClocks,
-	showClocks,
 	set,
 	stopClocks,
 	edit,
