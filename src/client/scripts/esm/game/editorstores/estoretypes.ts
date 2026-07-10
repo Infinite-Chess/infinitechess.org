@@ -15,8 +15,6 @@ import * as z from 'zod';
 
 // Types ------------------------------------------------------------------
 
-const EDITOR_AUTOSAVE_NAME = 'editor-autosave';
-
 /** Minimal information about a saved position — used for display in the saved positions list */
 export interface EditorAbridgedSaveState {
 	position_name: string;
@@ -78,11 +76,16 @@ const SaveStateSchema = z.strictObject({
 	...positionDataFields,
 });
 
+// Constants --------------------------------------------------------------------
+
+/** Name of the IndexedDB key for the board editor autosave */
+const EDITOR_AUTOSAVE_NAME = 'infinitechess-boardeditor-autosave';
+
 // Exports --------------------------------------------------------------------
 
 export default {
-	EDITOR_AUTOSAVE_NAME,
 	positionDataFields,
 	AbridgedSaveStateSchema,
 	SaveStateSchema,
+	EDITOR_AUTOSAVE_NAME,
 };
