@@ -102,7 +102,7 @@ function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
 	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
-	element_Gauge.classList.toggle('hidden', !value);
+	setGaugeVisible(value);
 	if (!value) {
 		resetLineWindowState();
 		enginearrows.clearArrows();
@@ -111,6 +111,15 @@ function setEngineEnabled(value: boolean): void {
 		element_Stats.textContent = 'Local evaluation off';
 		updateProgress(undefined);
 	}
+}
+
+/** Shows/hides the eval gauge. */
+function setGaugeVisible(visible: boolean): void {
+	const wasHidden = element_Gauge.classList.contains('hidden');
+	element_Gauge.classList.toggle('hidden', !visible);
+	// Toggling its visibility affects the canvas's width,
+	// emit a 'resize' event so it doesn't get stretched.
+	if (wasHidden === visible) window.dispatchEvent(new Event('resize'));
 }
 
 // Settings UI ------------------------------------------------------------------------
@@ -225,7 +234,7 @@ function onEngineStatus(status: CevalStatus): void {
 		updateProgress(ceval.getLatestUpdate());
 	} else if (status === 'failed') {
 		element_Toggle.checked = false;
-		element_Gauge.classList.add('hidden');
+		setGaugeVisible(false);
 		element_Stats.textContent = 'Engine failed to load';
 		updateProgress(undefined);
 		toast.show('The analysis engine failed to load.', { error: true });
