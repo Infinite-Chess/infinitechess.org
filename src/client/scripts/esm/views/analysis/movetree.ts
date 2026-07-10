@@ -8,6 +8,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
+import type { GameConclusion } from '../../../../../shared/chess/util/winconutil.js';
 
 interface AnalysisMoveNode {
 	id: number;
@@ -16,6 +17,12 @@ interface AnalysisMoveNode {
 	parent: AnalysisMoveNode | undefined;
 	children: AnalysisMoveNode[];
 	forceVariation?: boolean;
+	/**
+	 * The global game-conclusion at this node's position, if it terminates the game. Only a
+	 * line's front node is ever terminal, so this lets each branch restore its own conclusion
+	 * when reselected instead of inheriting whatever was last on the shared gamefile.
+	 */
+	gameConclusion?: GameConclusion;
 }
 
 let root: AnalysisMoveNode | undefined;
@@ -131,6 +138,17 @@ function setActiveLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return line;
 }
 
+/** The stored game-conclusion of the active line's front (terminal) node, if the branch ends the game. */
+function getActiveLineConclusion(): GameConclusion | undefined {
+	return activeLine[activeLine.length - 1]?.gameConclusion;
+}
+
+/** Persists this branch's global game-conclusion onto its front node, so it survives switching branches. */
+function storeActiveLineConclusion(conclusion: GameConclusion | undefined): void {
+	const front = activeLine[activeLine.length - 1];
+	if (front) front.gameConclusion = conclusion;
+}
+
 function getLineForNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 	return extendWithMainline(getLineToNode(node));
 }
@@ -227,6 +245,8 @@ export default {
 	syncAfterMovesChanged,
 	getLineForNode,
 	setActiveLineToNode,
+	getActiveLineConclusion,
+	storeActiveLineConclusion,
 	promoteAtFork,
 	makeMainLine,
 	forceVariation,

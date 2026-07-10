@@ -589,8 +589,10 @@ function deleteAnalysisNode(node: AnalysisMoveNode): void {
 	} else {
 		// Stay on the current move; just resync the flat list to the (possibly rerouted)
 		// active line and re-render the tree. The viewed position — and its analysis — is
-		// unchanged, so we leave the engine and board where they are.
+		// unchanged, so we leave the engine and board where they are. The front may have
+		// changed though (e.g. the old front was deleted), so realign the global conclusion.
 		gamefile.moves = movetree.getMovesFromLine(movetree.getActiveLine());
+		gamefile.gameConclusion = movetree.getActiveLineConclusion();
 		updateNavButtons();
 		enqueueRender(reconcileAnalysisMovesTable);
 	}
@@ -712,6 +714,12 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	const mesh = gameslot.getMesh();
 	premoves.cancelPremoves(gamefile, mesh);
 
+	// gameConclusion is a global state that belongs to the active line's front. Snapshot the
+	// branch we're leaving before swapping lines, then restore the target branch's own conclusion
+	// once its line is active — otherwise a decisive line's conclusion would bleed onto branches
+	// that don't end the game.
+	movetree.storeActiveLineConclusion(gamefile.gameConclusion);
+
 	const newLine = movetree.getLineForNode(node);
 	const newMoves = movetree.getMovesFromLine(newLine);
 	const targetIndex = movetree.getNodeMoveIndex(node);
@@ -727,6 +735,7 @@ function navigateToAnalysisNode(gamefile: GameFile, node: AnalysisMoveNode): voi
 	// Swap the flat move list to the chosen branch, then replay forward to the node.
 	movetree.setActiveLineToNode(node);
 	gamefile.moves = newMoves;
+	gamefile.gameConclusion = movetree.getActiveLineConclusion();
 
 	if (targetIndex >= 0) movesequence.viewIndex(gamefile, mesh, targetIndex);
 	else GameBus.dispatch('view-move'); // Root node — already at the start.

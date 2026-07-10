@@ -14,7 +14,6 @@ import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
-import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
@@ -357,15 +356,13 @@ function updateGauge(chances: number): void {
 
 /**
  * White-POV gauge fill for a game-over position: +1/-1 for a decisive winner, 0 for a draw.
- * The engine only reports "no legal moves", so the victor is recomputed fresh from the viewed
- * board rather than read from gamefile.gameConclusion — that property only tracks the active
- * line's front and gets clobbered when another variation is explored. A terminal position is
- * always the front of its line, so getGameConclusion's "latest move" precondition holds.
+ * A terminal position is always the front of its line, where gamefile.gameConclusion holds
+ * that branch's own conclusion (each branch restores its conclusion when reselected).
  */
 function terminalGaugeChances(): number {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || !moveutil.areWeViewingLatestMove(gamefile)) return 0; // Stale update; guard the precondition.
-	const victor = wincondition.getGameConclusion(gamefile)?.victor;
+	if (!gamefile || !moveutil.areWeViewingLatestMove(gamefile)) return 0; // Stale update | not on the front.
+	const victor = gamefile.gameConclusion?.victor;
 	return victor === p.WHITE ? 1 : victor === p.BLACK ? -1 : 0;
 }
 
