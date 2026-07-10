@@ -57,18 +57,14 @@ function init(nextOptions: EngineLegalMovesDebugOptions): void {
 function toggle(): void {
 	if (enabled) {
 		disable();
-		toast.show('Engine legal moves debug off');
 		return;
 	}
 	if (!options?.canRequest()) {
-		toast.show('Engine legal moves debug disabled: pieces outside world border', {
-			error: true,
-		});
+		toast.show('Engine legal moves debug disabled: pieces outside world border', { error: true }); // prettier-ignore
 		return;
 	}
 	enabled = true;
-	console.log('Toggled engine move gen highlights: true');
-	toast.show('Engine legal moves debug on');
+	console.log('Toggled engine debug: true');
 	requestMovesForCurrentPosition();
 }
 
@@ -76,7 +72,7 @@ function toggle(): void {
 function disable(): void {
 	if (!enabled) return;
 	enabled = false;
-	console.log('Toggled engine move gen highlights: false');
+	console.log('Toggled engine debug: false');
 	requestKeyById.clear();
 	pendingRequestIds.length = 0;
 	frametracker.onVisualChange();

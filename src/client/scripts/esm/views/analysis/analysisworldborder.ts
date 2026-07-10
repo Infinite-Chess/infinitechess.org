@@ -8,7 +8,6 @@ import type { Color } from '../../../../../shared/util/math/math.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import toast from '../../components/toast.js';
 import boardpos from '../../game/rendering/boardpos.js';
 import gameslot from '../../game/chess/gameslot.js';
 import boardtiles from '../../game/rendering/boardtiles.js';
@@ -23,14 +22,12 @@ const HALF_SQUARE = bd.fromNumber(0.5);
 let enabled = false;
 
 function init(): void {
-	GameBus.addEventListener('analysis-engine-border-debug', toggle);
+	GameBus.addEventListener('engine-debug', toggle);
 	GameBus.addEventListener('render-below-pieces', render);
 }
 
 function toggle(): void {
 	enabled = !enabled;
-	console.log(`Toggled analysis engine border: ${enabled}`);
-	toast.show(`Analysis engine border debug ${enabled ? 'on' : 'off'}`);
 	frametracker.onVisualChange();
 }
 
