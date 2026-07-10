@@ -274,8 +274,7 @@ function insertPlayerBarNameNodes(bar: HTMLElement, nodes: Node[]): void {
 }
 
 function syncClockDisplayToViewedMove(remapBars = false): void {
-	const gamefile = gameslot.getGamefile();
-	if (!gamefile) return;
+	const gamefile = gameslot.getGamefile()!;
 	if (remapBars) guiclock.set(gamefile);
 	guiclock.showViewedMoveClockStamps(gamefile);
 }
