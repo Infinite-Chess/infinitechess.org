@@ -13,7 +13,10 @@ import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icncon
 import boardutil from '../../../../../shared/chess/util/boardutil.js';
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
-import { pieceCountToDisableCheckmate } from '../../../../../shared/chess/util/winconutil.js';
+import {
+	GameConclusion,
+	pieceCountToDisableCheckmate,
+} from '../../../../../shared/chess/util/winconutil.js';
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
@@ -50,7 +53,7 @@ function startGame(options: { variant: VariantCode; timeControl: TimeControl }):
  */
 async function pasteGame(
 	longformOut: LongFormatOut,
-	viewWhitePerspective?: boolean,
+	gameConclusion?: GameConclusion,
 ): Promise<void> {
 	// Build the gamefile options from the longformat...
 
@@ -64,14 +67,14 @@ async function pasteGame(
 			position,
 			specialRights,
 		}),
+		gameConclusion,
 	};
 	// FUTURE: transfer the pasted move comments into the gamefile here too.
 	if (longformOut.moves) additional.moves = icnimport.movePacketsFromParsed(longformOut.moves);
 
 	// Retain the same perspective as the current loaded game, unless overridden (e.g. flip board).
 	// No game loaded yet (initial /analysis/:id load): default to white's perspective.
-	const vwp =
-		viewWhitePerspective ?? (gameslot.getGamefile() ? gameslot.areViewingWhite() : true);
+	const vwp = gameslot.getGamefile() ? gameslot.areViewingWhite() : true;
 
 	if (gameslot.getGamefile()) gameslot.unloadGame();
 

@@ -10,6 +10,7 @@
 
 import type { ModalMode } from '../../components/gameSetupModalHandoff.js';
 import type { VariantCode } from '../../../../../shared/chess/variants/variantregistry.js';
+import type { DeadGameState } from '../../../../../shared/types.js';
 import type { VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EditorAutosaveState } from '../../game/editorstores/estoretypes.js';
 
@@ -85,31 +86,33 @@ function start(): void {
 
 /** Loads the game named by the URL, falling back to a fresh board of the selected variant. */
 async function loadInitialGame(): Promise<void> {
-	// An ICN import on a loaded game's page redirects here (this page renders no
-	// clocks/players/result banner to conflict with) with the text stashed for us.
 	const pendingImport = icnpanel.takePendingImport();
+	const gameId = window.analysisPageData.gameId;
+
 	if (pendingImport !== null) {
+		// An ICN import on a loaded game's page redirects here (this page renders no
+		// clocks/players/result banner to conflict with) with the text stashed for us.
 		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
 		icnpanel.importIcnText(pendingImport);
-		return;
-	}
-
-	const gameId = window.analysisPageData.gameId;
-	if (gameId === null) return loadVariant(getSelectedVariant());
-
-	gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
-	try {
-		const response = await fetch(`/api/game/${gameId}`);
-		if (!response.ok) throw Error(`Game fetch failed (${response.status})`);
-		const state: { icn: string } = await response.json();
-		const longformOut = icnconverter.ShortToLong_Format(state.icn);
-		syncVariantSelect(longformOut.metadata.Variant);
-		await analysisloader.pasteGame(longformOut, true);
-		syncClockDisplayToViewedMove(true);
-	} catch (e) {
-		console.error('Failed to load game for analysis:', e);
-		toast.show('Failed to load the game. Starting a fresh board.', { error: true });
+	} else if (gameId === null) {
+		// No game ID in the URL -> start a fresh board
 		loadVariant(getSelectedVariant());
+	} else {
+		// Load the game from the server
+		gamesession.setSessionGame({ type: 'analysis' }); // pasteGame requires an analysis session.
+		try {
+			const response = await fetch(`/api/game/${gameId}`);
+			if (!response.ok) throw Error(`Game fetch failed (${response.status})`);
+			const state: DeadGameState = await response.json();
+			const longformOut = icnconverter.ShortToLong_Format(state.icn);
+			syncVariantSelect(longformOut.metadata.Variant);
+			await analysisloader.pasteGame(longformOut, state.gameConclusion);
+			syncClockDisplayToViewedMove(true);
+		} catch (e) {
+			console.error('Failed to load game for analysis:', e);
+			toast.show('Failed to load the game. Starting a fresh board.', { error: true });
+			loadVariant(getSelectedVariant());
+		}
 	}
 }
 
