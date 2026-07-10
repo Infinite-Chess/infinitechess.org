@@ -41,16 +41,6 @@
 	border-color: var(--c-border-2);
 }
 
-.analysis-game-meta {
-	flex: 0 0 auto;
-}
-
-.analysis-game-meta .meta-foot {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
 .analysis .play-group {
 	flex: 1 1 360px;
 	min-height: 260px;
