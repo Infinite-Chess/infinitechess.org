@@ -6,7 +6,6 @@ import variantregistry from '../../shared/chess/variants/variantregistry.js';
 
 import send404 from '../middleware/send404.js';
 import { resolveAuth } from '../middleware/resolveAuth.js';
-import crossOriginIsolation from '../middleware/crossOriginIsolation.js';
 import { getGamePageState } from '../controllers/gamePageController.js';
 import { getVerifyPageState } from '../controllers/verifyAccountController.js';
 import { TURNSTILE_SITE_KEY } from '../controllers/turnstile.js';
@@ -28,6 +27,20 @@ function attachRenderContext(req: Request, res: Response, next: NextFunction): v
 	next();
 }
 
+/**
+ * Marks a response cross-origin isolated (COOP + COEP), which is what unlocks
+ * `SharedArrayBuffer` — required by the multi-threaded (Lazy SMP) analysis engine build.
+ *
+ * Applied ONLY to the analysis page: `require-corp` would block cross-origin subresources
+ * that don't send CORP (Turnstile, YouTube embeds, the analytics beacon) on other pages.
+ * The analysis page's engine assets (worker, wasm, rayon snippet workers) are all
+ * same-origin, so they're allowed without extra CORP headers.
+ */
+function crossOriginIsolation(_req: Request, res: Response, next: NextFunction): void {
+	res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+	res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+	next();
+}
 /**
  * Registers a GET page route. Runs resolveAuth then attaches the render
  * context, before the route's own handler. Ensures auth doesn't run
