@@ -126,9 +126,9 @@ function showViewedMoveClockStamps(basegame: GameFile): void {
 		currentTime[player] = basegame.clocks.startTime.millis; // Fallback if they never moved.
 		for (let i = basegame.state.local.moveIndex; i >= 0; i--) {
 			if (moveutil.getColorThatPlayedMoveIndex(basegame, i) !== player) continue;
-			const stamp = basegame.moves[i]?.clockStamp;
-			// Analysis moves added on the board carry no clock; skip past them so the clock keeps
-			// this variation's last real value instead of dropping to 0.
+			const stamp = basegame.moves[i]!.clockStamp;
+			// Analysis moves added on the board carry no clock; skip past them so the
+			// clock keeps this variation's last real value instead of dropping to 0.
 			if (stamp === undefined) continue;
 			currentTime[player] = stamp;
 			break;
