@@ -14,7 +14,9 @@ import type { EngineArrow } from '../enginearrows.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/util/moveutil.js';
+import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil, { CoordsKey } from '../../../../../../shared/chess/util/coordutil.js';
 
 import ceval from '../ceval.js';
@@ -291,9 +293,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 		element_Stats.textContent = 'Game Over';
 		enginearrows.clearArrows();
 		renderLines([]);
-		// The engine reports the winner at a game-over position; fill the
-		// gauge fully for them, or leave it even on a draw (no victor).
-		updateGauge(update.victor === 'w' ? 1 : update.victor === 'b' ? -1 : 0);
+		updateGauge(terminalGaugeChances());
 		updateProgress(update);
 		return;
 	}
@@ -353,6 +353,20 @@ function updateProgress(update: CevalUpdate | undefined): void {
 function updateGauge(chances: number): void {
 	// chances=+1 (white winning) → black bar 0%; chances=-1 → 100%.
 	element_GaugeBlack.style.height = `${50 - chances * 50}%`;
+}
+
+/**
+ * White-POV gauge fill for a game-over position: +1/-1 for a decisive winner, 0 for a draw.
+ * The engine only reports "no legal moves", so the victor is recomputed fresh from the viewed
+ * board rather than read from gamefile.gameConclusion — that property only tracks the active
+ * line's front and gets clobbered when another variation is explored. A terminal position is
+ * always the front of its line, so getGameConclusion's "latest move" precondition holds.
+ */
+function terminalGaugeChances(): number {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile || !moveutil.areWeViewingLatestMove(gamefile)) return 0; // Stale update; guard the precondition.
+	const victor = wincondition.getGameConclusion(gamefile)?.victor;
+	return victor === p.WHITE ? 1 : victor === p.BLACK ? -1 : 0;
 }
 
 // PV lines ----------------------------------------------------------------------------

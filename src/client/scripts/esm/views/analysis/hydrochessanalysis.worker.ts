@@ -47,11 +47,6 @@ interface AnalysisInfo {
 	/** TT fill in permille (0-1000). */
 	hashfull: number;
 	lines: AnalysisLine[];
-	/**
-	 * Winning color at a game-over position (absolute board POV);
-	 * absent for a draw or non-terminal position.
-	 */
-	victor?: 'w' | 'b';
 }
 
 /** Search limits/settings for a `go` command. */

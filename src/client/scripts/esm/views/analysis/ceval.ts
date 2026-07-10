@@ -67,8 +67,6 @@ interface CevalUpdate {
 	done: boolean;
 	/** The viewed position is game-over (no legal moves): no lines will ever come. */
 	terminal: boolean;
-	/** Winning color at a terminal position (absolute board POV, engine verdict); absent for a draw. */
-	victor?: 'w' | 'b';
 }
 
 /** Engine lifecycle status, for the UI status row. `crashed` = this position reliably panics the engine. */
@@ -682,8 +680,6 @@ function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, termi
 		moveIndex: analyzed.moveIndex,
 		done,
 		terminal,
-		// Winner identity (not a score), so it is NOT flipped by blackPov like cp/mate.
-		...(info.victor && { victor: info.victor }),
 	};
 
 	const cached = positionCache.get(analyzed.icn);
