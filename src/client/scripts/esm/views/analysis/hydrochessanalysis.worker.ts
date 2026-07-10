@@ -17,12 +17,12 @@
  */
 
 /**
- * The engine glue is served UNBUNDLED at /engine/ (see build/engine-wasm.ts) and loaded via a
- * runtime dynamic import — NOT a static import. wasm-bindgen-rayon self-spawns its Lazy SMP
- * threads by resolving the glue's own `import.meta.url`, which only works when the glue (and its
- * `snippets/` + .wasm) are real served files; bundling them into this worker breaks thread setup.
+ * The engine glue is served UNBUNDLED at a content-versioned `/engine/<hash>/` path (see
+ * build/engine-wasm.ts) and loaded via a runtime dynamic import — NOT a static import. Its URL
+ * arrives in the 'init' message (the page reads it from the asset manifest). wasm-bindgen-rayon
+ * self-spawns its Lazy SMP threads by resolving the glue's own `import.meta.url`, which only works
+ * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
-const ENGINE_GLUE_URL = '/engine/hydrochess_wasm.js';
 /** The engine module's exports (default init + Engine + initThreadPool + stop_flag_ptr + …). */
 let wasm: any;
 
@@ -60,8 +60,8 @@ interface GoOptions {
 
 /** Messages accepted by this worker. */
 type AnalysisCommand =
-	/** `threads` > 0 spins up the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for the idle legal-moves helper. */
-	| { cmd: 'init'; hashMb: number; threads?: number }
+	/** `engineUrl` is the served glue path (from the manifest). `threads` > 0 spins up the Lazy SMP pool and posts the shared stop flag (the search worker); omit it for the idle legal-moves helper. */
+	| { cmd: 'init'; hashMb: number; engineUrl: string; threads?: number }
 	| { cmd: 'position'; icn: string; newGame?: boolean; resetSearch?: boolean }
 	| { cmd: 'go'; opts: GoOptions }
 	| { cmd: 'legalmoves'; requestId: number; icn: string }
@@ -121,9 +121,9 @@ let reachedDepth = 0;
 async function initialize(msg: Extract<AnalysisCommand, { cmd: 'init' }>): Promise<void> {
 	try {
 		// Absolute, computed specifier so the bundler leaves this as a runtime import.
-		const glueUrl = new URL(ENGINE_GLUE_URL, self.location.origin).href;
+		const glueUrl = new URL(msg.engineUrl, self.location.origin).href;
 		wasm = await import(glueUrl);
-		const output = await wasm.default(); // Loads /engine/hydrochess_wasm_bg.wasm (glue's own sibling).
+		const output = await wasm.default(); // Loads the sibling .wasm from the same /engine/<hash>/ dir.
 		wasm.set_hash_size(msg.hashMb);
 
 		// A single-threaded engine build exports no initThreadPool; guard so it degrades

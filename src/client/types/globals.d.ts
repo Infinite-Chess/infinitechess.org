@@ -95,6 +95,8 @@ declare global {
 	var analysisPageData: {
 		/** Base62 id of a game to auto-load, or null for a fresh board. */
 		gameId: string | null;
+		/** Content-versioned URL of the unbundled engine glue (`/engine/<hash>/hydrochess_wasm.js`), from the manifest. */
+		engineUrl: string;
 		/** Hashed URL of the analysis engine worker script (from the asset manifest). */
 		workerUrl: string;
 	};

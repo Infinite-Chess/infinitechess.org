@@ -137,8 +137,8 @@ const DEFAULT_SETTINGS: CevalSettings = {
 
 // State ----------------------------------------------------------------------------
 
-/** Set once by {@link init} with the page-provided worker URL. */
-let config: { workerUrl: string } | undefined;
+/** Set once by {@link init} with the page-provided worker + engine-glue URLs. */
+let config: { engineUrl: string; workerUrl: string } | undefined;
 
 /** The persistent search worker. Kept alive across position switches so its transposition table stays warm. */
 let worker: Worker | undefined;
@@ -269,7 +269,12 @@ function spawnWorker(): void {
 
 	worker = new Worker(config.workerUrl, { type: 'module' });
 	attachActiveWorkerHandlers(worker);
-	send({ cmd: 'init', hashMb: settings.hashMb, threads: settings.threads });
+	send({
+		cmd: 'init',
+		hashMb: settings.hashMb,
+		threads: settings.threads,
+		engineUrl: config.engineUrl,
+	});
 }
 
 function terminateWorker(): void {
@@ -312,7 +317,11 @@ function ensureLegalWorker(): void {
 		if (legalWorker === w) terminateLegalWorker();
 	};
 	legalWorker = w;
-	w.postMessage({ cmd: 'init', hashMb: settings.hashMb } satisfies AnalysisCommand);
+	w.postMessage({
+		cmd: 'init',
+		hashMb: settings.hashMb,
+		engineUrl: config.engineUrl,
+	} satisfies AnalysisCommand);
 }
 
 function terminateLegalWorker(): void {
@@ -749,8 +758,8 @@ function notifyStatus(override?: CevalStatus): void {
 
 // Public API --------------------------------------------------------------------------------
 
-/** Provides the page-specific worker URL. Must be called before {@link setEnabled}. */
-function init(options: { workerUrl: string }): void {
+/** Provides the engine-glue + page-specific worker URLs. Must be called before {@link setEnabled}. */
+function init(options: { workerUrl: string; engineUrl: string }): void {
 	config = options;
 
 	// Keep the engine pointed at the viewed position. 'view-move' fires on every

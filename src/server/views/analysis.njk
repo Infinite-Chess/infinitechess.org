@@ -13,6 +13,7 @@
    multithreaded engine package location. #}
 <script>window.analysisPageData = {
 	gameId: {{ gameId | json | safe }},
+	engineUrl: "{{ manifest['engine'] }}",
 	workerUrl: "{{ manifest['scripts/esm/views/analysis/hydrochessanalysis.worker.ts'] }}"
 };</script>
 {% endblock %}

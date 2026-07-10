@@ -69,7 +69,10 @@ let crashToastShown = false;
 
 /** Initializes the engine panel. Called once by the page entry. */
 function init(): void {
-	ceval.init({ workerUrl: window.analysisPageData.workerUrl });
+	ceval.init({
+		engineUrl: window.analysisPageData.engineUrl,
+		workerUrl: window.analysisPageData.workerUrl,
+	});
 	enginelegalmovesdebug.init({
 		canRequest: () => !ceval.isBlockedByEngineWorldBorder(),
 		requestMoves: ({ id, positionIcn }) => ceval.requestLegalMoves(id, positionIcn),

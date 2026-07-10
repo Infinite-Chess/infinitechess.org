@@ -12,7 +12,7 @@ why an asset 404s or a template can't resolve its hashed filename.
 [build/index.ts](/build/index.ts) orchestrates, in order:
 
 1. `setupEnv()` — ensures a valid `.env` exists.
-2. `setupEngineWasm()` — **awaited** (client bundle has a `.wasm` dependency on it).
+2. `downloadEngineWasm()` — **awaited** (client bundle has a `.wasm` dependency on it).
 3. `Promise.all([buildClient, buildServer])`.
 
 Two modes, chosen by the `--dev` flag on `build/index.ts`:

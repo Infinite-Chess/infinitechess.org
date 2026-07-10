@@ -7,6 +7,6 @@
  * wasm imports, which are otherwise only downloaded by the full build.
  */
 
-import { setupEngineWasm } from '../build/engine-wasm';
+import { downloadEngineWasm } from '../build/engine-wasm';
 
-await setupEngineWasm();
+await downloadEngineWasm();
