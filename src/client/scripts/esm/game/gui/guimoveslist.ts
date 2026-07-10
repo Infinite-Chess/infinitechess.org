@@ -349,8 +349,6 @@ async function reconcileAnalysisMovesTable(): Promise<void> {
 	tree.className = 'analysis-move-tree';
 	const root = analysismovetree.getRoot()!;
 
-	// The mainline walk renders every mainline move's alternatives below it — including the
-	// first move's, which branch from the root — so no separate root-variation pass is needed.
 	await appendAnalysisMainline(tree, root);
 
 	element_MovesTable.insertBefore(tree, element_GameResult);
