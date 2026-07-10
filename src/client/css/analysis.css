@@ -460,7 +460,6 @@
 }
 
 .analysis-move-tree {
-	padding: 3px 0;
 	font-size: 0.96em;
 }
 
@@ -614,7 +613,7 @@
 
 .eval-gauge {
 	position: relative;
-	flex: 0 0 12px;
+	flex: 0 0 15px;
 	background: #ddd;
 	overflow: hidden;
 }
@@ -633,13 +632,13 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	height: 1px;
+	height: 2px;
 	background: rgba(120, 120, 120, 0.4);
 }
 
 .gauge-zero {
-	height: 2px;
-	background: color-mix(in srgb, var(--c-accent, #d64f00) 85%, transparent);
+	height: 8px;
+	background: color-mix(in srgb, var(--c-accent, #d64f00) 80%, transparent);
 }
 
 /* Flipped board: white on top */
