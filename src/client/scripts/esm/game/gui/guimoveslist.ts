@@ -162,11 +162,6 @@ element_Last.addEventListener('click', jumpToEnd);
 
 /** Populates and reveals the `.game-result` banner with the game's conclusion. */
 function showGameResult(): void {
-	// On the analysis board the end-of-list result is only meaningful for a game opened by id
-	// (/analysis/:id, an already-finished game). Fresh boards, ICN imports, and lines played out
-	// to a conclusion don't show it.
-	if (gamesession.getGameType() === 'analysis' && window.analysisPageData.gameId === null) return;
-
 	const gamefile = gameslot.getGamefile()!;
 
 	const { score, text } = gameresultutil.getResultDisplay(gamefile.gameConclusion!, t.shared);
