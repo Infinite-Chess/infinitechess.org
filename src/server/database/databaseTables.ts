@@ -390,7 +390,6 @@ function initDatabase(): void {
 	renameDisconnectResignTimeColumnIfNeeded();
 	renameDisconnectByChoiceColumnIfNeeded();
 	addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded();
-	renameLiveGamesDeleteTimeColumnIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
 	addRatingDeviationColumnsToPlayerGamesIfNeeded();
 	startPeriodicDatabaseCleanupTasks();
@@ -579,31 +578,19 @@ function addBothDisconnectedEndTimeColumnToLiveGamesIfNeeded(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
  *
- * Renames `live_games.delete_time` to `finalize_time` — the column's meaning is now the deadline
- * to finalize (lock in + log) a concluded game, after which the game only lingers in memory
- * for the rematch handshake rather than being deleted. Fresh DBs get the new name directly.
- */
-function renameLiveGamesDeleteTimeColumnIfNeeded(): void {
-	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated (or fresh DB).
-	db.run('ALTER TABLE live_games RENAME COLUMN delete_time TO finalize_time');
-	console.log('Temporary DB migration: renamed live_games.delete_time to finalize_time.');
-}
-
-/**
- * TEMPORARY MIGRATION: remove (and its call in initDatabase) after it has run in production.
- *
  * Concluded games are now logged to the permanent `games` table the instant they end, and their
  * `live_games` row is dropped immediately — so only ongoing games are ever persisted/restored.
- * The conclusion snapshot columns (`conclusion_condition`, `conclusion_victor`, `time_ended`,
- * `finalize_time`) are therefore vestigial and need removing from old DBs. Fresh DBs never have them.
+ * The conclusion snapshot columns (`conclusion_condition`, `conclusion_victor`, `time_ended`) and
+ * the `delete_time` finalize deadline are therefore vestigial and need removing from old DBs.
+ * Fresh DBs never have them.
  */
 function dropLiveGamesConclusionColumnsIfPresent(): void {
-	if (!db.columnExists('live_games', 'finalize_time')) return; // Already migrated (or fresh DB).
+	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated (or fresh DB).
 	for (const column of [
 		'conclusion_condition',
 		'conclusion_victor',
 		'time_ended',
-		'finalize_time',
+		'delete_time',
 	]) {
 		db.run(`ALTER TABLE live_games DROP COLUMN ${column}`);
 	}

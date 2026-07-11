@@ -64,9 +64,8 @@ import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './dr
 
 /**
  * The cushion time, after a non-server-validated game concludes, before its result is locked in
- * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat
- * report — which updates the already-logged database record. The game is logged to the permanent
- * database the instant it concludes regardless; this only delays the finalized (locked) flag.
+ * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat report
+ * — which updates the already-logged database record. This only delays the finalized (locked) flag.
  */
 export const timeBeforeFinalizeMillis = 1000 * 8;
 
@@ -162,8 +161,8 @@ interface MatchInfo {
 	drawOfferState?: Player;
 
 	/**
-	 * Whether or not the game has concluded at all, which then
-	 * frees players to join a new game. Freed !== finalized.
+	 * Whether or not the game has concluded at all, which then frees players
+	 * to join a new game, and logs the game into the db. Freed !== finalized.
 	 */
 	freed: boolean;
 	/**

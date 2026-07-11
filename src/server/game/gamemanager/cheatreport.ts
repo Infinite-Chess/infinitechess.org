@@ -125,9 +125,8 @@ function concludeReportedGame(
 	conclusion: GameConclusion,
 	cheaterColor: Player,
 ): void {
-	// If the game already concluded before this report, it was already logged to the permanent
-	// database — the overturn must update that record below. If it was still ongoing, the freeGame
-	// call at the end logs it fresh (as aborted), so no update is needed.
+	// If the game already concluded before this report, it was already logged
+	// to the permanent database — the overturn must update that record below.
 	const wasLogged = servergame.match.freed;
 	const originalConclusion = servergame.gameConclusion;
 
@@ -148,11 +147,10 @@ function concludeReportedGame(
 	const conclusionMessage = gameutility.buildGameConclusionMessage(servergame);
 	gameutility.broadcastToSpectators(servergame, 'gameconclusion', conclusionMessage);
 
-	// Update the already-logged permanent record to reflect the overturn (aborted, one fewer move).
-	if (wasLogged && originalConclusion !== undefined)
-		gamelogger.updateOverturnedGame(servergame, originalConclusion, cheaterColor);
-
 	freeGame(servergame);
+
+	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
+	if (wasLogged) gamelogger.updateOverturnedGame(servergame, originalConclusion!, cheaterColor);
 }
 
 export { onReport, reportschem };

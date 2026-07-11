@@ -8,7 +8,10 @@
  * and determines which pending timers (auto time loss, disconnect,
  * delete) need to be reinstated.
  *
- * See dev-utils/live-game-persistence.md for the schema and restoration details.
+ * Only ongoing games are ever restored — a concluded game's row is
+ * dropped the instant it's logged — so it has no conclusion.
+ *
+ * See docs/systems/LIVE_GAME_PERSISTENCE.md for the schema and restoration details.
  */
 
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
@@ -135,8 +138,7 @@ function restoreSingleGame(
 	// 2. Reconstruct clock values for timed games
 	const clockValues = reconstructClockValues(gameRow, playerRows);
 
-	// 3. Create the game (also computes gameRules). Only ongoing games are ever restored — a
-	// concluded game's row is dropped the instant it's logged — so it has no conclusion.
+	// 3. Create the game (also computes gameRules).
 	const variant: LoadedVariant = {
 		code: gameRow.variant as VariantCode,
 		mod: variantcache.getModule(gameRow.variant as VariantCode),
@@ -297,8 +299,8 @@ function reconstructMatchInfo(
 		playerData,
 		drawOfferState:
 			gameRow.draw_offer_state === null ? undefined : (gameRow.draw_offer_state as Player),
-		// Only ongoing games are ever restored: a concluded game's row is dropped the instant it's
-		// logged, so a restored game is never freed nor finalized.
+		// Only ongoing games are ever restored: a concluded game's row is dropped
+		// the instant it's logged, so a restored game is never freed nor finalized.
 		freed: false,
 		finalized: false,
 		rematchOffers: new Set(), // Ephemeral — rematch offers never survive a restart.

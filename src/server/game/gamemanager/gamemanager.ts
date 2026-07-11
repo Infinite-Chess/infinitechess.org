@@ -349,6 +349,14 @@ function pushGameClock(servergame: ServerGame): number | undefined {
 	return data;
 }
 
+/** A player has lost on time: set the game conclusion. */
+function onPlayerLostOnTime(servergame: ServerGame): void {
+	const winner = typeutil.invertPlayer(servergame.whosTurn);
+	onGameConclusion(servergame, { victor: winner, condition: 'time' });
+}
+
+// Game Life Cycle -----------------------------------------------------------------------
+
 /**
  * Sets the game conclusion, broadcasts it to all clients, frees -> finalizes -> evicts game.
  * Typically called for non-move-triggered conclusions (e.g. resignation, time loss...).
@@ -385,9 +393,6 @@ function applyConclusion(servergame: ServerGame, conclusion: GameConclusion): vo
 
 	// Set end time
 	if (servergame.match.timeEnded === undefined) servergame.match.timeEnded = Date.now();
-
-	// The live-game persistence row isn't updated with the conclusion here — freeGame logs the
-	// game to the permanent database and drops the row immediately after, so it's never restored.
 }
 
 /** Game has ended: console log the result for debugging. */
@@ -420,8 +425,8 @@ function freeGame(servergame: ServerGame): void {
 		broadcastMemberInGameStatus(data.identifier);
 	}
 
-	// Log the game into the permanent database the instant it concludes, so the Analysis page can
-	// fetch it right away — even for non-validated games whose result isn't locked in (finalized) yet.
+	// Log the game into the database the instant it concludes.
+	// Not final yet, as cheat reports can still update the record.
 	logConcludedGame(servergame);
 
 	if (servergame.validateMoves) {
@@ -429,8 +434,7 @@ function freeGame(servergame: ServerGame): void {
 		finalizeGame(servergame);
 	} else {
 		// No server-side validation (e.g. large variant, or custom position). Give the opponent a
-		// cushion to overturn the conclusion with a cheat report — which updates the logged record —
-		// before locking it in.
+		// cushion to overturn the conclusion with a cheat report before locking it in.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalizeGame(servergame);
 			evictIfBothLeft(servergame);
@@ -445,7 +449,7 @@ function freeGame(servergame: ServerGame): void {
  * Logs a concluded game into the permanent database (computing rating changes for rated games)
  * and drops its live-game persistence row. Runs once, at conclusion, from {@link freeGame}.
  * A non-validated game's result may still be overturned by a cheat report until it finalizes,
- * in which case the logged record is updated in place (see gamelogger.updateOverturnedGame).
+ * in which case the logged record is updated in place.
  */
 function logConcludedGame(servergame: ServerGame): void {
 	// Mostly deprecated:
@@ -486,14 +490,22 @@ function logConcludedGame(servergame: ServerGame): void {
 	// The result now lives in the permanent tables — drop the live game row so a restart doesn't
 	// restore (and re-log) it. The in-memory game may still linger for the rematch handshake.
 	liveGameValues.onGameLogged(servergame);
-
-	if (PRINT_GAMES) console.log(`Logged game ${servergame.match.id}.`);
 }
 
-/** A player has lost on time: set the game conclusion. */
-function onPlayerLostOnTime(servergame: ServerGame): void {
-	const winner = typeutil.invertPlayer(servergame.whosTurn);
-	onGameConclusion(servergame, { victor: winner, condition: 'time' });
+/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
+function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
+	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
+	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
+		ratingResults[Number(playerStr) as Player] = {
+			ratingAtGame: {
+				value: playerRating.elo_at_game,
+				confident: playerRating.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
+			},
+			change: playerRating.elo_change_from_game!,
+		};
+	}
+
+	return ratingResults;
 }
 
 /**
@@ -541,11 +553,10 @@ function onBothPlayersDisconnected(servergame: ServerGame): void {
 }
 
 /**
- * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are no
- * longer accepted. The game was already logged to the database at conclusion (see
- * {@link logConcludedGame}), so this only flips the flag, measures rating abuse, and tells clients
- * the result can no longer change. Idempotent. Finalized !== evicted: the game may linger in
- * memory for the rematch handshake.
+ * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
+ * no longer accepted. Game is ALREADY logged into the db at conclusion. This only flips
+ * the flag, measures rating abuse, and tells clients the result can no longer change.
+ * Indempotent. Finalized !== evicted: the game may linger in memory for the rematch handshake.
  */
 function finalizeGame(servergame: ServerGame): void {
 	if (servergame.match.finalized) return; // Already finalized
@@ -557,22 +568,8 @@ function finalizeGame(servergame: ServerGame): void {
 	// Tell any connected participants the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
 	gameutility.broadcastToParticipants(servergame, 'finalized', undefined);
-}
 
-/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
-function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
-	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
-	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
-		ratingResults[Number(playerStr) as Player] = {
-			ratingAtGame: {
-				value: playerRating.elo_at_game,
-				confident: playerRating.rating_deviation_at_game <= UNCERTAIN_LEADERBOARD_RD,
-			},
-			change: playerRating.elo_change_from_game!,
-		};
-	}
-
-	return ratingResults;
+	if (PRINT_GAMES) console.log(`Finalized game ${servergame.match.id}.`);
 }
 
 /**
